@@ -19,11 +19,23 @@ jobs:
       - name: Run AI inference
         id: inference
         uses: actions/ai-inference@v1
+        timeout-minutes: 2
+        continue-on-error: true
         with:
           prompt: |
-            Summarize the following GitHub issue in one paragraph:
-            Title: ${{ github.event.issue.title }}
-            Body: ${{ github.event.issue.body }}
+            Summarize the following GitHub issue in one paragraph.
+            Title: ${{ github.event.issue.title || 'Untitled issue' }}
+            Body: |
+              ${{ github.event.issue.body || 'No description provided.' }}
+      - name: Comment with AI summary
+        run: |
+          RESPONSE_SAFE="${RESPONSE:-"AI summary unavailable."}"
+          printf "%s\n" "$RESPONSE_SAFE" > body.txt
+          gh issue comment "$ISSUE_NUMBER" --body-file body.txt
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RESPONSE: ${{ steps.inference.outputs.response }}
 
       - name: Comment with AI summary
         run: |
