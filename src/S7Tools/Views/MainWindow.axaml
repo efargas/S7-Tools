@@ -43,7 +43,7 @@
                     <ui:NavigationViewItem Content="{Binding Header}"
                                            Tag="{Binding ContentViewModelType}">
                         <ui:NavigationViewItem.IconSource>
-                            <fa:FontIconSource Glyph="{Binding Icon}" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
+                            <fa:FontIconSource Glyph="{Binding Icon}" FontFamily="Font Awesome 6 Free Solid" />
                         </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
                 </DataTemplate>
