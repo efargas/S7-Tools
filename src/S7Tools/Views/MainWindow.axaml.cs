@@ -10,6 +10,7 @@ namespace S7Tools.Views;
 
 public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
 {
+    private NavigationItemViewModel? _previousSelectedItem;
     public MainWindow()
     {
         InitializeComponent();
@@ -29,7 +30,25 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
         if (DataContext is MainWindowViewModel viewModel && e.SelectedItem is NavigationItemViewModel selectedItem)
         {
-            viewModel.NavigateTo(selectedItem.ContentViewModelType);
+            if (_previousSelectedItem == selectedItem)
+            {
+                var navigationView = this.FindControl<NavigationView>("MainNavigationView");
+                if (navigationView != null)
+                {
+                    navigationView.IsPaneOpen = !navigationView.IsPaneOpen;
+                }
+            }
+            else
+            {
+                viewModel.NavigateTo(selectedItem.ContentViewModelType);
+                var navigationView = this.FindControl<NavigationView>("MainNavigationView");
+                if (navigationView != null)
+                {
+                    navigationView.IsPaneOpen = true;
+                }
+            }
+
+            _previousSelectedItem = selectedItem;
         }
     }
 }

@@ -50,6 +50,23 @@ public class MainWindowViewModel : ReactiveObject
         get => _selectedMenuItem;
         set => this.RaiseAndSetIfChanged(ref _selectedMenuItem, value);
     }
+
+    private GridLength _bottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
+    public GridLength BottomPanelGridLength
+    {
+        get => _bottomPanelGridLength;
+        set => this.RaiseAndSetIfChanged(ref _bottomPanelGridLength, value);
+    }
+
+    public ObservableCollection<TabViewModel> Tabs { get; }
+    private TabViewModel? _selectedTab;
+    public TabViewModel? SelectedTab
+    {
+        get => _selectedTab;
+        set => this.RaiseAndSetIfChanged(ref _selectedTab, value);
+    }
+
+    public ReactiveCommand<Unit, Unit> ToggleBottomPanelCommand { get; }
     
     
         /// <summary>
@@ -87,6 +104,18 @@ public class MainWindowViewModel : ReactiveObject
             {
                 NavigateTo(MenuItems[0].ContentViewModelType);
             }
+
+            Tabs = new ObservableCollection<TabViewModel>
+            {
+                new TabViewModel { Header = "Output" },
+                new TabViewModel { Header = "Problems" },
+            };
+            SelectedTab = Tabs.FirstOrDefault();
+
+            ToggleBottomPanelCommand = ReactiveCommand.Create(() =>
+            {
+                BottomPanelGridLength = (BottomPanelGridLength.Value == 0) ? new GridLength(200, GridUnitType.Pixel) : new GridLength(0, GridUnitType.Pixel);
+            });
 
             CloseApplicationInteraction = new Interaction<Unit, Unit>();
         }
