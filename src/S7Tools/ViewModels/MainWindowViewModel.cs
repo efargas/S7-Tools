@@ -134,7 +134,7 @@ public class MainWindowViewModel : ReactiveObject
                 if (_dialogService != null)
                 {
                     var result = await _dialogService.ShowConfirmationAsync("Exit Application", "Are you sure you want to exit?");
-                    if (result)
+                    if (result && CloseApplicationInteraction != null)
                     {
                         await CloseApplicationInteraction.Handle(Unit.Default);
                     }
