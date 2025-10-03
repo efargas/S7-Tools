@@ -27,35 +27,9 @@
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
 
-    <Window.Styles>
-    </Window.Styles>
-
-    <Window.Styles>
-    </Window.Styles>
-
-    <DockPanel>
-        <!-- Menu Bar -->
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Exit" Command="{Binding ExitCommand}" />
-            </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Control+X" />
-                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Control+C" />
-                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Control+V" />
-            </MenuItem>
-            <MenuItem Header="_View">
-                <MenuItem Header="Toggle Bottom Panel" Command="{Binding ToggleBottomPanelCommand}" />
-            </MenuItem>
-        </Menu>
-
-        <!-- Status Bar -->
-        <Border DockPanel.Dock="Bottom" Background="#007ACC" Padding="5">
-            <TextBlock Text="Ready" Foreground="White" />
-        </Border>
-
-        <!-- Main Content -->
+    <Grid ColumnDefinitions="Auto,*">
         <ui:NavigationView x:Name="MainNavigationView"
+                           Grid.Column="0"
                            IsPaneToggleButtonVisible="False"
                            PaneDisplayMode="LeftCompact"
                            CompactPaneLength="48"
@@ -66,17 +40,35 @@
 
             <ui:NavigationView.MenuItemTemplate>
                 <DataTemplate DataType="vm:NavigationItemViewModel">
-                    <ui:NavigationViewItem Tag="{Binding ContentViewModelType}">
-                        <Grid ColumnDefinitions="Auto, *">
-                            <icons:Icon Grid.Column="0" Value="{Binding Icon}" />
-                            <TextBlock Grid.Column="1" Text="{Binding Header}" />
-                        </Grid>
+                    <ui:NavigationViewItem Content="{Binding Header}"
+                                           Tag="{Binding ContentViewModelType}">
+                        <ui:NavigationViewItem.IconSource>
+                            <fa:FontIconSource Glyph="{Binding Icon}" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
+                        </ui:NavigationViewItem.IconSource>
                     </ui:NavigationViewItem>
                 </DataTemplate>
             </ui:NavigationView.MenuItemTemplate>
-
-            <ContentControl Content="{Binding CurrentContent}" />
-
         </ui:NavigationView>
-    </DockPanel>
+
+        <GridSplitter Grid.Column="1" Width="1" Background="Transparent" />
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <ContentControl Grid.Row="0" Content="{Binding CurrentContent}" />
+
+            <GridSplitter Grid.Row="1"
+                          Height="5"
+                          Background="#3C3C3C"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Center"
+                          ResizeDirection="Rows" />
+
+            <ContentControl Grid.Row="2" Content="{Binding DetailContent}" />
+        </Grid>
+    </Grid>
 </Window>

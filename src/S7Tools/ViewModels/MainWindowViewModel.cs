@@ -45,6 +45,13 @@ public class MainWindowViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _currentContent, value);
     }
 
+    private object? _detailContent;
+    public object? DetailContent
+    {
+        get => _detailContent;
+        set => this.RaiseAndSetIfChanged(ref _detailContent, value);
+    }
+
     private NavigationItemViewModel? _selectedMenuItem;
     public NavigationItemViewModel? SelectedMenuItem
     {
@@ -59,22 +66,6 @@ public class MainWindowViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _testInputText, value);
     }
 
-    private GridLength _bottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
-    public GridLength BottomPanelGridLength
-    {
-        get => _bottomPanelGridLength;
-        set => this.RaiseAndSetIfChanged(ref _bottomPanelGridLength, value);
-    }
-
-    public ObservableCollection<TabViewModel> Tabs { get; }
-    private TabViewModel? _selectedTab;
-    public TabViewModel? SelectedTab
-    {
-        get => _selectedTab;
-        set => this.RaiseAndSetIfChanged(ref _selectedTab, value);
-    }
-
-    public ReactiveCommand<Unit, Unit> ToggleBottomPanelCommand { get; }
     public ReactiveCommand<Unit, Unit> ExitCommand { get; }
     public ReactiveCommand<Unit, Unit> CutCommand { get; }
     public ReactiveCommand<Unit, Unit> CopyCommand { get; }
@@ -117,18 +108,6 @@ public class MainWindowViewModel : ReactiveObject
                 SelectedMenuItem = MenuItems[0];
                 NavigateTo(MenuItems[0].ContentViewModelType);
             }
-
-            Tabs = new ObservableCollection<TabViewModel>
-            {
-                new TabViewModel { Header = "Output" },
-                new TabViewModel { Header = "Problems" },
-            };
-            SelectedTab = Tabs.FirstOrDefault();
-
-            ToggleBottomPanelCommand = ReactiveCommand.Create(() =>
-            {
-                BottomPanelGridLength = (BottomPanelGridLength.Value == 0) ? new GridLength(200, GridUnitType.Pixel) : new GridLength(0, GridUnitType.Pixel);
-            });
 
             ExitCommand = ReactiveCommand.CreateFromTask(async () =>
             {
@@ -178,5 +157,18 @@ public class MainWindowViewModel : ReactiveObject
             // Using Activator.CreateInstance for simplicity. In a real app, you would use a DI container.
             var viewModel = (ViewModelBase)Activator.CreateInstance(viewModelType)!;
             CurrentContent = viewModel;
+
+            if (viewModel is HomeViewModel homeViewModel)
+            {
+                DetailContent = homeViewModel.DetailContent;
+            }
+            else if (viewModel is ConnectionsViewModel connectionsViewModel)
+            {
+                DetailContent = connectionsViewModel.DetailContent;
+            }
+            else
+            {
+                DetailContent = null;
+            }
         }
 }

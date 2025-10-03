@@ -30,21 +30,21 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
         if (DataContext is MainWindowViewModel viewModel && e.SelectedItem is NavigationItemViewModel selectedItem)
         {
-            if (_previousSelectedItem == selectedItem)
-            {
-                var navigationView = this.FindControl<NavigationView>("MainNavigationView");
-                if (navigationView != null)
-                {
-                    navigationView.IsPaneOpen = !navigationView.IsPaneOpen;
-                }
-            }
-            else
+            if (_previousSelectedItem != selectedItem)
             {
                 viewModel.NavigateTo(selectedItem.ContentViewModelType);
                 var navigationView = this.FindControl<NavigationView>("MainNavigationView");
                 if (navigationView != null)
                 {
                     navigationView.IsPaneOpen = true;
+                }
+            }
+            else
+            {
+                var navigationView = this.FindControl<NavigationView>("MainNavigationView");
+                if (navigationView != null)
+                {
+                    navigationView.IsPaneOpen = !navigationView.IsPaneOpen;
                 }
             }
 
