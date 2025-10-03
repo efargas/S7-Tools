@@ -6,6 +6,8 @@ using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
 using S7Tools.Views;
+using Splat.Microsoft.Extensions.DependencyInjection;
+
 
 namespace S7Tools;
 
@@ -39,6 +41,11 @@ sealed class Program
 
         // ViewModels
         services.AddSingleton<MainWindowViewModel>();
+
+        // Configure Splat to use the Microsoft.Extensions.DependencyInjection container.
+        // This must be done during service configuration and before the service provider is built.
+        services.UseMicrosoftDependencyResolver();
+
 
         // Views
         services.AddSingleton<MainWindow>(provider => new MainWindow

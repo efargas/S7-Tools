@@ -34,16 +34,11 @@ public class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (_serviceProvider != null)
-        {
-            _serviceProvider.UseMicrosoftDependencyResolver();
-        }
-
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             DisableAvaloniaDataAnnotationValidation();
 
-            if (_serviceProvider != null)
+            if (_serviceProvider is not null)
             {
                 desktop.MainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             }
