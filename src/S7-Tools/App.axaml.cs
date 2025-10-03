@@ -6,6 +6,10 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using S7_Tools.ViewModels;
 using S7_Tools.Views;
+using ReactiveUI;
+using Splat;
+using System.Reactive.Concurrency;
+using Avalonia.ReactiveUI; // Added for AvaloniaScheduler and AvaloniaActivationForViewFetcher
 
 namespace S7_Tools;
 
@@ -18,6 +22,11 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        RxApp.MainThreadScheduler = AvaloniaScheduler.Instance;
+        RxApp.TaskpoolScheduler = TaskPoolScheduler.Default;
+
+        Locator.CurrentMutable.RegisterConstant(new AvaloniaActivationForViewFetcher(), typeof(IActivationForViewFetcher));
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 

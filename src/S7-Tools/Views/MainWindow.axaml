@@ -3,18 +3,130 @@
         xmlns:vm="using:S7_Tools.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:styles="using:Avalonia.Styling"
+        xmlns:converters="using:S7_Tools.Converters"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="S7_Tools.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="S7_Tools">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Resources>
+        <converters:BooleanToIconConverter x:Key="BottomPanelIconConverter"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Top Menu Bar -->
+        <Menu Grid.Row="0" Background="#252526">
+            <MenuItem Header="_File">
+                <MenuItem Header="_New"/>
+                <MenuItem Header="_Open"/>
+                <Separator/>
+                <MenuItem Header="_Exit" Command="{Binding ExitCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Cut" InputGesture="Ctrl+X" Command="{Binding CutCommand}"/>
+                <MenuItem Header="_Copy" InputGesture="Ctrl+C" Command="{Binding CopyCommand}"/>
+                <MenuItem Header="_Paste" InputGesture="Ctrl+V" Command="{Binding PasteCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Toggle Left Panel" Command="{Binding ToggleLeftPanelCommand}"/>
+                <MenuItem Header="_Toggle Bottom Panel" Command="{Binding ToggleBottomPanelCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Header="_About"/>
+            </MenuItem>
+        </Menu>
+
+            <!-- Main Content Area (Left Panel + Central Workspace) -->
+            <SplitView Grid.Row="1"
+                       IsPaneOpen="{Binding IsLeftPanelOpen}"
+                       DisplayMode="{Binding LeftPanelDisplayMode}"
+                       OpenPaneLength="250"
+                       CompactPaneLength="48"
+                       PaneBackground="#333333">
+                <SplitView.Pane>
+                    <!-- Left Panel Content -->
+                    <StackPanel>
+                        <Button Command="{Binding ToggleLeftPanelCommand}"
+                                ToolTip.Tip="Toggle Left Panel"
+                                HorizontalAlignment="Left"
+                                Background="Transparent" Foreground="White" BorderThickness="0"
+                                Margin="0,5,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <PathIcon Data="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" Width="20" Height="20" Foreground="White" VerticalAlignment="Center"/>
+                                <TextBlock Text="Hide Menu" Foreground="White" Margin="10,0,0,0" VerticalAlignment="Center" IsVisible="{Binding IsLeftPanelOpen}"/>
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Left">
+                            <PathIcon Data="M10 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z" Width="20" Height="20" Margin="0,0,10,0" Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="Explorer" VerticalAlignment="Center" Foreground="White" IsVisible="{Binding IsLeftPanelOpen}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Left">
+                            <PathIcon Data="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" Width="20" Height="20" Margin="0,0,10,0" Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="Search" VerticalAlignment="Center" Foreground="White" IsVisible="{Binding IsLeftPanelOpen}"/>
+                        </StackPanel>
+                        <!-- Add more menu items here -->
+                    </StackPanel>
+                </SplitView.Pane>
+                <SplitView.Content>
+                    <!-- Central Workspace -->
+                    <StackPanel Background="#1E1E1E" Margin="10">
+                        <TextBlock Text="Welcome to S7-Tools!" Foreground="White" FontSize="24" Margin="0,0,0,10"/>
+                        <TextBlock Text="You can test Cut, Copy, and Paste functionality below:" Foreground="White" Margin="0,0,0,5"/>
+                        <TextBox Text="{Binding TestInputText}" AcceptsReturn="True" Height="150" Foreground="White" Background="#2D2D30" BorderBrush="#555555" BorderThickness="1" Padding="5"/>
+                    </StackPanel>
+                </SplitView.Content>
+            </SplitView>
+
+            <!-- GridSplitter for resizing main content and bottom panel -->
+            <GridSplitter Grid.Row="2"
+                          HorizontalAlignment="Stretch"
+                          Height="4"
+                          Background="#444444"/>
+
+            <!-- Bottom Panel (Console/Terminal/Output) -->
+            <Grid Grid.Row="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="{Binding BottomPanelGridLength}"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Background="#252526" Padding="5" MinHeight="30">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Output" Foreground="White" Margin="0,0,10,0"/>
+                        <TextBlock Text="Terminal" Foreground="White" Margin="0,0,10,0"/>
+                        <TextBlock Text="Problems" Foreground="White" Margin="0,0,10,0"/>
+                        <Button Command="{Binding ToggleBottomPanelCommand}"
+                                ToolTip.Tip="Toggle Bottom Panel"
+                                HorizontalAlignment="Right"
+                                Background="Transparent" Foreground="White" BorderThickness="0">
+                            <PathIcon Data="{Binding BottomPanelGridLength, Converter={StaticResource BottomPanelIconConverter}}" Foreground="White"/>
+                        </Button>
+                    </StackPanel>
+                </Border>
+                <TabControl Grid.Row="1" Background="#1E1E1E" VerticalAlignment="Stretch">
+                    <TabItem Header="Output">
+                        <TextBlock Text="Output content goes here..." Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    </TabItem>
+                    <TabItem Header="Terminal">
+                        <TextBlock Text="Terminal content goes here..." Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    </TabItem>
+                    <TabItem Header="Problems">
+                        <TextBlock Text="Problems content goes here..." Foreground="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </Grid>
 
 </Window>
