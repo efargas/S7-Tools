@@ -58,10 +58,26 @@
                            SelectedItem="{Binding SelectedNavigationItem}"
                            SelectionChanged="NavigationView_SelectionChanged">
             <fa:NavigationView.MenuItems>
-                <fa:NavigationViewItem Content="Home" Tag="HomeView" Icon="{fa:FontIconSource Glyph=&#xf015;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
-                <fa:NavigationViewItem Content="Connections" Tag="ConnectionsView" Icon="{fa:FontIconSource Glyph=&#xf1e6;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
-                <fa:NavigationViewItem Content="Settings" Tag="SettingsView" Icon="{fa:FontIconSource Glyph=&#xf013;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
-                <fa:NavigationViewItem Content="About" Tag="AboutView" Icon="{fa:FontIconSource Glyph=&#xf05a;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
+                <fa:NavigationViewItem Content="Home" Tag="HomeView">
+                    <fa:NavigationViewItem.Icon>
+                        <fa:FontIcon Glyph="&#xf015;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
+                    </fa:NavigationViewItem.Icon>
+                </fa:NavigationViewItem>
+                <fa:NavigationViewItem Content="Connections" Tag="ConnectionsView">
+                    <fa:NavigationViewItem.Icon>
+                        <fa:FontIcon Glyph="&#xf1e6;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
+                    </fa:NavigationViewItem.Icon>
+                </fa:NavigationViewItem>
+                <fa:NavigationViewItem Content="Settings" Tag="SettingsView">
+                    <fa:NavigationViewItem.Icon>
+                        <fa:FontIcon Glyph="&#xf013;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
+                    </fa:NavigationViewItem.Icon>
+                </fa:NavigationViewItem>
+                <fa:NavigationViewItem Content="About" Tag="AboutView">
+                    <fa:NavigationViewItem.Icon>
+                        <fa:FontIcon Glyph="&#xf05a;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
+                    </fa:NavigationViewItem.Icon>
+                </fa:NavigationViewItem>
             </fa:NavigationView.MenuItems>
 
             <Grid RowDefinitions="*, Auto">
