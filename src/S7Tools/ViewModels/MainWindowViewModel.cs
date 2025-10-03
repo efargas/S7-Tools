@@ -102,18 +102,19 @@ public class MainWindowViewModel : ReactiveObject
 
             MenuItems = new ObservableCollection<NavigationItemViewModel>
             {
-                new NavigationItemViewModel("Home", new FontIconSource { Glyph = "&#xf015;", FontFamily = new FontFamily("avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid") }, typeof(HomeViewModel)),
-                new NavigationItemViewModel("Connections", new FontIconSource { Glyph = "&#xf1e6;", FontFamily = new FontFamily("avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid") }, typeof(ConnectionsViewModel)),
+                new NavigationItemViewModel("Home", "fa-home", typeof(HomeViewModel)),
+                new NavigationItemViewModel("Connections", "fa-plug", typeof(ConnectionsViewModel)),
             };
 
             FooterMenuItems = new ObservableCollection<NavigationItemViewModel>
             {
-                new NavigationItemViewModel("Settings", new SymbolIconSource { Symbol = Symbol.Settings }, typeof(SettingsViewModel))
+                new NavigationItemViewModel("Settings", "fa-cog", typeof(SettingsViewModel))
             };
 
             // Set initial content
             if (MenuItems.Count > 0)
             {
+                SelectedMenuItem = MenuItems[0];
                 NavigateTo(MenuItems[0].ContentViewModelType);
             }
 

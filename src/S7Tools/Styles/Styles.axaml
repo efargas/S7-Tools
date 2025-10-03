@@ -6,23 +6,6 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="Gray" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Grid ColumnDefinitions="Auto, *">
-                    <Border x:Name="AccentRectangle" Grid.Column="0" Width="3" HorizontalAlignment="Left" Background="#007ACC" IsVisible="False" />
-                    <ContentPresenter Grid.Column="1"
-                                      Name="PART_ContentPresenter"
-                                      Background="{TemplateBinding Background}"
-                                      BorderBrush="{TemplateBinding BorderBrush}"
-                                      BorderThickness="{TemplateBinding BorderThickness}"
-                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                      Content="{TemplateBinding Content}"
-                                      Padding="{TemplateBinding Padding}"
-                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
-                </Grid>
-            </ControlTemplate>
-        </Setter>
     </Style>
     <Style Selector="ui|NavigationViewItem:selected">
         <Setter Property="Foreground" Value="White" />
@@ -36,6 +19,12 @@
 
     <Style Selector="ui|NavigationView[PaneDisplayMode=LeftCompact] ui|NavigationViewItem">
         <Setter Property="Content" Value="" />
+    </Style>
+
+    <Style Selector="ui|NavigationViewItem Image">
+        <Setter Property="Width" Value="20" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Margin" Value="0,0,0,5" />
     </Style>
 
     <Style Selector="ui|NavigationView Grid#PaneContentGrid">
