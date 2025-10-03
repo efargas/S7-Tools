@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
@@ -38,6 +39,8 @@ sealed class Program
         services.AddSingleton<IGreetingService, GreetingService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
         services.AddSingleton<IDialogService, DialogService>();
+        services.AddSingleton<ITagRepository, PlcDataService>();
+        services.AddSingleton<IS7ConnectionProvider, PlcDataService>();
 
         // ViewModels
         services.AddSingleton<MainWindowViewModel>();

@@ -9,8 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Exceptions\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
@@ -28,5 +26,9 @@
     <PackageReference Include="ReactiveUI" Version="20.1.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Splat.Microsoft.Extensions.DependencyInjection" Version="14.8.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\S7Tools.Core\S7Tools.Core.csproj" />
   </ItemGroup>
 </Project>

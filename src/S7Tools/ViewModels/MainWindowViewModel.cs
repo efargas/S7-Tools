@@ -4,6 +4,8 @@ using System.Reactive;
 using System;
 using System.Reactive.Linq;
 using S7Tools.Services;
+using S7Tools.Core.Models;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -16,14 +18,16 @@ public class MainWindowViewModel : ReactiveObject
     private readonly IGreetingService _greetingService;
     private readonly IClipboardService _clipboardService;
     private readonly IDialogService _dialogService;
+    private readonly ITagRepository _tagRepository;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
     /// </summary>
     /// <remarks>
     /// This constructor is used by the designer.
+    /// A null-forgiving operator is used for services that are not essential for the designer view.
     /// </remarks>
-    public MainWindowViewModel() : this(new GreetingService(), new ClipboardService(), new DialogService())
+    public MainWindowViewModel() : this(new GreetingService(), new ClipboardService(), new DialogService(), new PlcDataService())
     {
     }
 
@@ -87,6 +91,16 @@ public class MainWindowViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _greeting, value);
     }
 
+    private Tag? _lastReadTag;
+    /// <summary>
+    /// Gets or sets the last tag that was read from the PLC.
+    /// </summary>
+    public Tag? LastReadTag
+    {
+        get => _lastReadTag;
+        set => this.RaiseAndSetIfChanged(ref _lastReadTag, value);
+    }
+
     /// <summary>
     /// Toggles the visibility of the left panel.
     /// </summary>
@@ -111,6 +125,10 @@ public class MainWindowViewModel : ReactiveObject
     /// Pastes text from the clipboard.
     /// </summary>
     public ReactiveCommand<Unit, Unit> PasteCommand { get; }
+    /// <summary>
+    /// Reads a tag from the PLC.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ReadTagCommand { get; }
 
     /// <summary>
     /// Interaction to signal the view to close the application.
@@ -123,12 +141,14 @@ public class MainWindowViewModel : ReactiveObject
     /// <param name="greetingService">The greeting service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="dialogService">The dialog service.</param>
-    public MainWindowViewModel(IGreetingService greetingService, IClipboardService clipboardService, IDialogService dialogService)
+    /// <param name="tagRepository">The tag repository service.</param>
+    public MainWindowViewModel(IGreetingService greetingService, IClipboardService clipboardService, IDialogService dialogService, ITagRepository tagRepository)
     {
         _greetingService = greetingService;
         _clipboardService = clipboardService;
         _dialogService = dialogService;
-        Greeting = _greetingService.Greet("Dependency Injection");
+        _tagRepository = tagRepository;
+        Greeting = _greetingService.Greet("S7Tools");
 
         ToggleLeftPanelCommand = ReactiveCommand.Create(() =>
         {
@@ -176,6 +196,11 @@ public class MainWindowViewModel : ReactiveObject
             {
                 TestInputText += text;
             }
+        });
+
+        ReadTagCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            LastReadTag = await _tagRepository.ReadTagAsync("DB1.DBD0");
         });
 
         // Set initial content for the workspace (optional)
