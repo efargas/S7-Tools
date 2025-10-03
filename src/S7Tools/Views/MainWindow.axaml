@@ -27,48 +27,88 @@
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
 
-    <Grid ColumnDefinitions="Auto,*">
-        <ui:NavigationView x:Name="MainNavigationView"
-                           Grid.Column="0"
-                           IsPaneToggleButtonVisible="False"
-                           PaneDisplayMode="LeftCompact"
-                           CompactPaneLength="48"
-                           OpenPaneLength="256"
-                           MenuItemsSource="{Binding MenuItems}"
-                           SelectedItem="{Binding SelectedMenuItem, Mode=TwoWay}"
-                           SelectionChanged="MainNavigationView_SelectionChanged">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Exit" Command="{Binding ExitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Control+X" />
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Control+C" />
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Control+V" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Toggle Bottom Panel" Command="{Binding ToggleBottomPanelCommand}" />
+            </MenuItem>
+        </Menu>
 
-            <ui:NavigationView.MenuItemTemplate>
-                <DataTemplate DataType="vm:NavigationItemViewModel">
-                    <ui:NavigationViewItem Content="{Binding Header}"
-                                           Tag="{Binding ContentViewModelType}">
-                        <ui:NavigationViewItem.IconSource>
-                            <fa:FontIconSource Glyph="{Binding Icon}" FontFamily="Font Awesome 6 Free Solid" />
-                        </ui:NavigationViewItem.IconSource>
-                    </ui:NavigationViewItem>
-                </DataTemplate>
-            </ui:NavigationView.MenuItemTemplate>
-        </ui:NavigationView>
+        <Border DockPanel.Dock="Bottom" Background="#007ACC" Padding="5">
+            <TextBlock Text="Ready" Foreground="White" />
+        </Border>
 
-        <GridSplitter Grid.Column="1" Width="1" Background="Transparent" />
+        <Grid ColumnDefinitions="Auto,*">
+            <ui:NavigationView x:Name="MainNavigationView"
+                               Grid.Column="0"
+                               IsPaneToggleButtonVisible="True"
+                               PaneDisplayMode="LeftCompact"
+                               CompactPaneLength="48"
+                               OpenPaneLength="256"
+                               MenuItemsSource="{Binding MenuItems}"
+                               SelectedItem="{Binding SelectedMenuItem, Mode=TwoWay}"
+                               SelectionChanged="MainNavigationView_SelectionChanged">
 
-        <Grid Grid.Column="1">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+                <ui:NavigationView.MenuItemTemplate>
+                    <DataTemplate DataType="vm:NavigationItemViewModel">
+                        <ui:NavigationViewItem Tag="{Binding ContentViewModelType}">
+                            <ui:NavigationViewItem.IconSource>
+                                <fa:FontIconSource Glyph="{Binding Icon}" FontFamily="Font Awesome 6 Free Solid" />
+                            </ui:NavigationViewItem.IconSource>
+                        </ui:NavigationViewItem>
+                    </DataTemplate>
+                </ui:NavigationView.MenuItemTemplate>
 
-            <ContentControl Grid.Row="0" Content="{Binding CurrentContent}" />
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-            <GridSplitter Grid.Row="1"
-                          Height="5"
-                          Background="#3C3C3C"
-                          HorizontalAlignment="Stretch"
-                          VerticalAlignment="Center"
-                          ResizeDirection="Rows" />
+                    <ContentControl Grid.Row="0" Content="{Binding CurrentContent}" />
 
-            <ContentControl Grid.Row="2" Content="{Binding DetailContent}" />
+                    <Grid Grid.Row="1" RowDefinitions="Auto, Auto, Auto, *">
+                        <GridSplitter Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5" Background="#3C3C3C" />
+                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Button Command="{Binding ToggleBottomPanelCommand}" Background="Transparent" BorderThickness="0" Padding="10,0">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <icons:Icon Value="fa-solid fa-chevron-up" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}, ConverterParameter=Inverse}" />
+                                    <icons:Icon Value="fa-solid fa-chevron-down" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}}" />
+                                    <TextBlock Text="Output" Foreground="White" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <TabControl ItemsSource="{Binding Tabs}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <TabControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Header}" Foreground="White" FontSize="12" />
+                                    </DataTemplate>
+                                </TabControl.ItemTemplate>
+                                <TabControl.ContentTemplate>
+                                    <DataTemplate x:DataType="vm:TabViewModel">
+                                        <ContentControl Content="{Binding Content}" />
+                                    </DataTemplate>
+                                </TabControl.ContentTemplate>
+                            </TabControl>
+                        </StackPanel>
+                        <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#3C3C3C" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <Border Grid.Row="3"
+                                Height="{Binding BottomPanelGridLength.Value}"
+                                Background="#1E1E1E">
+                            <ScrollViewer>
+                                <ContentControl Content="{Binding SelectedTab.Content}" />
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </ui:NavigationView>
         </Grid>
-    </Grid>
+    </DockPanel>
 </Window>
