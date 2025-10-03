@@ -20,12 +20,16 @@ namespace S7Tools.Converters
         /// <returns>An icon path string.</returns>
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is GridLength gridLength)
+            if (value is double gridLengthValue)
             {
-                // Down arrow SVG path if collapsed, Up arrow SVG path if expanded
-                return gridLength.Value == 0 ? "M7 14l5 5 5-5H7z" : "M7 10l5-5 5 5H7z";
+                bool isCollapsed = gridLengthValue == 0;
+                if (parameter as string == "Inverse")
+                {
+                    return !isCollapsed;
+                }
+                return isCollapsed;
             }
-            return "";
+            return false; // Default to not visible
         }
 
         /// <summary>

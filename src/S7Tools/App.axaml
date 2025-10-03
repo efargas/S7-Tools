@@ -1,6 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:S7Tools"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:fa="using:FluentAvalonia.UI.Controls"
              x:Class="S7Tools.App"
              RequestedThemeVariant="Default">
     <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
@@ -12,5 +15,38 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+        <sty:FluentAvaloniaTheme />
+        <Style Selector="fa|NavigationViewItem">
+            <Setter Property="Height" Value="50" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="Gray" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Border x:Name="AccentRectangle" Grid.Column="0" Width="3" HorizontalAlignment="Left" Background="#007ACC" IsVisible="False" />
+                        <ContentPresenter Grid.Column="1"
+                                          Name="PART_ContentPresenter"
+                                          Background="{TemplateBinding Background}"
+                                          BorderBrush="{TemplateBinding BorderBrush}"
+                                          BorderThickness="{TemplateBinding BorderThickness}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="fa|NavigationViewItem:selected">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="fa|NavigationViewItem:selected Border#AccentRectangle">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="fa|NavigationViewItem:pointerover">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
     </Application.Styles>
 </Application>

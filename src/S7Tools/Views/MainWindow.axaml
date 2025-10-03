@@ -5,8 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i="using:Avalonia.Xaml.Interactivity"
         xmlns:views="clr-namespace:S7Tools.Views"
-        xmlns:converters="clr-namespace:S7Tools.Converters"
         xmlns:local="clr-namespace:S7Tools"
+        xmlns:icons="using:Projektanker.Icons.Avalonia"
+        xmlns:converters="clr-namespace:S7Tools.Converters"
+        xmlns:fa="using:FluentAvalonia.UI.Controls"
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
         x:Class="S7Tools.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -17,6 +19,15 @@
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
+
+    <Window.Resources>
+        <converters:BooleanToInverseBooleanConverter x:Key="BooleanToInverseBooleanConverter" />
+        <converters:GridLengthToIconConverter x:Key="GridLengthToIconConverter" />
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
+
+    <Window.Styles>
+    </Window.Styles>
 
     <i:Interaction.Behaviors>
         <views:CloseApplicationBehavior Interaction="{Binding CloseApplicationInteraction}" />
@@ -29,9 +40,9 @@
                 <MenuItem Header="_Exit" Command="{Binding ExitCommand}" />
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Header="_Cut" Command="{Binding CutCommand}" />
-                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" />
-                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" />
+                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Control+X" />
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Control+C" />
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Control+V" />
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="Toggle Left Panel" Command="{Binding ToggleLeftPanelCommand}" />
@@ -40,62 +51,59 @@
         </Menu>
 
         <!-- Main Content Area -->
-        <SplitView Grid.Row="1"
-                   IsPaneOpen="{Binding IsLeftPanelOpen}"
-                   DisplayMode="{Binding LeftPanelDisplayMode}"
-                   PanePlacement="Left">
-            <SplitView.Pane>
-                <Border Background="LightGray" Padding="10">
-                    <TextBlock Text="Navigation Panel" />
-                </Border>
-            </SplitView.Pane>
+        <fa:NavigationView Grid.Row="1"
+                           IsPaneOpen="{Binding IsLeftPanelOpen}"
+                           PaneDisplayMode="LeftMinimal"
+                           IsPaneToggleButtonVisible="False"
+                           SelectedItem="{Binding SelectedNavigationItem}"
+                           SelectionChanged="NavigationView_SelectionChanged">
+            <fa:NavigationView.MenuItems>
+                <fa:NavigationViewItem Content="Home" Tag="HomeView" Icon="{fa:FontIconSource Glyph=&#xf015;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
+                <fa:NavigationViewItem Content="Connections" Tag="ConnectionsView" Icon="{fa:FontIconSource Glyph=&#xf1e6;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
+                <fa:NavigationViewItem Content="Settings" Tag="SettingsView" Icon="{fa:FontIconSource Glyph=&#xf013;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
+                <fa:NavigationViewItem Content="About" Tag="AboutView" Icon="{fa:FontIconSource Glyph=&#xf05a;, FontFamily=avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid}" />
+            </fa:NavigationView.MenuItems>
 
             <Grid RowDefinitions="*, Auto">
                 <!-- Workspace -->
-                <ContentControl Grid.Row="0" Content="{Binding ActiveWorkspaceContent}">
-                    <ContentControl.ContentTemplate>
-                        <DataTemplate>
-                            <!-- This is where different views would be loaded -->
-                            <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </DataTemplate>
-                    </ContentControl.ContentTemplate>
+                <ContentControl Grid.Row="0" Content="{Binding CurrentView}">
                     <ContentControl.DataTemplates>
                         <local:ViewLocator/>
                     </ContentControl.DataTemplates>
-                    <!-- Default content when ActiveWorkspaceContent is null -->
-                    <StackPanel Spacing="10" Margin="20" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Greeting}" FontSize="24" FontWeight="Bold"/>
-
-                        <Button Content="Read Tag" Command="{Binding ReadTagCommand}" HorizontalAlignment="Center"/>
-
-                        <TextBlock Text="Last Read Tag:" Margin="0,10,0,0"/>
-                        <Border Padding="10" BorderBrush="Gray" BorderThickness="1" CornerRadius="4">
-                            <StackPanel IsVisible="{Binding LastReadTag, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
-                                <TextBlock Text="{Binding LastReadTag.Name, StringFormat='Name: {0}'}"/>
-                                <TextBlock Text="{Binding LastReadTag.Address, StringFormat='Address: {0}'}"/>
-                                <TextBlock Text="{Binding LastReadTag.Value, StringFormat='Value: {0}'}"/>
-                            </StackPanel>
-                        </Border>
-                        <TextBlock IsVisible="{Binding LastReadTag, Converter={x:Static converters:ObjectConverters.IsNull}}" Text="No tag read yet."/>
-
-                        <TextBox Text="{Binding TestInputText}" Margin="0,20,0,0" Watermark="Text for clipboard..."/>
-                    </StackPanel>
                 </ContentControl>
 
                 <!-- Bottom Panel -->
-                <GridSplitter Grid.Row="1" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5" Background="LightGray" />
-                <Border Grid.Row="1"
-                        Height="{Binding BottomPanelGridLength.Value}"
-                        Background="LightGray"
-                        Padding="10">
-                    <TextBlock Text="Bottom Panel (Logs, Output, etc.)" />
-                </Border>
+                <Grid Grid.Row="1" RowDefinitions="Auto, Auto, Auto, *">
+                    <GridSplitter Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5" Background="#3C3C3C" />
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left">
+                        <Button Command="{Binding ToggleBottomPanelCommand}" Background="Transparent" BorderThickness="0" Padding="10,0">
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <icons:Icon Value="fa-solid fa-chevron-up" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}, ConverterParameter=Inverse}" />
+                                <icons:Icon Value="fa-solid fa-chevron-down" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}}" />
+                                <TextBlock Text="Output" Foreground="White" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TabControl ItemsSource="{Binding Tabs}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <TabControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Header}" Foreground="White" FontSize="12" />
+                                </DataTemplate>
+                            </TabControl.ItemTemplate>
+                        </TabControl>
+                    </StackPanel>
+                    <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#3C3C3C" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <Border Grid.Row="3"
+                            Height="{Binding BottomPanelGridLength.Value}"
+                            Background="#1E1E1E">
+                        <ContentControl Content="{Binding SelectedTab.Content}" />
+                    </Border>
+                </Grid>
             </Grid>
-        </SplitView>
+        </fa:NavigationView>
 
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="Gainsboro" Padding="5">
-            <TextBlock Text="Ready" />
+        <Border Grid.Row="2" Background="#007ACC" Padding="5">
+            <TextBlock Text="Ready" Foreground="White" />
         </Border>
     </Grid>
 </Window>

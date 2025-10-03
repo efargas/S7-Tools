@@ -8,6 +8,8 @@ using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
 using S7Tools.Views;
 using Splat.Microsoft.Extensions.DependencyInjection;
+using Projektanker.Icons.Avalonia;
+using Projektanker.Icons.Avalonia.FontAwesome;
 
 
 namespace S7Tools;
@@ -20,6 +22,8 @@ sealed class Program
         var services = new ServiceCollection();
         ConfigureServices(services);
         var serviceProvider = services.BuildServiceProvider();
+
+        IconProvider.Current.Register<FontAwesomeIconProvider>();
 
         BuildAvaloniaApp(serviceProvider)
             .StartWithClassicDesktopLifetime(args);
