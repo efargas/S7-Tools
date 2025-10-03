@@ -1,20 +1,19 @@
+using System;
+using FluentAvalonia.UI.Controls;
 using ReactiveUI;
 
 namespace S7Tools.ViewModels;
 
 public class NavigationItemViewModel : ReactiveObject
 {
-    private string _icon = string.Empty;
-    public string Icon
-    {
-        get => _icon;
-        set => this.RaiseAndSetIfChanged(ref _icon, value);
-    }
+    public string Header { get; }
+    public IconSource IconSource { get; }
+    public Type ContentViewModelType { get; }
 
-    private string _text = string.Empty;
-    public string Text
+    public NavigationItemViewModel(string header, IconSource iconSource, Type contentViewModelType)
     {
-        get => _text;
-        set => this.RaiseAndSetIfChanged(ref _text, value);
+        Header = header;
+        IconSource = iconSource;
+        ContentViewModelType = contentViewModelType;
     }
 }

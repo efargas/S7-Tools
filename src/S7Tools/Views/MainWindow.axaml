@@ -9,6 +9,7 @@
         xmlns:icons="using:Projektanker.Icons.Avalonia"
         xmlns:converters="clr-namespace:S7Tools.Converters"
         xmlns:fa="using:FluentAvalonia.UI.Controls"
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
         x:Class="S7Tools.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -29,97 +30,26 @@
     <Window.Styles>
     </Window.Styles>
 
-    <i:Interaction.Behaviors>
-        <views:CloseApplicationBehavior Interaction="{Binding CloseApplicationInteraction}" />
-    </i:Interaction.Behaviors>
+<ui:NavigationView x:Name="MainNavigationView"
+                       IsPaneToggleButtonVisible="True"
+                       IsSettingsVisible="True"
+                       PaneDisplayMode="LeftCompact"
+                       CompactPaneLength="48"
+                       OpenPaneLength="256"
+                       MenuItemsSource="{Binding MenuItems}"
+                       FooterMenuItemsSource="{Binding FooterMenuItems}"
+                       SelectedItem="{Binding SelectedMenuItem, Mode=TwoWay}"
+                       SelectionChanged="MainNavigationView_SelectionChanged">
 
-    <Grid RowDefinitions="Auto, *, Auto">
-        <!-- Menu Bar -->
-        <Menu Grid.Row="0">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Exit" Command="{Binding ExitCommand}" />
-            </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Control+X" />
-                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Control+C" />
-                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Control+V" />
-            </MenuItem>
-            <MenuItem Header="_View">
-                <MenuItem Header="Toggle Left Panel" Command="{Binding ToggleLeftPanelCommand}" />
-                <MenuItem Header="Toggle Bottom Panel" Command="{Binding ToggleBottomPanelCommand}" />
-            </MenuItem>
-        </Menu>
+        <ui:NavigationView.MenuItemTemplate>
+            <DataTemplate DataType="vm:NavigationItemViewModel">
+                <ui:NavigationViewItem Content="{Binding Header}"
+                                       IconSource="{Binding IconSource}"
+                                       Tag="{Binding ContentViewModelType}" />
+            </DataTemplate>
+        </ui:NavigationView.MenuItemTemplate>
 
-        <!-- Main Content Area -->
-        <fa:NavigationView Grid.Row="1"
-                           IsPaneOpen="{Binding IsLeftPanelOpen}"
-                           PaneDisplayMode="LeftMinimal"
-                           IsPaneToggleButtonVisible="False"
-                           SelectedItem="{Binding SelectedNavigationItem}"
-                           SelectionChanged="NavigationView_SelectionChanged">
-            <fa:NavigationView.MenuItems>
-                <fa:NavigationViewItem Content="Home" Tag="HomeView">
-                    <fa:NavigationViewItem.Icon>
-                        <fa:FontIcon Glyph="&#xf015;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
-                    </fa:NavigationViewItem.Icon>
-                </fa:NavigationViewItem>
-                <fa:NavigationViewItem Content="Connections" Tag="ConnectionsView">
-                    <fa:NavigationViewItem.Icon>
-                        <fa:FontIcon Glyph="&#xf1e6;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
-                    </fa:NavigationViewItem.Icon>
-                </fa:NavigationViewItem>
-                <fa:NavigationViewItem Content="Settings" Tag="SettingsView">
-                    <fa:NavigationViewItem.Icon>
-                        <fa:FontIcon Glyph="&#xf013;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
-                    </fa:NavigationViewItem.Icon>
-                </fa:NavigationViewItem>
-                <fa:NavigationViewItem Content="About" Tag="AboutView">
-                    <fa:NavigationViewItem.Icon>
-                        <fa:FontIcon Glyph="&#xf05a;" FontFamily="avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid" />
-                    </fa:NavigationViewItem.Icon>
-                </fa:NavigationViewItem>
-            </fa:NavigationView.MenuItems>
+        <ContentControl Content="{Binding CurrentContent}" />
 
-            <Grid RowDefinitions="*, Auto">
-                <!-- Workspace -->
-                <ContentControl Grid.Row="0" Content="{Binding CurrentView}">
-                    <ContentControl.DataTemplates>
-                        <local:ViewLocator/>
-                    </ContentControl.DataTemplates>
-                </ContentControl>
-
-                <!-- Bottom Panel -->
-                <Grid Grid.Row="1" RowDefinitions="Auto, Auto, Auto, *">
-                    <GridSplitter Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5" Background="#3C3C3C" />
-                    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left">
-                        <Button Command="{Binding ToggleBottomPanelCommand}" Background="Transparent" BorderThickness="0" Padding="10,0">
-                            <StackPanel Orientation="Horizontal" Spacing="5">
-                                <icons:Icon Value="fa-solid fa-chevron-up" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}, ConverterParameter=Inverse}" />
-                                <icons:Icon Value="fa-solid fa-chevron-down" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}}" />
-                                <TextBlock Text="Output" Foreground="White" VerticalAlignment="Center" />
-                            </StackPanel>
-                        </Button>
-                        <TabControl ItemsSource="{Binding Tabs}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                            <TabControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Header}" Foreground="White" FontSize="12" />
-                                </DataTemplate>
-                            </TabControl.ItemTemplate>
-                        </TabControl>
-                    </StackPanel>
-                    <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#3C3C3C" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                    <Border Grid.Row="3"
-                            Height="{Binding BottomPanelGridLength.Value}"
-                            Background="#1E1E1E">
-                        <ContentControl Content="{Binding SelectedTab.Content}" />
-                    </Border>
-                </Grid>
-            </Grid>
-        </fa:NavigationView>
-
-        <!-- Status Bar -->
-        <Border Grid.Row="2" Background="#007ACC" Padding="5">
-            <TextBlock Text="Ready" Foreground="White" />
-        </Border>
-    </Grid>
+    </ui:NavigationView>
 </Window>

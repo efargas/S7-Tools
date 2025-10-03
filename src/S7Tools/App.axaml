@@ -3,6 +3,7 @@
              xmlns:local="clr-namespace:S7Tools"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:sty="using:FluentAvalonia.Styling"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
              x:Class="S7Tools.App"
              RequestedThemeVariant="Default">
@@ -14,9 +15,8 @@
 
     <Application.Styles>
         <FluentTheme />
-        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
         <sty:FluentAvaloniaTheme />
-        <Style Selector="fa|NavigationViewItem">
+        <Style Selector="ui|NavigationViewItem">
             <Setter Property="Height" Value="50" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Background" Value="Transparent" />
@@ -39,13 +39,13 @@
                 </ControlTemplate>
             </Setter>
         </Style>
-        <Style Selector="fa|NavigationViewItem:selected">
+        <Style Selector="ui|NavigationViewItem:selected">
             <Setter Property="Foreground" Value="White" />
         </Style>
-        <Style Selector="fa|NavigationViewItem:selected Border#AccentRectangle">
+        <Style Selector="ui|NavigationViewItem:selected Border#AccentRectangle">
             <Setter Property="IsVisible" Value="True" />
         </Style>
-        <Style Selector="fa|NavigationViewItem:pointerover">
+        <Style Selector="ui|NavigationViewItem:pointerover">
             <Setter Property="Foreground" Value="White" />
         </Style>
     </Application.Styles>
