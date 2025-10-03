@@ -1,20 +1,31 @@
+using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using S7_Tools.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using S7_Tools.Views;
-using ReactiveUI;
 using Splat;
-using System.Reactive.Concurrency;
-using Avalonia.ReactiveUI; // Added for AvaloniaScheduler and AvaloniaActivationForViewFetcher
+using Splat.Microsoft.Extensions.DependencyInjection;
 
 namespace S7_Tools;
 
 public partial class App : Application
 {
+    private readonly IServiceProvider _serviceProvider;
+
+    public App()
+    {
+        // This constructor is used by the designer.
+    }
+
+    public App(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -22,20 +33,31 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        RxApp.MainThreadScheduler = AvaloniaScheduler.Instance;
-        RxApp.TaskpoolScheduler = TaskPoolScheduler.Default;
-
-        Locator.CurrentMutable.RegisterConstant(new AvaloniaActivationForViewFetcher(), typeof(IActivationForViewFetcher));
+        if (_serviceProvider != null)
+        {
+            _serviceProvider.UseMicrosoftDependencyResolver();
+            Locator.CurrentMutable.InitializeSplat();
+            Locator.CurrentMutable.InitializeReactiveUI();
+        }
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
+            // Avoid duplicate validations from both Avalonia and the CommunityToolkit.
             // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
-            desktop.MainWindow = new MainWindow
+
+            if (_serviceProvider != null)
             {
-                DataContext = new MainWindowViewModel(),
-            };
+                desktop.MainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+            }
+            else
+            {
+                // For the designer
+                desktop.MainWindow = new MainWindow
+                {
+                    DataContext = new ViewModels.MainWindowViewModel()
+                };
+            }
         }
 
         base.OnFrameworkInitializationCompleted();

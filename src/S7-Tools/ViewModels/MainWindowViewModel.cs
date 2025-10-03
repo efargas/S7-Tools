@@ -2,15 +2,18 @@ using Avalonia.Controls;
 using ReactiveUI;
 using System.Reactive;
 using System;
-using System.Reactive.Linq; // Added for FirstAsync()
+using System.Reactive.Linq;
 using Avalonia.Input.Platform;
 using Avalonia.Threading;
 using Avalonia.Controls.ApplicationLifetimes;
+using S7_Tools.Services.Interfaces;
 
 namespace S7_Tools.ViewModels;
 
 public partial class MainWindowViewModel : ReactiveObject
 {
+    private readonly IGreetingService _greetingService;
+
     private bool _isLeftPanelOpen = true;
     public bool IsLeftPanelOpen
     {
@@ -46,6 +49,13 @@ public partial class MainWindowViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _activeWorkspaceContent, value);
     }
 
+    private string _greeting;
+    public string Greeting
+    {
+        get => _greeting;
+        set => this.RaiseAndSetIfChanged(ref _greeting, value);
+    }
+
     public ReactiveCommand<Unit, Unit> ToggleLeftPanelCommand { get; }
     public ReactiveCommand<Unit, Unit> ToggleBottomPanelCommand { get; }
     public ReactiveCommand<Unit, Unit> ExitCommand { get; }
@@ -55,8 +65,11 @@ public partial class MainWindowViewModel : ReactiveObject
 
     public Interaction<Unit, Unit> CloseApplicationInteraction { get; }
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(IGreetingService greetingService)
     {
+        _greetingService = greetingService;
+        Greeting = _greetingService.Greet("Dependency Injection");
+
         ToggleLeftPanelCommand = ReactiveCommand.Create(() =>
         {
             IsLeftPanelOpen = !IsLeftPanelOpen;

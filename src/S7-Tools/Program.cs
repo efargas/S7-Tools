@@ -1,21 +1,46 @@
-﻿using Avalonia;
 using System;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Microsoft.Extensions.DependencyInjection;
+using S7_Tools.ViewModels;
+using S7_Tools.Views;
 
 namespace S7_Tools;
 
 sealed class Program
 {
-    // Initialization code. Don't use any Avalonia, third-party APIs or any
-    // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-    // yet and stuff might break.
     [STAThread]
-    public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+    public static void Main(string[] args)
+    {
+        var services = new ServiceCollection();
+        ConfigureServices(services);
+        var serviceProvider = services.BuildServiceProvider();
 
-    // Avalonia configuration, don't remove; also used by visual designer.
-    public static AppBuilder BuildAvaloniaApp()
+        BuildAvaloniaApp(serviceProvider)
+            .StartWithClassicDesktopLifetime(args);
+    }
+
+    public static AppBuilder BuildAvaloniaApp(IServiceProvider serviceProvider)
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
-            .LogToTrace();
+            .LogToTrace()
+            .WithApplicationFactory(() => new App(serviceProvider));
+
+
+    private static void ConfigureServices(IServiceCollection services)
+    {
+        // Services
+        services.AddSingleton<S7_Tools.Services.Interfaces.IGreetingService, S7_Tools.Services.GreetingService>();
+
+        // ViewModels
+        services.AddSingleton<MainWindowViewModel>();
+
+        // Views
+        services.AddSingleton<MainWindow>(provider => new MainWindow
+        {
+            DataContext = provider.GetRequiredService<MainWindowViewModel>()
+        });
+    }
 }
