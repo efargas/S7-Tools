@@ -1,7 +1,10 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using ReactiveUI;
 
 namespace S7_Tools.ViewModels;
 
-public class ViewModelBase : ObservableObject
+/// <summary>
+/// Base class for all view models.
+/// </summary>
+public class ViewModelBase : ReactiveObject
 {
 }

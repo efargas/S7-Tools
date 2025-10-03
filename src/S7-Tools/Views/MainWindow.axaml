@@ -16,7 +16,7 @@
     </Design.DataContext>
 
     <Window.Resources>
-        <converters:BooleanToIconConverter x:Key="BottomPanelIconConverter"/>
+        <converters:GridLengthToIconConverter x:Key="BottomPanelIconConverter"/>
     </Window.Resources>
 
     <Grid>

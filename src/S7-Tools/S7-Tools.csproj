@@ -24,9 +24,8 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
     <PackageReference Include="ReactiveUI" Version="20.1.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Splat.Microsoft.Extensions.DependencyInjection" Version="14.8.2" />
+    <PackageReference Include="Splat.Microsoft.Extensions.DependencyInjection" Version="14.8.6" />
   </ItemGroup>
 </Project>
