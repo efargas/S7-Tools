@@ -2,30 +2,28 @@ using System;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
-using S7_Tools.Services;
-using S7_Tools.Services.Interfaces;
-using S7_Tools.ViewModels;
-using S7_Tools.Views;
+using S7Tools.Services;
+using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels;
+using S7Tools.Views;
 
-namespace S7_Tools;
+namespace S7Tools;
 
 sealed class Program
 {
-    internal static IServiceProvider? ServiceProvider { get; private set; }
-
     [STAThread]
     public static void Main(string[] args)
     {
         var services = new ServiceCollection();
         ConfigureServices(services);
-        ServiceProvider = services.BuildServiceProvider();
+        var serviceProvider = services.BuildServiceProvider();
 
-        BuildAvaloniaApp()
+        BuildAvaloniaApp(serviceProvider)
             .StartWithClassicDesktopLifetime(args);
     }
 
-    public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
+    public static AppBuilder BuildAvaloniaApp(IServiceProvider serviceProvider)
+        => AppBuilder.Configure(() => new App(serviceProvider))
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace()
@@ -37,6 +35,7 @@ sealed class Program
         // Services
         services.AddSingleton<IGreetingService, GreetingService>();
         services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<IDialogService, DialogService>();
 
         // ViewModels
         services.AddSingleton<MainWindowViewModel>();

@@ -3,18 +3,19 @@ using ReactiveUI;
 using System.Reactive;
 using System;
 using System.Reactive.Linq;
-using S7_Tools.Services;
-using S7_Tools.Services.Interfaces;
+using S7Tools.Services;
+using S7Tools.Services.Interfaces;
 
-namespace S7_Tools.ViewModels;
+namespace S7Tools.ViewModels;
 
 /// <summary>
 /// ViewModel for the main window.
 /// </summary>
-public partial class MainWindowViewModel : ReactiveObject
+public class MainWindowViewModel : ReactiveObject
 {
     private readonly IGreetingService _greetingService;
     private readonly IClipboardService _clipboardService;
+    private readonly IDialogService _dialogService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
@@ -22,7 +23,7 @@ public partial class MainWindowViewModel : ReactiveObject
     /// <remarks>
     /// This constructor is used by the designer.
     /// </remarks>
-    public MainWindowViewModel() : this(new GreetingService(), new ClipboardService())
+    public MainWindowViewModel() : this(new GreetingService(), new ClipboardService(), new DialogService())
     {
     }
 
@@ -121,10 +122,12 @@ public partial class MainWindowViewModel : ReactiveObject
     /// </summary>
     /// <param name="greetingService">The greeting service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
-    public MainWindowViewModel(IGreetingService greetingService, IClipboardService clipboardService)
+    /// <param name="dialogService">The dialog service.</param>
+    public MainWindowViewModel(IGreetingService greetingService, IClipboardService clipboardService, IDialogService dialogService)
     {
         _greetingService = greetingService;
         _clipboardService = clipboardService;
+        _dialogService = dialogService;
         Greeting = _greetingService.Greet("Dependency Injection");
 
         ToggleLeftPanelCommand = ReactiveCommand.Create(() =>
@@ -142,7 +145,11 @@ public partial class MainWindowViewModel : ReactiveObject
 
         ExitCommand = ReactiveCommand.CreateFromTask(async () =>
         {
-            await CloseApplicationInteraction.Handle(Unit.Default).FirstAsync();
+            var result = await _dialogService.ShowConfirmationAsync("Exit Application", "Are you sure you want to exit?");
+            if (result)
+            {
+                await CloseApplicationInteraction.Handle(Unit.Default);
+            }
         });
 
         CutCommand = ReactiveCommand.CreateFromTask(async () =>

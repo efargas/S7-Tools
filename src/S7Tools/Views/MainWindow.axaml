@@ -1,15 +1,15 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:S7_Tools.ViewModels"
+        xmlns:vm="using:S7Tools.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:styles="using:Avalonia.Styling"
-        xmlns:converters="using:S7_Tools.Converters"
+        xmlns:converters="using:S7Tools.Converters"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
-        x:Class="S7_Tools.Views.MainWindow"
+        x:Class="S7Tools.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="S7_Tools">
+        Title="S7Tools">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>

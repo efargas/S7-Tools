@@ -2,9 +2,9 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
-using S7_Tools.Services.Interfaces;
+using S7Tools.Services.Interfaces;
 
-namespace S7_Tools.Services;
+namespace S7Tools.Services;
 
 /// <summary>
 /// Service for interacting with the system clipboard.

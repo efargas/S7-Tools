@@ -1,4 +1,4 @@
-namespace S7_Tools.Services.Interfaces;
+namespace S7Tools.Services.Interfaces;
 
 /// <summary>
 /// Defines the contract for a service that provides greeting messages.

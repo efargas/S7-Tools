@@ -1,6 +1,6 @@
-using S7_Tools.Services.Interfaces;
+using S7Tools.Services.Interfaces;
 
-namespace S7_Tools.Services;
+namespace S7Tools.Services;
 
 /// <summary>
 /// A service that provides greeting messages.
