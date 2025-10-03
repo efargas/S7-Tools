@@ -30,8 +30,26 @@
     <Window.Styles>
     </Window.Styles>
 
-<Grid RowDefinitions="*, Auto">
-        <Grid Grid.Row="0" RowDefinitions="*, Auto">
+    <Window.Styles>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto, *, Auto">
+        <!-- Menu Bar -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Exit" Command="{Binding ExitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Control+X" />
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Control+C" />
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Control+V" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Toggle Bottom Panel" Command="{Binding ToggleBottomPanelCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <Grid Grid.Row="1" RowDefinitions="*, Auto">
             <ui:NavigationView x:Name="MainNavigationView"
                                Grid.Row="0"
                                IsPaneToggleButtonVisible="False"
@@ -77,12 +95,14 @@
                 <Border Grid.Row="3"
                         Height="{Binding BottomPanelGridLength.Value}"
                         Background="#1E1E1E">
-                    <ContentControl Content="{Binding SelectedTab.Content}" />
+                    <ScrollViewer>
+                        <ContentControl Content="{Binding SelectedTab.Content}" />
+                    </ScrollViewer>
                 </Border>
             </Grid>
         </Grid>
         <!-- Status Bar -->
-        <Border Grid.Row="1" Background="#007ACC" Padding="5">
+        <Border Grid.Row="2" Background="#007ACC" Padding="5">
             <TextBlock Text="Ready" Foreground="White" />
         </Border>
     </Grid>

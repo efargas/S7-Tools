@@ -10,6 +10,7 @@ using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using System.Linq;
 using FluentAvalonia.UI.Controls;
+using Avalonia.Media;
 
 namespace S7Tools.ViewModels;
 
@@ -51,6 +52,13 @@ public class MainWindowViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _selectedMenuItem, value);
     }
 
+    private string _testInputText = "This is some text to test clipboard operations.";
+    public string TestInputText
+    {
+        get => _testInputText;
+        set => this.RaiseAndSetIfChanged(ref _testInputText, value);
+    }
+
     private GridLength _bottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
     public GridLength BottomPanelGridLength
     {
@@ -67,6 +75,10 @@ public class MainWindowViewModel : ReactiveObject
     }
 
     public ReactiveCommand<Unit, Unit> ToggleBottomPanelCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExitCommand { get; }
+    public ReactiveCommand<Unit, Unit> CutCommand { get; }
+    public ReactiveCommand<Unit, Unit> CopyCommand { get; }
+    public ReactiveCommand<Unit, Unit> PasteCommand { get; }
     
     
         /// <summary>
@@ -90,8 +102,8 @@ public class MainWindowViewModel : ReactiveObject
 
             MenuItems = new ObservableCollection<NavigationItemViewModel>
             {
-                new NavigationItemViewModel("Home", new SymbolIconSource { Symbol = Symbol.Home }, typeof(HomeViewModel)),
-                new NavigationItemViewModel("Connections", new SymbolIconSource { Symbol = Symbol.Globe }, typeof(ConnectionsViewModel)),
+                new NavigationItemViewModel("Home", new FontIconSource { Glyph = "&#xf015;", FontFamily = new FontFamily("avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid") }, typeof(HomeViewModel)),
+                new NavigationItemViewModel("Connections", new FontIconSource { Glyph = "&#xf1e6;", FontFamily = new FontFamily("avares://Projektanker.Icons.Avalonia.FontAwesome/Assets/FontAwesome.Solid.otf#Font Awesome 6 Free Solid") }, typeof(ConnectionsViewModel)),
             };
 
             FooterMenuItems = new ObservableCollection<NavigationItemViewModel>
@@ -115,6 +127,44 @@ public class MainWindowViewModel : ReactiveObject
             ToggleBottomPanelCommand = ReactiveCommand.Create(() =>
             {
                 BottomPanelGridLength = (BottomPanelGridLength.Value == 0) ? new GridLength(200, GridUnitType.Pixel) : new GridLength(0, GridUnitType.Pixel);
+            });
+
+            ExitCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                if (_dialogService != null)
+                {
+                    var result = await _dialogService.ShowConfirmationAsync("Exit Application", "Are you sure you want to exit?");
+                    if (result)
+                    {
+                        await CloseApplicationInteraction.Handle(Unit.Default);
+                    }
+                }
+            });
+
+            CutCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                if (!string.IsNullOrEmpty(TestInputText))
+                {
+                    await _clipboardService.SetTextAsync(TestInputText);
+                    TestInputText = string.Empty;
+                }
+            });
+
+            CopyCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                if (!string.IsNullOrEmpty(TestInputText))
+                {
+                    await _clipboardService.SetTextAsync(TestInputText);
+                }
+            });
+
+            PasteCommand = ReactiveCommand.CreateFromTask(async () =>
+            {
+                var text = await _clipboardService.GetTextAsync();
+                if (!string.IsNullOrEmpty(text))
+                {
+                    TestInputText += text;
+                }
             });
 
             CloseApplicationInteraction = new Interaction<Unit, Unit>();
