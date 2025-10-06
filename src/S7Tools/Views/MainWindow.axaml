@@ -8,14 +8,13 @@
         xmlns:local="clr-namespace:S7Tools"
         xmlns:icons="using:Projektanker.Icons.Avalonia"
         xmlns:converters="clr-namespace:S7Tools.Converters"
-        xmlns:fa="using:FluentAvalonia.UI.Controls"
-        xmlns:ui="using:FluentAvalonia.UI.Controls"
         mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
         x:Class="S7Tools.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="S7Tools"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Background="#1E1E1E">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -25,90 +24,300 @@
         <converters:BooleanToInverseBooleanConverter x:Key="BooleanToInverseBooleanConverter" />
         <converters:GridLengthToIconConverter x:Key="GridLengthToIconConverter" />
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:BooleanToColorConverter x:Key="BooleanToColorConverter" />
     </Window.Resources>
 
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+B" Command="{Binding ToggleSidebarCommand}" />
+        <KeyBinding Gesture="Ctrl+J" Command="{Binding ToggleBottomPanelCommand}" />
+        <KeyBinding Gesture="Ctrl+X" Command="{Binding CutCommand}" />
+        <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyCommand}" />
+        <KeyBinding Gesture="Ctrl+V" Command="{Binding PasteCommand}" />
+        <KeyBinding Gesture="Alt+F4" Command="{Binding ExitCommand}" />
+        <!-- Activity Bar Navigation -->
+        <KeyBinding Gesture="Ctrl+Shift+E" Command="{Binding NavigateToActivityBarItemCommand}" CommandParameter="explorer" />
+        <KeyBinding Gesture="Ctrl+Shift+F" Command="{Binding NavigateToActivityBarItemCommand}" CommandParameter="connections" />
+        <KeyBinding Gesture="Ctrl+Shift+L" Command="{Binding NavigateToActivityBarItemCommand}" CommandParameter="logviewer" />
+        <KeyBinding Gesture="Ctrl+OemComma" Command="{Binding NavigateToActivityBarItemCommand}" CommandParameter="settings" />
+    </Window.KeyBindings>
+
+    <!-- VSCode-style layout structure -->
     <DockPanel>
-        <Menu DockPanel.Dock="Top">
-            <MenuItem Header="_File">
-                <MenuItem Header="_Exit" Command="{Binding ExitCommand}" />
+        <!-- Menu Bar -->
+        <Menu DockPanel.Dock="Top" Background="#2D2D30" Foreground="#CCCCCC" Height="40" FontSize="14">
+            <MenuItem Header="_File" Foreground="#CCCCCC">
+                <MenuItem Header="_New File" InputGesture="Ctrl+N" />
+                <MenuItem Header="_Open File..." InputGesture="Ctrl+O" />
+                <MenuItem Header="_Save" InputGesture="Ctrl+S" />
+                <MenuItem Header="_Save As..." InputGesture="Ctrl+Shift+S" />
+                <Separator />
+                <MenuItem Header="_Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4" />
             </MenuItem>
-            <MenuItem Header="_Edit">
-                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Control+X" />
-                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Control+C" />
-                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Control+V" />
+            <MenuItem Header="_Edit" Foreground="#CCCCCC">
+                <MenuItem Header="_Undo" InputGesture="Ctrl+Z" />
+                <MenuItem Header="_Redo" InputGesture="Ctrl+Y" />
+                <Separator />
+                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Ctrl+X" />
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Ctrl+C" />
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V" />
+                <Separator />
+                <MenuItem Header="_Find" InputGesture="Ctrl+F" />
+                <MenuItem Header="_Replace" InputGesture="Ctrl+H" />
             </MenuItem>
-            <MenuItem Header="_View">
-                <MenuItem Header="Toggle Bottom Panel" Command="{Binding ToggleBottomPanelCommand}" />
+            <MenuItem Header="_View" Foreground="#CCCCCC">
+                <MenuItem Header="_Command Palette..." InputGesture="Ctrl+Shift+P" />
+                <MenuItem Header="_Explorer" InputGesture="Ctrl+Shift+E" />
+                <MenuItem Header="_Search" InputGesture="Ctrl+Shift+F" />
+                <Separator />
+                <MenuItem Header="Toggle _Sidebar" Command="{Binding ToggleSidebarCommand}" InputGesture="Ctrl+B" />
+                <MenuItem Header="Toggle _Bottom Panel" Command="{Binding ToggleBottomPanelCommand}" InputGesture="Ctrl+J" />
+            </MenuItem>
+            <MenuItem Header="_Help" Foreground="#CCCCCC">
+                <MenuItem Header="_About" />
             </MenuItem>
         </Menu>
 
-        <Border DockPanel.Dock="Bottom" Background="#007ACC" Padding="5">
-            <TextBlock Text="Ready" Foreground="White" />
-        </Border>
+        <!-- Main Content Area with Bottom Panel and Status Bar -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <Grid ColumnDefinitions="Auto,*">
-            <ui:NavigationView x:Name="MainNavigationView"
-                               Grid.Column="0"
-                               IsPaneToggleButtonVisible="True"
-                               PaneDisplayMode="LeftCompact"
-                               CompactPaneLength="48"
-                               OpenPaneLength="256"
-                               MenuItemsSource="{Binding MenuItems}"
-                               SelectedItem="{Binding SelectedMenuItem, Mode=TwoWay}"
-                               SelectionChanged="MainNavigationView_SelectionChanged">
+            <!-- Main Content Area -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <!-- Activity Bar -->
+                    <ColumnDefinition Width="48" />
+                    <!-- Sidebar -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Main Content -->
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                <ui:NavigationView.MenuItemTemplate>
-                    <DataTemplate DataType="vm:NavigationItemViewModel">
-                        <ui:NavigationViewItem Tag="{Binding ContentViewModelType}">
-                            <ui:NavigationViewItem.IconSource>
-                                <fa:FontIconSource Glyph="{Binding Icon}" FontFamily="Font Awesome 6 Free Solid" />
-                            </ui:NavigationViewItem.IconSource>
-                        </ui:NavigationViewItem>
-                    </DataTemplate>
-                </ui:NavigationView.MenuItemTemplate>
+                <!-- Activity Bar -->
+                <Border Grid.Column="0" Background="#333333" BorderBrush="#464647" BorderThickness="0,0,1,0">
+                    <ItemsControl ItemsSource="{Binding ActivityBarItems}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Width="48" Height="48">
+                                    <!-- Selection indicator (left border) -->
+                                    <Border Width="2" 
+                                            Height="48" 
+                                            Background="#007ACC" 
+                                            HorizontalAlignment="Left"
+                                            IsVisible="{Binding IsSelected}" />
+                                    
+                                    <!-- Button -->
+                                    <Button Width="48" 
+                                            Height="48"
+                                            Padding="0"
+                                            BorderThickness="0"
+                                            Background="Transparent"
+                                            Command="{Binding $parent[Window].DataContext.SelectActivityBarItemCommand}"
+                                            CommandParameter="{Binding Id}"
+                                            ToolTip.Tip="{Binding Tooltip}">
+                                        <Button.Styles>
+                                            <Style Selector="Button">
+                                                <Setter Property="Background" Value="Transparent" />
+                                            </Style>
+                                            <Style Selector="Button:pointerover">
+                                                <Setter Property="Background" Value="Transparent" />
+                                            </Style>
+                                            <Style Selector="Button:pressed">
+                                                <Setter Property="Background" Value="Transparent" />
+                                            </Style>
+                                        </Button.Styles>
+                                        <icons:Icon Width="24" 
+                                                   Height="24"
+                                                   Value="{Binding IconPath}"
+                                                   Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}">
+                                            <icons:Icon.Styles>
+                                                <!-- White on hover -->
+                                                <Style Selector="icons|Icon:pointerover">
+                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                </Style>
+                                            </icons:Icon.Styles>
+                                        </icons:Icon>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
 
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-
-                    <ContentControl Grid.Row="0" Content="{Binding CurrentContent}" />
-
-                    <Grid Grid.Row="1" RowDefinitions="Auto, Auto, Auto, *">
-                        <GridSplitter Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Top" Height="5" Background="#3C3C3C" />
-                        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Left">
-                            <Button Command="{Binding ToggleBottomPanelCommand}" Background="Transparent" BorderThickness="0" Padding="10,0">
-                                <StackPanel Orientation="Horizontal" Spacing="5">
-                                    <icons:Icon Value="fa-solid fa-chevron-up" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}, ConverterParameter=Inverse}" />
-                                    <icons:Icon Value="fa-solid fa-chevron-down" Width="12" Height="12" Foreground="White" VerticalAlignment="Center" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource GridLengthToIconConverter}}" />
-                                    <TextBlock Text="Output" Foreground="White" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
-                            <TabControl ItemsSource="{Binding Tabs}" Background="Transparent" BorderThickness="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                <TabControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Header}" Foreground="White" FontSize="12" />
-                                    </DataTemplate>
-                                </TabControl.ItemTemplate>
-                                <TabControl.ContentTemplate>
-                                    <DataTemplate x:DataType="vm:TabViewModel">
-                                        <ContentControl Content="{Binding Content}" />
-                                    </DataTemplate>
-                                </TabControl.ContentTemplate>
-                            </TabControl>
-                        </StackPanel>
-                        <Border Grid.Row="2" BorderThickness="0,1,0,0" BorderBrush="#3C3C3C" IsVisible="{Binding BottomPanelGridLength.Value, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                        <Border Grid.Row="3"
-                                Height="{Binding BottomPanelGridLength.Value}"
-                                Background="#1E1E1E">
-                            <ScrollViewer>
-                                <ContentControl Content="{Binding SelectedTab.Content}" />
-                            </ScrollViewer>
+                <!-- Sidebar -->
+                <Border Grid.Column="1" 
+                        Background="#252526" 
+                        BorderBrush="#464647" 
+                        BorderThickness="0,0,1,0"
+                        Width="300"
+                        IsVisible="{Binding IsSidebarVisible}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Sidebar Header -->
+                        <Border Grid.Row="0" 
+                                Background="#2D2D30" 
+                                Height="35" 
+                                BorderBrush="#464647" 
+                                BorderThickness="0,0,0,1">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0" 
+                                          Text="{Binding SidebarTitle}" 
+                                          Foreground="#CCCCCC" 
+                                          FontSize="11" 
+                                          FontWeight="Bold" 
+                                          VerticalAlignment="Center" 
+                                          Margin="12,0" />
+                                
+                                <Button Grid.Column="1" 
+                                        Background="Transparent" 
+                                        BorderThickness="0" 
+                                        Width="24" 
+                                        Height="24"
+                                        Margin="4"
+                                        Command="{Binding ToggleSidebarCommand}"
+                                        ToolTip.Tip="Collapse Sidebar">
+                                    <icons:Icon Value="fa-solid fa-times" 
+                                               Width="12" 
+                                               Height="12" 
+                                               Foreground="#CCCCCC" />
+                                </Button>
+                            </Grid>
                         </Border>
+                        
+                        <!-- Sidebar Content -->
+                        <ContentControl Grid.Row="1" Content="{Binding CurrentContent}" />
                     </Grid>
+                </Border>
+
+                <!-- Main Editor Area -->
+                <Border Grid.Column="2" Background="#1E1E1E">
+                    <ContentControl Content="{Binding DetailContent}" />
+                </Border>
+            </Grid>
+
+            <!-- Bottom Panel -->
+            <Grid Grid.Row="1" Background="#1E1E1E">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="{Binding BottomPanelGridLength}" />
+                </Grid.RowDefinitions>
+
+                <!-- Bottom Panel Header (Always Visible) -->
+                <Border Grid.Row="0" 
+                        Background="#2D2D30" 
+                        Height="35" 
+                        BorderBrush="#464647" 
+                        BorderThickness="0,1,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Tab Control for Bottom Panel -->
+                        <TabControl Grid.Column="0"
+                                   ItemsSource="{Binding Tabs}" 
+                                   SelectedItem="{Binding SelectedTab}"
+                                   Background="Transparent" 
+                                   BorderThickness="0"
+                                   TabStripPlacement="Top">
+                            <TabControl.Styles>
+                                <Style Selector="TabControl">
+                                    <Setter Property="Background" Value="Transparent" />
+                                </Style>
+                                <Style Selector="TabItem">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Setter Property="Padding" Value="0" />
+                                    <Setter Property="Margin" Value="0" />
+                                </Style>
+                                <Style Selector="TabItem:selected">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0,0,0,2" />
+                                    <Setter Property="BorderBrush" Value="#007ACC" />
+                                </Style>
+                            </TabControl.Styles>
+                            <TabControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Background="Transparent" 
+                                            BorderThickness="0" 
+                                            Padding="0"
+                                            Command="{Binding $parent[Window].DataContext.SelectBottomPanelTabCommand}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding Header}" 
+                                                  Foreground="#CCCCCC" 
+                                                  FontSize="11" 
+                                                  Margin="12,8,12,8" />
+                                    </Button>
+                                </DataTemplate>
+                            </TabControl.ItemTemplate>
+                            <TabControl.ContentTemplate>
+                                <DataTemplate>
+                                    <!-- Content will be shown in the main content area below -->
+                                </DataTemplate>
+                            </TabControl.ContentTemplate>
+                        </TabControl>
+                        
+                        <!-- Collapse/Expand Button (Right Side) -->
+                        <Button Grid.Column="1"
+                                Command="{Binding ToggleBottomPanelCommand}" 
+                                Background="Transparent" 
+                                BorderThickness="0" 
+                                Height="35"
+                                Width="35"
+                                Padding="0">
+                            <icons:Icon Value="fa-solid fa-chevron-down" 
+                                       Width="12" 
+                                       Height="12" 
+                                       Foreground="#CCCCCC" 
+                                       VerticalAlignment="Center" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Bottom Panel Content -->
+                <Border Grid.Row="1" 
+                        Background="#1E1E1E">
+                    <ScrollViewer>
+                        <ContentControl Content="{Binding SelectedTab.Content}" />
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+
+            <!-- Status Bar (Full Width) -->
+            <Border Grid.Row="2" Background="#007ACC" Height="24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="8,0">
+                        <TextBlock Text="Ready" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0">
+                        <TextBlock Text="S7Tools" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                    </StackPanel>
                 </Grid>
-            </ui:NavigationView>
+            </Border>
         </Grid>
     </DockPanel>
 </Window>

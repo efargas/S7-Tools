@@ -243,19 +243,19 @@ public sealed class ActivityBarService : IActivityBarService
     {
         return new[]
         {
-            new ActivityBarItem("explorer", "Explorer", "Explorer", "avares://S7Tools/Assets/Icons/explorer.svg")
+            new ActivityBarItem("explorer", "Explorer", "Explorer (Ctrl+Shift+E)", "fa-solid fa-folder")
             {
                 Order = 0
             },
-            new ActivityBarItem("connections", "Connections", "PLC Connections", "avares://S7Tools/Assets/Icons/connections.svg")
+            new ActivityBarItem("connections", "Connections", "PLC Connections", "fa-solid fa-plug")
             {
                 Order = 1
             },
-            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "avares://S7Tools/Assets/Icons/log.svg")
+            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "fa-solid fa-file-text")
             {
                 Order = 2
             },
-            new ActivityBarItem("settings", "Settings", "Application Settings", "avares://S7Tools/Assets/Icons/settings.svg")
+            new ActivityBarItem("settings", "Settings", "Application Settings", "fa-solid fa-cog")
             {
                 Order = 3
             }

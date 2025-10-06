@@ -3,14 +3,17 @@ using System.Reactive.Disposables;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
 using S7Tools.ViewModels;
-using Avalonia.Controls;
-using FluentAvalonia.UI.Controls;
 
 namespace S7Tools.Views;
 
+/// <summary>
+/// Main window with VSCode-style layout.
+/// </summary>
 public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
 {
-    private NavigationItemViewModel? _previousSelectedItem;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MainWindow"/> class.
+    /// </summary>
     public MainWindow()
     {
         InitializeComponent();
@@ -18,37 +21,13 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
         this.WhenActivated(disposables =>
         {
             if (ViewModel is null) return;
+            
+            // Handle application close interaction
             ViewModel.CloseApplicationInteraction.RegisterHandler(interaction =>
             {
                 Close();
                 interaction.SetOutput(Unit.Default);
             }).DisposeWith(disposables);
         });
-    }
-
-    private void MainNavigationView_SelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
-    {
-        if (DataContext is MainWindowViewModel viewModel && e.SelectedItem is NavigationItemViewModel selectedItem)
-        {
-            if (_previousSelectedItem != selectedItem)
-            {
-                viewModel.NavigateTo(selectedItem.ContentViewModelType);
-                var navigationView = this.FindControl<NavigationView>("MainNavigationView");
-                if (navigationView != null)
-                {
-                    navigationView.IsPaneOpen = true;
-                }
-            }
-            else
-            {
-                var navigationView = this.FindControl<NavigationView>("MainNavigationView");
-                if (navigationView != null)
-                {
-                    navigationView.IsPaneOpen = !navigationView.IsPaneOpen;
-                }
-            }
-
-            _previousSelectedItem = selectedItem;
-        }
     }
 }
