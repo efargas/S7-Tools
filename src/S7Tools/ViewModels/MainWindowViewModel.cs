@@ -168,6 +168,16 @@ public class MainWindowViewModel : ReactiveObject
     public ReactiveCommand<string, Unit> SelectActivityBarItemCommand { get; }
 
     /// <summary>
+    /// Gets the command to navigate to an activity bar item via keyboard (always expands sidebar).
+    /// </summary>
+    public ReactiveCommand<string, Unit> NavigateToActivityBarItemCommand { get; }
+
+    /// <summary>
+    /// Gets the command to select a bottom panel tab (expands panel if collapsed).
+    /// </summary>
+    public ReactiveCommand<PanelTabItem, Unit> SelectBottomPanelTabCommand { get; }
+
+    /// <summary>
     /// Interaction to signal the view to close the application.
     /// </summary>
     public Interaction<Unit, Unit> CloseApplicationInteraction { get; }
@@ -226,7 +236,45 @@ public class MainWindowViewModel : ReactiveObject
         {
         if (!string.IsNullOrEmpty(itemId))
         {
+        var currentSelectedItem = _activityBarService.SelectedItem;
+        
+        // VSCode behavior: clicking on selected item toggles sidebar
+        if (currentSelectedItem != null && currentSelectedItem.Id == itemId)
+        {
+        // Toggle sidebar visibility
+        IsSidebarVisible = !IsSidebarVisible;
+        }
+        else
+        {
+        // Select new item and ensure sidebar is visible
         _activityBarService.SelectItem(itemId);
+        IsSidebarVisible = true;
+        }
+        }
+        });
+
+        NavigateToActivityBarItemCommand = ReactiveCommand.Create<string>(itemId =>
+        {
+        if (!string.IsNullOrEmpty(itemId))
+        {
+        // Keyboard navigation always selects the item and ensures sidebar is visible
+        _activityBarService.SelectItem(itemId);
+        IsSidebarVisible = true;
+        }
+        });
+
+        SelectBottomPanelTabCommand = ReactiveCommand.Create<PanelTabItem>(tab =>
+        {
+        if (tab != null)
+        {
+        // VSCode behavior: clicking on tab expands bottom panel if collapsed
+        if (BottomPanelGridLength.Value == 0)
+        {
+        BottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
+        }
+        
+        // Select the tab
+        SelectedTab = tab;
         }
         });
         
