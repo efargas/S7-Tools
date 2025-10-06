@@ -1,0 +1,246 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using S7Tools.Infrastructure.Logging.Core.Models;
+using S7Tools.Infrastructure.Logging.Providers.Extensions;
+using S7Tools.Services;
+using S7Tools.Services.Interfaces;
+
+namespace S7Tools.Extensions;
+
+/// <summary>
+/// Extension methods for configuring S7Tools services in the dependency injection container.
+/// </summary>
+public static class ServiceCollectionExtensions
+{
+    /// <summary>
+    /// Adds all S7Tools foundation services to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsFoundationServices(this IServiceCollection services)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        // Add UI Thread Service
+        services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
+
+        // Add Localization Service
+        services.TryAddSingleton<ILocalizationService, LocalizationService>();
+
+        // Add Layout Service
+        services.TryAddSingleton<ILayoutService, LayoutService>();
+
+        // Add Activity Bar Service
+        services.TryAddSingleton<IActivityBarService, ActivityBarService>();
+
+        // Add Theme Service
+        services.TryAddSingleton<IThemeService, ThemeService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds S7Tools logging infrastructure to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="configureDataStore">Optional configuration action for the log data store.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsLogging(
+        this IServiceCollection services,
+        Action<LogDataStoreOptions>? configureDataStore = null)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        // Add DataStore logging services
+        services.AddDataStoreLogging(configureDataStore);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds all S7Tools services including foundation services and logging.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="configureDataStore">Optional configuration action for the log data store.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsServices(
+        this IServiceCollection services,
+        Action<LogDataStoreOptions>? configureDataStore = null)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        // Add foundation services
+        services.AddS7ToolsFoundationServices();
+
+        // Add logging services
+        services.AddS7ToolsLogging(configureDataStore);
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds S7Tools services with custom configuration.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="configureServices">Action to configure individual services.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsServices(
+        this IServiceCollection services,
+        Action<S7ToolsServiceConfiguration> configureServices)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        if (configureServices == null)
+            throw new ArgumentNullException(nameof(configureServices));
+
+        var configuration = new S7ToolsServiceConfiguration();
+        configureServices(configuration);
+
+        // Add foundation services based on configuration
+        if (configuration.IncludeUIThreadService)
+        {
+            services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
+        }
+
+        if (configuration.IncludeLocalizationService)
+        {
+            services.TryAddSingleton<ILocalizationService, LocalizationService>();
+        }
+
+        if (configuration.IncludeLayoutService)
+        {
+            services.TryAddSingleton<ILayoutService, LayoutService>();
+        }
+
+        if (configuration.IncludeActivityBarService)
+        {
+            services.TryAddSingleton<IActivityBarService, ActivityBarService>();
+        }
+
+        if (configuration.IncludeThemeService)
+        {
+            services.TryAddSingleton<IThemeService, ThemeService>();
+        }
+
+        // Add logging services if configured
+        if (configuration.IncludeLoggingServices)
+        {
+            services.AddDataStoreLogging(configuration.DataStoreConfiguration);
+        }
+
+        return services;
+    }
+
+    /// <summary>
+    /// Initializes S7Tools services that require initialization after the service provider is built.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider to initialize services from.</param>
+    /// <returns>A task representing the asynchronous initialization operation.</returns>
+    public static async Task InitializeS7ToolsServicesAsync(this IServiceProvider serviceProvider)
+    {
+        if (serviceProvider == null)
+            throw new ArgumentNullException(nameof(serviceProvider));
+
+        // Initialize Layout Service
+        var layoutService = serviceProvider.GetService<ILayoutService>();
+        if (layoutService != null)
+        {
+            await layoutService.LoadLayoutAsync().ConfigureAwait(false);
+        }
+
+        // Initialize Theme Service
+        var themeService = serviceProvider.GetService<IThemeService>();
+        if (themeService != null)
+        {
+            await themeService.LoadThemeConfigurationAsync().ConfigureAwait(false);
+        }
+
+        // Initialize Localization Service (if needed)
+        var localizationService = serviceProvider.GetService<ILocalizationService>();
+        if (localizationService != null)
+        {
+            // Localization service doesn't require async initialization currently
+            // but this is where you would add it if needed
+        }
+    }
+
+    /// <summary>
+    /// Shuts down S7Tools services gracefully.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider to shut down services from.</param>
+    /// <returns>A task representing the asynchronous shutdown operation.</returns>
+    public static async Task ShutdownS7ToolsServicesAsync(this IServiceProvider serviceProvider)
+    {
+        if (serviceProvider == null)
+            throw new ArgumentNullException(nameof(serviceProvider));
+
+        // Save Layout Service configuration
+        var layoutService = serviceProvider.GetService<ILayoutService>();
+        if (layoutService != null)
+        {
+            await layoutService.SaveLayoutAsync().ConfigureAwait(false);
+        }
+
+        // Save Theme Service configuration
+        var themeService = serviceProvider.GetService<IThemeService>();
+        if (themeService != null)
+        {
+            await themeService.SaveThemeConfigurationAsync().ConfigureAwait(false);
+        }
+
+        // Dispose logging services
+        var logDataStore = serviceProvider.GetService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
+        logDataStore?.Dispose();
+    }
+}
+
+/// <summary>
+/// Configuration options for S7Tools services.
+/// </summary>
+public sealed class S7ToolsServiceConfiguration
+{
+    /// <summary>
+    /// Gets or sets a value indicating whether to include the UI thread service.
+    /// Default is true.
+    /// </summary>
+    public bool IncludeUIThreadService { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to include the localization service.
+    /// Default is true.
+    /// </summary>
+    public bool IncludeLocalizationService { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to include the layout service.
+    /// Default is true.
+    /// </summary>
+    public bool IncludeLayoutService { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to include the activity bar service.
+    /// Default is true.
+    /// </summary>
+    public bool IncludeActivityBarService { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to include the theme service.
+    /// Default is true.
+    /// </summary>
+    public bool IncludeThemeService { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to include logging services.
+    /// Default is true.
+    /// </summary>
+    public bool IncludeLoggingServices { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the configuration action for the log data store.
+    /// </summary>
+    public Action<LogDataStoreOptions>? DataStoreConfiguration { get; set; }
+}

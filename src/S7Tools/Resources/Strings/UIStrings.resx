@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion. The mimetype is used for serialized objects, 
+    and tells the ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Application Title and General -->
+  <data name="ApplicationTitle" xml:space="preserve">
+    <value>S7Tools</value>
+    <comment>Main application title</comment>
+  </data>
+  <data name="ApplicationDescription" xml:space="preserve">
+    <value>Siemens S7 PLC Tools with Integrated LogViewer</value>
+    <comment>Application description</comment>
+  </data>
+  
+  <!-- Menu Items -->
+  <data name="Menu_File" xml:space="preserve">
+    <value>File</value>
+    <comment>File menu</comment>
+  </data>
+  <data name="Menu_Edit" xml:space="preserve">
+    <value>Edit</value>
+    <comment>Edit menu</comment>
+  </data>
+  <data name="Menu_View" xml:space="preserve">
+    <value>View</value>
+    <comment>View menu</comment>
+  </data>
+  <data name="Menu_Tools" xml:space="preserve">
+    <value>Tools</value>
+    <comment>Tools menu</comment>
+  </data>
+  <data name="Menu_Help" xml:space="preserve">
+    <value>Help</value>
+    <comment>Help menu</comment>
+  </data>
+  
+  <!-- Activity Bar Items -->
+  <data name="ActivityBar_Explorer" xml:space="preserve">
+    <value>Explorer</value>
+    <comment>Explorer activity bar item</comment>
+  </data>
+  <data name="ActivityBar_Connections" xml:space="preserve">
+    <value>Connections</value>
+    <comment>Connections activity bar item</comment>
+  </data>
+  <data name="ActivityBar_LogViewer" xml:space="preserve">
+    <value>Log Viewer</value>
+    <comment>Log Viewer activity bar item</comment>
+  </data>
+  <data name="ActivityBar_Settings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Settings activity bar item</comment>
+  </data>
+  
+  <!-- Common Actions -->
+  <data name="Action_Open" xml:space="preserve">
+    <value>Open</value>
+    <comment>Open action</comment>
+  </data>
+  <data name="Action_Save" xml:space="preserve">
+    <value>Save</value>
+    <comment>Save action</comment>
+  </data>
+  <data name="Action_Close" xml:space="preserve">
+    <value>Close</value>
+    <comment>Close action</comment>
+  </data>
+  <data name="Action_Exit" xml:space="preserve">
+    <value>Exit</value>
+    <comment>Exit action</comment>
+  </data>
+  <data name="Action_Connect" xml:space="preserve">
+    <value>Connect</value>
+    <comment>Connect action</comment>
+  </data>
+  <data name="Action_Disconnect" xml:space="preserve">
+    <value>Disconnect</value>
+    <comment>Disconnect action</comment>
+  </data>
+  <data name="Action_Clear" xml:space="preserve">
+    <value>Clear</value>
+    <comment>Clear action</comment>
+  </data>
+  <data name="Action_Export" xml:space="preserve">
+    <value>Export</value>
+    <comment>Export action</comment>
+  </data>
+  
+  <!-- Status Messages -->
+  <data name="Status_Ready" xml:space="preserve">
+    <value>Ready</value>
+    <comment>Ready status message</comment>
+  </data>
+  <data name="Status_Connected" xml:space="preserve">
+    <value>Connected</value>
+    <comment>Connected status message</comment>
+  </data>
+  <data name="Status_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+    <comment>Disconnected status message</comment>
+  </data>
+  <data name="Status_Loading" xml:space="preserve">
+    <value>Loading...</value>
+    <comment>Loading status message</comment>
+  </data>
+  
+  <!-- Log Viewer -->
+  <data name="LogViewer_Title" xml:space="preserve">
+    <value>Log Viewer</value>
+    <comment>Log Viewer title</comment>
+  </data>
+  <data name="LogViewer_Search" xml:space="preserve">
+    <value>Search logs...</value>
+    <comment>Log search placeholder</comment>
+  </data>
+  <data name="LogViewer_Filter" xml:space="preserve">
+    <value>Filter</value>
+    <comment>Log filter label</comment>
+  </data>
+  <data name="LogViewer_Level" xml:space="preserve">
+    <value>Level</value>
+    <comment>Log level column header</comment>
+  </data>
+  <data name="LogViewer_Timestamp" xml:space="preserve">
+    <value>Timestamp</value>
+    <comment>Log timestamp column header</comment>
+  </data>
+  <data name="LogViewer_Category" xml:space="preserve">
+    <value>Category</value>
+    <comment>Log category column header</comment>
+  </data>
+  <data name="LogViewer_Message" xml:space="preserve">
+    <value>Message</value>
+    <comment>Log message column header</comment>
+  </data>
+  
+  <!-- Themes -->
+  <data name="Theme_Light" xml:space="preserve">
+    <value>Light</value>
+    <comment>Light theme name</comment>
+  </data>
+  <data name="Theme_Dark" xml:space="preserve">
+    <value>Dark</value>
+    <comment>Dark theme name</comment>
+  </data>
+  <data name="Theme_Auto" xml:space="preserve">
+    <value>Auto</value>
+    <comment>Auto theme name</comment>
+  </data>
+  
+  <!-- Error Messages -->
+  <data name="Error_ConnectionFailed" xml:space="preserve">
+    <value>Connection failed. Please check your settings and try again.</value>
+    <comment>Connection failed error message</comment>
+  </data>
+  <data name="Error_FileNotFound" xml:space="preserve">
+    <value>File not found. Please check the file path and try again.</value>
+    <comment>File not found error message</comment>
+  </data>
+  <data name="Error_InvalidConfiguration" xml:space="preserve">
+    <value>Invalid configuration. Please check your settings.</value>
+    <comment>Invalid configuration error message</comment>
+  </data>
+  
+  <!-- Confirmation Messages -->
+  <data name="Confirm_Exit" xml:space="preserve">
+    <value>Are you sure you want to exit?</value>
+    <comment>Exit confirmation message</comment>
+  </data>
+  <data name="Confirm_ClearLogs" xml:space="preserve">
+    <value>Are you sure you want to clear all logs?</value>
+    <comment>Clear logs confirmation message</comment>
+  </data>
+  
+  <!-- Tooltips -->
+  <data name="Tooltip_ToggleSidebar" xml:space="preserve">
+    <value>Toggle Sidebar</value>
+    <comment>Toggle sidebar tooltip</comment>
+  </data>
+  <data name="Tooltip_ToggleBottomPanel" xml:space="preserve">
+    <value>Toggle Bottom Panel</value>
+    <comment>Toggle bottom panel tooltip</comment>
+  </data>
+  <data name="Tooltip_SwitchTheme" xml:space="preserve">
+    <value>Switch Theme</value>
+    <comment>Switch theme tooltip</comment>
+  </data>
+</root>

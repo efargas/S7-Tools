@@ -11,6 +11,79 @@ applyTo:
 
 Patterns and practices for implementing LogViewer systems in .NET Avalonia applications with proper architecture and performance considerations.
 
+## 🚨 CRITICAL: Project Configuration Requirements
+
+### Project File Configuration Pattern
+**ALWAYS** ensure these properties are present in ALL .csproj files to prevent compilation issues:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>
+```
+
+**CRITICAL**: `ImplicitUsings` must be enabled to prevent 100+ compilation errors from missing using statements.
+
+### EditorConfig Requirements
+**ALWAYS** maintain comprehensive .editorconfig with memory optimization rules:
+
+```ini
+# Memory optimization rules - REQUIRED
+csharp_style_prefer_null_check_over_type_check = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
+dotnet_diagnostic.IDE0041.severity = warning # Use 'is null' check
+dotnet_diagnostic.IDE0150.severity = warning # Prefer 'null' check over type check
+
+# Performance rules - REQUIRED
+dotnet_diagnostic.CA1805.severity = warning # Avoid unnecessary initialization
+dotnet_diagnostic.CA1822.severity = suggestion # Mark members as static
+dotnet_diagnostic.CA1825.severity = warning # Avoid zero-length array allocations
+```
+
+### Null Check Pattern (MEMORY OPTIMIZED)
+**ALWAYS** use `is null` and `is not null` instead of `== null` and `!= null` for better memory performance:
+
+```csharp
+// CORRECT: Memory-optimized null checking
+if (value is null)
+    throw new ArgumentNullException(nameof(value));
+
+if (result is not null)
+    return result.Value;
+
+// WRONG: Less efficient null checking
+if (value == null) // Don't use this
+if (result != null) // Don't use this
+```
+
+### Avalonia Dispatcher Compatibility Pattern
+**CRITICAL**: Avalonia DispatcherOperation doesn't support ConfigureAwait - handle properly:
+
+```csharp
+// CORRECT: Avalonia-compatible async patterns
+public async Task InvokeOnUIThreadAsync(Action action)
+{
+    if (IsUIThread)
+    {
+        action();
+    }
+    else
+    {
+        await Dispatcher.UIThread.InvokeAsync(action); // No ConfigureAwait
+    }
+}
+
+// WRONG: Will cause compilation errors
+await Dispatcher.UIThread.InvokeAsync(action).ConfigureAwait(false); // Don't do this
+```
+
 ## Architecture Patterns
 
 ### Additive-Only Integration Pattern
@@ -441,3 +514,90 @@ public class PlcDataService : ITagRepository, IS7ConnectionProvider
 ```
 
 Add logging calls without changing existing method signatures or behavior.
+
+## 🔧 Build Validation & Troubleshooting
+
+### Mandatory Build Validation Pattern
+**ALWAYS** validate build after any changes to prevent compilation issues:
+
+```bash
+# REQUIRED: Validate build after changes
+cd src
+dotnet build --verbosity quiet
+
+# Expected result: Build succeeded with warnings only (no errors)
+```
+
+### Common Compilation Issues & Solutions
+
+#### Issue: 101+ "using" statement errors
+**Cause**: Missing `<ImplicitUsings>enable</ImplicitUsings>` in .csproj files
+**Solution**: Add ImplicitUsings to ALL project files
+
+#### Issue: DispatcherOperation ConfigureAwait errors
+**Cause**: Avalonia DispatcherOperation doesn't support ConfigureAwait
+**Solution**: Remove `.ConfigureAwait(false)` from Dispatcher calls
+
+#### Issue: CA1805 warnings about unnecessary initialization
+**Cause**: Fields initialized to default values explicitly
+**Solution**: Remove explicit initialization or suppress warning
+
+```csharp
+// WRONG: Explicit default initialization
+private bool _isSelected = false;
+private int _order = 0;
+
+// CORRECT: Let compiler handle defaults
+private bool _isSelected;
+private int _order;
+```
+
+### Project Structure Validation Pattern
+**ALWAYS** ensure consistent project structure:
+
+```
+src/
+├── S7Tools/                          # Main UI project
+│   ├── S7Tools.csproj                # ImplicitUsings=true
+├── S7Tools.Core/                     # Core models
+│   ├── S7Tools.Core.csproj           # ImplicitUsings=true
+├── S7Tools.Infrastructure.Logging/   # Logging infrastructure
+│   ├── S7Tools.Infrastructure.Logging.csproj # ImplicitUsings=true
+└── S7Tools.sln                      # All projects referenced
+```
+
+### Solution File Validation Pattern
+**ALWAYS** ensure all projects are properly referenced in solution:
+
+```xml
+<!-- REQUIRED: All projects must be in solution -->
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools", "S7Tools\S7Tools.csproj"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools.Core", "S7Tools.Core\S7Tools.Core.csproj"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools.Infrastructure.Logging", "S7Tools.Infrastructure.Logging\S7Tools.Infrastructure.Logging.csproj"
+```
+
+### Package Reference Validation Pattern
+**ALWAYS** ensure consistent package versions across projects:
+
+```xml
+<!-- REQUIRED: Consistent Microsoft.Extensions.Logging versions -->
+<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+```
+
+## 🚨 CRITICAL CHECKLIST
+
+Before any code commit, **ALWAYS** verify:
+
+- [ ] ✅ All .csproj files have `<ImplicitUsings>enable</ImplicitUsings>`
+- [ ] ✅ All .csproj files have `<TreatWarningsAsErrors>false</TreatWarningsAsErrors>`
+- [ ] ✅ .editorconfig contains memory optimization rules
+- [ ] ✅ `dotnet build` succeeds with warnings only (no errors)
+- [ ] ✅ All projects referenced in solution file
+- [ ] ✅ No `ConfigureAwait(false)` on Avalonia Dispatcher calls
+- [ ] ✅ Use `is null` and `is not null` for null checks
+- [ ] ✅ Circular buffer limits implemented for collections
+- [ ] ✅ Proper disposal patterns for all resources
+
+**FAILURE TO FOLLOW THIS CHECKLIST WILL RESULT IN COMPILATION ERRORS AND PROJECT DELAYS**
