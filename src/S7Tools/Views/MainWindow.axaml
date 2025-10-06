@@ -108,14 +108,14 @@
                             <DataTemplate>
                                 <Grid Width="48" Height="48">
                                     <!-- Selection indicator (left border) -->
-                                    <Border Width="2" 
-                                            Height="48" 
-                                            Background="#007ACC" 
+                                    <Border Width="2"
+                                            Height="48"
+                                            Background="#007ACC"
                                             HorizontalAlignment="Left"
                                             IsVisible="{Binding IsSelected}" />
-                                    
+
                                     <!-- Button -->
-                                    <Button Width="48" 
+                                    <Button Width="48"
                                             Height="48"
                                             Padding="0"
                                             BorderThickness="0"
@@ -134,7 +134,7 @@
                                                 <Setter Property="Background" Value="Transparent" />
                                             </Style>
                                         </Button.Styles>
-                                        <icons:Icon Width="24" 
+                                        <icons:Icon Width="24"
                                                    Height="24"
                                                    Value="{Binding IconPath}"
                                                    Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}">
@@ -153,9 +153,9 @@
                 </Border>
 
                 <!-- Sidebar -->
-                <Border Grid.Column="1" 
-                        Background="#252526" 
-                        BorderBrush="#464647" 
+                <Border Grid.Column="1"
+                        Background="#252526"
+                        BorderBrush="#464647"
                         BorderThickness="0,0,1,0"
                         Width="300"
                         IsVisible="{Binding IsSidebarVisible}">
@@ -164,43 +164,43 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        
+
                         <!-- Sidebar Header -->
-                        <Border Grid.Row="0" 
-                                Background="#2D2D30" 
-                                Height="35" 
-                                BorderBrush="#464647" 
+                        <Border Grid.Row="0"
+                                Background="#2D2D30"
+                                Height="35"
+                                BorderBrush="#464647"
                                 BorderThickness="0,0,0,1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                
-                                <TextBlock Grid.Column="0" 
-                                          Text="{Binding SidebarTitle}" 
-                                          Foreground="#CCCCCC" 
-                                          FontSize="11" 
-                                          FontWeight="Bold" 
-                                          VerticalAlignment="Center" 
+
+                                <TextBlock Grid.Column="0"
+                                          Text="{Binding SidebarTitle}"
+                                          Foreground="#CCCCCC"
+                                          FontSize="11"
+                                          FontWeight="Bold"
+                                          VerticalAlignment="Center"
                                           Margin="12,0" />
-                                
-                                <Button Grid.Column="1" 
-                                        Background="Transparent" 
-                                        BorderThickness="0" 
-                                        Width="24" 
+
+                                <Button Grid.Column="1"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Width="24"
                                         Height="24"
                                         Margin="4"
                                         Command="{Binding ToggleSidebarCommand}"
                                         ToolTip.Tip="Collapse Sidebar">
-                                    <icons:Icon Value="fa-solid fa-times" 
-                                               Width="12" 
-                                               Height="12" 
+                                    <icons:Icon Value="fa-solid fa-times"
+                                               Width="12"
+                                               Height="12"
                                                Foreground="#CCCCCC" />
                                 </Button>
                             </Grid>
                         </Border>
-                        
+
                         <!-- Sidebar Content -->
                         <ContentControl Grid.Row="1" Content="{Binding CurrentContent}" />
                     </Grid>
@@ -220,80 +220,85 @@
                 </Grid.RowDefinitions>
 
                 <!-- Bottom Panel Header (Always Visible) -->
-                <Border Grid.Row="0" 
-                        Background="#2D2D30" 
-                        Height="35" 
-                        BorderBrush="#464647" 
+                <Border Grid.Row="0"
+                        Background="#2D2D30"
+                        Height="35"
+                        BorderBrush="#464647"
                         BorderThickness="0,1,0,1">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        
-                        <!-- Tab Control for Bottom Panel -->
-                        <TabControl Grid.Column="0"
-                                   ItemsSource="{Binding Tabs}" 
-                                   SelectedItem="{Binding SelectedTab}"
-                                   Background="Transparent" 
-                                   BorderThickness="0"
-                                   TabStripPlacement="Top">
-                            <TabControl.Styles>
-                                <Style Selector="TabControl">
-                                    <Setter Property="Background" Value="Transparent" />
-                                </Style>
-                                <Style Selector="TabItem">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderThickness" Value="0" />
-                                    <Setter Property="Padding" Value="0" />
-                                    <Setter Property="Margin" Value="0" />
-                                </Style>
-                                <Style Selector="TabItem:selected">
-                                    <Setter Property="Background" Value="Transparent" />
-                                    <Setter Property="BorderThickness" Value="0,0,0,2" />
-                                    <Setter Property="BorderBrush" Value="#007ACC" />
-                                </Style>
-                            </TabControl.Styles>
-                            <TabControl.ItemTemplate>
+                        <!-- Bottom Panel Items (Activity Bar Style) -->
+                        <ItemsControl Grid.Column="0" ItemsSource="{Binding Tabs}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button Background="Transparent" 
-                                            BorderThickness="0" 
-                                            Padding="0"
-                                            Command="{Binding $parent[Window].DataContext.SelectBottomPanelTabCommand}"
-                                            CommandParameter="{Binding}">
-                                        <TextBlock Text="{Binding Header}" 
-                                                  Foreground="#CCCCCC" 
-                                                  FontSize="11" 
-                                                  Margin="12,8,12,8" />
-                                    </Button>
+                                    <Grid Height="35">
+                                        <!-- Selection indicator (bottom border) -->
+                                        <Border Height="2"
+                                                Background="#007ACC"
+                                                VerticalAlignment="Bottom"
+                                                IsVisible="{Binding IsSelected}" />
+
+                                        <!-- Button -->
+                                        <Button Background="Transparent"
+                                                BorderThickness="0"
+                                                Padding="12,8,12,8"
+                                                Command="{Binding $parent[Window].DataContext.SelectBottomPanelTabCommand}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip.Tip="{Binding Header}">
+                                            <Button.Styles>
+                                                <Style Selector="Button">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                </Style>
+                                                <Style Selector="Button:pointerover">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                </Style>
+                                                <Style Selector="Button:pressed">
+                                                    <Setter Property="Background" Value="Transparent" />
+                                                </Style>
+                                            </Button.Styles>
+                                            <TextBlock Text="{Binding Header}"
+                                                      FontSize="11"
+                                                      Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}">
+                                                <TextBlock.Styles>
+                                                    <!-- White on hover -->
+                                                    <Style Selector="TextBlock:pointerover">
+                                                        <Setter Property="Foreground" Value="#FFFFFF" />
+                                                    </Style>
+                                                </TextBlock.Styles>
+                                            </TextBlock>
+                                        </Button>
+                                    </Grid>
                                 </DataTemplate>
-                            </TabControl.ItemTemplate>
-                            <TabControl.ContentTemplate>
-                                <DataTemplate>
-                                    <!-- Content will be shown in the main content area below -->
-                                </DataTemplate>
-                            </TabControl.ContentTemplate>
-                        </TabControl>
-                        
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
                         <!-- Collapse/Expand Button (Right Side) -->
                         <Button Grid.Column="1"
-                                Command="{Binding ToggleBottomPanelCommand}" 
-                                Background="Transparent" 
-                                BorderThickness="0" 
+                                Command="{Binding ToggleBottomPanelCommand}"
+                                Background="Transparent"
+                                BorderThickness="0"
                                 Height="35"
                                 Width="35"
                                 Padding="0">
-                            <icons:Icon Value="fa-solid fa-chevron-down" 
-                                       Width="12" 
-                                       Height="12" 
-                                       Foreground="#CCCCCC" 
+                            <icons:Icon Value="fa-solid fa-chevron-down"
+                                       Width="12"
+                                       Height="12"
+                                       Foreground="#CCCCCC"
                                        VerticalAlignment="Center" />
                         </Button>
                     </Grid>
                 </Border>
 
                 <!-- Bottom Panel Content -->
-                <Border Grid.Row="1" 
+                <Border Grid.Row="1"
                         Background="#1E1E1E">
                     <ScrollViewer>
                         <ContentControl Content="{Binding SelectedTab.Content}" />
@@ -308,11 +313,11 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    
+
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="8,0">
                         <TextBlock Text="Ready" Foreground="White" VerticalAlignment="Center" FontSize="12" />
                     </StackPanel>
-                    
+
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0">
                         <TextBlock Text="S7Tools" Foreground="White" VerticalAlignment="Center" FontSize="12" />
                     </StackPanel>

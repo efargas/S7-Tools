@@ -219,6 +219,12 @@ public class MainWindowViewModel : ReactiveObject
         };
         SelectedTab = Tabs.FirstOrDefault();
         
+        // Set the first tab as selected
+        if (SelectedTab != null)
+        {
+        SelectedTab.IsSelected = true;
+        }
+        
         // Initialize commands
         ToggleBottomPanelCommand = ReactiveCommand.Create(() =>
         {
@@ -267,14 +273,33 @@ public class MainWindowViewModel : ReactiveObject
         {
         if (tab != null)
         {
-        // VSCode behavior: clicking on tab expands bottom panel if collapsed
+        var currentSelectedTab = SelectedTab;
+        
+        // VSCode behavior: clicking on selected tab toggles bottom panel
+        if (currentSelectedTab != null && currentSelectedTab.Id == tab.Id)
+        {
+        // Toggle bottom panel visibility
+        BottomPanelGridLength = (BottomPanelGridLength.Value == 0) 
+        ? new GridLength(200, GridUnitType.Pixel) 
+        : new GridLength(0, GridUnitType.Pixel);
+        }
+        else
+        {
+        // Select new tab and ensure bottom panel is visible
         if (BottomPanelGridLength.Value == 0)
         {
         BottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
         }
         
+        // Update IsSelected property on all tabs
+        foreach (var tabItem in Tabs)
+        {
+        tabItem.IsSelected = (tabItem.Id == tab.Id);
+        }
+        
         // Select the tab
         SelectedTab = tab;
+        }
         }
         });
         
