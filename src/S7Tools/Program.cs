@@ -2,14 +2,15 @@ using System;
 using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
-using S7Tools.Core.Services.Interfaces;
-using S7Tools.Services;
-using S7Tools.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using S7Tools.Extensions;
 using S7Tools.ViewModels;
 using S7Tools.Views;
 using Splat.Microsoft.Extensions.DependencyInjection;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
+using S7Tools.Infrastructure.Logging.Providers.Extensions;
+using S7Tools.Infrastructure.Logging.Core.Models;
 
 
 namespace S7Tools;
@@ -39,20 +40,36 @@ sealed class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        // Services
-        services.AddSingleton<IGreetingService, GreetingService>();
-        services.AddSingleton<IClipboardService, ClipboardService>();
-        services.AddSingleton<IDialogService, DialogService>();
-        services.AddSingleton<ITagRepository, PlcDataService>();
-        services.AddSingleton<IS7ConnectionProvider, PlcDataService>();
+        // Add logging with DataStore provider
+        services.AddLogging(builder =>
+        {
+            builder.SetMinimumLevel(LogLevel.Debug);
+            
+            // Add DataStore logging provider
+            builder.AddDataStore(options =>
+            {
+                options.MaxEntries = 10000;
+            }, config =>
+            {
+                // Configure logger settings
+                config.LogLevel = LogLevel.Debug;
+                config.IncludeScopes = true;
+                config.CaptureProperties = true;
+                config.FormatMessages = true;
+                config.CaptureStackTrace = true;
+                config.MaxMessageLength = 10000;
+            });
+        });
 
-        // ViewModels
-        services.AddSingleton<MainWindowViewModel>();
+        // Add S7Tools services using the extension method
+        services.AddS7ToolsServices(options =>
+        {
+            options.MaxEntries = 10000;
+        });
 
         // Configure Splat to use the Microsoft.Extensions.DependencyInjection container.
         // This must be done during service configuration and before the service provider is built.
         services.UseMicrosoftDependencyResolver();
-
 
         // Views
         services.AddSingleton<MainWindow>(provider => new MainWindow

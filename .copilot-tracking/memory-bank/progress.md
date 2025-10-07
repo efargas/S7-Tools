@@ -274,9 +274,9 @@ tests/
 ## Next Development Priorities
 
 ### **Immediate (Next 1-2 Sessions)**
-1. **Complete Memory Bank Setup** - Finish task management system
-2. **Testing Framework Implementation** - Set up xUnit and initial tests
-3. **Settings Persistence** - Implement configuration save/load
+1. **UI & Logging System Fixes** - Fix logging display and UI control issues (TASK007)
+2. **Complete Memory Bank Setup** - Finish task management system
+3. **Testing Framework Implementation** - Set up xUnit and initial tests
 
 ### **Short-term (Next 2-4 Sessions)**
 1. **PLC Communication Core** - Implement S7-1200 protocol

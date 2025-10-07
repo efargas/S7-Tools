@@ -15,6 +15,7 @@ using S7Tools.Views;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace S7Tools.ViewModels;
 
@@ -30,6 +31,9 @@ public class MainWindowViewModel : ReactiveObject
     private readonly IActivityBarService _activityBarService;
     private readonly ILayoutService _layoutService;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly ILogDataStore? _logDataStore;
+    private readonly IUIThreadService? _uiThreadService;
+    private readonly IFileDialogService? _fileDialogService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
@@ -245,6 +249,51 @@ public class MainWindowViewModel : ReactiveObject
     }
 
     /// <summary>
+    /// Gets a value indicating whether the bottom panel is expanded.
+    /// </summary>
+    public bool IsBottomPanelExpanded => BottomPanelGridLength.Value > 35;
+
+    private string _statusMessage = "Ready";
+    /// <summary>
+    /// Gets or sets the status message.
+    /// </summary>
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
+    }
+
+    private string _logStatsMessage = "";
+    /// <summary>
+    /// Gets or sets the log statistics message.
+    /// </summary>
+    public string LogStatsMessage
+    {
+        get => _logStatsMessage;
+        set => this.RaiseAndSetIfChanged(ref _logStatsMessage, value);
+    }
+
+    private bool _showLogStats = false;
+    /// <summary>
+    /// Gets or sets a value indicating whether to show log statistics.
+    /// </summary>
+    public bool ShowLogStats
+    {
+        get => _showLogStats;
+        set => this.RaiseAndSetIfChanged(ref _showLogStats, value);
+    }
+
+    private string _lastButtonPressed = "";
+    /// <summary>
+    /// Gets or sets the last button pressed message.
+    /// </summary>
+    public string LastButtonPressed
+    {
+        get => _lastButtonPressed;
+        set => this.RaiseAndSetIfChanged(ref _lastButtonPressed, value);
+    }
+
+    /// <summary>
     /// Gets the bottom panel tabs.
     /// </summary>
     public ObservableCollection<PanelTabItem> Tabs { get; }
@@ -384,6 +433,9 @@ public class MainWindowViewModel : ReactiveObject
         /// <param name="activityBarService">The activity bar service.</param>
         /// <param name="layoutService">The layout service.</param>
         /// <param name="logger">The logger instance.</param>
+        /// <param name="logDataStore">The log data store (optional).</param>
+        /// <param name="uiThreadService">The UI thread service (optional).</param>
+        /// <param name="fileDialogService">The file dialog service (optional).</param>
         public MainWindowViewModel(
         IGreetingService greetingService, 
         IClipboardService clipboardService, 
@@ -391,7 +443,10 @@ public class MainWindowViewModel : ReactiveObject
         ITagRepository tagRepository,
         IActivityBarService activityBarService,
         ILayoutService layoutService,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<MainWindowViewModel> logger,
+        ILogDataStore? logDataStore = null,
+        IUIThreadService? uiThreadService = null,
+        IFileDialogService? fileDialogService = null)
         {
         _greetingService = greetingService;
         _clipboardService = clipboardService;
@@ -400,6 +455,9 @@ public class MainWindowViewModel : ReactiveObject
         _activityBarService = activityBarService;
         _layoutService = layoutService;
         _logger = logger;
+        _logDataStore = logDataStore;
+        _uiThreadService = uiThreadService;
+        _fileDialogService = fileDialogService;
         
         // Activity bar items are already initialized by the service
         // No need to add them again
@@ -423,9 +481,18 @@ public class MainWindowViewModel : ReactiveObject
         // Initialize commands
         ToggleBottomPanelCommand = ReactiveCommand.Create(() =>
         {
-        BottomPanelGridLength = (BottomPanelGridLength.Value == 0) 
-        ? new GridLength(200, GridUnitType.Pixel) 
-        : new GridLength(0, GridUnitType.Pixel);
+            // VSCode-like behavior: Toggle between collapsed (35px for tab headers) and expanded (200px default)
+            if (BottomPanelGridLength.Value <= 35)
+            {
+                // Expand to previous height or default 200px
+                BottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
+            }
+            else
+            {
+                // Collapse to show only tab headers (35px)
+                BottomPanelGridLength = new GridLength(35, GridUnitType.Pixel);
+            }
+            this.RaisePropertyChanged(nameof(IsBottomPanelExpanded));
         });
 
         ToggleSidebarCommand = ReactiveCommand.Create(() =>
@@ -466,36 +533,43 @@ public class MainWindowViewModel : ReactiveObject
 
         SelectBottomPanelTabCommand = ReactiveCommand.Create<PanelTabItem>(tab =>
         {
-        if (tab != null)
-        {
-        var currentSelectedTab = SelectedTab;
-        
-        // VSCode behavior: clicking on selected tab toggles bottom panel
-        if (currentSelectedTab != null && currentSelectedTab.Id == tab.Id)
-        {
-        // Toggle bottom panel visibility
-        BottomPanelGridLength = (BottomPanelGridLength.Value == 0) 
-        ? new GridLength(200, GridUnitType.Pixel) 
-        : new GridLength(0, GridUnitType.Pixel);
-        }
-        else
-        {
-        // Select new tab and ensure bottom panel is visible
-        if (BottomPanelGridLength.Value == 0)
-        {
-        BottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
-        }
-        
-        // Update IsSelected property on all tabs
-        foreach (var tabItem in Tabs)
-        {
-        tabItem.IsSelected = (tabItem.Id == tab.Id);
-        }
-        
-        // Select the tab
-        SelectedTab = tab;
-        }
-        }
+            if (tab != null)
+            {
+                var currentSelectedTab = SelectedTab;
+                
+                // VSCode behavior: clicking on selected tab toggles bottom panel
+                if (currentSelectedTab != null && currentSelectedTab.Id == tab.Id)
+                {
+                    // Toggle bottom panel between collapsed (35px) and expanded (200px)
+                    if (BottomPanelGridLength.Value <= 35)
+                    {
+                        BottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
+                    }
+                    else
+                    {
+                        BottomPanelGridLength = new GridLength(35, GridUnitType.Pixel);
+                    }
+                    this.RaisePropertyChanged(nameof(IsBottomPanelExpanded));
+                }
+                else
+                {
+                    // Select new tab and ensure bottom panel is expanded
+                    if (BottomPanelGridLength.Value <= 35)
+                    {
+                        BottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
+                        this.RaisePropertyChanged(nameof(IsBottomPanelExpanded));
+                    }
+                    
+                    // Update IsSelected property on all tabs
+                    foreach (var tabItem in Tabs)
+                    {
+                        tabItem.IsSelected = (tabItem.Id == tab.Id);
+                    }
+                    
+                    // Select the tab
+                    SelectedTab = tab;
+                }
+            }
         });
         
         ExitCommand = ReactiveCommand.CreateFromTask(async () =>
@@ -540,31 +614,49 @@ public class MainWindowViewModel : ReactiveObject
         TestTraceLogCommand = ReactiveCommand.Create(() =>
         {
             _logger.LogTrace("This is a TRACE level log message generated at {Timestamp}", DateTime.Now);
+            LastButtonPressed = "TRACE Log Generated";
+            StatusMessage = "Generated TRACE log message";
+            ClearButtonPressedAfterDelay();
         });
 
         TestDebugLogCommand = ReactiveCommand.Create(() =>
         {
             _logger.LogDebug("This is a DEBUG level log message with some debug info: {DebugData}", new { UserId = 123, Action = "ButtonClick" });
+            LastButtonPressed = "DEBUG Log Generated";
+            StatusMessage = "Generated DEBUG log message";
+            ClearButtonPressedAfterDelay();
         });
 
         TestInfoLogCommand = ReactiveCommand.Create(() =>
         {
             _logger.LogInformation("This is an INFORMATION level log message. User performed action: {Action}", "Test Info Log");
+            LastButtonPressed = "INFO Log Generated";
+            StatusMessage = "Generated INFORMATION log message";
+            ClearButtonPressedAfterDelay();
         });
 
         TestWarningLogCommand = ReactiveCommand.Create(() =>
         {
             _logger.LogWarning("This is a WARNING level log message. Something might need attention: {Warning}", "Test warning condition");
+            LastButtonPressed = "WARNING Log Generated";
+            StatusMessage = "Generated WARNING log message";
+            ClearButtonPressedAfterDelay();
         });
 
         TestErrorLogCommand = ReactiveCommand.Create(() =>
         {
             _logger.LogError("This is an ERROR level log message. An error occurred: {Error}", "Simulated error for testing");
+            LastButtonPressed = "ERROR Log Generated";
+            StatusMessage = "Generated ERROR log message";
+            ClearButtonPressedAfterDelay();
         });
 
         TestCriticalLogCommand = ReactiveCommand.Create(() =>
         {
             _logger.LogCritical("This is a CRITICAL level log message. System is in critical state: {CriticalIssue}", "Simulated critical issue");
+            LastButtonPressed = "CRITICAL Log Generated";
+            StatusMessage = "Generated CRITICAL log message";
+            ClearButtonPressedAfterDelay();
         });
 
         ExportLogsCommand = ReactiveCommand.CreateFromTask(async () =>
@@ -582,18 +674,72 @@ public class MainWindowViewModel : ReactiveObject
         });
 
         // Settings Commands
-        BrowseDefaultLogPathCommand = ReactiveCommand.Create(() =>
+        BrowseDefaultLogPathCommand = ReactiveCommand.CreateFromTask(async () =>
         {
-            // TODO: Implement folder browser dialog
-            SettingsStatusMessage = "Browse for default log path - Feature coming soon";
-            _logger.LogInformation("Browse default log path requested");
+            try
+            {
+                if (_fileDialogService != null)
+                {
+                    var selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                        "Select Default Log Path", 
+                        DefaultLogPath);
+                    
+                    if (!string.IsNullOrEmpty(selectedPath))
+                    {
+                        DefaultLogPath = selectedPath;
+                        SettingsStatusMessage = "Default log path updated successfully";
+                        _logger.LogInformation("Default log path updated to: {Path}", selectedPath);
+                    }
+                    else
+                    {
+                        SettingsStatusMessage = "Folder selection cancelled";
+                    }
+                }
+                else
+                {
+                    SettingsStatusMessage = "File dialog service not available";
+                    _logger.LogWarning("File dialog service not available for default log path selection");
+                }
+            }
+            catch (Exception ex)
+            {
+                SettingsStatusMessage = $"Failed to browse for default log path: {ex.Message}";
+                _logger.LogError(ex, "Failed to browse for default log path");
+            }
         });
 
-        BrowseExportPathCommand = ReactiveCommand.Create(() =>
+        BrowseExportPathCommand = ReactiveCommand.CreateFromTask(async () =>
         {
-            // TODO: Implement folder browser dialog
-            SettingsStatusMessage = "Browse for export path - Feature coming soon";
-            _logger.LogInformation("Browse export path requested");
+            try
+            {
+                if (_fileDialogService != null)
+                {
+                    var selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                        "Select Export Path", 
+                        ExportPath);
+                    
+                    if (!string.IsNullOrEmpty(selectedPath))
+                    {
+                        ExportPath = selectedPath;
+                        SettingsStatusMessage = "Export path updated successfully";
+                        _logger.LogInformation("Export path updated to: {Path}", selectedPath);
+                    }
+                    else
+                    {
+                        SettingsStatusMessage = "Folder selection cancelled";
+                    }
+                }
+                else
+                {
+                    SettingsStatusMessage = "File dialog service not available";
+                    _logger.LogWarning("File dialog service not available for export path selection");
+                }
+            }
+            catch (Exception ex)
+            {
+                SettingsStatusMessage = $"Failed to browse for export path: {ex.Message}";
+                _logger.LogError(ex, "Failed to browse for export path");
+            }
         });
 
         SaveSettingsCommand = ReactiveCommand.Create(() =>
@@ -709,21 +855,29 @@ public class MainWindowViewModel : ReactiveObject
         SidebarTitle = "EXPLORER";
         CurrentContent = new HomeViewModel();
         DetailContent = new LoggingTestView() { DataContext = this };
+        ShowLogStats = false;
         break;
         case "connections":
         SidebarTitle = "CONNECTIONS";
         CurrentContent = new ConnectionsViewModel();
         DetailContent = ((ConnectionsViewModel)CurrentContent).DetailContent;
+        ShowLogStats = false;
         break;
         case "logviewer":
         SidebarTitle = "LOG VIEWER";
         CurrentContent = new HomeViewModel(); // TODO: Create LogViewerViewModel
         DetailContent = "Log Viewer functionality coming soon...";
+        ShowLogStats = true;
+        if (_logDataStore != null)
+        {
+            LogStatsMessage = $"Logs: {_logDataStore.Count}";
+        }
         break;
         case "settings":
         SidebarTitle = "SETTINGS";
         CurrentContent = new SettingsViewModel();
         DetailContent = new SettingsConfigView() { DataContext = this };
+        ShowLogStats = false;
         break;
         default:
         SidebarTitle = "EXPLORER";
@@ -765,7 +919,52 @@ public class MainWindowViewModel : ReactiveObject
         /// <returns>The LogViewer view.</returns>
         private object CreateLogViewerContent()
         {
-            // For now, return a placeholder. This will be properly implemented with DI.
-            return new LogViewerView();
+            try
+            {
+                // Create LogViewerView with proper DataContext from DI
+                var logViewerView = new LogViewerView();
+                
+                // If we have the required services, create a proper LogViewerViewModel
+                if (_logDataStore != null && _uiThreadService != null)
+                {
+                    var logViewerViewModel = new LogViewerViewModel(
+                        _logDataStore,
+                        _uiThreadService,
+                        _clipboardService,
+                        _dialogService
+                    );
+                    logViewerView.DataContext = logViewerViewModel;
+                }
+                else
+                {
+                    // Use design-time ViewModel if services are not available
+                    logViewerView.DataContext = new LogViewerViewModel();
+                    _logger.LogWarning("LogViewer created with design-time services due to missing dependencies");
+                }
+                
+                return logViewerView;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create LogViewerViewModel");
+                // Return a simple placeholder if we can't create the proper view
+                return new TextBlock 
+                { 
+                    Text = "LogViewer initialization failed. Check logs for details.", 
+                    Foreground = Brushes.Red,
+                    Margin = new Avalonia.Thickness(10),
+                    TextWrapping = Avalonia.Media.TextWrapping.Wrap
+                };
+            }
+        }
+
+        /// <summary>
+        /// Clears the button pressed message after a delay.
+        /// </summary>
+        private async void ClearButtonPressedAfterDelay()
+        {
+            await Task.Delay(3000); // Clear after 3 seconds
+            LastButtonPressed = "";
+            StatusMessage = "Ready";
         }
 }

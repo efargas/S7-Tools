@@ -1,9 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Providers.Extensions;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Extensions;
 
@@ -37,6 +40,37 @@ public static class ServiceCollectionExtensions
         // Add Theme Service
         services.TryAddSingleton<IThemeService, ThemeService>();
 
+        // Add Settings Service
+        services.TryAddSingleton<ISettingsService, SettingsService>();
+
+        // Add Dialog Service
+        services.TryAddTransient<IDialogService, DialogService>();
+
+        // Add Clipboard Service
+        services.TryAddTransient<IClipboardService, ClipboardService>();
+
+        // Add File Dialog Service
+        services.TryAddTransient<IFileDialogService>(provider =>
+        {
+            var logger = provider.GetRequiredService<ILogger<AvaloniaFileDialogService>>();
+            return new AvaloniaFileDialogService(logger, () =>
+            {
+                // Get the main window from the application
+                if (Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    return desktop.MainWindow;
+                }
+                return null;
+            });
+        });
+
+        // Add Greeting Service
+        services.TryAddSingleton<IGreetingService, GreetingService>();
+
+        // Add PLC Services
+        services.TryAddSingleton<ITagRepository, PlcDataService>();
+        services.TryAddSingleton<IS7ConnectionProvider, PlcDataService>();
+
         return services;
     }
 
@@ -60,6 +94,27 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Adds S7Tools ViewModels to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection to add ViewModels to.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsViewModels(this IServiceCollection services)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        // Add ViewModels
+        services.TryAddSingleton<MainWindowViewModel>();
+        services.TryAddTransient<LogViewerViewModel>();
+        services.TryAddTransient<HomeViewModel>();
+        services.TryAddTransient<ConnectionsViewModel>();
+        services.TryAddTransient<SettingsViewModel>();
+        services.TryAddTransient<AboutViewModel>();
+
+        return services;
+    }
+
+    /// <summary>
     /// Adds all S7Tools services including foundation services and logging.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
@@ -77,6 +132,9 @@ public static class ServiceCollectionExtensions
 
         // Add logging services
         services.AddS7ToolsLogging(configureDataStore);
+
+        // Add ViewModels
+        services.AddS7ToolsViewModels();
 
         return services;
     }

@@ -27,12 +27,35 @@
         <Setter Property="Background" Value="#2D2D2D" />
     </Style>
 
-    <Style Selector="GridSplitter:hover">
-        <Setter Property="Background" Value="#007ACC" />
+    <!-- GridSplitter Styles for VSCode-like appearance -->
+    <Style Selector="GridSplitter">
+        <Setter Property="Background" Value="#464647" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Focusable" Value="False" />
     </Style>
 
-    <Style Selector="GridSplitter:drag">
+    <Style Selector="GridSplitter:pointerover">
         <Setter Property="Background" Value="#007ACC" />
+        <Setter Property="Opacity" Value="0.8" />
+    </Style>
+
+    <Style Selector="GridSplitter:pressed">
+        <Setter Property="Background" Value="#007ACC" />
+        <Setter Property="Opacity" Value="1.0" />
+    </Style>
+
+    <!-- Horizontal GridSplitter (for bottom panel) -->
+    <Style Selector="GridSplitter[ResizeDirection=Rows]">
+        <Setter Property="Height" Value="4" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Cursor" Value="SizeNorthSouth" />
+    </Style>
+
+    <!-- Vertical GridSplitter (for sidebar) -->
+    <Style Selector="GridSplitter[ResizeDirection=Columns]">
+        <Setter Property="Width" Value="4" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Cursor" Value="SizeWestEast" />
     </Style>
 
     <Style Selector="TabItem">
@@ -41,5 +64,133 @@
 
     <Style Selector="TabItem:selected">
         <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <!-- Smooth transitions for panel animations -->
+    <Style Selector="Border.panel-content">
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- Grid transitions for smooth resizing -->
+    <Style Selector="Grid">
+        <Setter Property="Transitions">
+            <Transitions>
+                <ThicknessTransition Property="Margin" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <!-- DatePicker Styles for dark theme -->
+    <Style Selector="DatePicker">
+        <Setter Property="Background" Value="#3C3C3C" />
+        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style Selector="DatePicker:pointerover">
+        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <Style Selector="DatePicker:focus">
+        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <!-- DatePicker Button Styles -->
+    <Style Selector="DatePicker Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="DatePicker Button:pointerover">
+        <Setter Property="Background" Value="#007ACC" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+
+    <!-- ComboBox Styles for consistency -->
+    <Style Selector="ComboBox">
+        <Setter Property="Background" Value="#3C3C3C" />
+        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style Selector="ComboBox:pointerover">
+        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <Style Selector="ComboBox:focus">
+        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <!-- TextBox Styles for consistency -->
+    <Style Selector="TextBox">
+        <Setter Property="Background" Value="#3C3C3C" />
+        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="SelectionBrush" Value="#007ACC" />
+        <Setter Property="CaretBrush" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="TextBox:pointerover">
+        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <Style Selector="TextBox:focus">
+        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <!-- Button Styles for consistency -->
+    <Style Selector="Button">
+        <Setter Property="Background" Value="#0E639C" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style Selector="Button:pointerover">
+        <Setter Property="Background" Value="#1177BB" />
+        <Setter Property="BorderBrush" Value="#1177BB" />
+    </Style>
+
+    <Style Selector="Button:pressed">
+        <Setter Property="Background" Value="#005A9E" />
+        <Setter Property="BorderBrush" Value="#005A9E" />
+    </Style>
+
+    <!-- Transparent Button Override -->
+    <Style Selector="Button.transparent">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="BorderBrush" Value="#464647" />
+    </Style>
+
+    <Style Selector="Button.transparent:pointerover">
+        <Setter Property="Background" Value="#404040" />
+        <Setter Property="BorderBrush" Value="#007ACC" />
     </Style>
 </Styles>

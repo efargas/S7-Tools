@@ -21,6 +21,17 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     private readonly IDialogService _dialogService;
     private bool _disposed = false;
 
+    /// <summary>
+    /// Initializes a new instance of the LogViewerViewModel class for design-time use.
+    /// </summary>
+    public LogViewerViewModel() : this(
+        new DesignTimeLogDataStore(),
+        new DesignTimeUIThreadService(),
+        new DesignTimeClipboardService(),
+        new DesignTimeDialogService())
+    {
+    }
+
     private ObservableCollection<LogModel> _logEntries;
     private ObservableCollection<LogModel> _filteredLogEntries;
     private string _searchText = string.Empty;
@@ -417,3 +428,73 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
         _disposed = true;
     }
 }
+
+#region Design-Time Services
+
+/// <summary>
+/// Design-time implementation of ILogDataStore for XAML previews.
+/// </summary>
+internal class DesignTimeLogDataStore : ILogDataStore
+{
+    public event PropertyChangedEventHandler? PropertyChanged;
+    public event System.Collections.Specialized.NotifyCollectionChangedEventHandler? CollectionChanged;
+
+    public IReadOnlyList<LogModel> Entries { get; } = new List<LogModel>
+    {
+        new() { Timestamp = DateTime.Now.AddMinutes(-5), Level = LogLevel.Information, Category = "S7Tools.Services", Message = "Application started successfully" },
+        new() { Timestamp = DateTime.Now.AddMinutes(-3), Level = LogLevel.Warning, Category = "S7Tools.PLC", Message = "Connection timeout, retrying..." },
+        new() { Timestamp = DateTime.Now.AddMinutes(-1), Level = LogLevel.Error, Category = "S7Tools.Data", Message = "Failed to read tag value", Exception = new InvalidOperationException("Tag not found") }
+    };
+
+    public int Count => Entries.Count;
+    public int MaxEntries => 10000;
+    public bool IsFull => false;
+
+    public void AddEntry(LogModel logEntry) { }
+    public void AddEntries(IEnumerable<LogModel> logEntries) { }
+    public void Clear() { }
+    public IEnumerable<LogModel> GetFilteredEntries(Func<LogModel, bool> filter) => Entries.Where(filter);
+    public IEnumerable<LogModel> GetEntriesInTimeRange(DateTime startTime, DateTime endTime) => Entries.Where(e => e.Timestamp >= startTime && e.Timestamp <= endTime);
+    public Task<string> ExportAsync(string format = "txt") => Task.FromResult("Design-time export data");
+    public void Dispose() { }
+}
+
+/// <summary>
+/// Design-time implementation of IUIThreadService for XAML previews.
+/// </summary>
+internal class DesignTimeUIThreadService : IUIThreadService
+{
+    public bool IsUIThread => true;
+    
+    public void InvokeOnUIThread(Action action) => action?.Invoke();
+    public Task InvokeOnUIThreadAsync(Action action) => Task.Run(action);
+    public T InvokeOnUIThread<T>(Func<T> function) => function();
+    public Task<T> InvokeOnUIThreadAsync<T>(Func<T> function) => Task.Run(function);
+    public Task InvokeOnUIThreadAsync(Func<Task> asyncAction) => asyncAction();
+    public Task<T> InvokeOnUIThreadAsync<T>(Func<Task<T>> asyncFunction) => asyncFunction();
+    public void PostToUIThread(Action action) => action?.Invoke();
+    public bool TryInvokeOnUIThread(Action action, TimeSpan timeout) { action?.Invoke(); return true; }
+    public bool TryInvokeOnUIThread<T>(Func<T> function, TimeSpan timeout, out T result) { result = function(); return true; }
+}
+
+/// <summary>
+/// Design-time implementation of IClipboardService for XAML previews.
+/// </summary>
+internal class DesignTimeClipboardService : IClipboardService
+{
+    public Task<string?> GetTextAsync() => Task.FromResult("Design-time clipboard text");
+    public Task SetTextAsync(string? text) => Task.CompletedTask;
+}
+
+/// <summary>
+/// Design-time implementation of IDialogService for XAML previews.
+/// </summary>
+internal class DesignTimeDialogService : IDialogService
+{
+    public Task ShowErrorAsync(string title, string message) => Task.CompletedTask;
+    public Task ShowInformationAsync(string title, string message) => Task.CompletedTask;
+    public Task ShowWarningAsync(string title, string message) => Task.CompletedTask;
+    public Task<bool> ShowConfirmationAsync(string title, string message) => Task.FromResult(false);
+}
+
+#endregion

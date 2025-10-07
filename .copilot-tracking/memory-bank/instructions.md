@@ -256,6 +256,60 @@ this.WhenAnyValue(x => x.SearchText)
 **Commit Messages**: Conventional commit format preferred  
 **Documentation**: Update Memory Bank files with significant changes
 
+## Research Documentation References
+
+### **Avalonia UI Documentation**
+- **Official Documentation**: https://docs.avaloniaui.net/
+- **Controls Reference**: https://docs.avaloniaui.net/docs/reference/controls/
+- **GridSplitter**: https://docs.avaloniaui.net/docs/reference/controls/gridsplitter
+- **DatePicker**: https://docs.avaloniaui.net/docs/reference/controls/datepicker
+- **File Dialogs**: https://docs.avaloniaui.net/docs/reference/controls/dialog
+- **Data Binding**: https://docs.avaloniaui.net/docs/data-binding/
+- **Styling**: https://docs.avaloniaui.net/docs/styling/
+
+### **C# and .NET Documentation**
+- **Microsoft Docs**: https://docs.microsoft.com/en-us/dotnet/
+- **C# Language Reference**: https://docs.microsoft.com/en-us/dotnet/csharp/
+- **Microsoft.Extensions.Logging**: https://docs.microsoft.com/en-us/dotnet/core/extensions/logging
+- **Custom Logging Providers**: https://docs.microsoft.com/en-us/dotnet/core/extensions/custom-logging-provider
+- **Dependency Injection**: https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection
+- **Structured Logging**: https://docs.microsoft.com/en-us/dotnet/core/extensions/logging
+
+### **ReactiveUI Documentation**
+- **Official Documentation**: https://www.reactiveui.net/docs/
+- **Commands**: https://www.reactiveui.net/docs/handbook/commands/
+- **Property Changes**: https://www.reactiveui.net/docs/handbook/view-models/
+- **Threading**: https://www.reactiveui.net/docs/handbook/scheduling/
+- **Data Binding**: https://www.reactiveui.net/docs/handbook/data-binding/
+
+### **Reference Project - LogViewerControl**
+- **Location**: `.github/agents/workspace/referent-projects/LogViewerControl/`
+- **Purpose**: Reference implementation for logging UI controls
+- **Key Components**:
+  - LogViewerControl.Avalonia - Main Avalonia control implementation
+  - LogViewerControl.Shared - Common interfaces and models
+  - Architecture patterns for real-time log display
+  - Export functionality implementations (Text, JSON, CSV)
+  - Filtering system architecture
+  - DataStore integration patterns
+- **Usage**: Study implementation patterns, service interfaces, and UI control architecture
+- **Integration**: Adapt patterns to S7Tools architecture while maintaining consistency
+
+### **Common Services Between Applications**
+- **ILogDataStore**: Circular buffer implementation for high-performance log storage
+- **IUIThreadService**: Cross-thread UI operation marshalling
+- **IFileDialogService**: Native file/folder picker dialog abstraction
+- **IClipboardService**: Cross-platform clipboard operations
+- **IDialogService**: User notification and confirmation dialogs
+- **IThemeService**: Application theming and resource management
+
+### **Resource Management Patterns**
+- **String Resources**: UIStrings.resx for localization support
+- **Theme Resources**: App.axaml resource dictionaries for consistent styling
+- **Icon Resources**: Font Awesome integration via Projektanker.Icons.Avalonia
+- **Color Schemes**: VSCode-inspired color palette definitions
+- **Style Resources**: Consistent control styling across application
+
 ## AI Agent Specific Guidance
 
 ### **Memory Bank Maintenance**
@@ -269,21 +323,24 @@ this.WhenAnyValue(x => x.SearchText)
 **Follow Existing Patterns**: Study existing code before generating new code  
 **Service Registration**: Always register new services in ServiceCollectionExtensions  
 **Error Handling**: Include comprehensive error handling in all generated code  
-**Documentation**: Generate XML documentation for all public members
+**Documentation**: Generate XML documentation for all public members  
+**Reference Project Study**: Always review LogViewerControl reference project for similar functionality
 
 ### **Testing Approach**
 
 **Service Layer Focus**: Test business logic in services, not UI  
 **Mocking Strategy**: Mock external dependencies, test internal logic  
 **Integration Tests**: Test service interactions and data flow  
-**UI Testing**: Manual testing for UI, automated for business logic
+**UI Testing**: Manual testing for UI, automated for business logic  
+**Reference Implementation**: Compare behavior with LogViewerControl reference project
 
 ### **Performance Considerations**
 
 **Memory Usage**: Monitor memory usage with large datasets  
 **UI Responsiveness**: Keep UI operations under 100ms  
 **Background Processing**: Use background threads for I/O operations  
-**Logging Performance**: Be mindful of logging overhead in tight loops
+**Logging Performance**: Be mindful of logging overhead in tight loops  
+**Circular Buffer**: Use LogViewerControl patterns for efficient log storage
 
 ---
 

@@ -24,7 +24,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Toolbar -->
@@ -84,10 +83,7 @@
 
                     <!-- Clear Filters -->
                     <Button Command="{Binding ClearFiltersCommand}"
-                            Background="Transparent"
-                            BorderThickness="1"
-                            BorderBrush="#464647"
-                            Foreground="#CCCCCC"
+                            Classes="transparent"
                             Padding="8,4"
                             ToolTip.Tip="Clear all filters">
                         <StackPanel Orientation="Horizontal" Spacing="4">
@@ -313,43 +309,5 @@
             </DataGrid.ContextMenu>
         </DataGrid>
 
-        <!-- Status Bar -->
-        <Border Grid.Row="3" 
-                Background="#007ACC" 
-                Padding="8,4">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" 
-                           Foreground="White" 
-                           FontSize="12"
-                           VerticalAlignment="Center">
-                    <TextBlock.Text>
-                        <MultiBinding StringFormat="Showing {0} of {1} log entries">
-                            <Binding Path="FilteredLogCount" />
-                            <Binding Path="TotalLogCount" />
-                        </MultiBinding>
-                    </TextBlock.Text>
-                </TextBlock>
-
-                <StackPanel Grid.Column="1" 
-                            Orientation="Horizontal" 
-                            Spacing="8">
-                    <TextBlock Text="{Binding SelectedLogLevel, StringFormat='Level: {0}'}" 
-                               Foreground="White" 
-                               FontSize="12" 
-                               VerticalAlignment="Center" />
-                    
-                    <TextBlock Text="{Binding SearchText, StringFormat='Filter: {0}'}" 
-                               Foreground="White" 
-                               FontSize="12" 
-                               VerticalAlignment="Center"
-                               IsVisible="{Binding SearchText, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                </StackPanel>
             </Grid>
-        </Border>
-    </Grid>
 </UserControl>
