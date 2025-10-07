@@ -106,8 +106,15 @@ public static class ServiceCollectionExtensions
         // Add ViewModel Factory
         services.TryAddSingleton<IViewModelFactory, ViewModelFactory>();
 
-        // Add ViewModels
+        // Add Main ViewModels
         services.TryAddSingleton<MainWindowViewModel>();
+        
+        // Add Specialized ViewModels for MainWindow decomposition
+        services.TryAddSingleton<NavigationViewModel>();
+        services.TryAddSingleton<BottomPanelViewModel>();
+        services.TryAddSingleton<SettingsManagementViewModel>();
+        
+        // Add Feature ViewModels
         services.TryAddTransient<LogViewerViewModel>();
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();

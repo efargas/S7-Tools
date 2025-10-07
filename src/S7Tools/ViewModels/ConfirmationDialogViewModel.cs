@@ -19,6 +19,11 @@ public class ConfirmationDialogViewModel : ViewModelBase
     public string Message { get; }
 
     /// <summary>
+    /// Gets a value indicating whether the cancel button should be shown.
+    /// </summary>
+    public bool ShowCancel { get; }
+
+    /// <summary>
     /// Gets the command to confirm the dialog.
     /// </summary>
     public ReactiveCommand<Unit, bool> OkCommand { get; }
@@ -33,10 +38,12 @@ public class ConfirmationDialogViewModel : ViewModelBase
     /// </summary>
     /// <param name="title">The dialog title.</param>
     /// <param name="message">The dialog message.</param>
-    public ConfirmationDialogViewModel(string title, string message)
+    /// <param name="showCancel">Whether to show the cancel button.</param>
+    public ConfirmationDialogViewModel(string title, string message, bool showCancel = true)
     {
         Title = title;
         Message = message;
+        ShowCancel = showCancel;
 
         OkCommand = ReactiveCommand.Create(() => true);
         CancelCommand = ReactiveCommand.Create(() => false);

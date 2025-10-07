@@ -251,7 +251,7 @@ public sealed class ActivityBarService : IActivityBarService
             {
                 Order = 1
             },
-            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "fa-solid fa-file-text")
+            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "fa-solid fa-list-alt")
             {
                 Order = 2
             },

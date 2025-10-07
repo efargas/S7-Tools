@@ -48,7 +48,7 @@
                                    VerticalAlignment="Center" />
                         
                         <TextBox Grid.Column="1" Grid.Row="0"
-                                 Text="{Binding DefaultLogPath}"
+                                 Text="{Binding Settings.DefaultLogPath}"
                                  Background="#3C3C3C"
                                  Foreground="#CCCCCC"
                                  BorderBrush="#464647"
@@ -60,7 +60,7 @@
                                 Foreground="White"
                                 BorderThickness="0"
                                 Padding="12,6"
-                                Command="{Binding BrowseDefaultLogPathCommand}" />
+                                Command="{Binding Settings.BrowseDefaultLogPathCommand}" />
 
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
                                    Text="Directory where log files will be stored by default"
@@ -87,7 +87,7 @@
                                    VerticalAlignment="Center" />
                         
                         <TextBox Grid.Column="1" Grid.Row="0"
-                                 Text="{Binding ExportPath}"
+                                 Text="{Binding Settings.ExportPath}"
                                  Background="#3C3C3C"
                                  Foreground="#CCCCCC"
                                  BorderBrush="#464647"
@@ -99,7 +99,7 @@
                                 Foreground="White"
                                 BorderThickness="0"
                                 Padding="12,6"
-                                Command="{Binding BrowseExportPathCommand}" />
+                                Command="{Binding Settings.BrowseExportPathCommand}" />
 
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
                                    Text="Directory where exported log files will be saved"
@@ -122,7 +122,7 @@
                                    VerticalAlignment="Center" />
                         
                         <ComboBox Grid.Column="1"
-                                  SelectedItem="{Binding MinimumLogLevel}"
+                                  SelectedItem="{Binding Settings.MinimumLogLevel}"
                                   Background="#3C3C3C"
                                   Foreground="#CCCCCC"
                                   BorderBrush="#464647"
@@ -156,7 +156,7 @@
                                    VerticalAlignment="Center" />
                         
                         <CheckBox Grid.Column="1"
-                                  IsChecked="{Binding AutoScrollLogs}"
+                                  IsChecked="{Binding Settings.AutoScrollLogs}"
                                   Content="Automatically scroll to newest log entries"
                                   Foreground="#CCCCCC"
                                   Margin="8,0" />
@@ -175,7 +175,7 @@
                                    VerticalAlignment="Center" />
                         
                         <CheckBox Grid.Column="1"
-                                  IsChecked="{Binding EnableRollingLogs}"
+                                  IsChecked="{Binding Settings.EnableRollingLogs}"
                                   Content="Create new log file each day (MainLog_YYYY-MM-DD_HH-mm-ss.log)"
                                   Foreground="#CCCCCC"
                                   Margin="8,0" />
@@ -196,17 +196,17 @@
                                Foreground="#CCCCCC" />
 
                     <!-- Show Timestamp -->
-                    <CheckBox IsChecked="{Binding ShowTimestampInLogs}"
+                    <CheckBox IsChecked="{Binding Settings.ShowTimestampInLogs}"
                               Content="Show timestamp in log entries"
                               Foreground="#CCCCCC" />
 
                     <!-- Show Category -->
-                    <CheckBox IsChecked="{Binding ShowCategoryInLogs}"
+                    <CheckBox IsChecked="{Binding Settings.ShowCategoryInLogs}"
                               Content="Show category in log entries"
                               Foreground="#CCCCCC" />
 
                     <!-- Show Log Level -->
-                    <CheckBox IsChecked="{Binding ShowLogLevelInLogs}"
+                    <CheckBox IsChecked="{Binding Settings.ShowLogLevelInLogs}"
                               Content="Show log level badges in log entries"
                               Foreground="#CCCCCC" />
                 </StackPanel>
@@ -239,7 +239,7 @@
                                 BorderThickness="0"
                                 Padding="16,8"
                                 Margin="0,0,8,0"
-                                Command="{Binding SaveSettingsCommand}">
+                                Command="{Binding Settings.SaveSettingsCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <icons:Icon Value="fa-solid fa-save" Width="16" Height="16" />
                                 <TextBlock Text="Save Settings" />
@@ -253,7 +253,7 @@
                                 BorderThickness="0"
                                 Padding="16,8"
                                 Margin="4,0"
-                                Command="{Binding LoadSettingsCommand}">
+                                Command="{Binding Settings.LoadSettingsCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <icons:Icon Value="fa-solid fa-folder-open" Width="16" Height="16" />
                                 <TextBlock Text="Load Settings" />
@@ -267,7 +267,7 @@
                                 BorderThickness="0"
                                 Padding="16,8"
                                 Margin="4,0"
-                                Command="{Binding ResetSettingsCommand}">
+                                Command="{Binding Settings.ResetSettingsCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <icons:Icon Value="fa-solid fa-undo" Width="16" Height="16" />
                                 <TextBlock Text="Reset Defaults" />
@@ -282,7 +282,7 @@
                                 BorderThickness="1"
                                 Padding="16,8"
                                 Margin="8,0,0,0"
-                                Command="{Binding OpenSettingsFolderCommand}">
+                                Command="{Binding Settings.OpenSettingsFolderCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="8">
                                 <icons:Icon Value="fa-solid fa-folder" Width="16" Height="16" />
                                 <TextBlock Text="Open Folder" />
@@ -291,7 +291,7 @@
                     </Grid>
 
                     <!-- Status Text -->
-                    <TextBlock Text="{Binding SettingsStatusMessage}"
+                    <TextBlock Text="{Binding Settings.SettingsStatusMessage}"
                                Foreground="#858585"
                                FontSize="12"
                                TextWrapping="Wrap" />
@@ -310,12 +310,12 @@
                                FontWeight="SemiBold" 
                                Foreground="#CCCCCC" />
 
-                    <TextBlock Text="{Binding CurrentSettingsFilePath}"
+                    <TextBlock Text="{Binding Settings.CurrentSettingsFilePath}"
                                Foreground="#858585"
                                FontSize="11"
                                TextWrapping="Wrap" />
 
-                    <TextBlock Text="{Binding SettingsLastModified, StringFormat='Last modified: {0:yyyy-MM-dd HH:mm:ss}'}"
+                    <TextBlock Text="{Binding Settings.SettingsLastModified, StringFormat='Last modified: {0:yyyy-MM-dd HH:mm:ss}'}"
                                Foreground="#858585"
                                FontSize="11" />
                 </StackPanel>

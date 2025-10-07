@@ -1,351 +1,278 @@
 # Instructions: S7Tools Project Intelligence
 
 **Last Updated**: Current Session  
-**Context Type**: Project-Specific Patterns, Preferences, and Intelligence  
+**Context Type**: Project-specific patterns, preferences, and learned insights  
 
-## Project Intelligence Summary
+## Critical Project Intelligence
 
-This document captures critical patterns, preferences, and project intelligence discovered through analysis of the S7Tools codebase and documentation. These insights help AI agents work more effectively with the project's specific requirements and established patterns.
+### **Memory Bank Usage Rules - CRITICAL**
 
-## Critical Implementation Paths
+**NEVER mark tasks as complete without user validation**. This is a fundamental rule that was violated and caused incorrect status tracking.
 
-### **Service Registration Pattern**
+**Key Learning**: 
+- User feedback is the ONLY source of truth for task completion
+- Implementation changes do not equal working functionality
+- Always wait for user testing and validation before updating task status
+- Use "In Progress", "Blocked", or "Not Started" until user confirms functionality
 
-**Pattern**: All new services must be registered in `ServiceCollectionExtensions.cs`  
-**Location**: `src/S7Tools/Extensions/ServiceCollectionExtensions.cs`  
-**Critical Rule**: NEVER register services directly in `Program.cs` - always use the extension method
+### **User Feedback Integration Pattern**
+
+When user provides feedback on implemented changes:
+
+1. **Update task status immediately** to reflect actual state
+2. **Document user feedback verbatim** in progress logs
+3. **Investigate why implementations didn't work** as expected
+4. **Adjust completion estimates** based on actual complexity
+5. **Never assume success** without explicit user confirmation
+
+## Development Workflow Patterns
+
+### **UI Implementation Reality Check**
+
+**Pattern Discovered**: UI changes that appear correct in code may not work as expected in runtime.
+
+**Examples from TASK009**:
+- GridSplitter reduced to 1px in XAML but user reports "still too big"
+- Hover effects implemented in styles but user reports "still not accentuating color"
+- DialogService singleton registered but dialogs still not showing
+
+**Lesson**: Always test UI changes in running application before claiming completion.
+
+### **Dialog Service Integration Complexity**
+
+**Challenge**: ReactiveUI Interactions with Avalonia require precise timing and service instance matching.
+
+**Current Issue**: 
+- DialogService registered as singleton in Program.cs
+- Interaction handlers registered globally
+- But dialogs still not showing for File > Exit and Clear Logs
+
+**Investigation Needed**:
+- Verify interaction handler registration timing
+- Check if handlers are registered on correct service instance
+- Ensure UI thread marshalling for dialog display
+
+### **GridSplitter Styling Challenges**
+
+**Issue**: Standard Avalonia GridSplitter styling may not behave as expected.
+
+**Current Problem**:
+- 1px height/width set in styles
+- Hover transitions implemented
+- But user reports dividers still too thick and no hover effects
+
+**Potential Solutions**:
+- Investigate if Avalonia GridSplitter has minimum size constraints
+- Check if custom templates are needed for ultra-thin dividers
+- Verify hover state selectors are working correctly
+
+## Architecture Patterns
+
+### **Service Registration Patterns**
+
+**Established Pattern**: Use ServiceCollectionExtensions for organized service registration
 
 ```csharp
-// CORRECT: Service registration in ServiceCollectionExtensions.cs
-public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+public static class ServiceCollectionExtensions
 {
-    services.AddSingleton<INewService, NewService>();
-    return services;
+    public static IServiceCollection AddS7ToolsServices(this IServiceCollection services, Action<LogDataStoreOptions> configureOptions)
+    {
+        // Core services
+        services.AddSingleton<IActivityBarService, ActivityBarService>();
+        services.AddSingleton<ILayoutService, LayoutService>();
+        
+        // UI services
+        services.AddTransient<IDialogService, DialogService>(); // Note: May need singleton for interactions
+        
+        // ViewModels
+        services.AddTransient<MainWindowViewModel>();
+        
+        return services;
+    }
 }
-
-// INCORRECT: Direct registration in Program.cs
-services.AddSingleton<INewService, NewService>(); // DON'T DO THIS
 ```
 
-### **MVVM Implementation Pattern**
+**Critical Learning**: DialogService lifetime affects ReactiveUI interaction registration.
 
-**Pattern**: Strict ReactiveUI MVVM with specific conventions  
-**ViewModels**: Must inherit from `ReactiveObject` and use `RaiseAndSetIfChanged`  
-**Commands**: Always use `ReactiveCommand<TParam, TResult>`  
-**Navigation**: Handled through service layer, not direct ViewModel references
+### **MVVM Implementation Standards**
+
+**Established Pattern**: All ViewModels use ReactiveUI with proper dependency injection
 
 ```csharp
-// CORRECT: ReactiveUI ViewModel pattern
-public class MyViewModel : ReactiveObject
+public class ExampleViewModel : ReactiveObject, IDisposable
 {
-    private string _property;
-    public string Property
+    private readonly IService _service;
+    private readonly CompositeDisposable _disposables = new();
+    
+    public ExampleViewModel(IService service)
     {
-        get => _property;
-        set => this.RaiseAndSetIfChanged(ref _property, value);
+        _service = service ?? throw new ArgumentNullException(nameof(service));
+        InitializeCommands();
     }
     
-    public ReactiveCommand<Unit, Unit> MyCommand { get; }
+    public ReactiveCommand<Unit, Unit> ExampleCommand { get; private set; }
+    
+    private void InitializeCommands()
+    {
+        ExampleCommand = ReactiveCommand.CreateFromTask(ExecuteExampleAsync);
+        ExampleCommand.ThrownExceptions
+            .Subscribe(ex => /* handle exceptions */)
+            .DisposeWith(_disposables);
+    }
+    
+    public void Dispose() => _disposables?.Dispose();
 }
 ```
 
-### **Logging Integration Pattern**
+## User Experience Patterns
 
-**Pattern**: Use injected `ILogger<T>` with structured logging  
-**Critical Rule**: All services should log operations with structured parameters  
-**Performance**: Use LogLevel appropriately to avoid performance impact
+### **VSCode-Like Interface Requirements**
 
-```csharp
-// CORRECT: Structured logging with parameters
-_logger.LogInformation("User performed action: {Action} at {Timestamp}", action, DateTime.Now);
+**User Expectation**: Interface should closely match VSCode behavior and appearance.
 
-// INCORRECT: String concatenation in logging
-_logger.LogInformation($"User performed action: {action} at {DateTime.Now}"); // DON'T DO THIS
-```
+**Key Requirements**:
+- Ultra-thin panel dividers (thinner than standard Avalonia defaults)
+- Smooth hover effects with accent color transitions
+- Context menus instead of checkboxes for column management
+- Confirmation dialogs for destructive operations
+- Settings persistence between sessions
 
-### **UI Thread Safety Pattern**
+### **Logging System User Patterns**
 
-**Pattern**: Use `IUIThreadService` for all cross-thread UI operations  
-**Critical Rule**: NEVER directly access UI from background threads  
-**Implementation**: Always use `ConfigureAwait(false)` in service layer
+**User Workflow**:
+1. View real-time logs in bottom panel
+2. Filter logs by level, search text, date range
+3. Clear logs with confirmation dialog
+4. Export logs to various formats
+5. Toggle column visibility via context menu
 
-```csharp
-// CORRECT: UI thread marshalling
-await _uiThreadService.InvokeAsync(() =>
-{
-    // UI updates here
-});
+**Critical Issues Identified**:
+- Clear logs works but no confirmation dialog
+- Export functionality completely broken
+- Column visibility still uses checkboxes instead of context menu
 
-// CORRECT: ConfigureAwait in services
-var result = await SomeAsyncOperation().ConfigureAwait(false);
-```
+## Technical Constraints
 
-## User Preferences and Workflow
+### **Avalonia UI Limitations**
 
-### **Architecture Preferences**
+**GridSplitter Constraints**:
+- May have minimum size constraints preventing ultra-thin appearance
+- Hover effects may require custom templates
+- Cross-platform behavior may vary
 
-**Clean Architecture**: Strict adherence to dependency inversion  
-- Core project has NO external dependencies
-- Infrastructure depends only on Core
-- Application layer orchestrates between layers
-- UI depends on Application and Core only
+**Dialog System Constraints**:
+- ReactiveUI Interactions require precise service instance matching
+- Timing of handler registration is critical
+- UI thread marshalling required for proper display
 
-**Service-Oriented Design**: Everything is a service with an interface  
-- All business logic in services, not ViewModels
-- ViewModels are thin presentation layer only
-- Services are registered in DI container
-- Interfaces defined in Core project when possible
+### **Cross-Platform Considerations**
 
-### **Code Quality Standards**
+**File System Access**:
+- Settings persistence must work across Windows, Linux, macOS
+- File dialog paths need platform-specific defaults
+- Export functionality must handle platform-specific file systems
 
-**XML Documentation**: Required for ALL public APIs  
-**EditorConfig Compliance**: Strict adherence to style rules  
-**Nullable Reference Types**: Enabled and enforced  
-**Error Handling**: Comprehensive with user-friendly messages
+## Quality Standards
 
-```csharp
-/// <summary>
-/// Reads a tag value from the PLC asynchronously.
-/// </summary>
-/// <param name="address">The tag address to read.</param>
-/// <returns>A task representing the tag read operation.</returns>
-/// <exception cref="ArgumentNullException">Thrown when address is null.</exception>
-public async Task<Tag> ReadTagAsync(string address)
-{
-    ArgumentNullException.ThrowIfNull(address);
-    // Implementation...
-}
-```
+### **Code Quality Requirements**
 
-### **UI/UX Preferences**
+**Established Standards**:
+- All public APIs must have XML documentation
+- Nullable reference types enabled throughout
+- EditorConfig rules enforced
+- SOLID principles applied consistently
+- Clean Architecture maintained
 
-**VSCode Design Language**: Strict adherence to VSCode patterns  
-- Activity bar behavior: click selected item toggles visibility
-- Color scheme: #007ACC for accents, #858585 for inactive, #FFFFFF for active
-- Animations: Smooth transitions, no jarring changes
-- Keyboard shortcuts: Standard VSCode shortcuts where applicable
+### **Testing Requirements**
 
-**Responsive Design**: UI must remain responsive  
-- Background operations for I/O
-- Progress indicators for long operations
-- No blocking UI operations
-- Graceful error handling with user feedback
+**Current Gap**: No formal testing framework implemented
 
-## Project-Specific Patterns
+**Required Testing Strategy**:
+- Unit tests for all services and ViewModels
+- Integration tests for critical workflows
+- UI tests for dialog interactions
+- Cross-platform compatibility tests
 
-### **File Organization Pattern**
+## Common Pitfalls
 
-**Strict Naming Conventions**:
-- Services: `{Feature}Service.cs` with `I{Feature}Service.cs`
-- ViewModels: `{View}ViewModel.cs`
-- Views: `{Feature}View.axaml` with `{Feature}View.axaml.cs`
-- Models: `{Entity}Model.cs` or just `{Entity}.cs`
+### **Task Status Management**
 
-**Folder Structure Rules**:
-- Interfaces always in `Interfaces/` subfolder
-- One class per file, file name matches class name
-- Namespace matches folder structure exactly
-- No deep nesting (max 3 levels)
+**CRITICAL PITFALL**: Marking tasks complete without user validation
 
-### **Dependency Injection Lifetime Patterns**
+**Prevention**:
+- Always use "In Progress" or "Blocked" until user confirms
+- Document user feedback verbatim
+- Investigate discrepancies between implementation and user experience
+- Adjust estimates based on actual complexity
 
-**Singleton**: Services that maintain state or are expensive to create  
-- `IActivityBarService`, `ILayoutService`, `IThemeService`
-- Logging infrastructure services
-- Configuration services
+### **UI Implementation Assumptions**
 
-**Transient**: Lightweight services or those that shouldn't maintain state  
-- `IDialogService`, `IClipboardService`
-- Repository services (when implemented)
-- Factory services
+**PITFALL**: Assuming XAML changes work as expected without runtime testing
 
-```csharp
-// Lifetime decision pattern
-services.AddSingleton<IExpensiveService, ExpensiveService>();     // Stateful, expensive
-services.AddTransient<ILightweightService, LightweightService>(); // Stateless, cheap
-```
+**Prevention**:
+- Test all UI changes in running application
+- Verify cross-platform behavior
+- Check edge cases and different screen sizes
+- Validate user interactions work as intended
 
-### **Error Handling Strategy**
+### **Service Lifetime Issues**
 
-**User-Facing Errors**: Always provide actionable error messages  
-**Logging Strategy**: Log all errors with context, but don't expose internals to users  
-**Recovery Pattern**: Graceful degradation where possible
+**PITFALL**: Incorrect service lifetimes causing interaction failures
 
-```csharp
-try
-{
-    await PerformOperation();
-}
-catch (SpecificException ex)
-{
-    _logger.LogError(ex, "Operation failed in {Method}", nameof(PerformOperation));
-    await _dialogService.ShowErrorAsync("Unable to complete operation", 
-        "Please check your connection and try again.");
-}
-```
+**Prevention**:
+- Carefully consider service lifetimes (Singleton vs Transient)
+- Test service interactions across application lifecycle
+- Verify dependency injection resolution works correctly
+- Document service lifetime decisions and rationale
 
-## Known Challenges and Solutions
-
-### **Challenge: Cross-Platform Compatibility**
-
-**Issue**: Avalonia behavior can vary across platforms  
-**Solution**: Use platform-specific services where needed  
-**Pattern**: Abstract platform differences behind interfaces
-
-### **Challenge: Memory Management with Large Datasets**
-
-**Issue**: PLC data and logs can consume significant memory  
-**Solution**: Circular buffers and data virtualization  
-**Implementation**: Already implemented in logging system, extend to PLC data
-
-### **Challenge: Real-Time Data Updates**
-
-**Issue**: UI must remain responsive during continuous data updates  
-**Solution**: Background processing with batched UI updates  
-**Pattern**: Use ReactiveUI throttling and background schedulers
-
-```csharp
-// Throttle rapid updates
-this.WhenAnyValue(x => x.SearchText)
-    .Throttle(TimeSpan.FromMilliseconds(300))
-    .ObserveOn(RxApp.MainThreadScheduler)
-    .Subscribe(text => PerformSearch(text));
-```
-
-## Evolution of Project Decisions
-
-### **Initial Architecture Decisions**
-
-**Clean Architecture**: Chosen for maintainability and testability  
-**Avalonia UI**: Selected for cross-platform desktop support  
-**ReactiveUI**: Chosen for reactive programming and MVVM support  
-**Microsoft.Extensions.Logging**: Selected for standardization and extensibility
-
-### **Evolved Patterns**
-
-**Custom Logging Infrastructure**: Added for real-time UI integration  
-**Service-Oriented Architecture**: Evolved from simple MVVM to comprehensive service layer  
-**VSCode UI Pattern**: Adopted for professional appearance and familiar UX
-
-### **Lessons Learned**
-
-**Documentation Importance**: Extensive documentation prevents confusion and duplicate work  
-**Status Tracking**: Multiple tracking systems create confusion - single source of truth needed  
-**Architecture Investment**: Strong architecture enables rapid feature development  
-**User Experience Focus**: Professional UI significantly improves user acceptance
-
-## Tool Usage Patterns
-
-### **Development Workflow**
-
-**Primary IDE**: Visual Studio 2022 with Avalonia extension  
-**Build Process**: `dotnet build` from solution root  
-**Testing**: Manual testing currently, xUnit planned  
-**Debugging**: Avalonia DevTools (F12) for UI debugging
-
-### **Code Analysis**
-
-**EditorConfig**: Comprehensive style enforcement  
-**Static Analysis**: Roslyn analyzers with custom rules  
-**Documentation**: XML documentation for all public APIs  
-**Performance**: Memory profiling for large datasets
-
-### **Version Control**
-
-**Git Workflow**: Feature branches with PR reviews  
-**Commit Messages**: Conventional commit format preferred  
-**Documentation**: Update Memory Bank files with significant changes
-
-## Research Documentation References
-
-### **Avalonia UI Documentation**
-- **Official Documentation**: https://docs.avaloniaui.net/
-- **Controls Reference**: https://docs.avaloniaui.net/docs/reference/controls/
-- **GridSplitter**: https://docs.avaloniaui.net/docs/reference/controls/gridsplitter
-- **DatePicker**: https://docs.avaloniaui.net/docs/reference/controls/datepicker
-- **File Dialogs**: https://docs.avaloniaui.net/docs/reference/controls/dialog
-- **Data Binding**: https://docs.avaloniaui.net/docs/data-binding/
-- **Styling**: https://docs.avaloniaui.net/docs/styling/
-
-### **C# and .NET Documentation**
-- **Microsoft Docs**: https://docs.microsoft.com/en-us/dotnet/
-- **C# Language Reference**: https://docs.microsoft.com/en-us/dotnet/csharp/
-- **Microsoft.Extensions.Logging**: https://docs.microsoft.com/en-us/dotnet/core/extensions/logging
-- **Custom Logging Providers**: https://docs.microsoft.com/en-us/dotnet/core/extensions/custom-logging-provider
-- **Dependency Injection**: https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection
-- **Structured Logging**: https://docs.microsoft.com/en-us/dotnet/core/extensions/logging
-
-### **ReactiveUI Documentation**
-- **Official Documentation**: https://www.reactiveui.net/docs/
-- **Commands**: https://www.reactiveui.net/docs/handbook/commands/
-- **Property Changes**: https://www.reactiveui.net/docs/handbook/view-models/
-- **Threading**: https://www.reactiveui.net/docs/handbook/scheduling/
-- **Data Binding**: https://www.reactiveui.net/docs/handbook/data-binding/
-
-### **Reference Project - LogViewerControl**
-- **Location**: `.github/agents/workspace/referent-projects/LogViewerControl/`
-- **Purpose**: Reference implementation for logging UI controls
-- **Key Components**:
-  - LogViewerControl.Avalonia - Main Avalonia control implementation
-  - LogViewerControl.Shared - Common interfaces and models
-  - Architecture patterns for real-time log display
-  - Export functionality implementations (Text, JSON, CSV)
-  - Filtering system architecture
-  - DataStore integration patterns
-- **Usage**: Study implementation patterns, service interfaces, and UI control architecture
-- **Integration**: Adapt patterns to S7Tools architecture while maintaining consistency
-
-### **Common Services Between Applications**
-- **ILogDataStore**: Circular buffer implementation for high-performance log storage
-- **IUIThreadService**: Cross-thread UI operation marshalling
-- **IFileDialogService**: Native file/folder picker dialog abstraction
-- **IClipboardService**: Cross-platform clipboard operations
-- **IDialogService**: User notification and confirmation dialogs
-- **IThemeService**: Application theming and resource management
-
-### **Resource Management Patterns**
-- **String Resources**: UIStrings.resx for localization support
-- **Theme Resources**: App.axaml resource dictionaries for consistent styling
-- **Icon Resources**: Font Awesome integration via Projektanker.Icons.Avalonia
-- **Color Schemes**: VSCode-inspired color palette definitions
-- **Style Resources**: Consistent control styling across application
-
-## AI Agent Specific Guidance
+## Success Patterns
 
 ### **Memory Bank Maintenance**
 
-**Update Frequency**: After major features or architectural changes  
-**Focus Areas**: activeContext.md and progress.md most important for continuity  
-**Task Management**: Always update task files with progress and decisions
+**Successful Pattern**: Comprehensive documentation with clear status tracking
 
-### **Code Generation Guidelines**
+**Key Elements**:
+- Regular updates to progress.md with actual status
+- Detailed task tracking with user feedback integration
+- Clear separation between implementation and validation
+- Honest assessment of completion status
 
-**Follow Existing Patterns**: Study existing code before generating new code  
-**Service Registration**: Always register new services in ServiceCollectionExtensions  
-**Error Handling**: Include comprehensive error handling in all generated code  
-**Documentation**: Generate XML documentation for all public members  
-**Reference Project Study**: Always review LogViewerControl reference project for similar functionality
+### **User Communication**
 
-### **Testing Approach**
+**Successful Pattern**: Clear communication about implementation vs validation
 
-**Service Layer Focus**: Test business logic in services, not UI  
-**Mocking Strategy**: Mock external dependencies, test internal logic  
-**Integration Tests**: Test service interactions and data flow  
-**UI Testing**: Manual testing for UI, automated for business logic  
-**Reference Implementation**: Compare behavior with LogViewerControl reference project
+**Approach**:
+- Explain what was implemented
+- Request user testing and feedback
+- Acknowledge when implementations don't work as expected
+- Adjust plans based on user feedback
 
-### **Performance Considerations**
+## Future Considerations
 
-**Memory Usage**: Monitor memory usage with large datasets  
-**UI Responsiveness**: Keep UI operations under 100ms  
-**Background Processing**: Use background threads for I/O operations  
-**Logging Performance**: Be mindful of logging overhead in tight loops  
-**Circular Buffer**: Use LogViewerControl patterns for efficient log storage
+### **Testing Framework Priority**
+
+**High Priority**: Implement comprehensive testing to catch issues before user testing
+
+**Benefits**:
+- Reduce user-reported issues
+- Increase confidence in implementations
+- Enable refactoring with safety net
+- Improve overall code quality
+
+### **UI Framework Evaluation**
+
+**Consideration**: Evaluate if Avalonia limitations require workarounds or alternatives
+
+**Areas to Monitor**:
+- GridSplitter customization capabilities
+- Dialog system integration complexity
+- Cross-platform consistency
+- Performance characteristics
 
 ---
 
-**Document Status**: Living document - grows with project experience  
-**Next Review**: After major feature implementation or architectural changes  
+**Document Status**: Living document capturing project intelligence  
+**Next Update**: After significant learning or pattern discovery  
 **Owner**: Development Team with AI Assistance  
 
-**Key Insight**: This project has excellent architecture and implementation quality. Focus on building upon the strong foundation rather than rebuilding existing functionality.
+**Key Reminder**: This document captures hard-learned lessons. Always refer to it before making assumptions about task completion or implementation success.

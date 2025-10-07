@@ -231,7 +231,7 @@ tests/
 
 ## Known Issues
 
-### **✅ RESOLVED CRITICAL ISSUES (Phase 1 Complete)**
+### **✅ RESOLVED CRITICAL ISSUES (Phases 1-3 Complete)**
 
 #### **✅ 1. MVVM Violations - View-ViewModel Coupling - RESOLVED**
 - **Resolution**: Refactored DialogService to use ReactiveUI Interactions pattern
@@ -248,42 +248,82 @@ tests/
 - **Changes**: Updated HomeViewModel and ConnectionsViewModel, registered all ViewModels in DI
 - **Status**: ✅ COMPLETED - All ViewModels receive dependencies through constructor injection
 
-### **🔧 HIGH PRIORITY ISSUES**
+#### **✅ 4. God Object Anti-Pattern - RESOLVED**
+- **Resolution**: MainWindowViewModel decomposed into specialized ViewModels
+- **Changes**: Created NavigationViewModel, BottomPanelViewModel, SettingsManagementViewModel
+- **Status**: ✅ COMPLETED - MainWindowViewModel reduced from 600+ to ~350 lines (42% reduction)
+- **Impact**: Single Responsibility Principle applied, improved maintainability and testability
 
-#### **4. God Object Anti-Pattern**
-- **Issue**: MainWindowViewModel is still 600+ lines managing multiple responsibilities
-- **Location**: `MainWindowViewModel.cs`
-- **Impact**: Violates Single Responsibility Principle, difficult to test and maintain
+#### **✅ 5. Core Domain Model Type Safety - RESOLVED**
+- **Resolution**: Implemented type-safe domain model with value objects and Result pattern
+- **Changes**: Created PlcAddress, TagValue value objects, immutable Tag record, Result<T> pattern
+- **Status**: ✅ COMPLETED - Type-safe domain model with comprehensive validation
+- **Impact**: Eliminated primitive obsession, added compile-time type safety
+
+### **🔧 CRITICAL ISSUES (Phase 4 - Current Priority)**
+
+#### **6. UI Panel Dividers Still Too Thick**
+- **Issue**: GridSplitter dividers are still visually too thick despite changes
+- **Location**: `MainWindow.axaml`, `Styles.axaml`
+- **Impact**: Poor visual appearance, not matching VSCode-like design
 - **Priority**: HIGH
-- **Estimated Fix**: 3-4 days
-- **Next Phase**: Phase 2 - Decompose into specialized ViewModels
+- **Status**: ❌ USER FEEDBACK: Still too big despite 1px implementation
 
-#### **5. Core Domain Model Type Safety**
-- **Issue**: Tag.Value property is `object?`, sacrificing compile-time type safety
-- **Location**: `S7Tools.Core/Models/Tag.cs`
-- **Impact**: Runtime casting errors, no compile-time validation
+#### **7. GridSplitter Hover Effects Not Working**
+- **Issue**: Accent color hover effects not showing on panel dividers
+- **Location**: `Styles.axaml` GridSplitter styles
+- **Impact**: Poor user feedback during resize operations
 - **Priority**: HIGH
-- **Estimated Fix**: 2-3 days
+- **Status**: ❌ USER FEEDBACK: Still not accentuating color on hovering
 
-#### **6. Model Mutability**
-- **Issue**: Tag class is mutable, unsafe for data representing snapshots
-- **Location**: `S7Tools.Core/Models/Tag.cs`
-- **Impact**: Potential data corruption, thread safety issues
-- **Priority**: MEDIUM
-- **Estimated Fix**: 1 day
+#### **8. Bottom Panel Resize Limit Not Implemented**
+- **Issue**: Bottom panel needs to grow more and respect 75% max limit
+- **Location**: `MainWindow.axaml` RowDefinition MaxHeight
+- **Impact**: Poor UX, panel sizing issues
+- **Priority**: HIGH
+- **Status**: ❌ USER FEEDBACK: Bottom panel needs to grow more
+
+#### **9. Menu File Exit Dialog Not Working**
+- **Issue**: Exit confirmation dialog not showing when using File > Exit
+- **Location**: DialogService interaction handler registration
+- **Impact**: Critical functionality broken, no exit confirmation
+- **Priority**: CRITICAL
+- **Status**: ❌ USER FEEDBACK: Menu file exit isn't showing confirmation dialog
+
+#### **10. Column Visibility Checkboxes Still Present**
+- **Issue**: Column visibility checkboxes not replaced with context menu
+- **Location**: LogViewerView.axaml and other DataGrid implementations
+- **Impact**: Poor UX, not following modern UI patterns
+- **Priority**: HIGH
+- **Status**: ❌ USER FEEDBACK: Checkboxes still there not in context menu
+
+#### **11. Clear Log Files Fixed But Dialog Missing**
+- **Issue**: Clear log files no longer crashes but confirmation dialog not showing
+- **Location**: LogViewerViewModel ClearLogsCommand
+- **Impact**: Functionality works but lacks user confirmation
+- **Priority**: HIGH
+- **Status**: ⚠️ USER FEEDBACK: Now not crashes when clean log is triggered but still not showing dialog
+
+#### **12. Export to File Not Working**
+- **Issue**: Log export functionality not working properly
+- **Location**: LogViewerViewModel ExportLogsCommand
+- **Impact**: Users cannot export log data
+- **Priority**: HIGH
+- **Status**: ❌ USER FEEDBACK: Export to file not working
+
+#### **13. Settings Not Integrated Properly**
+- **Issue**: Settings system not saving/loading, no customizable paths, no defaults
+- **Location**: SettingsService, SettingsViewModel
+- **Impact**: User preferences lost between sessions
+- **Priority**: HIGH
+- **Status**: ❌ USER FEEDBACK: Settings integration issues (save/load, browser paths, defaults)
 
 ### **📋 MEDIUM PRIORITY ISSUES**
 
-#### **7. Settings Persistence**
-- **Issue**: User settings not saved between application sessions
-- **Impact**: Users must reconfigure preferences each time
-- **Priority**: Medium
-- **Estimated Fix**: 2-3 days
-
-#### **8. No Testing Framework**
+#### **14. No Testing Framework**
 - **Issue**: Zero automated tests, no testing infrastructure
 - **Impact**: No safety net for refactoring, potential regressions
-- **Priority**: HIGH
+- **Priority**: MEDIUM
 - **Estimated Fix**: 1-2 weeks
 
 ### **✅ ARCHITECTURAL DEBT STATUS - SIGNIFICANTLY IMPROVED**
@@ -315,9 +355,9 @@ tests/
 ## Next Development Priorities
 
 ### **Immediate (Next 1-2 Sessions)**
-1. **Phase 2: Decompose MainWindowViewModel** - Break down God Object into specialized ViewModels (TASK008 Phase 2)
+1. **Complete Phase 2: XAML Binding Updates** - Update MainWindow.axaml and SettingsConfigView.axaml bindings (TASK008 Phase 2 Final Step)
 2. **Testing Framework Implementation** - Set up xUnit and initial tests for refactored components
-3. **Complete Memory Bank Setup** - Finish task management system
+3. **Phase 3: Core Domain Model Improvements** - Implement type-safe Tag system (TASK008 Phase 3)
 
 ### **Short-term (Next 2-4 Sessions)**
 1. **Phase 3: Core Domain Model Improvements** - Implement type-safe Tag system (TASK008 Phase 3)

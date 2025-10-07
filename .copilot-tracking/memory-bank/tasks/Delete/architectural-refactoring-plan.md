@@ -425,10 +425,10 @@ public object? Value { get; set; }
 - [x] Day 3-4: Remove Direct View Instantiation (Task 1.2) ✅ COMPLETED
 - [x] Day 5: Fix DI Bypassing (Task 1.3) ✅ COMPLETED
 
-### **🔄 Week 2: Decompose MainWindowViewModel - READY TO START**
-- [ ] Day 1-2: Create BottomPanelViewModel (Task 2.1a)
-- [ ] Day 3-4: Create NavigationViewModel (Task 2.1b)
-- [ ] Day 5: Create SettingsManagementViewModel (Task 2.1c)
+### **✅ Week 2: Decompose MainWindowViewModel - COMPLETED**
+- [x] Day 1-2: Create BottomPanelViewModel (Task 2.1a) ✅ COMPLETED
+- [x] Day 3-4: Create NavigationViewModel (Task 2.1b) ✅ COMPLETED
+- [x] Day 5: Create SettingsManagementViewModel (Task 2.1c) ✅ COMPLETED
 
 ### **📋 Week 3: Core Domain Improvements - PLANNED**
 - [ ] Day 1-3: Implement Generic Tag System (Task 3.1)
