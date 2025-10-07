@@ -66,6 +66,20 @@ When user provides feedback on implemented changes:
 - Check if custom templates are needed for ultra-thin dividers
 - Verify hover state selectors are working correctly
 
+### **UI Styling Challenges**
+
+**Issue**: Hover effects and icon sizing are not being applied correctly.
+
+**Current Problem**:
+- Activity Bar icons are not resizing to 48x48.
+- Hovering over Activity Bar icons does not change their color to white.
+- Hovering over inactive Bottom Panel tabs does not change their text color to white.
+
+**Potential Solutions**:
+- Investigate style precedence and overrides.
+- Use more specific style selectors.
+- Apply styles directly to controls as a last resort.
+
 ## Architecture Patterns
 
 ### **Service Registration Patterns**
@@ -324,11 +338,13 @@ if (StartDate.HasValue)
    - **Implementation**: LogExportService properly configured with default path
 
 **🔄 REMAINING CRITICAL ISSUES**:
-1. **Bottom Panel Resizing** - Must be resizable more in up direction with 75% limit
-2. **Panel Dividers** - Must be thinner with accent color highlighting on hover/drag
-3. **✅ DateTime Conversion - RESOLVED** - Date pickers conversion errors fixed
-4. **Main Content Container** - Must be a container for views using locator pattern
-5. **Exception Handling** - Need additional try/catch with logging throughout
+1. **Activity Bar Icons** - Icons are not resizing and hover effects are not working.
+2. **Bottom Panel Tabs** - Hover effects are not working.
+3. **Bottom Panel Resizing** - Must be resizable more in up direction with 75% limit
+4. **Panel Dividers** - Must be thinner with accent color highlighting on hover/drag
+5. **✅ DateTime Conversion - RESOLVED** - Date pickers conversion errors fixed
+6. **Main Content Container** - Must be a container for views using locator pattern
+7. **Exception Handling** - Need additional try/catch with logging throughout
 
 **📊 CURRENT STATUS: 60% COMPLETE**
 - **Application Stability**: ✅ Clean startup and runtime confirmed by logs
