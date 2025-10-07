@@ -25,4 +25,18 @@ public class DialogService : IDialogService
 
         return false;
     }
+
+    /// <inheritdoc/>
+    public async Task ShowErrorAsync(string title, string message)
+    {
+        // For now, use the confirmation dialog as an error dialog
+        // In a real implementation, you would create a dedicated error dialog
+        var dialog = new ConfirmationDialog();
+        dialog.DataContext = new ConfirmationDialogViewModel(dialog, title, message);
+
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is not null)
+        {
+            await dialog.ShowDialog<bool>(desktop.MainWindow);
+        }
+    }
 }

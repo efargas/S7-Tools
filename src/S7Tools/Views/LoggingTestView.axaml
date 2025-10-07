@@ -1,0 +1,248 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.LoggingTestView"
+             x:DataType="vm:MainWindowViewModel"
+             Background="#1E1E1E">
+
+    <ScrollViewer>
+        <StackPanel Margin="20" Spacing="20">
+            <!-- Header -->
+            <TextBlock Text="Logging and Clipboard Testing" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="#CCCCCC" 
+                       Margin="0,0,0,10" />
+
+            <!-- Logging Test Section -->
+            <Border Background="#252526" 
+                    BorderBrush="#464647" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Logging Test Buttons" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Foreground="#CCCCCC" />
+                    
+                    <TextBlock Text="Click these buttons to test different log levels. Check the LOG VIEWER tab in the bottom panel to see the results." 
+                               FontSize="12" 
+                               Foreground="#858585" 
+                               TextWrapping="Wrap" />
+
+                    <WrapPanel Orientation="Horizontal" ItemWidth="150" ItemHeight="40">
+                        <!-- Trace Log Button -->
+                        <Button Command="{Binding TestTraceLogCommand}"
+                                Background="#808080"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Margin="5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-search" Width="14" Height="14" />
+                                <TextBlock Text="Trace" FontSize="12" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Debug Log Button -->
+                        <Button Command="{Binding TestDebugLogCommand}"
+                                Background="#007ACC"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Margin="5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-bug" Width="14" Height="14" />
+                                <TextBlock Text="Debug" FontSize="12" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Info Log Button -->
+                        <Button Command="{Binding TestInfoLogCommand}"
+                                Background="#00AA00"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Margin="5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-info-circle" Width="14" Height="14" />
+                                <TextBlock Text="Info" FontSize="12" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Warning Log Button -->
+                        <Button Command="{Binding TestWarningLogCommand}"
+                                Background="#FFA500"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Margin="5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-exclamation-triangle" Width="14" Height="14" />
+                                <TextBlock Text="Warning" FontSize="12" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Error Log Button -->
+                        <Button Command="{Binding TestErrorLogCommand}"
+                                Background="#DC143C"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Margin="5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-times-circle" Width="14" Height="14" />
+                                <TextBlock Text="Error" FontSize="12" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Critical Log Button -->
+                        <Button Command="{Binding TestCriticalLogCommand}"
+                                Background="#8B0000"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Margin="5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-skull" Width="14" Height="14" />
+                                <TextBlock Text="Critical" FontSize="12" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                    </WrapPanel>
+
+                    <!-- Export Logs Button -->
+                    <Button Command="{Binding ExportLogsCommand}"
+                            Background="#464647"
+                            Foreground="#CCCCCC"
+                            BorderThickness="1"
+                            BorderBrush="#007ACC"
+                            CornerRadius="4"
+                            Padding="15,8"
+                            HorizontalAlignment="Left">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <icons:Icon Value="fa-solid fa-download" Width="16" Height="16" />
+                            <TextBlock Text="Export Logs to Clipboard" FontSize="14" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Border>
+
+            <!-- Clipboard Test Section -->
+            <Border Background="#252526" 
+                    BorderBrush="#464647" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="20">
+                <StackPanel Spacing="15">
+                    <TextBlock Text="Clipboard Testing" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Foreground="#CCCCCC" />
+                    
+                    <TextBlock Text="Test clipboard operations and keyboard shortcuts (Ctrl+X, Ctrl+C, Ctrl+V):" 
+                               FontSize="12" 
+                               Foreground="#858585" 
+                               TextWrapping="Wrap" />
+
+                    <!-- Text Input -->
+                    <TextBox Text="{Binding TestInputText}" 
+                             Watermark="Enter text to test clipboard operations..."
+                             Background="#3C3C3C"
+                             Foreground="#CCCCCC"
+                             BorderBrush="#464647"
+                             BorderThickness="1"
+                             CornerRadius="4"
+                             Padding="10"
+                             MinHeight="100"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True" />
+
+                    <!-- Clipboard Buttons -->
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Command="{Binding CutCommand}"
+                                Background="#DC143C"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:Icon Value="fa-solid fa-cut" Width="14" Height="14" />
+                                <TextBlock Text="Cut (Ctrl+X)" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding CopyCommand}"
+                                Background="#007ACC"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                                <TextBlock Text="Copy (Ctrl+C)" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding PasteCommand}"
+                                Background="#00AA00"
+                                Foreground="White"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="12,6">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <icons:Icon Value="fa-solid fa-paste" Width="14" Height="14" />
+                                <TextBlock Text="Paste (Ctrl+V)" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Instructions -->
+                    <Border Background="#2D2D30" 
+                            BorderBrush="#464647" 
+                            BorderThickness="1" 
+                            CornerRadius="4" 
+                            Padding="15">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Instructions:" 
+                                       FontSize="14" 
+                                       FontWeight="SemiBold" 
+                                       Foreground="#CCCCCC" />
+                            <TextBlock Text="• Type some text in the text box above" 
+                                       FontSize="12" 
+                                       Foreground="#858585" />
+                            <TextBlock Text="• Use Ctrl+C to copy or click the Copy button" 
+                                       FontSize="12" 
+                                       Foreground="#858585" />
+                            <TextBlock Text="• Use Ctrl+X to cut or click the Cut button" 
+                                       FontSize="12" 
+                                       Foreground="#858585" />
+                            <TextBlock Text="• Use Ctrl+V to paste or click the Paste button" 
+                                       FontSize="12" 
+                                       Foreground="#858585" />
+                            <TextBlock Text="• Check the LOG VIEWER tab to see logging test results" 
+                                       FontSize="12" 
+                                       Foreground="#858585" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

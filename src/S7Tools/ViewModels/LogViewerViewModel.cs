@@ -1,0 +1,419 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Reactive;
+using System.Reactive.Linq;
+using Microsoft.Extensions.Logging;
+using ReactiveUI;
+using S7Tools.Infrastructure.Logging.Core.Models;
+using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Services.Interfaces;
+
+namespace S7Tools.ViewModels;
+
+/// <summary>
+/// ViewModel for the LogViewer functionality with real-time log display, filtering, and search capabilities.
+/// </summary>
+public class LogViewerViewModel : ViewModelBase, IDisposable
+{
+    private readonly ILogDataStore _logDataStore;
+    private readonly IUIThreadService _uiThreadService;
+    private readonly IClipboardService _clipboardService;
+    private readonly IDialogService _dialogService;
+    private bool _disposed = false;
+
+    private ObservableCollection<LogModel> _logEntries;
+    private ObservableCollection<LogModel> _filteredLogEntries;
+    private string _searchText = string.Empty;
+    private LogLevel _selectedLogLevel = LogLevel.Trace;
+    private bool _autoScroll = true;
+    private bool _showTimestamp = true;
+    private bool _showCategory = true;
+    private bool _showLevel = true;
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+    private int _totalLogCount;
+    private int _filteredLogCount;
+
+    /// <summary>
+    /// Initializes a new instance of the LogViewerViewModel class.
+    /// </summary>
+    /// <param name="logDataStore">The log data store service.</param>
+    /// <param name="uiThreadService">The UI thread service.</param>
+    /// <param name="clipboardService">The clipboard service.</param>
+    /// <param name="dialogService">The dialog service.</param>
+    public LogViewerViewModel(
+        ILogDataStore logDataStore,
+        IUIThreadService uiThreadService,
+        IClipboardService clipboardService,
+        IDialogService dialogService)
+    {
+        _logDataStore = logDataStore ?? throw new ArgumentNullException(nameof(logDataStore));
+        _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+
+        _logEntries = new ObservableCollection<LogModel>();
+        _filteredLogEntries = new ObservableCollection<LogModel>();
+
+        InitializeCommands();
+        InitializeLogStore();
+        ApplyFilters();
+    }
+
+    /// <summary>
+    /// Gets the collection of all log entries.
+    /// </summary>
+    public ObservableCollection<LogModel> LogEntries
+    {
+        get => _logEntries;
+        private set => this.RaiseAndSetIfChanged(ref _logEntries, value);
+    }
+
+    /// <summary>
+    /// Gets the collection of filtered log entries for display.
+    /// </summary>
+    public ObservableCollection<LogModel> FilteredLogEntries
+    {
+        get => _filteredLogEntries;
+        private set => this.RaiseAndSetIfChanged(ref _filteredLogEntries, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the search text for filtering log entries.
+    /// </summary>
+    public string SearchText
+    {
+        get => _searchText;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _searchText, value);
+            ApplyFilters();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the selected minimum log level for filtering.
+    /// </summary>
+    public LogLevel SelectedLogLevel
+    {
+        get => _selectedLogLevel;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedLogLevel, value);
+            ApplyFilters();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether auto-scroll is enabled.
+    /// </summary>
+    public bool AutoScroll
+    {
+        get => _autoScroll;
+        set => this.RaiseAndSetIfChanged(ref _autoScroll, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether timestamps are shown.
+    /// </summary>
+    public bool ShowTimestamp
+    {
+        get => _showTimestamp;
+        set => this.RaiseAndSetIfChanged(ref _showTimestamp, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether categories are shown.
+    /// </summary>
+    public bool ShowCategory
+    {
+        get => _showCategory;
+        set => this.RaiseAndSetIfChanged(ref _showCategory, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether log levels are shown.
+    /// </summary>
+    public bool ShowLevel
+    {
+        get => _showLevel;
+        set => this.RaiseAndSetIfChanged(ref _showLevel, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the start date for date range filtering.
+    /// </summary>
+    public DateTime? StartDate
+    {
+        get => _startDate;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _startDate, value);
+            ApplyFilters();
+        }
+    }
+
+    /// <summary>
+    /// Gets or sets the end date for date range filtering.
+    /// </summary>
+    public DateTime? EndDate
+    {
+        get => _endDate;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _endDate, value);
+            ApplyFilters();
+        }
+    }
+
+    /// <summary>
+    /// Gets the total number of log entries.
+    /// </summary>
+    public int TotalLogCount
+    {
+        get => _totalLogCount;
+        private set => this.RaiseAndSetIfChanged(ref _totalLogCount, value);
+    }
+
+    /// <summary>
+    /// Gets the number of filtered log entries.
+    /// </summary>
+    public int FilteredLogCount
+    {
+        get => _filteredLogCount;
+        private set => this.RaiseAndSetIfChanged(ref _filteredLogCount, value);
+    }
+
+    /// <summary>
+    /// Gets the available log levels for filtering.
+    /// </summary>
+    public LogLevel[] AvailableLogLevels { get; } = Enum.GetValues<LogLevel>();
+
+    /// <summary>
+    /// Gets the command to clear all log entries.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ClearLogsCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to export log entries.
+    /// </summary>
+    public ReactiveCommand<string, Unit> ExportLogsCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to copy selected log entry to clipboard.
+    /// </summary>
+    public ReactiveCommand<LogModel, Unit> CopyLogEntryCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to refresh the log display.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> RefreshCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to clear all filters.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ClearFiltersCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Initializes the reactive commands.
+    /// </summary>
+    private void InitializeCommands()
+    {
+        ClearLogsCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            var result = await _dialogService.ShowConfirmationAsync(
+                "Clear Logs", 
+                "Are you sure you want to clear all log entries? This action cannot be undone.");
+            
+            if (result)
+            {
+                _logDataStore.Clear();
+            }
+        });
+
+        ExportLogsCommand = ReactiveCommand.CreateFromTask<string>(async format =>
+        {
+            try
+            {
+                var exportData = await _logDataStore.ExportAsync(format);
+                await _clipboardService.SetTextAsync(exportData);
+                
+                // TODO: Show success notification
+            }
+            catch (Exception ex)
+            {
+                await _dialogService.ShowErrorAsync("Export Failed", $"Failed to export logs: {ex.Message}");
+            }
+        });
+
+        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<LogModel>(async logEntry =>
+        {
+            if (logEntry != null)
+            {
+                var logText = $"[{logEntry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
+                await _clipboardService.SetTextAsync(logText);
+            }
+        });
+
+        RefreshCommand = ReactiveCommand.Create(() =>
+        {
+            LoadLogEntries();
+            ApplyFilters();
+        });
+
+        ClearFiltersCommand = ReactiveCommand.Create(() =>
+        {
+            SearchText = string.Empty;
+            SelectedLogLevel = LogLevel.Trace;
+            StartDate = null;
+            EndDate = null;
+        });
+    }
+
+    /// <summary>
+    /// Initializes the log data store and subscribes to changes.
+    /// </summary>
+    private void InitializeLogStore()
+    {
+        // Load initial log entries
+        LoadLogEntries();
+
+        // Subscribe to log store changes for real-time updates
+        _logDataStore.PropertyChanged += OnLogDataStorePropertyChanged;
+        _logDataStore.CollectionChanged += OnLogDataStoreCollectionChanged;
+    }
+
+    /// <summary>
+    /// Loads log entries from the data store.
+    /// </summary>
+    private void LoadLogEntries()
+    {
+        var entries = _logDataStore.Entries;
+        
+        _uiThreadService.InvokeOnUIThread(() =>
+        {
+            LogEntries.Clear();
+            foreach (var entry in entries)
+            {
+                LogEntries.Add(entry);
+            }
+            
+            TotalLogCount = LogEntries.Count;
+        });
+    }
+
+    /// <summary>
+    /// Handles property changes from the log data store.
+    /// </summary>
+    private void OnLogDataStorePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ILogDataStore.Entries))
+        {
+            LoadLogEntries();
+            ApplyFilters();
+        }
+        else if (e.PropertyName == nameof(ILogDataStore.Count))
+        {
+            _uiThreadService.InvokeOnUIThread(() =>
+            {
+                TotalLogCount = _logDataStore.Count;
+            });
+        }
+    }
+
+    /// <summary>
+    /// Handles collection changes from the log data store.
+    /// </summary>
+    private void OnLogDataStoreCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        _uiThreadService.InvokeOnUIThread(() =>
+        {
+            switch (e.Action)
+            {
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
+                    if (e.NewItems != null)
+                    {
+                        foreach (LogModel newItem in e.NewItems)
+                        {
+                            LogEntries.Add(newItem);
+                        }
+                    }
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
+                    LogEntries.Clear();
+                    break;
+
+                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
+                    if (e.NewItems != null && e.OldItems != null)
+                    {
+                        // For replace operations, we'll just refresh the entire collection
+                        LoadLogEntries();
+                        return; // Skip the ApplyFilters call at the end since LoadLogEntries will handle it
+                    }
+                    break;
+            }
+
+            TotalLogCount = LogEntries.Count;
+            ApplyFilters();
+        });
+    }
+
+    /// <summary>
+    /// Applies the current filters to the log entries.
+    /// </summary>
+    private void ApplyFilters()
+    {
+        _uiThreadService.InvokeOnUIThread(() =>
+        {
+            var filtered = LogEntries.AsEnumerable();
+
+            // Apply log level filter
+            filtered = filtered.Where(entry => entry.Level >= SelectedLogLevel);
+
+            // Apply search text filter
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var searchLower = SearchText.ToLowerInvariant();
+                filtered = filtered.Where(entry =>
+                    entry.Message.ToLowerInvariant().Contains(searchLower) ||
+                    entry.Category.ToLowerInvariant().Contains(searchLower) ||
+                    (entry.Exception?.ToString().ToLowerInvariant().Contains(searchLower) ?? false));
+            }
+
+            // Apply date range filter
+            if (StartDate.HasValue)
+            {
+                filtered = filtered.Where(entry => entry.Timestamp >= StartDate.Value);
+            }
+
+            if (EndDate.HasValue)
+            {
+                filtered = filtered.Where(entry => entry.Timestamp <= EndDate.Value.AddDays(1).AddTicks(-1));
+            }
+
+            // Update filtered collection
+            FilteredLogEntries.Clear();
+            foreach (var entry in filtered.OrderBy(e => e.Timestamp))
+            {
+                FilteredLogEntries.Add(entry);
+            }
+
+            FilteredLogCount = FilteredLogEntries.Count;
+        });
+    }
+
+    /// <summary>
+    /// Disposes the view model and releases resources.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _logDataStore.PropertyChanged -= OnLogDataStorePropertyChanged;
+        _logDataStore.CollectionChanged -= OnLogDataStoreCollectionChanged;
+
+        _disposed = true;
+    }
+}

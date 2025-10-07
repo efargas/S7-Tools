@@ -1,0 +1,355 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:models="using:S7Tools.Infrastructure.Logging.Core.Models"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:converters="clr-namespace:S7Tools.Converters"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.LogViewerView"
+             x:DataType="vm:LogViewerViewModel"
+             Background="#1E1E1E">
+
+    <Design.DataContext>
+        <vm:LogViewerViewModel />
+    </Design.DataContext>
+
+    <UserControl.Resources>
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="0" 
+                Background="#2D2D30" 
+                BorderBrush="#464647" 
+                BorderThickness="0,0,0,1" 
+                Padding="8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left side controls -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <!-- Search -->
+                    <TextBox Text="{Binding SearchText}" 
+                             Watermark="Search logs..." 
+                             Width="200"
+                             Background="#3C3C3C"
+                             Foreground="#CCCCCC"
+                             BorderBrush="#464647" />
+
+                    <!-- Log Level Filter -->
+                    <ComboBox ItemsSource="{Binding AvailableLogLevels}"
+                              SelectedItem="{Binding SelectedLogLevel}"
+                              Width="120"
+                              Background="#3C3C3C"
+                              Foreground="#CCCCCC"
+                              BorderBrush="#464647" />
+
+                    <!-- Date Range -->
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="From:" 
+                                   Foreground="#CCCCCC" 
+                                   FontSize="12" 
+                                   VerticalAlignment="Center" />
+                        <DatePicker SelectedDate="{Binding StartDate}"
+                                    Width="140"
+                                    Background="#3C3C3C"
+                                    Foreground="#CCCCCC"
+                                    BorderBrush="#464647" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="To:" 
+                                   Foreground="#CCCCCC" 
+                                   FontSize="12" 
+                                   VerticalAlignment="Center" />
+                        <DatePicker SelectedDate="{Binding EndDate}"
+                                    Width="140"
+                                    Background="#3C3C3C"
+                                    Foreground="#CCCCCC"
+                                    BorderBrush="#464647" />
+                    </StackPanel>
+
+                    <!-- Clear Filters -->
+                    <Button Command="{Binding ClearFiltersCommand}"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#464647"
+                            Foreground="#CCCCCC"
+                            Padding="8,4"
+                            ToolTip.Tip="Clear all filters">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <icons:Icon Value="fa-solid fa-times" Width="14" Height="14" />
+                            <TextBlock Text="Clear" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Right side controls -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <!-- Auto Scroll Toggle -->
+                    <ToggleButton IsChecked="{Binding AutoScroll}"
+                                  Background="Transparent"
+                                  BorderThickness="1"
+                                  BorderBrush="#464647"
+                                  Foreground="#CCCCCC"
+                                  Padding="8,4"
+                                  ToolTip.Tip="Auto-scroll to latest entries">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <icons:Icon Value="fa-solid fa-arrow-down" Width="14" Height="14" />
+                            <TextBlock Text="Auto" FontSize="12" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <!-- Refresh -->
+                    <Button Command="{Binding RefreshCommand}"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#464647"
+                            Foreground="#CCCCCC"
+                            Padding="8,4"
+                            ToolTip.Tip="Refresh log display">
+                        <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                    </Button>
+
+                    <!-- Export Menu -->
+                    <Button Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#464647"
+                            Foreground="#CCCCCC"
+                            Padding="8,4"
+                            ToolTip.Tip="Export logs">
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuItem Header="Export as Text" 
+                                          Command="{Binding ExportLogsCommand}" 
+                                          CommandParameter="txt">
+                                    <MenuItem.Icon>
+                                        <icons:Icon Value="fa-solid fa-file-alt" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Export as JSON" 
+                                          Command="{Binding ExportLogsCommand}" 
+                                          CommandParameter="json">
+                                    <MenuItem.Icon>
+                                        <icons:Icon Value="fa-solid fa-code" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Export as CSV" 
+                                          Command="{Binding ExportLogsCommand}" 
+                                          CommandParameter="csv">
+                                    <MenuItem.Icon>
+                                        <icons:Icon Value="fa-solid fa-table" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
+                            <TextBlock Text="Export" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Clear Logs -->
+                    <Button Command="{Binding ClearLogsCommand}"
+                            Background="Transparent"
+                            BorderThickness="1"
+                            BorderBrush="#464647"
+                            Foreground="#CCCCCC"
+                            Padding="8,4"
+                            ToolTip.Tip="Clear all log entries">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                            <TextBlock Text="Clear" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Display Options -->
+        <Border Grid.Row="1" 
+                Background="#252526" 
+                BorderBrush="#464647" 
+                BorderThickness="0,0,0,1" 
+                Padding="8">
+            <StackPanel Orientation="Horizontal" Spacing="16">
+                <TextBlock Text="Show:" 
+                           Foreground="#CCCCCC" 
+                           FontSize="12" 
+                           VerticalAlignment="Center" />
+                
+                <CheckBox IsChecked="{Binding ShowTimestamp}" 
+                          Content="Timestamp" 
+                          Foreground="#CCCCCC" 
+                          FontSize="12" />
+                
+                <CheckBox IsChecked="{Binding ShowLevel}" 
+                          Content="Level" 
+                          Foreground="#CCCCCC" 
+                          FontSize="12" />
+                
+                <CheckBox IsChecked="{Binding ShowCategory}" 
+                          Content="Category" 
+                          Foreground="#CCCCCC" 
+                          FontSize="12" />
+            </StackPanel>
+        </Border>
+
+        <!-- Log Entries DataGrid -->
+        <DataGrid Grid.Row="2"
+                  Name="LogDataGrid"
+                  ItemsSource="{Binding FilteredLogEntries}"
+                  Background="#1E1E1E"
+                  Foreground="#CCCCCC"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  CanUserReorderColumns="True"
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="True"
+                  IsReadOnly="True"
+                  SelectionMode="Single"
+                  AutoGenerateColumns="False">
+            
+            <DataGrid.Styles>
+                <Style Selector="DataGrid">
+                    <Setter Property="BorderBrush" Value="#464647" />
+                    <Setter Property="BorderThickness" Value="1" />
+                </Style>
+                <Style Selector="DataGridColumnHeader">
+                    <Setter Property="Background" Value="#2D2D30" />
+                    <Setter Property="Foreground" Value="#CCCCCC" />
+                    <Setter Property="BorderBrush" Value="#464647" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="FontSize" Value="12" />
+                    <Setter Property="Padding" Value="8,4" />
+                </Style>
+                <Style Selector="DataGridRow">
+                    <Setter Property="Background" Value="Transparent" />
+                </Style>
+                <Style Selector="DataGridRow:selected">
+                    <Setter Property="Background" Value="#094771" />
+                </Style>
+                <Style Selector="DataGridRow:pointerover">
+                    <Setter Property="Background" Value="#2A2D2E" />
+                </Style>
+                <Style Selector="DataGridCell">
+                    <Setter Property="BorderBrush" Value="#464647" />
+                    <Setter Property="Padding" Value="8,4" />
+                    <Setter Property="FontSize" Value="12" />
+                </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+                <!-- Timestamp Column -->
+                <DataGridTextColumn Header="Timestamp" 
+                                    Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
+                                    Width="160"
+                                    IsVisible="{Binding $parent[UserControl].DataContext.ShowTimestamp}" />
+
+                <!-- Level Column -->
+                <DataGridTemplateColumn Header="Level" 
+                                        Width="80"
+                                        IsVisible="{Binding $parent[UserControl].DataContext.ShowLevel}">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate DataType="models:LogModel">
+                            <Border CornerRadius="3" 
+                                    Padding="4,2" 
+                                    Margin="2"
+                                    Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
+                                <TextBlock Text="{Binding Level}" 
+                                           Foreground="White" 
+                                           FontSize="10" 
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- Category Column -->
+                <DataGridTextColumn Header="Category" 
+                                    Binding="{Binding Category}"
+                                    Width="150"
+                                    IsVisible="{Binding $parent[UserControl].DataContext.ShowCategory}" />
+
+                <!-- Message Column -->
+                <DataGridTextColumn Header="Message" 
+                                    Binding="{Binding FormattedMessage}"
+                                    Width="*"
+                                    CanUserResize="True" />
+            </DataGrid.Columns>
+
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy Entry" 
+                              Command="{Binding CopyLogEntryCommand}" 
+                              CommandParameter="{Binding $parent[DataGrid].SelectedItem}">
+                        <MenuItem.Icon>
+                            <icons:Icon Value="fa-solid fa-copy" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <Separator />
+                    <MenuItem Header="Copy Message" 
+                              Command="{Binding CopyLogEntryCommand}" 
+                              CommandParameter="{Binding $parent[DataGrid].SelectedItem}">
+                        <MenuItem.Icon>
+                            <icons:Icon Value="fa-solid fa-clipboard" />
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+        </DataGrid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" 
+                Background="#007ACC" 
+                Padding="8,4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" 
+                           Foreground="White" 
+                           FontSize="12"
+                           VerticalAlignment="Center">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="Showing {0} of {1} log entries">
+                            <Binding Path="FilteredLogCount" />
+                            <Binding Path="TotalLogCount" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal" 
+                            Spacing="8">
+                    <TextBlock Text="{Binding SelectedLogLevel, StringFormat='Level: {0}'}" 
+                               Foreground="White" 
+                               FontSize="12" 
+                               VerticalAlignment="Center" />
+                    
+                    <TextBlock Text="{Binding SearchText, StringFormat='Filter: {0}'}" 
+                               Foreground="White" 
+                               FontSize="12" 
+                               VerticalAlignment="Center"
+                               IsVisible="{Binding SearchText, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

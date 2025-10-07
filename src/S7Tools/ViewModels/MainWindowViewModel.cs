@@ -11,6 +11,10 @@ using S7Tools.Services.Interfaces;
 using System.Linq;
 using Avalonia.Media;
 using S7Tools.Models;
+using S7Tools.Views;
+using S7Tools.Infrastructure.Logging.Core.Storage;
+using Microsoft.Extensions.Logging;
+using System.IO;
 
 namespace S7Tools.ViewModels;
 
@@ -25,6 +29,7 @@ public class MainWindowViewModel : ReactiveObject
     private readonly ITagRepository _tagRepository;
     private readonly IActivityBarService _activityBarService;
     private readonly ILayoutService _layoutService;
+    private readonly ILogger<MainWindowViewModel> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
@@ -39,8 +44,19 @@ public class MainWindowViewModel : ReactiveObject
         new DialogService(), 
         new PlcDataService(),
         new ActivityBarService(),
-        new LayoutService())
+        new LayoutService(),
+        CreateDesignTimeLogger())
     {
+    }
+
+    /// <summary>
+    /// Creates a design-time logger for the designer.
+    /// </summary>
+    /// <returns>A logger instance for design-time use.</returns>
+    private static ILogger<MainWindowViewModel> CreateDesignTimeLogger()
+    {
+        using var loggerFactory = LoggerFactory.Create(builder => { });
+        return loggerFactory.CreateLogger<MainWindowViewModel>();
     }
 
     /// <summary>
@@ -95,6 +111,117 @@ public class MainWindowViewModel : ReactiveObject
     {
         get => _testInputText;
         set => this.RaiseAndSetIfChanged(ref _testInputText, value);
+    }
+
+    // Settings Properties
+    private string _defaultLogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "S7Tools", "Logs");
+    /// <summary>
+    /// Gets or sets the default log path.
+    /// </summary>
+    public string DefaultLogPath
+    {
+        get => _defaultLogPath;
+        set => this.RaiseAndSetIfChanged(ref _defaultLogPath, value);
+    }
+
+    private string _exportPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "S7Tools", "Exports");
+    /// <summary>
+    /// Gets or sets the export path.
+    /// </summary>
+    public string ExportPath
+    {
+        get => _exportPath;
+        set => this.RaiseAndSetIfChanged(ref _exportPath, value);
+    }
+
+    private string _minimumLogLevel = "Information";
+    /// <summary>
+    /// Gets or sets the minimum log level.
+    /// </summary>
+    public string MinimumLogLevel
+    {
+        get => _minimumLogLevel;
+        set => this.RaiseAndSetIfChanged(ref _minimumLogLevel, value);
+    }
+
+    private bool _autoScrollLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to auto-scroll logs.
+    /// </summary>
+    public bool AutoScrollLogs
+    {
+        get => _autoScrollLogs;
+        set => this.RaiseAndSetIfChanged(ref _autoScrollLogs, value);
+    }
+
+    private bool _enableRollingLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to enable rolling log files.
+    /// </summary>
+    public bool EnableRollingLogs
+    {
+        get => _enableRollingLogs;
+        set => this.RaiseAndSetIfChanged(ref _enableRollingLogs, value);
+    }
+
+    private bool _showTimestampInLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to show timestamp in logs.
+    /// </summary>
+    public bool ShowTimestampInLogs
+    {
+        get => _showTimestampInLogs;
+        set => this.RaiseAndSetIfChanged(ref _showTimestampInLogs, value);
+    }
+
+    private bool _showCategoryInLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to show category in logs.
+    /// </summary>
+    public bool ShowCategoryInLogs
+    {
+        get => _showCategoryInLogs;
+        set => this.RaiseAndSetIfChanged(ref _showCategoryInLogs, value);
+    }
+
+    private bool _showLogLevelInLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to show log level in logs.
+    /// </summary>
+    public bool ShowLogLevelInLogs
+    {
+        get => _showLogLevelInLogs;
+        set => this.RaiseAndSetIfChanged(ref _showLogLevelInLogs, value);
+    }
+
+    private string _settingsStatusMessage = "Settings ready";
+    /// <summary>
+    /// Gets or sets the settings status message.
+    /// </summary>
+    public string SettingsStatusMessage
+    {
+        get => _settingsStatusMessage;
+        set => this.RaiseAndSetIfChanged(ref _settingsStatusMessage, value);
+    }
+
+    private string _currentSettingsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "S7Tools", "settings.json");
+    /// <summary>
+    /// Gets or sets the current settings file path.
+    /// </summary>
+    public string CurrentSettingsFilePath
+    {
+        get => _currentSettingsFilePath;
+        set => this.RaiseAndSetIfChanged(ref _currentSettingsFilePath, value);
+    }
+
+    private DateTime _settingsLastModified = DateTime.Now;
+    /// <summary>
+    /// Gets or sets the settings last modified date.
+    /// </summary>
+    public DateTime SettingsLastModified
+    {
+        get => _settingsLastModified;
+        set => this.RaiseAndSetIfChanged(ref _settingsLastModified, value);
     }
 
     private GridLength _bottomPanelGridLength = new GridLength(200, GridUnitType.Pixel);
@@ -178,6 +305,71 @@ public class MainWindowViewModel : ReactiveObject
     public ReactiveCommand<PanelTabItem, Unit> SelectBottomPanelTabCommand { get; }
 
     /// <summary>
+    /// Gets the command to test trace logging.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestTraceLogCommand { get; }
+
+    /// <summary>
+    /// Gets the command to test debug logging.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestDebugLogCommand { get; }
+
+    /// <summary>
+    /// Gets the command to test information logging.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestInfoLogCommand { get; }
+
+    /// <summary>
+    /// Gets the command to test warning logging.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestWarningLogCommand { get; }
+
+    /// <summary>
+    /// Gets the command to test error logging.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestErrorLogCommand { get; }
+
+    /// <summary>
+    /// Gets the command to test critical logging.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestCriticalLogCommand { get; }
+
+    /// <summary>
+    /// Gets the command to export logs.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to browse for default log path.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> BrowseDefaultLogPathCommand { get; }
+
+    /// <summary>
+    /// Gets the command to browse for export path.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> BrowseExportPathCommand { get; }
+
+    /// <summary>
+    /// Gets the command to save settings.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to load settings.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> LoadSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to reset settings to defaults.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ResetSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to open settings folder.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> OpenSettingsFolderCommand { get; }
+
+    /// <summary>
     /// Interaction to signal the view to close the application.
     /// </summary>
     public Interaction<Unit, Unit> CloseApplicationInteraction { get; }
@@ -191,13 +383,15 @@ public class MainWindowViewModel : ReactiveObject
         /// <param name="tagRepository">The tag repository service.</param>
         /// <param name="activityBarService">The activity bar service.</param>
         /// <param name="layoutService">The layout service.</param>
+        /// <param name="logger">The logger instance.</param>
         public MainWindowViewModel(
         IGreetingService greetingService, 
         IClipboardService clipboardService, 
         IDialogService dialogService, 
         ITagRepository tagRepository,
         IActivityBarService activityBarService,
-        ILayoutService layoutService)
+        ILayoutService layoutService,
+        ILogger<MainWindowViewModel> logger)
         {
         _greetingService = greetingService;
         _clipboardService = clipboardService;
@@ -205,6 +399,7 @@ public class MainWindowViewModel : ReactiveObject
         _tagRepository = tagRepository;
         _activityBarService = activityBarService;
         _layoutService = layoutService;
+        _logger = logger;
         
         // Activity bar items are already initialized by the service
         // No need to add them again
@@ -215,7 +410,7 @@ public class MainWindowViewModel : ReactiveObject
         new PanelTabItem("problems", "PROBLEMS", "No problems detected.", "fa-solid fa-exclamation-triangle"),
         new PanelTabItem("output", "OUTPUT", "Output console ready...", "fa-solid fa-terminal"),
         new PanelTabItem("debug", "DEBUG CONSOLE", "Debug console ready...", "fa-solid fa-bug"),
-        new PanelTabItem("logviewer", "LOG VIEWER", "Application logs will appear here...", "fa-solid fa-file-text")
+        new PanelTabItem("logviewer", "LOG VIEWER", CreateLogViewerContent(), "fa-solid fa-file-text")
         };
         SelectedTab = Tabs.FirstOrDefault();
         
@@ -340,9 +535,144 @@ public class MainWindowViewModel : ReactiveObject
         TestInputText += text;
         }
         });
+
+        // Initialize logging test commands
+        TestTraceLogCommand = ReactiveCommand.Create(() =>
+        {
+            _logger.LogTrace("This is a TRACE level log message generated at {Timestamp}", DateTime.Now);
+        });
+
+        TestDebugLogCommand = ReactiveCommand.Create(() =>
+        {
+            _logger.LogDebug("This is a DEBUG level log message with some debug info: {DebugData}", new { UserId = 123, Action = "ButtonClick" });
+        });
+
+        TestInfoLogCommand = ReactiveCommand.Create(() =>
+        {
+            _logger.LogInformation("This is an INFORMATION level log message. User performed action: {Action}", "Test Info Log");
+        });
+
+        TestWarningLogCommand = ReactiveCommand.Create(() =>
+        {
+            _logger.LogWarning("This is a WARNING level log message. Something might need attention: {Warning}", "Test warning condition");
+        });
+
+        TestErrorLogCommand = ReactiveCommand.Create(() =>
+        {
+            _logger.LogError("This is an ERROR level log message. An error occurred: {Error}", "Simulated error for testing");
+        });
+
+        TestCriticalLogCommand = ReactiveCommand.Create(() =>
+        {
+            _logger.LogCritical("This is a CRITICAL level log message. System is in critical state: {CriticalIssue}", "Simulated critical issue");
+        });
+
+        ExportLogsCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            try
+            {
+                var exportText = "Log Export - " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                await _clipboardService.SetTextAsync(exportText);
+                _logger.LogInformation("Log export copied to clipboard");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to export logs to clipboard");
+            }
+        });
+
+        // Settings Commands
+        BrowseDefaultLogPathCommand = ReactiveCommand.Create(() =>
+        {
+            // TODO: Implement folder browser dialog
+            SettingsStatusMessage = "Browse for default log path - Feature coming soon";
+            _logger.LogInformation("Browse default log path requested");
+        });
+
+        BrowseExportPathCommand = ReactiveCommand.Create(() =>
+        {
+            // TODO: Implement folder browser dialog
+            SettingsStatusMessage = "Browse for export path - Feature coming soon";
+            _logger.LogInformation("Browse export path requested");
+        });
+
+        SaveSettingsCommand = ReactiveCommand.Create(() =>
+        {
+            try
+            {
+                // TODO: Implement actual settings save
+                SettingsStatusMessage = "Settings saved successfully";
+                SettingsLastModified = DateTime.Now;
+                _logger.LogInformation("Settings saved to {Path}", CurrentSettingsFilePath);
+            }
+            catch (Exception ex)
+            {
+                SettingsStatusMessage = $"Failed to save settings: {ex.Message}";
+                _logger.LogError(ex, "Failed to save settings");
+            }
+        });
+
+        LoadSettingsCommand = ReactiveCommand.Create(() =>
+        {
+            try
+            {
+                // TODO: Implement actual settings load
+                SettingsStatusMessage = "Settings loaded successfully";
+                SettingsLastModified = DateTime.Now;
+                _logger.LogInformation("Settings loaded from {Path}", CurrentSettingsFilePath);
+            }
+            catch (Exception ex)
+            {
+                SettingsStatusMessage = $"Failed to load settings: {ex.Message}";
+                _logger.LogError(ex, "Failed to load settings");
+            }
+        });
+
+        ResetSettingsCommand = ReactiveCommand.Create(() =>
+        {
+            try
+            {
+                // Reset to default values
+                DefaultLogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "S7Tools", "Logs");
+                ExportPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "S7Tools", "Exports");
+                MinimumLogLevel = "Information";
+                AutoScrollLogs = true;
+                EnableRollingLogs = true;
+                ShowTimestampInLogs = true;
+                ShowCategoryInLogs = true;
+                ShowLogLevelInLogs = true;
+                
+                SettingsStatusMessage = "Settings reset to defaults";
+                _logger.LogInformation("Settings reset to default values");
+            }
+            catch (Exception ex)
+            {
+                SettingsStatusMessage = $"Failed to reset settings: {ex.Message}";
+                _logger.LogError(ex, "Failed to reset settings");
+            }
+        });
+
+        OpenSettingsFolderCommand = ReactiveCommand.Create(() =>
+        {
+            try
+            {
+                var settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath);
+                if (!string.IsNullOrEmpty(settingsDir))
+                {
+                    // TODO: Implement folder opening
+                    SettingsStatusMessage = $"Settings folder: {settingsDir}";
+                    _logger.LogInformation("Open settings folder requested: {Path}", settingsDir);
+                }
+            }
+            catch (Exception ex)
+            {
+                SettingsStatusMessage = $"Failed to open settings folder: {ex.Message}";
+                _logger.LogError(ex, "Failed to open settings folder");
+            }
+        });
         
         CloseApplicationInteraction = new Interaction<Unit, Unit>();
-        
+                
         // Subscribe to activity bar selection changes
         _activityBarService.SelectionChanged += OnActivityBarSelectionChanged;
         
@@ -378,7 +708,7 @@ public class MainWindowViewModel : ReactiveObject
         case "explorer":
         SidebarTitle = "EXPLORER";
         CurrentContent = new HomeViewModel();
-        DetailContent = ((HomeViewModel)CurrentContent).DetailContent;
+        DetailContent = new LoggingTestView() { DataContext = this };
         break;
         case "connections":
         SidebarTitle = "CONNECTIONS";
@@ -393,7 +723,7 @@ public class MainWindowViewModel : ReactiveObject
         case "settings":
         SidebarTitle = "SETTINGS";
         CurrentContent = new SettingsViewModel();
-        DetailContent = "Settings panel";
+        DetailContent = new SettingsConfigView() { DataContext = this };
         break;
         default:
         SidebarTitle = "EXPLORER";
@@ -427,5 +757,15 @@ public class MainWindowViewModel : ReactiveObject
         {
         DetailContent = null;
         }
+        }
+
+        /// <summary>
+        /// Creates the LogViewer content for the bottom panel.
+        /// </summary>
+        /// <returns>The LogViewer view.</returns>
+        private object CreateLogViewerContent()
+        {
+            // For now, return a placeholder. This will be properly implemented with DI.
+            return new LogViewerView();
         }
 }

@@ -1,6 +1,6 @@
 ---
 description: 'Memory instructions for .NET LogViewer implementation patterns, best practices, and common pitfalls specific to S7Tools project architecture.'
-applyTo: 
+applyTo:
   - 'src/**/*.cs'
   - 'src/**/*.axaml'
   - 'src/**/*.csproj'
@@ -95,7 +95,7 @@ private static void ConfigureServices(IServiceCollection services)
 {
     // [EXISTING SERVICES - DO NOT MODIFY]
     services.AddSingleton<IGreetingService, GreetingService>();
-    
+
     // [NEW] Logging Infrastructure - ADD ONLY
     services.AddLoggingInfrastructure(configuration);
     services.AddSingleton<LogViewerControlViewModel>();
@@ -112,7 +112,7 @@ Always implement thread-safe log storage with proper synchronization:
 public class LogDataStore : ILogDataStore
 {
     private static readonly SemaphoreSlim _semaphore = new(1);
-    
+
     public virtual void AddEntry(LogModel logModel)
     {
         _semaphore.Wait();
@@ -121,7 +121,7 @@ public class LogDataStore : ILogDataStore
             // Circular buffer logic to prevent memory leaks
             if (Entries.Count >= _maxEntries)
                 Entries.RemoveAt(0);
-            
+
             Entries.Add(logModel);
         }
         finally
@@ -143,11 +143,11 @@ public class DataStoreLoggerProvider : ILoggerProvider
 {
     private readonly ConcurrentDictionary<string, DataStoreLogger> _loggers = new();
     private readonly IDisposable? _onChangeToken;
-    
+
     public ILogger CreateLogger(string categoryName)
         => _loggers.GetOrAdd(categoryName, name =>
             new DataStoreLogger(name, GetCurrentConfig, _dataStore));
-    
+
     public void Dispose()
     {
         _loggers.Clear();
@@ -261,15 +261,15 @@ Use ReactiveUI patterns consistently with existing codebase:
 public class LogViewerControlViewModel : ViewModelBase
 {
     private string _searchText = string.Empty;
-    
+
     public string SearchText
     {
         get => _searchText;
         set => this.RaiseAndSetIfChanged(ref _searchText, value);
     }
-    
+
     public ReactiveCommand<Unit, Unit> ClearLogsCommand { get; }
-    
+
     public LogViewerControlViewModel(ILogDataStore dataStore)
     {
         ClearLogsCommand = ReactiveCommand.Create(ClearLogs);
@@ -314,7 +314,7 @@ public DataStoreLogger(string categoryName, ILogDataStore dataStore)
 {
     ArgumentNullException.ThrowIfNull(categoryName);
     ArgumentNullException.ThrowIfNull(dataStore);
-    
+
     _categoryName = categoryName;
     _dataStore = dataStore;
 }
@@ -327,7 +327,7 @@ Use structured logging with proper parameter formatting:
 
 ```csharp
 // CORRECT: Structured logging with parameters
-_logger.LogError(ex, "Failed to read tag from address {Address} with timeout {Timeout}ms", 
+_logger.LogError(ex, "Failed to read tag from address {Address} with timeout {Timeout}ms",
     address, timeout);
 
 // AVOID: String concatenation in log messages
@@ -453,7 +453,7 @@ public class LogDataStore
 public class LogDataStore
 {
     private readonly int _maxEntries;
-    
+
     public LogDataStore(IOptions<LogDataStoreOptions> options)
     {
         _maxEntries = options.Value.MaxEntries;
@@ -473,7 +473,7 @@ Add navigation items without modifying existing structure:
 public MainWindowViewModel(/* existing parameters */)
 {
     // [EXISTING INITIALIZATION - DO NOT MODIFY]
-    
+
     // [NEW] Add logging navigation - ADD ONLY
     NavigationItems.Add(new NavigationItemViewModel
     {
@@ -494,19 +494,19 @@ Integrate logging into existing services without breaking changes:
 public class PlcDataService : ITagRepository, IS7ConnectionProvider
 {
     private readonly ILogger<PlcDataService> _logger;
-    
+
     // Modified constructor - add logger parameter
     public PlcDataService(ILogger<PlcDataService> logger)
     {
         _logger = logger;
     }
-    
+
     public async Task<Tag> ReadTagAsync(string address)
     {
         _logger.LogInformation("Reading tag from address: {Address}", address);
-        
+
         // [EXISTING IMPLEMENTATION - DO NOT MODIFY]
-        
+
         _logger.LogDebug("Successfully read tag: {Address}", address);
         return result;
     }
@@ -575,6 +575,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools", "S7Tools\S7Tools.
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools.Core", "S7Tools.Core\S7Tools.Core.csproj"
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools.Infrastructure.Logging", "S7Tools.Infrastructure.Logging\S7Tools.Infrastructure.Logging.csproj"
 ```
+## Lessons Learned
+1. **Avalonia XAML Differences**: Some WPF/UWP properties don't exist in Avalonia (Watermark, ElementStyle)
+2. **DataGrid Styling**: Avalonia DataGrid requires different styling approaches than other frameworks
+3. **Thread Safety**: Critical for real-time log updates in UI applications
+4. **Service Integration**: Proper service contracts enable seamless feature integration
 
 ### Package Reference Validation Pattern
 **ALWAYS** ensure consistent package versions across projects:

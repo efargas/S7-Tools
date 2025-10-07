@@ -1,0 +1,325 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.SettingsConfigView"
+             x:DataType="vm:MainWindowViewModel"
+             Background="#1E1E1E">
+
+    <ScrollViewer>
+        <StackPanel Margin="20" Spacing="20">
+            <!-- Header -->
+            <TextBlock Text="Application Settings" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="#CCCCCC" 
+                       Margin="0,0,0,10" />
+
+            <!-- Logging Settings Section -->
+            <Border Background="#252526" 
+                    BorderBrush="#464647" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Logging Configuration" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Foreground="#CCCCCC" />
+
+                    <!-- Default Log Path -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="0" Grid.Row="0"
+                                   Text="Default Log Path:" 
+                                   Foreground="#CCCCCC" 
+                                   VerticalAlignment="Center" />
+                        
+                        <TextBox Grid.Column="1" Grid.Row="0"
+                                 Text="{Binding DefaultLogPath}"
+                                 Background="#3C3C3C"
+                                 Foreground="#CCCCCC"
+                                 BorderBrush="#464647"
+                                 Margin="8,0" />
+                        
+                        <Button Grid.Column="2" Grid.Row="0"
+                                Content="Browse..."
+                                Background="#0E639C"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Padding="12,6"
+                                Command="{Binding BrowseDefaultLogPathCommand}" />
+
+                        <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+                                   Text="Directory where log files will be stored by default"
+                                   FontSize="11"
+                                   Foreground="#858585"
+                                   Margin="8,4,0,0" />
+                    </Grid>
+
+                    <!-- Export Path -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Column="0" Grid.Row="0"
+                                   Text="Export Path:" 
+                                   Foreground="#CCCCCC" 
+                                   VerticalAlignment="Center" />
+                        
+                        <TextBox Grid.Column="1" Grid.Row="0"
+                                 Text="{Binding ExportPath}"
+                                 Background="#3C3C3C"
+                                 Foreground="#CCCCCC"
+                                 BorderBrush="#464647"
+                                 Margin="8,0" />
+                        
+                        <Button Grid.Column="2" Grid.Row="0"
+                                Content="Browse..."
+                                Background="#0E639C"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Padding="12,6"
+                                Command="{Binding BrowseExportPathCommand}" />
+
+                        <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+                                   Text="Directory where exported log files will be saved"
+                                   FontSize="11"
+                                   Foreground="#858585"
+                                   Margin="8,4,0,0" />
+                    </Grid>
+
+                    <!-- Log Level -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Minimum Log Level:" 
+                                   Foreground="#CCCCCC" 
+                                   VerticalAlignment="Center" />
+                        
+                        <ComboBox Grid.Column="1"
+                                  SelectedItem="{Binding MinimumLogLevel}"
+                                  Background="#3C3C3C"
+                                  Foreground="#CCCCCC"
+                                  BorderBrush="#464647"
+                                  Margin="8,0">
+                            <ComboBoxItem Content="Trace" />
+                            <ComboBoxItem Content="Debug" />
+                            <ComboBoxItem Content="Information" />
+                            <ComboBoxItem Content="Warning" />
+                            <ComboBoxItem Content="Error" />
+                            <ComboBoxItem Content="Critical" />
+                        </ComboBox>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="Only log messages at this level or higher will be recorded"
+                                   FontSize="11"
+                                   Foreground="#858585"
+                                   VerticalAlignment="Center"
+                                   Margin="8,0" />
+                    </Grid>
+
+                    <!-- Auto-scroll -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Auto-scroll:" 
+                                   Foreground="#CCCCCC" 
+                                   VerticalAlignment="Center" />
+                        
+                        <CheckBox Grid.Column="1"
+                                  IsChecked="{Binding AutoScrollLogs}"
+                                  Content="Automatically scroll to newest log entries"
+                                  Foreground="#CCCCCC"
+                                  Margin="8,0" />
+                    </Grid>
+
+                    <!-- Rolling Log Files -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Rolling Log Files:" 
+                                   Foreground="#CCCCCC" 
+                                   VerticalAlignment="Center" />
+                        
+                        <CheckBox Grid.Column="1"
+                                  IsChecked="{Binding EnableRollingLogs}"
+                                  Content="Create new log file each day (MainLog_YYYY-MM-DD_HH-mm-ss.log)"
+                                  Foreground="#CCCCCC"
+                                  Margin="8,0" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Display Settings Section -->
+            <Border Background="#252526" 
+                    BorderBrush="#464647" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Display Options" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Foreground="#CCCCCC" />
+
+                    <!-- Show Timestamp -->
+                    <CheckBox IsChecked="{Binding ShowTimestampInLogs}"
+                              Content="Show timestamp in log entries"
+                              Foreground="#CCCCCC" />
+
+                    <!-- Show Category -->
+                    <CheckBox IsChecked="{Binding ShowCategoryInLogs}"
+                              Content="Show category in log entries"
+                              Foreground="#CCCCCC" />
+
+                    <!-- Show Log Level -->
+                    <CheckBox IsChecked="{Binding ShowLogLevelInLogs}"
+                              Content="Show log level badges in log entries"
+                              Foreground="#CCCCCC" />
+                </StackPanel>
+            </Border>
+
+            <!-- Actions Section -->
+            <Border Background="#252526" 
+                    BorderBrush="#464647" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Settings Management" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Foreground="#CCCCCC" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Save Settings -->
+                        <Button Grid.Column="0"
+                                Background="#0E639C"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Padding="16,8"
+                                Margin="0,0,8,0"
+                                Command="{Binding SaveSettingsCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-save" Width="16" Height="16" />
+                                <TextBlock Text="Save Settings" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Load Settings -->
+                        <Button Grid.Column="1"
+                                Background="#0E639C"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Padding="16,8"
+                                Margin="4,0"
+                                Command="{Binding LoadSettingsCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-folder-open" Width="16" Height="16" />
+                                <TextBlock Text="Load Settings" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Reset to Defaults -->
+                        <Button Grid.Column="2"
+                                Background="#D13438"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Padding="16,8"
+                                Margin="4,0"
+                                Command="{Binding ResetSettingsCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-undo" Width="16" Height="16" />
+                                <TextBlock Text="Reset Defaults" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Open Settings Folder -->
+                        <Button Grid.Column="3"
+                                Background="Transparent"
+                                Foreground="#CCCCCC"
+                                BorderBrush="#464647"
+                                BorderThickness="1"
+                                Padding="16,8"
+                                Margin="8,0,0,0"
+                                Command="{Binding OpenSettingsFolderCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-folder" Width="16" Height="16" />
+                                <TextBlock Text="Open Folder" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <!-- Status Text -->
+                    <TextBlock Text="{Binding SettingsStatusMessage}"
+                               Foreground="#858585"
+                               FontSize="12"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- Current Settings Info -->
+            <Border Background="#252526" 
+                    BorderBrush="#464647" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Current Settings File" 
+                               FontSize="18" 
+                               FontWeight="SemiBold" 
+                               Foreground="#CCCCCC" />
+
+                    <TextBlock Text="{Binding CurrentSettingsFilePath}"
+                               Foreground="#858585"
+                               FontSize="11"
+                               TextWrapping="Wrap" />
+
+                    <TextBlock Text="{Binding SettingsLastModified, StringFormat='Last modified: {0:yyyy-MM-dd HH:mm:ss}'}"
+                               Foreground="#858585"
+                               FontSize="11" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
