@@ -51,7 +51,7 @@ public sealed class ActivityBarService : IActivityBarService
         get => _selectedItem;
         set
         {
-            if (_selectedItem == value)
+            if (_selectedItem is value)
             {
                 return;
             }
@@ -59,7 +59,7 @@ public sealed class ActivityBarService : IActivityBarService
             var previousItem = _selectedItem;
             
             // Deselect previous item
-            if (_selectedItem != null)
+            if (_selectedItem is not null)
             {
                 _selectedItem.IsSelected = false;
             }
@@ -67,7 +67,7 @@ public sealed class ActivityBarService : IActivityBarService
             _selectedItem = value;
 
             // Select new item
-            if (_selectedItem != null)
+            if (_selectedItem is not null)
             {
                 _selectedItem.IsSelected = true;
             }
@@ -85,7 +85,7 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public void AddItem(ActivityBarItem item)
     {
-        if (item == null)
+        if (item is null)
         {
             throw new ArgumentNullException(nameof(item));
         }
@@ -95,7 +95,7 @@ public sealed class ActivityBarService : IActivityBarService
             throw new ArgumentException("Activity bar item must have a valid ID.", nameof(item));
         }
 
-        if (_items.Any(i => i.Id == item.Id))
+        if (_items.Any(i => i.Id is item.Id))
         {
             throw new ArgumentException($"Activity bar item with ID '{item.Id}' already exists.", nameof(item));
         }
@@ -119,16 +119,16 @@ public sealed class ActivityBarService : IActivityBarService
             return false;
         }
 
-        var item = _items.FirstOrDefault(i => i.Id == itemId);
-        if (item == null)
+        var item = _items.FirstOrDefault(i => i.Id is itemId);
+        if (item is null)
         {
             return false;
         }
 
         // If removing the selected item, select another item
-        if (item == _selectedItem)
+        if (item is _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
+            var nextItem = _items.FirstOrDefault(i => i is not item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 
@@ -143,7 +143,7 @@ public sealed class ActivityBarService : IActivityBarService
             return null;
         }
 
-        return _items.FirstOrDefault(i => i.Id == itemId);
+        return _items.FirstOrDefault(i => i.Id is itemId);
     }
 
     /// <inheritdoc />
@@ -155,7 +155,7 @@ public sealed class ActivityBarService : IActivityBarService
         }
 
         var item = GetItem(itemId);
-        if (item == null || !item.IsVisible || !item.IsEnabled)
+        if (item is null || !item.IsVisible || !item.IsEnabled)
         {
             return false;
         }
@@ -168,13 +168,13 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public bool UpdateItem(string itemId, Action<ActivityBarItem> updateAction)
     {
-        if (string.IsNullOrEmpty(itemId) || updateAction == null)
+        if (string.IsNullOrEmpty(itemId) || updateAction is null)
         {
             return false;
         }
 
         var item = GetItem(itemId);
-        if (item == null)
+        if (item is null)
         {
             return false;
         }
@@ -196,7 +196,7 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public void ReorderItems(IEnumerable<string> itemIds)
     {
-        if (itemIds == null)
+        if (itemIds is null)
         {
             throw new ArgumentNullException(nameof(itemIds));
         }
@@ -228,7 +228,7 @@ public sealed class ActivityBarService : IActivityBarService
     public bool SetItemVisibility(string itemId, bool isVisible)
     {
         var item = GetItem(itemId);
-        if (item == null)
+        if (item is null)
         {
             return false;
         }
@@ -236,9 +236,9 @@ public sealed class ActivityBarService : IActivityBarService
         item.IsVisible = isVisible;
 
         // If hiding the selected item, select another visible item
-        if (!isVisible && item == _selectedItem)
+        if (!isVisible && item is _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
+            var nextItem = _items.FirstOrDefault(i => i is not item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 
@@ -249,7 +249,7 @@ public sealed class ActivityBarService : IActivityBarService
     public bool SetItemEnabled(string itemId, bool isEnabled)
     {
         var item = GetItem(itemId);
-        if (item == null)
+        if (item is null)
         {
             return false;
         }
@@ -257,9 +257,9 @@ public sealed class ActivityBarService : IActivityBarService
         item.IsEnabled = isEnabled;
 
         // If disabling the selected item, select another enabled item
-        if (!isEnabled && item == _selectedItem)
+        if (!isEnabled && item is _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
+            var nextItem = _items.FirstOrDefault(i => i is not item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 
