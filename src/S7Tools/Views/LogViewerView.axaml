@@ -17,6 +17,7 @@
 
     <UserControl.Resources>
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <converters:NullableDateTimeConverter x:Key="NullableDateTimeConverter" />
     </UserControl.Resources>
 
     <Grid>
@@ -62,7 +63,7 @@
                                    Foreground="#CCCCCC" 
                                    FontSize="12" 
                                    VerticalAlignment="Center" />
-                        <DatePicker SelectedDate="{Binding StartDate}"
+                        <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}"
                                     Width="140"
                                     Background="#3C3C3C"
                                     Foreground="#CCCCCC"
@@ -74,7 +75,7 @@
                                    Foreground="#CCCCCC" 
                                    FontSize="12" 
                                    VerticalAlignment="Center" />
-                        <DatePicker SelectedDate="{Binding EndDate}"
+                        <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
                                     Width="140"
                                     Background="#3C3C3C"
                                     Foreground="#CCCCCC"

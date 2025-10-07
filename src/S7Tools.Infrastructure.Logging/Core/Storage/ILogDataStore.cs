@@ -59,7 +59,7 @@ public interface ILogDataStore : INotifyPropertyChanged, INotifyCollectionChange
     /// <param name="startTime">The start time for filtering.</param>
     /// <param name="endTime">The end time for filtering.</param>
     /// <returns>Log entries within the time range.</returns>
-    IEnumerable<LogModel> GetEntriesInTimeRange(DateTime startTime, DateTime endTime);
+    IEnumerable<LogModel> GetEntriesInTimeRange(DateTimeOffset startTime, DateTimeOffset endTime);
 
     /// <summary>
     /// Exports all log entries to a string format.

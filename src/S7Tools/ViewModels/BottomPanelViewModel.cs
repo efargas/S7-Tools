@@ -25,6 +25,7 @@ public class BottomPanelViewModel : ReactiveObject
     private readonly IUIThreadService? _uiThreadService;
     private readonly IClipboardService _clipboardService;
     private readonly IDialogService _dialogService;
+    private readonly ILogExportService? _logExportService;
 
     private GridLength _panelHeight = new GridLength(200, GridUnitType.Pixel);
     private PanelTabItem? _selectedTab;
@@ -57,18 +58,21 @@ public class BottomPanelViewModel : ReactiveObject
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="logDataStore">The log data store (optional).</param>
     /// <param name="uiThreadService">The UI thread service (optional).</param>
+    /// <param name="logExportService">The log export service (optional).</param>
     public BottomPanelViewModel(
         ILogger<BottomPanelViewModel> logger,
         IClipboardService clipboardService,
         IDialogService dialogService,
         ILogDataStore? logDataStore = null,
-        IUIThreadService? uiThreadService = null)
+        IUIThreadService? uiThreadService = null,
+        ILogExportService? logExportService = null)
     {
         _logger = logger;
         _clipboardService = clipboardService;
         _dialogService = dialogService;
         _logDataStore = logDataStore;
         _uiThreadService = uiThreadService;
+        _logExportService = logExportService;
 
         // Initialize bottom panel tabs
         Tabs = new ObservableCollection<PanelTabItem>

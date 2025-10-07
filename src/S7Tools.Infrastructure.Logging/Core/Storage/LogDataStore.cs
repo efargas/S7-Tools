@@ -208,7 +208,7 @@ public sealed class LogDataStore : ILogDataStore
     }
 
     /// <inheritdoc />
-    public IEnumerable<LogModel> GetEntriesInTimeRange(DateTime startTime, DateTime endTime)
+    public IEnumerable<LogModel> GetEntriesInTimeRange(DateTimeOffset startTime, DateTimeOffset endTime)
     {
         lock (_lock)
         {

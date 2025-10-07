@@ -52,4 +52,16 @@ public static class ObjectConverters
             LogLevel.None => Color.FromRgb(64, 64, 64),          // Dark Gray
             _ => Color.FromRgb(128, 128, 128)                    // Default Gray
         }));
+
+    /// <summary>
+    /// A value converter that safely converts DateTimeOffset to DateTime for DatePicker binding.
+    /// </summary>
+    public static readonly IValueConverter DateTimeOffsetToDateTime =
+        new DateTimeOffsetToDateTimeConverter();
+
+    /// <summary>
+    /// A value converter that safely handles nullable DateTime conversions with error handling.
+    /// </summary>
+    public static readonly IValueConverter NullableDateTime =
+        new NullableDateTimeConverter();
 }

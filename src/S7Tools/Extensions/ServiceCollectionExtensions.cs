@@ -49,6 +49,9 @@ public static class ServiceCollectionExtensions
         // Add Clipboard Service
         services.TryAddTransient<IClipboardService, ClipboardService>();
 
+        // Add Log Export Service
+        services.TryAddTransient<ILogExportService, LogExportService>();
+
         // Add File Dialog Service
         services.TryAddTransient<IFileDialogService>(provider =>
         {

@@ -55,8 +55,8 @@ public sealed class LogModel
     /// <summary>
     /// Gets the formatted message including exception details if present.
     /// </summary>
-    public string FormattedMessage => Exception != null 
-        ? $"{Message}\n{Exception}" 
+    public string FormattedMessage => Exception != null
+        ? $"{Message}\n{Exception}"
         : Message;
 
     /// <summary>

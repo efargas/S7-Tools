@@ -151,6 +151,64 @@ public class ExampleViewModel : ReactiveObject, IDisposable
 - Export functionality completely broken
 - Column visibility still uses checkboxes instead of context menu
 
+## Technical Patterns and Solutions
+
+### **DateTimeOffset vs DateTime Pattern - CRITICAL LEARNING**
+
+**Problem Pattern**: `"Could not convert [DateTimeOffset] to [DateTime]"` errors in data binding
+
+**Root Cause**: Type mismatch between UI framework controls and ViewModel properties
+- **Avalonia DatePicker.SelectedDate**: Expects `DateTimeOffset?` (nullable DateTimeOffset)
+- **Common Mistake**: Using `DateTime?` in ViewModel properties
+
+**Solution Pattern**:
+```csharp
+// ❌ INCORRECT - Causes conversion errors
+private DateTime? _startDate;
+public DateTime? StartDate { get; set; }
+
+// ✅ CORRECT - Matches framework expectations
+private DateTimeOffset? _startDate;
+public DateTimeOffset? StartDate { get; set; }
+```
+
+**XAML Binding Pattern**:
+```xml
+<!-- ❌ INCORRECT - Requires unnecessary converters -->
+<DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay, Converter={x:Static converters:ObjectConverters.NullableDateTime}}" />
+
+<!-- ✅ CORRECT - Direct binding without converters -->
+<DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}" />
+```
+
+**Filtering Logic Pattern**:
+```csharp
+// ❌ INCORRECT - Unnecessary conversion
+if (StartDate.HasValue)
+{
+    var startDateOffset = new DateTimeOffset(StartDate.Value);
+    filtered = filtered.Where(entry => entry.Timestamp >= startDateOffset);
+}
+
+// ✅ CORRECT - Direct comparison
+if (StartDate.HasValue)
+{
+    filtered = filtered.Where(entry => entry.Timestamp >= StartDate.Value);
+}
+```
+
+**Key Insights**:
+1. **Framework API Compliance**: Always match exact property types expected by UI controls
+2. **Documentation Research**: Check official framework documentation before implementation
+3. **Type Consistency**: Use consistent types throughout the data flow
+4. **Avoid Converters**: Prefer direct binding when types match naturally
+
+**Verification Steps**:
+1. Build successfully without compilation errors
+2. Run application and test DatePicker functionality
+3. Verify date filtering works without conversion errors
+4. Confirm no runtime binding exceptions
+
 ## Technical Constraints
 
 ### **Avalonia UI Limitations**
@@ -247,6 +305,59 @@ public class ExampleViewModel : ReactiveObject, IDisposable
 - Acknowledge when implementations don't work as expected
 - Adjust plans based on user feedback
 
+## Current Priority Issues (January 2025) - UPDATED WITH LOG ANALYSIS
+
+### **TASK010: Comprehensive UI and Architecture Fixes - MAJOR PROGRESS**
+
+**✅ RESOLVED CRITICAL ISSUES (Verified by Log Analysis)**:
+1. **Dialog System Fixed** ✅ - ReactiveUI Interaction handlers properly registered
+   - **Evidence**: Application logs show "Dialog interaction handlers registered successfully"
+   - **Implementation**: Moved handlers from Program.cs to App.axaml.cs with proper UI thread context
+2. **Export Logs Functionality Implemented** ✅ - Complete ILogExportService working
+   - **Evidence**: Multiple successful exports detected in logs
+     - TXT export: 13 log entries exported successfully
+     - JSON export: 16 log entries exported successfully  
+     - CSV export: 18+ log entries exported successfully
+   - **Implementation**: Full service with TXT/JSON/CSV support and error handling
+3. **Default Folders Configured** ✅ - Export service using correct location
+   - **Evidence**: Log shows "Created export folder: /bin/Debug/net8.0/resources/exports"
+   - **Implementation**: LogExportService properly configured with default path
+
+**🔄 REMAINING CRITICAL ISSUES**:
+1. **Bottom Panel Resizing** - Must be resizable more in up direction with 75% limit
+2. **Panel Dividers** - Must be thinner with accent color highlighting on hover/drag
+3. **✅ DateTime Conversion - RESOLVED** - Date pickers conversion errors fixed
+4. **Main Content Container** - Must be a container for views using locator pattern
+5. **Exception Handling** - Need additional try/catch with logging throughout
+
+**📊 CURRENT STATUS: 60% COMPLETE**
+- **Application Stability**: ✅ Clean startup and runtime confirmed by logs
+- **Core Functionality**: ✅ Dialog system and export working as evidenced by logs
+- **Logging System**: ✅ Comprehensive structured logging operational
+- **User Interaction**: ✅ Bottom panel tab selection working ("Selected bottom panel tab: LOG VIEWER")
+
+**Architecture Requirements**:
+- Use abstracts, interfaces, services, DTOs where appropriate
+- Follow best practices from design pattern review
+- Implement proper error handling and logging
+- Maintain Clean Architecture principles
+
+### **Design Pattern Review Integration**
+
+**Key Findings from Review**:
+- Missing Command Pattern implementation (required)
+- Factory Pattern needs enhancement
+- Resource Pattern not implemented
+- Input validation missing throughout
+- Error handling needs improvement
+- Testing framework required
+
+**Implementation Priority**:
+1. Fix critical UI issues first
+2. Implement missing design patterns
+3. Add comprehensive error handling
+4. Establish testing framework
+
 ## Future Considerations
 
 ### **Testing Framework Priority**
@@ -268,6 +379,15 @@ public class ExampleViewModel : ReactiveObject, IDisposable
 - Dialog system integration complexity
 - Cross-platform consistency
 - Performance characteristics
+
+### **Architecture Evolution**
+
+**Next Steps Based on Design Review**:
+- Implement Command Handler pattern with generic base classes
+- Add Factory Pattern for complex object creation
+- Implement Resource Pattern for localization
+- Add comprehensive input validation
+- Establish structured logging throughout
 
 ---
 

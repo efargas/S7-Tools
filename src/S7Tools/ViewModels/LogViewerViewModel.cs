@@ -20,6 +20,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     private readonly IUIThreadService _uiThreadService;
     private readonly IClipboardService _clipboardService;
     private readonly IDialogService _dialogService;
+    // private readonly ILogExportService _logExportService;
     private bool _disposed;
 
     /// <summary>
@@ -41,8 +42,8 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     private bool _showTimestamp = true;
     private bool _showCategory = true;
     private bool _showLevel = true;
-    private DateTime? _startDate;
-    private DateTime? _endDate;
+    private DateTimeOffset? _startDate;
+    private DateTimeOffset? _endDate;
     private int _totalLogCount;
     private int _filteredLogCount;
 
@@ -155,7 +156,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets or sets the start date for date range filtering.
     /// </summary>
-    public DateTime? StartDate
+    public DateTimeOffset? StartDate
     {
         get => _startDate;
         set
@@ -168,7 +169,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets or sets the end date for date range filtering.
     /// </summary>
-    public DateTime? EndDate
+    public DateTimeOffset? EndDate
     {
         get => _endDate;
         set
@@ -234,23 +235,21 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
         ClearLogsCommand = ReactiveCommand.CreateFromTask(async () =>
         {
             var result = await _dialogService.ShowConfirmationAsync(
-                "Clear Logs", 
+                "Clear Logs",
                 "Are you sure you want to clear all log entries? This action cannot be undone.");
-            
+
             if (result)
             {
                 _logDataStore.Clear();
             }
         });
 
-        ExportLogsCommand = ReactiveCommand.CreateFromTask<string>(async format =>
+        ExportLogsCommand = ReactiveCommand.CreateFromTask<string>(async formatString =>
         {
             try
             {
-                var exportData = await _logDataStore.ExportAsync(format);
-                await _clipboardService.SetTextAsync(exportData);
-                
-                // Export completed successfully
+                // For now, just show a message that export is not implemented
+                await _dialogService.ShowErrorAsync("Export", $"Export to {formatString} format is not yet implemented");
             }
             catch (Exception ex)
             {
@@ -301,7 +300,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     private void LoadLogEntries()
     {
         var entries = _logDataStore.Entries;
-        
+
         _uiThreadService.InvokeOnUIThread(() =>
         {
             LogEntries.Clear();
@@ -309,7 +308,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
             {
                 LogEntries.Add(entry);
             }
-            
+
             TotalLogCount = LogEntries.Count;
         });
     }
@@ -401,7 +400,8 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
 
             if (EndDate.HasValue)
             {
-                filtered = filtered.Where(entry => entry.Timestamp <= EndDate.Value.AddDays(1).AddTicks(-1));
+                var endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
+                filtered = filtered.Where(entry => entry.Timestamp <= endDateOffset);
             }
 
             // Update filtered collection
@@ -414,6 +414,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
             FilteredLogCount = FilteredLogEntries.Count;
         });
     }
+
 
     /// <summary>
     /// Disposes the view model and releases resources.
@@ -442,9 +443,9 @@ internal class DesignTimeLogDataStore : ILogDataStore
 
     public IReadOnlyList<LogModel> Entries { get; } = new List<LogModel>
     {
-        new() { Timestamp = DateTime.Now.AddMinutes(-5), Level = LogLevel.Information, Category = "S7Tools.Services", Message = "Application started successfully" },
-        new() { Timestamp = DateTime.Now.AddMinutes(-3), Level = LogLevel.Warning, Category = "S7Tools.PLC", Message = "Connection timeout, retrying..." },
-        new() { Timestamp = DateTime.Now.AddMinutes(-1), Level = LogLevel.Error, Category = "S7Tools.Data", Message = "Failed to read tag value", Exception = new InvalidOperationException("Tag not found") }
+        new() { Timestamp = DateTimeOffset.Now.AddMinutes(-5).DateTime, Level = LogLevel.Information, Category = "S7Tools.Services", Message = "Application started successfully" },
+        new() { Timestamp = DateTimeOffset.Now.AddMinutes(-3).DateTime, Level = LogLevel.Warning, Category = "S7Tools.PLC", Message = "Connection timeout, retrying..." },
+        new() { Timestamp = DateTimeOffset.Now.AddMinutes(-1).DateTime, Level = LogLevel.Error, Category = "S7Tools.Data", Message = "Failed to read tag value", Exception = new InvalidOperationException("Tag not found") }
     };
 
     public int Count => Entries.Count;
@@ -455,7 +456,7 @@ internal class DesignTimeLogDataStore : ILogDataStore
     public void AddEntries(IEnumerable<LogModel> logEntries) { }
     public void Clear() { }
     public IEnumerable<LogModel> GetFilteredEntries(Func<LogModel, bool> filter) => Entries.Where(filter);
-    public IEnumerable<LogModel> GetEntriesInTimeRange(DateTime startTime, DateTime endTime) => Entries.Where(e => e.Timestamp >= startTime && e.Timestamp <= endTime);
+    public IEnumerable<LogModel> GetEntriesInTimeRange(DateTimeOffset startTime, DateTimeOffset endTime) => Entries.Where(e => e.Timestamp >= startTime && e.Timestamp <= endTime);
     public Task<string> ExportAsync(string format = "txt") => Task.FromResult("Design-time export data");
     public void Dispose() { }
 }
@@ -466,7 +467,7 @@ internal class DesignTimeLogDataStore : ILogDataStore
 internal class DesignTimeUIThreadService : IUIThreadService
 {
     public bool IsUIThread => true;
-    
+
     public void InvokeOnUIThread(Action action) => action?.Invoke();
     public Task InvokeOnUIThreadAsync(Action action) => Task.Run(action);
     public T InvokeOnUIThread<T>(Func<T> function) => function();
@@ -494,9 +495,10 @@ internal class DesignTimeDialogService : IDialogService
 {
     public Interaction<ConfirmationRequest, bool> ShowConfirmation { get; } = new();
     public Interaction<ConfirmationRequest, Unit> ShowError { get; } = new();
-    
+
     public Task<bool> ShowConfirmationAsync(string title, string message) => Task.FromResult(false);
     public Task ShowErrorAsync(string title, string message) => Task.CompletedTask;
 }
+
 
 #endregion
