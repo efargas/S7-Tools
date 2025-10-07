@@ -43,12 +43,14 @@ public sealed class LogDataStore : ILogDataStore
             lock (_lock)
             {
                 if (_count == 0)
+                {
                     return Array.Empty<LogModel>();
+                }
 
                 var result = new LogModel[_count];
                 for (int i = 0; i < _count; i++)
                 {
-                    var index = (_head - _count + i + _buffer.Length) % _buffer.Length;
+                    int index = (_head - _count + i + _buffer.Length) % _buffer.Length;
                     result[i] = _buffer[index];
                 }
                 return result;
@@ -86,11 +88,12 @@ public sealed class LogDataStore : ILogDataStore
     /// <inheritdoc />
     public void AddEntry(LogModel logEntry)
     {
-        if (logEntry == null)
-            throw new ArgumentNullException(nameof(logEntry));
+        ArgumentNullException.ThrowIfNull(logEntry);
 
         if (_disposed)
+        {
             return;
+        }
 
         LogModel? removedEntry = null;
         bool wasAdded = false;
@@ -100,7 +103,7 @@ public sealed class LogDataStore : ILogDataStore
             // Store the entry that will be overwritten if buffer is full
             if (_count == _buffer.Length)
             {
-                var oldIndex = _head;
+                int oldIndex = _head;
                 removedEntry = _buffer[oldIndex];
             }
 
@@ -141,45 +144,48 @@ public sealed class LogDataStore : ILogDataStore
     /// <inheritdoc />
     public void AddEntries(IEnumerable<LogModel> logEntries)
     {
-        if (logEntries == null)
-            throw new ArgumentNullException(nameof(logEntries));
+        ArgumentNullException.ThrowIfNull(logEntries);
 
-        if (_disposed)
-            return;
-
-        var entries = logEntries.ToList();
-        if (entries.Count == 0)
-            return;
-
-        lock (_lock)
+        if (!_disposed)
         {
-            foreach (var entry in entries)
+            var entries = logEntries.ToList();
+            if (entries.Count == 0)
             {
-                if (entry != null)
-                {
-                    _buffer[_head] = entry;
-                    _head = (_head + 1) % _buffer.Length;
+                return;
+            }
 
-                    if (_count < _buffer.Length)
+            lock (_lock)
+            {
+                foreach (LogModel? entry in entries)
+                {
+                    if (entry != null)
                     {
-                        _count++;
+                        _buffer[_head] = entry;
+                        _head = (_head + 1) % _buffer.Length;
+
+                        if (_count < _buffer.Length)
+                        {
+                            _count++;
+                        }
                     }
                 }
             }
-        }
 
-        // Notify outside of lock
-        OnPropertyChanged(nameof(Count));
-        OnPropertyChanged(nameof(IsFull));
-        OnPropertyChanged(nameof(Entries));
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            // Notify outside of lock
+            OnPropertyChanged(nameof(Count));
+            OnPropertyChanged(nameof(IsFull));
+            OnPropertyChanged(nameof(Entries));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
     }
 
     /// <inheritdoc />
     public void Clear()
     {
         if (_disposed)
+        {
             return;
+        }
 
         lock (_lock)
         {
@@ -197,13 +203,26 @@ public sealed class LogDataStore : ILogDataStore
     /// <inheritdoc />
     public IEnumerable<LogModel> GetFilteredEntries(Func<LogModel, bool> filter)
     {
-        if (filter == null)
-            throw new ArgumentNullException(nameof(filter));
+        ArgumentNullException.ThrowIfNull(filter);
 
         lock (_lock)
         {
-            var entries = Entries;
-            return entries.Where(filter).ToList();
+            if (_count == 0)
+            {
+                return Enumerable.Empty<LogModel>();
+            }
+
+            var result = new List<LogModel>(_count);
+            for (int i = 0; i < _count; i++)
+            {
+                int index = (_head - _count + i + _buffer.Length) % _buffer.Length;
+                LogModel entry = _buffer[index];
+                if (entry is not null && filter(entry))
+                {
+                    result.Add(entry);
+                }
+            }
+            return result;
         }
     }
 
@@ -212,15 +231,29 @@ public sealed class LogDataStore : ILogDataStore
     {
         lock (_lock)
         {
-            var entries = Entries;
-            return entries.Where(e => e.Timestamp >= startTime && e.Timestamp <= endTime).ToList();
+            if (_count == 0)
+            {
+                return Enumerable.Empty<LogModel>();
+            }
+
+            var result = new List<LogModel>(_count);
+            for (int i = 0; i < _count; i++)
+            {
+                int index = (_head - _count + i + _buffer.Length) % _buffer.Length;
+                LogModel entry = _buffer[index];
+                if (entry is not null && entry.Timestamp >= startTime && entry.Timestamp <= endTime)
+                {
+                    result.Add(entry);
+                }
+            }
+            return result;
         }
     }
 
     /// <inheritdoc />
     public async Task<string> ExportAsync(string format = "txt")
     {
-        var entries = Entries;
+        IReadOnlyList<LogModel> entries = Entries;
         
         return format.ToLowerInvariant() switch
         {
@@ -262,7 +295,7 @@ public sealed class LogDataStore : ILogDataStore
             var sb = new StringBuilder();
             sb.AppendLine("Timestamp,Level,Category,Message,Exception,EventId,EventName,Scope");
 
-            foreach (var entry in entries)
+            foreach (LogModel entry in entries)
             {
                 sb.AppendLine($"\"{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}\"," +
                              $"\"{entry.Level}\"," +
@@ -284,7 +317,7 @@ public sealed class LogDataStore : ILogDataStore
         {
             var sb = new StringBuilder();
             
-            foreach (var entry in entries)
+            foreach (LogModel entry in entries)
             {
                 sb.AppendLine($"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.Level}] {entry.Category}: {entry.Message}");
                 
@@ -308,7 +341,9 @@ public sealed class LogDataStore : ILogDataStore
     private static string EscapeCsv(string value)
     {
         if (string.IsNullOrEmpty(value))
+        {
             return string.Empty;
+        }
 
         return value.Replace("\"", "\"\"");
     }
@@ -327,14 +362,21 @@ public sealed class LogDataStore : ILogDataStore
     public void Dispose()
     {
         if (_disposed)
+        {
             return;
+        }
+
 
         lock (_lock)
         {
             if (_disposed)
+            {
                 return;
+            }
 
             Array.Clear(_buffer, 0, _buffer.Length);
+            _count = 0; // Restablecer el contador de entradas
+            _head = 0;  // Opcional: restablecer el puntero de cabeza
             _disposed = true;
         }
 

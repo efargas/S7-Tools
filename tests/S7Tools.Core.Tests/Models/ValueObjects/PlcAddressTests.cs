@@ -108,9 +108,9 @@ public class PlcAddressTests
         var result = PlcAddress.Create(invalidAddress);
 
         // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error.Should().NotBeEmpty();
-        result.Value.Should().BeNull();
+    result.IsFailure.Should().BeTrue();
+    result.Error.Should().NotBeEmpty();
+    result.Value.Should().Be(default(PlcAddress));
     }
 
     [Theory]

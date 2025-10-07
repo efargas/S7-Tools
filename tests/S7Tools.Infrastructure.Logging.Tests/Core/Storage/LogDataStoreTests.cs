@@ -123,7 +123,9 @@ public class LogDataStoreTests : IDisposable
         // Assert
         collectionChangedArgs.Should().NotBeNull();
         collectionChangedArgs!.Action.Should().Be(NotifyCollectionChangedAction.Add);
-        collectionChangedArgs.NewItems!.Should().Contain(logEntry);
+    var newItems = collectionChangedArgs.NewItems as System.Collections.IList;
+    Assert.NotNull(newItems);
+    Assert.True(newItems.Contains(logEntry));
     }
 
     [Fact]
@@ -391,7 +393,7 @@ public class LogDataStoreTests : IDisposable
         return new LogModel
         {
             Id = Guid.NewGuid(),
-            Timestamp = timestamp ?? DateTimeOffset.Now,
+            Timestamp = (timestamp ?? DateTimeOffset.Now).UtcDateTime,
             Level = level,
             Category = "Test.Category",
             Message = message,

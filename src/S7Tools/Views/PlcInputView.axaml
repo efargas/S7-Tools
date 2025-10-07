@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             x:Class="S7Tools.Views.PlcInputView">
+  <StackPanel Margin="16" Spacing="8">
+    <TextBlock Text="Dirección PLC:" FontWeight="Bold"/>
+    <TextBox Text="{Binding Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
+    <Button Content="Validar" Command="{Binding ValidateCommand}" Width="100"/>
+    <TextBlock Text="{Binding ValidationError}" Foreground="Red"/>
+  </StackPanel>
+</UserControl>

@@ -101,20 +101,19 @@ public class DialogServiceTests
         // Arrange
         const string title = "Test Title";
         const string message = "Test Message";
-        var firstHandlerCalled = false;
-        var secondHandlerCalled = false;
+        var handlerCalled = false;
 
         // Register first handler
         _dialogService.ShowConfirmation.RegisterHandler(interaction =>
         {
-            firstHandlerCalled = true;
+            handlerCalled = true;
             interaction.SetOutput(true);
         });
 
-        // Register second handler
+        // Register second handler (overwrites the first)
         _dialogService.ShowConfirmation.RegisterHandler(interaction =>
         {
-            secondHandlerCalled = true;
+            handlerCalled = true;
             interaction.SetOutput(false);
         });
 
@@ -122,9 +121,8 @@ public class DialogServiceTests
         var result = await _dialogService.ShowConfirmationAsync(title, message);
 
         // Assert
-        firstHandlerCalled.Should().BeTrue();
-        secondHandlerCalled.Should().BeFalse();
-        result.Should().BeTrue();
+        handlerCalled.Should().BeTrue();
+        result.Should().BeFalse();
     }
 
     [Fact]

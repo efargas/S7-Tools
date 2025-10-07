@@ -100,12 +100,12 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<EnhancedViewModelFactory>();
         services.TryAddSingleton<IViewModelFactory>(provider => provider.GetRequiredService<EnhancedViewModelFactory>());
 
-        // Add Resource Pattern Services
-        services.TryAddSingleton<IResourceManager, ResourceManager>();
-        services.TryAddSingleton(typeof(IResourceManager<>), typeof(ResourceManager<>));
+    // Add Resource Pattern Services (InMemoryResourceManager para pruebas/desarrollo)
+    services.TryAddSingleton<IResourceManager, S7Tools.Core.Resources.InMemoryResourceManager>();
+    // Si se requiere el ResourceManager decorador, cambiar aquí
 
-        // Add Validation Services
-        services.TryAddSingleton<IValidationService, ValidationService>();
+    // Add Validation Services
+    services.TryAddSingleton<IValidationService, S7Tools.Core.Validation.ValidationService>();
 
         // Add Structured Logging Services
         services.TryAddSingleton<IStructuredLoggerFactory, StructuredLoggerFactory>();

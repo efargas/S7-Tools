@@ -44,7 +44,11 @@ public readonly record struct PlcAddress
     /// <exception cref="ArgumentException">Thrown when the address format is invalid.</exception>
     public PlcAddress(string address)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(address);
+
+        if (string.IsNullOrWhiteSpace(address))
+        {
+            throw new ArgumentException($"Invalid PLC address format: {address}", nameof(address));
+        }
 
         if (!AddressPattern.IsMatch(address))
         {
@@ -53,6 +57,15 @@ public readonly record struct PlcAddress
 
         Value = address.ToUpperInvariant();
         (AddressType, DataBlockNumber, Offset, BitOffset) = ParseAddress(Value);
+
+        // Validación de rango de bit offset para DBX, M, I, Q, V
+        if (BitOffset.HasValue)
+        {
+            if (BitOffset.Value < 0 || BitOffset.Value > 7)
+            {
+                throw new ArgumentException($"Invalid PLC address format: {address} (bit offset fuera de rango 0-7)", nameof(address));
+            }
+        }
     }
 
     /// <summary>
