@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using S7Tools.Core.Factories;
 using S7Tools.Core.Models.ValueObjects;
 using S7Tools.Core.Validation;
@@ -24,7 +25,8 @@ public partial class PlcInputViewModel : ObservableObject
         _validatorFactory = validatorFactory;
     }
 
-    public void Validate()
+    [RelayCommand]
+    private void Validate()
     {
         var validator = _validatorFactory.Create("PlcAddress");
         var result = PlcAddress.Create(Address ?? string.Empty);
