@@ -55,7 +55,9 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     public ILogger CreateLogger(string categoryName)
     {
         if (_disposed)
+        {
             throw new ObjectDisposedException(nameof(DataStoreLoggerProvider));
+        }
 
         return _loggers.GetOrAdd(categoryName, name => new DataStoreLogger(name, _dataStore, _configuration));
     }
@@ -88,10 +90,14 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     public void UpdateConfiguration(DataStoreLoggerConfiguration configuration)
     {
         if (configuration == null)
+        {
             throw new ArgumentNullException(nameof(configuration));
+        }
 
         if (_disposed)
+        {
             return;
+        }
 
         // Update the configuration
         _configuration.LogLevel = configuration.LogLevel;
@@ -112,7 +118,9 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     public void ClearLoggers()
     {
         if (_disposed)
+        {
             return;
+        }
 
         _loggers.Clear();
     }
@@ -121,7 +129,9 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     public void Dispose()
     {
         if (_disposed)
+        {
             return;
+        }
 
         _loggers.Clear();
         _scopeProvider = null;

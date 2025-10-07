@@ -256,7 +256,9 @@ public sealed class LayoutService : ILayoutService
         {
             var configPath = GetConfigFilePath();
             if (!File.Exists(configPath))
+            {
                 return;
+            }
 
             var json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             var configuration = JsonSerializer.Deserialize<LayoutConfiguration>(json);
@@ -294,7 +296,9 @@ public sealed class LayoutService : ILayoutService
     public void ApplyConfiguration(LayoutConfiguration configuration)
     {
         if (configuration == null)
+        {
             throw new ArgumentNullException(nameof(configuration));
+        }
 
         IsSidebarVisible = configuration.IsSidebarVisible;
         IsBottomPanelVisible = configuration.IsBottomPanelVisible;
@@ -311,7 +315,9 @@ public sealed class LayoutService : ILayoutService
     private void SetProperty<T>(ref T field, T value, [System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(field, value))
+        {
             return;
+        }
 
         var oldValue = field;
         field = value;

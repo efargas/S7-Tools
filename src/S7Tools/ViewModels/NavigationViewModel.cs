@@ -214,7 +214,10 @@ public class NavigationViewModel : ReactiveObject
     /// <param name="itemId">The activity bar item ID.</param>
     private void SelectActivityBarItem(string itemId)
     {
-        if (string.IsNullOrEmpty(itemId)) return;
+        if (string.IsNullOrEmpty(itemId))
+        {
+            return;
+        }
 
         var currentSelectedItem = _activityBarService.SelectedItem;
 
@@ -240,7 +243,10 @@ public class NavigationViewModel : ReactiveObject
     /// <param name="itemId">The activity bar item ID.</param>
     private void NavigateToActivityBarItemViaKeyboard(string itemId)
     {
-        if (string.IsNullOrEmpty(itemId)) return;
+        if (string.IsNullOrEmpty(itemId))
+        {
+            return;
+        }
 
         // Keyboard navigation always selects the item and ensures sidebar is visible
         _activityBarService.SelectItem(itemId);
@@ -404,7 +410,10 @@ public class NavigationViewModel : ReactiveObject
     /// <param name="viewModelType">The view model type.</param>
     public void NavigateTo(Type viewModelType)
     {
-        if (viewModelType == null) return;
+        if (viewModelType == null)
+        {
+            return;
+        }
 
         try
         {

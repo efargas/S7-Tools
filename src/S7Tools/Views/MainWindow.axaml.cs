@@ -37,8 +37,11 @@ public partial class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
         this.WhenActivated(disposables =>
         {
-            if (ViewModel is null) return;
-            
+            if (ViewModel is null)
+            {
+                return;
+            }
+
             // Handle application close interaction
             ViewModel.CloseApplicationInteraction.RegisterHandler(interaction =>
             {

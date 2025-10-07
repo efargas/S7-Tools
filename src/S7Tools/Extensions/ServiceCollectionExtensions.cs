@@ -29,7 +29,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddS7ToolsFoundationServices(this IServiceCollection services)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         // Add UI Thread Service
         services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
@@ -91,7 +93,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddS7ToolsAdvancedServices(this IServiceCollection services)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         // Add Command Pattern Services
         services.TryAddSingleton<ICommandDispatcher, CommandDispatcher>();
@@ -129,7 +133,9 @@ public static class ServiceCollectionExtensions
         Action<LogDataStoreOptions>? configureDataStore = null)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         // Add DataStore logging services
         services.AddDataStoreLogging(configureDataStore);
@@ -145,7 +151,9 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddS7ToolsViewModels(this IServiceCollection services)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         // Add ViewModel Factory
         services.TryAddSingleton<IViewModelFactory, ViewModelFactory>();
@@ -180,7 +188,9 @@ public static class ServiceCollectionExtensions
         Action<LogDataStoreOptions>? configureDataStore = null)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         // Add foundation services
         services.AddS7ToolsFoundationServices();
@@ -208,10 +218,14 @@ public static class ServiceCollectionExtensions
         Action<S7ToolsServiceConfiguration> configureServices)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         if (configureServices == null)
+        {
             throw new ArgumentNullException(nameof(configureServices));
+        }
 
         var configuration = new S7ToolsServiceConfiguration();
         configureServices(configuration);
@@ -259,7 +273,9 @@ public static class ServiceCollectionExtensions
     public static async Task InitializeS7ToolsServicesAsync(this IServiceProvider serviceProvider)
     {
         if (serviceProvider == null)
+        {
             throw new ArgumentNullException(nameof(serviceProvider));
+        }
 
         // Initialize Layout Service
         var layoutService = serviceProvider.GetService<ILayoutService>();
@@ -292,7 +308,9 @@ public static class ServiceCollectionExtensions
     public static async Task ShutdownS7ToolsServicesAsync(this IServiceProvider serviceProvider)
     {
         if (serviceProvider == null)
+        {
             throw new ArgumentNullException(nameof(serviceProvider));
+        }
 
         // Save Layout Service configuration
         var layoutService = serviceProvider.GetService<ILayoutService>();

@@ -166,7 +166,10 @@ public class BottomPanelViewModel : ReactiveObject
     /// <param name="tab">The tab to select.</param>
     private void SelectTab(PanelTabItem tab)
     {
-        if (tab == null) return;
+        if (tab == null)
+        {
+            return;
+        }
 
         var currentSelectedTab = SelectedTab;
 

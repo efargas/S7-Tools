@@ -25,7 +25,9 @@ public static class LoggingServiceCollectionExtensions
         Action<LogDataStoreOptions>? configure = null)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         // Configure options
         if (configure != null)
@@ -71,13 +73,19 @@ public static class LoggingServiceCollectionExtensions
         Action<DataStoreLoggerConfiguration> configureLogger)
     {
         if (services == null)
+        {
             throw new ArgumentNullException(nameof(services));
+        }
 
         if (configureDataStore == null)
+        {
             throw new ArgumentNullException(nameof(configureDataStore));
+        }
 
         if (configureLogger == null)
+        {
             throw new ArgumentNullException(nameof(configureLogger));
+        }
 
         // Configure DataStore options
         services.Configure(configureDataStore);
@@ -119,7 +127,9 @@ public static class LoggingServiceCollectionExtensions
         Action<DataStoreLoggerConfiguration>? configure = null)
     {
         if (builder == null)
+        {
             throw new ArgumentNullException(nameof(builder));
+        }
 
         // Ensure DataStore services are registered
         builder.Services.AddDataStoreLogging();
@@ -150,7 +160,9 @@ public static class LoggingServiceCollectionExtensions
         Action<DataStoreLoggerConfiguration> configureLogger)
     {
         if (builder == null)
+        {
             throw new ArgumentNullException(nameof(builder));
+        }
 
         // Register DataStore services with configuration
         builder.Services.AddDataStoreLogging(configureDataStore, configureLogger);
@@ -170,7 +182,9 @@ public static class LoggingServiceCollectionExtensions
     public static DataStoreLoggerProvider GetDataStoreLoggerProvider(this IServiceProvider serviceProvider)
     {
         if (serviceProvider == null)
+        {
             throw new ArgumentNullException(nameof(serviceProvider));
+        }
 
         return serviceProvider.GetRequiredService<DataStoreLoggerProvider>();
     }
@@ -183,7 +197,9 @@ public static class LoggingServiceCollectionExtensions
     public static ILogDataStore GetLogDataStore(this IServiceProvider serviceProvider)
     {
         if (serviceProvider == null)
+        {
             throw new ArgumentNullException(nameof(serviceProvider));
+        }
 
         return serviceProvider.GetRequiredService<ILogDataStore>();
     }

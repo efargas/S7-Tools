@@ -42,7 +42,9 @@ public sealed class LocalizationService : ILocalizationService
     public string GetString(string key)
     {
         if (string.IsNullOrEmpty(key))
+        {
             return string.Empty;
+        }
 
         try
         {
@@ -61,7 +63,9 @@ public sealed class LocalizationService : ILocalizationService
         var format = GetString(key);
         
         if (args == null || args.Length == 0)
+        {
             return format;
+        }
 
         try
         {
@@ -79,7 +83,9 @@ public sealed class LocalizationService : ILocalizationService
         value = string.Empty;
 
         if (string.IsNullOrEmpty(key))
+        {
             return false;
+        }
 
         try
         {
@@ -102,13 +108,17 @@ public sealed class LocalizationService : ILocalizationService
     public bool SetCulture(CultureInfo culture)
     {
         if (culture == null)
+        {
             return false;
+        }
 
         var bestMatch = GetBestMatchingCulture(culture);
         var oldCulture = _currentUICulture;
 
         if (bestMatch.Equals(_currentUICulture))
+        {
             return true;
+        }
 
         try
         {
@@ -141,7 +151,9 @@ public sealed class LocalizationService : ILocalizationService
     public bool SetCulture(string cultureName)
     {
         if (string.IsNullOrEmpty(cultureName))
+        {
             return false;
+        }
 
         try
         {
@@ -165,7 +177,9 @@ public sealed class LocalizationService : ILocalizationService
     public bool IsCultureSupported(CultureInfo culture)
     {
         if (culture == null)
+        {
             return false;
+        }
 
         return _availableCultures.Any(c => 
             c.Name.Equals(culture.Name, StringComparison.OrdinalIgnoreCase) ||
@@ -176,19 +190,25 @@ public sealed class LocalizationService : ILocalizationService
     public CultureInfo GetBestMatchingCulture(CultureInfo culture)
     {
         if (culture == null)
+        {
             return _availableCultures.First();
+        }
 
         // Exact match
         var exactMatch = _availableCultures.FirstOrDefault(c => 
             c.Name.Equals(culture.Name, StringComparison.OrdinalIgnoreCase));
         if (exactMatch != null)
+        {
             return exactMatch;
+        }
 
         // Language match (e.g., "en" for "en-US")
         var languageMatch = _availableCultures.FirstOrDefault(c => 
             c.TwoLetterISOLanguageName.Equals(culture.TwoLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
         if (languageMatch != null)
+        {
             return languageMatch;
+        }
 
         // Parent culture match
         if (!culture.IsNeutralCulture)
@@ -196,7 +216,9 @@ public sealed class LocalizationService : ILocalizationService
             var parentMatch = _availableCultures.FirstOrDefault(c => 
                 c.Name.Equals(culture.Parent.Name, StringComparison.OrdinalIgnoreCase));
             if (parentMatch != null)
+            {
                 return parentMatch;
+            }
         }
 
         // Default to first available culture (usually English)

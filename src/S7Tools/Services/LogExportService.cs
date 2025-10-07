@@ -252,7 +252,9 @@ public class LogExportService : ILogExportService
     private static string EscapeCsvField(string field)
     {
         if (string.IsNullOrEmpty(field))
+        {
             return "";
+        }
 
         // If field contains comma, quote, or newline, wrap in quotes and escape internal quotes
         if (field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r'))

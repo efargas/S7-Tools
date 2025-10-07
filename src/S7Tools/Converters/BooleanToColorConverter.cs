@@ -21,11 +21,15 @@ public class BooleanToColorConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not bool boolValue || parameter is not string paramString)
+        {
             return new SolidColorBrush(Colors.Gray);
+        }
 
         var colors = paramString.Split('|');
         if (colors.Length != 2)
+        {
             return new SolidColorBrush(Colors.Gray);
+        }
 
         var colorString = boolValue ? colors[0] : colors[1];
         

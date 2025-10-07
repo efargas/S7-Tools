@@ -75,10 +75,14 @@ public sealed class DataStoreLoggerConfiguration
     public bool MatchesCategory(string categoryName)
     {
         if (string.IsNullOrEmpty(CategoryFilter))
+        {
             return true;
+        }
 
         if (string.IsNullOrEmpty(categoryName))
+        {
             return false;
+        }
 
         return MatchesPattern(categoryName, CategoryFilter);
     }
@@ -87,10 +91,14 @@ public sealed class DataStoreLoggerConfiguration
     {
         // Simple wildcard matching implementation
         if (pattern == "*")
+        {
             return true;
+        }
 
         if (!pattern.Contains('*') && !pattern.Contains('?'))
+        {
             return string.Equals(input, pattern, StringComparison.OrdinalIgnoreCase);
+        }
 
         // Convert wildcard pattern to regex-like matching
         var regexPattern = "^" + pattern

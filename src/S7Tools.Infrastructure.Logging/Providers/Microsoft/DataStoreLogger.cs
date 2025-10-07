@@ -44,10 +44,14 @@ public sealed class DataStoreLogger : ILogger
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel))
+        {
             return;
+        }
 
         if (_configuration.EventId.HasValue && _configuration.EventId.Value != eventId.Id)
+        {
             return;
+        }
 
         var message = _configuration.FormatMessages && formatter != null 
             ? formatter(state, exception) 
@@ -83,11 +87,15 @@ public sealed class DataStoreLogger : ILogger
     private string? GetCurrentScope()
     {
         if (!_configuration.IncludeScopes)
+        {
             return null;
+        }
 
         var scope = LoggerScope<object>.Current;
         if (scope == null)
+        {
             return null;
+        }
 
         var sb = new StringBuilder();
         var currentScope = scope;
@@ -95,8 +103,10 @@ public sealed class DataStoreLogger : ILogger
         while (currentScope != null)
         {
             if (sb.Length > 0)
+            {
                 sb.Insert(0, " => ");
-            
+            }
+
             sb.Insert(0, currentScope.State?.ToString() ?? "null");
             currentScope = currentScope.Parent as LoggerScope<object>;
         }

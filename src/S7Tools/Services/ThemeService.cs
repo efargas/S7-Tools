@@ -56,7 +56,9 @@ public sealed class ThemeService : IThemeService
     public bool SetTheme(ThemeMode theme)
     {
         if (_currentTheme == theme)
+        {
             return true;
+        }
 
         var previousTheme = _currentTheme;
         var previousThemeInfo = _currentThemeInfo;
@@ -66,7 +68,9 @@ public sealed class ThemeService : IThemeService
         var themeInfo = _availableThemes.FirstOrDefault(t => t.Mode == actualTheme);
         
         if (themeInfo == null)
+        {
             return false;
+        }
 
         _currentTheme = theme;
         _currentThemeInfo = themeInfo;
@@ -87,7 +91,9 @@ public sealed class ThemeService : IThemeService
     public bool SetTheme(string themeName)
     {
         if (string.IsNullOrEmpty(themeName))
+        {
             return false;
+        }
 
         if (Enum.TryParse<ThemeMode>(themeName, true, out var themeMode))
         {
@@ -125,15 +131,21 @@ public sealed class ThemeService : IThemeService
     public string? GetThemeColor(string colorKey)
     {
         if (string.IsNullOrEmpty(colorKey))
+        {
             return null;
+        }
 
         // Check custom colors first
         if (_customColors.TryGetValue(colorKey, out var customColor))
+        {
             return customColor;
+        }
 
         // Check theme colors
         if (_currentThemeInfo.Colors.TryGetValue(colorKey, out var themeColor))
+        {
             return themeColor;
+        }
 
         return null;
     }
@@ -156,7 +168,9 @@ public sealed class ThemeService : IThemeService
     public void ApplyCustomColors(Dictionary<string, string> customColors)
     {
         if (customColors == null)
+        {
             throw new ArgumentNullException(nameof(customColors));
+        }
 
         _customColors.Clear();
         foreach (var color in customColors)
@@ -206,7 +220,9 @@ public sealed class ThemeService : IThemeService
         {
             var configPath = GetConfigFilePath();
             if (!File.Exists(configPath))
+            {
                 return;
+            }
 
             var json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             var config = JsonSerializer.Deserialize<ThemeConfiguration>(json);
@@ -240,9 +256,13 @@ public sealed class ThemeService : IThemeService
             // This is a simplified implementation - in a real app you might use platform-specific APIs
             var app = Application.Current;
             if (app?.ActualThemeVariant == ThemeVariant.Dark)
+            {
                 return ThemeMode.Dark;
+            }
             else
+            {
                 return ThemeMode.Light;
+            }
         }
         catch
         {

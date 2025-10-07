@@ -478,7 +478,9 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     public void Dispose()
     {
         if (_disposed)
+        {
             return;
+        }
 
         _logDataStore.PropertyChanged -= OnLogDataStorePropertyChanged;
         _logDataStore.CollectionChanged -= OnLogDataStoreCollectionChanged;

@@ -22,13 +22,19 @@ public class DateTimeOffsetToDateTimeConverter : IValueConverter
         try
         {
             if (value == null)
+            {
                 return null;
+            }
 
             if (value is DateTimeOffset dateTimeOffset)
+            {
                 return dateTimeOffset.DateTime;
+            }
 
             if (value is DateTime dateTime)
+            {
                 return dateTime;
+            }
 
             // Handle nullable types
             if (value.GetType() == typeof(DateTimeOffset?))
@@ -64,13 +70,19 @@ public class DateTimeOffsetToDateTimeConverter : IValueConverter
         try
         {
             if (value == null)
+            {
                 return null;
+            }
 
             if (value is DateTime dateTime)
+            {
                 return new DateTimeOffset(dateTime);
+            }
 
             if (value is DateTimeOffset dateTimeOffset)
+            {
                 return dateTimeOffset;
+            }
 
             return null;
         }

@@ -52,7 +52,9 @@ public sealed class ActivityBarService : IActivityBarService
         set
         {
             if (_selectedItem == value)
+            {
                 return;
+            }
 
             var previousItem = _selectedItem;
             
@@ -84,13 +86,19 @@ public sealed class ActivityBarService : IActivityBarService
     public void AddItem(ActivityBarItem item)
     {
         if (item == null)
+        {
             throw new ArgumentNullException(nameof(item));
+        }
 
         if (string.IsNullOrEmpty(item.Id))
+        {
             throw new ArgumentException("Activity bar item must have a valid ID.", nameof(item));
+        }
 
         if (_items.Any(i => i.Id == item.Id))
+        {
             throw new ArgumentException($"Activity bar item with ID '{item.Id}' already exists.", nameof(item));
+        }
 
         _items.Add(item);
         
@@ -107,11 +115,15 @@ public sealed class ActivityBarService : IActivityBarService
     public bool RemoveItem(string itemId)
     {
         if (string.IsNullOrEmpty(itemId))
+        {
             return false;
+        }
 
         var item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item == null)
+        {
             return false;
+        }
 
         // If removing the selected item, select another item
         if (item == _selectedItem)
@@ -127,7 +139,9 @@ public sealed class ActivityBarService : IActivityBarService
     public ActivityBarItem? GetItem(string itemId)
     {
         if (string.IsNullOrEmpty(itemId))
+        {
             return null;
+        }
 
         return _items.FirstOrDefault(i => i.Id == itemId);
     }
@@ -136,11 +150,15 @@ public sealed class ActivityBarService : IActivityBarService
     public bool SelectItem(string itemId)
     {
         if (string.IsNullOrEmpty(itemId))
+        {
             return false;
+        }
 
         var item = GetItem(itemId);
         if (item == null || !item.IsVisible || !item.IsEnabled)
+        {
             return false;
+        }
 
         SelectedItem = item;
         ItemActivated?.Invoke(this, new ActivityBarItemActivatedEventArgs(item));
@@ -151,11 +169,15 @@ public sealed class ActivityBarService : IActivityBarService
     public bool UpdateItem(string itemId, Action<ActivityBarItem> updateAction)
     {
         if (string.IsNullOrEmpty(itemId) || updateAction == null)
+        {
             return false;
+        }
 
         var item = GetItem(itemId);
         if (item == null)
+        {
             return false;
+        }
 
         updateAction(item);
         return true;
@@ -175,7 +197,9 @@ public sealed class ActivityBarService : IActivityBarService
     public void ReorderItems(IEnumerable<string> itemIds)
     {
         if (itemIds == null)
+        {
             throw new ArgumentNullException(nameof(itemIds));
+        }
 
         var orderedIds = itemIds.ToList();
         var itemsDict = _items.ToDictionary(i => i.Id);
@@ -205,7 +229,9 @@ public sealed class ActivityBarService : IActivityBarService
     {
         var item = GetItem(itemId);
         if (item == null)
+        {
             return false;
+        }
 
         item.IsVisible = isVisible;
 
@@ -224,7 +250,9 @@ public sealed class ActivityBarService : IActivityBarService
     {
         var item = GetItem(itemId);
         if (item == null)
+        {
             return false;
+        }
 
         item.IsEnabled = isEnabled;
 

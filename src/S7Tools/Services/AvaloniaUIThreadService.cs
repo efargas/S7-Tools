@@ -15,7 +15,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public void InvokeOnUIThread(Action action)
     {
         if (action == null)
+        {
             throw new ArgumentNullException(nameof(action));
+        }
 
         if (IsUIThread)
         {
@@ -31,7 +33,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public async Task InvokeOnUIThreadAsync(Action action)
     {
         if (action == null)
+        {
             throw new ArgumentNullException(nameof(action));
+        }
 
         if (IsUIThread)
         {
@@ -47,7 +51,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public T InvokeOnUIThread<T>(Func<T> function)
     {
         if (function == null)
+        {
             throw new ArgumentNullException(nameof(function));
+        }
 
         if (IsUIThread)
         {
@@ -63,7 +69,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public async Task<T> InvokeOnUIThreadAsync<T>(Func<T> function)
     {
         if (function == null)
+        {
             throw new ArgumentNullException(nameof(function));
+        }
 
         if (IsUIThread)
         {
@@ -79,7 +87,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public async Task InvokeOnUIThreadAsync(Func<Task> asyncAction)
     {
         if (asyncAction == null)
+        {
             throw new ArgumentNullException(nameof(asyncAction));
+        }
 
         if (IsUIThread)
         {
@@ -95,7 +105,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public async Task<T> InvokeOnUIThreadAsync<T>(Func<Task<T>> asyncFunction)
     {
         if (asyncFunction == null)
+        {
             throw new ArgumentNullException(nameof(asyncFunction));
+        }
 
         if (IsUIThread)
         {
@@ -111,7 +123,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public void PostToUIThread(Action action)
     {
         if (action == null)
+        {
             throw new ArgumentNullException(nameof(action));
+        }
 
         if (IsUIThread)
         {
@@ -127,7 +141,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
     public bool TryInvokeOnUIThread(Action action, TimeSpan timeout)
     {
         if (action == null)
+        {
             throw new ArgumentNullException(nameof(action));
+        }
 
         if (IsUIThread)
         {
@@ -153,7 +169,9 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
         result = default(T)!;
 
         if (function == null)
+        {
             throw new ArgumentNullException(nameof(function));
+        }
 
         if (IsUIThread)
         {
