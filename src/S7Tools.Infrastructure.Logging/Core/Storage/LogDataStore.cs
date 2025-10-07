@@ -15,9 +15,9 @@ public sealed class LogDataStore : ILogDataStore
     private readonly object _lock = new();
     private readonly LogModel[] _buffer;
     private readonly LogDataStoreOptions _options;
-    private int _head = 0;
-    private int _count = 0;
-    private bool _disposed = false;
+    private int _head;
+    private int _count;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the LogDataStore class.

@@ -16,7 +16,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     private readonly DataStoreLoggerConfiguration _configuration;
     private readonly ConcurrentDictionary<string, DataStoreLogger> _loggers = new();
     private IExternalScopeProvider? _scopeProvider;
-    private bool _disposed = false;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the DataStoreLoggerProvider class.

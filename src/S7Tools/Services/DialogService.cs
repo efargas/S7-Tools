@@ -1,42 +1,43 @@
-using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
+using ReactiveUI;
+using S7Tools.Models;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels;
-using S7Tools.Views;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Threading.Tasks;
 
 namespace S7Tools.Services;
 
 /// <summary>
-/// A service for displaying dialogs.
+/// Service for displaying dialogs using the interaction pattern.
 /// </summary>
 public class DialogService : IDialogService
 {
     /// <inheritdoc/>
+    public Interaction<ConfirmationRequest, bool> ShowConfirmation { get; }
+    
+    /// <inheritdoc/>
+    public Interaction<ConfirmationRequest, Unit> ShowError { get; }
+    
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DialogService"/> class.
+    /// </summary>
+    public DialogService()
+    {
+        ShowConfirmation = new Interaction<ConfirmationRequest, bool>();
+        ShowError = new Interaction<ConfirmationRequest, Unit>();
+    }
+
+    /// <inheritdoc/>
     public async Task<bool> ShowConfirmationAsync(string title, string message)
     {
-        var dialog = new ConfirmationDialog();
-        dialog.DataContext = new ConfirmationDialogViewModel(dialog, title, message);
-
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is not null)
-        {
-            return await dialog.ShowDialog<bool>(desktop.MainWindow);
-        }
-
-        return false;
+        var request = new ConfirmationRequest(title, message);
+        return await ShowConfirmation.Handle(request).FirstAsync();
     }
 
     /// <inheritdoc/>
     public async Task ShowErrorAsync(string title, string message)
     {
-        // For now, use the confirmation dialog as an error dialog
-        // In a real implementation, you would create a dedicated error dialog
-        var dialog = new ConfirmationDialog();
-        dialog.DataContext = new ConfirmationDialogViewModel(dialog, title, message);
-
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow is not null)
-        {
-            await dialog.ShowDialog<bool>(desktop.MainWindow);
-        }
+        var request = new ConfirmationRequest(title, message);
+        await ShowError.Handle(request).FirstAsync();
     }
 }

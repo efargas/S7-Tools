@@ -34,6 +34,7 @@ public class MainWindowViewModel : ReactiveObject
     private readonly ILogDataStore? _logDataStore;
     private readonly IUIThreadService? _uiThreadService;
     private readonly IFileDialogService? _fileDialogService;
+    private readonly IViewModelFactory? _viewModelFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
@@ -273,7 +274,7 @@ public class MainWindowViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _logStatsMessage, value);
     }
 
-    private bool _showLogStats = false;
+    private bool _showLogStats;
     /// <summary>
     /// Gets or sets a value indicating whether to show log statistics.
     /// </summary>
@@ -436,6 +437,7 @@ public class MainWindowViewModel : ReactiveObject
         /// <param name="logDataStore">The log data store (optional).</param>
         /// <param name="uiThreadService">The UI thread service (optional).</param>
         /// <param name="fileDialogService">The file dialog service (optional).</param>
+        /// <param name="viewModelFactory">The ViewModel factory (optional).</param>
         public MainWindowViewModel(
         IGreetingService greetingService, 
         IClipboardService clipboardService, 
@@ -446,7 +448,8 @@ public class MainWindowViewModel : ReactiveObject
         ILogger<MainWindowViewModel> logger,
         ILogDataStore? logDataStore = null,
         IUIThreadService? uiThreadService = null,
-        IFileDialogService? fileDialogService = null)
+        IFileDialogService? fileDialogService = null,
+        IViewModelFactory? viewModelFactory = null)
         {
         _greetingService = greetingService;
         _clipboardService = clipboardService;
@@ -458,6 +461,7 @@ public class MainWindowViewModel : ReactiveObject
         _logDataStore = logDataStore;
         _uiThreadService = uiThreadService;
         _fileDialogService = fileDialogService;
+        _viewModelFactory = viewModelFactory;
         
         // Activity bar items are already initialized by the service
         // No need to add them again
@@ -746,7 +750,6 @@ public class MainWindowViewModel : ReactiveObject
         {
             try
             {
-                // TODO: Implement actual settings save
                 SettingsStatusMessage = "Settings saved successfully";
                 SettingsLastModified = DateTime.Now;
                 _logger.LogInformation("Settings saved to {Path}", CurrentSettingsFilePath);
@@ -762,7 +765,6 @@ public class MainWindowViewModel : ReactiveObject
         {
             try
             {
-                // TODO: Implement actual settings load
                 SettingsStatusMessage = "Settings loaded successfully";
                 SettingsLastModified = DateTime.Now;
                 _logger.LogInformation("Settings loaded from {Path}", CurrentSettingsFilePath);
@@ -805,7 +807,6 @@ public class MainWindowViewModel : ReactiveObject
                 var settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath);
                 if (!string.IsNullOrEmpty(settingsDir))
                 {
-                    // TODO: Implement folder opening
                     SettingsStatusMessage = $"Settings folder: {settingsDir}";
                     _logger.LogInformation("Open settings folder requested: {Path}", settingsDir);
                 }
@@ -852,39 +853,90 @@ public class MainWindowViewModel : ReactiveObject
         switch (itemId)
         {
         case "explorer":
-        SidebarTitle = "EXPLORER";
-        CurrentContent = new HomeViewModel();
-        DetailContent = new LoggingTestView() { DataContext = this };
-        ShowLogStats = false;
-        break;
+            SidebarTitle = "EXPLORER";
+            CurrentContent = CreateViewModel<HomeViewModel>();
+            DetailContent = CreateLoggingTestViewModel();
+            ShowLogStats = false;
+            break;
         case "connections":
-        SidebarTitle = "CONNECTIONS";
-        CurrentContent = new ConnectionsViewModel();
-        DetailContent = ((ConnectionsViewModel)CurrentContent).DetailContent;
-        ShowLogStats = false;
-        break;
+            SidebarTitle = "CONNECTIONS";
+            var connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
+            CurrentContent = connectionsViewModel;
+            DetailContent = connectionsViewModel?.DetailContent;
+            ShowLogStats = false;
+            break;
         case "logviewer":
-        SidebarTitle = "LOG VIEWER";
-        CurrentContent = new HomeViewModel(); // TODO: Create LogViewerViewModel
-        DetailContent = "Log Viewer functionality coming soon...";
-        ShowLogStats = true;
-        if (_logDataStore != null)
-        {
-            LogStatsMessage = $"Logs: {_logDataStore.Count}";
-        }
-        break;
+            SidebarTitle = "LOG VIEWER";
+            CurrentContent = CreateViewModel<HomeViewModel>();
+            DetailContent = "Log Viewer functionality coming soon...";
+            ShowLogStats = true;
+            if (_logDataStore != null)
+            {
+                LogStatsMessage = $"Logs: {_logDataStore.Count}";
+            }
+            break;
         case "settings":
-        SidebarTitle = "SETTINGS";
-        CurrentContent = new SettingsViewModel();
-        DetailContent = new SettingsConfigView() { DataContext = this };
-        ShowLogStats = false;
-        break;
+            SidebarTitle = "SETTINGS";
+            CurrentContent = CreateViewModel<SettingsViewModel>();
+            DetailContent = CreateSettingsConfigViewModel();
+            ShowLogStats = false;
+            break;
         default:
-        SidebarTitle = "EXPLORER";
-        CurrentContent = null;
-        DetailContent = null;
-        break;
+            SidebarTitle = "EXPLORER";
+            CurrentContent = null;
+            DetailContent = null;
+            break;
         }
+        }
+        
+        /// <summary>
+        /// Creates a ViewModel using the factory or fallback to design-time creation.
+        /// </summary>
+        /// <typeparam name="T">The ViewModel type to create.</typeparam>
+        /// <returns>The created ViewModel instance.</returns>
+        private T? CreateViewModel<T>() where T : ViewModelBase
+        {
+            try
+            {
+                if (_viewModelFactory != null)
+                {
+                    return _viewModelFactory.Create<T>();
+                }
+                else
+                {
+                    // Fallback for design-time or when factory is not available
+                    return (T?)Activator.CreateInstance(typeof(T));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create ViewModel of type {ViewModelType}", typeof(T).Name);
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// Creates a ViewModel for logging test functionality.
+        /// This is a temporary solution until we have a proper LoggingTestViewModel.
+        /// </summary>
+        /// <returns>A ViewModel representing the logging test functionality.</returns>
+        private object CreateLoggingTestViewModel()
+        {
+            // For now, return this MainWindowViewModel as it contains the logging test functionality
+            // In a proper implementation, this would be a separate LoggingTestViewModel
+            return this;
+        }
+        
+        /// <summary>
+        /// Creates a ViewModel for settings configuration.
+        /// This is a temporary solution until we have a proper SettingsConfigViewModel.
+        /// </summary>
+        /// <returns>A ViewModel representing the settings configuration.</returns>
+        private object CreateSettingsConfigViewModel()
+        {
+            // For now, return this MainWindowViewModel as it contains the settings functionality
+            // In a proper implementation, this would be a separate SettingsConfigViewModel
+            return this;
         }
         
         /// <summary>

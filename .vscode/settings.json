@@ -1,5 +1,5 @@
 {
     "geminicodeassist.agentYoloMode": true,
     "geminicodeassist.agentDebugMode": true,
-    "codium.codeCompletion.enable": true
+    "codium.codeCompletion.enable": false
 }

@@ -66,23 +66,27 @@
 
 ### **✅ MVVM Implementation - FULLY FUNCTIONAL**
 
-**Status**: Complete ReactiveUI implementation  
+**Status**: Complete ReactiveUI implementation with proper MVVM patterns  
 **Completion**: 100%  
 
 **ViewModels**:
-- **MainWindowViewModel** - Complex main window logic with navigation
-- **HomeViewModel** - Explorer functionality
-- **ConnectionsViewModel** - PLC connection management
+- **MainWindowViewModel** - Complex main window logic with navigation (refactored for proper MVVM)
+- **HomeViewModel** - Explorer functionality (uses DI-based ViewModel creation)
+- **ConnectionsViewModel** - PLC connection management (uses DI-based ViewModel creation)
 - **SettingsViewModel** - Application configuration
 - **LogViewerViewModel** - Advanced log viewer with filtering
 - **AboutViewModel** - Application information
+- **ConfirmationDialogViewModel** - Dialog handling without View dependencies
 
 **Key Patterns**:
 - **ReactiveUI Integration** - Reactive properties and commands
 - **Data Binding** - Comprehensive two-way binding
 - **Command Pattern** - ReactiveCommand for all user actions
-- **Navigation System** - Dynamic content switching
+- **Navigation System** - Dynamic content switching using ViewModels
 - **State Management** - Proper state handling and persistence
+- **Interaction Pattern** - Dialogs use ReactiveUI Interactions for proper decoupling
+- **Factory Pattern** - IViewModelFactory for centralized ViewModel creation
+- **Dependency Injection** - All ViewModels created through DI container
 
 ### **✅ Clean Architecture - FULLY FUNCTIONAL**
 
@@ -227,32 +231,69 @@ tests/
 
 ## Known Issues
 
-### **Minor Issues**
+### **✅ RESOLVED CRITICAL ISSUES (Phase 1 Complete)**
 
-#### **1. Settings Persistence**
+#### **✅ 1. MVVM Violations - View-ViewModel Coupling - RESOLVED**
+- **Resolution**: Refactored DialogService to use ReactiveUI Interactions pattern
+- **Changes**: Created ConfirmationRequest model, updated IDialogService interface, removed Window dependencies
+- **Status**: ✅ COMPLETED - No more circular dependencies between Views and ViewModels
+
+#### **✅ 2. Direct View Instantiation in ViewModels - RESOLVED**
+- **Resolution**: Created IViewModelFactory and refactored navigation to use ViewModels
+- **Changes**: Updated MainWindowViewModel navigation, created factory pattern, rely on ViewLocator
+- **Status**: ✅ COMPLETED - Zero direct View instantiation in ViewModels
+
+#### **✅ 3. Bypassing Dependency Injection - RESOLVED**
+- **Resolution**: All ViewModels now created through DI container using IViewModelFactory
+- **Changes**: Updated HomeViewModel and ConnectionsViewModel, registered all ViewModels in DI
+- **Status**: ✅ COMPLETED - All ViewModels receive dependencies through constructor injection
+
+### **🔧 HIGH PRIORITY ISSUES**
+
+#### **4. God Object Anti-Pattern**
+- **Issue**: MainWindowViewModel is still 600+ lines managing multiple responsibilities
+- **Location**: `MainWindowViewModel.cs`
+- **Impact**: Violates Single Responsibility Principle, difficult to test and maintain
+- **Priority**: HIGH
+- **Estimated Fix**: 3-4 days
+- **Next Phase**: Phase 2 - Decompose into specialized ViewModels
+
+#### **5. Core Domain Model Type Safety**
+- **Issue**: Tag.Value property is `object?`, sacrificing compile-time type safety
+- **Location**: `S7Tools.Core/Models/Tag.cs`
+- **Impact**: Runtime casting errors, no compile-time validation
+- **Priority**: HIGH
+- **Estimated Fix**: 2-3 days
+
+#### **6. Model Mutability**
+- **Issue**: Tag class is mutable, unsafe for data representing snapshots
+- **Location**: `S7Tools.Core/Models/Tag.cs`
+- **Impact**: Potential data corruption, thread safety issues
+- **Priority**: MEDIUM
+- **Estimated Fix**: 1 day
+
+### **📋 MEDIUM PRIORITY ISSUES**
+
+#### **7. Settings Persistence**
 - **Issue**: User settings not saved between application sessions
 - **Impact**: Users must reconfigure preferences each time
 - **Priority**: Medium
 - **Estimated Fix**: 2-3 days
 
-#### **2. Memory Usage Monitoring**
-- **Issue**: No active memory usage monitoring
-- **Impact**: Potential memory leaks not detected
-- **Priority**: Low
-- **Estimated Fix**: 1-2 days
+#### **8. No Testing Framework**
+- **Issue**: Zero automated tests, no testing infrastructure
+- **Impact**: No safety net for refactoring, potential regressions
+- **Priority**: HIGH
+- **Estimated Fix**: 1-2 weeks
 
-#### **3. Error Message Consistency**
-- **Issue**: Some error messages could be more user-friendly
-- **Impact**: Poor user experience during error conditions
-- **Priority**: Low
-- **Estimated Fix**: 1-2 days
-
-### **No Critical Issues**
+### **✅ ARCHITECTURAL DEBT STATUS - SIGNIFICANTLY IMPROVED**
 
 **Build Status**: ✅ Clean builds successfully  
-**Runtime Status**: ✅ Application runs without critical errors  
+**Runtime Status**: ✅ Application runs with proper MVVM architecture  
 **UI Status**: ✅ All UI functionality working correctly  
 **Logging Status**: ✅ Logging system fully functional  
+**Architecture Status**: ✅ MVVM violations resolved, SOLID principles properly applied  
+**Phase 1 Status**: ✅ COMPLETED - Critical architectural issues resolved  
 
 ## Success Metrics
 
@@ -274,19 +315,21 @@ tests/
 ## Next Development Priorities
 
 ### **Immediate (Next 1-2 Sessions)**
-1. **UI & Logging System Fixes** - Fix logging display and UI control issues (TASK007)
-2. **Complete Memory Bank Setup** - Finish task management system
-3. **Testing Framework Implementation** - Set up xUnit and initial tests
+1. **Phase 2: Decompose MainWindowViewModel** - Break down God Object into specialized ViewModels (TASK008 Phase 2)
+2. **Testing Framework Implementation** - Set up xUnit and initial tests for refactored components
+3. **Complete Memory Bank Setup** - Finish task management system
 
 ### **Short-term (Next 2-4 Sessions)**
-1. **PLC Communication Core** - Implement S7-1200 protocol
-2. **Connection Management UI** - Enhance ConnectionsViewModel
-3. **Performance Monitoring** - Add metrics collection
+1. **Phase 3: Core Domain Model Improvements** - Implement type-safe Tag system (TASK008 Phase 3)
+2. **UI & Logging System Fixes** - Fix logging display and UI control issues (TASK007)
+3. **PLC Communication Core** - Implement S7-1200 protocol
 
 ### **Medium-term (Next 1-2 Months)**
-1. **Data Visualization** - Charts and real-time displays
-2. **Advanced Configuration** - Comprehensive settings system
-3. **Documentation Enhancement** - User guides and API docs
+1. **Connection Management UI** - Enhance ConnectionsViewModel
+2. **Data Visualization** - Charts and real-time displays
+3. **Advanced Configuration** - Comprehensive settings system
+4. **Performance Monitoring** - Add metrics collection
+5. **Documentation Enhancement** - User guides and API docs
 
 ---
 

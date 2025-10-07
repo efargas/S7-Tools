@@ -103,6 +103,9 @@ public static class ServiceCollectionExtensions
         if (services == null)
             throw new ArgumentNullException(nameof(services));
 
+        // Add ViewModel Factory
+        services.TryAddSingleton<IViewModelFactory, ViewModelFactory>();
+
         // Add ViewModels
         services.TryAddSingleton<MainWindowViewModel>();
         services.TryAddTransient<LogViewerViewModel>();
@@ -110,6 +113,7 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<ConnectionsViewModel>();
         services.TryAddTransient<SettingsViewModel>();
         services.TryAddTransient<AboutViewModel>();
+        services.TryAddTransient<ConfirmationDialogViewModel>();
 
         return services;
     }

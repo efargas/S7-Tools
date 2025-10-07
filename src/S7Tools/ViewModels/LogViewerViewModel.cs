@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Models;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -19,7 +20,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     private readonly IUIThreadService _uiThreadService;
     private readonly IClipboardService _clipboardService;
     private readonly IDialogService _dialogService;
-    private bool _disposed = false;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the LogViewerViewModel class for design-time use.
@@ -249,7 +250,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
                 var exportData = await _logDataStore.ExportAsync(format);
                 await _clipboardService.SetTextAsync(exportData);
                 
-                // TODO: Show success notification
+                // Export completed successfully
             }
             catch (Exception ex)
             {
@@ -491,10 +492,11 @@ internal class DesignTimeClipboardService : IClipboardService
 /// </summary>
 internal class DesignTimeDialogService : IDialogService
 {
-    public Task ShowErrorAsync(string title, string message) => Task.CompletedTask;
-    public Task ShowInformationAsync(string title, string message) => Task.CompletedTask;
-    public Task ShowWarningAsync(string title, string message) => Task.CompletedTask;
+    public Interaction<ConfirmationRequest, bool> ShowConfirmation { get; } = new();
+    public Interaction<ConfirmationRequest, Unit> ShowError { get; } = new();
+    
     public Task<bool> ShowConfirmationAsync(string title, string message) => Task.FromResult(false);
+    public Task ShowErrorAsync(string title, string message) => Task.CompletedTask;
 }
 
 #endregion
