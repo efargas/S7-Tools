@@ -17,13 +17,11 @@ public sealed class ActivityBarService : IActivityBarService
     /// </summary>
     public ActivityBarService()
     {
-        _items = new ObservableCollection<ActivityBarItem>();
-        
-        // Initialize with default items
-        foreach (var item in GetDefaultItems())
-        {
-            _items.Add(item);
-        }
+        _items =
+        [
+            // Initialize with default items
+            .. GetDefaultItems(),
+        ];
 
         // Select the first item by default
         if (_items.Count > 0)
@@ -51,30 +49,23 @@ public sealed class ActivityBarService : IActivityBarService
         get => _selectedItem;
         set
         {
-            if (_selectedItem is value)
+            if (_selectedItem == value)
             {
                 return;
             }
 
-            var previousItem = _selectedItem;
-            
+            ActivityBarItem? previousItem = _selectedItem;
+
             // Deselect previous item
-            if (_selectedItem is not null)
-            {
-                _selectedItem.IsSelected = false;
-            }
+            _selectedItem?.IsSelected = false;
 
             _selectedItem = value;
 
             // Select new item
-            if (_selectedItem is not null)
-            {
-                _selectedItem.IsSelected = true;
-            }
+            _selectedItem?.IsSelected = true;
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItem)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItemId)));
-            
             SelectionChanged?.Invoke(this, new ActivityBarSelectionChangedEventArgs(previousItem, _selectedItem));
         }
     }
@@ -85,27 +76,24 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public void AddItem(ActivityBarItem item)
     {
-        if (item is null)
-        {
-            throw new ArgumentNullException(nameof(item));
-        }
+        ArgumentNullException.ThrowIfNull(item);
 
         if (string.IsNullOrEmpty(item.Id))
         {
             throw new ArgumentException("Activity bar item must have a valid ID.", nameof(item));
         }
 
-        if (_items.Any(i => i.Id is item.Id))
+        if (_items.Any(i => i.Id == item.Id))
         {
             throw new ArgumentException($"Activity bar item with ID '{item.Id}' already exists.", nameof(item));
         }
 
         _items.Add(item);
-        
+
         // Sort items by order
         var sortedItems = _items.OrderBy(i => i.Order).ToList();
         _items.Clear();
-        foreach (var sortedItem in sortedItems)
+        foreach (ActivityBarItem? sortedItem in sortedItems)
         {
             _items.Add(sortedItem);
         }
@@ -119,16 +107,16 @@ public sealed class ActivityBarService : IActivityBarService
             return false;
         }
 
-        var item = _items.FirstOrDefault(i => i.Id is itemId);
+        ActivityBarItem? item = _items.FirstOrDefault(i => i.Id == itemId);
         if (item is null)
         {
             return false;
         }
 
         // If removing the selected item, select another item
-        if (item is _selectedItem)
+        if (item == _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i is not item && i.IsVisible && i.IsEnabled);
+            ActivityBarItem? nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 
@@ -143,7 +131,7 @@ public sealed class ActivityBarService : IActivityBarService
             return null;
         }
 
-        return _items.FirstOrDefault(i => i.Id is itemId);
+        return _items.FirstOrDefault(i => i.Id == itemId);
     }
 
     /// <inheritdoc />
@@ -154,7 +142,7 @@ public sealed class ActivityBarService : IActivityBarService
             return false;
         }
 
-        var item = GetItem(itemId);
+        ActivityBarItem? item = GetItem(itemId);
         if (item is null || !item.IsVisible || !item.IsEnabled)
         {
             return false;
@@ -173,7 +161,7 @@ public sealed class ActivityBarService : IActivityBarService
             return false;
         }
 
-        var item = GetItem(itemId);
+        ActivityBarItem? item = GetItem(itemId);
         if (item is null)
         {
             return false;
@@ -188,7 +176,7 @@ public sealed class ActivityBarService : IActivityBarService
     {
         _selectedItem = null;
         _items.Clear();
-        
+
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItem)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItemId)));
     }
@@ -196,20 +184,17 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public void ReorderItems(IEnumerable<string> itemIds)
     {
-        if (itemIds is null)
-        {
-            throw new ArgumentNullException(nameof(itemIds));
-        }
+        ArgumentNullException.ThrowIfNull(itemIds);
 
         var orderedIds = itemIds.ToList();
         var itemsDict = _items.ToDictionary(i => i.Id);
 
         _items.Clear();
 
-        var order = 0;
-        foreach (var itemId in orderedIds)
+        int order = 0;
+        foreach (string? itemId in orderedIds)
         {
-            if (itemsDict.TryGetValue(itemId, out var item))
+            if (itemsDict.TryGetValue(itemId, out ActivityBarItem? item))
             {
                 item.Order = order++;
                 _items.Add(item);
@@ -217,7 +202,7 @@ public sealed class ActivityBarService : IActivityBarService
         }
 
         // Add any items that weren't in the ordered list
-        foreach (var item in itemsDict.Values.Where(i => !orderedIds.Contains(i.Id)))
+        foreach (ActivityBarItem? item in itemsDict.Values.Where(i => !orderedIds.Contains(i.Id)))
         {
             item.Order = order++;
             _items.Add(item);
@@ -227,7 +212,7 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public bool SetItemVisibility(string itemId, bool isVisible)
     {
-        var item = GetItem(itemId);
+        ActivityBarItem? item = GetItem(itemId);
         if (item is null)
         {
             return false;
@@ -236,9 +221,9 @@ public sealed class ActivityBarService : IActivityBarService
         item.IsVisible = isVisible;
 
         // If hiding the selected item, select another visible item
-        if (!isVisible && item is _selectedItem)
+        if (!isVisible && item == _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i is not item && i.IsVisible && i.IsEnabled);
+            var nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 
@@ -248,7 +233,7 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public bool SetItemEnabled(string itemId, bool isEnabled)
     {
-        var item = GetItem(itemId);
+        ActivityBarItem? item = GetItem(itemId);
         if (item is null)
         {
             return false;
@@ -257,9 +242,9 @@ public sealed class ActivityBarService : IActivityBarService
         item.IsEnabled = isEnabled;
 
         // If disabling the selected item, select another enabled item
-        if (!isEnabled && item is _selectedItem)
+        if (!isEnabled && item == _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i is not item && i.IsVisible && i.IsEnabled);
+            var nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 
@@ -269,8 +254,8 @@ public sealed class ActivityBarService : IActivityBarService
     /// <inheritdoc />
     public IEnumerable<ActivityBarItem> GetDefaultItems()
     {
-        return new[]
-        {
+        return
+        [
             new ActivityBarItem("explorer", "Explorer", "Explorer (Ctrl+Shift+E)", "fa-solid fa-folder")
             {
                 Order = 0
@@ -287,6 +272,6 @@ public sealed class ActivityBarService : IActivityBarService
             {
                 Order = 3
             }
-        };
+        ];
     }
 }
