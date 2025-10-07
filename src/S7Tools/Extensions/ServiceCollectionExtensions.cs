@@ -7,6 +7,12 @@ using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Commands;
+using S7Tools.Core.Factories;
+using S7Tools.Core.Resources;
+using S7Tools.Core.Validation;
+using S7Tools.Core.Logging;
+using S7Tools.Resources;
 
 namespace S7Tools.Extensions;
 
@@ -78,6 +84,41 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Adds advanced design pattern services to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsAdvancedServices(this IServiceCollection services)
+    {
+        if (services == null)
+            throw new ArgumentNullException(nameof(services));
+
+        // Add Command Pattern Services
+        services.TryAddSingleton<ICommandDispatcher, CommandDispatcher>();
+
+        // Add Enhanced Factory Services
+        services.TryAddSingleton<EnhancedViewModelFactory>();
+        services.TryAddSingleton<IViewModelFactory>(provider => provider.GetRequiredService<EnhancedViewModelFactory>());
+
+        // Add Resource Pattern Services
+        services.TryAddSingleton<IResourceManager, ResourceManager>();
+        services.TryAddSingleton(typeof(IResourceManager<>), typeof(ResourceManager<>));
+
+        // Add Validation Services
+        services.TryAddSingleton<IValidationService, ValidationService>();
+
+        // Add Structured Logging Services
+        services.TryAddSingleton<IStructuredLoggerFactory, StructuredLoggerFactory>();
+        services.TryAddTransient(typeof(IStructuredLogger), provider =>
+        {
+            var factory = provider.GetRequiredService<IStructuredLoggerFactory>();
+            return factory.CreateLogger("S7Tools.Application");
+        });
+
+        return services;
+    }
+
+    /// <summary>
     /// Adds S7Tools logging infrastructure to the service collection.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
@@ -143,6 +184,9 @@ public static class ServiceCollectionExtensions
 
         // Add foundation services
         services.AddS7ToolsFoundationServices();
+
+        // Add advanced design pattern services
+        services.AddS7ToolsAdvancedServices();
 
         // Add logging services
         services.AddS7ToolsLogging(configureDataStore);

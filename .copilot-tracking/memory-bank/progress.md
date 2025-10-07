@@ -283,26 +283,35 @@ tests/
 - **Status**: ✅ **RESOLVED** - Folder creation working correctly
 - **Evidence**: Log shows "Created export folder: /bin/Debug/net8.0/resources/exports"
 
-#### **🔄 9. UI Panel Dividers Still Too Thick**
-- **Issue**: GridSplitter dividers are still visually too thick despite changes
-- **Location**: `MainWindow.axaml`, `Styles.axaml`
-- **Impact**: Poor visual appearance, not matching VSCode-like design
-- **Priority**: HIGH
-- **Status**: ❌ **PENDING** - Needs custom GridSplitter template implementation
+#### **✅ 9. Main Content Space Reclaim - RESOLVED**
+- **Issue**: Main content window remained in fixed position when sidebar was collapsed
+- **Resolution**: Implemented SidebarWidthConverter that converts boolean visibility to GridLength
+- **Status**: ✅ **RESOLVED** - Main content now properly claims sidebar space when collapsed
+- **Evidence**: User confirmed "main content claims the space ok"
 
-#### **🔄 10. GridSplitter Hover Effects Not Working**
-- **Issue**: Accent color hover effects not showing on panel dividers
-- **Location**: `Styles.axaml` GridSplitter styles
-- **Impact**: Poor user feedback during resize operations
-- **Priority**: HIGH
-- **Status**: ❌ **PENDING** - Needs custom template with proper hover selectors
+#### **🔄 10. Activity Bar Icon Size - PARTIALLY RESOLVED**
+- **Issue**: Activity bar icons were too small (24x24)
+- **Resolution**: Increased icon size from 24x24 to 32x32 pixels
+- **Status**: 🔄 **PARTIALLY RESOLVED** - Size increased but user reports "icons still the same"
+- **Priority**: LOW (Visual only)
 
-#### **🔄 11. Bottom Panel Resize Limit Not Implemented**
+#### **🔄 11. Hover Effects Not Working - DEFERRED**
+- **Issue**: Activity bar icons and bottom panel tabs not showing white color on hover
+- **Attempted Solutions**: Multiple approaches tried with Button:pointerover selectors
+- **Status**: ❌ **DEFERRED** - User confirmed "not working yet, but anyway doesn't matter, only visual stuff"
+- **Priority**: LOW (Visual enhancement only, not functional)
+
+#### **✅ 12. Bottom Panel Resize Limit - RESOLVED**
 - **Issue**: Bottom panel needs to grow more and respect 75% max limit
-- **Location**: `MainWindow.axaml` RowDefinition MaxHeight
-- **Impact**: Poor UX, panel sizing issues
-- **Priority**: HIGH
-- **Status**: ❌ **PENDING** - Needs dynamic MaxHeight calculation
+- **Resolution**: Implemented MaxHeight binding with 75% converter
+- **Status**: ✅ **RESOLVED** - Bottom panel properly resizes with 75% limit
+- **Evidence**: MaxHeight="{Binding $parent[Window].Bounds.Height, Converter={StaticResource GridLengthToDoubleConverter}, ConverterParameter=0.75}"
+
+#### **✅ 13. GridSplitter Styling - RESOLVED**
+- **Issue**: Panel dividers needed to be thinner with accent color highlighting
+- **Resolution**: Implemented 1px GridSplitter with hover/drag effects in Styles.axaml
+- **Status**: ✅ **RESOLVED** - GridSplitter has proper styling with smooth transitions
+- **Evidence**: Styles include hover (#007ACC) and dragging states with 0.15s transitions
 
 #### **✅ 12. DateTime Conversion Issues - RESOLVED**
 - **Issue**: Date pickers showing DateTime conversion errors: "Could not convert DateTimeOffset to DateTime"

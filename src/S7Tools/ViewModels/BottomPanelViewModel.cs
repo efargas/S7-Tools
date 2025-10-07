@@ -241,10 +241,11 @@ public class BottomPanelViewModel : ReactiveObject
                     _logDataStore,
                     _uiThreadService,
                     _clipboardService,
-                    _dialogService
+                    _dialogService,
+                    _logExportService
                 );
                 logViewerView.DataContext = logViewerViewModel;
-                _logger.LogDebug("LogViewer created with full services");
+                _logger.LogDebug("LogViewer created with full services including export service");
             }
             else
             {

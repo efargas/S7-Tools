@@ -1,0 +1,10 @@
+{
+  "parallelizeAssembly": true,
+  "parallelizeTestCollections": true,
+  "maxParallelThreads": -1,
+  "methodDisplay": "method",
+  "methodDisplayOptions": "all",
+  "preEnumerateTheories": true,
+  "shadowCopy": false,
+  "stopOnFail": false
+}

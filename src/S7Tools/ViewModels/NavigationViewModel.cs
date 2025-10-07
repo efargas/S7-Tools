@@ -21,9 +21,12 @@ public class NavigationViewModel : ReactiveObject
 
     private object? _currentContent;
     private object? _detailContent;
+    private object? _mainContent;
     private string _sidebarTitle = "EXPLORER";
+    private string _mainContentTitle = "";
     private bool _isSidebarVisible = true;
     private bool _showLogStats;
+    private bool _showMainContentHeader;
     private string _logStatsMessage = "";
 
     /// <summary>
@@ -114,12 +117,39 @@ public class NavigationViewModel : ReactiveObject
     }
 
     /// <summary>
+    /// Gets or sets the main content displayed in the main editor area using ViewLocator pattern.
+    /// </summary>
+    public object? MainContent
+    {
+        get => _mainContent;
+        set => this.RaiseAndSetIfChanged(ref _mainContent, value);
+    }
+
+    /// <summary>
     /// Gets or sets the title displayed in the sidebar header.
     /// </summary>
     public string SidebarTitle
     {
         get => _sidebarTitle;
         set => this.RaiseAndSetIfChanged(ref _sidebarTitle, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the title displayed in the main content header.
+    /// </summary>
+    public string MainContentTitle
+    {
+        get => _mainContentTitle;
+        set => this.RaiseAndSetIfChanged(ref _mainContentTitle, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show the main content header.
+    /// </summary>
+    public bool ShowMainContentHeader
+    {
+        get => _showMainContentHeader;
+        set => this.RaiseAndSetIfChanged(ref _showMainContentHeader, value);
     }
 
     /// <summary>
@@ -239,7 +269,10 @@ public class NavigationViewModel : ReactiveObject
             {
                 case "explorer":
                     SidebarTitle = "EXPLORER";
+                    MainContentTitle = "Welcome";
+                    ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
+                    MainContent = CreateLoggingTestViewModel();
                     DetailContent = CreateLoggingTestViewModel();
                     ShowLogStats = false;
                     _logger.LogDebug("Navigated to Explorer");
@@ -247,8 +280,11 @@ public class NavigationViewModel : ReactiveObject
 
                 case "connections":
                     SidebarTitle = "CONNECTIONS";
+                    MainContentTitle = "PLC Connections";
+                    ShowMainContentHeader = true;
                     var connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
                     CurrentContent = connectionsViewModel;
+                    MainContent = connectionsViewModel?.DetailContent;
                     DetailContent = connectionsViewModel?.DetailContent;
                     ShowLogStats = false;
                     _logger.LogDebug("Navigated to Connections");
@@ -256,7 +292,10 @@ public class NavigationViewModel : ReactiveObject
 
                 case "logviewer":
                     SidebarTitle = "LOG VIEWER";
+                    MainContentTitle = "Log Viewer";
+                    ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
+                    MainContent = "Log Viewer functionality coming soon...";
                     DetailContent = "Log Viewer functionality coming soon...";
                     ShowLogStats = true;
                     UpdateLogStats();
@@ -265,7 +304,10 @@ public class NavigationViewModel : ReactiveObject
 
                 case "settings":
                     SidebarTitle = "SETTINGS";
+                    MainContentTitle = "Settings Configuration";
+                    ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<SettingsViewModel>();
+                    MainContent = CreateSettingsConfigViewModel();
                     DetailContent = CreateSettingsConfigViewModel();
                     ShowLogStats = false;
                     _logger.LogDebug("Navigated to Settings");
@@ -273,7 +315,10 @@ public class NavigationViewModel : ReactiveObject
 
                 default:
                     SidebarTitle = "EXPLORER";
+                    MainContentTitle = "";
+                    ShowMainContentHeader = false;
                     CurrentContent = null;
+                    MainContent = null;
                     DetailContent = null;
                     ShowLogStats = false;
                     _logger.LogWarning("Unknown activity bar item: {ItemId}", itemId);
@@ -285,7 +330,10 @@ public class NavigationViewModel : ReactiveObject
             _logger.LogError(ex, "Failed to navigate to activity bar item: {ItemId}", itemId);
             // Set fallback content
             SidebarTitle = "ERROR";
+            MainContentTitle = "Error";
+            ShowMainContentHeader = true;
             CurrentContent = null;
+            MainContent = $"Navigation failed: {ex.Message}";
             DetailContent = $"Navigation failed: {ex.Message}";
             ShowLogStats = false;
         }

@@ -93,8 +93,8 @@
                 <Grid.ColumnDefinitions>
                     <!-- Activity Bar -->
                     <ColumnDefinition Width="48" />
-                    <!-- Sidebar -->
-                    <ColumnDefinition Width="300" MinWidth="200" MaxWidth="600" />
+                    <!-- Sidebar - Width changes based on visibility -->
+                    <ColumnDefinition Width="{Binding Navigation.IsSidebarVisible, Converter={x:Static converters:ObjectConverters.SidebarWidthConverter}}" />
                     <!-- Sidebar Splitter -->
                     <ColumnDefinition Width="Auto" />
                     <!-- Main Content -->
@@ -127,7 +127,8 @@
                                             Background="Transparent"
                                             Command="{Binding $parent[Window].DataContext.Navigation.SelectActivityBarItemCommand}"
                                             CommandParameter="{Binding Id}"
-                                            ToolTip.Tip="{Binding Tooltip}">
+                                            ToolTip.Tip="{Binding Tooltip}"
+                                            Name="ActivityBarButton">
                                         <Button.Styles>
                                             <Style Selector="Button">
                                                 <Setter Property="Background" Value="Transparent" />
@@ -138,18 +139,15 @@
                                             <Style Selector="Button:pressed">
                                                 <Setter Property="Background" Value="Transparent" />
                                             </Style>
+                                            <!-- Icon hover effect via Button hover -->
+                                            <Style Selector="Button:pointerover > icons|Icon">
+                                                <Setter Property="Foreground" Value="#FFFFFF" />
+                                            </Style>
                                         </Button.Styles>
-                                        <icons:Icon Width="24"
-                                                   Height="24"
+                                        <icons:Icon Width="32"
+                                                   Height="32"
                                                    Value="{Binding IconPath}"
-                                                   Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}">
-                                            <icons:Icon.Styles>
-                                                <!-- White on hover -->
-                                                <Style Selector="icons|Icon:pointerover">
-                                                    <Setter Property="Foreground" Value="#FFFFFF" />
-                                                </Style>
-                                            </icons:Icon.Styles>
-                                        </icons:Icon>
+                                                   Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}" />
                                     </Button>
                                 </Grid>
                             </DataTemplate>
@@ -213,7 +211,6 @@
                 <!-- Sidebar GridSplitter -->
                 <GridSplitter Grid.Column="2" 
                               Width="1" 
-                              Background="#464647" 
                               VerticalAlignment="Stretch"
                               ResizeDirection="Columns"
                               IsVisible="{Binding Navigation.IsSidebarVisible}"
@@ -222,14 +219,38 @@
 
                 <!-- Main Editor Area -->
                 <Border Grid.Column="3" Background="#1E1E1E">
-                    <ContentControl Content="{Binding Navigation.CurrentContent}" />
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Main Content Header (Optional) -->
+                        <Border Grid.Row="0" 
+                                Background="#2D2D30" 
+                                Height="35" 
+                                BorderBrush="#464647" 
+                                BorderThickness="0,0,0,1"
+                                IsVisible="{Binding Navigation.ShowMainContentHeader}">
+                            <TextBlock Text="{Binding Navigation.MainContentTitle}" 
+                                      Foreground="#CCCCCC" 
+                                      FontSize="11" 
+                                      FontWeight="Bold" 
+                                      VerticalAlignment="Center" 
+                                      Margin="12,0" />
+                        </Border>
+                        
+                        <!-- Main Content Container using ViewLocator -->
+                        <ContentControl Grid.Row="1" 
+                                       Content="{Binding Navigation.MainContent}"
+                                       Background="#1E1E1E" />
+                    </Grid>
                 </Border>
             </Grid>
 
             <!-- GridSplitter for Bottom Panel -->
             <GridSplitter Grid.Row="1"
-                          Height="3"
-                          Background="Transparent"
+                          Height="1"
                           HorizontalAlignment="Stretch"
                           ResizeDirection="Rows"
                           IsVisible="{Binding BottomPanel.IsExpanded}"
@@ -288,17 +309,14 @@
                                                 <Style Selector="Button:pressed">
                                                     <Setter Property="Background" Value="Transparent" />
                                                 </Style>
+                                                <!-- TextBlock hover effect via Button hover -->
+                                                <Style Selector="Button:pointerover > TextBlock">
+                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                </Style>
                                             </Button.Styles>
                                             <TextBlock Text="{Binding Header}"
                                                       FontSize="11"
-                                                      Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}">
-                                                <TextBlock.Styles>
-                                                    <!-- White on hover -->
-                                                    <Style Selector="TextBlock:pointerover">
-                                                        <Setter Property="Foreground" Value="#FFFFFF" />
-                                                    </Style>
-                                                </TextBlock.Styles>
-                                            </TextBlock>
+                                                      Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}" />
                                         </Button>
                                     </Grid>
                                 </DataTemplate>

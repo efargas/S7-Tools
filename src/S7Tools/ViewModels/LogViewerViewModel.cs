@@ -20,7 +20,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     private readonly IUIThreadService _uiThreadService;
     private readonly IClipboardService _clipboardService;
     private readonly IDialogService _dialogService;
-    // private readonly ILogExportService _logExportService;
+    private readonly ILogExportService? _logExportService;
     private bool _disposed;
 
     /// <summary>
@@ -54,16 +54,19 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="dialogService">The dialog service.</param>
+    /// <param name="logExportService">The log export service (optional).</param>
     public LogViewerViewModel(
         ILogDataStore logDataStore,
         IUIThreadService uiThreadService,
         IClipboardService clipboardService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        ILogExportService? logExportService = null)
     {
         _logDataStore = logDataStore ?? throw new ArgumentNullException(nameof(logDataStore));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _logExportService = logExportService;
 
         _logEntries = new ObservableCollection<LogModel>();
         _filteredLogEntries = new ObservableCollection<LogModel>();
@@ -263,8 +266,42 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
         {
             try
             {
-                // For now, just show a message that export is not implemented
-                await _dialogService.ShowErrorAsync("Export", $"Export to {formatString} format is not yet implemented");
+                if (_logExportService == null)
+                {
+                    await _dialogService.ShowErrorAsync("Export", "Export service is not available");
+                    return;
+                }
+
+                // Parse the format string to determine export format
+                var format = formatString?.ToLowerInvariant() switch
+                {
+                    "txt" or "text" => ExportFormat.Text,
+                    "json" => ExportFormat.Json,
+                    "csv" => ExportFormat.Csv,
+                    _ => ExportFormat.Text
+                };
+
+                // Use filtered entries for export (respects current filters)
+                var logsToExport = FilteredLogEntries.ToList();
+                
+                if (!logsToExport.Any())
+                {
+                    await _dialogService.ShowErrorAsync("Export", "No log entries to export. Check your filters.");
+                    return;
+                }
+
+                // Export the logs
+                var result = await _logExportService.ExportLogsAsync(logsToExport, format);
+                
+                if (result.IsSuccess)
+                {
+                    await _dialogService.ShowErrorAsync("Export Success", 
+                        $"Successfully exported {logsToExport.Count} log entries to {format} format.");
+                }
+                else
+                {
+                    await _dialogService.ShowErrorAsync("Export Failed", result.Error ?? "Unknown error occurred");
+                }
             }
             catch (Exception ex)
             {

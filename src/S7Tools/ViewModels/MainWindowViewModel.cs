@@ -14,7 +14,7 @@ namespace S7Tools.ViewModels;
 /// Delegates specific responsibilities to specialized ViewModels.
 /// This is the new, clean implementation that replaces the God Object pattern.
 /// </summary>
-public class MainWindowViewModel : ReactiveObject
+public class MainWindowViewModel : ViewModelBase
 {
     private readonly IDialogService _dialogService;
     private readonly IClipboardService _clipboardService;

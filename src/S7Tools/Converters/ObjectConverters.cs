@@ -1,6 +1,8 @@
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
+using Avalonia;
+using Avalonia.Controls;
 
 namespace S7Tools.Converters;
 
@@ -64,4 +66,12 @@ public static class ObjectConverters
     /// </summary>
     public static readonly IValueConverter NullableDateTime =
         new NullableDateTimeConverter();
+
+    /// <summary>
+    /// A value converter that converts boolean sidebar visibility to GridLength.
+    /// Returns 300 pixels when visible, 0 when hidden.
+    /// </summary>
+    public static readonly IValueConverter SidebarWidthConverter =
+        new FuncValueConverter<bool, GridLength>(isVisible => 
+            isVisible ? new GridLength(300, GridUnitType.Pixel) : new GridLength(0, GridUnitType.Pixel));
 }
