@@ -1,6 +1,7 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="using:FluentAvalonia.UI.Controls">
+        xmlns:ui="using:FluentAvalonia.UI.Controls"
+        xmlns:views="clr-namespace:S7Tools.Views">
     <Style Selector="ui|NavigationViewItem">
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="Transparent" />
@@ -27,42 +28,7 @@
         <Setter Property="Background" Value="#2D2D2D" />
     </Style>
 
-    <!-- GridSplitter Styles for VSCode-like appearance - Enhanced with thinner dividers and smooth transitions -->
-    <Style Selector="GridSplitter">
-        <Setter Property="Background" Value="#464647" />
-        <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="Focusable" Value="False" />
-        <Setter Property="Transitions">
-            <Transitions>
-                <BrushTransition Property="Background" Duration="0:0:0.2" />
-                <DoubleTransition Property="Opacity" Duration="0:0:0.2" />
-            </Transitions>
-        </Setter>
-    </Style>
-
-    <Style Selector="GridSplitter:pointerover">
-        <Setter Property="Background" Value="#007ACC" />
-        <Setter Property="Opacity" Value="1.0" />
-    </Style>
-
-    <Style Selector="GridSplitter:pressed">
-        <Setter Property="Background" Value="#007ACC" />
-        <Setter Property="Opacity" Value="1.0" />
-    </Style>
-
-    <!-- Horizontal GridSplitter (for bottom panel) - Reduced to 1px for thin appearance -->
-    <Style Selector="GridSplitter[ResizeDirection=Rows]">
-        <Setter Property="Height" Value="1" />
-        <Setter Property="HorizontalAlignment" Value="Stretch" />
-        <Setter Property="Cursor" Value="SizeNorthSouth" />
-    </Style>
-
-    <!-- Vertical GridSplitter (for sidebar) - Reduced to 1px for thin appearance -->
-    <Style Selector="GridSplitter[ResizeDirection=Columns]">
-        <Setter Property="Width" Value="1" />
-        <Setter Property="VerticalAlignment" Value="Stretch" />
-        <Setter Property="Cursor" Value="SizeWestEast" />
-    </Style>
+    <!-- GridSplitter Styles for VSCode-like appearance -->
 
     <Style Selector="TabItem">
         <Setter Property="Foreground" Value="Gray" />
@@ -198,5 +164,29 @@
     <Style Selector="Button.transparent:pointerover">
         <Setter Property="Background" Value="#404040" />
         <Setter Property="BorderBrush" Value="#007ACC" />
+    </Style>
+
+    <Style Selector="views|LogViewerView TextBox">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="views|LogViewerView ComboBox">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="views|LogViewerView DatePicker">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="views|LogViewerView Button">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 </Styles>

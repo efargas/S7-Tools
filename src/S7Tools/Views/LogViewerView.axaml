@@ -44,18 +44,12 @@
                     <!-- Search -->
                     <TextBox Text="{Binding SearchText}" 
                              Watermark="Search logs..." 
-                             Width="200"
-                             Background="#3C3C3C"
-                             Foreground="#CCCCCC"
-                             BorderBrush="#464647" />
+                             Width="200" />
 
                     <!-- Log Level Filter -->
                     <ComboBox ItemsSource="{Binding AvailableLogLevels}"
                               SelectedItem="{Binding SelectedLogLevel}"
-                              Width="120"
-                              Background="#3C3C3C"
-                              Foreground="#CCCCCC"
-                              BorderBrush="#464647" />
+                              Width="120" />
 
                     <!-- Date Range -->
                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -64,10 +58,7 @@
                                    FontSize="12" 
                                    VerticalAlignment="Center" />
                         <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}"
-                                    Width="140"
-                                    Background="#3C3C3C"
-                                    Foreground="#CCCCCC"
-                                    BorderBrush="#464647" />
+                                    Width="140" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Spacing="4">
@@ -76,17 +67,12 @@
                                    FontSize="12" 
                                    VerticalAlignment="Center" />
                         <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
-                                    Width="140"
-                                    Background="#3C3C3C"
-                                    Foreground="#CCCCCC"
-                                    BorderBrush="#464647" />
+                                    Width="140" />
                     </StackPanel>
 
                     <!-- Clear Filters -->
                     <Button Command="{Binding ClearFiltersCommand}"
-                            Classes="transparent"
-                            Padding="8,4"
-                            ToolTip.Tip="Clear all filters">
+                            Classes="transparent">
                         <StackPanel Orientation="Horizontal" Spacing="4">
                             <icons:Icon Value="fa-solid fa-times" Width="14" Height="14" />
                             <TextBlock Text="Clear" FontSize="12" />
@@ -176,34 +162,7 @@
             </Grid>
         </Border>
 
-        <!-- Display Options -->
-        <Border Grid.Row="1" 
-                Background="#252526" 
-                BorderBrush="#464647" 
-                BorderThickness="0,0,0,1" 
-                Padding="8">
-            <StackPanel Orientation="Horizontal" Spacing="16">
-                <TextBlock Text="Show:" 
-                           Foreground="#CCCCCC" 
-                           FontSize="12" 
-                           VerticalAlignment="Center" />
-                
-                <CheckBox IsChecked="{Binding ShowTimestamp}" 
-                          Content="Timestamp" 
-                          Foreground="#CCCCCC" 
-                          FontSize="12" />
-                
-                <CheckBox IsChecked="{Binding ShowLevel}" 
-                          Content="Level" 
-                          Foreground="#CCCCCC" 
-                          FontSize="12" />
-                
-                <CheckBox IsChecked="{Binding ShowCategory}" 
-                          Content="Category" 
-                          Foreground="#CCCCCC" 
-                          FontSize="12" />
-            </StackPanel>
-        </Border>
+        <!-- Display Options removed, context menu will be used instead -->
 
         <!-- Log Entries DataGrid -->
         <DataGrid Grid.Row="2"
@@ -232,6 +191,13 @@
                     <Setter Property="FontWeight" Value="SemiBold" />
                     <Setter Property="FontSize" Value="12" />
                     <Setter Property="Padding" Value="8,4" />
+                    <Setter Property="ContextMenu">
+                        <ContextMenu>
+                            <MenuItem Header="Show Timestamp" IsChecked="{Binding $parent[UserControl].DataContext.ShowTimestamp}" Command="{Binding $parent[UserControl].DataContext.ToggleTimestampCommand}" />
+                            <MenuItem Header="Show Level" IsChecked="{Binding $parent[UserControl].DataContext.ShowLevel}" Command="{Binding $parent[UserControl].DataContext.ToggleLevelCommand}" />
+                            <MenuItem Header="Show Category" IsChecked="{Binding $parent[UserControl].DataContext.ShowCategory}" Command="{Binding $parent[UserControl].DataContext.ToggleCategoryCommand}" />
+                        </ContextMenu>
+                    </Setter>
                 </Style>
                 <Style Selector="DataGridRow">
                     <Setter Property="Background" Value="Transparent" />

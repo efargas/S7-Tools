@@ -228,6 +228,21 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
     public ReactiveCommand<Unit, Unit> ClearFiltersCommand { get; private set; } = null!;
 
     /// <summary>
+    /// Gets the command to toggle the timestamp column visibility.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ToggleTimestampCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to toggle the level column visibility.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ToggleLevelCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to toggle the category column visibility.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ToggleCategoryCommand { get; private set; } = null!;
+
+    /// <summary>
     /// Initializes the reactive commands.
     /// </summary>
     private void InitializeCommands()
@@ -279,6 +294,10 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
             StartDate = null;
             EndDate = null;
         });
+
+        ToggleTimestampCommand = ReactiveCommand.Create(() => { ShowTimestamp = !ShowTimestamp; });
+        ToggleLevelCommand = ReactiveCommand.Create(() => { ShowLevel = !ShowLevel; });
+        ToggleCategoryCommand = ReactiveCommand.Create(() => { ShowCategory = !ShowCategory; });
     }
 
     /// <summary>

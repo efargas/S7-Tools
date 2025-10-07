@@ -28,6 +28,7 @@ public class BottomPanelViewModel : ReactiveObject
     private readonly ILogExportService? _logExportService;
 
     private GridLength _panelHeight = new GridLength(200, GridUnitType.Pixel);
+    private GridLength _lastPanelHeight = new GridLength(200, GridUnitType.Pixel);
     private PanelTabItem? _selectedTab;
 
     /// <summary>
@@ -143,12 +144,14 @@ public class BottomPanelViewModel : ReactiveObject
     {
         if (PanelHeight.Value <= 35)
         {
-            // Expand to previous height or default 200px
-            PanelHeight = new GridLength(200, GridUnitType.Pixel);
+            // Expand to the last known height
+            PanelHeight = _lastPanelHeight;
             _logger.LogDebug("Bottom panel expanded to {Height}px", PanelHeight.Value);
         }
         else
         {
+            // Store the current height before collapsing
+            _lastPanelHeight = PanelHeight;
             // Collapse to show only tab headers (35px)
             PanelHeight = new GridLength(35, GridUnitType.Pixel);
             _logger.LogDebug("Bottom panel collapsed to {Height}px", PanelHeight.Value);

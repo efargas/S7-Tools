@@ -22,7 +22,7 @@
 
     <Window.Resources>
         <converters:BooleanToInverseBooleanConverter x:Key="BooleanToInverseBooleanConverter" />
-        <converters:GridLengthToIconConverter x:Key="GridLengthToIconConverter" />
+        <converters:GridLengthToDoubleConverter x:Key="GridLengthToDoubleConverter" />
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:BooleanToColorConverter x:Key="BooleanToColorConverter" />
     </Window.Resources>
@@ -82,7 +82,9 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MinHeight="100" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="{Binding BottomPanel.PanelHeight}" MinHeight="35" MaxHeight="400" />
+                <RowDefinition Height="{Binding BottomPanel.PanelHeight, Mode=TwoWay}"
+                               MinHeight="35"
+                               MaxHeight="{Binding $parent[Window].Bounds.Height, Converter={StaticResource GridLengthToDoubleConverter}, ConverterParameter=0.75}" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
@@ -220,14 +222,14 @@
 
                 <!-- Main Editor Area -->
                 <Border Grid.Column="3" Background="#1E1E1E">
-                    <ContentControl Content="{Binding Navigation.DetailContent}" />
+                    <ContentControl Content="{Binding Navigation.CurrentContent}" />
                 </Border>
             </Grid>
 
             <!-- GridSplitter for Bottom Panel -->
-            <GridSplitter Grid.Row="1" 
-                          Height="1" 
-                          Background="#464647" 
+            <GridSplitter Grid.Row="1"
+                          Height="3"
+                          Background="Transparent"
                           HorizontalAlignment="Stretch"
                           ResizeDirection="Rows"
                           IsVisible="{Binding BottomPanel.IsExpanded}"
@@ -235,7 +237,8 @@
                           ShowsPreview="False" />
 
             <!-- Bottom Panel -->
-            <Grid Grid.Row="2" Background="#1E1E1E" MinHeight="35">
+            <Grid Grid.Row="2"
+                  Background="#1E1E1E">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />

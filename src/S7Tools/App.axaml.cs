@@ -59,6 +59,13 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+
+        // Global exception handler
+        AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+        {
+            var logger = _serviceProvider.GetService<ILogger<App>>();
+            logger?.LogError(e.ExceptionObject as Exception, "Unhandled application exception");
+        };
     }
 
     /// <summary>

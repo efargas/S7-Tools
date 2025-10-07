@@ -13,6 +13,38 @@
         <local:ViewLocator/>
     </Application.DataTemplates>
 
+    <Application.Resources>
+        <ControlTheme x:Key="{x:Type GridSplitter}" TargetType="GridSplitter">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}">
+                        <Border x:Name="PART_Divider"
+                                Background="#464647"
+                                BorderThickness="0"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+            <Style Selector="^:pointerover /template/ Border#PART_Divider, ^:pressed /template/ Border#PART_Divider">
+                <Setter Property="Background" Value="#007ACC"/>
+            </Style>
+            <Style Selector="^[ResizeDirection=Columns]">
+                <Setter Property="Width" Value="3"/>
+                <Style Selector="^ /template/ Border#PART_Divider">
+                    <Setter Property="Width" Value="3"/>
+                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                </Style>
+            </Style>
+            <Style Selector="^[ResizeDirection=Rows]">
+                <Setter Property="Height" Value="3"/>
+                <Style Selector="^ /template/ Border#PART_Divider">
+                    <Setter Property="Height" Value="3"/>
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                </Style>
+            </Style>
+        </ControlTheme>
+    </Application.Resources>
+
     <Application.Styles>
         <FluentTheme />
         <sty:FluentAvaloniaTheme />
