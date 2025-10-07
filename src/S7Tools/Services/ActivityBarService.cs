@@ -57,12 +57,18 @@ public sealed class ActivityBarService : IActivityBarService
             ActivityBarItem? previousItem = _selectedItem;
 
             // Deselect previous item
-            _selectedItem?.IsSelected = false;
+            if (_selectedItem != null)
+            {
+                _selectedItem.IsSelected = false;
+            }
 
             _selectedItem = value;
 
             // Select new item
-            _selectedItem?.IsSelected = true;
+            if (_selectedItem != null)
+            {
+                _selectedItem.IsSelected = true;
+            }
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItem)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItemId)));

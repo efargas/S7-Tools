@@ -20,6 +20,8 @@ public partial class CommandDemoViewModel : ObservableObject
     [RelayCommand]
     private void RunHello()
     {
-        _commandFactory.Create("SayHello").Execute();
+        // TODO: Implement command execution using ICommandDispatcher
+        // var command = _commandFactory.Create("SayHello");
+        // await _commandDispatcher.DispatchAsync(command);
     }
 }
