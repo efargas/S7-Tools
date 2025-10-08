@@ -187,6 +187,11 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
+        // Add Serial Port ViewModels
+        services.TryAddTransient<SerialPortsSettingsViewModel>();
+        services.TryAddTransient<SerialPortProfileViewModel>();
+        services.TryAddTransient<SerialPortScannerViewModel>();
+
         return services;
     }
 
