@@ -122,6 +122,22 @@
 ### 2025-10-08 — Update
 - Phases 1-5 confirmed complete. Phase 6 (Testing & Validation) is blocked pending user validation. User reported UI controls missing from the right panel; awaiting reproduction details (screenshot/steps).
 
+#### Session Details (2025-10-08)
+
+- Fixes applied
+   - Marshalled profile collection updates to the UI thread to fix Avalonia DataGrid "invalid thread" exceptions (implemented in `SerialPortsSettingsViewModel` using `IUIThreadService`).
+   - Added ProfilesPath UI (Browse / Open / Load Default) to Serial Ports settings and ensured Load Default uses repository convention `resources/SerialProfiles` at runtime (created under build output resources when missing).
+   - Replaced WPF-style DataGrid header styling with Avalonia `DataGrid.Styles` and enabled header TextTrimming to avoid truncation.
+
+- Persistence & logging
+   - `SerialPortProfileService` auto-creates profiles folder and `profiles.json` with a default read-only profile when missing; runtime example path: `src/S7Tools/bin/Debug/net8.0/resources/SerialProfiles/profiles.json`.
+   - Added a minimal `FileLogWriter` service to persist in-memory logs to disk under `Logging.DefaultLogPath`; registered in DI for automatic startup.
+
+- Verification notes
+   - Solution builds succeeded locally (latest run: "Build succeeded" with warnings).
+   - Manual UI verification is pending: user to open Settings → Serial Ports and confirm immediate profile population, Browse/Open, and Load Default behavior.
+   - Outstanding follow-ups: investigate "Profile ID must be greater than zero" runtime errors in profile operations and enhance FileLogWriter rotation/retention.
+
 #### **Architecture Requirements**
 - **Location**: Interfaces in `S7Tools.Core/Services/Interfaces/`, implementations in `S7Tools/Services/`
 - **Error Handling**: Comprehensive exception handling with structured logging

@@ -204,7 +204,7 @@ services.AddSingleton<IServiceInterface, ServiceImplementation>();
 public class MyService
 {
     private readonly IDependency _dependency;
-    
+
     public MyService(IDependency dependency)
     {
         _dependency = dependency ?? throw new ArgumentNullException(nameof(dependency));
@@ -277,7 +277,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILongLivedService, LongLivedService>();
         services.AddScoped<IRequestScopedService, RequestScopedService>();
         services.AddTransient<ITransientService, TransientService>();
-        
+
         return services;
     }
 }
@@ -495,7 +495,7 @@ private void SetupValidation()
         .Skip(1) // Skip initial value
         .Subscribe(_ => OnPropertyChanged())
         .DisposeWith(_disposables);
-    
+
     // Repeat for each property...
 }
 ```
@@ -593,7 +593,23 @@ These patterns ensure optimal performance, maintainability, and avoid common Rea
 
 ---
 
-**Last Updated**: Current Session  
-**Project Version**: Development  
-**Minimum .NET Version**: 8.0  
+**Last Updated**: 2025-10-08
+**Project Version**: Development
+**Minimum .NET Version**: 8.0
 **Supported Platforms**: Windows, Linux, macOS
+
+## Recent Session Notes (2025-10-08)
+
+- UI / Serial Ports fixes
+    - Fixed cross-thread DataGrid crash by marshaling profile collection updates to the UI thread using an injected IUIThreadService in `SerialPortsSettingsViewModel`.
+    - Added ProfilesPath control to Serial Ports settings with Browse, Open in Explorer, and Load Default actions (default path: resources/SerialProfiles).
+    - Resolved DataGrid header styling/truncation by using Avalonia `DataGrid.Styles` and smaller header padding + TextTrimming on headers.
+
+- Persistence & Logging
+    - Serial port profiles are now created automatically when missing; `profiles.json` is created under the app runtime resources folder (e.g. `src/S7Tools/bin/Debug/net8.0/resources/SerialProfiles/profiles.json`).
+    - Added a minimal `FileLogWriter` service to persist in-memory logs to disk under the configured `Logging.DefaultLogPath`. Registered in DI for automatic startup.
+
+- Verification & Next Steps
+    - Solution builds successfully (latest build: "Build succeeded" with warnings).
+    - Manual UI verification is pending: open Settings → Serial Ports and confirm automatic load, Browse/Open, and Load Default behavior.
+    - Known follow-ups: investigate some runtime exceptions related to profile operations (e.g. "Profile ID must be greater than zero") and improve FileLogWriter (rotation/retention).
