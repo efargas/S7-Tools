@@ -84,9 +84,8 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IS7ConnectionProvider, PlcDataService>();
 
         // Add Serial Port Services
-        // TODO: Add serial port services in Phase 2
-        // services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
-        // services.TryAddSingleton<ISerialPortService, SerialPortService>();
+        services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
+        services.TryAddSingleton<ISerialPortService, SerialPortService>();
 
         return services;
     }
