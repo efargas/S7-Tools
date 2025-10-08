@@ -47,7 +47,7 @@ public class SettingsViewModel : ViewModelBase
     public string SelectedCategory
     {
         get => _selectedCategory;
-        set 
+        set
         {
             this.RaiseAndSetIfChanged(ref _selectedCategory, value);
             SelectedCategoryViewModel = GetCategoryViewModel(_selectedCategory);
@@ -89,7 +89,7 @@ public class SettingsViewModel : ViewModelBase
         var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         var logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
-        
+
         return new LoggingSettingsViewModel(settingsService, fileDialogService, logger);
     }
 
@@ -99,8 +99,10 @@ public class SettingsViewModel : ViewModelBase
         var portService = _serviceProvider.GetRequiredService<ISerialPortService>();
         var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
-        
-        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, logger);
+    var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+    var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+    var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
+
+    return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
     }
 }

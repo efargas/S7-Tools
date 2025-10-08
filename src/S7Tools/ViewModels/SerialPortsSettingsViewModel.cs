@@ -27,6 +27,9 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     private readonly IDialogService _dialogService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<SerialPortsSettingsViewModel> _logger;
+    private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
+    private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
+    private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -40,28 +43,44 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// <param name="portService">The serial port service.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
+    /// <param name="settingsService">The settings service used to persist application settings.</param>
     /// <param name="logger">The logger.</param>
     public SerialPortsSettingsViewModel(
-        ISerialPortProfileService profileService,
-        ISerialPortService portService,
-        IDialogService dialogService,
-        IFileDialogService? fileDialogService,
-        ILogger<SerialPortsSettingsViewModel> logger)
+    ISerialPortProfileService profileService,
+    ISerialPortService portService,
+    IDialogService dialogService,
+    IFileDialogService? fileDialogService,
+    S7Tools.Services.Interfaces.ISettingsService settingsService,
+    S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
+    ILogger<SerialPortsSettingsViewModel> logger)
     {
-        _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
-        _portService = portService ?? throw new ArgumentNullException(nameof(portService));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-        _fileDialogService = fileDialogService;
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
+    _portService = portService ?? throw new ArgumentNullException(nameof(portService));
+    _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+    _fileDialogService = fileDialogService;
+    _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+    _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+    _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize collections
         Profiles = new ObservableCollection<SerialPortProfile>();
         AvailablePorts = new ObservableCollection<string>();
 
-        // Initialize commands
-        InitializeCommands();
+    // Initialize commands
+    InitializeCommands();
+
+    // Initialize path commands
+    BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
+    OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
+    ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
+
+    // Initialize ProfilesPath from settings and subscribe to changes
+    RefreshFromSettings();
+    _settingsChangedHandler = (_, __) => RefreshFromSettings();
+    _settingsService.SettingsChanged += _settingsChangedHandler;
 
         // Load initial data
+        // Load profiles and scan ports in background but marshal collection updates to UI thread
         _ = Task.Run(async () =>
         {
             await LoadProfilesAsync();
@@ -175,6 +194,18 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _portCount, value);
     }
 
+    private string _profilesPath = string.Empty;
+    /// <summary>
+    /// Gets or sets the current profiles directory path shown in the UI.
+    /// This value is persisted to application settings when changed.
+    /// </summary>
+    public string ProfilesPath
+    {
+        get => _profilesPath;
+        set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
+    }
+
+
     #endregion
 
     #region Commands
@@ -238,6 +269,22 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// Gets the command to show profile details.
     /// </summary>
     public ReactiveCommand<Unit, Unit> ShowProfileDetailsCommand { get; private set; } = null!;
+
+    // Path management commands
+    /// <summary>
+    /// Command to open a folder browser to select the profiles directory.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> BrowseProfilesPathCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Command to open the profiles directory in the system file explorer.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> OpenProfilesPathCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Command to reset the profiles path to the default within the application resources.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ResetProfilesPathCommand { get; private set; } = null!;
 
     #endregion
 
@@ -346,6 +393,9 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         ShowProfileDetailsCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "showing profile details"))
             .DisposeWith(_disposables);
+
+        // Subscribe to settings changes to update ProfilesPath
+        // no-op: primary command initialization happened above
     }
 
     /// <summary>
@@ -359,17 +409,22 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             StatusMessage = "Loading profiles...";
 
             var profiles = await _profileService.GetAllProfilesAsync();
-            
-            Profiles.Clear();
-            foreach (var profile in profiles.OrderBy(p => p.IsDefault ? 0 : 1).ThenBy(p => p.Name))
-            {
-                Profiles.Add(profile);
-            }
 
-            ProfileCount = Profiles.Count;
+            // Update the ObservableCollection on the UI thread to avoid cross-thread exceptions
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                Profiles.Clear();
+                foreach (var profile in profiles.OrderBy(p => p.IsDefault ? 0 : 1).ThenBy(p => p.Name))
+                {
+                    Profiles.Add(profile);
+                }
+
+                ProfileCount = Profiles.Count;
+            });
             StatusMessage = $"Loaded {ProfileCount} profile(s)";
 
             _logger.LogInformation("Loaded {ProfileCount} profiles", ProfileCount);
+            // ProfilesPath is managed via settings; RefreshFromSettings handles syncing
         }
         catch (Exception ex)
         {
@@ -393,7 +448,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             StatusMessage = "Scanning for ports...";
 
             var portInfos = await _portService.ScanAvailablePortsAsync();
-            
+
             AvailablePorts.Clear();
             foreach (var portInfo in portInfos.OrderBy(p => p.PortPath))
             {
@@ -466,12 +521,15 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task EditProfileAsync()
     {
-        if (SelectedProfile == null) return;
+        if (SelectedProfile == null)
+        {
+            return;
+        }
 
         try
         {
             StatusMessage = "Opening profile editor...";
-            
+
             // TODO: Implement profile editor dialog
             // For now, just show a placeholder message
             await _dialogService.ShowErrorAsync(
@@ -492,7 +550,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task DeleteProfileAsync()
     {
-        if (SelectedProfile == null) return;
+        if (SelectedProfile == null)
+        {
+            return;
+        }
 
         try
         {
@@ -501,7 +562,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 "Delete Profile",
                 $"Are you sure you want to delete the profile '{SelectedProfile.Name}'?");
 
-            if (!confirmed) return;
+            if (!confirmed)
+            {
+                return;
+            }
 
             IsLoading = true;
             StatusMessage = "Deleting profile...";
@@ -539,18 +603,21 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task DuplicateProfileAsync()
     {
-        if (SelectedProfile == null) return;
+        if (SelectedProfile == null)
+        {
+            return;
+        }
 
         try
         {
             // TODO: Implement name input dialog
             var newName = $"{SelectedProfile.Name} (Copy)";
-            
+
             IsLoading = true;
             StatusMessage = "Duplicating profile...";
 
             var duplicatedProfile = await _profileService.DuplicateProfileAsync(SelectedProfile.Id, newName);
-            
+
             Profiles.Add(duplicatedProfile);
             SelectedProfile = duplicatedProfile;
             ProfileCount = Profiles.Count;
@@ -574,7 +641,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task SetDefaultProfileAsync()
     {
-        if (SelectedProfile == null) return;
+        if (SelectedProfile == null)
+        {
+            return;
+        }
 
         try
         {
@@ -582,7 +652,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             StatusMessage = "Setting default profile...";
 
             await _profileService.SetDefaultProfileAsync(SelectedProfile.Id);
-            
+
             // Update UI - mark current default as false and selected as true
             foreach (var profile in Profiles)
             {
@@ -608,7 +678,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task TestPortAsync()
     {
-        if (SelectedProfile == null || string.IsNullOrEmpty(SelectedPort)) return;
+        if (SelectedProfile == null || string.IsNullOrEmpty(SelectedPort))
+        {
+            return;
+        }
 
         try
         {
@@ -616,13 +689,13 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
             // Apply configuration to test the port
             var success = await _portService.ApplyConfigurationAsync(SelectedPort, SelectedProfile.Configuration);
-            
-            var message = success 
-                ? $"Port {SelectedPort} test successful" 
+
+            var message = success
+                ? $"Port {SelectedPort} test successful"
                 : $"Port {SelectedPort} test failed";
 
             await _dialogService.ShowErrorAsync("Port Test Result", message);
-            
+
             StatusMessage = success ? "Port test successful" : "Port test failed";
             _logger.LogInformation("Port test result for {Port}: {Success}", SelectedPort, success);
         }
@@ -652,7 +725,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 null,
                 "profiles.json");
 
-            if (string.IsNullOrEmpty(fileName)) return;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
 
             IsLoading = true;
             StatusMessage = "Exporting profiles...";
@@ -674,6 +750,135 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    private async Task BrowseProfilesPathAsync()
+    {
+        if (_fileDialogService == null)
+        {
+            StatusMessage = "File dialog service not available";
+            return;
+        }
+
+        try
+        {
+            var result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Profiles Directory", ProfilesPath);
+            if (!string.IsNullOrEmpty(result))
+            {
+                ProfilesPath = result;
+                await UpdateProfilesPathInSettingsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error browsing for profiles path");
+            StatusMessage = "Error selecting directory";
+        }
+    }
+
+    private async Task OpenProfilesPathAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(ProfilesPath))
+            {
+                StatusMessage = "Profiles path is not set";
+                return;
+            }
+
+            if (!Directory.Exists(ProfilesPath))
+            {
+                Directory.CreateDirectory(ProfilesPath);
+            }
+
+            await OpenDirectoryInExplorerAsync(ProfilesPath);
+            _logger.LogInformation("Opened profiles path in explorer: {Path}", ProfilesPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening profiles path in explorer");
+            StatusMessage = "Error opening profiles path";
+        }
+    }
+
+    private async Task ResetProfilesPathAsync()
+    {
+        try
+        {
+            // Reset to default path inside application resources
+            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            var defaultPath = Path.Combine(baseDir, "resources", "SerialProfiles");
+            ProfilesPath = defaultPath;
+            await UpdateProfilesPathInSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resetting profiles path");
+            StatusMessage = "Error resetting profiles path";
+        }
+    }
+
+    private async Task UpdateProfilesPathInSettingsAsync()
+    {
+        try
+        {
+            // Persist through the injected settings service
+            var settings = _settingsService.Settings.Clone();
+            settings.SerialPorts.ProfilesPath = ProfilesPath;
+            await _settingsService.UpdateSettingsAsync(settings).ConfigureAwait(false);
+            StatusMessage = "Profiles path updated";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update settings with new profiles path");
+            StatusMessage = "Failed to update settings";
+        }
+    }
+
+    private static async Task OpenDirectoryInExplorerAsync(string path)
+    {
+        await Task.Run(() =>
+        {
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", path);
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    System.Diagnostics.Process.Start("xdg-open", path);
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    System.Diagnostics.Process.Start("open", path);
+                }
+                else
+                {
+                    throw new PlatformNotSupportedException("Opening directories in explorer is not supported on this platform");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to open directory in explorer: {path}", ex);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Refreshes the view model properties from the persisted settings.
+    /// </summary>
+    private void RefreshFromSettings()
+    {
+        try
+        {
+            var settings = _settingsService.Settings;
+            ProfilesPath = settings.SerialPorts?.ProfilesPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SerialProfiles");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to refresh profiles path from settings");
+        }
+    }
+
     /// <summary>
     /// Imports profiles from a JSON file.
     /// </summary>
@@ -691,7 +896,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 "Import Profiles",
                 "JSON files (*.json)|*.json|All files (*.*)|*.*");
 
-            if (string.IsNullOrEmpty(fileName)) return;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
 
             IsLoading = true;
             StatusMessage = "Importing profiles...";
@@ -721,7 +929,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task ExportSelectedProfileAsync()
     {
-        if (SelectedProfile == null || _fileDialogService == null) return;
+        if (SelectedProfile == null || _fileDialogService == null)
+        {
+            return;
+        }
 
         try
         {
@@ -731,7 +942,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 null,
                 $"{SelectedProfile.Name}.json");
 
-            if (string.IsNullOrEmpty(fileName)) return;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
 
             IsLoading = true;
             StatusMessage = "Exporting profile...";
@@ -758,7 +972,10 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task ShowProfileDetailsAsync()
     {
-        if (SelectedProfile == null) return;
+        if (SelectedProfile == null)
+        {
+            return;
+        }
 
         try
         {
@@ -775,7 +992,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                          $"Modified: {SelectedProfile.ModifiedAt:yyyy-MM-dd HH:mm:ss}";
 
             await _dialogService.ShowErrorAsync("Profile Details", details);
-            
+
             _logger.LogInformation("Showed details for profile: {ProfileName}", SelectedProfile.Name);
         }
         catch (Exception ex)
@@ -805,8 +1022,31 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     public void Dispose()
     {
-        _disposables?.Dispose();
-        _logger.LogInformation("SerialPortsSettingsViewModel disposed");
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Protected dispose pattern implementation.
+    /// </summary>
+    /// <param name="disposing">True when called from Dispose()</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            try
+            {
+                _disposables?.Dispose();
+                _settingsService.SettingsChanged -= (_, _) => RefreshFromSettings();
+            }
+            catch { }
+        }
+
+        try
+        {
+            _logger.LogInformation("SerialPortsSettingsViewModel disposed");
+        }
+        catch { }
     }
 
     #endregion

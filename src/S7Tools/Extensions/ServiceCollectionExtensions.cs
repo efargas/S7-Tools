@@ -61,6 +61,9 @@ public static class ServiceCollectionExtensions
         // Add Log Export Service
         services.TryAddTransient<ILogExportService, LogExportService>();
 
+    // Add File Log Writer - will subscribe to in-memory log data store and persist to disk when enabled
+    services.TryAddSingleton<FileLogWriter>();
+
         // Add File Dialog Service
         services.TryAddTransient<IFileDialogService>(provider =>
         {
@@ -173,12 +176,12 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<ISettingsService>(),
             provider.GetService<IFileDialogService>(),
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>()));
-        
+
         // Add Specialized ViewModels for MainWindow decomposition
         services.TryAddSingleton<NavigationViewModel>();
         services.TryAddSingleton<BottomPanelViewModel>();
         services.TryAddSingleton<SettingsManagementViewModel>();
-        
+
         // Add Feature ViewModels
         services.TryAddTransient<LogViewerViewModel>();
         services.TryAddTransient<HomeViewModel>();
@@ -315,6 +318,31 @@ public static class ServiceCollectionExtensions
         {
             // Localization service doesn't require async initialization currently
             // but this is where you would add it if needed
+        }
+
+        // Initialize Serial Port Profile storage in background to ensure profiles folder/file are created.
+        try
+        {
+            var profileService = serviceProvider.GetService<ISerialPortProfileService>();
+            if (profileService != null)
+            {
+                // Fire-and-forget initialization; any exceptions are logged inside the service
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await profileService.InitializeStorageAsync().ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // Intentionally swallow here; service logs errors
+                    }
+                });
+            }
+        }
+        catch
+        {
+            // ignore
         }
     }
 

@@ -17,13 +17,14 @@ namespace S7Tools.Services;
 /// Service for managing serial port profiles with JSON-based persistence, thread-safe operations, and comprehensive error handling.
 /// This service provides complete CRUD operations, import/export functionality, and validation for serial port profiles.
 /// </summary>
-public class SerialPortProfileService : ISerialPortProfileService
+public class SerialPortProfileService : ISerialPortProfileService, IDisposable
 {
     private readonly ILogger<SerialPortProfileService> _logger;
     private readonly ISettingsService _settingsService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly List<SerialPortProfile> _profiles = new();
-    private bool _isInitialized = false;
+    private bool _isInitialized;
+    private bool _disposed;
     private int _nextId = 1;
 
     /// <summary>
@@ -581,7 +582,13 @@ public class SerialPortProfileService : ISerialPortProfileService
     /// <inheritdoc />
     public async Task InitializeStorageAsync(CancellationToken cancellationToken = default)
     {
+        // We need to avoid holding the semaphore while calling EnsureDefaultProfileExistsAsync
+        // because that method also acquires the same semaphore. To prevent deadlocks we
+        // will release the semaphore briefly, call EnsureDefaultProfileExistsAsync, then
+        // reacquire to set the _isInitialized flag.
+
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        var shouldRelease = true;
         try
         {
             if (_isInitialized)
@@ -592,16 +599,33 @@ public class SerialPortProfileService : ISerialPortProfileService
             var settings = _settingsService.Settings.SerialPorts;
             var profilesPath = GetProfilesDirectoryPath();
 
-            // Ensure directory exists
-            Directory.CreateDirectory(profilesPath);
+            _logger.LogDebug("InitializeStorageAsync: profilesPath={ProfilesPath}", profilesPath);
 
-            // Load existing profiles
+            // Ensure directory exists
+            try
+            {
+                Directory.CreateDirectory(profilesPath);
+                _logger.LogDebug("Ensure directory exists: {ProfilesPath}", profilesPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to create profiles directory: {ProfilesPath}", profilesPath);
+                throw;
+            }
+
+            // Load existing profiles while we still hold the semaphore
+            _logger.LogDebug("Loading existing profiles from {FilePath}", GetProfilesFilePath());
             await LoadProfilesAsync(cancellationToken).ConfigureAwait(false);
 
-            // Ensure default profile exists
-            await EnsureDefaultProfileExistsAsync(cancellationToken).ConfigureAwait(false);
-
+            // Mark initialized now so EnsureDefaultProfileExistsAsync won't attempt to re-enter initialization
             _isInitialized = true;
+
+            // Release semaphore before ensuring default profile exists to avoid deadlock
+            _semaphore.Release();
+            shouldRelease = false;
+
+            _logger.LogDebug("Ensuring default profile exists (outside semaphore)");
+            await EnsureDefaultProfileExistsAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Profile storage initialized at {ProfilesPath}", profilesPath);
         }
         catch (Exception ex)
@@ -611,7 +635,10 @@ public class SerialPortProfileService : ISerialPortProfileService
         }
         finally
         {
-            _semaphore.Release();
+            if (shouldRelease)
+            {
+                _semaphore.Release();
+            }
         }
     }
 
@@ -775,9 +802,92 @@ public class SerialPortProfileService : ISerialPortProfileService
             };
 
             var json = JsonSerializer.Serialize(_profiles, options);
-            await File.WriteAllTextAsync(filePath, json, cancellationToken).ConfigureAwait(false);
+            // Ensure directory exists
+            var directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
 
-            _logger.LogDebug("Saved {Count} profiles to {FilePath}", _profiles.Count, filePath);
+            // Write to a temporary file first, then atomically replace the target file.
+            // This reduces the risk of leaving a partially written/corrupted file if the process is killed.
+            var tempFile = filePath + ".tmp";
+
+            try
+            {
+                _logger.LogDebug("Saving profiles: targetFile={FilePath}, tempFile={TempFile}, count={Count}", filePath, tempFile, _profiles.Count);
+
+                await File.WriteAllTextAsync(tempFile, json, cancellationToken).ConfigureAwait(false);
+
+                // Move over the existing file. Use overwrite=true where supported.
+                // File.Move with overwrite is atomic on most platforms for same-filesystem moves.
+                if (File.Exists(filePath))
+                {
+                    // Attempt an overwrite move; if not supported, fall back to Replace.
+                    try
+                    {
+                        File.Move(tempFile, filePath, true);
+                    }
+                    catch (PlatformNotSupportedException)
+                    {
+                        // Fallback to File.Replace which provides an atomic replace with backup.
+                        var backup = filePath + ".bak";
+                        File.Replace(tempFile, filePath, backup, ignoreMetadataErrors: true);
+                        if (File.Exists(backup))
+                        {
+                            try { File.Delete(backup); } catch { }
+                        }
+                    }
+                }
+                else
+                {
+                    File.Move(tempFile, filePath);
+                }
+
+                // Log file size and timestamp after move
+                try
+                {
+                    var fi = new FileInfo(filePath);
+                    _logger.LogInformation("Saved {Count} profiles to {FilePath} (size={Size}, lastWrite={LastWrite})", _profiles.Count, filePath, fi.Length, fi.LastWriteTimeUtc);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Saved profiles but failed to read file info for {FilePath}", filePath);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning("Save profiles operation was canceled before completion");
+                // Clean up temp file if it exists
+                try
+                {
+                    if (File.Exists(tempFile))
+                    {
+                        File.Delete(tempFile);
+                    }
+                }
+                catch
+                {
+                }
+
+                throw;
+            }
+            catch (Exception)
+            {
+                // If an error occurs during the temp->final move, try to remove the temp file and rethrow
+                try
+                {
+                    if (File.Exists(tempFile))
+                    {
+                        File.Delete(tempFile);
+                    }
+                }
+                catch
+                {
+                }
+
+                throw;
+            }
         }
         catch (Exception ex)
         {
@@ -795,8 +905,28 @@ public class SerialPortProfileService : ISerialPortProfileService
     /// </summary>
     public void Dispose()
     {
-        _semaphore?.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Dispose pattern implementation.
+    /// </summary>
+    /// <param name="disposing">True when called from Dispose, false from finalizer.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            // dispose managed resources
+            _semaphore?.Dispose();
+        }
+
+        _disposed = true;
     }
 
     #endregion

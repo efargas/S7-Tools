@@ -28,6 +28,58 @@ sealed class Program
         ConfigureServices(services);
         var serviceProvider = services.BuildServiceProvider();
 
+    // Diagnostic initialization: ensure important services are initialized early so
+    // we can validate profile storage and stty integration during startup.
+        // If started with --diag flag, run initialization synchronously and print diagnostics, then exit.
+        if (args != null && args.Length > 0 && args.Contains("--diag"))
+        {
+            try
+            {
+                // Run initialization synchronously for diagnostics so we can inspect storage state.
+                serviceProvider.InitializeS7ToolsServicesAsync().GetAwaiter().GetResult();
+
+                var profileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISerialPortProfileService>()
+                                     ?? serviceProvider.GetService<S7Tools.Services.SerialPortProfileService>();
+
+                if (profileService != null)
+                {
+                    try
+                    {
+                        var storageInfo = profileService.GetStorageInfoAsync().GetAwaiter().GetResult();
+                        var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                        Console.WriteLine("[S7Tools] SerialPortProfileService storage info:\n" + json);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[S7Tools] Failed to get profile storage info: {ex}");
+                    }
+                }
+
+                Console.WriteLine("[S7Tools] Diagnostics complete. Exiting due to --diag flag.");
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[S7Tools] Startup diagnostics failed: {ex}");
+                // fall through to start the UI so user can still run the app
+            }
+        }
+
+        // Normal startup: initialize background services asynchronously without blocking the UI thread.
+        // This avoids blocking startup hangs while still allowing services to initialize in the background.
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                // Log to console - UI will still start
+                Console.WriteLine($"[S7Tools] Background service initialization failed: {ex}");
+            }
+        });
+
         IconProvider.Current.Register<FontAwesomeIconProvider>();
 
         BuildAvaloniaApp(serviceProvider)
@@ -48,7 +100,7 @@ sealed class Program
         services.AddLogging(builder =>
         {
             builder.SetMinimumLevel(LogLevel.Debug);
-            
+
             // Add DataStore logging provider
             builder.AddDataStore(options =>
             {

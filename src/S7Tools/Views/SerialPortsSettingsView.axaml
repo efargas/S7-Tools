@@ -12,23 +12,87 @@
   <ScrollViewer>
     <StackPanel Margin="20" Spacing="20">
       <!-- Header -->
-      <TextBlock Text="Serial Ports Settings" 
-                 FontSize="24" 
-                 FontWeight="Bold" 
-                 Foreground="#CCCCCC" 
+      <TextBlock Text="Serial Ports Settings"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="#CCCCCC"
                  Margin="0,0,0,10" />
 
       <!-- Profile Management Section -->
-      <Border Background="#252526" 
-              BorderBrush="#464647" 
-              BorderThickness="1" 
-              CornerRadius="4" 
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="16">
-          <TextBlock Text="Profile Management" 
-                     FontSize="18" 
-                     FontWeight="SemiBold" 
+          <TextBlock Text="Profile Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
                      Foreground="#CCCCCC" />
+
+          <!-- Profiles Path Setting -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <!-- Column for Load Default button -->
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0"
+                       Text="Profiles Path:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <TextBox Grid.Column="1" Grid.Row="0"
+                     Text="{Binding ProfilesPath}"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+
+      <Button Grid.Column="2" Grid.Row="0"
+        Content="Browse..."
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="12,6"
+                    Margin="0,0,4,0"
+                    Command="{Binding BrowseProfilesPathCommand}" />
+
+      <Button Grid.Column="3" Grid.Row="0"
+                    Background="Transparent"
+                    Foreground="#CCCCCC"
+                    BorderBrush="#464647"
+                    BorderThickness="1"
+                    Padding="8,6"
+                    ToolTip.Tip="Open in Explorer"
+                    Command="{Binding OpenProfilesPathCommand}">
+              <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+            </Button>
+
+      <!-- Load Default Path -->
+      <Button Grid.Column="4" Grid.Row="0"
+        Content="Load Default"
+        Background="#007ACC"
+        Foreground="White"
+        BorderThickness="0"
+        Padding="8,6"
+        Margin="8,0,0,0"
+        Command="{Binding ResetProfilesPathCommand}" />
+
+            <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="4"
+                       Text="Directory where profile JSON files are stored"
+                       FontSize="11"
+                       Foreground="#858585"
+                       Margin="8,4,0,0" />
+          </Grid>
 
           <!-- Create New Profile -->
           <Grid>
@@ -44,10 +108,10 @@
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Column="0" Grid.Row="0"
-                       Text="New Profile:" 
-                       Foreground="#CCCCCC" 
+                       Text="New Profile:"
+                       Foreground="#CCCCCC"
                        VerticalAlignment="Center" />
-            
+
             <TextBox Grid.Column="1" Grid.Row="0"
                      Text="{Binding NewProfileName}"
                      Watermark="Profile name..."
@@ -55,7 +119,7 @@
                      Foreground="#CCCCCC"
                      BorderBrush="#464647"
                      Margin="8,0" />
-            
+
             <TextBox Grid.Column="2" Grid.Row="0"
                      Text="{Binding NewProfileDescription}"
                      Watermark="Description (optional)..."
@@ -63,7 +127,7 @@
                      Foreground="#CCCCCC"
                      BorderBrush="#464647"
                      Margin="8,0" />
-            
+
             <Button Grid.Column="3" Grid.Row="0"
                     Background="#0E639C"
                     Foreground="White"
@@ -103,25 +167,56 @@
                       IsReadOnly="True"
                       Height="200"
                       Margin="0,8,8,0">
+              <!-- Header style using Avalonia style selector (matches LogViewer pattern) -->
+              <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                  <!-- Reduce font size and right padding so headers take less horizontal space -->
+                  <Setter Property="FontSize" Value="11" />
+                  <Setter Property="FontWeight" Value="SemiBold" />
+                  <Setter Property="Padding" Value="8,4,20,4" />
+                  <Setter Property="HorizontalContentAlignment" Value="Left" />
+                </Style>
+              </DataGrid.Styles>
+
               <DataGrid.Columns>
-                <DataGridTextColumn Header="Name" 
-                                    Binding="{Binding Name}" 
-                                    Width="150" />
-                <DataGridTextColumn Header="Description" 
-                                    Binding="{Binding Description}" 
-                                    Width="200" />
-                <DataGridTextColumn Header="Baud Rate" 
-                                    Binding="{Binding Configuration.BaudRate}" 
-                                    Width="80" />
-                <DataGridTextColumn Header="Parity" 
-                                    Binding="{Binding Configuration.Parity}" 
-                                    Width="80" />
-                <DataGridCheckBoxColumn Header="Default" 
-                                        Binding="{Binding IsDefault}" 
-                                        Width="60" />
-                <DataGridCheckBoxColumn Header="Read-Only" 
-                                        Binding="{Binding IsReadOnly}" 
-                                        Width="80" />
+                <!-- Name: slightly smaller min width so headers don't appear too large -->
+                <DataGridTextColumn Binding="{Binding Name}" Width="1.2*" MinWidth="120">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <!-- Description: allow more flexible width but reduce excessive min width -->
+                <DataGridTextColumn Binding="{Binding Description}" Width="1.8*" MinWidth="140">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <!-- Small fixed columns use Auto so header fits content and arrow -->
+                <DataGridTextColumn Binding="{Binding Configuration.BaudRate}" Width="90" MinWidth="70">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Baud Rate" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding Configuration.Parity}" Width="80" MinWidth="70">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Parity" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="70" MinWidth="60">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
+
+                <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="80" MinWidth="70">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
               </DataGrid.Columns>
             </DataGrid>
 
@@ -224,15 +319,15 @@
       </Border>
 
       <!-- Port Discovery Section -->
-      <Border Background="#252526" 
-              BorderBrush="#464647" 
-              BorderThickness="1" 
-              CornerRadius="4" 
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="16">
-          <TextBlock Text="Port Discovery" 
-                     FontSize="18" 
-                     FontWeight="SemiBold" 
+          <TextBlock Text="Port Discovery"
+                     FontSize="18"
+                     FontWeight="SemiBold"
                      Foreground="#CCCCCC" />
 
           <!-- Scan Controls -->
@@ -295,11 +390,11 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"
-                       Text="Available Ports:" 
-                       Foreground="#CCCCCC" 
+                       Text="Available Ports:"
+                       Foreground="#CCCCCC"
                        VerticalAlignment="Top"
                        Margin="0,8,0,0" />
-            
+
             <ListBox Grid.Column="1"
                      ItemsSource="{Binding AvailablePorts}"
                      SelectedItem="{Binding SelectedPort}"
@@ -322,15 +417,15 @@
       </Border>
 
       <!-- Import/Export Section -->
-      <Border Background="#252526" 
-              BorderBrush="#464647" 
-              BorderThickness="1" 
-              CornerRadius="4" 
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="16">
-          <TextBlock Text="Import/Export" 
-                     FontSize="18" 
-                     FontWeight="SemiBold" 
+          <TextBlock Text="Import/Export"
+                     FontSize="18"
+                     FontWeight="SemiBold"
                      Foreground="#CCCCCC" />
 
           <Grid>
@@ -391,15 +486,15 @@
       </Border>
 
       <!-- Status Section -->
-      <Border Background="#252526" 
-              BorderBrush="#464647" 
-              BorderThickness="1" 
-              CornerRadius="4" 
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="8">
-          <TextBlock Text="Status Information" 
-                     FontSize="18" 
-                     FontWeight="SemiBold" 
+          <TextBlock Text="Status Information"
+                     FontSize="18"
+                     FontWeight="SemiBold"
                      Foreground="#CCCCCC" />
 
           <Grid>
@@ -409,8 +504,8 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Spacing="4">
-              <TextBlock Text="Profile Management:" 
-                         Foreground="#CCCCCC" 
+              <TextBlock Text="Profile Management:"
+                         Foreground="#CCCCCC"
                          FontWeight="SemiBold" />
               <TextBlock Text="{Binding ProfileCount, StringFormat='• {0} profiles loaded'}"
                          Foreground="#858585"
@@ -421,8 +516,8 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Spacing="4">
-              <TextBlock Text="Port Discovery:" 
-                         Foreground="#CCCCCC" 
+              <TextBlock Text="Port Discovery:"
+                         Foreground="#CCCCCC"
                          FontWeight="SemiBold" />
               <TextBlock Text="{Binding PortCount, StringFormat='• {0} ports discovered'}"
                          Foreground="#858585"
@@ -434,16 +529,16 @@
           </Grid>
 
           <!-- Loading Indicator -->
-          <StackPanel Orientation="Horizontal" 
-                      Spacing="8" 
+          <StackPanel Orientation="Horizontal"
+                      Spacing="8"
                       IsVisible="{Binding IsLoading}">
-            <icons:Icon Value="fa-solid fa-spinner" 
-                        Width="16" 
-                        Height="16" 
+            <icons:Icon Value="fa-solid fa-spinner"
+                        Width="16"
+                        Height="16"
                         Foreground="#0E639C"
                         Classes="spin" />
-            <TextBlock Text="Loading..." 
-                       Foreground="#858585" 
+            <TextBlock Text="Loading..."
+                       Foreground="#858585"
                        FontSize="12" />
           </StackPanel>
 
