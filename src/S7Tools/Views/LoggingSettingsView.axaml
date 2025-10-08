@@ -5,7 +5,7 @@
              xmlns:vm="using:S7Tools.ViewModels"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="S7Tools.Views.SettingsConfigView"
+             x:Class="S7Tools.Views.LoggingSettingsView"
              x:DataType="vm:LoggingSettingsViewModel"
              Background="#1E1E1E">
 
@@ -36,6 +36,7 @@
                             <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -60,9 +61,21 @@
                                 Foreground="White"
                                 BorderThickness="0"
                                 Padding="12,6"
+                                Margin="0,0,4,0"
                                 Command="{Binding BrowseDefaultLogPathCommand}" />
 
-                        <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+                        <Button Grid.Column="3" Grid.Row="0"
+                                Background="Transparent"
+                                Foreground="#CCCCCC"
+                                BorderBrush="#464647"
+                                BorderThickness="1"
+                                Padding="8,6"
+                                ToolTip.Tip="Open in Explorer"
+                                Command="{Binding OpenDefaultLogPathCommand}">
+                            <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                        </Button>
+
+                        <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
                                    Text="Directory where log files will be stored by default"
                                    FontSize="11"
                                    Foreground="#858585"
@@ -74,6 +87,7 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
@@ -99,9 +113,21 @@
                                 Foreground="White"
                                 BorderThickness="0"
                                 Padding="12,6"
+                                Margin="0,0,4,0"
                                 Command="{Binding BrowseExportPathCommand}" />
 
-                        <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+                        <Button Grid.Column="3" Grid.Row="0"
+                                Background="Transparent"
+                                Foreground="#CCCCCC"
+                                BorderBrush="#464647"
+                                BorderThickness="1"
+                                Padding="8,6"
+                                ToolTip.Tip="Open in Explorer"
+                                Command="{Binding OpenExportPathCommand}">
+                            <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                        </Button>
+
+                        <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
                                    Text="Directory where exported log files will be saved"
                                    FontSize="11"
                                    Foreground="#858585"

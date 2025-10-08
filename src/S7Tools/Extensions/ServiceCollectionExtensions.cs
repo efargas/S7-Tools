@@ -159,7 +159,15 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IViewModelFactory, ViewModelFactory>();
 
         // Add Main ViewModels
-        services.TryAddSingleton<MainWindowViewModel>();
+        services.TryAddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel(
+            provider.GetRequiredService<NavigationViewModel>(),
+            provider.GetRequiredService<BottomPanelViewModel>(),
+            provider.GetRequiredService<SettingsManagementViewModel>(),
+            provider.GetRequiredService<IDialogService>(),
+            provider.GetRequiredService<IClipboardService>(),
+            provider.GetRequiredService<ISettingsService>(),
+            provider.GetService<IFileDialogService>(),
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>()));
         
         // Add Specialized ViewModels for MainWindow decomposition
         services.TryAddSingleton<NavigationViewModel>();
@@ -170,7 +178,7 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<LogViewerViewModel>();
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
-        services.TryAddTransient<SettingsViewModel>();
+        services.TryAddTransient<SettingsViewModel>(provider => new SettingsViewModel(provider));
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
 

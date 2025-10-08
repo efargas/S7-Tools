@@ -1,19 +1,23 @@
 # Tasks Index
 
 **Last Updated**: Current Session  
-**Total Tasks**: 12  
+**Total Tasks**: 17  
 
 ## In Progress
 
 - **[TASK010]** ✅ Comprehensive UI and Architecture Fixes - CRITICAL: 95% Complete - All major functionality implemented and working (dialogs, export, resizing, dividers, view container, DateTime conversion)
 - **[TASK001]** Memory Bank System Setup - 95% Complete - Core files established, task documentation updated
 - **[TASK003]** Testing Framework Implementation - NEXT PRIORITY - Set up comprehensive testing infrastructure with xUnit
+- **[TASK013]** Implementar Command Pattern en operaciones de logs - Not Started
+- **[TASK014]** Mejorar Factory Pattern para servicios configurables - Not Started
+- **[TASK015]** Implementar Resource Pattern para mensajes y textos - Not Started
+- **[TASK016]** Validación de entrada y manejo de errores - Not Started
+- **[TASK017]** Refuerzo de pruebas y cobertura - Not Started
 
 ## Pending
 
 - **[TASK009]** Comprehensive UI and Functionality Fixes - Superseded by TASK010 comprehensive approach
 - **[TASK007]** S7Tools UI & Logging System Fixes - Superseded by TASK010 comprehensive approach
-- **[TASK003]** Testing Framework Implementation - Set up xUnit testing projects with comprehensive test structure
 - **[TASK004]** PLC Communication System Development - Implement S7-1200 protocol communication and data exchange
 - **[TASK005]** Configuration Management Enhancement - Partially covered by TASK010 settings integration
 - **[TASK006]** Performance Monitoring and Optimization - Add performance metrics collection and optimization
@@ -34,26 +38,26 @@
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| In Progress | 3 | 25.0% |
-| Pending | 5 | 41.7% |
-| Completed | 3 | 25.0% |
-| Abandoned | 1 | 8.3% |
+| In Progress | 8 | 47.1% |
+| Pending | 5 | 29.4% |
+| Completed | 3 | 17.6% |
+| Abandoned | 1 | 5.9% |
 
 ## Priority Distribution
 
 | Priority | Tasks |
 |----------|-------|
 | Critical | **TASK009** (Comprehensive UI fixes) |
-| High | TASK001, TASK003, TASK004, TASK007 |
+| High | TASK001, TASK003, TASK004, TASK007, TASK013-017 |
 | Medium | TASK005, TASK006 |
 | Low | *None* |
 
 ## Next Actions
 
-1. **🔥 IMMEDIATE: Begin TASK009 Phase A** - Fix critical functionality (dialogs, log operations, panel dividers)
+1. **🔥 IMMEDIATE: Begin TASK013-017** - Implement advanced patterns (Command, Factory, Resource, Validation, Testing)
 2. **Complete TASK001** - Finish Memory Bank setup with instructions.md
 3. **Begin TASK003** - Start testing framework implementation
-4. **Evaluate TASK007** - Determine if superseded by TASK009 or needs separate focus
+4. **Evaluate TASK007** - Determine if superseded by TASK010 or needs separate focus
 
 ## Recent Achievements
 

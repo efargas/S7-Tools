@@ -27,11 +27,11 @@ public class LogExportService : ILogExportService
     public LogExportService(ILogger<LogExportService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        
+
         // Set default export path to bin/resources/exports
-        var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         _defaultExportPath = Path.Combine(baseDirectory, "resources", "exports");
-        
+
         _logger.LogDebug("LogExportService initialized with default path: {DefaultPath}", _defaultExportPath);
     }
 
@@ -41,26 +41,26 @@ public class LogExportService : ILogExportService
         try
         {
             ArgumentNullException.ThrowIfNull(logs, nameof(logs));
-            
+
             _logger.LogInformation("Starting log export in {Format} format", format);
-            
+
             // Ensure export folder exists
             await EnsureExportFolderExistsAsync();
-            
+
             // Generate file path if not provided
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 filePath = Path.Combine(_defaultExportPath, GenerateDefaultFileName(format));
             }
-            
+
             // Ensure the directory for the file path exists
-            var directory = Path.GetDirectoryName(filePath);
+            string? directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
                 _logger.LogDebug("Created directory: {Directory}", directory);
             }
-            
+
             // Export based on format
             switch (format)
             {
@@ -76,7 +76,7 @@ public class LogExportService : ILogExportService
                 default:
                     return Result.Failure($"Unsupported export format: {format}");
             }
-            
+
             _logger.LogInformation("Logs exported successfully to {FilePath}", filePath);
             return Result.Success();
         }
@@ -123,7 +123,7 @@ public class LogExportService : ILogExportService
                 Directory.CreateDirectory(_defaultExportPath);
                 _logger.LogInformation("Created export folder: {ExportPath}", _defaultExportPath);
             }
-            
+
             await Task.CompletedTask;
         }
         catch (Exception ex)
@@ -136,15 +136,15 @@ public class LogExportService : ILogExportService
     /// <inheritdoc/>
     public string GenerateDefaultFileName(ExportFormat format)
     {
-        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var extension = format switch
+        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string extension = format switch
         {
             ExportFormat.Text => "txt",
             ExportFormat.Json => "json",
             ExportFormat.Csv => "csv",
             _ => "log"
         };
-        
+
         return $"s7tools_logs_{timestamp}.{extension}";
     }
 
@@ -161,16 +161,16 @@ public class LogExportService : ILogExportService
         sb.AppendLine(new string('=', 80));
         sb.AppendLine();
 
-        foreach (var log in logs.OrderBy(l => l.Timestamp))
+        foreach (LogModel? log in logs.OrderBy(l => l.Timestamp))
         {
             sb.AppendLine($"[{log.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{log.Level}] {log.Category}");
             sb.AppendLine($"Message: {log.FormattedMessage}");
-            
+
             if (log.Exception != null)
             {
                 sb.AppendLine($"Exception: {log.Exception}");
             }
-            
+
             sb.AppendLine(new string('-', 40));
         }
 
@@ -185,33 +185,40 @@ public class LogExportService : ILogExportService
     /// <param name="filePath">The file path to export to.</param>
     private async Task ExportAsJsonAsync(IEnumerable<LogModel> logs, string filePath)
     {
+        // Project to JSON-safe payload to avoid issues serializing Exception and object-valued Properties.
         var exportData = new
         {
             ExportInfo = new
             {
                 Application = "S7Tools",
-                ExportDate = DateTime.Now,
+                ExportDate = DateTime.UtcNow,
                 TotalEntries = logs.Count()
             },
-            Logs = logs.OrderBy(l => l.Timestamp).Select(log => new
-            {
-                Timestamp = log.Timestamp,
-                Level = log.Level.ToString(),
-                Category = log.Category,
-                Message = log.Message,
-                FormattedMessage = log.FormattedMessage,
-                Exception = log.Exception?.ToString(),
-                Properties = log.Properties
-            })
+            Logs = logs
+                .OrderBy(l => l.Timestamp)
+                .Select(log => new
+                {
+                    Id = log.Id,
+                    Timestamp = log.Timestamp, // Serialized as ISO 8601
+                    Level = log.Level.ToString(),
+                    Category = log.Category,
+                    Message = log.Message,
+                    FormattedMessage = log.FormattedMessage,
+                    Exception = log.Exception?.ToString(),
+                    EventId = new { Id = log.EventId.Id, Name = log.EventId.Name },
+                    Scope = log.Scope,
+                    Properties = log.Properties?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString())
+                })
         };
 
         var options = new JsonSerializerOptions
         {
             WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         };
 
-        var json = JsonSerializer.Serialize(exportData, options);
+        string json = JsonSerializer.Serialize(exportData, options);
         await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
         _logger.LogDebug("Exported {Count} logs as JSON to {FilePath}", logs.Count(), filePath);
     }
@@ -224,18 +231,18 @@ public class LogExportService : ILogExportService
     private async Task ExportAsCsvAsync(IEnumerable<LogModel> logs, string filePath)
     {
         var sb = new StringBuilder();
-        
+
         // CSV Header
         sb.AppendLine("Timestamp,Level,Category,Message,Exception");
 
         // CSV Data
-        foreach (var log in logs.OrderBy(l => l.Timestamp))
+        foreach (LogModel? log in logs.OrderBy(l => l.Timestamp))
         {
-            var timestamp = log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
-            var level = log.Level.ToString();
-            var category = EscapeCsvField(log.Category);
-            var message = EscapeCsvField(log.FormattedMessage);
-            var exception = EscapeCsvField(log.Exception?.ToString() ?? "");
+            string timestamp = log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            string level = log.Level.ToString();
+            string category = EscapeCsvField(log.Category);
+            string message = EscapeCsvField(log.FormattedMessage);
+            string exception = EscapeCsvField(log.Exception?.ToString() ?? "");
 
             sb.AppendLine($"{timestamp},{level},{category},{message},{exception}");
         }

@@ -151,8 +151,20 @@ public class SettingsService : ISettingsService
     {
         try
         {
+            // Root resources
+            var resourcesRoot = _settings.ResourcesRoot;
+            if (!string.IsNullOrWhiteSpace(resourcesRoot))
+            {
+                Directory.CreateDirectory(resourcesRoot);
+            }
+
+            // Standard application resource folders
             Directory.CreateDirectory(_settings.Logging.DefaultLogPath);
             Directory.CreateDirectory(_settings.Logging.ExportPath);
+            Directory.CreateDirectory(_settings.PayloadsPath);
+            Directory.CreateDirectory(_settings.FirmwarePath);
+            Directory.CreateDirectory(_settings.ExtractionsPath);
+            Directory.CreateDirectory(_settings.DumpsPath);
         }
         catch (Exception)
         {

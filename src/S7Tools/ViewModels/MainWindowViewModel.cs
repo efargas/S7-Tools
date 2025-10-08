@@ -18,6 +18,8 @@ public class MainWindowViewModel : ViewModelBase
 {
     private readonly IDialogService _dialogService;
     private readonly IClipboardService _clipboardService;
+    private readonly ISettingsService _settingsService;
+    private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
 
     private string _testInputText = "This is some text to test clipboard operations.";
@@ -33,6 +35,8 @@ public class MainWindowViewModel : ViewModelBase
         new SettingsManagementViewModel(),
         new DialogService(),
         new ClipboardService(),
+        new Services.SettingsService(),
+        null,
         CreateDesignTimeLogger())
     {
     }
@@ -62,6 +66,8 @@ public class MainWindowViewModel : ViewModelBase
         SettingsManagementViewModel settings,
         IDialogService dialogService,
         IClipboardService clipboardService,
+        ISettingsService settingsService,
+        IFileDialogService? fileDialogService,
         ILogger<MainWindowViewModel> logger)
     {
         Navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
@@ -69,6 +75,8 @@ public class MainWindowViewModel : ViewModelBase
         Settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _fileDialogService = fileDialogService; // optional in design-time
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize commands
@@ -86,6 +94,9 @@ public class MainWindowViewModel : ViewModelBase
         TestCriticalLogCommand = ReactiveCommand.Create(() => TestLog(LogLevel.Critical, "CRITICAL"));
 
         ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogsAsync);
+
+        LoadConfigurationCommand = ReactiveCommand.CreateFromTask(LoadConfigurationAsync);
+        SaveConfigurationCommand = ReactiveCommand.CreateFromTask(SaveConfigurationAsync);
 
         CloseApplicationInteraction = new Interaction<Unit, Unit>();
 
@@ -198,6 +209,16 @@ public class MainWindowViewModel : ViewModelBase
     /// Gets the command to export logs.
     /// </summary>
     public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
+
+    /// <summary>
+    /// Command to load configuration from a file via file picker.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> LoadConfigurationCommand { get; }
+
+    /// <summary>
+    /// Command to save configuration to a file via file picker.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> SaveConfigurationCommand { get; }
 
     /// <summary>
     /// Interaction to signal the view to close the application.
@@ -357,6 +378,51 @@ public class MainWindowViewModel : ViewModelBase
         {
             _logger.LogError(ex, "Failed to export logs to clipboard");
             StatusMessage = "Failed to export logs";
+        }
+    }
+
+    /// <summary>
+    /// Opens a file picker and loads application settings from the selected file.
+    /// </summary>
+    private async Task LoadConfigurationAsync()
+    {
+        try
+        {
+            var path = await (_fileDialogService?.ShowOpenFileDialogAsync("Load Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*") ?? Task.FromResult<string?>(null));
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                await _settingsService.LoadSettingsAsync(path);
+                StatusMessage = $"Loaded configuration: {System.IO.Path.GetFileName(path)}";
+                _logger.LogInformation("Configuration loaded from {Path}", path);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load configuration");
+            StatusMessage = "Failed to load configuration";
+        }
+    }
+
+    /// <summary>
+    /// Opens a file picker and saves application settings to the selected file.
+    /// </summary>
+    private async Task SaveConfigurationAsync()
+    {
+        try
+        {
+            var defaultName = "settings.json";
+            var path = await (_fileDialogService?.ShowSaveFileDialogAsync("Save Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*", defaultFileName: defaultName) ?? Task.FromResult<string?>(null));
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                await _settingsService.SaveSettingsAsync(path);
+                StatusMessage = $"Saved configuration: {System.IO.Path.GetFileName(path)}";
+                _logger.LogInformation("Configuration saved to {Path}", path);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save configuration");
+            StatusMessage = "Failed to save configuration";
         }
     }
 

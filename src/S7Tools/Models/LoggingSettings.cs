@@ -1,6 +1,7 @@
-using System.Text.Json.Serialization;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using Microsoft.Extensions.Logging;
-using Avalonia.Media;
 
 namespace S7Tools.Models;
 
@@ -9,15 +10,18 @@ namespace S7Tools.Models;
 /// </summary>
 public class LoggingSettings
 {
-    /// <summary>
-    /// Gets or sets the default path for log files.
-    /// </summary>
-    public string DefaultLogPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "S7Tools", "Logs");
+    private static string ResourcesPath(string subfolder)
+        => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", subfolder);
 
     /// <summary>
-    /// Gets or sets the export path for log files.
+    /// Gets or sets the default path for log files (under application resources/logs).
     /// </summary>
-    public string ExportPath { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "S7Tools_Exports");
+    public string DefaultLogPath { get; set; } = ResourcesPath("logs");
+
+    /// <summary>
+    /// Gets or sets the export path for log files (under application resources/exports).
+    /// </summary>
+    public string ExportPath { get; set; } = ResourcesPath("exports");
 
     /// <summary>
     /// Gets or sets the minimum log level to display.

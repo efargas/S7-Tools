@@ -312,9 +312,10 @@ public class NavigationViewModel : ReactiveObject
                     SidebarTitle = "SETTINGS";
                     MainContentTitle = "Settings Configuration";
                     ShowMainContentHeader = true;
-                    CurrentContent = CreateViewModel<SettingsViewModel>();
-                    MainContent = CreateSettingsConfigViewModel();
-                    DetailContent = CreateSettingsConfigViewModel();
+                    var settingsViewModel = CreateViewModel<SettingsViewModel>();
+                    CurrentContent = settingsViewModel; // Categories in sidebar
+                    MainContent = settingsViewModel; // Content in main area
+                    DetailContent = settingsViewModel;
                     ShowLogStats = false;
                     _logger.LogDebug("Navigated to Settings");
                     break;

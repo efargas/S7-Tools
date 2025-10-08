@@ -25,6 +25,16 @@
         <converters:GridLengthToDoubleConverter x:Key="GridLengthToDoubleConverter" />
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:BooleanToColorConverter x:Key="BooleanToColorConverter" />
+        
+        <!-- DataTemplate for SettingsViewModel in sidebar (categories only) -->
+        <DataTemplate x:Key="SettingsSidebarTemplate" DataType="vm:SettingsViewModel">
+            <views:SettingsCategoriesView />
+        </DataTemplate>
+        
+        <!-- DataTemplate for SettingsViewModel in main content (content only) -->
+        <DataTemplate x:Key="SettingsMainContentTemplate" DataType="vm:SettingsViewModel">
+            <views:SettingsView />
+        </DataTemplate>
     </Window.Resources>
 
     <Window.KeyBindings>
@@ -47,19 +57,19 @@
         <Menu DockPanel.Dock="Top" Background="#2D2D30" Foreground="#CCCCCC" Height="40" FontSize="14">
             <MenuItem Header="_File" Foreground="#CCCCCC">
                 <MenuItem Header="_New File" InputGesture="Ctrl+N" />
-                <MenuItem Header="_Open File..." InputGesture="Ctrl+O" />
-                <MenuItem Header="_Save" InputGesture="Ctrl+S" />
+                <MenuItem Header="_Load Configuration..." InputGesture="Ctrl+O" Command="{Binding LoadConfigurationCommand}" />
+                <MenuItem Header="_Save Configuration" InputGesture="Ctrl+S" Command="{Binding SaveConfigurationCommand}" />
                 <MenuItem Header="_Save As..." InputGesture="Ctrl+Shift+S" />
                 <Separator />
                 <MenuItem Header="_Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4" />
             </MenuItem>
-            <MenuItem Header="_Edit" Foreground="#CCCCCC">
+            <MenuItem Header="_Edit" Foreground="#CCCCCC" StaysOpenOnClick="True">
                 <MenuItem Header="_Undo" InputGesture="Ctrl+Z" />
                 <MenuItem Header="_Redo" InputGesture="Ctrl+Y" />
                 <Separator />
-                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Ctrl+X" />
-                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Ctrl+C" />
-                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V" />
+                <MenuItem Header="_Cut" Command="{Binding CutCommand}" InputGesture="Ctrl+X" StaysOpenOnClick="False" />
+                <MenuItem Header="_Copy" Command="{Binding CopyCommand}" InputGesture="Ctrl+C" StaysOpenOnClick="False" />
+                <MenuItem Header="_Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V" StaysOpenOnClick="False" />
                 <Separator />
                 <MenuItem Header="_Find" InputGesture="Ctrl+F" />
                 <MenuItem Header="_Replace" InputGesture="Ctrl+H" />
@@ -204,7 +214,13 @@
                         </Border>
 
                         <!-- Sidebar Content -->
-                        <ContentControl Grid.Row="1" Content="{Binding Navigation.CurrentContent}" />
+                        <ContentControl Grid.Row="1" Content="{Binding Navigation.CurrentContent}">
+                            <ContentControl.DataTemplates>
+                                <DataTemplate DataType="vm:SettingsViewModel">
+                                    <views:SettingsCategoriesView />
+                                </DataTemplate>
+                            </ContentControl.DataTemplates>
+                        </ContentControl>
                     </Grid>
                 </Border>
 

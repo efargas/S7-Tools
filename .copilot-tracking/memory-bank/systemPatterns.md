@@ -43,6 +43,7 @@ graph TD
   - Domain models (Tag, ConnectionProfile, etc.)
   - Service interfaces (ITagRepository, IS7ConnectionProvider)
   - Business logic and domain rules
+  - Command, Factory, Resource, and Validation patterns
 
 #### **S7Tools.Infrastructure.Logging (Infrastructure Layer)**
 - **Purpose**: Logging infrastructure and external integrations
@@ -51,6 +52,58 @@ graph TD
   - Custom logging providers and storage
   - External service integrations
   - Data persistence implementations
+
+---
+
+## Advanced Patterns Implementation (Octubre 2025)
+
+### **Arquitectura Mejorada S7Tools**
+
+La arquitectura de S7Tools evoluciona hacia una implementación avanzada de Clean Architecture, integrando patrones Command, Factory, Resource, validación centralizada y pruebas exhaustivas. El objetivo es maximizar la mantenibilidad, extensibilidad y robustez, alineando el desarrollo con estándares empresariales .NET.
+
+### **Capas y Patrones Clave**
+
+- **Dominio (S7Tools.Core):**
+  - Entidades, Value Objects, lógica de negocio pura
+  - Interfaces para servicios, comandos y validadores
+  - Command Pattern interfaces y base classes
+  - Factory Pattern interfaces y implementations
+  - Resource Pattern contracts
+  - Validation framework
+
+- **Aplicación (S7Tools):**
+  - ViewModels (MVVM, ReactiveUI)
+  - Servicios de aplicación, comandos, validadores
+  - Integración de patrones Command y Factory
+  - Resource managers y localization
+
+- **Infraestructura:**
+  - Implementaciones de servicios, acceso a datos, logging, exportación
+  - Fábricas y proveedores concretos
+  - External resource providers
+
+### **Flujo de Comandos (Command Pattern)**
+1. ViewModel crea y configura un comando (Command/CommandHandler)
+2. El comando es validado (Validator)
+3. El handler ejecuta la lógica (servicio, exportación, etc.)
+4. El resultado se comunica al usuario (UI, logs, mensajes)
+
+### **Fábricas (Factory Pattern)**
+- Fábricas centralizan la creación de servicios complejos/configurables
+- Integración con DI para resolución flexible
+- Support for keyed factories and parameterized creation
+
+### **Recursos (Resource Pattern)**
+- Mensajes y textos accedidos mediante claves fuertemente tipadas
+- Soporte multi-idioma y localización
+- Centralized resource management
+
+### **Validación y Manejo de Errores**
+- Validación previa a la ejecución de comandos y servicios
+- Logging estructurado de errores y excepciones
+- Comprehensive error handling strategies
+
+---
 
 ## Key Technical Decisions
 
@@ -115,32 +168,84 @@ public class DataStoreLoggerProvider : ILoggerProvider
 }
 ```
 
-### **4. Service-Oriented Architecture**
-
-**Decision**: Organize functionality into focused services with clear interfaces  
-**Rationale**: Promotes testability, maintainability, and separation of concerns  
-**Pattern**:
-
-```csharp
-// Interface definition in Core project
-public interface IActivityBarService
-{
-    IReadOnlyList<ActivityBarItem> Items { get; }
-    ActivityBarItem? SelectedItem { get; set; }
-    event EventHandler<ActivityBarSelectionChangedEventArgs> SelectionChanged;
-    void SelectItem(string itemId);
-}
-
-// Implementation in main project
-public class ActivityBarService : IActivityBarService
-{
-    // Implementation details...
-}
-```
+---
 
 ## Design Patterns in Use
 
-### **1. Repository Pattern**
+### **1. Command Pattern (Advanced Implementation)**
+
+**Usage**: Decoupled command execution with validation and error handling  
+**Implementation**:
+
+```csharp
+public interface ICommand<TOptions, TResult> 
+{ 
+    TOptions Options { get; } 
+}
+
+public interface ICommandHandler<TCommand, TResult>
+    where TCommand : ICommand<TOptions, TResult>
+{
+    Task<TResult> HandleAsync(TCommand command, CancellationToken ct = default);
+}
+
+public class ExportLogsCommand : ICommand<ExportLogsOptions, ExportResult> 
+{ 
+    public ExportLogsOptions Options { get; set; }
+}
+
+public class ExportLogsCommandHandler : ICommandHandler<ExportLogsCommand, ExportResult> 
+{
+    public async Task<ExportResult> HandleAsync(ExportLogsCommand command, CancellationToken ct = default)
+    {
+        // Implementation with validation, logging, and error handling
+    }
+}
+```
+
+### **2. Factory Pattern (Enhanced)**
+
+**Usage**: Centralized creation of complex/configurable services  
+**Implementation**:
+
+```csharp
+public interface IServiceFactory<TService>
+{
+    TService Create(params object[] args);
+}
+
+public interface IKeyedFactory<TKey, TBase>
+{
+    TBase Create(TKey key);
+}
+
+public class LogExportServiceFactory : IServiceFactory<ILogExportService> 
+{
+    public ILogExportService Create(params object[] args)
+    {
+        // Factory logic with configuration
+    }
+}
+```
+
+### **3. Resource Pattern**
+
+**Usage**: Centralized resource management with localization support  
+**Implementation**:
+
+```csharp
+public interface IResourceManager
+{
+    string GetString(string key);
+    string GetString(string key, CultureInfo culture);
+}
+
+// .resx file: LogMessages.resx
+// Access:
+var message = _resourceManager.GetString("ExportSuccess");
+```
+
+### **4. Repository Pattern**
 
 **Usage**: Data access abstraction for PLC communication  
 **Implementation**:
@@ -154,7 +259,7 @@ public interface ITagRepository
 }
 ```
 
-### **2. Provider Pattern**
+### **5. Provider Pattern**
 
 **Usage**: Logging system with pluggable providers  
 **Implementation**:
@@ -169,7 +274,7 @@ services.AddLogging(builder =>
 });
 ```
 
-### **3. Observer Pattern**
+### **6. Observer Pattern**
 
 **Usage**: Real-time updates for logging and data changes  
 **Implementation**:
@@ -181,31 +286,99 @@ services.AddLogging(builder =>
 public event EventHandler<ActivityBarSelectionChangedEventArgs> SelectionChanged;
 ```
 
-### **4. Command Pattern**
+### **7. Validation Pattern (Centralized)**
 
-**Usage**: UI actions and operations  
+**Usage**: Comprehensive input validation with rule composition  
 **Implementation**:
 
 ```csharp
-// ReactiveCommand for all UI operations
-public ReactiveCommand<Unit, Unit> ConnectCommand { get; }
-public ReactiveCommand<string, Unit> SelectActivityBarItemCommand { get; }
-```
-
-### **5. Factory Pattern**
-
-**Usage**: ViewLocator for View-ViewModel mapping  
-**Implementation**:
-
-```csharp
-public class ViewLocator : IDataTemplate
+public class ExportLogsOptions
 {
-    public Control Build(object? data)
+    [Required]
+    [StringLength(100)]
+    public string FileName { get; set; }
+}
+
+public class ExportLogsOptionsValidator : AbstractValidator<ExportLogsOptions>
+{
+    public ExportLogsOptionsValidator()
     {
-        // Factory logic to create appropriate View for ViewModel
+        RuleFor(x => x.FileName).NotEmpty().MaximumLength(100);
     }
 }
 ```
+
+---
+
+## Templates de Implementación
+
+### **1. Command Pattern Template**
+```csharp
+public interface ICommand<TOptions, TResult> { TOptions Options { get; } }
+public interface ICommandHandler<TCommand, TResult>
+    where TCommand : ICommand<TOptions, TResult>
+{
+    Task<TResult> HandleAsync(TCommand command, CancellationToken ct = default);
+}
+
+public class ExportLogsCommand : ICommand<ExportLogsOptions, ExportResult> { /* ... */ }
+public class ExportLogsCommandHandler : ICommandHandler<ExportLogsCommand, ExportResult> { /* ... */ }
+```
+
+### **2. Factory Pattern Template**
+```csharp
+public interface IServiceFactory<TService>
+{
+    TService Create(params object[] args);
+}
+
+public class LogExportServiceFactory : IServiceFactory<ILogExportService> { /* ... */ }
+```
+
+### **3. Resource Pattern Template**
+```csharp
+// .resx file: LogMessages.resx
+// Access:
+var message = LogMessages.ResourceManager.GetString("ExportSuccess");
+```
+
+### **4. Validación Centralizada Template**
+```csharp
+public class ExportLogsOptions
+{
+    [Required]
+    [StringLength(100)]
+    public string FileName { get; set; }
+}
+
+public class ExportLogsOptionsValidator : AbstractValidator<ExportLogsOptions>
+{
+    public ExportLogsOptionsValidator()
+    {
+        RuleFor(x => x.FileName).NotEmpty().MaximumLength(100);
+    }
+}
+```
+
+### **5. Test Unitario AAA Template**
+```csharp
+[Fact]
+public void ExportLogsCommandHandler_ShouldExportSuccessfully()
+{
+    // Arrange
+    var handler = new ExportLogsCommandHandler(...);
+    var command = new ExportLogsCommand(...);
+    
+    // Act
+    var result = handler.HandleAsync(command);
+    
+    // Assert
+    result.Should().NotBeNull();
+    result.Success.Should().BeTrue();
+}
+```
+
+---
 
 ## Component Relationships
 
@@ -222,6 +395,10 @@ graph TD
     AS --> |"UI Operations"| UIS[UI Thread Service]
     AS --> |"Themes"| TS[Theme Service]
     AS --> |"Layout"| LAS[Layout Service]
+    AS --> |"Commands"| CH[Command Handlers]
+    AS --> |"Factories"| F[Factories]
+    AS --> |"Resources"| RM[Resource Managers]
+    AS --> |"Validation"| V[Validators]
 ```
 
 ### **Data Flow Patterns**
@@ -229,9 +406,11 @@ graph TD
 #### **User Input Flow**
 1. **User Action** → View (XAML)
 2. **Data Binding** → ViewModel Property/Command
-3. **Business Logic** → Application Service
-4. **Domain Logic** → Core Service/Repository
-5. **External Integration** → Infrastructure Service
+3. **Command Creation** → Command Pattern
+4. **Validation** → Validation Pattern
+5. **Business Logic** → Application Service
+6. **Domain Logic** → Core Service/Repository
+7. **External Integration** → Infrastructure Service
 
 #### **Data Update Flow**
 1. **External Data** → Infrastructure Service
@@ -259,6 +438,8 @@ public async Task<Result<T>> PerformOperationAsync<T>()
     }
 }
 ```
+
+---
 
 ## Threading and Concurrency Patterns
 
@@ -307,6 +488,8 @@ private readonly ConcurrentQueue<LogModel> _logEntries = new();
 private readonly SemaphoreSlim _semaphore = new(1, 1);
 ```
 
+---
+
 ## Performance Patterns
 
 ### **Memory Management**
@@ -346,6 +529,8 @@ this.WhenAnyValue(x => x.SearchText)
     .Subscribe(text => PerformSearch(text));
 ```
 
+---
+
 ## Configuration and Settings Patterns
 
 ### **Strongly-Typed Configuration**
@@ -375,6 +560,8 @@ public class SomeService
     }
 }
 ```
+
+---
 
 ## Testing Patterns
 
@@ -407,6 +594,25 @@ public class ActivityBarServiceTests
     }
 }
 ```
+
+### **Testing Guidelines**
+- AAA pattern (Arrange, Act, Assert)
+- Cobertura mínima 85%
+- Tests de concurrencia y edge cases
+- Multi-proyecto testing structure
+
+---
+
+## Decisiones y Consideraciones
+
+- Todos los comandos y servicios deben ser validados antes de ejecutarse
+- Los mensajes de usuario y logs deben obtenerse de recursos
+- Las fábricas deben usarse para servicios con múltiples dependencias/configuración
+- La cobertura de tests debe mantenerse y documentarse en progress.md
+- All dependencies flow inward toward the Domain layer
+- Use interfaces for all service contracts
+- Implement proper disposal patterns for all resources
+- Follow reactive programming patterns for UI updates
 
 ---
 

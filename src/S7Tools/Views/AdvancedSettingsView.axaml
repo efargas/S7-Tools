@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.AdvancedSettingsView"
+             x:DataType="vm:AdvancedSettingsViewModel"
+             Background="#1E1E1E">
+
+    <ScrollViewer>
+        <StackPanel Margin="20" Spacing="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <!-- Header -->
+            <TextBlock Text="Advanced Settings" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Foreground="#CCCCCC" 
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,20" />
+
+            <!-- Coming Soon Message -->
+            <Border Background="#252526" 
+                    BorderBrush="#464647" 
+                    BorderThickness="1" 
+                    CornerRadius="8" 
+                    Padding="40"
+                    MaxWidth="400">
+                <StackPanel Spacing="16" HorizontalAlignment="Center">
+                    <TextBlock Text="⚙️" 
+                               FontSize="48" 
+                               HorizontalAlignment="Center" />
+                    
+                    <TextBlock Text="Coming Soon" 
+                               FontSize="20" 
+                               FontWeight="SemiBold" 
+                               Foreground="#CCCCCC" 
+                               HorizontalAlignment="Center" />
+                    
+                    <TextBlock Text="Advanced configuration options and developer settings will be available in a future update."
+                               FontSize="14"
+                               Foreground="#858585"
+                               TextWrapping="Wrap"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
