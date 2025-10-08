@@ -1,0 +1,459 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.SerialPortsSettingsView"
+             x:DataType="vm:SerialPortsSettingsViewModel"
+             Background="#1E1E1E">
+
+  <ScrollViewer>
+    <StackPanel Margin="20" Spacing="20">
+      <!-- Header -->
+      <TextBlock Text="Serial Ports Settings" 
+                 FontSize="24" 
+                 FontWeight="Bold" 
+                 Foreground="#CCCCCC" 
+                 Margin="0,0,0,10" />
+
+      <!-- Profile Management Section -->
+      <Border Background="#252526" 
+              BorderBrush="#464647" 
+              BorderThickness="1" 
+              CornerRadius="4" 
+              Padding="16">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Profile Management" 
+                     FontSize="18" 
+                     FontWeight="SemiBold" 
+                     Foreground="#CCCCCC" />
+
+          <!-- Create New Profile -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="120" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0"
+                       Text="New Profile:" 
+                       Foreground="#CCCCCC" 
+                       VerticalAlignment="Center" />
+            
+            <TextBox Grid.Column="1" Grid.Row="0"
+                     Text="{Binding NewProfileName}"
+                     Watermark="Profile name..."
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+            
+            <TextBox Grid.Column="2" Grid.Row="0"
+                     Text="{Binding NewProfileDescription}"
+                     Watermark="Description (optional)..."
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+            
+            <Button Grid.Column="3" Grid.Row="0"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="12,6"
+                    Command="{Binding CreateProfileCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                <TextBlock Text="Create" />
+              </StackPanel>
+            </Button>
+
+            <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+                       Text="Create a new serial port configuration profile"
+                       FontSize="11"
+                       Foreground="#858585"
+                       Margin="8,4,0,0" />
+          </Grid>
+
+          <!-- Profiles List -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <DataGrid Grid.Column="0"
+                      ItemsSource="{Binding Profiles}"
+                      SelectedItem="{Binding SelectedProfile}"
+                      Background="#3C3C3C"
+                      Foreground="#CCCCCC"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      Height="200"
+                      Margin="0,8,8,0">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Name" 
+                                    Binding="{Binding Name}" 
+                                    Width="150" />
+                <DataGridTextColumn Header="Description" 
+                                    Binding="{Binding Description}" 
+                                    Width="200" />
+                <DataGridTextColumn Header="Baud Rate" 
+                                    Binding="{Binding Configuration.BaudRate}" 
+                                    Width="80" />
+                <DataGridTextColumn Header="Parity" 
+                                    Binding="{Binding Configuration.Parity}" 
+                                    Width="80" />
+                <DataGridCheckBoxColumn Header="Default" 
+                                        Binding="{Binding IsDefault}" 
+                                        Width="60" />
+                <DataGridCheckBoxColumn Header="Read-Only" 
+                                        Binding="{Binding IsReadOnly}" 
+                                        Width="80" />
+              </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Profile Actions -->
+            <StackPanel Grid.Column="1" Spacing="8" Margin="0,8,0,0">
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,6"
+                      Command="{Binding EditProfileCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
+                  <TextBlock Text="Edit" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="#D13438"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,6"
+                      Command="{Binding DeleteProfileCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                  <TextBlock Text="Delete" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,6"
+                      Command="{Binding DuplicateProfileCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                  <TextBlock Text="Duplicate" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,6"
+                      Command="{Binding SetDefaultProfileCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
+                  <TextBlock Text="Set Default" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="Transparent"
+                      Foreground="#CCCCCC"
+                      BorderBrush="#464647"
+                      BorderThickness="1"
+                      Padding="12,6"
+                      Command="{Binding ShowProfileDetailsCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-info-circle" Width="14" Height="14" />
+                  <TextBlock Text="Details" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="Transparent"
+                      Foreground="#CCCCCC"
+                      BorderBrush="#464647"
+                      BorderThickness="1"
+                      Padding="12,6"
+                      Command="{Binding RefreshProfilesCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                  <TextBlock Text="Refresh" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
+
+          <!-- Profile Statistics -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding ProfileCount, StringFormat='Total Profiles: {0}'}"
+                       Foreground="#858585"
+                       FontSize="12" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding SelectedProfile.Name, StringFormat='Selected: {0}', FallbackValue='Selected: None'}"
+                       Foreground="#858585"
+                       FontSize="12" />
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding StatusMessage}"
+                       Foreground="#858585"
+                       FontSize="12" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Port Discovery Section -->
+      <Border Background="#252526" 
+              BorderBrush="#464647" 
+              BorderThickness="1" 
+              CornerRadius="4" 
+              Padding="16">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Port Discovery" 
+                     FontSize="18" 
+                     FontWeight="SemiBold" 
+                     Foreground="#CCCCCC" />
+
+          <!-- Scan Controls -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="0"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="16,8"
+                    Margin="0,0,8,0"
+                    Command="{Binding ScanPortsCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <icons:Icon Value="fa-solid fa-search" Width="16" Height="16" />
+                <TextBlock Text="Scan Ports" />
+              </StackPanel>
+            </Button>
+
+            <ProgressBar Grid.Column="1"
+                         IsVisible="{Binding IsScanning}"
+                         IsIndeterminate="True"
+                         Background="#3C3C3C"
+                         Foreground="#0E639C"
+                         Height="8"
+                         VerticalAlignment="Center"
+                         Margin="8,0" />
+
+            <TextBlock Grid.Column="1"
+                       IsVisible="{Binding !IsScanning}"
+                       Text="{Binding PortCount, StringFormat='Found {0} port(s)'}"
+                       Foreground="#858585"
+                       VerticalAlignment="Center"
+                       Margin="8,0" />
+
+            <Button Grid.Column="2"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="12,8"
+                    Margin="0,0,8,0"
+                    Command="{Binding TestPortCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
+                <TextBlock Text="Test Port" />
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <!-- Available Ports -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="120" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Available Ports:" 
+                       Foreground="#CCCCCC" 
+                       VerticalAlignment="Top"
+                       Margin="0,8,0,0" />
+            
+            <ListBox Grid.Column="1"
+                     ItemsSource="{Binding AvailablePorts}"
+                     SelectedItem="{Binding SelectedPort}"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Height="120"
+                     Margin="8,0">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icons:Icon Value="fa-solid fa-plug" Width="16" Height="16" Foreground="#0E639C" />
+                    <TextBlock Text="{Binding}" Foreground="#CCCCCC" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Import/Export Section -->
+      <Border Background="#252526" 
+              BorderBrush="#464647" 
+              BorderThickness="1" 
+              CornerRadius="4" 
+              Padding="16">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Import/Export" 
+                     FontSize="18" 
+                     FontWeight="SemiBold" 
+                     Foreground="#CCCCCC" />
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Export All Profiles -->
+            <Button Grid.Column="0"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="16,8"
+                    Margin="0,0,8,0"
+                    Command="{Binding ExportProfilesCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <icons:Icon Value="fa-solid fa-download" Width="16" Height="16" />
+                <TextBlock Text="Export All" />
+              </StackPanel>
+            </Button>
+
+            <!-- Export Selected Profile -->
+            <Button Grid.Column="1"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="16,8"
+                    Margin="4,0"
+                    Command="{Binding ExportSelectedProfileCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <icons:Icon Value="fa-solid fa-file-download" Width="16" Height="16" />
+                <TextBlock Text="Export Selected" />
+              </StackPanel>
+            </Button>
+
+            <!-- Import Profiles -->
+            <Button Grid.Column="2"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="16,8"
+                    Margin="8,0,0,0"
+                    Command="{Binding ImportProfilesCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <icons:Icon Value="fa-solid fa-upload" Width="16" Height="16" />
+                <TextBlock Text="Import" />
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <TextBlock Text="Export profiles to JSON files for backup or sharing. Import profiles from previously exported files."
+                     FontSize="11"
+                     Foreground="#858585"
+                     TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+
+      <!-- Status Section -->
+      <Border Background="#252526" 
+              BorderBrush="#464647" 
+              BorderThickness="1" 
+              CornerRadius="4" 
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Status Information" 
+                     FontSize="18" 
+                     FontWeight="SemiBold" 
+                     Foreground="#CCCCCC" />
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="4">
+              <TextBlock Text="Profile Management:" 
+                         Foreground="#CCCCCC" 
+                         FontWeight="SemiBold" />
+              <TextBlock Text="{Binding ProfileCount, StringFormat='• {0} profiles loaded'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+              <TextBlock Text="{Binding SelectedProfile.Name, StringFormat='• Selected: {0}', FallbackValue='• No profile selected'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="4">
+              <TextBlock Text="Port Discovery:" 
+                         Foreground="#CCCCCC" 
+                         FontWeight="SemiBold" />
+              <TextBlock Text="{Binding PortCount, StringFormat='• {0} ports discovered'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+              <TextBlock Text="{Binding SelectedPort, StringFormat='• Selected: {0}', FallbackValue='• No port selected'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Loading Indicator -->
+          <StackPanel Orientation="Horizontal" 
+                      Spacing="8" 
+                      IsVisible="{Binding IsLoading}">
+            <icons:Icon Value="fa-solid fa-spinner" 
+                        Width="16" 
+                        Height="16" 
+                        Foreground="#0E639C"
+                        Classes="spin" />
+            <TextBlock Text="Loading..." 
+                       Foreground="#858585" 
+                       FontSize="12" />
+          </StackPanel>
+
+          <!-- Status Message -->
+          <TextBlock Text="{Binding StatusMessage}"
+                     Foreground="#858585"
+                     FontSize="12"
+                     TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

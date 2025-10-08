@@ -76,7 +76,7 @@ public class SettingsViewModel : ViewModelBase
             "General" => new GeneralSettingsViewModel(),
             "Appearance" => new AppearanceSettingsViewModel(),
             "Advanced" => new AdvancedSettingsViewModel(),
-            "Serial Ports" => new GeneralSettingsViewModel(), // TODO: Implement SerialPortSettingsViewModel in Phase 3
+            "Serial Ports" => CreateSerialPortsSettingsViewModel(),
             _ => new GeneralSettingsViewModel()
         };
 
@@ -93,5 +93,14 @@ public class SettingsViewModel : ViewModelBase
         return new LoggingSettingsViewModel(settingsService, fileDialogService, logger);
     }
 
-    // TODO: Implement CreateSerialPortSettingsViewModel in Phase 3
+    private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()
+    {
+        var profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
+        var portService = _serviceProvider.GetRequiredService<ISerialPortService>();
+        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
+        
+        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, logger);
+    }
 }
