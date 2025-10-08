@@ -1,126 +1,75 @@
-# Instructions: S7Tools Project Intelligence
+# Instructions: S7Tools Development Guidelines
 
-**Last Updated**: January 2025 - Testing Framework Implementation Complete  
-**Context Type**: Project-specific patterns, preferences, and learned insights  
+**Last Updated**: January 2025 - New Functionality Phase  
+**Context Type**: Development patterns, architecture rules, and implementation guidelines  
 
-## Critical Project Intelligence
+## Critical Development Rules
 
-### **Memory Bank Usage Rules - CRITICAL**
+### **Memory Bank Usage - MANDATORY**
 
-**NEVER mark tasks as complete without user validation**. This is a fundamental rule that was violated and caused incorrect status tracking.
+**File Structure and Purpose**:
+- **instructions.md** (this file) - Development patterns, rules, and guidelines for next agent
+- **progress.md** - Current implementation status and task progress tracking
+- **activeContext.md** - Current session context and immediate next steps for next agent
 
-**Key Learning**: 
-- User feedback is the ONLY source of truth for task completion
-- Implementation changes do not equal working functionality
-- Always wait for user testing and validation before updating task status
-- Use "In Progress", "Blocked", or "Not Started" until user confirms functionality
+**Update Pattern for Every Task/Phase**:
+1. **Before Implementation**: Update activeContext.md with current task and next steps
+2. **During Implementation**: Update progress.md with actual progress and issues
+3. **After Implementation**: Update instructions.md with new patterns learned
+4. **NEVER mark complete without user validation** - This is the fundamental rule
 
-### **User Feedback Integration Pattern**
+### **User Validation Rule - CRITICAL**
 
-When user provides feedback on implemented changes:
+- **Implementation ≠ Working functionality**
+- **User feedback is the ONLY source of truth for completion**
+- Always use "In Progress", "Blocked", or "Not Started" until user confirms
+- Document user feedback verbatim in progress.md
+- Investigate discrepancies between implementation and user experience
 
-1. **Update task status immediately** to reflect actual state
-2. **Document user feedback verbatim** in progress logs
-3. **Investigate why implementations didn't work** as expected
-4. **Adjust completion estimates** based on actual complexity
-5. **Never assume success** without explicit user confirmation
+## Application Architecture - IMMUTABLE CORE
 
-## Development Workflow Patterns
+### **Project Structure - DO NOT CHANGE**
+```
+S7Tools/
+├── S7Tools.Core/                    # Domain models and interfaces (dependency-free)
+│   ├── Services/Interfaces/         # Service contracts
+│   ├── Models/                      # Domain models and value objects
+│   └── Commands/                    # Command pattern implementations
+├── S7Tools.Infrastructure.Logging/  # Logging infrastructure
+└── S7Tools/                         # Main application
+    ├── Services/                    # Service implementations
+    ├── ViewModels/                  # MVVM ViewModels
+    ├── Views/                       # XAML Views
+    ├── Models/                      # Application models
+    └── Extensions/                  # Service registration
+```
 
-### **UI Implementation Reality Check**
+### **Clean Architecture Rules - MANDATORY**
+1. **Dependencies flow inward** - Core has no external dependencies
+2. **Infrastructure depends only on Core**
+3. **Application depends on Core and Infrastructure**
+4. **No circular dependencies** between layers
 
-**Pattern Discovered**: UI changes that appear correct in code may not work as expected in runtime.
-
-**Examples from TASK009**:
-- GridSplitter reduced to 1px in XAML but user reports "still too big"
-- Hover effects implemented in styles but user reports "still not accentuating color"
-- DialogService singleton registered but dialogs still not showing
-
-**Lesson**: Always test UI changes in running application before claiming completion.
-
-### **Dialog Service Integration Complexity**
-
-**Challenge**: ReactiveUI Interactions with Avalonia require precise timing and service instance matching.
-
-**Current Issue**: 
-- DialogService registered as singleton in Program.cs
-- Interaction handlers registered globally
-- But dialogs still not showing for File > Exit and Clear Logs
-
-**Investigation Needed**:
-- Verify interaction handler registration timing
-- Check if handlers are registered on correct service instance
-- Ensure UI thread marshalling for dialog display
-
-### **GridSplitter Styling Challenges**
-
-**Issue**: Standard Avalonia GridSplitter styling may not behave as expected.
-
-**Current Problem**:
-- 1px height/width set in styles
-- Hover transitions implemented
-- But user reports dividers still too thick and no hover effects
-
-**Potential Solutions**:
-- Investigate if Avalonia GridSplitter has minimum size constraints
-- Check if custom templates are needed for ultra-thin dividers
-- Verify hover state selectors are working correctly
-
-### **UI Styling Challenges - PARTIALLY RESOLVED**
-
-**Issue**: Hover effects and icon sizing are not being applied correctly.
-
-**Current Status**:
-- ✅ **Activity Bar icons**: Size increased from 24x24 to 32x32 (improvement but user reports "still the same")
-- ❌ **Hover effects**: Multiple approaches attempted but not working in Avalonia UI
-- ✅ **Main content space reclaim**: Successfully implemented with SidebarWidthConverter
-
-**Attempted Solutions**:
-- Tried `Button:pointerover > icons|Icon` selector approach
-- Tried `Button:pointerover > TextBlock` selector approach  
-- Multiple style precedence investigations
-
-**Key Learning**: 
-- **Hover effects in Avalonia are complex** and may require custom templates or different approaches
-- **User Priority**: User confirmed hover effects are "only visual stuff" and "doesn't matter"
-- **Focus on Functional Issues**: Prioritize functional fixes over visual enhancements
-
-**Resolution**: 
-- **DEFERRED** - Hover effects deferred as low-priority visual enhancements
-- **FUNCTIONAL FIXES PRIORITIZED** - Focus on core functionality over cosmetic improvements
-
-## Architecture Patterns
-
-### **Service Registration Patterns**
-
-**Established Pattern**: Use ServiceCollectionExtensions for organized service registration
-
+### **Service Registration Pattern - REQUIRED**
 ```csharp
-public static class ServiceCollectionExtensions
+// In ServiceCollectionExtensions.cs - ALWAYS use this pattern
+services.AddSingleton<IServiceInterface, ServiceImplementation>();
+
+// Constructor injection - ALWAYS use this pattern
+public class MyService
 {
-    public static IServiceCollection AddS7ToolsServices(this IServiceCollection services, Action<LogDataStoreOptions> configureOptions)
+    private readonly IDependency _dependency;
+    
+    public MyService(IDependency dependency)
     {
-        // Core services
-        services.AddSingleton<IActivityBarService, ActivityBarService>();
-        services.AddSingleton<ILayoutService, LayoutService>();
-        
-        // UI services
-        services.AddTransient<IDialogService, DialogService>(); // Note: May need singleton for interactions
-        
-        // ViewModels
-        services.AddTransient<MainWindowViewModel>();
-        
-        return services;
+        _dependency = dependency ?? throw new ArgumentNullException(nameof(dependency));
     }
 }
 ```
 
-**Critical Learning**: DialogService lifetime affects ReactiveUI interaction registration.
+## MVVM Implementation - ESTABLISHED PATTERNS
 
-### **MVVM Implementation Standards**
-
-**Established Pattern**: All ViewModels use ReactiveUI with proper dependency injection
-
+### **ReactiveUI Standards - MANDATORY**
 ```csharp
 public class ExampleViewModel : ReactiveObject, IDisposable
 {
@@ -147,348 +96,226 @@ public class ExampleViewModel : ReactiveObject, IDisposable
 }
 ```
 
-## User Experience Patterns
+### **View-ViewModel Binding - REQUIRED PATTERN**
+- **Views contain ONLY UI logic and data binding**
+- **ViewModels handle ALL presentation logic**
+- **NO direct View instantiation in ViewModels**
+- **Use ReactiveUI Interactions for dialogs**
+- **All ViewModels created through DI container**
 
-### **VSCode-Like Interface Requirements**
+## UI Framework Rules - ESTABLISHED
 
-**User Expectation**: Interface should closely match VSCode behavior and appearance.
+### **VSCode-Style Interface - DO NOT CHANGE**
+- **Activity Bar** - Left sidebar with icon navigation
+- **Collapsible Sidebar** - Dynamic content switching
+- **Main Content Area** - Primary workspace
+- **Bottom Panel** - Resizable with tabs
+- **Menu System** - Complete with keyboard shortcuts
 
-**Key Requirements**:
-- Ultra-thin panel dividers (thinner than standard Avalonia defaults)
-- Smooth hover effects with accent color transitions
-- Context menus instead of checkboxes for column management
-- Confirmation dialogs for destructive operations
-- Settings persistence between sessions
+### **Avalonia UI Patterns - ESTABLISHED**
+- **2-space indentation** for XAML files
+- **PascalCase** for elements and properties
+- **Data binding** over code-behind manipulation
+- **Styles.axaml** for consistent styling
+- **ViewLocator** for View-ViewModel resolution
 
-### **Logging System User Patterns**
+## Logging System - IMMUTABLE
 
-**User Workflow**:
-1. View real-time logs in bottom panel
-2. Filter logs by level, search text, date range
-3. Clear logs with confirmation dialog
-4. Export logs to various formats
-5. Toggle column visibility via context menu
-
-**Critical Issues Identified**:
-- Clear logs works but no confirmation dialog
-- Export functionality completely broken
-- Column visibility still uses checkboxes instead of context menu
-
-## Technical Patterns and Solutions
-
-### **DateTimeOffset vs DateTime Pattern - CRITICAL LEARNING**
-
-**Problem Pattern**: `"Could not convert [DateTimeOffset] to [DateTime]"` errors in data binding
-
-**Root Cause**: Type mismatch between UI framework controls and ViewModel properties
-- **Avalonia DatePicker.SelectedDate**: Expects `DateTimeOffset?` (nullable DateTimeOffset)
-- **Common Mistake**: Using `DateTime?` in ViewModel properties
-
-**Solution Pattern**:
+### **Structured Logging - REQUIRED**
 ```csharp
-// ❌ INCORRECT - Causes conversion errors
-private DateTime? _startDate;
-public DateTime? StartDate { get; set; }
+// Inject logger - ALWAYS use this pattern
+private readonly ILogger<MyClass> _logger;
 
-// ✅ CORRECT - Matches framework expectations
-private DateTimeOffset? _startDate;
-public DateTimeOffset? StartDate { get; set; }
+// Structured logging - ALWAYS use this pattern
+_logger.LogInformation("User performed action: {Action} at {Timestamp}", action, DateTime.Now);
+_logger.LogError(exception, "Error occurred in {Method}", nameof(MyMethod));
 ```
 
-**XAML Binding Pattern**:
-```xml
-<!-- ❌ INCORRECT - Requires unnecessary converters -->
-<DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay, Converter={x:Static converters:ObjectConverters.NullableDateTime}}" />
+### **Log Infrastructure - DO NOT MODIFY**
+- **S7Tools.Infrastructure.Logging** - Complete circular buffer system
+- **DataStore provider** - Custom logging provider
+- **Real-time notifications** - INotifyPropertyChanged integration
+- **Thread-safe operations** - Concurrent access patterns
 
-<!-- ✅ CORRECT - Direct binding without converters -->
-<DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}" />
+## Design Patterns - ESTABLISHED
+
+### **Command Pattern - IMPLEMENTED**
+- **BaseCommandHandler** - Generic command handling
+- **ICommandDispatcher** - Command dispatching
+- **Async support** - All commands support async operations
+- **Error handling** - Comprehensive exception handling
+
+### **Factory Pattern - IMPLEMENTED**
+- **IViewModelFactory** - ViewModel creation
+- **EnhancedViewModelFactory** - Advanced factory with caching
+- **Keyed factories** - Multiple factory types
+- **DI integration** - Factory uses dependency injection
+
+### **Resource Pattern - IMPLEMENTED**
+- **IResourceManager** - Localization support
+- **Multi-culture** - Support for multiple languages
+- **Strongly-typed access** - Type-safe resource access
+- **Fallback mechanisms** - Default resource handling
+
+### **Validation Pattern - IMPLEMENTED**
+- **IValidator<T>** - Generic validation interface
+- **ValidationService** - Centralized validation
+- **Rule-based validation** - Flexible validation rules
+- **Async validation** - Support for async validation
+
+## Code Quality Standards - MANDATORY
+
+### **Naming Conventions - REQUIRED**
+- **Services**: `{FeatureName}Service.cs` with `I{FeatureName}Service.cs`
+- **ViewModels**: `{ViewName}ViewModel.cs`
+- **Views**: `{ViewName}.axaml` with `{ViewName}.axaml.cs`
+- **Models**: `{EntityName}.cs` or `{EntityName}Model.cs`
+- **Interfaces**: Prefixed with 'I' (e.g., `IActivityBarService`)
+- **Private Fields**: Camel case with underscore prefix (e.g., `_fieldName`)
+
+### **Documentation Standards - REQUIRED**
+- **All public APIs** must have XML documentation
+- **Service interfaces** must document all methods
+- **Complex logic** must have inline comments
+- **Architecture decisions** must be documented
+
+### **Error Handling - MANDATORY**
+- **All service methods** must have try-catch blocks
+- **User-friendly error messages** for UI operations
+- **Structured logging** for all exceptions
+- **Graceful degradation** where possible
+
+## Testing Framework - ESTABLISHED
+
+### **Test Structure - DO NOT CHANGE**
+```
+tests/
+├── S7Tools.Tests/                   # Main application tests
+├── S7Tools.Core.Tests/              # Domain model tests
+└── S7Tools.Infrastructure.Logging.Tests/  # Infrastructure tests
 ```
 
-**Filtering Logic Pattern**:
-```csharp
-// ❌ INCORRECT - Unnecessary conversion
-if (StartDate.HasValue)
-{
-    var startDateOffset = new DateTimeOffset(StartDate.Value);
-    filtered = filtered.Where(entry => entry.Timestamp >= startDateOffset);
-}
-
-// ✅ CORRECT - Direct comparison
-if (StartDate.HasValue)
-{
-    filtered = filtered.Where(entry => entry.Timestamp >= StartDate.Value);
-}
-```
-
-**Key Insights**:
-1. **Framework API Compliance**: Always match exact property types expected by UI controls
-2. **Documentation Research**: Check official framework documentation before implementation
-3. **Type Consistency**: Use consistent types throughout the data flow
-4. **Avoid Converters**: Prefer direct binding when types match naturally
-
-**Verification Steps**:
-1. Build successfully without compilation errors
-2. Run application and test DatePicker functionality
-3. Verify date filtering works without conversion errors
-4. Confirm no runtime binding exceptions
-
-## Technical Constraints
-
-### **Avalonia UI Limitations**
-
-**GridSplitter Constraints**:
-- May have minimum size constraints preventing ultra-thin appearance
-- Hover effects may require custom templates
-- Cross-platform behavior may vary
-
-**Dialog System Constraints**:
-- ReactiveUI Interactions require precise service instance matching
-- Timing of handler registration is critical
-- UI thread marshalling required for proper display
-
-### **Cross-Platform Considerations**
-
-**File System Access**:
-- Settings persistence must work across Windows, Linux, macOS
-- File dialog paths need platform-specific defaults
-- Export functionality must handle platform-specific file systems
-
-## Quality Standards
-
-### **Code Quality Requirements**
-
-**Established Standards**:
-- All public APIs must have XML documentation
-- Nullable reference types enabled throughout
-- EditorConfig rules enforced
-- SOLID principles applied consistently
-- Clean Architecture maintained
-
-### **Testing Requirements - ✅ COMPLETED**
-
-**✅ COMPREHENSIVE TESTING FRAMEWORK IMPLEMENTED**:
-
-**Multi-Project Test Structure**:
-- **S7Tools.Tests** - Main application tests (UI, Services, ViewModels)
-- **S7Tools.Core.Tests** - Domain model and business logic tests  
-- **S7Tools.Infrastructure.Logging.Tests** - Logging infrastructure tests
-
-**Testing Technologies & Packages**:
+### **Testing Patterns - REQUIRED**
 - **xUnit** - Primary testing framework
-- **FluentAssertions** - Expressive assertion library
-- **Moq & NSubstitute** - Mocking frameworks for dependency isolation
-- **Coverlet** - Code coverage collection
-- **Directory.Build.props** - Centralized build configuration
+- **FluentAssertions** - Expressive assertions
+- **Moq/NSubstitute** - Mocking frameworks
+- **AAA Pattern** - Arrange, Act, Assert
+- **Dependency injection** in tests
 
-**Test Coverage Achieved**:
-- **Total Tests**: 123 tests implemented
-- **Success Rate**: 93.5% (115 passing, 8 failing edge cases)
-- **Domain Tests**: PlcAddress value objects, Result patterns (25 tests)
-- **Infrastructure Tests**: LogDataStore circular buffer, thread safety (20 tests)
-- **Service Tests**: DialogService, PlcDataService, export functionality (25 tests)
-- **UI Tests**: Converters, data binding, ReactiveUI interactions (15 tests)
-- **Integration Tests**: Cross-layer interactions (38 tests)
+## New Feature Development Workflow
 
-**Testing Best Practices Implemented**:
-- **AAA Pattern** - Arrange, Act, Assert structure
-- **Dependency Injection** - Proper mocking of dependencies
-- **Thread Safety Testing** - Concurrent operation validation
-- **Error Handling** - Edge cases and failure scenarios
-- **Performance Testing** - Memory management and disposal patterns
-- **Architecture Compliance** - Clean Architecture layer boundaries respected
+### **Step 1: Define Interface in Core**
+```csharp
+// S7Tools.Core/Services/Interfaces/INewFeatureService.cs
+public interface INewFeatureService
+{
+    Task<Result<T>> DoSomethingAsync(Parameters parameters);
+}
+```
 
-**Key Testing Achievements**:
-1. **Early Bug Detection** - Issues caught before user testing
-2. **Regression Prevention** - Changes validated automatically
-3. **Safe Refactoring** - Structural changes with confidence
-4. **Living Documentation** - Tests explain system behavior
-5. **Development Velocity** - Faster feedback and validation
+### **Step 2: Implement Service**
+```csharp
+// S7Tools/Services/NewFeatureService.cs
+public class NewFeatureService : INewFeatureService
+{
+    private readonly ILogger<NewFeatureService> _logger;
+    
+    public NewFeatureService(ILogger<NewFeatureService> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+    
+    public async Task<Result<T>> DoSomethingAsync(Parameters parameters)
+    {
+        try
+        {
+            // Implementation
+            _logger.LogInformation("Operation completed successfully");
+            return Result<T>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Operation failed");
+            return Result<T>.Failure(ex.Message);
+        }
+    }
+}
+```
 
-**Test Execution Performance**:
-- **Execution Time**: ~71 seconds for full test suite
-- **Parallel Execution**: Multi-threaded test execution enabled
-- **Code Coverage**: Comprehensive across all architectural layers
-- **CI/CD Ready**: Test projects integrated into solution structure
+### **Step 3: Register Service**
+```csharp
+// ServiceCollectionExtensions.cs
+services.AddSingleton<INewFeatureService, NewFeatureService>();
+```
 
-## Common Pitfalls
+### **Step 4: Create ViewModel**
+```csharp
+// S7Tools/ViewModels/NewFeatureViewModel.cs
+public class NewFeatureViewModel : ReactiveObject, IDisposable
+{
+    private readonly INewFeatureService _service;
+    private readonly CompositeDisposable _disposables = new();
+    
+    // Follow established ReactiveUI patterns
+}
+```
 
-### **Task Status Management**
+### **Step 5: Create View**
+```xml
+<!-- S7Tools/Views/NewFeatureView.axaml -->
+<UserControl x:Class="S7Tools.Views.NewFeatureView">
+    <!-- Follow established XAML patterns -->
+</UserControl>
+```
 
-**CRITICAL PITFALL**: Marking tasks complete without user validation
+## Common Pitfalls - AVOID
 
-**Prevention**:
-- Always use "In Progress" or "Blocked" until user confirms
-- Document user feedback verbatim
-- Investigate discrepancies between implementation and user experience
-- Adjust estimates based on actual complexity
+### **Architecture Violations**
+- **DO NOT** create circular dependencies
+- **DO NOT** put business logic in ViewModels
+- **DO NOT** access Views directly from ViewModels
+- **DO NOT** bypass dependency injection
 
-### **UI Implementation Assumptions**
+### **UI Implementation Issues**
+- **DO NOT** assume XAML changes work without testing
+- **DO NOT** ignore cross-platform considerations
+- **DO NOT** hardcode UI values
+- **DO NOT** create tight coupling between Views
 
-**PITFALL**: Assuming XAML changes work as expected without runtime testing
+### **Service Implementation Issues**
+- **DO NOT** use incorrect service lifetimes
+- **DO NOT** ignore error handling
+- **DO NOT** skip logging integration
+- **DO NOT** create services without interfaces
 
-**Prevention**:
-- Test all UI changes in running application
-- Verify cross-platform behavior
-- Check edge cases and different screen sizes
-- Validate user interactions work as intended
+## Memory Bank Update Rules
 
-### **Service Lifetime Issues**
+### **When to Update Each File**
 
-**PITFALL**: Incorrect service lifetimes causing interaction failures
+#### **instructions.md** (this file)
+- **When**: New patterns are established or rules change
+- **What**: Add new patterns, update architecture rules, document lessons learned
+- **Who**: Agent that discovers new patterns or establishes new rules
 
-**Prevention**:
-- Carefully consider service lifetimes (Singleton vs Transient)
-- Test service interactions across application lifecycle
-- Verify dependency injection resolution works correctly
-- Document service lifetime decisions and rationale
+#### **progress.md**
+- **When**: Every implementation step, phase completion, or status change
+- **What**: Current task status, progress percentages, issues encountered, user feedback
+- **Who**: Agent currently working on implementation
 
-## Success Patterns
+#### **activeContext.md**
+- **When**: Beginning of session, task changes, or context switches
+- **What**: Current task, immediate next steps, blockers, session goals
+- **Who**: Agent starting new work or changing context
 
-### **Memory Bank Maintenance**
-
-**Successful Pattern**: Comprehensive documentation with clear status tracking
-
-**Key Elements**:
-- Regular updates to progress.md with actual status
-- Detailed task tracking with user feedback integration
-- Clear separation between implementation and validation
-- Honest assessment of completion status
-
-### **User Communication**
-
-**Successful Pattern**: Clear communication about implementation vs validation
-
-**Approach**:
-- Explain what was implemented
-- Request user testing and feedback
-- Acknowledge when implementations don't work as expected
-- Adjust plans based on user feedback
-
-## Current Priority Issues (January 2025) - UPDATED WITH LOG ANALYSIS
-
-### **TASK010: Comprehensive UI and Architecture Fixes - MAJOR PROGRESS**
-
-**✅ RESOLVED CRITICAL ISSUES (Verified by Log Analysis)**:
-1. **Dialog System Fixed** ✅ - ReactiveUI Interaction handlers properly registered
-   - **Evidence**: Application logs show "Dialog interaction handlers registered successfully"
-   - **Implementation**: Moved handlers from Program.cs to App.axaml.cs with proper UI thread context
-2. **Export Logs Functionality Implemented** ✅ - Complete ILogExportService working
-   - **Evidence**: Multiple successful exports detected in logs
-     - TXT export: 13 log entries exported successfully
-     - JSON export: 16 log entries exported successfully  
-     - CSV export: 18+ log entries exported successfully
-   - **Implementation**: Full service with TXT/JSON/CSV support and error handling
-3. **Default Folders Configured** ✅ - Export service using correct location
-   - **Evidence**: Log shows "Created export folder: /bin/Debug/net8.0/resources/exports"
-   - **Implementation**: LogExportService properly configured with default path
-
-**🔄 REMAINING CRITICAL ISSUES**:
-1. **Activity Bar Icons** - Icons are not resizing and hover effects are not working.
-2. **Bottom Panel Tabs** - Hover effects are not working.
-3. **Bottom Panel Resizing** - Must be resizable more in up direction with 75% limit
-4. **Panel Dividers** - Must be thinner with accent color highlighting on hover/drag
-5. **✅ DateTime Conversion - RESOLVED** - Date pickers conversion errors fixed
-6. **Main Content Container** - Must be a container for views using locator pattern
-7. **Exception Handling** - Need additional try/catch with logging throughout
-
-**📊 CURRENT STATUS: 60% COMPLETE**
-- **Application Stability**: ✅ Clean startup and runtime confirmed by logs
-- **Core Functionality**: ✅ Dialog system and export working as evidenced by logs
-- **Logging System**: ✅ Comprehensive structured logging operational
-- **User Interaction**: ✅ Bottom panel tab selection working ("Selected bottom panel tab: LOG VIEWER")
-
-**Architecture Requirements**:
-- Use abstracts, interfaces, services, DTOs where appropriate
-- Follow best practices from design pattern review
-- Implement proper error handling and logging
-- Maintain Clean Architecture principles
-
-### **Design Pattern Review Integration**
-
-**Key Findings from Review**:
-- Missing Command Pattern implementation (required)
-- Factory Pattern needs enhancement
-- Resource Pattern not implemented
-- Input validation missing throughout
-- Error handling needs improvement
-- Testing framework required
-
-**Implementation Priority**:
-1. Fix critical UI issues first
-2. Implement missing design patterns
-3. Add comprehensive error handling
-4. Establish testing framework
-
-## Future Considerations
-
-### **Testing Framework Priority**
-
-**High Priority**: Implement comprehensive testing to catch issues before user testing
-
-**Benefits**:
-- Reduce user-reported issues
-- Increase confidence in implementations
-- Enable refactoring with safety net
-- Improve overall code quality
-
-### **UI Framework Evaluation**
-
-**Consideration**: Evaluate if Avalonia limitations require workarounds or alternatives
-
-**Areas to Monitor**:
-- GridSplitter customization capabilities
-- Dialog system integration complexity
-- Cross-platform consistency
-- Performance characteristics
-
-### **Architecture Evolution - COMPLETED**
-
-**✅ COMPLETED: Advanced Design Patterns Implementation (TASK012)**:
-- ✅ **Command Handler Pattern**: Generic base classes with comprehensive error handling and async support
-- ✅ **Enhanced Factory Pattern**: Multiple factory types with caching, keyed factories, and custom parameters
-- ✅ **Resource Pattern**: Localization support with strongly-typed access and multi-culture support
-- ✅ **Comprehensive Input Validation**: Generic validation framework with rule-based validation
-- ✅ **Enhanced Structured Logging**: Property enrichment, operation tracking, and metric logging
-
-**Implementation Status**: All patterns successfully implemented and integrated
-**Build Status**: ✅ Successful (0 errors, 72 non-critical warnings)
-**Documentation**: Complete implementation guide created
-**Architecture Compliance**: Clean Architecture principles maintained throughout
-
-**Key Achievements**:
-1. **Zero Breaking Changes**: All existing functionality preserved
-2. **Comprehensive Integration**: All services properly registered in DI container
-3. **Enterprise-Grade Patterns**: Production-ready implementations with proper error handling
-4. **Extensive Documentation**: Complete usage examples and architectural guidance
-5. **Performance Optimized**: Caching, async/await, and efficient resource management
-
-**✅ COMPLETED: Comprehensive Testing Framework Implementation (TASK003)**:
-- ✅ **Multi-Project Test Structure**: S7Tools.Tests, S7Tools.Core.Tests, S7Tools.Infrastructure.Logging.Tests
-- ✅ **Enterprise Testing Tools**: xUnit, FluentAssertions, Moq, NSubstitute, Coverlet
-- ✅ **123 Tests Implemented**: 93.5% success rate (115 passing, 8 failing edge cases)
-- ✅ **Comprehensive Coverage**: Domain models, infrastructure, services, UI components
-- ✅ **Architecture Compliance**: Clean Architecture layer boundaries respected in tests
-- ✅ **Performance Optimized**: ~71 seconds execution time with parallel test execution
-- ✅ **CI/CD Ready**: Test projects integrated into solution structure
-
-**Implementation Status**: All testing infrastructure successfully implemented and operational
-**Build Status**: ✅ Successful test execution with comprehensive coverage
-**Documentation**: Complete testing implementation summary created
-**Quality Assurance**: Enterprise-grade testing practices established
-
-**Key Testing Achievements**:
-1. **Early Bug Detection**: Automated validation catches issues before user testing
-2. **Regression Prevention**: Changes validated automatically against existing behavior
-3. **Safe Refactoring**: Structural changes with confidence through test safety net
-4. **Living Documentation**: Tests serve as executable specifications
-5. **Development Velocity**: Faster feedback loop and validation cycles
-
-**Next Priority**: Fix remaining 8 failing tests and integrate with CI/CD pipeline
+### **Update Frequency**
+- **activeContext.md**: Every session start and major context change
+- **progress.md**: Every significant progress milestone or issue
+- **instructions.md**: When new patterns are established or rules change
 
 ---
 
-**Document Status**: Living document capturing project intelligence  
-**Next Update**: After significant learning or pattern discovery  
+**Document Status**: Living guidelines for S7Tools development  
+**Next Update**: When new patterns are established or architecture changes  
 **Owner**: Development Team with AI Assistance  
 
-**Key Reminder**: This document captures hard-learned lessons. Always refer to it before making assumptions about task completion or implementation success.
+**Key Reminder**: These patterns and rules are established and working. Follow them consistently to maintain application quality and architecture integrity.

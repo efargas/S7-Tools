@@ -3,6 +3,7 @@ using ReactiveUI;
 using System.Reactive;
 using Microsoft.Extensions.DependencyInjection;
 using S7Tools.Services.Interfaces;
+using S7Tools.Core.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace S7Tools.ViewModels;
@@ -22,7 +23,8 @@ public class SettingsViewModel : ViewModelBase
             "Logging",
             "General",
             "Appearance",
-            "Advanced"
+            "Advanced",
+            "Serial Ports"
         });
 
         // Initialize with Logging category
@@ -74,6 +76,7 @@ public class SettingsViewModel : ViewModelBase
             "General" => new GeneralSettingsViewModel(),
             "Appearance" => new AppearanceSettingsViewModel(),
             "Advanced" => new AdvancedSettingsViewModel(),
+            "Serial Ports" => new GeneralSettingsViewModel(), // TODO: Implement SerialPortSettingsViewModel in Phase 3
             _ => new GeneralSettingsViewModel()
         };
 
@@ -89,4 +92,6 @@ public class SettingsViewModel : ViewModelBase
         
         return new LoggingSettingsViewModel(settingsService, fileDialogService, logger);
     }
+
+    // TODO: Implement CreateSerialPortSettingsViewModel in Phase 3
 }

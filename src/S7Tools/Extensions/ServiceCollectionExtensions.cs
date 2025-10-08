@@ -13,6 +13,7 @@ using S7Tools.Core.Resources;
 using S7Tools.Core.Validation;
 using S7Tools.Core.Logging;
 using S7Tools.Resources;
+using S7Tools.Models;
 
 namespace S7Tools.Extensions;
 
@@ -81,6 +82,11 @@ public static class ServiceCollectionExtensions
         // Add PLC Services
         services.TryAddSingleton<ITagRepository, PlcDataService>();
         services.TryAddSingleton<IS7ConnectionProvider, PlcDataService>();
+
+        // Add Serial Port Services
+        // TODO: Add serial port services in Phase 2
+        // services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
+        // services.TryAddSingleton<ISerialPortService, SerialPortService>();
 
         return services;
     }

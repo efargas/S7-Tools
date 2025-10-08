@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Models;
 
@@ -15,6 +16,11 @@ public class ApplicationSettings
     /// Gets or sets the logging settings.
     /// </summary>
     public LoggingSettings Logging { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the serial port settings.
+    /// </summary>
+    public SerialPortSettings SerialPorts { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the theme settings.
@@ -83,6 +89,7 @@ public class ApplicationSettings
         return new ApplicationSettings
         {
             Logging = Logging.Clone(),
+            SerialPorts = SerialPorts.Clone(),
             Theme = Theme,
             Language = Language,
             SidebarVisible = SidebarVisible,
