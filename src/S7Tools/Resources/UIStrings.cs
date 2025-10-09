@@ -212,6 +212,11 @@ public static class UIStrings
     /// </summary>
     public static string DialogNo => ResourceManager.GetString("DialogNo") ?? "No";
 
+    /// <summary>
+    /// Gets the title for the exit application confirmation dialog.
+    /// </summary>
+    public static string Dialog_ExitTitle => ResourceManager.GetString("Dialog_ExitTitle") ?? "Exit Application";
+
     #endregion
 
     #region Status Messages
@@ -269,6 +274,20 @@ public static class UIStrings
     /// Gets the invalid operation error message.
     /// </summary>
     public static string ErrorInvalidOperation => ResourceManager.GetString("ErrorInvalidOperation") ?? "Invalid operation";
+
+    #endregion
+
+    #region Confirmation Messages
+
+    /// <summary>
+    /// Gets the exit application confirmation message.
+    /// </summary>
+    public static string Confirm_Exit => ResourceManager.GetString("Confirm_Exit") ?? "Are you sure you want to exit?";
+
+    /// <summary>
+    /// Gets the clear logs confirmation message.
+    /// </summary>
+    public static string Confirm_ClearLogs => ResourceManager.GetString("Confirm_ClearLogs") ?? "Are you sure you want to clear all logs?";
 
     #endregion
 

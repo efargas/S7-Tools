@@ -274,6 +274,10 @@
   </data>
   
   <!-- Confirmation Messages -->
+  <data name="Dialog_ExitTitle" xml:space="preserve">
+    <value>Exit Application</value>
+    <comment>Title for exit confirmation dialog</comment>
+  </data>
   <data name="Confirm_Exit" xml:space="preserve">
     <value>Are you sure you want to exit?</value>
     <comment>Exit confirmation message</comment>
