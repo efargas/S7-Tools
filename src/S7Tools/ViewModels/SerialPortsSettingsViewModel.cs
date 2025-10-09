@@ -89,10 +89,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
         _logger.LogInformation("SerialPortsSettingsViewModel initialized");
 
-        // Update STTY preview when selection changes
-        this.WhenAnyValue(x => x.SelectedProfile)
-            .Subscribe(profile =>
+        // Update STTY preview when either profile or port selection changes
+        this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedPort)
+            .Subscribe(values =>
             {
+                var (profile, selectedPort) = values;
                 try
                 {
                     if (profile == null)
@@ -101,12 +102,13 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                     }
                     else
                     {
-                        // Use port service to generate the stty command for the profile (requires a port path placeholder)
-                        // We don't have a selected port here; show the per-profile flags without the -F device prefix
+                        // Use the actual selected port if available, otherwise use placeholder
+                        var portToUse = !string.IsNullOrEmpty(selectedPort) ? selectedPort : "/dev/ttyS0";
+
                         try
                         {
-                            // Generate a sample command using '/dev/ttyS0' as placeholder so GenerateSttyCommandForProfile returns full command
-                            SelectedProfileSttyString = _portService.GenerateSttyCommandForProfile("/dev/ttyS0", profile);
+                            // Generate command with the actual selected port for accurate preview
+                            SelectedProfileSttyString = _portService.GenerateSttyCommandForProfile(portToUse, profile);
                         }
                         catch
                         {
@@ -495,7 +497,13 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             var portInfos = await _portService.ScanAvailablePortsAsync();
 
             AvailablePorts.Clear();
-            foreach (var portInfo in portInfos.OrderBy(p => p.PortPath))
+
+            // Sort ports with ttyUSB* first (external serial adapters), then others alphabetically
+            var sortedPortInfos = portInfos
+                .OrderBy(p => !p.PortPath.Contains("/ttyUSB")) // ttyUSB* ports come first (false sorts before true)
+                .ThenBy(p => p.PortPath); // Then sort alphabetically within each group
+
+            foreach (var portInfo in sortedPortInfos)
             {
                 AvailablePorts.Add(portInfo.PortPath);
             }

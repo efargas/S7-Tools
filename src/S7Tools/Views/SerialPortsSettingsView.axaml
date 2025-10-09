@@ -227,11 +227,7 @@
               </DataGrid.Columns>
             </DataGrid>
           </Grid>
-
-          <!-- Preview stty command for selected profile -->
-          <TextBlock Text="Profile STTY Command:" Foreground="#CCCCCC" FontWeight="SemiBold" />
-          <TextBox Text="{Binding SelectedProfileSttyString}" IsReadOnly="True" Background="#1E1E1E" Foreground="#CCCCCC" BorderBrush="#464647" Height="56" TextWrapping="Wrap" />
-        </StackPanel>
+          </StackPanel>
 
           <!-- Profile Statistics -->
           <Grid>
@@ -254,7 +250,7 @@
                        FontSize="12" />
 
             <TextBlock Grid.Column="2"
-                       Text="{Binding StatusMessage}"
+                       Text=""
                        Foreground="#858585"
                        FontSize="12" />
           </Grid>
@@ -268,30 +264,26 @@
               CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="16">
-          <TextBlock Text="Port Discovery"
-                     FontSize="18"
-                     FontWeight="SemiBold"
-                     Foreground="#CCCCCC" />
-
-          <!-- Scan Controls with circular spinner -->
-          <!-- Use a compact two-column grid so spinner and result text appear below the Scan button in the left column -->
+          <!-- Row 1: Port Discovery Title + Scan Ports Button -->
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto" />
-              <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
 
-            <!-- Scan button in the left column, top row -->
-            <Button Grid.Row="0" Grid.Column="0"
+            <TextBlock Grid.Column="0"
+                       Text="Port Discovery"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <Button Grid.Column="2"
                     Background="#0E639C"
                     Foreground="White"
                     BorderThickness="0"
                     Padding="12,8"
-                    Margin="0,0,8,8"
                     Command="{Binding ScanPortsCommand}"
                     IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
               <StackPanel Orientation="Horizontal" Spacing="8">
@@ -299,101 +291,112 @@
                 <TextBlock Text="Scan Ports" />
               </StackPanel>
             </Button>
-
-            <!-- Found-text below the Scan button. The large scanning indicator is shown over the ports list. -->
-            <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-              <TextBlock Text="{Binding PortCount, StringFormat='Found {0} port(s)'}"
-                         Foreground="#858585"
-                         VerticalAlignment="Center" />
-            </StackPanel>
-
-            <!-- Optional spacer / status area on the right column -->
-            <TextBlock Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
-                       Text=""
-                       Foreground="#858585"
-                       VerticalAlignment="Center"
-                       Margin="8,0" />
           </Grid>
 
-            <!-- Available Ports -->
+          <!-- Row 2: The wrap list with the scanned ports -->
+          <Grid Background="Transparent">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+              <ListBox x:Name="PortsListBox"
+                       Height="160"
+                       ItemsSource="{Binding AvailablePorts}"
+                       SelectedItem="{Binding SelectedPort}"
+                       Background="#3C3C3C"
+                       Foreground="#CCCCCC"
+                       BorderBrush="#464647"
+                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                       ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                       Focusable="False">
+                <!-- Use a WrapPanel so ports fill top->down then next column with proper spacing -->
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <!-- No rounded corners, tighter width, proper spacing -->
+                    <Border Background="#2D2D2D"
+                            CornerRadius="0"
+                            Padding="8,6"
+                            Margin="6,3"
+                            Width="130"
+                            Height="26">
+                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#0E639C" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </ScrollViewer>
+
+            <!-- Overlay: semi-transparent backdrop with a centered ProgressRing when scanning -->
+            <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+              <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <fa:ProgressRing Width="64" Height="64" IsActive="{Binding IsScanning}" />
+              </Grid>
+            </Border>
+          </Grid>
+
+          <!-- Row 3: Found ports text and Selected port text -->
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="120" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"
-                       Text="Available Ports:"
+                       Text="{Binding StatusMessage}"
+                       Foreground="#858585"
+                       FontSize="12"
+                       VerticalAlignment="Center" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding SelectedPort, StringFormat='Selected: {0}', FallbackValue='Selected: None'}"
+                       Foreground="#858585"
+                       FontSize="12"
+                       VerticalAlignment="Center" />
+
+            <TextBlock Grid.Column="2"
+                       Text=""
+                       Foreground="#858585"
+                       FontSize="12" />
+          </Grid>
+
+          <!-- Row 4: Test Port Button + STTY Command inline -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="4" Margin="0,0,16,0">
+              <TextBlock Text="Test Port:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,8"
+                      Command="{Binding TestPortCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
+                  <TextBlock Text="Test Port" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="4">
+              <TextBlock Text="Profile STTY Command:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <TextBox Text="{Binding SelectedProfileSttyString}"
+                       IsReadOnly="True"
+                       Background="#1E1E1E"
                        Foreground="#CCCCCC"
-                       VerticalAlignment="Top"
-                       Margin="0,4,0,0" />
-
-            <!-- Ports list with centered overlay progress ring while scanning. Fixed height to show 5 rows (no inner vertical scroll). -->
-            <Grid Grid.Column="1" Margin="8,0">
-              <Grid.RowDefinitions>
-                <!-- Ports area -->
-                <RowDefinition Height="Auto" />
-                <!-- Buttons row (Test Port moved next to ports to avoid empty vertical space) -->
-                <RowDefinition Height="Auto" />
-              </Grid.RowDefinitions>
-
-              <Grid Grid.Row="0" Background="Transparent">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                  <!-- Calculate Height for 5 rows: ItemHeight * 5 + vertical margins/paddings. ItemHeight=56 -> 56*5=280 -->
-                  <ListBox x:Name="PortsListBox"
-                           Height="280"
-                           ItemsSource="{Binding AvailablePorts}"
-                           SelectedItem="{Binding SelectedPort}"
-                           Background="#3C3C3C"
-                           Foreground="#CCCCCC"
-                           BorderBrush="#464647"
-                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                           ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                           Focusable="False">
-                    <!-- Use a WrapPanel so ports fill top->down then next column: column-major ordering. Larger tiles for better appearance -->
-                    <ListBox.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Vertical" ItemWidth="220" ItemHeight="56" />
-                      </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-
-                    <ListBox.ItemTemplate>
-                      <DataTemplate>
-                        <Border Background="#2D2D2D" CornerRadius="6" Padding="10" Margin="6" Width="220" Height="56">
-                          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                            <icons:Icon Value="fa-solid fa-plug" Width="16" Height="16" Foreground="#0E639C" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                          </StackPanel>
-                        </Border>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                </ScrollViewer>
-
-                <!-- Overlay: semi-transparent backdrop with a centered ProgressRing when scanning -->
-                <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                  <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <fa:ProgressRing Width="96" Height="96" IsActive="{Binding IsScanning}" />
-                  </Grid>
-                </Border>
-              </Grid>
-
-              <!-- Buttons row below ports but still inside the same column to claim vertical space efficiently -->
-              <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12" Margin="0,10,0,0">
-                <Button Background="#0E639C"
-                        Foreground="White"
-                        BorderThickness="0"
-                        Padding="12,8"
-                        Command="{Binding TestPortCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
-                    <TextBlock Text="Test Port" />
-                  </StackPanel>
-                </Button>
-
-                <!-- Optional extra actions can be added here later (e.g., Open in Terminal) -->
-              </StackPanel>
-            </Grid>
+                       BorderBrush="#464647"
+                       Height="56"
+                       TextWrapping="Wrap" />
+            </StackPanel>
           </Grid>
         </StackPanel>
       </Border>

@@ -192,7 +192,7 @@ public class SerialPortService : ISerialPortService
             }
 
             // Start monitoring timer
-            var timer = new Timer(async _ => await MonitorPortChangesAsync().ConfigureAwait(false), 
+            var timer = new Timer(async _ => await MonitorPortChangesAsync().ConfigureAwait(false),
                 null, TimeSpan.Zero, TimeSpan.FromSeconds(settings.ScanIntervalSeconds));
 
             _logger.LogInformation("Started port monitoring with {Interval}s interval", settings.ScanIntervalSeconds);
@@ -506,7 +506,8 @@ public class SerialPortService : ISerialPortService
         // Check for dangerous commands
         var dangerousPatterns = new[]
         {
-            @"rm\s+", @"del\s+", @"format\s+", @"mkfs\s+", @"dd\s+",
+            @"rm\s+", @"del\s+", @"format\s+", @"mkfs\s+",
+            @";\s*dd\s+", @"&&\s*dd\s+", @"\|\s*dd\s+", @"^\s*dd\s+",  // Only dangerous dd usage (standalone dd command)
             @">\s*/dev/", @";\s*rm\s+", @"&&\s*rm\s+", @"\|\s*rm\s+"
         };
 
