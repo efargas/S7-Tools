@@ -21,12 +21,12 @@ public sealed class LogDataStore : ILogDataStore
         /// Plain text export format.
         /// </summary>
         public const string Text = "txt";
-        
+
         /// <summary>
         /// JSON export format.
         /// </summary>
         public const string Json = "json";
-        
+
         /// <summary>
         /// CSV export format.
         /// </summary>
@@ -200,7 +200,7 @@ public sealed class LogDataStore : ILogDataStore
             OnPropertyChanged(nameof(Count));
             OnPropertyChanged(nameof(IsFull));
             OnPropertyChanged(nameof(Entries));
-            
+
             // Use Add action for better UI performance instead of Reset
             if (addedEntries.Count > 0)
             {
@@ -285,7 +285,7 @@ public sealed class LogDataStore : ILogDataStore
     public async Task<string> ExportAsync(string format = ExportFormats.Text)
     {
         IReadOnlyList<LogModel> entries = Entries;
-        
+
         return format.ToLowerInvariant() switch
         {
             ExportFormats.Json => await ExportAsJsonAsync(entries).ConfigureAwait(false),
@@ -347,21 +347,21 @@ public sealed class LogDataStore : ILogDataStore
         return await Task.Run(() =>
         {
             var sb = new StringBuilder();
-            
+
             foreach (LogModel entry in entries)
             {
                 sb.AppendLine($"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.Level}] {entry.Category}: {entry.Message}");
-                
+
                 if (entry.Exception != null)
                 {
                     sb.AppendLine($"Exception: {entry.Exception}");
                 }
-                
+
                 if (!string.IsNullOrEmpty(entry.Scope))
                 {
                     sb.AppendLine($"Scope: {entry.Scope}");
                 }
-                
+
                 sb.AppendLine();
             }
 
