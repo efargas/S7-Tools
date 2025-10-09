@@ -21,6 +21,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
 {
     private readonly ILogger<SerialPortProfileService> _logger;
     private readonly ISettingsService _settingsService;
+    private readonly IDialogService _dialogService;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly List<SerialPortProfile> _profiles = new();
     private bool _isInitialized;
@@ -32,11 +33,16 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
     /// <param name="settingsService">The settings service for accessing application settings.</param>
-    /// <exception cref="ArgumentNullException">Thrown when logger or settingsService is null.</exception>
-    public SerialPortProfileService(ILogger<SerialPortProfileService> logger, ISettingsService settingsService)
+    /// <param name="dialogService">The dialog service for user interactions.</param>
+    /// <exception cref="ArgumentNullException">Thrown when logger, settingsService, or dialogService is null.</exception>
+    public SerialPortProfileService(
+        ILogger<SerialPortProfileService> logger,
+        ISettingsService settingsService,
+        IDialogService dialogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         _logger.LogDebug("SerialPortProfileService initialized");
     }
@@ -52,7 +58,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
         try
         {
             _logger.LogDebug("Retrieved {Count} profiles", _profiles.Count);
-            return _profiles.Select(p => p.Clone()).ToList();
+            return _profiles.Select(p => p.ClonePreserveId()).ToList();
         }
         finally
         {
@@ -75,7 +81,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
         {
             var profile = _profiles.FirstOrDefault(p => p.Id == profileId);
             _logger.LogDebug("Retrieved profile by ID {ProfileId}: {Found}", profileId, profile != null);
-            return profile?.Clone();
+            return profile?.ClonePreserveId();
         }
         finally
         {
@@ -98,7 +104,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
         {
             var profile = _profiles.FirstOrDefault(p => string.Equals(p.Name, profileName, StringComparison.OrdinalIgnoreCase));
             _logger.LogDebug("Retrieved profile by name '{ProfileName}': {Found}", profileName, profile != null);
-            return profile?.Clone();
+            return profile?.ClonePreserveId();
         }
         finally
         {
@@ -122,10 +128,12 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // Check if name already exists
-            if (_profiles.Any(p => string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
+            // Ensure profile name is unique with smart naming strategy
+            var uniqueName = await EnsureUniqueProfileNameAsync(profile.Name, cancellationToken).ConfigureAwait(false);
+            if (uniqueName == null)
             {
-                throw new InvalidOperationException($"A profile with the name '{profile.Name}' already exists");
+                // User cancelled the operation
+                throw new OperationCanceledException("Profile creation was cancelled by the user");
             }
 
             // Check maximum profiles limit
@@ -137,9 +145,18 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
 
             // Create new profile with assigned ID
             var newProfile = profile.Clone();
+            newProfile.Name = uniqueName; // Use the unique name
             newProfile.Id = _nextId++;
             newProfile.CreatedAt = DateTime.UtcNow;
             newProfile.ModifiedAt = DateTime.UtcNow;
+            // If the new profile requests to be the default, clear any existing default flags.
+            if (newProfile.IsDefault)
+            {
+                foreach (var p in _profiles)
+                {
+                    p.IsDefault = false; // intentionally clear even read-only previous defaults
+                }
+            }
 
             _profiles.Add(newProfile);
             await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
@@ -185,16 +202,29 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
                 throw new ArgumentException("Cannot modify read-only profile", nameof(profile));
             }
 
-            // Check if name conflicts with another profile
-            if (_profiles.Any(p => p.Id != profile.Id && string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
+            // Ensure profile name is unique (excluding the current profile)
+            var uniqueName = await EnsureUniqueProfileNameForUpdateAsync(profile.Name, profile.Id, cancellationToken).ConfigureAwait(false);
+            if (uniqueName == null)
             {
-                throw new InvalidOperationException($"A profile with the name '{profile.Name}' already exists");
+                // User cancelled the operation
+                throw new OperationCanceledException("Profile update was cancelled by the user");
             }
 
             // Update existing profile
             var updatedProfile = profile.Clone();
+            updatedProfile.Name = uniqueName; // Use the unique name
             updatedProfile.CreatedAt = existingProfile.CreatedAt; // Preserve creation time
             updatedProfile.ModifiedAt = DateTime.UtcNow;
+
+            // If the updated profile is now marked as default, clear the flag on all other profiles
+            if (updatedProfile.IsDefault)
+            {
+                foreach (var p in _profiles)
+                {
+                    // Clear existing defaults - do this regardless of read-only status so only one default remains
+                    p.IsDefault = false;
+                }
+            }
 
             var index = _profiles.IndexOf(existingProfile);
             _profiles[index] = updatedProfile;
@@ -275,8 +305,33 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
             throw new InvalidOperationException($"Source profile with ID {sourceProfileId} does not exist");
         }
 
-        var duplicatedProfile = sourceProfile.Duplicate(newName);
-        return await CreateProfileAsync(duplicatedProfile, cancellationToken).ConfigureAwait(false);
+        // Try to create duplicated profile; if the name already exists, attempt unique variants
+        var baseName = newName?.Trim() ?? throw new ArgumentException("New name cannot be null or empty", nameof(newName));
+        const int maxAttempts = 50;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            // First try the desired base name, then append an underscore and a number on collisions
+            var candidateName = attempt == 1 ? baseName : $"{baseName}_{attempt}";
+            var duplicatedProfile = sourceProfile.Duplicate(candidateName);
+
+            try
+            {
+                return await CreateProfileAsync(duplicatedProfile, cancellationToken).ConfigureAwait(false);
+            }
+            catch (InvalidOperationException ex)
+            {
+                // If name conflict, try next candidate; otherwise rethrow
+                if (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
+                {
+                    // continue to next attempt
+                    continue;
+                }
+                throw;
+            }
+        }
+
+        throw new InvalidOperationException($"Failed to duplicate profile: could not find an available name after {maxAttempts} attempts");
     }
 
     /// <inheritdoc />
@@ -293,7 +348,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
                 throw new InvalidOperationException("No default profile found");
             }
 
-            return defaultProfile.Clone();
+            return defaultProfile.ClonePreserveId();
         }
         finally
         {
@@ -362,7 +417,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
             await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Created system default profile with ID {ProfileId}", systemDefault.Id);
-            return systemDefault.Clone();
+            return systemDefault.ClonePreserveId();
         }
         finally
         {
@@ -709,6 +764,170 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
     #endregion
 
     #region Private Methods
+
+    /// <summary>
+    /// Ensures the profile name is unique by adding a counter suffix if needed, with user interaction as fallback.
+    /// </summary>
+    /// <param name="baseName">The base name to make unique.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A unique name, or null if the user cancelled the operation.</returns>
+    private async Task<string?> EnsureUniqueProfileNameAsync(string baseName, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            throw new ArgumentException("Base name cannot be null or empty", nameof(baseName));
+        }
+
+        var candidateName = baseName.Trim();
+
+        // Check if the original name is available
+        if (!_profiles.Any(p => string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
+        {
+            return candidateName;
+        }
+
+        // Try up to 3 iterations with counter suffix
+        for (int counter = 1; counter <= 3; counter++)
+        {
+            candidateName = $"{baseName}_{counter}";
+            if (!_profiles.Any(p => string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogInformation("Profile name '{OriginalName}' already exists, using '{UniqueName}' instead", baseName, candidateName);
+                return candidateName;
+            }
+        }
+
+        // After 3 attempts, ask the user for a new name
+        _logger.LogWarning("Could not generate unique name for '{BaseName}' after 3 attempts", baseName);
+
+        // Note: In a real UI application, this would show a dialog to the user
+        // For now, we'll implement a simple fallback strategy
+        return await HandleNameConflictWithUserInteractionAsync(baseName, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Ensures the profile name is unique for updates by adding a counter suffix if needed, excluding the current profile.
+    /// </summary>
+    /// <param name="baseName">The base name to make unique.</param>
+    /// <param name="excludeProfileId">The ID of the profile to exclude from the uniqueness check.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A unique name, or null if the user cancelled the operation.</returns>
+    private async Task<string?> EnsureUniqueProfileNameForUpdateAsync(string baseName, int excludeProfileId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            throw new ArgumentException("Base name cannot be null or empty", nameof(baseName));
+        }
+
+        var candidateName = baseName.Trim();
+
+        // Check if the original name is available (excluding the current profile)
+        if (!_profiles.Any(p => p.Id != excludeProfileId && string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
+        {
+            return candidateName;
+        }
+
+        // Try up to 3 iterations with counter suffix
+        for (int counter = 1; counter <= 3; counter++)
+        {
+            candidateName = $"{baseName}_{counter}";
+            if (!_profiles.Any(p => p.Id != excludeProfileId && string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogInformation("Profile name '{OriginalName}' already exists for update, using '{UniqueName}' instead", baseName, candidateName);
+                return candidateName;
+            }
+        }
+
+        // After 3 attempts, use the same fallback strategy
+        _logger.LogWarning("Could not generate unique name for update '{BaseName}' after 3 attempts", baseName);
+        return await HandleNameConflictWithUserInteractionAsync(baseName, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Handles name conflicts by providing user interaction options.
+    /// </summary>
+    /// <param name="baseName">The base name that has conflicts.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A unique name chosen by the user, or null if cancelled.</returns>
+    private async Task<string?> HandleNameConflictWithUserInteractionAsync(string baseName, CancellationToken cancellationToken)
+    {
+        // Show dialog to user asking for a new name
+        var message = $"The profile name '{baseName}' already exists after multiple attempts to generate a unique name.\n\nPlease enter a new name for the profile:";
+        var title = "Profile Name Conflict";
+        var placeholder = "Enter a new profile name...";
+
+        _logger.LogInformation("Showing name conflict dialog for profile '{BaseName}'", baseName);
+
+        try
+        {
+            var result = await _dialogService.ShowInputAsync(title, message, baseName, placeholder).ConfigureAwait(false);
+
+            if (result.IsCancelled || string.IsNullOrWhiteSpace(result.Value))
+            {
+                _logger.LogInformation("User cancelled name conflict resolution for '{BaseName}'", baseName);
+                return null; // User cancelled
+            }
+
+            var newName = result.Value.Trim();
+
+            // Validate the new name doesn't conflict
+            if (_profiles.Any(p => string.Equals(p.Name, newName, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogWarning("User provided name '{NewName}' also conflicts, showing error dialog", newName);
+
+                // Show error and ask user to try again or cancel
+                var errorMessage = $"The name '{newName}' also already exists. Please choose a different name.";
+                var retryTitle = "Name Still Conflicts";
+
+                var shouldRetry = await _dialogService.ShowConfirmationAsync(retryTitle, errorMessage + "\n\nWould you like to try again?").ConfigureAwait(false);
+
+                if (shouldRetry)
+                {
+                    // Recursive call to try again
+                    return await HandleNameConflictWithUserInteractionAsync(baseName, cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    _logger.LogInformation("User chose not to retry after name conflict");
+                    return null; // User chose not to retry
+                }
+            }
+
+            _logger.LogInformation("User provided valid unique name: '{NewName}' for original '{BaseName}'", newName, baseName);
+            return newName;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred during name conflict resolution dialog for '{BaseName}'", baseName);
+
+            // Fallback to timestamp-based approach if dialog fails
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var fallbackName = $"{baseName}_{timestamp}";
+
+            if (!_profiles.Any(p => string.Equals(p.Name, fallbackName, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogWarning("Dialog failed, using fallback name: '{FallbackName}'", fallbackName);
+                return fallbackName;
+            }
+
+            // If even fallback fails, generate random suffix
+            var random = new Random();
+            for (int attempt = 0; attempt < 10; attempt++)
+            {
+                var randomSuffix = random.Next(1000, 9999);
+                var randomName = $"{baseName}_{timestamp}_{randomSuffix}";
+
+                if (!_profiles.Any(p => string.Equals(p.Name, randomName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    _logger.LogWarning("Using random fallback name after dialog error: '{RandomName}'", randomName);
+                    return randomName;
+                }
+            }
+
+            _logger.LogError("Could not generate any unique name for '{BaseName}' even after dialog error", baseName);
+            return null;
+        }
+    }
 
     /// <summary>
     /// Ensures the service is initialized before performing operations.

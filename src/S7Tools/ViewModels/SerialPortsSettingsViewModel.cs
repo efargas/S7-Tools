@@ -88,6 +88,36 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         });
 
         _logger.LogInformation("SerialPortsSettingsViewModel initialized");
+
+        // Update STTY preview when selection changes
+        this.WhenAnyValue(x => x.SelectedProfile)
+            .Subscribe(profile =>
+            {
+                try
+                {
+                    if (profile == null)
+                    {
+                        SelectedProfileSttyString = string.Empty;
+                    }
+                    else
+                    {
+                        // Use port service to generate the stty command for the profile (requires a port path placeholder)
+                        // We don't have a selected port here; show the per-profile flags without the -F device prefix
+                        try
+                        {
+                            // Generate a sample command using '/dev/ttyS0' as placeholder so GenerateSttyCommandForProfile returns full command
+                            SelectedProfileSttyString = _portService.GenerateSttyCommandForProfile("/dev/ttyS0", profile);
+                        }
+                        catch
+                        {
+                            // Fallback to serializing configuration flags manually
+                            SelectedProfileSttyString = System.Text.Json.JsonSerializer.Serialize(profile.Configuration, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                        }
+                    }
+                }
+                catch { }
+            })
+            .DisposeWith(_disposables);
     }
 
     #endregion
@@ -112,6 +142,16 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     {
         get => _selectedProfile;
         set => this.RaiseAndSetIfChanged(ref _selectedProfile, value);
+    }
+
+    private string _selectedProfileSttyString = string.Empty;
+    /// <summary>
+    /// Gets the generated stty command string for the currently selected profile.
+    /// </summary>
+    public string SelectedProfileSttyString
+    {
+        get => _selectedProfileSttyString;
+        private set => this.RaiseAndSetIfChanged(ref _selectedProfileSttyString, value);
     }
 
     private string? _selectedPort;
@@ -376,9 +416,9 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             .Subscribe(ex => HandleCommandException(ex, "importing profiles"))
             .DisposeWith(_disposables);
 
-        // Export selected profile command - enabled when a profile is selected
+        // Export selected profile command - enabled when a profile is selected and has a valid Id
         var canExportSelectedProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null);
+            .Select(profile => profile != null && profile.Id > 0);
 
         ExportSelectedProfileCommand = ReactiveCommand.CreateFromTask(ExportSelectedProfileAsync, canExportSelectedProfile);
         ExportSelectedProfileCommand.ThrownExceptions
@@ -418,8 +458,13 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 {
                     Profiles.Add(profile);
                 }
-
                 ProfileCount = Profiles.Count;
+
+                // Ensure a SelectedProfile exists to avoid null-binding errors in the view.
+                if (Profiles.Count > 0 && SelectedProfile == null)
+                {
+                    SelectedProfile = Profiles.First();
+                }
             });
             StatusMessage = $"Loaded {ProfileCount} profile(s)";
 
@@ -493,10 +538,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             var newProfile = SerialPortProfile.CreateUserProfile(NewProfileName, NewProfileDescription);
             var createdProfile = await _profileService.CreateProfileAsync(newProfile);
 
-            // Add to collection and select it
-            Profiles.Add(createdProfile);
-            SelectedProfile = createdProfile;
-            ProfileCount = Profiles.Count;
+            // Refresh list and select created profile to ensure canonical state
+            await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
 
             // Clear input fields
             NewProfileName = string.Empty;
@@ -571,13 +614,14 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             StatusMessage = "Deleting profile...";
 
             var profileName = SelectedProfile.Name;
-            var success = await _profileService.DeleteProfileAsync(SelectedProfile.Id);
+            var idToDelete = SelectedProfile.Id;
+            var success = await _profileService.DeleteProfileAsync(idToDelete);
 
             if (success)
             {
-                Profiles.Remove(SelectedProfile);
-                SelectedProfile = null;
-                ProfileCount = Profiles.Count;
+                // Refresh profiles; preserve selection if possible (select next available)
+                await RefreshProfilesPreserveSelectionAsync(null);
+
                 StatusMessage = $"Profile '{profileName}' deleted successfully";
                 _logger.LogInformation("Deleted profile: {ProfileName}", profileName);
             }
@@ -618,12 +662,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
             var duplicatedProfile = await _profileService.DuplicateProfileAsync(SelectedProfile.Id, newName);
 
-            Profiles.Add(duplicatedProfile);
-            SelectedProfile = duplicatedProfile;
-            ProfileCount = Profiles.Count;
+            // Refresh and select duplicated profile
+            await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
 
             StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
-            _logger.LogInformation("Duplicated profile: {OriginalName} -> {NewName}", SelectedProfile.Name, duplicatedProfile.Name);
+            _logger.LogInformation("Duplicated profile: {OriginalName} -> {NewName}", SelectedProfile?.Name, duplicatedProfile.Name);
         }
         catch (Exception ex)
         {
@@ -653,11 +696,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
             await _profileService.SetDefaultProfileAsync(SelectedProfile.Id);
 
-            // Update UI - mark current default as false and selected as true
-            foreach (var profile in Profiles)
-            {
-                profile.IsDefault = profile.Id == SelectedProfile.Id;
-            }
+            // Persisted change made; refresh profiles and keep selection
+            await RefreshProfilesPreserveSelectionAsync(SelectedProfile.Id);
 
             StatusMessage = $"'{SelectedProfile.Name}' set as default profile";
             _logger.LogInformation("Set default profile: {ProfileName}", SelectedProfile.Name);
@@ -950,7 +990,26 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = "Exporting profile...";
 
-            var jsonData = await _profileService.ExportProfileToJsonAsync(SelectedProfile.Id);
+            string jsonData;
+
+            // If the selected profile has a valid persisted Id, use the profile service which performs
+            // any canonical serialization and validation. Otherwise fall back to directly serializing
+            // the in-memory profile to allow exporting unsaved/imported profiles without throwing.
+            if (SelectedProfile.Id > 0)
+            {
+                jsonData = await _profileService.ExportProfileToJsonAsync(SelectedProfile.Id);
+            }
+            else
+            {
+                var options = new System.Text.Json.JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                };
+
+                jsonData = System.Text.Json.JsonSerializer.Serialize(SelectedProfile, options);
+            }
+
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported profile '{SelectedProfile.Name}' to {Path.GetFileName(fileName)}";
@@ -1047,6 +1106,43 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             _logger.LogInformation("SerialPortsSettingsViewModel disposed");
         }
         catch { }
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>
+    /// Refreshes profiles from the service and optionally restores selection by profile Id.
+    /// </summary>
+    private async Task RefreshProfilesPreserveSelectionAsync(int? selectProfileId)
+    {
+        try
+        {
+            // Reload profiles from storage/service
+            await LoadProfilesAsync();
+
+            // If a specific profile Id was requested, try to select it
+            if (selectProfileId.HasValue)
+            {
+                var match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
+                if (match != null)
+                {
+                    SelectedProfile = match;
+                    return;
+                }
+            }
+
+            // Otherwise, ensure there's a sensible selection
+            if (Profiles.Count > 0 && SelectedProfile == null)
+            {
+                SelectedProfile = Profiles.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to refresh profiles while preserving selection");
+        }
     }
 
     #endregion

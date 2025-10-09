@@ -205,4 +205,6 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
+
+    <!-- spin style removed: apply animations per-control or use ProgressRing for large scanning indicator -->
 </Styles>

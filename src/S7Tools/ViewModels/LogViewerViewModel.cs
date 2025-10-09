@@ -283,7 +283,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
 
                 // Use filtered entries for export (respects current filters)
                 var logsToExport = FilteredLogEntries.ToList();
-                
+
                 if (!logsToExport.Any())
                 {
                     await _dialogService.ShowErrorAsync("Export", "No log entries to export. Check your filters.");
@@ -292,10 +292,10 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
 
                 // Export the logs
                 var result = await _logExportService.ExportLogsAsync(logsToExport, format);
-                
+
                 if (result.IsSuccess)
                 {
-                    await _dialogService.ShowErrorAsync("Export Success", 
+                    await _dialogService.ShowErrorAsync("Export Success",
                         $"Successfully exported {logsToExport.Count} log entries to {format} format.");
                 }
                 else
@@ -553,9 +553,12 @@ internal class DesignTimeDialogService : IDialogService
 {
     public Interaction<ConfirmationRequest, bool> ShowConfirmation { get; } = new();
     public Interaction<ConfirmationRequest, Unit> ShowError { get; } = new();
+    public Interaction<InputRequest, InputResult> ShowInput { get; } = new();
 
     public Task<bool> ShowConfirmationAsync(string title, string message) => Task.FromResult(false);
     public Task ShowErrorAsync(string title, string message) => Task.CompletedTask;
+    public Task<InputResult> ShowInputAsync(string title, string message, string? defaultValue = null, string? placeholder = null)
+        => Task.FromResult(InputResult.Cancelled());
 }
 
 

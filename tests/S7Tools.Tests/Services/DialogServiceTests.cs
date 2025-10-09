@@ -25,6 +25,7 @@ public class DialogServiceTests
         // Assert
         _dialogService.ShowConfirmation.Should().NotBeNull();
         _dialogService.ShowError.Should().NotBeNull();
+        _dialogService.ShowInput.Should().NotBeNull();
     }
 
     [Fact]
@@ -253,5 +254,55 @@ public class DialogServiceTests
 
         // Assert
         callCount.Should().Be(10);
+    }
+
+    [Fact]
+    public async Task ShowInputAsync_WithValidParameters_ShouldReturnExpectedResult()
+    {
+        // Arrange
+        const string title = "Input Title";
+        const string message = "Input Message";
+        const string defaultValue = "Default";
+        const string placeholder = "Placeholder";
+        const string expectedValue = "User Input";
+        var handlerCalled = false;
+
+        // Register handler
+        _dialogService.ShowInput.RegisterHandler(interaction =>
+        {
+            interaction.Input.Title.Should().Be(title);
+            interaction.Input.Message.Should().Be(message);
+            interaction.Input.DefaultValue.Should().Be(defaultValue);
+            interaction.Input.Placeholder.Should().Be(placeholder);
+            handlerCalled = true;
+            interaction.SetOutput(InputResult.Success(expectedValue));
+        });
+
+        // Act
+        var result = await _dialogService.ShowInputAsync(title, message, defaultValue, placeholder);
+
+        // Assert
+        handlerCalled.Should().BeTrue();
+        result.Should().NotBeNull();
+        result.IsCancelled.Should().BeFalse();
+        result.Value.Should().Be(expectedValue);
+    }
+
+    [Fact]
+    public async Task ShowInputAsync_WithCancelledResult_ShouldReturnCancelled()
+    {
+        // Arrange
+        _dialogService.ShowInput.RegisterHandler(interaction =>
+        {
+            interaction.SetOutput(InputResult.Cancelled());
+        });
+
+        // Act
+        var result = await _dialogService.ShowInputAsync("Title", "Message");
+
+        // Assert
+        result.Should().NotBeNull();
+        result.IsCancelled.Should().BeTrue();
+        result.Value.Should().BeNull();
     }
 }

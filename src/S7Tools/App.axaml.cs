@@ -194,6 +194,51 @@ public partial class App : Application
                 }
             });
 
+            // Handle input dialogs
+            dialogService.ShowInput.RegisterHandler(async interaction =>
+            {
+                try
+                {
+                    logger.LogDebug("Showing input dialog: {Title} - {Message}",
+                        interaction.Input.Title, interaction.Input.Message);
+
+                    // Create and show input dialog
+                    var dialog = new InputDialog
+                    {
+                        DataContext = new InputDialogViewModel(interaction.Input)
+                    };
+
+                    // Get the main window as parent
+                    var mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+
+                    if (mainWindow != null)
+                    {
+                        var result = await dialog.ShowDialog<InputResult?>(mainWindow);
+                        if (result != null)
+                        {
+                            interaction.SetOutput(result);
+                            logger.LogDebug("Input dialog result: Cancelled={IsCancelled}, Value={Value}",
+                                result.IsCancelled, result.Value ?? string.Empty);
+                        }
+                        else
+                        {
+                            interaction.SetOutput(InputResult.Cancelled());
+                            logger.LogDebug("Input dialog returned null, treating as cancelled");
+                        }
+                    }
+                    else
+                    {
+                        logger.LogWarning("Main window not available for input dialog, returning cancelled result");
+                        interaction.SetOutput(InputResult.Cancelled());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error showing input dialog");
+                    interaction.SetOutput(InputResult.Cancelled());
+                }
+            });
+
             logger.LogInformation("Dialog interaction handlers registered successfully");
         }
         catch (Exception ex)

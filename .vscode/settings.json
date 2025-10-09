@@ -6,5 +6,6 @@
     "workbench.editor.autoLockGroups": {
         "pdf.preview": true,
         "mainThreadWebview-markdown.preview": true
-    }
+    },
+    "github.copilot.chat.useResponsesApi": false
 }
