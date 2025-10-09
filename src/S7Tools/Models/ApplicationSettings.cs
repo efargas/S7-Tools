@@ -23,6 +23,11 @@ public class ApplicationSettings
     public SerialPortSettings SerialPorts { get; set; } = new();
 
     /// <summary>
+    /// Gets or sets the socat (Serial-to-TCP Proxy) settings.
+    /// </summary>
+    public SocatSettings Socat { get; set; } = new();
+
+    /// <summary>
     /// Gets or sets the theme settings.
     /// </summary>
     public string Theme { get; set; } = "Dark";
@@ -90,6 +95,7 @@ public class ApplicationSettings
         {
             Logging = Logging.Clone(),
             SerialPorts = SerialPorts.Clone(),
+            Socat = Socat.Clone(),
             Theme = Theme,
             Language = Language,
             SidebarVisible = SidebarVisible,
