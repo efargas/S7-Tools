@@ -90,6 +90,10 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
         services.TryAddSingleton<ISerialPortService, SerialPortService>();
 
+        // Add Socat Services (Servers Settings - socat configuration)
+        services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
+        services.TryAddSingleton<ISocatService, SocatService>();
+
         return services;
     }
 
