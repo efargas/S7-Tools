@@ -291,6 +291,65 @@ public static class UIStrings
 
     #endregion
 
+    #region Log Viewer Strings
+
+    /// <summary>
+    /// Gets the title for the clear logs confirmation dialog.
+    /// </summary>
+    public static string LogViewer_ClearLogsTitle => ResourceManager.GetString("LogViewer_ClearLogsTitle") ?? "Clear Logs";
+
+    /// <summary>
+    /// Gets the title for the export logs dialog.
+    /// </summary>
+    public static string LogViewer_ExportLogsTitle => ResourceManager.GetString("LogViewer_ExportLogsTitle") ?? "Export Logs";
+
+    /// <summary>
+    /// Gets the message for the clear logs confirmation dialog.
+    /// </summary>
+    public static string LogViewer_ClearLogsMessage => 
+        ResourceManager.GetString("LogViewer_ClearLogsMessage") ?? 
+        "Are you sure you want to clear all log entries? This action cannot be undone.";
+
+    /// <summary>
+    /// Gets the error message when export service is unavailable.
+    /// </summary>
+    public static string LogViewer_ExportServiceUnavailable => 
+        ResourceManager.GetString("LogViewer_ExportServiceUnavailable") ?? "Export service is not available";
+
+    /// <summary>
+    /// Gets the message when there are no logs to export.
+    /// </summary>
+    public static string LogViewer_NoLogsToExport => 
+        ResourceManager.GetString("LogViewer_NoLogsToExport") ?? "No log entries to export. Check your filters.";
+
+    /// <summary>
+    /// Gets the success message template after exporting logs.
+    /// Expects parameters: count (int), format (string)
+    /// </summary>
+    public static string LogViewer_ExportSuccess => 
+        ResourceManager.GetString("LogViewer_ExportSuccess") ?? "Successfully exported {0} log entries to {1} format.";
+
+    /// <summary>
+    /// Gets the title for export failed error dialog.
+    /// </summary>
+    public static string LogViewer_ExportFailed => 
+        ResourceManager.GetString("LogViewer_ExportFailed") ?? "Export Failed";
+
+    /// <summary>
+    /// Gets the error message template when export fails.
+    /// Expects parameter: error message (string)
+    /// </summary>
+    public static string LogViewer_ExportFailedMessage => 
+        ResourceManager.GetString("LogViewer_ExportFailedMessage") ?? "Failed to export logs: {0}";
+
+    /// <summary>
+    /// Gets the generic unknown error message.
+    /// </summary>
+    public static string LogViewer_UnknownError => 
+        ResourceManager.GetString("LogViewer_UnknownError") ?? "Unknown error occurred";
+
+    #endregion
+
     /// <summary>
     /// Gets a formatted string with the specified arguments.
     /// </summary>
