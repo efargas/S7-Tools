@@ -58,6 +58,27 @@ sealed class Program
                     }
                 }
 
+                // Initialize SocatProfileService and ensure default profile exists
+                var socatProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISocatProfileService>();
+
+                if (socatProfileService != null)
+                {
+                    try
+                    {
+                        // Initialize storage and ensure default profile exists
+                        socatProfileService.InitializeStorageAsync().GetAwaiter().GetResult();
+                        var storageInfo = socatProfileService.GetStorageInfoAsync().GetAwaiter().GetResult();
+                        var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                        logger?.LogInformation("[S7Tools] SocatProfileService storage info:\n{StorageInfo}", json);
+                        Console.WriteLine("[S7Tools] SocatProfileService storage info:\n" + json); // Keep console for --diag flag
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError(ex, "[S7Tools] Failed to initialize socat profile storage");
+                        Console.WriteLine($"[S7Tools] Failed to initialize socat profile storage: {ex}"); // Keep console for --diag flag
+                    }
+                }
+
                 logger?.LogInformation("[S7Tools] Diagnostics complete. Exiting due to --diag flag");
                 Console.WriteLine("[S7Tools] Diagnostics complete. Exiting due to --diag flag."); // Keep console for --diag flag
                 return;
