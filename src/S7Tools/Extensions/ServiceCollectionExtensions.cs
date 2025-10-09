@@ -330,23 +330,27 @@ public static class ServiceCollectionExtensions
             var profileService = serviceProvider.GetService<ISerialPortProfileService>();
             if (profileService != null)
             {
-                // Fire-and-forget initialization; any exceptions are logged inside the service
+                // Fire-and-forget initialization with proper error logging
                 _ = Task.Run(async () =>
                 {
                     try
                     {
                         await profileService.InitializeStorageAsync().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Intentionally swallow here; service logs errors
+                        // Log the error instead of swallowing it silently
+                        var logger = serviceProvider.GetService<ILogger<ISerialPortProfileService>>();
+                        logger?.LogError(ex, "Failed to initialize serial port profile storage during application startup");
                     }
                 });
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            // Log service retrieval errors instead of ignoring them
+            var logger = serviceProvider.GetService<ILogger>();
+            logger?.LogError(ex, "Failed to retrieve ISerialPortProfileService during service initialization");
         }
     }
 
