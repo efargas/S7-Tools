@@ -199,6 +199,10 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<SerialPortProfileViewModel>();
         services.TryAddTransient<SerialPortScannerViewModel>();
 
+        // Add Socat ViewModels (Servers Settings - socat configuration)
+        services.TryAddTransient<SocatSettingsViewModel>();
+        services.TryAddTransient<SocatProfileViewModel>();
+
         return services;
     }
 
