@@ -1,7 +1,31 @@
 # Tasks Index
 
-**Last Updated**: 2025-10-09 - Serial Ports Settings Complete
-**Total Tasks**: 2
+**Last Updated**: 2025-10-09 - Servers Settings Implementation Started
+**Total Tasks**: 3
+
+## Active Tasks
+
+### **[TASK003]** Servers Settings Category Implementation (socat Configuration)
+**Status**: 🔄 **IN PROGRESS**
+**Priority**: High
+**Started**: 2025-10-09
+**Description**: Comprehensive "Servers" settings category with socat (Serial-to-TCP Proxy) configuration and profile management
+
+#### **Current Progress: Phase 1 - Research & Design**
+- ✅ **Task Creation**: TASK003 created with comprehensive implementation plan
+- 🔄 **Parameter Research**: Analyzing socat documentation and reference project
+- ⏳ **Model Design**: Preparing SocatProfile, SocatConfiguration, SocatSettings models
+- ⏳ **Service Design**: Planning ISocatService, ISocatProfileService interfaces
+
+**Implementation Phases**:
+1. 🔄 **Core Models & Data Structures** (2-3 hours) - In Progress
+2. ⏳ **Service Layer Implementation** (3-4 hours) - Pending
+3. ⏳ **ViewModel Implementation** (4-5 hours) - Pending
+4. ⏳ **UI Implementation** (2-3 hours) - Pending
+5. ⏳ **Integration & Registration** (1-2 hours) - Pending
+6. ⏳ **Testing & Validation** (2-3 hours) - Pending
+
+**Next Steps**: Complete socat parameter research, design core models
 
 ## Recently Completed
 

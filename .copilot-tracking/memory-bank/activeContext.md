@@ -1,15 +1,176 @@
 # Active Context: S7Tools Development Session
 
 **Session Date**: October 2025
-**Context Type**: Serial Ports Settings Implementation Complete
+**Context Type**: Servers Settings Implementation (socat Configuration)
 
-## 🎉 **MAJOR ACCOMPLISHMENT: Serial Ports Settings Category COMPLETE**
+## 🚀 **NEW DEVELOPMENT PHASE: Servers Settings Category**
 
-### **✅ Task Status: COMPLETE**
+### **✨ Task Status: TASK003 - Starting Implementation**
 **Priority**: High
-**Status**: ✅ **SUCCESS** - Serial Ports Settings Category fully implemented and functional
-**Completion Date**: 2025-10-09
-**Total Development Time**: ~12 hours across multiple sessions
+**Status**: 🔄 **IN PROGRESS** - Phase 1 (Research & Design)
+**Started**: 2025-10-09
+**Estimated Time**: 15-20 hours across 6 phases
+
+#### **🎯 Current Objective: socat Configuration Settings**
+
+**Purpose**: Implement a new settings category "Servers" for configuring socat (Serial-to-TCP Proxy). The application will connect to PLC's serial port via TCP socket using socat to forward the serial device to a TCP port.
+
+**Target Command Pattern**:
+```bash
+socat -v -b 4 -x TCP-LISTEN:1238,fork,reuseaddr ${SERIAL_DEV}
+```
+
+#### **📋 Implementation Strategy**
+
+**Following Established Success Pattern**: Reuse all proven patterns from Serial Ports Settings implementation
+- ✅ **Clean Architecture** - Interfaces in Core, implementations in Application
+- ✅ **Profile-Based Configuration** - Similar to Serial Ports profiles
+- ✅ **ReactiveUI Optimization** - Individual property subscriptions pattern
+- ✅ **4-Row UI Layout** - Proven settings category structure
+- ✅ **Service Registration** - Complete DI integration
+
+#### **🔍 Research Findings (Phase 1)**
+
+**From Reference Project Analysis** (SiemensS7-Bootloader):
+- **SocatTcpPort**: 1238 (TCP listen port)
+- **SocatVerbose**: true (maps to -v flag)
+- **SocatHexDump**: true (maps to -x flag)
+- **SocatBlockSize**: 4 (maps to -b flag)
+
+**socat Command Structure**:
+```bash
+# Complete command with all parameters
+socat -d -d -v -b 4 -x TCP-LISTEN:1238,fork,reuseaddr /dev/ttyUSB0,raw,echo=0
+
+# Key Components:
+# -d -d          : Double debug level (when verbose enabled)
+# -v             : Verbose logging
+# -b 4           : Block size for transfers
+# -x             : Hex dump of transferred data
+# TCP-LISTEN:... : Network configuration (port, fork, reuseaddr)
+# /dev/device,... : Serial device configuration (raw mode, no echo)
+```
+
+**Additional Parameters Identified**:
+- **Process Management** - Start/stop socat processes, handle multiple instances
+- **Real-time Logging** - Capture socat output for debugging
+- **Connection Status** - Monitor TCP connection state
+- **Auto-stty Setup** - Automatic serial port configuration before socat
+
+#### **📊 Implementation Phases Overview**
+
+| Phase | Description | Est. Time | Status | Notes |
+|-------|-------------|-----------|--------|-------|
+| 1 | Core Models & Data Structures | 2-3 hours | 🔄 In Progress | SocatProfile, SocatConfiguration, SocatSettings |
+| 2 | Service Layer Implementation | 3-4 hours | ⏳ Pending | ISocatService, ISocatProfileService, implementations |
+| 3 | ViewModel Implementation | 4-5 hours | ⏳ Pending | SocatSettingsViewModel, SocatProfileViewModel |
+| 4 | UI Implementation | 2-3 hours | ⏳ Pending | 4-row layout, command preview, status indicators |
+| 5 | Integration & Registration | 1-2 hours | ⏳ Pending | Settings integration, DI registration |
+| 6 | Testing & Validation | 2-3 hours | ⏳ Pending | User validation, manual testing |
+
+### **Key Differences from Serial Settings**
+
+1. **Dynamic Device Selection** - Serial device path not stored in profile, selected at runtime
+2. **Network Configuration** - TCP host/port parameters
+3. **Process Management** - Start/stop socat process with status monitoring
+4. **Command Generation** - Different structure than stty commands
+5. **Real-time Logging** - Integration with socat output streams
+
+### **📚 Architecture Foundation Available**
+
+**From Previous Implementations**:
+- ✅ **Serial Ports Settings** - Complete reference implementation (6 phases, all patterns established)
+- ✅ **Dialog System** - ReactiveUI Interactions for user input
+- ✅ **Thread-Safe UI** - Cross-thread operations with IUIThreadService
+- ✅ **Settings Infrastructure** - Category-based settings management
+- ✅ **Testing Framework** - 93.5% success rate across 123 tests
+
+## Previous Major Accomplishment Context
+
+### **🎉 Serial Ports Settings COMPLETE** (Reference Implementation)
+**Status**: ✅ **COMPLETE** - All 6 phases successfully implemented and validated
+**Completed**: 2025-10-09
+**Total Development Time**: ~12 hours
+
+**Technical Excellence Delivered**:
+- ✅ **4-Row UI Layout** - Optimized Port Discovery section with efficient space utilization
+- ✅ **ReactiveUI Optimization** - Individual property subscriptions pattern (breakthrough solution)
+- ✅ **Thread-Safe Operations** - UI thread marshaling for cross-thread DataGrid updates
+- ✅ **Profile Management** - Complete CRUD operations with import/export functionality
+- ✅ **STTY Integration** - Dynamic Linux command generation with actual port paths
+
+**Key Patterns Established**:
+1. **Individual Property Subscriptions** - Optimal ReactiveUI pattern for 3+ properties
+2. **4-Row Layout Structure** - Efficient settings category UI design
+3. **Thread-Safe UI Updates** - IUIThreadService integration patterns
+4. **Dynamic Command Generation** - Real-time command preview with validation
+5. **Profile-Based Configuration** - Reusable profile management system
+
+## Current Development Environment
+
+### **🏗️ Application Status: Production Ready**
+- **Build Status**: ✅ Clean compilation (153 warnings, 0 errors)
+- **Runtime Status**: ✅ Application runs correctly with all features functional
+- **Architecture**: ✅ Clean Architecture with proven patterns established
+- **Testing**: ✅ Comprehensive framework with 93.5% success rate
+- **UI/UX**: ✅ Professional VSCode-style interface with polished interactions
+
+### **🔧 Available for Reuse**
+- **Service Layer Patterns** - Clean separation with interfaces in Core
+- **ReactiveUI MVVM** - Optimized property subscription patterns
+- **Settings Integration** - Seamless category addition framework
+- **UI Components** - 4-row layout, DataGrid styling, status messaging
+- **Validation Framework** - Model validation with user-friendly messaging
+- **Dialog System** - Professional UI dialogs with ReactiveUI integration
+
+## Session Context & Next Steps
+
+### **🎯 Immediate Focus: Phase 1 Completion**
+**Current Task**: Complete core models design based on research findings
+**Next Action**: Create SocatProfile, SocatConfiguration, SocatSettings models
+**Target**: Complete Phase 1 (Core Models) within 2-3 hours
+
+### **📋 Phase 1 Deliverables (In Progress)**
+1. **SocatProfile.cs** - Profile model with socat-specific properties
+2. **SocatConfiguration.cs** - Complete socat flags and parameters
+3. **SocatSettings.cs** - Settings integration model
+4. **ApplicationSettings.cs** - Add Socat property for integration
+
+### **🔄 Development Workflow**
+1. **Follow Serial Ports Pattern** - Reuse all proven patterns and structures
+2. **Maintain Architecture Compliance** - Clean Architecture with proper dependency flow
+3. **Apply ReactiveUI Optimization** - Individual property subscriptions for performance
+4. **Implement Comprehensive Logging** - Structured logging throughout
+5. **User Validation Required** - No completion without user confirmation
+
+### **⚠️ Critical Success Factors**
+- **Architecture Compliance** - Follow Clean Architecture principles
+- **Pattern Reuse** - Leverage established Serial Ports Settings patterns
+- **Quality Standards** - Maintain comprehensive error handling and logging
+- **User Experience** - Professional VSCode-style interface consistency
+- **Testing Integration** - Build upon existing testing framework
+
+## Memory Bank Compliance
+
+### **📄 Documentation Status**: ✅ Up-to-Date
+- **activeContext.md**: ✅ Updated with Servers settings focus
+- **progress.md**: ⏳ Pending update with new phase status
+- **tasks/_index.md**: ✅ Updated with TASK003 and progress
+- **TASK003 file**: ✅ Created with comprehensive implementation plan
+
+### **🧠 Knowledge Preservation**
+- ✅ **socat Configuration Analysis** - Complete parameter research documented
+- ✅ **Reference Project Patterns** - SiemensS7-Bootloader integration patterns
+- ✅ **Command Structure** - Complete socat command generation requirements
+- ✅ **Implementation Strategy** - Phase-by-phase approach with time estimates
+
+---
+
+**Document Status**: Active session context reflecting new Servers settings implementation
+**Last Updated**: 2025-10-09
+**Next Update**: After Phase 1 completion or significant progress
+
+**Key Focus**: Implement Servers settings category following all established patterns from Serial Ports Settings success, ensuring architecture compliance and user experience consistency.
 
 #### **🎯 Final Implementation Summary**
 
