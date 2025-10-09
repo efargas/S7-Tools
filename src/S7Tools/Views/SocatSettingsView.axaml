@@ -1,0 +1,673 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:conv="using:S7Tools.Converters"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:fa="using:FluentAvalonia.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.SocatSettingsView"
+             x:DataType="vm:SocatSettingsViewModel"
+             Background="#1E1E1E">
+
+  <UserControl.Resources>
+    <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
+  </UserControl.Resources>
+
+  <ScrollViewer>
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Servers Settings"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="#CCCCCC"
+                 Margin="0,0,0,10" />
+
+      <!-- Profile Management Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="socat Profile Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Create New Profile -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="120" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0"
+                       Text="New Profile:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <TextBox Grid.Column="1" Grid.Row="0"
+                     Text="{Binding NewProfileName}"
+                     Watermark="Profile name..."
+                     MaxLength="20"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+
+            <TextBox Grid.Column="2" Grid.Row="0"
+                     Text="{Binding NewProfileDescription}"
+                     Watermark="Description (optional)..."
+                     MaxLength="60"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+
+            <Button Grid.Column="3" Grid.Row="0"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="12,6"
+                    Command="{Binding CreateProfileCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                <TextBlock Text="Create" />
+              </StackPanel>
+            </Button>
+
+            <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+                       Text="Create a new socat configuration profile for Serial-to-TCP proxy"
+                       FontSize="11"
+                       Foreground="#858585"
+                       Margin="8,4,0,0" />
+          </Grid>
+
+          <!-- Profiles List -->
+          <StackPanel>
+            <!-- Toolbar above the DataGrid -->
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+              <Button Width="110" Height="34" Command="{Binding EditProfileCommand}" Background="#0E639C" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
+                  <TextBlock Text="Edit" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding DeleteProfileCommand}" Background="#D13438" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                  <TextBlock Text="Delete" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding DuplicateProfileCommand}" Background="#0E639C" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                  <TextBlock Text="Duplicate" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding SetDefaultProfileCommand}" Background="#0E639C" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
+                  <TextBlock Text="Set Default" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding ShowProfileDetailsCommand}" Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-info-circle" Width="14" Height="14" />
+                  <TextBlock Text="Details" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding RefreshProfilesCommand}" Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                  <TextBlock Text="Refresh" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <DataGrid Grid.Column="0"
+                        ItemsSource="{Binding Profiles}"
+                        SelectedItem="{Binding SelectedProfile}"
+                        Background="#3C3C3C"
+                        Foreground="#CCCCCC"
+                        GridLinesVisibility="Horizontal"
+                        HeadersVisibility="Column"
+                        CanUserReorderColumns="False"
+                        CanUserResizeColumns="True"
+                        CanUserSortColumns="True"
+                        IsReadOnly="True"
+                        Height="200"
+                        Margin="0,0,0,8">
+                <!-- Header style using Avalonia style selector -->
+                <DataGrid.Styles>
+                  <Style Selector="DataGridColumnHeader">
+                    <Setter Property="FontSize" Value="11" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Padding" Value="8,4,32,4" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Template">
+                      <ControlTemplate>
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                          <DockPanel>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              DockPanel.Dock="Left"
+                                              VerticalAlignment="Center" />
+                          </DockPanel>
+                        </Border>
+                      </ControlTemplate>
+                    </Setter>
+                  </Style>
+                </DataGrid.Styles>
+
+                <DataGrid.Columns>
+                  <DataGridTextColumn Binding="{Binding Name}" Width="160" MinWidth="120">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding Description}" Width="320" MinWidth="140">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding Configuration.TcpPort}" Width="80" MinWidth="70">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding Configuration.TcpHost}" Width="120" MinWidth="80">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="TCP Host" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridCheckBoxColumn Binding="{Binding Configuration.Verbose}" Width="80" MinWidth="70">
+                    <DataGridCheckBoxColumn.Header>
+                      <TextBlock Text="Verbose" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridCheckBoxColumn.Header>
+                  </DataGridCheckBoxColumn>
+
+                  <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="70" MinWidth="60">
+                    <DataGridCheckBoxColumn.Header>
+                      <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridCheckBoxColumn.Header>
+                  </DataGridCheckBoxColumn>
+
+                  <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="80" MinWidth="70">
+                    <DataGridCheckBoxColumn.Header>
+                      <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridCheckBoxColumn.Header>
+                  </DataGridCheckBoxColumn>
+                </DataGrid.Columns>
+              </DataGrid>
+            </Grid>
+          </StackPanel>
+
+          <!-- Profile Statistics -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding ProfileCount, StringFormat='Total Profiles: {0}'}"
+                       Foreground="#858585"
+                       FontSize="12" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding SelectedProfile.Name, StringFormat='Selected: {0}', FallbackValue='Selected: None'}"
+                       Foreground="#858585"
+                       FontSize="12" />
+
+            <TextBlock Grid.Column="2"
+                       Text=""
+                       Foreground="#858585"
+                       FontSize="12" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Serial Device Discovery Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <!-- Row 1: Device Discovery Title + Scan Devices Button -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Serial Device Discovery"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <Button Grid.Column="2"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="12,8"
+                    Command="{Binding ScanSerialDevicesCommand}"
+                    IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <icons:Icon Value="fa-solid fa-search" Width="16" Height="16" />
+                <TextBlock Text="Scan Devices" />
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <!-- Row 2: Available Serial Devices -->
+          <Grid Background="Transparent">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+              <ListBox x:Name="DevicesListBox"
+                       Height="160"
+                       ItemsSource="{Binding AvailableSerialDevices}"
+                       SelectedItem="{Binding SelectedSerialDevice}"
+                       Background="#3C3C3C"
+                       Foreground="#CCCCCC"
+                       BorderBrush="#464647"
+                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                       ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                       Focusable="False">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel Orientation="Vertical" ItemWidth="150" ItemHeight="32" />
+                  </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <Border Background="#2D2D2D"
+                            CornerRadius="0"
+                            Padding="8,6"
+                            Margin="6,3"
+                            Width="140"
+                            Height="26">
+                      <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                        <icons:Icon Value="fa-solid fa-microchip" Width="12" Height="12" Foreground="#0E639C" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </ScrollViewer>
+
+            <!-- Scanning overlay -->
+            <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+              <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <fa:ProgressRing Width="64" Height="64" IsActive="{Binding IsScanning}" />
+              </Grid>
+            </Border>
+          </Grid>
+
+          <!-- Row 3: Status and Selection Info -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding StatusMessage}"
+                       Foreground="#858585"
+                       FontSize="12"
+                       VerticalAlignment="Center" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding SelectedSerialDevice, StringFormat='• Selected: {0}', FallbackValue='• Selected: None'}"
+                       Foreground="#858585"
+                       FontSize="12"
+                       VerticalAlignment="Center" />
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding DeviceCount, StringFormat='• {0} devices found'}"
+                       Foreground="#858585"
+                       FontSize="12"
+                       VerticalAlignment="Center" />
+          </Grid>
+
+          <!-- Row 4: Actions and Command Preview -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="4" Margin="0,0,16,0">
+              <TextBlock Text="Actions:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Background="#0E639C"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Padding="12,8"
+                        Command="{Binding StartSocatCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
+                    <TextBlock Text="Start socat" />
+                  </StackPanel>
+                </Button>
+
+                <Button Background="#D13438"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Padding="12,8"
+                        Command="{Binding StopSocatCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-stop" Width="14" Height="14" />
+                    <TextBlock Text="Stop" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="4">
+              <TextBlock Text="socat Command Preview:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <TextBox Text="{Binding SelectedProfileSocatCommand}"
+                       IsReadOnly="True"
+                       Background="#1E1E1E"
+                       Foreground="#CCCCCC"
+                       BorderBrush="#464647"
+                       Height="56"
+                       TextWrapping="Wrap" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Process Management Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Running Processes"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+              <Button Background="#D13438"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,8"
+                      Command="{Binding StopAllSocatCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-stop-circle" Width="16" Height="16" />
+                  <TextBlock Text="Stop All" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="Transparent"
+                      BorderBrush="#464647"
+                      Foreground="#CCCCCC"
+                      BorderThickness="1"
+                      Padding="12,8"
+                      Command="{Binding RefreshProcessesCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-sync" Width="16" Height="16" />
+                  <TextBlock Text="Refresh" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
+
+          <!-- Running Processes List -->
+          <DataGrid ItemsSource="{Binding RunningProcesses}"
+                    SelectedItem="{Binding SelectedProcess}"
+                    Background="#3C3C3C"
+                    Foreground="#CCCCCC"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    IsReadOnly="True"
+                    Height="150">
+            <DataGrid.Styles>
+              <Style Selector="DataGridColumnHeader">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Padding" Value="8,4,32,4" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                  <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                      <DockPanel>
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          DockPanel.Dock="Left"
+                                          VerticalAlignment="Center" />
+                      </DockPanel>
+                    </Border>
+                  </ControlTemplate>
+                </Setter>
+              </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+              <DataGridTextColumn Binding="{Binding ProcessId}" Width="80" MinWidth="60">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="PID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Profile.Name}" Width="140" MinWidth="100">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Profile" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding SerialDevice}" Width="120" MinWidth="100">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Serial Device" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding TcpPort}" Width="80" MinWidth="70">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Status}" Width="100" MinWidth="80">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Status" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding StartTime, StringFormat='HH:mm:ss'}" Width="80" MinWidth="70">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Started" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding RunningProcessCount, StringFormat='Running: {0} socat processes'}"
+                       Foreground="#858585"
+                       FontSize="12"
+                       VerticalAlignment="Center" />
+
+            <Button Grid.Column="1"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="12,6"
+                    Command="{Binding TestConnectionCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-network-wired" Width="14" Height="14" />
+                <TextBlock Text="Test Connection" />
+              </StackPanel>
+            </Button>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Import/Export Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Import/Export"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="24">
+            <Button Width="140" Background="#0E639C" Foreground="White" BorderThickness="0" Padding="12,8" Command="{Binding ExportProfilesCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <icons:Icon Value="fa-solid fa-download" Width="16" Height="16" />
+                <TextBlock Text="Export All" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="160" Background="#0E639C" Foreground="White" BorderThickness="0" Padding="12,8" Command="{Binding ExportSelectedProfileCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <icons:Icon Value="fa-solid fa-file-download" Width="16" Height="16" />
+                <TextBlock Text="Export Selected" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="120" Background="#0E639C" Foreground="White" BorderThickness="0" Padding="12,8" Command="{Binding ImportProfilesCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <icons:Icon Value="fa-solid fa-upload" Width="16" Height="16" />
+                <TextBlock Text="Import" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Export socat profiles to JSON files for backup or sharing. Import profiles from previously exported files."
+                     FontSize="11"
+                     Foreground="#858585"
+                     TextWrapping="Wrap" />
+
+          <!-- Profiles Path controls -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <TextBlock Text="Profiles Path:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBox Width="420" Text="{Binding ProfilesPath}" Background="#3C3C3C" Foreground="#CCCCCC" BorderBrush="#464647" Margin="8,0" />
+            <Button Content="Browse..." Background="#0E639C" Foreground="White" BorderThickness="0" Padding="12,6" Command="{Binding BrowseProfilesPathCommand}" />
+            <Button Background="Transparent" Foreground="#CCCCCC" BorderBrush="#464647" BorderThickness="1" Padding="8,6" ToolTip.Tip="Open in Explorer" Command="{Binding OpenProfilesPathCommand}">
+              <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+            </Button>
+            <Button Content="Load Default" Background="#007ACC" Foreground="White" BorderThickness="0" Padding="8,6" Command="{Binding ResetProfilesPathCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Status Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Status Information"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="4">
+              <TextBlock Text="Profile Management:"
+                         Foreground="#CCCCCC"
+                         FontWeight="SemiBold" />
+              <TextBlock Text="{Binding ProfileCount, StringFormat='• {0} profiles loaded'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+              <TextBlock Text="{Binding SelectedProfile.Name, StringFormat='• Selected: {0}', FallbackValue='• No profile selected'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="4">
+              <TextBlock Text="socat Operations:"
+                         Foreground="#CCCCCC"
+                         FontWeight="SemiBold" />
+              <TextBlock Text="{Binding DeviceCount, StringFormat='• {0} devices discovered'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+              <TextBlock Text="{Binding RunningProcessCount, StringFormat='• {0} processes running'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Loading Indicator -->
+          <StackPanel Orientation="Horizontal"
+                      Spacing="8"
+                      IsVisible="{Binding IsLoading}">
+            <icons:Icon Value="fa-solid fa-spinner"
+                        Width="16"
+                        Height="16"
+                        Foreground="#0E639C"
+                        Classes="spin" />
+            <TextBlock Text="Loading..."
+                       Foreground="#858585"
+                       FontSize="12" />
+          </StackPanel>
+
+          <!-- Status Message -->
+          <TextBlock Text="{Binding StatusMessage}"
+                     Foreground="#858585"
+                     FontSize="12"
+                     TextWrapping="Wrap" />
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
