@@ -14,10 +14,13 @@ public class DialogService : IDialogService
 {
     /// <inheritdoc/>
     public Interaction<ConfirmationRequest, bool> ShowConfirmation { get; }
-    
+
     /// <inheritdoc/>
     public Interaction<ConfirmationRequest, Unit> ShowError { get; }
-    
+
+    /// <inheritdoc/>
+    public Interaction<InputRequest, InputResult> ShowInput { get; }
+
     /// <summary>
     /// Initializes a new instance of the <see cref="DialogService"/> class.
     /// </summary>
@@ -25,6 +28,7 @@ public class DialogService : IDialogService
     {
         ShowConfirmation = new Interaction<ConfirmationRequest, bool>();
         ShowError = new Interaction<ConfirmationRequest, Unit>();
+        ShowInput = new Interaction<InputRequest, InputResult>();
     }
 
     /// <inheritdoc/>
@@ -39,5 +43,12 @@ public class DialogService : IDialogService
     {
         var request = new ConfirmationRequest(title, message);
         await ShowError.Handle(request).FirstAsync();
+    }
+
+    /// <inheritdoc/>
+    public async Task<InputResult> ShowInputAsync(string title, string message, string? defaultValue = null, string? placeholder = null)
+    {
+        var request = new InputRequest(title, message, defaultValue, placeholder);
+        return await ShowInput.Handle(request).FirstAsync();
     }
 }

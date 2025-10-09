@@ -23,7 +23,7 @@ public class SerialPortSettings
     /// </remarks>
     [Required(ErrorMessage = "Profiles path is required")]
     [StringLength(260, ErrorMessage = "Profiles path cannot exceed 260 characters")]
-    public string ProfilesPath { get; set; } = Path.Combine("Resources", "SerialProfiles");
+    public string ProfilesPath { get; set; } = Path.Combine("resources", "SerialProfiles");
 
     /// <summary>
     /// Gets or sets the ID of the default profile to use for new connections.
@@ -190,7 +190,7 @@ public class SerialPortSettings
     /// When enabled, the application will show notifications when ports are added,
     /// removed, or change status.
     /// </remarks>
-    public bool ShowPortChangeNotifications { get; set; } = false;
+    public bool ShowPortChangeNotifications { get; set; }
 
     #endregion
 
@@ -221,7 +221,7 @@ public class SerialPortSettings
     {
         return new SerialPortSettings
         {
-            ProfilesPath = Path.Combine("Resources", "SerialProfiles"),
+            ProfilesPath = Path.Combine("resources", "SerialProfiles"),
             DefaultProfileId = 1, // S7Tools default profile
             MaxProfiles = 100,
             AutoScanPorts = true,

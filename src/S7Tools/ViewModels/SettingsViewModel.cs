@@ -47,7 +47,7 @@ public class SettingsViewModel : ViewModelBase
     public string SelectedCategory
     {
         get => _selectedCategory;
-        set 
+        set
         {
             this.RaiseAndSetIfChanged(ref _selectedCategory, value);
             SelectedCategoryViewModel = GetCategoryViewModel(_selectedCategory);
@@ -76,7 +76,7 @@ public class SettingsViewModel : ViewModelBase
             "General" => new GeneralSettingsViewModel(),
             "Appearance" => new AppearanceSettingsViewModel(),
             "Advanced" => new AdvancedSettingsViewModel(),
-            "Serial Ports" => new GeneralSettingsViewModel(), // TODO: Implement SerialPortSettingsViewModel in Phase 3
+            "Serial Ports" => CreateSerialPortsSettingsViewModel(),
             _ => new GeneralSettingsViewModel()
         };
 
@@ -89,9 +89,20 @@ public class SettingsViewModel : ViewModelBase
         var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         var logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
-        
+
         return new LoggingSettingsViewModel(settingsService, fileDialogService, logger);
     }
 
-    // TODO: Implement CreateSerialPortSettingsViewModel in Phase 3
+    private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()
+    {
+        var profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
+        var portService = _serviceProvider.GetRequiredService<ISerialPortService>();
+        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+    var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+    var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+    var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
+
+    return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
+    }
 }

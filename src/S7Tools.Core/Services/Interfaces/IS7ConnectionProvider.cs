@@ -132,17 +132,17 @@ public sealed record S7ConnectionConfig(
             return Result<S7ConnectionConfig>.Failure("IP address cannot be null or empty");
         }
 
-        if (port <= 0 || port > 65535)
+        if (port is <= 0 or > 65535)
         {
             return Result<S7ConnectionConfig>.Failure("Port must be between 1 and 65535");
         }
 
-        if (rack < 0 || rack > 7)
+        if (rack is < 0 or > 7)
         {
             return Result<S7ConnectionConfig>.Failure("Rack must be between 0 and 7");
         }
 
-        if (slot < 0 || slot > 31)
+        if (slot is < 0 or > 31)
         {
             return Result<S7ConnectionConfig>.Failure("Slot must be between 0 and 31");
         }
@@ -198,6 +198,6 @@ public sealed record PlcInfo(
     /// <summary>
     /// Returns a formatted string representation of the PLC information.
     /// </summary>
-    public override string ToString() => 
+    public override string ToString() =>
         $"{CpuType} - {ModuleName} (S/N: {SerialNumber}, FW: {FirmwareVersion})";
 }

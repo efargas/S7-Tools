@@ -208,6 +208,28 @@ public class SerialPortProfile
     }
 
     /// <summary>
+    /// Creates a deep copy of this profile while preserving the profile Id and flags.
+    /// This is intended for read/export operations where the persisted identity must be retained.
+    /// </summary>
+    /// <returns>A new SerialPortProfile instance with identical settings including Id.</returns>
+    public SerialPortProfile ClonePreserveId()
+    {
+        return new SerialPortProfile
+        {
+            Id = Id,
+            Name = Name,
+            Description = Description,
+            Configuration = Configuration.Clone(),
+            IsDefault = IsDefault,
+            IsReadOnly = IsReadOnly,
+            CreatedAt = CreatedAt,
+            ModifiedAt = ModifiedAt,
+            Version = Version,
+            Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
+        };
+    }
+
+    /// <summary>
     /// Creates a copy of this profile with a new name.
     /// </summary>
     /// <param name="newName">The name for the duplicated profile.</param>
@@ -295,12 +317,16 @@ public class SerialPortProfile
     public string GetSummary()
     {
         var summary = $"{Name}: {Configuration.BaudRate} baud, {Configuration.CharacterSize} bits";
-        
+
         if (IsDefault)
+        {
             summary += " (Default)";
-        
+        }
+
         if (IsReadOnly)
+        {
             summary += " (Read-Only)";
+        }
 
         return summary;
     }
@@ -322,7 +348,9 @@ public class SerialPortProfile
     public override bool Equals(object? obj)
     {
         if (obj is not SerialPortProfile other)
+        {
             return false;
+        }
 
         return Id == other.Id && Name == other.Name;
     }

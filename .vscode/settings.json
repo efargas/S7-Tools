@@ -1,5 +1,11 @@
 {
     "geminicodeassist.agentYoloMode": true,
     "geminicodeassist.agentDebugMode": true,
-    "codium.codeCompletion.enable": false
+    "codium.codeCompletion.enable": false,
+    "workbench.editor.alwaysShowEditorActions": true,
+    "workbench.editor.autoLockGroups": {
+        "pdf.preview": true,
+        "mainThreadWebview-markdown.preview": true
+    },
+    "github.copilot.chat.useResponsesApi": false
 }

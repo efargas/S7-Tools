@@ -204,7 +204,7 @@ services.AddSingleton<IServiceInterface, ServiceImplementation>();
 public class MyService
 {
     private readonly IDependency _dependency;
-    
+
     public MyService(IDependency dependency)
     {
         _dependency = dependency ?? throw new ArgumentNullException(nameof(dependency));
@@ -277,7 +277,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILongLivedService, LongLivedService>();
         services.AddScoped<IRequestScopedService, RequestScopedService>();
         services.AddTransient<ITransientService, TransientService>();
-        
+
         return services;
     }
 }
@@ -466,6 +466,106 @@ dotnet list src/S7Tools.sln reference
 - **Error Handling**: Implement proper exception handling with user-friendly messages
 - **Thread Safety**: Use `IUIThreadService` for cross-thread UI operations
 
+### ReactiveUI Best Practices & Lessons Learned
+
+#### Property Change Monitoring
+**❌ AVOID: Large WhenAnyValue calls with many properties**
+```csharp
+// DON'T DO THIS - Creates large tuples, has 12-property limit, poor performance
+var allChanges = this.WhenAnyValue(
+    x => x.Prop1, x => x.Prop2, x => x.Prop3, x => x.Prop4,
+    x => x.Prop5, x => x.Prop6, x => x.Prop7, x => x.Prop8,
+    x => x.Prop9, x => x.Prop10, x => x.Prop11, x => x.Prop12)
+    .Select(_ => Unit.Default);
+```
+
+**✅ PREFERRED: Individual property subscriptions**
+```csharp
+// DO THIS - Better performance, no limits, more maintainable
+private void SetupValidation()
+{
+    void OnPropertyChanged()
+    {
+        HasChanges = true;
+        UpdateSttyCommand();
+        ValidateConfiguration();
+    }
+
+    this.WhenAnyValue(x => x.PropertyName)
+        .Skip(1) // Skip initial value
+        .Subscribe(_ => OnPropertyChanged())
+        .DisposeWith(_disposables);
+
+    // Repeat for each property...
+}
+```
+
+#### Key ReactiveUI Constraints & Solutions
+
+1. **WhenAnyValue Property Limit**
+   - **Constraint**: Maximum 12 properties per `WhenAnyValue` call
+   - **Solution**: Use individual subscriptions or break into smaller groups with `Observable.Merge`
+
+2. **Tuple Creation Performance**
+   - **Problem**: Large `WhenAnyValue` calls create unnecessary tuples for every change
+   - **Solution**: Individual subscriptions avoid tuple allocation overhead
+
+3. **Compilation Errors**
+   - **Common Error**: `"string" does not contain a definition for "PropertyName"`
+   - **Root Cause**: Missing `using ReactiveUI;` or class not inheriting `ReactiveObject`
+   - **Fix**: Ensure proper inheritance and using statements
+
+4. **Missing Commas in WhenAnyValue**
+   - **Problem**: Syntax errors when properties lack commas between lambda expressions
+   - **Solution**: Always verify comma separation in multi-property calls
+
+#### Performance Guidelines
+
+- **Individual Subscriptions**: Use for 3+ properties or when performance matters
+- **Small WhenAnyValue Groups**: Acceptable for 2-3 related properties
+- **Observable.Merge**: Use to combine multiple observables when needed
+- **Skip(1)**: Always skip initial values to prevent false change detection
+- **DisposeWith**: Ensure all subscriptions are properly disposed
+
+#### Debugging ReactiveUI Issues
+
+1. **Check Class Inheritance**: Ensure ViewModel inherits from `ReactiveObject` or `ViewModelBase`
+2. **Verify Using Statements**: Confirm `using ReactiveUI;` is present
+3. **Property Syntax**: Ensure properties use `RaiseAndSetIfChanged` pattern
+4. **Subscription Disposal**: All reactive subscriptions must be disposed properly
+5. **Initial Value Handling**: Use `Skip(1)` to avoid processing initial property values
+
+#### Memory Bank: Critical Patterns
+
+**Property Change Monitoring Pattern (Recommended)**:
+```csharp
+private void SetupValidation()
+{
+    // Shared handler for all property changes
+    void OnPropertyChanged()
+    {
+        HasChanges = true;
+        UpdateCommand();
+        ValidateData();
+    }
+
+    // Individual subscriptions for each property
+    this.WhenAnyValue(x => x.Property1).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+    this.WhenAnyValue(x => x.Property2).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+    // ... continue for all properties
+}
+```
+
+**Command Enablement Pattern**:
+```csharp
+var canExecute = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
+    .Select(tuple => tuple.Item1 && tuple.Item2 && !tuple.Item3);
+
+MyCommand = ReactiveCommand.CreateFromTask(ExecuteAsync, canExecute);
+```
+
+These patterns ensure optimal performance, maintainability, and avoid common ReactiveUI pitfalls.
+
 ---
 
 ## Additional Context
@@ -493,7 +593,23 @@ dotnet list src/S7Tools.sln reference
 
 ---
 
-**Last Updated**: Current Session  
-**Project Version**: Development  
-**Minimum .NET Version**: 8.0  
+**Last Updated**: 2025-10-08
+**Project Version**: Development
+**Minimum .NET Version**: 8.0
 **Supported Platforms**: Windows, Linux, macOS
+
+## Recent Session Notes (2025-10-08)
+
+- UI / Serial Ports fixes
+    - Fixed cross-thread DataGrid crash by marshaling profile collection updates to the UI thread using an injected IUIThreadService in `SerialPortsSettingsViewModel`.
+    - Added ProfilesPath control to Serial Ports settings with Browse, Open in Explorer, and Load Default actions (default path: resources/SerialProfiles).
+    - Resolved DataGrid header styling/truncation by using Avalonia `DataGrid.Styles` and smaller header padding + TextTrimming on headers.
+
+- Persistence & Logging
+    - Serial port profiles are now created automatically when missing; `profiles.json` is created under the app runtime resources folder (e.g. `src/S7Tools/bin/Debug/net8.0/resources/SerialProfiles/profiles.json`).
+    - Added a minimal `FileLogWriter` service to persist in-memory logs to disk under the configured `Logging.DefaultLogPath`. Registered in DI for automatic startup.
+
+- Verification & Next Steps
+    - Solution builds successfully (latest build: "Build succeeded" with warnings).
+    - Manual UI verification is pending: open Settings → Serial Ports and confirm automatic load, Browse/Open, and Load Default behavior.
+    - Known follow-ups: investigate some runtime exceptions related to profile operations (e.g. "Profile ID must be greater than zero") and improve FileLogWriter (rotation/retention).

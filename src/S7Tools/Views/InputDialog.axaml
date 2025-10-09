@@ -1,0 +1,102 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:S7Tools.ViewModels"
+        mc:Ignorable="d"
+        x:Class="S7Tools.Views.InputDialog"
+        x:DataType="vm:InputDialogViewModel"
+        Title="{Binding Title}"
+        Width="450"
+        Height="250"
+        MinWidth="350"
+        MinHeight="200"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="False"
+        SystemDecorations="BorderOnly">
+
+    <Design.DataContext>
+        <vm:InputDialogViewModel />
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#CCCCCC" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#3C3C3C" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,6" />
+        </Style>
+        <Style Selector="Button">
+            <Setter Property="MinWidth" Value="80" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#007ACC" />
+            <Setter Property="BorderBrush" Value="#007ACC" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style Selector="Button.primary:pointerover">
+            <Setter Property="Background" Value="#005A9E" />
+            <Setter Property="BorderBrush" Value="#005A9E" />
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#464647" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+        </Style>
+        <Style Selector="Button.secondary:pointerover">
+            <Setter Property="Background" Value="#525253" />
+            <Setter Property="BorderBrush" Value="#525253" />
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="16" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Message -->
+        <TextBlock Grid.Row="0"
+                   Text="{Binding Message}"
+                   TextWrapping="Wrap"
+                   FontSize="14"
+                   LineHeight="20" />
+
+        <!-- Input Field -->
+        <TextBox Grid.Row="2"
+                 Text="{Binding InputValue, Mode=TwoWay}"
+                 Watermark="{Binding Placeholder}"
+                 FontSize="14"
+                 x:Name="InputTextBox" />
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="6"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button Content="Cancel"
+                    Classes="secondary"
+                    Command="{Binding CancelCommand}"
+                    IsCancel="True" />
+            <Button Content="OK"
+                    Classes="primary"
+                    Command="{Binding OkCommand}"
+                    IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</Window>

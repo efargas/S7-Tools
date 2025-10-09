@@ -1,7 +1,7 @@
 # Instructions: S7Tools Development Guidelines
 
-**Last Updated**: January 2025 - New Functionality Phase  
-**Context Type**: Development patterns, architecture rules, and implementation guidelines  
+**Last Updated**: January 2025 - New Functionality Phase
+**Context Type**: Development patterns, architecture rules, and implementation guidelines
 
 ## Critical Development Rules
 
@@ -59,7 +59,7 @@ services.AddSingleton<IServiceInterface, ServiceImplementation>();
 public class MyService
 {
     private readonly IDependency _dependency;
-    
+
     public MyService(IDependency dependency)
     {
         _dependency = dependency ?? throw new ArgumentNullException(nameof(dependency));
@@ -75,15 +75,15 @@ public class ExampleViewModel : ReactiveObject, IDisposable
 {
     private readonly IService _service;
     private readonly CompositeDisposable _disposables = new();
-    
+
     public ExampleViewModel(IService service)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         InitializeCommands();
     }
-    
+
     public ReactiveCommand<Unit, Unit> ExampleCommand { get; private set; }
-    
+
     private void InitializeCommands()
     {
         ExampleCommand = ReactiveCommand.CreateFromTask(ExecuteExampleAsync);
@@ -91,7 +91,7 @@ public class ExampleViewModel : ReactiveObject, IDisposable
             .Subscribe(ex => /* handle exceptions */)
             .DisposeWith(_disposables);
     }
-    
+
     public void Dispose() => _disposables?.Dispose();
 }
 ```
@@ -219,12 +219,12 @@ public interface INewFeatureService
 public class NewFeatureService : INewFeatureService
 {
     private readonly ILogger<NewFeatureService> _logger;
-    
+
     public NewFeatureService(ILogger<NewFeatureService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    
+
     public async Task<Result<T>> DoSomethingAsync(Parameters parameters)
     {
         try
@@ -255,7 +255,7 @@ public class NewFeatureViewModel : ReactiveObject, IDisposable
 {
     private readonly INewFeatureService _service;
     private readonly CompositeDisposable _disposables = new();
-    
+
     // Follow established ReactiveUI patterns
 }
 ```
@@ -314,8 +314,78 @@ public class NewFeatureViewModel : ReactiveObject, IDisposable
 
 ---
 
-**Document Status**: Living guidelines for S7Tools development  
-**Next Update**: When new patterns are established or architecture changes  
-**Owner**: Development Team with AI Assistance  
+**Document Status**: Living guidelines for S7Tools development
+**Next Update**: When new patterns are established or architecture changes
+**Owner**: Development Team with AI Assistance
 
 **Key Reminder**: These patterns and rules are established and working. Follow them consistently to maintain application quality and architecture integrity.
+
+## Recent Session Accomplishments
+
+### **🎉 MAJOR BREAKTHROUGH: UI Dialog Integration Complete (2025-10-09)**
+
+**Profile Name Conflict Resolution Enhancement**
+- ✅ **Replaced exception throwing** with intelligent naming strategies using automatic suffix naming (`_1`, `_2`, `_3`, etc.)
+- ✅ **Implemented fallback mechanisms** for edge cases with timestamp-based unique names
+- ✅ **Integrated comprehensive UI dialog system** for manual conflict resolution when automatic fails
+
+**Complete UI Dialog System Implementation**
+- ✅ **InputRequest/InputResult Models**: Clean data transfer objects for dialog communication
+- ✅ **IDialogService Extension**: Added `ShowInput` interaction for text input dialogs using ReactiveUI patterns
+- ✅ **DialogService Implementation**: Full ReactiveUI interaction support for confirmation, error, and input dialogs
+- ✅ **InputDialog UI Components**:
+  - Professional Avalonia XAML view with VSCode-style theming
+  - ReactiveUI ViewModel with proper command binding
+  - Keyboard navigation support (Enter/Escape keys)
+  - Focus management and user experience enhancements
+- ✅ **Application Integration**: Complete integration in `App.axaml.cs` with proper error handling and dialog handler registration
+
+**Technical Excellence Achieved**
+- ✅ **Architecture Compliance**: Clean Architecture maintained with proper dependency flow
+- ✅ **Thread Safety**: SemaphoreSlim-based concurrency control for profile operations
+- ✅ **Quality Assurance**: 168 tests passing, successful compilation with only warnings
+- ✅ **Error Handling**: Comprehensive logging and graceful fallbacks throughout
+- ✅ **User Experience**: Professional dialog interactions with smart conflict resolution
+
+**Pattern Established: ReactiveUI Dialog Integration**
+```csharp
+// Service Integration Pattern (Required for all dialog services)
+public class ServiceWithDialogs
+{
+    private readonly IDialogService _dialogService;
+
+    // Use ShowInput for text input with validation
+    var result = await _dialogService.ShowInputAsync(
+        new InputRequest("Profile Name Conflict",
+                        $"Name '{originalName}' already exists. Please enter a new name:",
+                        suggestedName,
+                        "Enter unique profile name"));
+
+    if (!result.IsCancelled && !string.IsNullOrWhiteSpace(result.Value))
+    {
+        // Process user input
+    }
+}
+
+// App.axaml.cs Registration Pattern (Required for all dialogs)
+dialogService.ShowInput.RegisterHandler(async interaction =>
+{
+    var dialog = new InputDialog
+    {
+        DataContext = new InputDialogViewModel(interaction.Input)
+    };
+    var result = await dialog.ShowDialog<InputResult?>(mainWindow);
+    interaction.SetOutput(result ?? InputResult.Cancelled());
+});
+```
+
+### **Previous Session Notes (2025-10-08)**
+
+- **UI / Serial Ports fixes**
+    - Fixed cross-thread DataGrid crash by marshaling profile collection updates to the UI thread using an injected IUIThreadService in `SerialPortsSettingsViewModel`.
+    - Added ProfilesPath control to Serial Ports settings with Browse, Open in Explorer, and Load Default actions (default path: resources/SerialProfiles).
+    - Resolved DataGrid header styling/truncation by using Avalonia `DataGrid.Styles` and smaller header padding + TextTrimming on headers.
+
+- **Persistence & Logging**
+    - Serial port profiles are now created automatically when missing; `profiles.json` is created under the app runtime resources folder (e.g. `src/S7Tools/bin/Debug/net8.0/resources/SerialProfiles/profiles.json`).
+    - Added a minimal `FileLogWriter` service to persist in-memory logs to disk under the configured `Logging.DefaultLogPath`. Registered in DI for automatic startup.
