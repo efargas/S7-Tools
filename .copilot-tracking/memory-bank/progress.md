@@ -11,6 +11,23 @@
 **Started**: 2025-10-09
 **Estimated Time**: 15-20 hours across 6 phases
 
+### **📋 Parallel Task: TASK004 - Deferred Code Improvements (BLOCKED)**
+**Status**: 🚫 **BLOCKED** (Until TASK003 complete)
+**Priority**: Medium (Quality improvements, not functional requirements)
+**Created**: 2025-10-09
+**Estimated Time**: 22-30 hours across 5 phases
+
+**Blocking Reason**: Architectural improvements could interfere with socat implementation. These quality enhancements should be implemented after socat is complete and stable to avoid interference with high-priority feature development.
+
+**Deferred Improvements Summary**:
+1. **File-Scoped Namespaces** (3-4 hours) - Convert all C# files to C# 10+ file-scoped namespace syntax
+2. **Extensive Result Pattern** (8-12 hours) - Expand Result<T> usage beyond PLC operations to all service methods
+3. **Configuration Centralization** (5-6 hours) - Create centralized configuration management system
+4. **DI Simplification** (4-5 hours) - Simplify dependency injection container registration patterns
+5. **Constants Implementation** (2-3 hours) - Replace remaining magic strings with named constants
+
+**Next Action**: Monitor TASK003 completion, then unblock TASK004 for quality improvements
+
 #### **📋 Implementation Overview**
 
 **Purpose**: Implement "Servers" settings category for configuring socat (Serial-to-TCP Proxy) that bridges serial devices to TCP sockets for network-based PLC communication.

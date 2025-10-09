@@ -1,7 +1,7 @@
 # Tasks Index
 
-**Last Updated**: 2025-10-09 - Servers Settings Implementation Started
-**Total Tasks**: 3
+**Last Updated**: 2025-10-09 - Deferred Improvements Task Added
+**Total Tasks**: 4
 
 ## Active Tasks
 
@@ -26,6 +26,27 @@
 6. ⏳ **Testing & Validation** (2-3 hours) - Pending
 
 **Next Steps**: Complete socat parameter research, design core models
+
+## Blocked Tasks
+
+### **[TASK004]** Deferred Code Improvements Implementation
+**Status**: 🚫 **BLOCKED** (Until TASK003 complete)
+**Priority**: Medium
+**Created**: 2025-10-09
+**Description**: Implementation of deferred architectural improvements from external code review - file-scoped namespaces, extensive Result pattern, configuration centralization, DI simplification
+
+#### **Blocking Reason**
+Architectural improvements could interfere with socat implementation. These quality improvements should be implemented after socat is complete and stable.
+
+**Deferred Improvements**:
+1. **File-Scoped Namespaces** (3-4 hours) - Convert all C# files to file-scoped namespace syntax
+2. **Extensive Result Pattern** (8-12 hours) - Expand Result<T> usage to all service methods
+3. **Configuration Centralization** (5-6 hours) - Create centralized configuration management
+4. **DI Simplification** (4-5 hours) - Simplify dependency injection patterns
+5. **Constants Implementation** (2-3 hours) - Replace magic strings with named constants
+
+**Total Estimated Time**: 22-30 hours across 5 phases
+**Next Action**: Monitor TASK003 completion, then unblock for implementation
 
 ## Recently Completed
 
@@ -70,9 +91,9 @@
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| Completed | 2 | 100% |
-| Active | 0 | 0% |
-| Blocked | 0 | 0% |
+| Completed | 2 | 50% |
+| Active | 1 | 25% |
+| Blocked | 1 | 25% |
 | Cancelled | 0 | 0% |
 
 ## Development Readiness

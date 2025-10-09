@@ -12,6 +12,16 @@
 **Phase 1 Completed**: 2025-10-09
 **Estimated Time**: 15-20 hours across 6 phases
 
+### **📋 Parallel Task: TASK004 - Deferred Code Improvements (BLOCKED)**
+**Priority**: Medium (Quality improvements, not functional requirements)
+**Status**: 🚫 **BLOCKED** (Until TASK003 complete)
+**Created**: 2025-10-09
+**Estimated Time**: 22-30 hours across 5 phases
+
+**Blocking Dependency**: TASK003 (socat implementation) must be complete before implementing architectural improvements to avoid interference with high-priority feature development.
+
+**Task Summary**: Implementation of deferred architectural improvements from external code review including file-scoped namespaces, extensive Result pattern, configuration centralization, and DI simplification.
+
 #### **🎯 Current Objective: socat Configuration Settings**
 
 **Purpose**: Implement a new settings category "Servers" for configuring socat (Serial-to-TCP Proxy). The application will connect to PLC's serial port via TCP socket using socat to forward the serial device to a TCP port.
