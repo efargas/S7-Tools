@@ -442,8 +442,13 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         var canSave = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
             .Select(tuple => tuple.Item1 && tuple.Item2 && !tuple.Item3);
 
-        SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync, canSave);
-        SaveCommand.ThrownExceptions
+        var backgroundScheduler = RxApp.TaskpoolScheduler;
+        var uiScheduler = RxApp.MainThreadScheduler;
+
+        SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync, canSave, backgroundScheduler);
+        SaveCommand
+            .ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "saving profile"))
             .DisposeWith(_disposables);
 
