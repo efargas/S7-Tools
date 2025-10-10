@@ -1073,18 +1073,11 @@ public class SocatProfileService : ISocatProfileService, IDisposable
         }
 
         // Last resort: ask user for input via dialog service
-        var inputRequest = new InputRequest(
+        var result = await _dialogService.ShowInputAsync(
             "Profile Name Conflict",
             $"Name '{desiredName}' already exists. Please enter a new name:",
             timestampName,
             "Enter unique profile name"
-        );
-
-        var result = await _dialogService.ShowInputAsync(
-            inputRequest.Title,
-            inputRequest.Message,
-            inputRequest.DefaultValue,
-            inputRequest.Placeholder
         ).ConfigureAwait(false);
         if (result.IsCancelled || string.IsNullOrWhiteSpace(result.Value))
         {
