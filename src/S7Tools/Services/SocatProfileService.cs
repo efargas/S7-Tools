@@ -831,11 +831,17 @@ public class SocatProfileService : ISocatProfileService, IDisposable
             _logger.LogDebug("Loading existing socat profiles from {FilePath}", GetProfilesFilePath());
             await LoadProfilesAsync(cancellationToken).ConfigureAwait(false);
 
-            // Ensure default profile exists
+            // Ensure default profile exists without re-entering the semaphore
             var defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
             if (defaultProfile == null)
             {
-                await EnsureDefaultProfileExistsAsync(cancellationToken).ConfigureAwait(false);
+                var systemDefault = SocatProfile.CreateDefaultProfile();
+                systemDefault.Id = _nextId++;
+                systemDefault.CreatedAt = DateTime.UtcNow;
+                systemDefault.ModifiedAt = DateTime.UtcNow;
+                _profiles.Add(systemDefault);
+                await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation("Created system default socat profile '{ProfileName}' with ID {ProfileId}", systemDefault.Name, systemDefault.Id);
             }
 
             _isInitialized = true;
