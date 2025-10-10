@@ -245,7 +245,7 @@
                        FontSize="12" />
 
             <TextBlock Grid.Column="1"
-                       Text="{Binding SelectedProfile.Name, StringFormat='Selected: {0}', FallbackValue='Selected: None'}"
+                       Text="{Binding StatusMessage}"
                        Foreground="#858585"
                        FontSize="12" />
 
@@ -479,7 +479,7 @@
               <TextBlock Text="{Binding ProfileCount, StringFormat='• {0} profiles loaded'}"
                          Foreground="#858585"
                          FontSize="12" />
-              <TextBlock Text="{Binding SelectedProfile.Name, StringFormat='• Selected: {0}', FallbackValue='• No profile selected'}"
+              <TextBlock Text="{Binding StatusMessage, StringFormat='• {0}'}"
                          Foreground="#858585"
                          FontSize="12" />
             </StackPanel>

@@ -360,6 +360,36 @@ public static class ServiceCollectionExtensions
             var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
             logger?.LogError(ex, "Failed to retrieve ISerialPortProfileService during service initialization");
         }
+
+        // Initialize Socat Profile storage in background to ensure profiles folder/file are created.
+        try
+        {
+            var socatProfileService = serviceProvider.GetService<ISocatProfileService>();
+            if (socatProfileService != null)
+            {
+                // Fire-and-forget initialization with proper error logging
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await socatProfileService.InitializeStorageAsync().ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log the error instead of swallowing it silently
+                        var logger = serviceProvider.GetService<ILogger<ISocatProfileService>>();
+                        logger?.LogError(ex, "Failed to initialize socat profile storage during application startup");
+                    }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log service retrieval errors instead of ignoring them
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
+            logger?.LogError(ex, "Failed to retrieve ISocatProfileService during service initialization");
+        }
     }
 
     /// <summary>

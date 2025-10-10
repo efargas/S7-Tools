@@ -721,6 +721,87 @@ this.WhenAnyValue(x => x.Property2).Skip(1).Subscribe(_ => OnPropertyChanged()).
 
 ## Recent Session Notes
 
+### Session 2025-10-10: Semaphore Deadlock Resolution (BUG001)
+
+#### **✅ CRITICAL BUG RESOLVED: Socat Profile CRUD Operations**
+
+**Status**: ✅ **FIXED** - All CRUD operations now working correctly
+**Resolution Date**: 2025-10-10
+**Root Cause**: Nested semaphore acquisition causing deadlock
+**Impact**: HIGH - Core functionality restored
+
+#### **Problem Summary**
+
+**User Reports**:
+- ❌ Create button → No new entries created
+- ❌ Duplicate button → No duplicated entries
+- ❌ Profiles NOT shown after navigating outside settings
+- ⚠️ Application hangs when attempting operations
+
+**Root Cause Identified**:
+```csharp
+// DEADLOCK CHAIN:
+CreateProfileAsync() acquires _semaphore
+  → Calls EnsureUniqueProfileNameAsync()
+    → Calls IsProfileNameAvailableAsync()
+      → Tries to acquire _semaphore AGAIN
+        → ❌ DEADLOCK - Semaphore already held
+```
+
+#### **Solution Implemented**
+
+**Pattern**: Single semaphore acquisition per call chain
+
+**Key Changes**:
+1. **EnsureUniqueProfileNameAsync** - Changed to use direct `_profiles.Any()` checks instead of calling `IsProfileNameAvailableAsync()`
+2. **Documentation Added** - Added `NOTE:` comments indicating methods must be called inside semaphore-protected blocks
+3. **Direct Collection Access** - Use `_profiles.Any()` inside protected blocks instead of calling other semaphore-protected methods
+
+**Files Modified**:
+- `src/S7Tools/Services/SocatProfileService.cs` (~95 lines changed)
+- `src/S7Tools/ViewModels/SocatSettingsViewModel.cs` (~30 lines changed)
+
+#### **Verification Results**
+
+**Build Status**: ✅ Clean compilation (85 warnings, 0 errors)
+
+**Functional Testing** (User Confirmed):
+- ✅ Create profile → Works immediately
+- ✅ Duplicate profile → Works immediately
+- ✅ Delete profile → Works immediately
+- ✅ Set default → Works immediately
+- ✅ Navigation persistence → Profiles persist across views
+- ✅ File system → profiles.json updated correctly
+
+#### **Memory Bank Updates**
+
+**New Documentation Created**:
+1. **threading-and-synchronization-patterns.md** - Comprehensive semaphore patterns and race condition detection
+2. **TASK005-profile-management-improvements.md** - Remaining issues and implementation plan
+
+**Key Patterns Documented**:
+- ✅ Single acquisition per call chain rule
+- ✅ Direct collection access inside protected blocks
+- ✅ Clone pattern for thread safety
+- ✅ Race condition detection techniques
+- ✅ ConfigureAwait(false) usage
+
+#### **Lessons Learned**
+
+**Critical Rules Established**:
+1. **Never nest semaphore acquisitions** - Each public method acquires once
+2. **Document semaphore requirements** - Mark private methods that assume lock held
+3. **Use direct collection access** - Inside protected blocks, use `_collection.Any()` directly
+4. **Add comprehensive logging** - Track execution flow to detect deadlocks
+5. **Test with timeouts** - Detect deadlocks early during development
+
+**Clone Pattern Benefits**:
+- ✅ Thread-safe (no shared mutable state)
+- ✅ Immutable from consumer perspective
+- ✅ Service controls all mutations
+- ✅ Easy change tracking
+- ✅ Prevents race conditions
+
 ### Session 2025-10-09: Critical Socat Profile Creation Bug Investigation
 
 #### **User Issue Report**

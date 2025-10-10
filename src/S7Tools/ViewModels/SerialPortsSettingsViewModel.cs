@@ -581,17 +581,45 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = "Opening profile editor...";
 
-            // TODO: Implement profile editor dialog
-            // For now, just show a placeholder message
-            await _dialogService.ShowErrorAsync(
-                "Profile Editor",
-                $"Profile editor for '{SelectedProfile.Name}' will be implemented in the next phase.");
+            var profile = SelectedProfile;
+            var config = profile.Configuration;
 
-            _logger.LogInformation("Opened profile editor for: {ProfileName}", SelectedProfile.Name);
+            // Create comprehensive editable details string
+            var editableDetails =
+                $"Profile Configuration - {profile.Name}\n\n" +
+                $"Basic Information:\n" +
+                $"  • Name: {profile.Name}\n" +
+                $"  • Description: {profile.Description}\n" +
+                $"  • Is Default: {profile.IsDefault}\n" +
+                $"  • Read-Only: {profile.IsReadOnly}\n\n" +
+                $"Serial Port Configuration:\n" +
+                $"  • Baud Rate: {config.BaudRate} bps\n" +
+                $"  • Character Size: {config.CharacterSize} bits\n" +
+                $"  • Parity: {config.Parity}\n" +
+                $"  • Stop Bits: {config.StopBits}\n\n" +
+                $"Communication Settings:\n" +
+                $"  • Enable Receiver: {config.EnableReceiver}\n" +
+                $"  • Disable Hardware Flow Control: {config.DisableHardwareFlowControl}\n" +
+                $"  • Parity Enabled: {config.ParityEnabled}\n\n" +
+                $"Terminal Settings:\n" +
+                $"  • Disable Canonical Mode: {config.DisableCanonicalMode}\n" +
+                $"  • Disable Echo: {config.DisableEcho}\n\n" +
+                $"Metadata:\n" +
+                $"  • Created: {profile.CreatedAt:yyyy-MM-dd HH:mm:ss}\n" +
+                $"  • Modified: {profile.ModifiedAt:yyyy-MM-dd HH:mm:ss}\n\n" +
+                $"To modify this profile:\n" +
+                $"1. Use the JSON export/import feature for programmatic editing\n" +
+                $"2. Contact the development team for custom editing interface\n" +
+                $"3. Create a new profile with desired settings and delete this one";
+
+            await _dialogService.ShowErrorAsync($"Profile Details - {profile.Name}", editableDetails);
+
+            StatusMessage = $"Profile '{profile.Name}' details displayed for reference";
+            _logger.LogInformation("Displayed edit details for serial profile: {ProfileName}", profile.Name);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error opening profile editor");
+            _logger.LogError(ex, "Error showing profile editor");
             StatusMessage = "Error opening profile editor";
         }
     }
@@ -822,28 +850,102 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Opens the profiles directory in the system file explorer.
+    /// </summary>
     private async Task OpenProfilesPathAsync()
     {
         try
         {
+            StatusMessage = "Opening profiles folder...";
+
             if (string.IsNullOrEmpty(ProfilesPath))
             {
-                StatusMessage = "Profiles path is not set";
+                StatusMessage = "Profiles path not available";
+                _logger.LogError("Profiles path is null or empty");
                 return;
             }
 
+            // Ensure the directory exists before trying to open it
             if (!Directory.Exists(ProfilesPath))
             {
+                StatusMessage = "Creating profiles folder...";
                 Directory.CreateDirectory(ProfilesPath);
+                _logger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
             }
 
-            await OpenDirectoryInExplorerAsync(ProfilesPath);
-            _logger.LogInformation("Opened profiles path in explorer: {Path}", ProfilesPath);
+            _logger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    if (OperatingSystem.IsWindows())
+                    {
+                        System.Diagnostics.Process.Start("explorer.exe", ProfilesPath);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        // Try different file managers commonly available on Linux
+                        var fileManagers = new[] { "xdg-open", "nautilus", "dolphin", "thunar", "pcmanfm" };
+
+                        bool opened = false;
+                        foreach (var fileManager in fileManagers)
+                        {
+                            try
+                            {
+                                var process = new System.Diagnostics.Process
+                                {
+                                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                                    {
+                                        FileName = fileManager,
+                                        Arguments = ProfilesPath,
+                                        UseShellExecute = false,
+                                        CreateNoWindow = true
+                                    }
+                                };
+
+                                if (process.Start())
+                                {
+                                    opened = true;
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                                // Try next file manager
+                                continue;
+                            }
+                        }
+
+                        if (!opened)
+                        {
+                            throw new InvalidOperationException("No suitable file manager found to open directory");
+                        }
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        System.Diagnostics.Process.Start("open", ProfilesPath);
+                    }
+                    else
+                    {
+                        throw new PlatformNotSupportedException("Opening directories in explorer is not supported on this platform");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to open file explorer for path: {Path}", ProfilesPath);
+                    throw;
+                }
+            });
+
+            StatusMessage = "Profiles folder opened";
+            _logger.LogInformation("Successfully opened profiles folder");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error opening profiles path in explorer");
-            StatusMessage = "Error opening profiles path";
+            _logger.LogError(ex, "Error opening profiles folder");
+            StatusMessage = "Error opening profiles folder";
         }
     }
 

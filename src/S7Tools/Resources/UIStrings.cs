@@ -15,9 +15,14 @@ public static class UIStrings
     /// </summary>
     public static IResourceManager ResourceManager
     {
-        get => _resourceManager ?? throw new InvalidOperationException("ResourceManager not initialized");
+        get => _resourceManager ?? throw new InvalidOperationException("ResourceManager not initialized. Ensure App.Initialize() has been called.");
         set => _resourceManager = value ?? throw new ArgumentNullException(nameof(value));
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the ResourceManager is initialized.
+    /// </summary>
+    public static bool IsInitialized => _resourceManager != null;
 
     #region Application Strings
 
@@ -315,57 +320,56 @@ public static class UIStrings
     /// <summary>
     /// Gets the title for the clear logs confirmation dialog.
     /// </summary>
-    public static string LogViewer_ClearLogsTitle => ResourceManager.GetString("LogViewer_ClearLogsTitle") ?? "Clear Logs";
+    public static string LogViewer_ClearLogsTitle => GetStringSafe("LogViewer_ClearLogsTitle", "Clear Logs");
 
     /// <summary>
     /// Gets the title for the export logs dialog.
     /// </summary>
-    public static string LogViewer_ExportLogsTitle => ResourceManager.GetString("LogViewer_ExportLogsTitle") ?? "Export Logs";
+    public static string LogViewer_ExportLogsTitle => GetStringSafe("LogViewer_ExportLogsTitle", "Export Logs");
 
     /// <summary>
     /// Gets the message for the clear logs confirmation dialog.
     /// </summary>
     public static string LogViewer_ClearLogsMessage =>
-        ResourceManager.GetString("LogViewer_ClearLogsMessage") ??
-        "Are you sure you want to clear all log entries? This action cannot be undone.";
+        GetStringSafe("LogViewer_ClearLogsMessage", "Are you sure you want to clear all log entries? This action cannot be undone.");
 
     /// <summary>
     /// Gets the error message when export service is unavailable.
     /// </summary>
     public static string LogViewer_ExportServiceUnavailable =>
-        ResourceManager.GetString("LogViewer_ExportServiceUnavailable") ?? "Export service is not available";
+        GetStringSafe("LogViewer_ExportServiceUnavailable", "Export service is not available");
 
     /// <summary>
     /// Gets the message when there are no logs to export.
     /// </summary>
     public static string LogViewer_NoLogsToExport =>
-        ResourceManager.GetString("LogViewer_NoLogsToExport") ?? "No log entries to export. Check your filters.";
+        GetStringSafe("LogViewer_NoLogsToExport", "No log entries to export. Check your filters.");
 
     /// <summary>
     /// Gets the success message template after exporting logs.
     /// Expects parameters: count (int), format (string)
     /// </summary>
     public static string LogViewer_ExportSuccess =>
-        ResourceManager.GetString("LogViewer_ExportSuccess") ?? "Successfully exported {0} log entries to {1} format.";
+        GetStringSafe("LogViewer_ExportSuccess", "Successfully exported {0} log entries to {1} format.");
 
     /// <summary>
     /// Gets the title for export failed error dialog.
     /// </summary>
     public static string LogViewer_ExportFailed =>
-        ResourceManager.GetString("LogViewer_ExportFailed") ?? "Export Failed";
+        GetStringSafe("LogViewer_ExportFailed", "Export Failed");
 
     /// <summary>
     /// Gets the error message template when export fails.
     /// Expects parameter: error message (string)
     /// </summary>
     public static string LogViewer_ExportFailedMessage =>
-        ResourceManager.GetString("LogViewer_ExportFailedMessage") ?? "Failed to export logs: {0}";
+        GetStringSafe("LogViewer_ExportFailedMessage", "Failed to export logs: {0}");
 
     /// <summary>
     /// Gets the generic unknown error message.
     /// </summary>
     public static string LogViewer_UnknownError =>
-        ResourceManager.GetString("LogViewer_UnknownError") ?? "Unknown error occurred";
+        GetStringSafe("LogViewer_UnknownError", "Unknown error occurred");
 
     #endregion
 
@@ -389,5 +393,24 @@ public static class UIStrings
     public static string GetString(string key, CultureInfo culture)
     {
         return ResourceManager.GetString(key, culture);
+    }
+
+    /// <summary>
+    /// Safely gets a resource string with fallback if ResourceManager is not initialized.
+    /// </summary>
+    /// <param name="key">The resource key.</param>
+    /// <param name="fallback">The fallback value to use if ResourceManager is not available.</param>
+    /// <returns>The localized string or the fallback value.</returns>
+    private static string GetStringSafe(string key, string fallback)
+    {
+        try
+        {
+            return IsInitialized ? (ResourceManager.GetString(key) ?? fallback) : fallback;
+        }
+        catch
+        {
+            // Return fallback if any exception occurs
+            return fallback;
+        }
     }
 }

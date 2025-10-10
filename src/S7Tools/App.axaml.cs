@@ -6,7 +6,9 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Resources;
 using S7Tools.Models;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
 using S7Tools.Views;
@@ -35,6 +37,22 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+
+        // Initialize ResourceManager for UIStrings
+        try
+        {
+            var resourceManager = _serviceProvider.GetRequiredService<IResourceManager>();
+            UIStrings.ResourceManager = resourceManager;
+
+            var logger = _serviceProvider.GetService<ILogger<App>>();
+            logger?.LogDebug("UIStrings ResourceManager initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            // Log error but don't crash the application
+            var logger = _serviceProvider.GetService<ILogger<App>>();
+            logger?.LogError(ex, "Failed to initialize UIStrings ResourceManager");
+        }
     }
 
     /// <summary>

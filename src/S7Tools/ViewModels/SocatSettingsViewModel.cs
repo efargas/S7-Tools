@@ -123,7 +123,10 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
                         {
                             _logger.LogWarning(ex, "Failed to generate socat command for profile '{ProfileName}' with device '{Device}'. Falling back to configuration command.", profile?.Name, deviceToUse);
                             // Fallback to configuration command generation
-                            SelectedProfileSocatCommand = _socatService.GenerateSocatCommand(profile.Configuration, deviceToUse);
+                            if (profile != null)
+                            {
+                                SelectedProfileSocatCommand = _socatService.GenerateSocatCommand(profile.Configuration, deviceToUse);
+                            }
                         }
                     }
                 }
@@ -619,25 +622,24 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
             var profiles = await _profileService.GetAllProfilesAsync();
 
+            // Update the ObservableCollection on the UI thread to avoid cross-thread exceptions
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 Profiles.Clear();
-                foreach (var profile in profiles)
+                foreach (var profile in profiles.OrderBy(p => p.IsDefault ? 0 : 1).ThenBy(p => p.Name))
                 {
                     Profiles.Add(profile);
                 }
                 ProfileCount = Profiles.Count;
 
-                // Select default profile if available
-                var defaultProfile = Profiles.FirstOrDefault(p => p.IsDefault);
-                if (defaultProfile != null)
+                // Ensure a SelectedProfile exists to avoid null-binding errors in the view.
+                if (Profiles.Count > 0 && SelectedProfile == null)
                 {
-                    SelectedProfile = defaultProfile;
+                    SelectedProfile = Profiles.First();
                 }
-
-                StatusMessage = $"Loaded {ProfileCount} profile(s)";
             });
 
+            StatusMessage = $"Loaded {ProfileCount} profile(s)";
             _logger.LogInformation("Loaded {ProfileCount} socat profiles", ProfileCount);
         }
         catch (Exception ex)
@@ -733,33 +735,49 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task CreateProfileAsync()
     {
-        try
-        {
-            StatusMessage = "Creating profile...";
-
-            var profile = SocatProfile.CreateUserProfile(NewProfileName, NewProfileDescription);
-            var createdProfile = await _profileService.CreateProfileAsync(profile);
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                Profiles.Add(createdProfile);
-                SelectedProfile = createdProfile;
-                ProfileCount = Profiles.Count;
-
-                // Clear input fields
-                NewProfileName = string.Empty;
-                NewProfileDescription = string.Empty;
-
-                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-            });
-
-            _logger.LogInformation("Created socat profile: {ProfileName}", createdProfile.Name);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating profile");
-            StatusMessage = "Error creating profile";
-        }
+    _logger.LogInformation("=== CreateProfileAsync STARTED ===");
+    _logger.LogInformation("NewProfileName: '{Name}', NewProfileDescription: '{Desc}'", NewProfileName, NewProfileDescription);
+    
+    try
+    {
+    IsLoading = true;
+    StatusMessage = "Creating profile...";
+    _logger.LogDebug("IsLoading set to true, StatusMessage updated");
+    
+    // Create new profile - service handles name uniqueness internally
+    _logger.LogDebug("Creating new SocatProfile with name: '{Name}'", NewProfileName);
+    var newProfile = SocatProfile.CreateUserProfile(NewProfileName, NewProfileDescription);
+    _logger.LogDebug("Calling _profileService.CreateProfileAsync");
+    var createdProfile = await _profileService.CreateProfileAsync(newProfile);
+    _logger.LogInformation("Profile created successfully with ID: {ProfileId}", createdProfile.Id);
+    
+    // Refresh list and select created profile to ensure canonical state
+    _logger.LogDebug("Refreshing profiles list and selecting new profile");
+    await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
+    
+    // Clear input fields
+    NewProfileName = string.Empty;
+    NewProfileDescription = string.Empty;
+    _logger.LogDebug("Input fields cleared");
+    
+    StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
+    _logger.LogInformation("Created new socat profile: {ProfileName}", createdProfile.Name);
+    }
+    catch (OperationCanceledException)
+    {
+    _logger.LogInformation("Profile creation cancelled by user");
+    StatusMessage = "Profile creation cancelled";
+    }
+    catch (Exception ex)
+    {
+    _logger.LogError(ex, "Error creating profile");
+    StatusMessage = $"Error creating profile: {ex.Message}";
+    }
+    finally
+    {
+    IsLoading = false;
+    _logger.LogInformation("=== CreateProfileAsync COMPLETED ===");
+    }
     }
 
     /// <summary>
@@ -774,15 +792,54 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
-            // TODO: Open profile edit dialog/view
-            // For now, just show a message
-            await _dialogService.ShowErrorAsync("Edit Profile",
-                $"Edit functionality for profile '{SelectedProfile.Name}' will be implemented in the UI layer.");
+            StatusMessage = "Opening profile editor...";
+
+            var profile = SelectedProfile;
+            var config = profile.Configuration;
+
+            // Create comprehensive editable details string
+            var editableDetails =
+                $"Profile Configuration - {profile.Name}\n\n" +
+                $"Basic Information:\n" +
+                $"  • Name: {profile.Name}\n" +
+                $"  • Description: {profile.Description}\n" +
+                $"  • Is Default: {profile.IsDefault}\n" +
+                $"  • Read-Only: {profile.IsReadOnly}\n\n" +
+                $"Network Configuration:\n" +
+                $"  • TCP Port: {config.TcpPort}\n" +
+                $"  • TCP Host: {config.TcpHost}\n\n" +
+                $"Process Options:\n" +
+                $"  • Enable Fork: {config.EnableFork}\n" +
+                $"  • Enable Reuse Address: {config.EnableReuseAddr}\n" +
+                $"  • Auto Restart: {config.AutoRestart}\n" +
+                $"  • Connection Timeout: {config.ConnectionTimeout} seconds\n\n" +
+                $"Debugging & Logging:\n" +
+                $"  • Verbose: {config.Verbose}\n" +
+                $"  • Hex Dump: {config.HexDump}\n" +
+                $"  • Debug Level: {config.DebugLevel}\n\n" +
+                $"Serial Configuration:\n" +
+                $"  • Serial Raw Mode: {config.SerialRawMode}\n" +
+                $"  • Serial Disable Echo: {config.SerialDisableEcho}\n" +
+                $"  • Auto Configure Serial: {config.AutoConfigureSerial}\n\n" +
+                $"Other Settings:\n" +
+                $"  • Block Size: {config.BlockSize} bytes\n\n" +
+                $"Metadata:\n" +
+                $"  • Created: {profile.CreatedAt:yyyy-MM-dd HH:mm:ss}\n" +
+                $"  • Modified: {profile.ModifiedAt:yyyy-MM-dd HH:mm:ss}\n\n" +
+                $"To modify this profile:\n" +
+                $"1. Use the JSON export/import feature for programmatic editing\n" +
+                $"2. Contact the development team for custom editing interface\n" +
+                $"3. Create a new profile with desired settings and delete this one";
+
+            await _dialogService.ShowErrorAsync($"Profile Details - {profile.Name}", editableDetails);
+
+            StatusMessage = $"Profile '{profile.Name}' details displayed for reference";
+            _logger.LogInformation("Displayed edit details for socat profile: {ProfileName}", profile.Name);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error editing profile");
-            StatusMessage = "Error editing profile";
+            _logger.LogError(ex, "Error showing profile editor");
+            StatusMessage = "Error opening profile editor";
         }
     }
 
@@ -798,32 +855,45 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var profileToDelete = SelectedProfile;
-            var result = await _dialogService.ShowConfirmationAsync("Delete Profile",
-                $"Are you sure you want to delete profile '{profileToDelete.Name}'?");
+            // Confirm deletion
+            var confirmed = await _dialogService.ShowConfirmationAsync(
+                "Delete Profile",
+                $"Are you sure you want to delete the profile '{SelectedProfile.Name}'?");
 
-            if (result)
+            if (!confirmed)
             {
-                StatusMessage = "Deleting profile...";
+                return;
+            }
 
-                await _profileService.DeleteProfileAsync(profileToDelete.Id);
+            IsLoading = true;
+            StatusMessage = "Deleting profile...";
 
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    Profiles.Remove(profileToDelete);
-                    ProfileCount = Profiles.Count;
-                    SelectedProfile = Profiles.FirstOrDefault();
+            var profileName = SelectedProfile.Name;
+            var idToDelete = SelectedProfile.Id;
+            var success = await _profileService.DeleteProfileAsync(idToDelete);
 
-                    StatusMessage = "Profile deleted successfully";
-                });
+            if (success)
+            {
+                // Refresh profiles; preserve selection if possible (select next available)
+                await RefreshProfilesPreserveSelectionAsync(null);
 
-                _logger.LogInformation("Deleted socat profile: {ProfileName}", profileToDelete.Name);
+                StatusMessage = $"Profile '{profileName}' deleted successfully";
+                _logger.LogInformation("Deleted socat profile: {ProfileName}", profileName);
+            }
+            else
+            {
+                StatusMessage = "Failed to delete profile";
+                _logger.LogWarning("Failed to delete socat profile: {ProfileName}", profileName);
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting profile");
             StatusMessage = "Error deleting profile";
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -841,17 +911,16 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         {
             var originalProfile = SelectedProfile;
             var newName = $"{originalProfile.Name} (Copy)";
+
+            IsLoading = true;
+            StatusMessage = "Duplicating profile...";
+
             var duplicatedProfile = await _profileService.DuplicateProfileAsync(originalProfile.Id, newName);
 
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                Profiles.Add(duplicatedProfile);
-                SelectedProfile = duplicatedProfile;
-                ProfileCount = Profiles.Count;
+            // Refresh and select duplicated profile
+            await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
 
-                StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
-            });
-
+            StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
             _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
                 originalProfile.Name, duplicatedProfile.Name);
         }
@@ -859,6 +928,10 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         {
             _logger.LogError(ex, "Error duplicating profile");
             StatusMessage = "Error duplicating profile";
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -874,27 +947,25 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
+            IsLoading = true;
             StatusMessage = "Setting default profile...";
 
             await _profileService.SetDefaultProfileAsync(SelectedProfile.Id);
 
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                // Update all profiles' default status
-                foreach (var profile in Profiles)
-                {
-                    profile.IsDefault = profile.Id == SelectedProfile.Id;
-                }
+            // Persisted change made; refresh profiles and keep selection
+            await RefreshProfilesPreserveSelectionAsync(SelectedProfile.Id);
 
-                StatusMessage = $"'{SelectedProfile.Name}' set as default profile";
-            });
-
+            StatusMessage = $"'{SelectedProfile.Name}' set as default profile";
             _logger.LogInformation("Set default socat profile: {ProfileName}", SelectedProfile.Name);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error setting default profile");
             StatusMessage = "Error setting default profile";
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -1020,23 +1091,42 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task ExportProfilesAsync()
     {
+        if (_fileDialogService == null)
+        {
+            StatusMessage = "File dialog service not available";
+            return;
+        }
+
         try
         {
+            var fileName = await _fileDialogService.ShowSaveFileDialogAsync(
+                "Export Profiles",
+                "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                null,
+                "profiles.json");
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            IsLoading = true;
             StatusMessage = "Exporting profiles...";
 
             var jsonData = await _profileService.ExportAllProfilesToJsonAsync();
+            await File.WriteAllTextAsync(fileName, jsonData);
 
-            // TODO: Save to file using file dialog
-            await _dialogService.ShowErrorAsync("Export Profiles",
-                "Export functionality will be implemented in the UI layer.");
-
-            StatusMessage = "Profiles exported successfully";
-            _logger.LogInformation("Exported all socat profiles");
+            StatusMessage = $"Exported {ProfileCount} profile(s) to {Path.GetFileName(fileName)}";
+            _logger.LogInformation("Exported {ProfileCount} profiles to {FileName}", ProfileCount, fileName);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error exporting profiles");
             StatusMessage = "Error exporting profiles";
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
@@ -1131,19 +1221,34 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task BrowseProfilesPathAsync()
     {
+        if (_fileDialogService == null)
+        {
+            StatusMessage = "File dialog service not available";
+            return;
+        }
+
         try
         {
-            // TODO: Implement folder dialog
-            await _dialogService.ShowErrorAsync("Browse Profiles Path",
-                "Folder selection will be implemented in the UI layer.");
+            var result = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                "Select Profiles Directory",
+                ProfilesPath);
+
+            if (!string.IsNullOrEmpty(result))
+            {
+                ProfilesPath = result;
+                await UpdateProfilesPathInSettingsAsync();
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error browsing profiles path");
-            StatusMessage = "Error browsing profiles path";
+            _logger.LogError(ex, "Error browsing for profiles path");
+            StatusMessage = "Error selecting directory";
         }
     }
 
+    /// <summary>
+    /// Opens the profiles directory in the system file explorer.
+    /// </summary>
     /// <summary>
     /// Opens the profiles directory in the system file explorer.
     /// </summary>
@@ -1151,14 +1256,99 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            // TODO: Implement system file explorer opening
-            await _dialogService.ShowErrorAsync("Open Profiles Path",
-                $"Opening '{ProfilesPath}' in file explorer will be implemented in the UI layer.");
+            StatusMessage = "Opening profiles folder...";
+
+            if (string.IsNullOrEmpty(ProfilesPath))
+            {
+                StatusMessage = "Profiles path not available";
+                _logger.LogError("Profiles path is null or empty");
+                return;
+            }
+
+            // Convert relative path to absolute path
+            var absolutePath = Path.IsPathRooted(ProfilesPath) ? ProfilesPath :
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ProfilesPath);
+
+            // Ensure the directory exists before trying to open it
+            if (!Directory.Exists(absolutePath))
+            {
+                StatusMessage = "Creating profiles folder...";
+                Directory.CreateDirectory(absolutePath);
+                _logger.LogInformation("Created profiles directory: {ProfilesPath}", absolutePath);
+            }
+
+            _logger.LogInformation("Opening profiles folder: {ProfilesPath}", absolutePath);
+
+            await Task.Run(() =>
+            {
+                try
+                {
+                    if (OperatingSystem.IsWindows())
+                    {
+                        System.Diagnostics.Process.Start("explorer.exe", absolutePath);
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        // Try different file managers commonly available on Linux
+                        var fileManagers = new[] { "xdg-open", "nautilus", "dolphin", "thunar", "pcmanfm" };
+
+                        bool opened = false;
+                        foreach (var fileManager in fileManagers)
+                        {
+                            try
+                            {
+                                var process = new System.Diagnostics.Process
+                                {
+                                    StartInfo = new System.Diagnostics.ProcessStartInfo
+                                    {
+                                        FileName = fileManager,
+                                        Arguments = absolutePath,
+                                        UseShellExecute = false,
+                                        CreateNoWindow = true
+                                    }
+                                };
+
+                                if (process.Start())
+                                {
+                                    opened = true;
+                                    break;
+                                }
+                            }
+                            catch
+                            {
+                                // Try next file manager
+                                continue;
+                            }
+                        }
+
+                        if (!opened)
+                        {
+                            throw new InvalidOperationException("No suitable file manager found to open directory");
+                        }
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        System.Diagnostics.Process.Start("open", absolutePath);
+                    }
+                    else
+                    {
+                        throw new PlatformNotSupportedException("Opening directories in explorer is not supported on this platform");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to open file explorer for path: {Path}", absolutePath);
+                    throw;
+                }
+            });
+
+            StatusMessage = "Profiles folder opened";
+            _logger.LogInformation("Successfully opened profiles folder");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error opening profiles path");
-            StatusMessage = "Error opening profiles path";
+            _logger.LogError(ex, "Error opening profiles folder");
+            StatusMessage = "Error opening profiles folder";
         }
     }
 
@@ -1186,6 +1376,26 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         {
             _logger.LogError(ex, "Error resetting profiles path");
             StatusMessage = "Error resetting profiles path";
+        }
+    }
+
+    /// <summary>
+    /// Updates the profiles path in application settings.
+    /// </summary>
+    private async Task UpdateProfilesPathInSettingsAsync()
+    {
+        try
+        {
+            // Persist through the injected settings service
+            var settings = _settingsService.Settings.Clone();
+            settings.Socat.ProfilesPath = ProfilesPath;
+            await _settingsService.UpdateSettingsAsync(settings).ConfigureAwait(false);
+            StatusMessage = "Profiles path updated";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update settings with new profiles path");
+            StatusMessage = "Failed to update settings";
         }
     }
 
@@ -1238,6 +1448,43 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     {
         Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>
+    /// Refreshes profiles from the service and optionally restores selection by profile Id.
+    /// </summary>
+    private async Task RefreshProfilesPreserveSelectionAsync(int? selectProfileId)
+    {
+        try
+        {
+            // Reload profiles from storage/service
+            await LoadProfilesAsync();
+
+            // If a specific profile Id was requested, try to select it
+            if (selectProfileId.HasValue)
+            {
+                var match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
+                if (match != null)
+                {
+                    SelectedProfile = match;
+                    return;
+                }
+            }
+
+            // Otherwise, ensure there's a sensible selection
+            if (Profiles.Count > 0 && SelectedProfile == null)
+            {
+                SelectedProfile = Profiles.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to refresh socat profiles while preserving selection");
+        }
     }
 
     #endregion
