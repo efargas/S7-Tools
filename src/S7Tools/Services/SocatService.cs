@@ -507,16 +507,18 @@ public class SocatService : ISocatService, IDisposable
                 {
                     return true;
                 }
-            }
-            finally
+            // Prefer managed check over shelling out to netstat/grep
+            try
             {
-                _semaphore.Release();
+                using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Any, tcpPort);
+                listener.Start();
+                listener.Stop();
+                return false; // successfully bound -> port not in use
             }
-
-            // Check system-wide port usage using netstat
-            var command = $"netstat -ln | grep ':{tcpPort} '";
-            var (success, exitCode, output, _) = await ExecuteCommandAsync(command, 5000, cancellationToken).ConfigureAwait(false);
-
+            catch (System.Net.Sockets.SocketException)
+            {
+                return true; // bind failed -> port likely in use or insufficient privileges
+            }
             if (success && !string.IsNullOrWhiteSpace(output))
             {
                 return true;
