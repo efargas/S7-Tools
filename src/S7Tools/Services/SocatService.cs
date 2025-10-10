@@ -350,26 +350,39 @@ public class SocatService : ISocatService, IDisposable
             try
             {
                 var process = Process.GetProcessById(processId);
-
-                // Attempt graceful termination only if a window exists (unlikely for socat)
                 bool exited = false;
-                try
+
+                // Try SIGTERM on Unix-like systems
+                if (!process.HasExited)
                 {
-                    if (process.MainWindowHandle != IntPtr.Zero)
+                    try
                     {
-                        process.CloseMainWindow();
-                        exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                        {
+                            // Send SIGTERM
+                            var (_, _, _, _) = await ExecuteCommandAsync($"kill -TERM {processId}", timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                            exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                        }
+                        else
+                        {
+                            // On Windows, try CloseMainWindow if possible (unlikely headless)
+                            if (process.MainWindowHandle != IntPtr.Zero)
+                            {
+                                process.CloseMainWindow();
+                                exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                            }
+                        }
                     }
-                }
-                catch
-                {
-                    // Ignore window-related exceptions for headless processes
+                    catch
+                    {
+                        // Ignore and escalate below
+                    }
                 }
 
                 if (!exited && !process.HasExited)
                 {
-                    _logger.LogWarning("Socat process {ProcessId} did not exit gracefully, forcing termination", processId);
-                    process.Kill(); // on Unix sends SIGKILL; consider a prior SIGTERM path if available
+                    _logger.LogWarning("Socat process {ProcessId} did not exit after SIGTERM, forcing termination", processId);
+                    process.Kill();
                     await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
                 }
 
@@ -378,14 +391,11 @@ public class SocatService : ISocatService, IDisposable
 
                 _logger.LogInformation("Stopped socat process {ProcessId}", processId);
 
-                // Raise event
                 ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
-
                 return true;
             }
             catch (ArgumentException)
             {
-                // Process already exited
                 processInfo.Status = SocatProcessStatus.Stopped;
                 processInfo.IsRunning = false;
                 _logger.LogDebug("Socat process {ProcessId} was already stopped", processId);
@@ -399,8 +409,6 @@ public class SocatService : ISocatService, IDisposable
             finally
             {
                 _runningProcesses.Remove(processId);
-
-                // Stop monitoring this process
                 if (_processMonitors.TryGetValue(processId, out var monitor))
                 {
                     monitor.Dispose();
