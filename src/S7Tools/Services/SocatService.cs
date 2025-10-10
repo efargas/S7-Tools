@@ -411,28 +411,29 @@ public class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<int> StopAllSocatProcessesAsync(CancellationToken cancellationToken = default)
     {
+        var processIds = new List<int>();
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var processIds = _runningProcesses.Keys.ToList();
-            int stoppedCount = 0;
-
-            foreach (var processId in processIds)
-            {
-                var stopped = await StopSocatByIdAsync(processId, cancellationToken).ConfigureAwait(false);
-                if (stopped)
-                {
-                    stoppedCount++;
-                }
-            }
-
-            _logger.LogInformation("Stopped {StoppedCount} of {TotalCount} socat processes", stoppedCount, processIds.Count);
-            return stoppedCount;
+            processIds = _runningProcesses.Keys.ToList();
         }
         finally
         {
             _semaphore.Release();
         }
+
+        int stoppedCount = 0;
+        var tasks = processIds.Select(async processId =>
+        {
+            if (await StopSocatByIdAsync(processId, cancellationToken).ConfigureAwait(false))
+            {
+                Interlocked.Increment(ref stoppedCount);
+            }
+        });
+        await Task.WhenAll(tasks).ConfigureAwait(false);
+
+        _logger.LogInformation("Stopped {StoppedCount} of {TotalCount} socat processes", stoppedCount, processIds.Count);
+        return stoppedCount;
     }
 
     #endregion
