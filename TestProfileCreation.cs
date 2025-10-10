@@ -40,21 +40,20 @@ class TestProfileCreation
             Console.WriteLine("✅ Storage initialized");
 
             // Check current profiles
-            var profiles = await socatProfileService.GetProfilesAsync();
+            var profiles = await socatProfileService.GetAllProfilesAsync();
             Console.WriteLine($"Current profiles count: {profiles.Count()}");
 
             // Create a test profile
             Console.WriteLine("Creating test profile...");
             var testProfile = SocatProfile.CreateUserProfile("Test Profile", "Test Description");
-            testProfile.TcpPort = 1234;
-            testProfile.SerialDevice = "/dev/ttyUSB0";
+            testProfile.Configuration.TcpPort = 1234; // configuration lives under Configuration
 
             var createdProfile = await socatProfileService.CreateProfileAsync(testProfile);
             Console.WriteLine($"✅ Profile created: {createdProfile.Name} (ID: {createdProfile.Id})");
 
             // Check if file was created
             var storageInfo = await socatProfileService.GetStorageInfoAsync();
-            Console.WriteLine($"File exists: {storageInfo.FileExists}");
+            Console.WriteLine($"File exists: {storageInfo["FileExists"]}");
             Console.WriteLine($"Profile count: {storageInfo.ProfileCount}");
             Console.WriteLine($"Profiles file: {storageInfo.ProfilesFile}");
 
