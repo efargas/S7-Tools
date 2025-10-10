@@ -10,7 +10,7 @@ namespace S7Tools.Infrastructure.Logging.Tests.Core.Storage;
 /// Unit tests for the LogDataStore circular buffer implementation.
 /// Tests thread safety, circular buffer behavior, and real-time notifications.
 /// </summary>
-public class LogDataStoreTests : IDisposable
+public sealed class LogDataStoreTests : IDisposable
 {
     private readonly LogDataStoreOptions _options;
     private readonly LogDataStore _dataStore;

@@ -8,7 +8,7 @@ using Xunit;
 
 namespace S7Tools.Tests.Services;
 
-public class PlcDataServiceTests : IDisposable
+public sealed class PlcDataServiceTests : IDisposable
 {
     private readonly Mock<ILogger<PlcDataService>> _mockLogger;
     private readonly PlcDataService _service;

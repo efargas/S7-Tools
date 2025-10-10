@@ -11,7 +11,7 @@ namespace S7Tools.Views;
 /// <summary>
 /// A behavior that closes the associated window when an interaction is received.
 /// </summary>
-public class CloseApplicationBehavior : Behavior<Window>, IDisposable
+public sealed class CloseApplicationBehavior : Behavior<Window>, IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
@@ -48,8 +48,12 @@ public class CloseApplicationBehavior : Behavior<Window>, IDisposable
         _disposables.Dispose();
     }
 
+    /// <summary>
+    /// Disposes the behavior and releases associated resources.
+    /// </summary>
     public void Dispose()
     {
-        throw new NotImplementedException();
+        _disposables?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

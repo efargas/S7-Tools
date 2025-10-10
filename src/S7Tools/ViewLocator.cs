@@ -5,9 +5,17 @@ using S7Tools.ViewModels;
 
 namespace S7Tools;
 
+/// <summary>
+/// Locates and creates views for view models using naming conventions.
+/// Maps ViewModels to Views by replacing namespace and suffix patterns.
+/// </summary>
 public class ViewLocator : IDataTemplate
 {
-
+    /// <summary>
+    /// Builds a control instance for the specified view model.
+    /// </summary>
+    /// <param name="param">The view model parameter to build a view for.</param>
+    /// <returns>A control instance for the view model, or a TextBlock with error message if the view is not found.</returns>
     public Control? Build(object? param)
     {
         if (param is null)
@@ -49,6 +57,11 @@ public class ViewLocator : IDataTemplate
         return new TextBlock { Text = "Not Found: " + name };
     }
 
+    /// <summary>
+    /// Determines whether the specified data is a ViewModelBase and can be handled by this locator.
+    /// </summary>
+    /// <param name="data">The data to check.</param>
+    /// <returns>True if the data is a ViewModelBase; otherwise, false.</returns>
     public bool Match(object? data)
     {
         return data is ViewModelBase;

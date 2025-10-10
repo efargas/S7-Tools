@@ -17,7 +17,7 @@ namespace S7Tools.ViewModels;
 /// ViewModel for real-time serial port discovery and monitoring, providing comprehensive
 /// port scanning capabilities with status monitoring and configuration testing.
 /// </summary>
-public class SerialPortScannerViewModel : ViewModelBase, IDisposable
+public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 {
     #region Fields
 
@@ -709,6 +709,7 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
         _scanCancellationTokenSource?.Dispose();
         _disposables?.Dispose();
         _logger.LogInformation("SerialPortScannerViewModel disposed");
+        GC.SuppressFinalize(this);
     }
 
     #endregion

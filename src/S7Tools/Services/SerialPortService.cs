@@ -19,7 +19,7 @@ namespace S7Tools.Services;
 /// Service for serial port operations including port discovery, configuration management, and Linux stty command integration.
 /// This service provides comprehensive serial port management capabilities optimized for Linux systems.
 /// </summary>
-public class SerialPortService : ISerialPortService, IDisposable
+public sealed class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
     private readonly ISettingsService _settingsService;

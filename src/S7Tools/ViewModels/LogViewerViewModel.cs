@@ -15,7 +15,7 @@ namespace S7Tools.ViewModels;
 /// <summary>
 /// ViewModel for the LogViewer functionality with real-time log display, filtering, and search capabilities.
 /// </summary>
-public class LogViewerViewModel : ViewModelBase, IDisposable
+public sealed class LogViewerViewModel : ViewModelBase, IDisposable
 {
     private readonly ILogDataStore _logDataStore;
     private readonly IUIThreadService _uiThreadService;
@@ -496,6 +496,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
         _logDataStore.CollectionChanged -= OnLogDataStoreCollectionChanged;
 
         _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }
 
