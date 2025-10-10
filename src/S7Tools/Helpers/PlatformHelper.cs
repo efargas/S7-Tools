@@ -28,23 +28,25 @@ public static class PlatformHelper
         {
             try
             {
+                ProcessStartInfo psi;
                 if (OperatingSystem.IsWindows())
                 {
-                    Process.Start("explorer.exe", path);
+                    psi = new ProcessStartInfo(path) { UseShellExecute = true };
                 }
                 else if (OperatingSystem.IsLinux())
                 {
-                    Process.Start("xdg-open", path);
+                    psi = new ProcessStartInfo("xdg-open", path) { UseShellExecute = false };
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
-                    Process.Start("open", path);
+                    psi = new ProcessStartInfo("open", path) { UseShellExecute = false };
                 }
                 else
                 {
                     throw new PlatformNotSupportedException(
                         "Opening directories in explorer is not supported on this platform");
                 }
+                Process.Start(psi);
             }
             catch (Exception ex) when (ex is not PlatformNotSupportedException)
             {
