@@ -837,12 +837,10 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        try
-        {
-            StatusMessage = "Duplicating profile...";
 
-            var newName = $"{SelectedProfile.Name} (Copy)";
-            var duplicatedProfile = await _profileService.DuplicateProfileAsync(SelectedProfile.Id, newName);
+            var originalProfile = SelectedProfile;
+            var newName = $"{originalProfile.Name} (Copy)";
+            var duplicatedProfile = await _profileService.DuplicateProfileAsync(originalProfile.Id, newName);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
@@ -853,6 +851,9 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
                 StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
             });
 
+            _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
+                originalProfile.Name, duplicatedProfile.Name);
+        }
             _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
                 SelectedProfile.Name, duplicatedProfile.Name);
         }
