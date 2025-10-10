@@ -32,7 +32,7 @@ public sealed class FileLogWriter : IDisposable
         // Ensure folder exists at startup if enabled
         try
         {
-            var settings = _settingsService.Settings;
+            var settings = _settingsService.GetSettings();
             if (settings.Logging.EnableFileLogging)
             {
                 Directory.CreateDirectory(settings.Logging.DefaultLogPath);
@@ -49,7 +49,7 @@ public sealed class FileLogWriter : IDisposable
         try
         {
             if (_disposed) return;
-                var settings = _settingsService.Settings;
+                var settings = _settingsService.GetSettings();
                 if (!settings.Logging.EnableFileLogging)
                 {
                     return;

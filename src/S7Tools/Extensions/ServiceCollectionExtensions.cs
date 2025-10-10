@@ -83,8 +83,12 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IGreetingService, GreetingService>();
 
         // Add PLC Services
-        services.TryAddSingleton<ITagRepository, PlcDataService>();
-        services.TryAddSingleton<IS7ConnectionProvider, PlcDataService>();
+        // Register the concrete service as a singleton, then register the interfaces
+        // to resolve to the same singleton instance. This ensures that any service
+        // requesting ITagRepository or IS7ConnectionProvider gets the same object.
+        services.TryAddSingleton<PlcDataService>();
+        services.TryAddSingleton<ITagRepository>(provider => provider.GetRequiredService<PlcDataService>());
+        services.TryAddSingleton<IS7ConnectionProvider>(provider => provider.GetRequiredService<PlcDataService>());
 
         // Add Serial Port Services
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
@@ -190,7 +194,7 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<LogViewerViewModel>();
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
-        services.TryAddTransient<SettingsViewModel>(provider => new SettingsViewModel(provider));
+        services.TryAddTransient<SettingsViewModel>();
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
 

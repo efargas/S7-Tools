@@ -869,7 +869,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         try
         {
             // Persist through the injected settings service
-            var settings = _settingsService.Settings.Clone();
+            var settings = _settingsService.GetSettings();
             settings.SerialPorts.ProfilesPath = ProfilesPath;
             await _settingsService.UpdateSettingsAsync(settings).ConfigureAwait(false);
             StatusMessage = "Profiles path updated";
@@ -918,7 +918,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var settings = _settingsService.Settings;
+            var settings = _settingsService.GetSettings();
             ProfilesPath = settings.SerialPorts?.ProfilesPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SerialProfiles");
         }
         catch (Exception ex)

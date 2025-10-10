@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using S7Tools.Models;
 using S7Tools.Services.Interfaces;
 
@@ -10,14 +11,16 @@ namespace S7Tools.Services;
 /// </summary>
 public class SettingsService : ISettingsService
 {
+    private readonly ILogger<SettingsService> _logger;
     private ApplicationSettings _settings = new();
     private readonly string _defaultSettingsPath;
 
     /// <summary>
     /// Initializes a new instance of the SettingsService class.
     /// </summary>
-    public SettingsService()
+    public SettingsService(ILogger<SettingsService> logger)
     {
+        _logger = logger;
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var appDirectory = Path.Combine(appDataPath, "S7Tools");
         Directory.CreateDirectory(appDirectory);
@@ -25,7 +28,7 @@ public class SettingsService : ISettingsService
     }
 
     /// <inheritdoc />
-    public ApplicationSettings Settings => _settings;
+    public ApplicationSettings GetSettings() => _settings.Clone();
 
     /// <inheritdoc />
     public event EventHandler<ApplicationSettings>? SettingsChanged;
@@ -58,9 +61,9 @@ public class SettingsService : ISettingsService
                 await SaveSettingsAsync(filePath);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // If loading fails, use default settings
+            _logger.LogError(ex, "Failed to load settings from {FilePath}. Using default settings.", filePath);
             _settings = new ApplicationSettings();
             EnsureDirectoriesExist();
         }
@@ -135,13 +138,13 @@ public class SettingsService : ISettingsService
     /// <inheritdoc />
     public async Task OpenLogDirectoryAsync()
     {
-        await OpenDirectoryAsync(_settings.Logging.DefaultLogPath);
+        await OpenDirectoryAsync(GetSettings().Logging.DefaultLogPath);
     }
 
     /// <inheritdoc />
     public async Task OpenExportDirectoryAsync()
     {
-        await OpenDirectoryAsync(_settings.Logging.ExportPath);
+        await OpenDirectoryAsync(GetSettings().Logging.ExportPath);
     }
 
     /// <summary>
@@ -151,24 +154,25 @@ public class SettingsService : ISettingsService
     {
         try
         {
+            var currentSettings = GetSettings();
             // Root resources
-            var resourcesRoot = _settings.ResourcesRoot;
+            var resourcesRoot = currentSettings.ResourcesRoot;
             if (!string.IsNullOrWhiteSpace(resourcesRoot))
             {
                 Directory.CreateDirectory(resourcesRoot);
             }
 
             // Standard application resource folders
-            Directory.CreateDirectory(_settings.Logging.DefaultLogPath);
-            Directory.CreateDirectory(_settings.Logging.ExportPath);
-            Directory.CreateDirectory(_settings.PayloadsPath);
-            Directory.CreateDirectory(_settings.FirmwarePath);
-            Directory.CreateDirectory(_settings.ExtractionsPath);
-            Directory.CreateDirectory(_settings.DumpsPath);
+            Directory.CreateDirectory(currentSettings.Logging.DefaultLogPath);
+            Directory.CreateDirectory(currentSettings.Logging.ExportPath);
+            Directory.CreateDirectory(currentSettings.PayloadsPath);
+            Directory.CreateDirectory(currentSettings.FirmwarePath);
+            Directory.CreateDirectory(currentSettings.ExtractionsPath);
+            Directory.CreateDirectory(currentSettings.DumpsPath);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Ignore directory creation errors
+            _logger.LogWarning(ex, "Failed to create one or more required directories. This may be due to permissions issues.");
         }
     }
 
@@ -177,7 +181,7 @@ public class SettingsService : ISettingsService
     /// </summary>
     /// <param name="directoryPath">The directory path to open.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    private static async Task OpenDirectoryAsync(string directoryPath)
+    private async Task OpenDirectoryAsync(string directoryPath)
     {
         try
         {
@@ -199,9 +203,9 @@ public class SettingsService : ISettingsService
                 }
             });
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Ignore errors opening directory
+            _logger.LogError(ex, "Failed to open directory '{DirectoryPath}' in file explorer.", directoryPath);
         }
     }
 }

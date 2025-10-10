@@ -200,7 +200,7 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
         }
 
-        var settings = _settingsService.Settings.Socat;
+        var settings = _settingsService.GetSettings().Socat;
 
         // Check concurrent instances limit
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -264,7 +264,7 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
         }
 
-        var settings = _settingsService.Settings.Socat;
+        var settings = _settingsService.GetSettings().Socat;
 
         // Check concurrent instances limit
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -344,7 +344,7 @@ public class SocatService : ISocatService, IDisposable
                 return false;
             }
 
-            var settings = _settingsService.Settings.Socat;
+            var settings = _settingsService.GetSettings().Socat;
             var timeoutMs = settings.ProcessShutdownTimeoutSeconds * 1000;
 
             try
@@ -561,7 +561,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Start new monitoring
-            var settings = _settingsService.Settings.Socat;
+            var settings = _settingsService.GetSettings().Socat;
             var monitorInterval = TimeSpan.FromSeconds(settings.StatusRefreshIntervalSeconds);
 
             var monitor = new Timer(async _ =>
@@ -869,7 +869,7 @@ public class SocatService : ISocatService, IDisposable
         SocatProfile? profile,
         CancellationToken cancellationToken)
     {
-        var settings = _settingsService.Settings.Socat;
+        var settings = _settingsService.GetSettings().Socat;
 
         try
         {

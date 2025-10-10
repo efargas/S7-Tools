@@ -137,7 +137,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
             }
 
             // Check maximum profiles limit
-            var settings = _settingsService.Settings.SerialPorts;
+            var settings = _settingsService.GetSettings().SerialPorts;
             if (_profiles.Count >= settings.MaxProfiles)
             {
                 throw new InvalidOperationException($"Maximum number of profiles ({settings.MaxProfiles}) has been reached");
@@ -624,7 +624,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
     {
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
 
-        var settings = _settingsService.Settings.SerialPorts;
+        var settings = _settingsService.GetSettings().SerialPorts;
         var currentCount = await GetProfileCountAsync(cancellationToken).ConfigureAwait(false);
 
         return currentCount >= settings.MaxProfiles;
@@ -651,7 +651,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
                 return;
             }
 
-            var settings = _settingsService.Settings.SerialPorts;
+            var settings = _settingsService.GetSettings().SerialPorts;
             var profilesPath = GetProfilesDirectoryPath();
 
             _logger.LogDebug("InitializeStorageAsync: profilesPath={ProfilesPath}", profilesPath);
@@ -738,7 +738,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
                 ["ProfilesDirectory"] = profilesPath,
                 ["ProfilesFile"] = profilesFile,
                 ["ProfileCount"] = _profiles.Count,
-                ["MaxProfiles"] = _settingsService.Settings.SerialPorts.MaxProfiles,
+                ["MaxProfiles"] = _settingsService.GetSettings().SerialPorts.MaxProfiles,
                 ["DefaultProfileId"] = _profiles.FirstOrDefault(p => p.IsDefault)?.Id ?? 0,
                 ["NextId"] = _nextId,
                 ["IsInitialized"] = _isInitialized,
@@ -947,7 +947,7 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
     /// <returns>The profiles directory path.</returns>
     private string GetProfilesDirectoryPath()
     {
-        var settings = _settingsService.Settings.SerialPorts;
+        var settings = _settingsService.GetSettings().SerialPorts;
         var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         return settings.GetAbsoluteProfilesPath(baseDirectory);
     }

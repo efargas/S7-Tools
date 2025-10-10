@@ -8,9 +8,10 @@ namespace S7Tools.Services.Interfaces;
 public interface ISettingsService
 {
     /// <summary>
-    /// Gets the current application settings.
+    /// Gets a clone of the current application settings.
     /// </summary>
-    ApplicationSettings Settings { get; }
+    /// <returns>A clone of the current settings.</returns>
+    ApplicationSettings GetSettings();
 
     /// <summary>
     /// Event raised when settings are changed.

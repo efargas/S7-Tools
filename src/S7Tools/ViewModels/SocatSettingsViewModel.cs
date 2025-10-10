@@ -595,7 +595,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var settings = _settingsService.Settings;
+            var settings = _settingsService.GetSettings();
             ProfilesPath = settings.Socat?.ProfilesPath ?? "resources/SocatProfiles";
         }
         catch (Exception ex)
@@ -1170,7 +1170,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
             ProfilesPath = "resources/SocatProfiles";
 
             // Update settings
-            var settings = _settingsService.Settings;
+            var settings = _settingsService.GetSettings();
             if (settings.Socat != null)
             {
                 settings.Socat.ProfilesPath = ProfilesPath;

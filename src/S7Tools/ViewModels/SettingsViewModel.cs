@@ -1,21 +1,18 @@
 using System.Collections.ObjectModel;
 using ReactiveUI;
 using System.Reactive;
-using Microsoft.Extensions.DependencyInjection;
 using S7Tools.Services.Interfaces;
-using S7Tools.Core.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 
 namespace S7Tools.ViewModels;
 
 public class SettingsViewModel : ViewModelBase
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IViewModelFactory _viewModelFactory;
     private readonly Dictionary<string, ViewModelBase> _categoryViewModels;
 
-    public SettingsViewModel(IServiceProvider serviceProvider)
+    public SettingsViewModel(IViewModelFactory viewModelFactory)
     {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
         _categoryViewModels = new Dictionary<string, ViewModelBase>();
 
         Categories = new ObservableCollection<string>(new[]
@@ -73,52 +70,16 @@ public class SettingsViewModel : ViewModelBase
 
         ViewModelBase viewModel = category switch
         {
-            "Logging" => CreateLoggingSettingsViewModel(),
-            "General" => new GeneralSettingsViewModel(),
-            "Appearance" => new AppearanceSettingsViewModel(),
-            "Advanced" => new AdvancedSettingsViewModel(),
-            "Serial Ports" => CreateSerialPortsSettingsViewModel(),
-            "Servers" => CreateSocatSettingsViewModel(),
-            _ => new GeneralSettingsViewModel()
+            "Logging" => _viewModelFactory.Create<LoggingSettingsViewModel>(),
+            "General" => _viewModelFactory.Create<GeneralSettingsViewModel>(),
+            "Appearance" => _viewModelFactory.Create<AppearanceSettingsViewModel>(),
+            "Advanced" => _viewModelFactory.Create<AdvancedSettingsViewModel>(),
+            "Serial Ports" => _viewModelFactory.Create<SerialPortsSettingsViewModel>(),
+            "Servers" => _viewModelFactory.Create<SocatSettingsViewModel>(),
+            _ => _viewModelFactory.Create<GeneralSettingsViewModel>()
         };
 
         _categoryViewModels[category] = viewModel;
         return viewModel;
-    }
-
-    private LoggingSettingsViewModel CreateLoggingSettingsViewModel()
-    {
-        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
-
-        return new LoggingSettingsViewModel(settingsService, fileDialogService, logger);
-    }
-
-    private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()
-    {
-        var profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
-        var portService = _serviceProvider.GetRequiredService<ISerialPortService>();
-        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-    var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-    var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-    var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
-
-    return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
-    }
-
-    private SocatSettingsViewModel CreateSocatSettingsViewModel()
-    {
-        var socatProfileService = _serviceProvider.GetRequiredService<ISocatProfileService>();
-        var socatService = _serviceProvider.GetRequiredService<ISocatService>();
-        var serialPortService = _serviceProvider.GetRequiredService<ISerialPortService>();
-        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<SocatSettingsViewModel>>();
-
-        return new SocatSettingsViewModel(socatProfileService, socatService, serialPortService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
     }
 }

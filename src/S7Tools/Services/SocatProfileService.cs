@@ -129,7 +129,7 @@ public class SocatProfileService : ISocatProfileService, IDisposable
         try
         {
             // Check maximum profiles limit
-            var settings = _settingsService.Settings.Socat;
+            var settings = _settingsService.GetSettings().Socat;
             if (_profiles.Count >= settings.MaxProfiles)
             {
                 throw new InvalidOperationException($"Maximum number of profiles ({settings.MaxProfiles}) has been reached");
@@ -780,7 +780,7 @@ public class SocatProfileService : ISocatProfileService, IDisposable
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            var settings = _settingsService.Settings.Socat;
+            var settings = _settingsService.GetSettings().Socat;
             return _profiles.Count >= settings.MaxProfiles;
         }
         finally
@@ -905,7 +905,7 @@ public class SocatProfileService : ISocatProfileService, IDisposable
                 ["ProfilesFile"] = profilesFile,
                 ["ProfileCount"] = _profiles.Count,
                 ["DefaultProfile"] = _profiles.FirstOrDefault(p => p.IsDefault)?.Name ?? "None",
-                ["MaxProfiles"] = _settingsService.Settings.Socat.MaxProfiles,
+                ["MaxProfiles"] = _settingsService.GetSettings().Socat.MaxProfiles,
                 ["DirectoryExists"] = Directory.Exists(profilesPath),
                 ["FileExists"] = File.Exists(profilesFile),
                 ["IsInitialized"] = _isInitialized,
@@ -949,7 +949,7 @@ public class SocatProfileService : ISocatProfileService, IDisposable
     /// <returns>The profiles directory path.</returns>
     private string GetProfilesDirectoryPath()
     {
-        var settings = _settingsService.Settings.Socat;
+        var settings = _settingsService.GetSettings().Socat;
         var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         return settings.GetAbsoluteProfilesPath(baseDirectory);
     }
