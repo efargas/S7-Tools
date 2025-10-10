@@ -874,29 +874,46 @@ public class SocatService : ISocatService, IDisposable
 
         try
         {
+            // Prefer invoking socat directly without shell to avoid injection
+            // Split command into executable and args only if it starts with "socat "
+            string fileName;
+            string arguments;
+            if (command.TrimStart().StartsWith("socat ", StringComparison.OrdinalIgnoreCase))
+            {
+                fileName = "socat";
+                arguments = command.Trim().Substring(5).TrimStart();
+            }
+            else
+            {
+                // Fallback to shell, but keep original behavior
+                fileName = "/bin/sh";
+                arguments = $"-c \"{command.Replace("\"", "\\\"")}\"";
+            }
+
             var processStartInfo = new ProcessStartInfo
             {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command}\"",
+                FileName = fileName,
+                Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = settings.CaptureProcessOutput,
                 RedirectStandardError = settings.CaptureProcessOutput,
                 CreateNoWindow = true
             };
 
-            var process = new Process { StartInfo = processStartInfo };
+            using var process = new Process { StartInfo = processStartInfo, EnableRaisingEvents = false };
 
+            StringBuilder? outputBuilder = null;
+            StringBuilder? errorBuilder = null;
             if (settings.CaptureProcessOutput)
             {
-                // Set up output capture
-                var outputBuilder = new StringBuilder();
-                var errorBuilder = new StringBuilder();
+                outputBuilder = new StringBuilder();
+                errorBuilder = new StringBuilder();
 
                 process.OutputDataReceived += (_, e) =>
                 {
                     if (e.Data != null)
                     {
-                        outputBuilder.AppendLine(e.Data);
+                        outputBuilder!.AppendLine(e.Data);
                         _logger.LogTrace("Socat output: {Output}", e.Data);
                     }
                 };
@@ -905,13 +922,12 @@ public class SocatService : ISocatService, IDisposable
                 {
                     if (e.Data != null)
                     {
-                        errorBuilder.AppendLine(e.Data);
+                        errorBuilder!.AppendLine(e.Data);
                         _logger.LogWarning("Socat error: {Error}", e.Data);
                     }
                 };
             }
 
-            // Start the process
             process.Start();
 
             if (settings.CaptureProcessOutput)
@@ -920,15 +936,15 @@ public class SocatService : ISocatService, IDisposable
                 process.BeginErrorReadLine();
             }
 
-            // Wait briefly to ensure process started successfully
-            await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(150, cancellationToken).ConfigureAwait(false);
 
             if (process.HasExited)
             {
-                throw new InvalidOperationException($"Socat process exited immediately with code {process.ExitCode}");
+                var exitCode = process.ExitCode;
+                var stderr = settings.CaptureProcessOutput ? errorBuilder?.ToString() : string.Empty;
+                throw new InvalidOperationException($"Socat process exited immediately with code {exitCode}. {stderr}");
             }
 
-            // Create process info
             var processInfo = new SocatProcessInfo
             {
                 ProcessId = process.Id,
@@ -937,7 +953,7 @@ public class SocatService : ISocatService, IDisposable
                 SerialDevice = serialDevice,
                 Configuration = configuration.Clone(),
                 Profile = profile?.Clone(),
-                CommandLine = command,
+                CommandLine = $"{fileName} {arguments}",
                 StartTime = DateTime.UtcNow,
                 IsRunning = true,
                 Status = SocatProcessStatus.Running,
