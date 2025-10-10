@@ -353,7 +353,8 @@ public static class ServiceCollectionExtensions
         catch (Exception ex)
         {
             // Log service retrieval errors instead of ignoring them
-            var logger = serviceProvider.GetService<ILogger>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
             logger?.LogError(ex, "Failed to retrieve ISerialPortProfileService during service initialization");
         }
     }
