@@ -274,6 +274,10 @@
   </data>
   
   <!-- Confirmation Messages -->
+  <data name="Dialog_ExitTitle" xml:space="preserve">
+    <value>Exit Application</value>
+    <comment>Title for exit confirmation dialog</comment>
+  </data>
   <data name="Confirm_Exit" xml:space="preserve">
     <value>Are you sure you want to exit?</value>
     <comment>Exit confirmation message</comment>
@@ -295,5 +299,45 @@
   <data name="Tooltip_SwitchTheme" xml:space="preserve">
     <value>Switch Theme</value>
     <comment>Switch theme tooltip</comment>
+  </data>
+  
+  <!-- Log Viewer Dialog Titles -->
+  <data name="LogViewer_ClearLogsTitle" xml:space="preserve">
+    <value>Clear Logs</value>
+    <comment>Title for clear logs confirmation dialog</comment>
+  </data>
+  <data name="LogViewer_ExportLogsTitle" xml:space="preserve">
+    <value>Export Logs</value>
+    <comment>Title for export logs dialog</comment>
+  </data>
+  
+  <!-- Log Viewer Messages -->
+  <data name="LogViewer_ClearLogsMessage" xml:space="preserve">
+    <value>Are you sure you want to clear all log entries? This action cannot be undone.</value>
+    <comment>Message for clear logs confirmation dialog</comment>
+  </data>
+  <data name="LogViewer_ExportServiceUnavailable" xml:space="preserve">
+    <value>Export service is not available</value>
+    <comment>Error message when export service is unavailable</comment>
+  </data>
+  <data name="LogViewer_NoLogsToExport" xml:space="preserve">
+    <value>No log entries to export. Check your filters.</value>
+    <comment>Message when there are no logs to export</comment>
+  </data>
+  <data name="LogViewer_ExportSuccess" xml:space="preserve">
+    <value>Successfully exported {0} log entries to {1} format.</value>
+    <comment>Success message after exporting logs with count and format</comment>
+  </data>
+  <data name="LogViewer_ExportFailed" xml:space="preserve">
+    <value>Export Failed</value>
+    <comment>Title for export failed error dialog</comment>
+  </data>
+  <data name="LogViewer_ExportFailedMessage" xml:space="preserve">
+    <value>Failed to export logs: {0}</value>
+    <comment>Error message when export fails with exception message</comment>
+  </data>
+  <data name="LogViewer_UnknownError" xml:space="preserve">
+    <value>Unknown error occurred</value>
+    <comment>Generic error message for unknown errors</comment>
   </data>
 </root>

@@ -7,6 +7,7 @@ using ReactiveUI;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -253,8 +254,8 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
         ClearLogsCommand = ReactiveCommand.CreateFromTask(async () =>
         {
             var result = await _dialogService.ShowConfirmationAsync(
-                "Clear Logs",
-                "Are you sure you want to clear all log entries? This action cannot be undone.");
+                UIStrings.LogViewer_ClearLogsTitle,
+                UIStrings.LogViewer_ClearLogsMessage);
 
             if (result)
             {
@@ -268,7 +269,9 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
             {
                 if (_logExportService == null)
                 {
-                    await _dialogService.ShowErrorAsync("Export", "Export service is not available");
+                    await _dialogService.ShowErrorAsync(
+                        UIStrings.LogViewer_ExportLogsTitle, 
+                        UIStrings.LogViewer_ExportServiceUnavailable);
                     return;
                 }
 
@@ -286,7 +289,9 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
 
                 if (!logsToExport.Any())
                 {
-                    await _dialogService.ShowErrorAsync("Export", "No log entries to export. Check your filters.");
+                    await _dialogService.ShowErrorAsync(
+                        UIStrings.LogViewer_ExportLogsTitle, 
+                        UIStrings.LogViewer_NoLogsToExport);
                     return;
                 }
 
@@ -295,17 +300,22 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
 
                 if (result.IsSuccess)
                 {
-                    await _dialogService.ShowErrorAsync("Export Success",
-                        $"Successfully exported {logsToExport.Count} log entries to {format} format.");
+                    await _dialogService.ShowErrorAsync(
+                        UIStrings.LogViewer_ExportLogsTitle,
+                        string.Format(UIStrings.LogViewer_ExportSuccess, logsToExport.Count, format));
                 }
                 else
                 {
-                    await _dialogService.ShowErrorAsync("Export Failed", result.Error ?? "Unknown error occurred");
+                    await _dialogService.ShowErrorAsync(
+                        UIStrings.LogViewer_ExportFailed, 
+                        result.Error ?? UIStrings.LogViewer_UnknownError);
                 }
             }
             catch (Exception ex)
             {
-                await _dialogService.ShowErrorAsync("Export Failed", $"Failed to export logs: {ex.Message}");
+                await _dialogService.ShowErrorAsync(
+                    UIStrings.LogViewer_ExportFailed, 
+                    string.Format(UIStrings.LogViewer_ExportFailedMessage, ex.Message));
             }
         });
 

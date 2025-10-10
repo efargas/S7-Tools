@@ -3,6 +3,7 @@ using System.Reactive;
 using System;
 using System.Threading.Tasks;
 using System.Reactive.Linq;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services;
 using Microsoft.Extensions.Logging;
@@ -236,7 +237,9 @@ public class MainWindowViewModel : ViewModelBase
     {
         try
         {
-            var result = await _dialogService.ShowConfirmationAsync("Exit Application", "Are you sure you want to exit?");
+            var result = await _dialogService.ShowConfirmationAsync(
+                UIStrings.Dialog_ExitTitle, 
+                UIStrings.Confirm_Exit);
             if (result)
             {
                 await CloseApplicationInteraction.Handle(Unit.Default).FirstAsync();
