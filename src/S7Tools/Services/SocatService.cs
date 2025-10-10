@@ -351,19 +351,25 @@ public class SocatService : ISocatService, IDisposable
             {
                 var process = Process.GetProcessById(processId);
 
-                // First try graceful shutdown
-                process.CloseMainWindow();
-
-                // Wait for graceful exit
-                var exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                // Attempt graceful termination only if a window exists (unlikely for socat)
+                bool exited = false;
+                try
+                {
+                    if (process.MainWindowHandle != IntPtr.Zero)
+                    {
+                        process.CloseMainWindow();
+                        exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                catch
+                {
+                    // Ignore window-related exceptions for headless processes
+                }
 
                 if (!exited && !process.HasExited)
                 {
-                    // Force kill if graceful shutdown failed
                     _logger.LogWarning("Socat process {ProcessId} did not exit gracefully, forcing termination", processId);
-                    process.Kill();
-
-                    // Wait for forced exit
+                    process.Kill(); // on Unix sends SIGKILL; consider a prior SIGTERM path if available
                     await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
                 }
 
