@@ -837,7 +837,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
             return;
         }
 
-
+        try
+        {
             var originalProfile = SelectedProfile;
             var newName = $"{originalProfile.Name} (Copy)";
             var duplicatedProfile = await _profileService.DuplicateProfileAsync(originalProfile.Id, newName);
@@ -853,9 +854,6 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
             _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
                 originalProfile.Name, duplicatedProfile.Name);
-        }
-            _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
-                SelectedProfile.Name, duplicatedProfile.Name);
         }
         catch (Exception ex)
         {
