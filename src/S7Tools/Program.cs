@@ -65,12 +65,17 @@ sealed class Program
                 {
                     try
                     {
-                        // Initialize storage and ensure default profile exists
-                        socatProfileService.InitializeStorageAsync().GetAwaiter().GetResult();
-                        var storageInfo = socatProfileService.GetStorageInfoAsync().GetAwaiter().GetResult();
-                        var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                        logger?.LogInformation("[S7Tools] SocatProfileService storage info:\n{StorageInfo}", json);
-                        Console.WriteLine("[S7Tools] SocatProfileService storage info:\n" + json); // Keep console for --diag flag
+                        // Use a local async function to avoid .GetResult() deadlocks
+                        async Task LogSocatStorageAsync()
+                        {
+                            await socatProfileService.InitializeStorageAsync().ConfigureAwait(false);
+                            var storageInfo = await socatProfileService.GetStorageInfoAsync().ConfigureAwait(false);
+                            var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                            logger?.LogInformation("[S7Tools] SocatProfileService storage info:\n{StorageInfo}", json);
+                            Console.WriteLine("[S7Tools] SocatProfileService storage info:\n" + json); // Keep console for --diag flag
+                        }
+
+                        LogSocatStorageAsync().GetAwaiter().GetResult();
                     }
                     catch (Exception ex)
                     {
