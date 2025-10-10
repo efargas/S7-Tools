@@ -1,9 +1,9 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Commands;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using S7Tools.Core.Commands;
 
 namespace S7Tools.Services;
 
@@ -63,7 +63,7 @@ public class CommandDispatcher : ICommandDispatcher
             var task = (Task<CommandResult>)handleMethod.Invoke(handler, new object[] { command, cancellationToken })!;
             var result = await task.ConfigureAwait(false);
 
-            _logger.LogDebug("Command dispatched successfully: {CommandType}, Success: {IsSuccess}", 
+            _logger.LogDebug("Command dispatched successfully: {CommandType}, Success: {IsSuccess}",
                 commandType.Name, result.IsSuccess);
 
             return result;
@@ -90,7 +90,7 @@ public class CommandDispatcher : ICommandDispatcher
         var resultType = typeof(TResult);
         var handlerType = typeof(ICommandHandler<,>).MakeGenericType(commandType, resultType);
 
-        _logger.LogDebug("Dispatching command with result: {CommandType} -> {ResultType}", 
+        _logger.LogDebug("Dispatching command with result: {CommandType} -> {ResultType}",
             commandType.Name, resultType.Name);
 
         try
@@ -114,14 +114,14 @@ public class CommandDispatcher : ICommandDispatcher
             var task = (Task<CommandResult<TResult>>)handleMethod.Invoke(handler, new object[] { command, cancellationToken })!;
             var result = await task.ConfigureAwait(false);
 
-            _logger.LogDebug("Command with result dispatched successfully: {CommandType} -> {ResultType}, Success: {IsSuccess}", 
+            _logger.LogDebug("Command with result dispatched successfully: {CommandType} -> {ResultType}, Success: {IsSuccess}",
                 commandType.Name, resultType.Name, result.IsSuccess);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error dispatching command with result: {CommandType} -> {ResultType}", 
+            _logger.LogError(ex, "Error dispatching command with result: {CommandType} -> {ResultType}",
                 commandType.Name, resultType.Name);
             return CommandResult<TResult>.Failure("Command dispatch failed", ex.Message, ex);
         }

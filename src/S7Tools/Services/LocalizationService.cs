@@ -1,7 +1,7 @@
-using S7Tools.Resources.Strings;
-using S7Tools.Services.Interfaces;
 using System.Globalization;
 using System.Resources;
+using S7Tools.Resources.Strings;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
@@ -61,7 +61,7 @@ public sealed class LocalizationService : ILocalizationService
     public string GetString(string key, params object[] args)
     {
         var format = GetString(key);
-        
+
         if (args == null || args.Length == 0)
         {
             return format;
@@ -181,7 +181,7 @@ public sealed class LocalizationService : ILocalizationService
             return false;
         }
 
-        return _availableCultures.Any(c => 
+        return _availableCultures.Any(c =>
             c.Name.Equals(culture.Name, StringComparison.OrdinalIgnoreCase) ||
             c.TwoLetterISOLanguageName.Equals(culture.TwoLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
     }
@@ -195,7 +195,7 @@ public sealed class LocalizationService : ILocalizationService
         }
 
         // Exact match
-        var exactMatch = _availableCultures.FirstOrDefault(c => 
+        var exactMatch = _availableCultures.FirstOrDefault(c =>
             c.Name.Equals(culture.Name, StringComparison.OrdinalIgnoreCase));
         if (exactMatch != null)
         {
@@ -203,7 +203,7 @@ public sealed class LocalizationService : ILocalizationService
         }
 
         // Language match (e.g., "en" for "en-US")
-        var languageMatch = _availableCultures.FirstOrDefault(c => 
+        var languageMatch = _availableCultures.FirstOrDefault(c =>
             c.TwoLetterISOLanguageName.Equals(culture.TwoLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
         if (languageMatch != null)
         {
@@ -213,7 +213,7 @@ public sealed class LocalizationService : ILocalizationService
         // Parent culture match
         if (!culture.IsNeutralCulture)
         {
-            var parentMatch = _availableCultures.FirstOrDefault(c => 
+            var parentMatch = _availableCultures.FirstOrDefault(c =>
                 c.Name.Equals(culture.Parent.Name, StringComparison.OrdinalIgnoreCase));
             if (parentMatch != null)
             {

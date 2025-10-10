@@ -1054,7 +1054,9 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
                         File.Replace(tempFile, filePath, backup, ignoreMetadataErrors: true);
                         if (File.Exists(backup))
                         {
-                            try { File.Delete(backup); } catch { }
+                            try
+                            { File.Delete(backup); }
+                            catch { }
                         }
                     }
                 }

@@ -1041,7 +1041,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
 
     #region IDisposable
 
-    private bool _disposed = false;
+    private bool _disposed;
 
     /// <summary>
     /// Disposes of the resources used by this ViewModel.

@@ -136,7 +136,9 @@ public class SettingsManagementViewModelTests
         _viewModel.PropertyChanged += (sender, args) =>
         {
             if (args.PropertyName == nameof(_viewModel.DefaultLogPath))
+            {
                 propertyChanged = true;
+            }
         };
 
         // Act

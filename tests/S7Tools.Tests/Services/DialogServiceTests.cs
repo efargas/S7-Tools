@@ -1,8 +1,8 @@
+using System.Reactive;
+using System.Reactive.Linq;
 using ReactiveUI;
 using S7Tools.Models;
 using S7Tools.Services;
-using System.Reactive;
-using System.Reactive.Linq;
 
 namespace S7Tools.Tests.Services;
 

@@ -1,9 +1,9 @@
+using System;
+using System.Reactive.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using S7Tools.Core.Models;
 using S7Tools.ViewModels;
-using System;
-using System.Reactive.Linq;
 
 namespace S7Tools.Views;
 

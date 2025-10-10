@@ -1,9 +1,9 @@
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using S7Tools.Core.Factories;
 using S7Tools.Core.Models.ValueObjects;
 using S7Tools.Core.Validation;
-using System.Linq;
 
 namespace S7Tools.ViewModels;
 

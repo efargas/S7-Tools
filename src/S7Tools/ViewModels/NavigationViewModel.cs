@@ -1,10 +1,10 @@
-using ReactiveUI;
-using System.Reactive;
 using System;
-using S7Tools.Services.Interfaces;
-using S7Tools.Services;
+using System.Reactive;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Services;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
 

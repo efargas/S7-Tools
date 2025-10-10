@@ -8,7 +8,7 @@ using Xunit;
 
 namespace S7Tools.Tests.Services;
 
-public class PlcDataServiceTests
+public class PlcDataServiceTests : IDisposable
 {
     private readonly Mock<ILogger<PlcDataService>> _mockLogger;
     private readonly PlcDataService _service;
@@ -50,7 +50,7 @@ public class PlcDataServiceTests
         // Arrange
         var config = new S7ConnectionConfig("192.168.1.100");
         var address = new PlcAddress("DB1.DBX0.0");
-        
+
         await _service.ConnectAsync(config);
 
         // Act
@@ -133,7 +133,7 @@ public class PlcDataServiceTests
 
         // Assert
         Assert.True(result.IsSuccess);
-        
+
         var allTagsResult = await _service.GetAllTagsAsync();
         Assert.True(allTagsResult.IsSuccess);
         Assert.Contains(allTagsResult.Value, t => t.Name == "TestTag");
@@ -159,7 +159,7 @@ public class PlcDataServiceTests
         // Arrange
         var config = new S7ConnectionConfig("192.168.1.100");
         var address = new PlcAddress("DB1.DBX0.0");
-        
+
         await _service.ConnectAsync(config);
 
         // Act
@@ -177,5 +177,14 @@ public class PlcDataServiceTests
 
         // Act & Assert
         service.Dispose();
+    }
+
+    /// <summary>
+    /// Disposes the test resources.
+    /// </summary>
+    public void Dispose()
+    {
+        _service?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

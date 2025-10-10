@@ -1,9 +1,9 @@
+using System.Collections.Specialized;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Services.Interfaces;
-using System.Collections.Specialized;
-using System.Text;
 
 namespace S7Tools.Services;
 
@@ -44,28 +44,32 @@ public sealed class FileLogWriter : IDisposable
         }
     }
 
-        private void DataStore_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void DataStore_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         try
         {
-            if (_disposed) return;
-                var settings = _settingsService.Settings;
-                if (!settings.Logging.EnableFileLogging)
-                {
-                    return;
-                }
+            if (_disposed)
+            {
+                return;
+            }
 
-                // Append new items if any
-                if (e.NewItems != null)
+            var settings = _settingsService.Settings;
+            if (!settings.Logging.EnableFileLogging)
+            {
+                return;
+            }
+
+            // Append new items if any
+            if (e.NewItems != null)
+            {
+                foreach (var item in e.NewItems)
                 {
-                    foreach (var item in e.NewItems)
+                    if (item is LogModel log)
                     {
-                        if (item is LogModel log)
-                        {
-                            AppendLogToFile(log, settings.Logging);
-                        }
+                        AppendLogToFile(log, settings.Logging);
                     }
                 }
+            }
         }
         catch (Exception ex)
         {
@@ -74,17 +78,17 @@ public sealed class FileLogWriter : IDisposable
         }
     }
 
-        private void AppendLogToFile(LogModel log, Models.LoggingSettings settings)
+    private void AppendLogToFile(LogModel log, Models.LoggingSettings settings)
     {
         try
         {
             var folder = settings.DefaultLogPath;
-                if (string.IsNullOrEmpty(folder))
-                {
-                    return;
-                }
+            if (string.IsNullOrEmpty(folder))
+            {
+                return;
+            }
 
-                Directory.CreateDirectory(folder);
+            Directory.CreateDirectory(folder);
 
             // Use timestamp-based file name pattern
             var timestamp = DateTime.Now.ToString("yyyyMMdd");
@@ -102,10 +106,10 @@ public sealed class FileLogWriter : IDisposable
             line.AppendLine(new string('-', 40));
 
             // Append text
-                lock (_sync)
-                {
-                    File.AppendAllText(filePath, line.ToString(), Encoding.UTF8);
-                }
+            lock (_sync)
+            {
+                File.AppendAllText(filePath, line.ToString(), Encoding.UTF8);
+            }
         }
         catch (Exception ex)
         {

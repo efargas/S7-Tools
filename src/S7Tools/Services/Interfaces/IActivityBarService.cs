@@ -113,8 +113,8 @@ public sealed class ActivityBarItem : INotifyPropertyChanged
     private string _iconData = string.Empty;
     private bool _isVisible = true;
     private bool _isEnabled = true;
-    private bool _isSelected = false;
-    private int _order = 0;
+    private bool _isSelected;
+    private int _order;
     private object? _tag;
 
     /// <summary>

@@ -1,12 +1,12 @@
-using ReactiveUI;
-using System.Reactive;
 using System;
-using System.Threading.Tasks;
+using System.Reactive;
 using System.Reactive.Linq;
-using S7Tools.Resources;
-using S7Tools.Services.Interfaces;
-using S7Tools.Services;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
+using S7Tools.Resources;
+using S7Tools.Services;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
 
@@ -238,7 +238,7 @@ public class MainWindowViewModel : ViewModelBase
         try
         {
             var result = await _dialogService.ShowConfirmationAsync(
-                UIStrings.Dialog_ExitTitle, 
+                UIStrings.Dialog_ExitTitle,
                 UIStrings.Confirm_Exit);
             if (result)
             {
@@ -331,7 +331,7 @@ public class MainWindowViewModel : ViewModelBase
         try
         {
             var message = $"This is a {levelName} level log message generated at {DateTime.Now}";
-            
+
             switch (level)
             {
                 case LogLevel.Trace:

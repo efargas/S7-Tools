@@ -1,6 +1,6 @@
-using S7Tools.Services.Interfaces;
 using System.ComponentModel;
 using System.Text.Json;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
@@ -30,8 +30,8 @@ public sealed class LayoutService : ILayoutService
     private double _maxSidebarWidth = DefaultMaxSidebarWidth;
     private double _minBottomPanelHeight = DefaultMinBottomPanelHeight;
     private double _maxBottomPanelHeight = DefaultMaxBottomPanelHeight;
-    private bool _isSidebarCollapsed = false;
-    private bool _isBottomPanelCollapsed = false;
+    private bool _isSidebarCollapsed;
+    private bool _isBottomPanelCollapsed;
 
     private double _previousSidebarWidth = DefaultSidebarWidth;
     private double _previousBottomPanelHeight = DefaultBottomPanelHeight;
@@ -262,7 +262,7 @@ public sealed class LayoutService : ILayoutService
 
             var json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
             var configuration = JsonSerializer.Deserialize<LayoutConfiguration>(json);
-            
+
             if (configuration != null)
             {
                 ApplyConfiguration(configuration);
@@ -323,7 +323,7 @@ public sealed class LayoutService : ILayoutService
         field = value;
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        
+
         if (propertyName != null)
         {
             LayoutChanged?.Invoke(this, new LayoutChangedEventArgs(propertyName, oldValue, value));
@@ -334,7 +334,7 @@ public sealed class LayoutService : ILayoutService
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var appFolder = Path.Combine(appDataPath, "S7Tools");
-        
+
         if (!Directory.Exists(appFolder))
         {
             Directory.CreateDirectory(appFolder);

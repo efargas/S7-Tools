@@ -1,8 +1,8 @@
+using System.Collections.Specialized;
+using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using System.Collections.Specialized;
-using System.ComponentModel;
 
 namespace S7Tools.Infrastructure.Logging.Tests.Core.Storage;
 
@@ -83,7 +83,7 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Count.Should().Be(5); // Buffer size
         _dataStore.IsFull.Should().BeTrue();
         _dataStore.Entries.Should().HaveCount(5);
-        
+
         // First entry should be overwritten, so we should have entries 1-5
         _dataStore.Entries.Should().NotContain(e => e.Message == entries[0].Message);
         _dataStore.Entries.Should().Contain(e => e.Message == entries[1].Message);
@@ -96,7 +96,7 @@ public class LogDataStoreTests : IDisposable
         // Arrange
         var logEntry = CreateLogEntry("Test message", LogLevel.Information);
         var propertyChangedEvents = new List<string>();
-        
+
         _dataStore.PropertyChanged += (sender, e) => propertyChangedEvents.Add(e.PropertyName!);
 
         // Act
@@ -114,7 +114,7 @@ public class LogDataStoreTests : IDisposable
         // Arrange
         var logEntry = CreateLogEntry("Test message", LogLevel.Information);
         NotifyCollectionChangedEventArgs? collectionChangedArgs = null;
-        
+
         _dataStore.CollectionChanged += (sender, e) => collectionChangedArgs = e;
 
         // Act
@@ -123,9 +123,9 @@ public class LogDataStoreTests : IDisposable
         // Assert
         collectionChangedArgs.Should().NotBeNull();
         collectionChangedArgs!.Action.Should().Be(NotifyCollectionChangedAction.Add);
-    var newItems = collectionChangedArgs.NewItems as System.Collections.IList;
-    Assert.NotNull(newItems);
-    Assert.True(newItems.Contains(logEntry));
+        var newItems = collectionChangedArgs.NewItems as System.Collections.IList;
+        Assert.NotNull(newItems);
+        Assert.True(newItems.Contains(logEntry));
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public class LogDataStoreTests : IDisposable
         _dataStore.AddEntry(CreateLogEntry("Test", LogLevel.Information));
         var propertyChangedEvents = new List<string>();
         NotifyCollectionChangedEventArgs? collectionChangedArgs = null;
-        
+
         _dataStore.PropertyChanged += (sender, e) => propertyChangedEvents.Add(e.PropertyName!);
         _dataStore.CollectionChanged += (sender, e) => collectionChangedArgs = e;
 
@@ -205,7 +205,7 @@ public class LogDataStoreTests : IDisposable
         propertyChangedEvents.Should().Contain(nameof(LogDataStore.Count));
         propertyChangedEvents.Should().Contain(nameof(LogDataStore.IsFull));
         propertyChangedEvents.Should().Contain(nameof(LogDataStore.Entries));
-        
+
         collectionChangedArgs.Should().NotBeNull();
         collectionChangedArgs!.Action.Should().Be(NotifyCollectionChangedAction.Reset);
     }
@@ -253,7 +253,7 @@ public class LogDataStoreTests : IDisposable
 
         // Act
         var filteredEntries = _dataStore.GetEntriesInTimeRange(
-            baseTime.AddMinutes(-5), 
+            baseTime.AddMinutes(-5),
             baseTime.AddMinutes(5));
 
         // Assert
@@ -369,7 +369,7 @@ public class LogDataStoreTests : IDisposable
         // Should not throw when adding after dispose
         var act = () => _dataStore.AddEntry(CreateLogEntry("After dispose", LogLevel.Information));
         act.Should().NotThrow();
-        
+
         // Count should remain unchanged after dispose
         _dataStore.Count.Should().Be(0);
     }
@@ -384,7 +384,7 @@ public class LogDataStoreTests : IDisposable
             _dataStore.Dispose();
             _dataStore.Dispose();
         };
-        
+
         act.Should().NotThrow();
     }
 
@@ -403,8 +403,12 @@ public class LogDataStoreTests : IDisposable
         };
     }
 
+    /// <summary>
+    /// Disposes the test resources.
+    /// </summary>
     public void Dispose()
     {
         _dataStore?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

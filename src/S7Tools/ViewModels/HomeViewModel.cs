@@ -9,7 +9,7 @@ namespace S7Tools.ViewModels;
 public class HomeViewModel : ViewModelBase
 {
     private readonly IViewModelFactory _viewModelFactory;
-    
+
     /// <summary>
     /// Gets the greeting message.
     /// </summary>
@@ -34,7 +34,7 @@ public class HomeViewModel : ViewModelBase
         _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
         DetailContent = _viewModelFactory.Create<AboutViewModel>();
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="HomeViewModel"/> class for design-time.
     /// </summary>
@@ -54,17 +54,17 @@ internal class DesignTimeViewModelFactory : IViewModelFactory
         {
             return (T)(object)new AboutViewModel();
         }
-        
+
         throw new NotSupportedException($"Design-time factory does not support type {typeof(T).Name}");
     }
-    
+
     public ViewModelBase Create(Type viewModelType)
     {
         if (viewModelType == typeof(AboutViewModel))
         {
             return new AboutViewModel();
         }
-        
+
         throw new NotSupportedException($"Design-time factory does not support type {viewModelType.Name}");
     }
 }

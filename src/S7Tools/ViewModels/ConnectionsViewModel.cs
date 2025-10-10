@@ -9,7 +9,7 @@ namespace S7Tools.ViewModels;
 public class ConnectionsViewModel : ViewModelBase
 {
     private readonly IViewModelFactory _viewModelFactory;
-    
+
     /// <summary>
     /// Gets the greeting message.
     /// </summary>
@@ -34,7 +34,7 @@ public class ConnectionsViewModel : ViewModelBase
         _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
         DetailContent = _viewModelFactory.Create<AboutViewModel>();
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ConnectionsViewModel"/> class for design-time.
     /// </summary>

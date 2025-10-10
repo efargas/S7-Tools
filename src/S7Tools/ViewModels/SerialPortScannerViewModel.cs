@@ -331,7 +331,10 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task ScanPortsAsync()
     {
-        if (IsScanning) return;
+        if (IsScanning)
+        {
+            return;
+        }
 
         try
         {
@@ -353,7 +356,10 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
             var portInfos = new List<SerialPortInfo>();
             foreach (var portName in filteredPorts)
             {
-                if (cancellationToken.IsCancellationRequested) break;
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
 
                 var portInfo = new SerialPortInfo
                 {
@@ -452,7 +458,10 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task RefreshPortInfoAsync()
     {
-        if (SelectedPort == null) return;
+        if (SelectedPort == null)
+        {
+            return;
+        }
 
         try
         {
@@ -460,7 +469,7 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
             var portName = SelectedPort.PortName;
             var isAccessible = await _portService.IsPortAccessibleAsync(portName);
-            
+
             SelectedPort.IsAccessible = isAccessible;
             SelectedPort.LastChecked = DateTime.Now;
 
@@ -495,7 +504,10 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task TestSelectedPortAsync()
     {
-        if (SelectedPort == null) return;
+        if (SelectedPort == null)
+        {
+            return;
+        }
 
         try
         {
@@ -507,8 +519,8 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
             SelectedPort.LastTestResult = success ? "Success" : "Failed";
             SelectedPort.LastTested = DateTime.Now;
 
-            StatusMessage = success 
-                ? $"Port {SelectedPort.PortName} test successful" 
+            StatusMessage = success
+                ? $"Port {SelectedPort.PortName} test successful"
                 : $"Port {SelectedPort.PortName} test failed";
 
             _logger.LogInformation("Port test result for {PortName}: {Success}", SelectedPort.PortName, success);
@@ -557,7 +569,10 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task CopyPortInfoAsync()
     {
-        if (SelectedPort == null) return;
+        if (SelectedPort == null)
+        {
+            return;
+        }
 
         try
         {
@@ -585,13 +600,19 @@ public class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
         // Apply type filters
         if (!IncludeUsbPorts)
+        {
             filtered = filtered.Where(p => !p.Contains("ttyUSB"));
+        }
 
         if (!IncludeAcmPorts)
+        {
             filtered = filtered.Where(p => !p.Contains("ttyACM"));
+        }
 
         if (!IncludeSerialPorts)
+        {
             filtered = filtered.Where(p => !p.Contains("ttyS"));
+        }
 
         // Apply text filter
         if (!string.IsNullOrEmpty(ScanFilter))

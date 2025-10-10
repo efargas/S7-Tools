@@ -8,7 +8,7 @@ namespace S7Tools;
 public class ViewLocator : IDataTemplate
 {
 
-        public Control? Build(object? param)
+    public Control? Build(object? param)
     {
         if (param is null)
         {

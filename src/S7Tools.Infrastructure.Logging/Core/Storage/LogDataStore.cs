@@ -1,9 +1,9 @@
-using S7Tools.Infrastructure.Logging.Core.Models;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
+using S7Tools.Infrastructure.Logging.Core.Models;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;
 
@@ -254,7 +254,7 @@ public sealed class LogDataStore : ILogDataStore
     public async Task<string> ExportAsync(string format = "txt")
     {
         IReadOnlyList<LogModel> entries = Entries;
-        
+
         return format.ToLowerInvariant() switch
         {
             "json" => await ExportAsJsonAsync(entries).ConfigureAwait(false),
@@ -316,21 +316,21 @@ public sealed class LogDataStore : ILogDataStore
         return await Task.Run(() =>
         {
             var sb = new StringBuilder();
-            
+
             foreach (LogModel entry in entries)
             {
                 sb.AppendLine($"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.Level}] {entry.Category}: {entry.Message}");
-                
+
                 if (entry.Exception != null)
                 {
                     sb.AppendLine($"Exception: {entry.Exception}");
                 }
-                
+
                 if (!string.IsNullOrEmpty(entry.Scope))
                 {
                     sb.AppendLine($"Scope: {entry.Scope}");
                 }
-                
+
                 sb.AppendLine();
             }
 

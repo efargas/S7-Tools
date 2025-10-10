@@ -1,8 +1,8 @@
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
-using Avalonia;
-using Avalonia.Controls;
 
 namespace S7Tools.Converters;
 
@@ -16,7 +16,7 @@ public static class ObjectConverters
     /// </summary>
     public static readonly IValueConverter IsNotNull =
         new FuncValueConverter<object?, bool>(x => x is not null);
-    
+
     /// <summary>
     /// A value converter that returns <see langword="true"/> if the input is <see langword="null"/>.
     /// </summary>
@@ -72,6 +72,6 @@ public static class ObjectConverters
     /// Returns 300 pixels when visible, 0 when hidden.
     /// </summary>
     public static readonly IValueConverter SidebarWidthConverter =
-        new FuncValueConverter<bool, GridLength>(isVisible => 
+        new FuncValueConverter<bool, GridLength>(isVisible =>
             isVisible ? new GridLength(300, GridUnitType.Pixel) : new GridLength(0, GridUnitType.Pixel));
 }

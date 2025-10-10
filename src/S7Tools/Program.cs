@@ -5,16 +5,16 @@ using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using S7Tools.Extensions;
-using S7Tools.ViewModels;
-using S7Tools.Views;
-using S7Tools.Services.Interfaces;
-using S7Tools.Services;
-using Splat.Microsoft.Extensions.DependencyInjection;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
-using S7Tools.Infrastructure.Logging.Providers.Extensions;
+using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Models;
+using S7Tools.Infrastructure.Logging.Providers.Extensions;
+using S7Tools.Services;
+using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels;
+using S7Tools.Views;
+using Splat.Microsoft.Extensions.DependencyInjection;
 
 
 namespace S7Tools;
@@ -28,8 +28,8 @@ sealed class Program
         ConfigureServices(services);
         var serviceProvider = services.BuildServiceProvider();
 
-    // Diagnostic initialization: ensure important services are initialized early so
-    // we can validate profile storage and stty integration during startup.
+        // Diagnostic initialization: ensure important services are initialized early so
+        // we can validate profile storage and stty integration during startup.
         // If started with --diag flag, run initialization synchronously and print diagnostics, then exit.
         if (args != null && args.Length > 0 && args.Contains("--diag"))
         {

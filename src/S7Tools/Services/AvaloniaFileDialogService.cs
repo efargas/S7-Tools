@@ -59,7 +59,7 @@ public class AvaloniaFileDialogService : IFileDialogService
             }
 
             var result = await window.StorageProvider.OpenFilePickerAsync(options);
-            
+
             if (result.Count > 0)
             {
                 var selectedFile = result[0].Path.LocalPath;
@@ -114,7 +114,7 @@ public class AvaloniaFileDialogService : IFileDialogService
             }
 
             var result = await window.StorageProvider.SaveFilePickerAsync(options);
-            
+
             if (result != null)
             {
                 var selectedFile = result.Path.LocalPath;
@@ -157,7 +157,7 @@ public class AvaloniaFileDialogService : IFileDialogService
             }
 
             var result = await window.StorageProvider.OpenFolderPickerAsync(options);
-            
+
             if (result.Count > 0)
             {
                 var selectedFolder = result[0].Path.LocalPath;
@@ -206,7 +206,7 @@ public class AvaloniaFileDialogService : IFileDialogService
             }
 
             var result = await window.StorageProvider.OpenFilePickerAsync(options);
-            
+
             if (result.Count > 0)
             {
                 var selectedFiles = result.Select(f => f.Path.LocalPath).ToArray();

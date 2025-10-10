@@ -1,8 +1,8 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.ValueObjects;
 using S7Tools.Core.Services.Interfaces;
-using System.Collections.Concurrent;
 
 namespace S7Tools.Services;
 
@@ -16,7 +16,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     private readonly ConcurrentDictionary<string, Tag> _managedTags = new();
     private readonly Random _random = new(); // For simulation purposes
     private readonly object _stateLock = new();
-    
+
     private ConnectionState _state = ConnectionState.Disconnected;
     private S7ConnectionConfig _configuration = new("127.0.0.1");
     private bool _disposed;
@@ -66,19 +66,19 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         try
         {
             _logger.LogInformation("Attempting to connect to PLC at {IpAddress}:{Port}", config.IpAddress, config.Port);
-            
+
             ChangeState(ConnectionState.Connecting);
-            
+
             // Simulate connection delay
             await Task.Delay(1000, cancellationToken);
-            
+
             lock (_stateLock)
             {
                 _configuration = config;
             }
-            
+
             ChangeState(ConnectionState.Connected);
-            
+
             _logger.LogInformation("Successfully connected to PLC at {IpAddress}:{Port}", config.IpAddress, config.Port);
             return Result.Success();
         }
@@ -102,12 +102,12 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         try
         {
             _logger.LogInformation("Disconnecting from PLC");
-            
+
             // Simulate disconnection delay
             await Task.Delay(500, cancellationToken);
-            
+
             ChangeState(ConnectionState.Disconnected);
-            
+
             _logger.LogInformation("Successfully disconnected from PLC");
             return Result.Success();
         }
@@ -124,13 +124,13 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         try
         {
             _logger.LogInformation("Testing connection to PLC at {IpAddress}:{Port}", config.IpAddress, config.Port);
-            
+
             // Simulate connection test
             await Task.Delay(500, cancellationToken);
-            
+
             // For simulation, assume connection is successful if IP is not empty
             var success = !string.IsNullOrWhiteSpace(config.IpAddress);
-            
+
             if (success)
             {
                 _logger.LogInformation("Connection test successful for {IpAddress}:{Port}", config.IpAddress, config.Port);
@@ -160,10 +160,10 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
             }
 
             _logger.LogDebug("Retrieving PLC information");
-            
+
             // Simulate delay for reading PLC info
             await Task.Delay(200, cancellationToken);
-            
+
             // Simulate PLC info (in real implementation, this would come from the actual PLC)
             var plcInfo = new PlcInfo(
                 CpuType: "CPU 1516-3 PN/DP",
@@ -171,7 +171,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
                 ModuleName: "CPU 1516-3 PN/DP",
                 ModuleTypeName: "CPU",
                 FirmwareVersion: "V2.8.3");
-            
+
             _logger.LogDebug("Retrieved PLC info: {PlcInfo}", plcInfo);
             return Result<PlcInfo>.Success(plcInfo);
         }
@@ -186,17 +186,17 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     public async Task<Result> ReconnectAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Attempting to reconnect to PLC");
-        
+
         ChangeState(ConnectionState.Reconnecting);
-        
+
         var disconnectResult = await DisconnectAsync(cancellationToken);
         if (disconnectResult.IsFailure)
         {
             _logger.LogWarning("Failed to disconnect during reconnect: {Error}", disconnectResult.Error);
         }
-        
+
         await Task.Delay(1000, cancellationToken); // Wait before reconnecting
-        
+
         return await ConnectAsync(Configuration, cancellationToken);
     }
 
@@ -215,23 +215,23 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
             }
 
             _logger.LogDebug("Reading tag from address {Address}", address);
-            
+
             // Simulate read delay
             await Task.Delay(50, cancellationToken);
-            
+
             // Generate simulated value based on address type
             var simulatedValue = GenerateSimulatedValue(address);
             var tagResult = Tag.Create($"Tag_{address}", address.Value, simulatedValue);
-            
+
             if (tagResult.IsFailure)
             {
                 _logger.LogError("Failed to create tag for address {Address}: {Error}", address, tagResult.Error);
                 return tagResult;
             }
-            
-            _logger.LogDebug("Successfully read tag {TagName} from {Address} with value {Value}", 
+
+            _logger.LogDebug("Successfully read tag {TagName} from {Address} with value {Value}",
                 tagResult.Value.Name, address, tagResult.Value.GetDisplayValue());
-            
+
             return tagResult;
         }
         catch (Exception ex)
@@ -280,10 +280,10 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         {
             var tasks = addresses.Select(address => ReadTagAsync(address, cancellationToken));
             var results = await Task.WhenAll(tasks);
-            
+
             var successfulTags = new List<Tag>();
             var errors = new List<string>();
-            
+
             foreach (var result in results)
             {
                 if (result.IsSuccess)
@@ -295,12 +295,12 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
                     errors.Add(result.Error);
                 }
             }
-            
+
             if (errors.Count > 0)
             {
                 _logger.LogWarning("Some tags failed to read: {Errors}", string.Join(", ", errors));
             }
-            
+
             return Result<IReadOnlyCollection<Tag>>.Success(successfulTags.AsReadOnly());
         }
         catch (Exception ex)
@@ -321,10 +321,10 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
             }
 
             _logger.LogDebug("Writing value {Value} to address {Address}", value, address);
-            
+
             // Simulate write delay
             await Task.Delay(50, cancellationToken);
-            
+
             _logger.LogDebug("Successfully wrote value {Value} to address {Address}", value, address);
             return Result.Success();
         }
@@ -366,15 +366,15 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         {
             var tasks = tagWrites.Select(tw => WriteTagAsync(tw.Address, tw.Value, cancellationToken));
             var results = await Task.WhenAll(tasks);
-            
+
             var errors = results.Where(r => r.IsFailure).Select(r => r.Error).ToList();
-            
+
             if (errors.Count > 0)
             {
                 _logger.LogError("Some tag writes failed: {Errors}", string.Join(", ", errors));
                 return Result.Failure($"Some writes failed: {string.Join(", ", errors)}");
             }
-            
+
             return Result.Success();
         }
         catch (Exception ex)
@@ -410,7 +410,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
                 _logger.LogDebug("Removed tag {TagName} from managed tags", tagName);
                 return Task.FromResult(Result.Success());
             }
-            
+
             return Task.FromResult(Result.Failure($"Tag '{tagName}' not found"));
         }
         catch (Exception ex)
@@ -444,7 +444,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
                 .Where(t => string.Equals(t.Group, group, StringComparison.OrdinalIgnoreCase))
                 .ToList()
                 .AsReadOnly();
-            
+
             return Task.FromResult(Result<IReadOnlyCollection<Tag>>.Success(tags));
         }
         catch (Exception ex)
@@ -461,7 +461,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         {
             // Simulate validation delay
             await Task.Delay(100, cancellationToken);
-            
+
             // For simulation, all addresses are considered valid
             _logger.LogDebug("Address {Address} is valid", address);
             return Result.Success();
@@ -480,13 +480,13 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     private void ChangeState(ConnectionState newState, string? error = null)
     {
         ConnectionState previousState;
-        
+
         lock (_stateLock)
         {
             previousState = _state;
             _state = newState;
         }
-        
+
         if (previousState != newState)
         {
             _logger.LogDebug("Connection state changed from {PreviousState} to {NewState}", previousState, newState);
@@ -519,13 +519,13 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         if (!_disposed)
         {
             _logger.LogInformation("Disposing PlcDataService");
-            
+
             // Disconnect if connected
             if (State == ConnectionState.Connected)
             {
                 _ = DisconnectAsync().ConfigureAwait(false);
             }
-            
+
             _disposed = true;
         }
     }

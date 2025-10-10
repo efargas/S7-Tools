@@ -1,5 +1,5 @@
-using ReactiveUI;
 using System.Reactive;
+using ReactiveUI;
 
 namespace S7Tools.ViewModels;
 
@@ -12,7 +12,7 @@ public class ConfirmationDialogViewModel : ViewModelBase
     /// Gets the dialog title.
     /// </summary>
     public string Title { get; }
-    
+
     /// <summary>
     /// Gets the dialog message.
     /// </summary>
@@ -27,7 +27,7 @@ public class ConfirmationDialogViewModel : ViewModelBase
     /// Gets the command to confirm the dialog.
     /// </summary>
     public ReactiveCommand<Unit, bool> OkCommand { get; }
-    
+
     /// <summary>
     /// Gets the command to cancel the dialog.
     /// </summary>
@@ -48,7 +48,7 @@ public class ConfirmationDialogViewModel : ViewModelBase
         OkCommand = ReactiveCommand.Create(() => true);
         CancelCommand = ReactiveCommand.Create(() => false);
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfirmationDialogViewModel"/> class for design-time.
     /// </summary>

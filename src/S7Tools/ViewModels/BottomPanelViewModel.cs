@@ -1,16 +1,16 @@
-using Avalonia.Controls;
-using ReactiveUI;
-using System.Reactive;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using S7Tools.Models;
-using S7Tools.Views;
-using S7Tools.Services.Interfaces;
-using S7Tools.Services;
-using S7Tools.Infrastructure.Logging.Core.Storage;
-using Microsoft.Extensions.Logging;
-using System;
+using System.Reactive;
+using Avalonia.Controls;
 using Avalonia.Media;
+using Microsoft.Extensions.Logging;
+using ReactiveUI;
+using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Models;
+using S7Tools.Services;
+using S7Tools.Services.Interfaces;
+using S7Tools.Views;
 
 namespace S7Tools.ViewModels;
 
@@ -156,7 +156,7 @@ public class BottomPanelViewModel : ReactiveObject
             PanelHeight = new GridLength(35, GridUnitType.Pixel);
             _logger.LogDebug("Bottom panel collapsed to {Height}px", PanelHeight.Value);
         }
-        
+
         this.RaisePropertyChanged(nameof(IsExpanded));
     }
 

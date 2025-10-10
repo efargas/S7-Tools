@@ -1,6 +1,6 @@
+using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Input;
-using System.Reactive;
 
 namespace S7Tools.Views;
 

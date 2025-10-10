@@ -1,7 +1,7 @@
-using Avalonia.Data.Converters;
-using Avalonia.Media;
 using System;
 using System.Globalization;
+using Avalonia.Data.Converters;
+using Avalonia.Media;
 
 namespace S7Tools.Converters;
 
@@ -32,7 +32,7 @@ public class BooleanToColorConverter : IValueConverter
         }
 
         var colorString = boolValue ? colors[0] : colors[1];
-        
+
         if (Color.TryParse(colorString, out var color))
         {
             return new SolidColorBrush(color);

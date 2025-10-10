@@ -107,7 +107,7 @@ public sealed class DataStoreLoggerConfiguration
             .Replace("?", ".")
             + "$";
 
-        return System.Text.RegularExpressions.Regex.IsMatch(input, regexPattern, 
+        return System.Text.RegularExpressions.Regex.IsMatch(input, regexPattern,
             System.Text.RegularExpressions.RegexOptions.IgnoreCase);
     }
 }

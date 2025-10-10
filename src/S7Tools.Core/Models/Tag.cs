@@ -119,8 +119,8 @@ public sealed record Tag(
     public Tag WithValue(object? newValue, TagQuality quality = TagQuality.Good, DateTimeOffset? timestamp = null)
     {
         var tagValueResult = TagValue.Create(newValue, DataType, quality);
-        var tagValue = tagValueResult.IsSuccess 
-            ? tagValueResult.Value 
+        var tagValue = tagValueResult.IsSuccess
+            ? tagValueResult.Value
             : new TagValue(newValue, PlcDataType.Unknown, TagQuality.Bad, timestamp);
 
         if (timestamp.HasValue)
@@ -136,7 +136,7 @@ public sealed record Tag(
     /// </summary>
     /// <param name="quality">The new quality.</param>
     /// <returns>A new Tag instance with the updated quality.</returns>
-    public Tag WithQuality(TagQuality quality) => 
+    public Tag WithQuality(TagQuality quality) =>
         this with { Value = Value.WithQuality(quality) };
 
     /// <summary>
@@ -151,7 +151,7 @@ public sealed record Tag(
     /// </summary>
     /// <param name="scanRate">The new scan rate in milliseconds.</param>
     /// <returns>A new Tag instance with the updated scan rate.</returns>
-    public Tag WithScanRate(int scanRate) => 
+    public Tag WithScanRate(int scanRate) =>
         scanRate >= 0 ? this with { ScanRate = scanRate } : this;
 
     /// <summary>
@@ -174,7 +174,7 @@ public sealed record Tag(
     {
         PlcAddressType.Output => true,
         PlcAddressType.Memory => true,
-        PlcAddressType.DataBlockBit or PlcAddressType.DataBlockByte or 
+        PlcAddressType.DataBlockBit or PlcAddressType.DataBlockByte or
         PlcAddressType.DataBlockWord or PlcAddressType.DataBlockDWord => true,
         PlcAddressType.Variable => true,
         _ => false
@@ -188,6 +188,6 @@ public sealed record Tag(
     /// <summary>
     /// Returns a detailed string representation of the tag.
     /// </summary>
-    public override string ToString() => 
+    public override string ToString() =>
         $"{Name} [{Address}] = {GetDisplayValue()} ({Quality}) - {(IsEnabled ? "Enabled" : "Disabled")}";
 }

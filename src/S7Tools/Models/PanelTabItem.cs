@@ -10,9 +10,9 @@ public class PanelTabItem : ReactiveObject
     private string _id = string.Empty;
     private string _header = string.Empty;
     private object? _content;
-    private bool _isSelected = false;
+    private bool _isSelected;
     private string _icon = string.Empty;
-    private bool _isClosable = false;
+    private bool _isClosable;
 
     /// <summary>
     /// Gets or sets the unique identifier for this tab item.

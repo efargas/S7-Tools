@@ -1,15 +1,15 @@
+using System;
+using System.Reactive;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using S7Tools.Models;
+using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
 using S7Tools.Views;
-using S7Tools.Services.Interfaces;
-using S7Tools.Models;
-using System;
-using System.Reactive;
-using System.Threading.Tasks;
 
 namespace S7Tools;
 
