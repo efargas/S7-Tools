@@ -498,7 +498,7 @@ public class SocatService : ISocatService, IDisposable
 
         try
         {
-            // Check our managed processes first
+            // First, check our managed processes under lock
             await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
@@ -507,7 +507,13 @@ public class SocatService : ISocatService, IDisposable
                 {
                     return true;
                 }
-            // Prefer managed check over shelling out to netstat/grep
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+
+            // Then, attempt to bind to the port to detect external usage
             try
             {
                 using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Any, tcpPort);
@@ -517,19 +523,14 @@ public class SocatService : ISocatService, IDisposable
             }
             catch (System.Net.Sockets.SocketException)
             {
-                return true; // bind failed -> port likely in use or insufficient privileges
+                return true; // bind failed -> port in use or insufficient privileges
             }
-            if (success && !string.IsNullOrWhiteSpace(output))
-            {
-                return true;
-            }
-
-            return false;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to check if TCP port {Port} is in use", tcpPort);
-            return false; // Assume not in use if we can't check
+            // Be conservative: assume port is in use on error to avoid collisions
+            return true;
         }
     }
 
