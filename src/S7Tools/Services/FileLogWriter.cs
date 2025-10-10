@@ -20,6 +20,12 @@ public sealed class FileLogWriter : IDisposable
     private readonly object _sync = new();
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileLogWriter"/> class.
+    /// </summary>
+    /// <param name="dataStore">The log data store to monitor for new entries.</param>
+    /// <param name="settingsService">The settings service to retrieve logging configuration.</param>
+    /// <param name="logger">The logger for diagnostic messages.</param>
     public FileLogWriter(ILogDataStore dataStore, ISettingsService settingsService, ILogger<FileLogWriter> logger)
     {
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
@@ -117,6 +123,9 @@ public sealed class FileLogWriter : IDisposable
         }
     }
 
+    /// <summary>
+    /// Disposes the file log writer and releases associated resources.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed)
