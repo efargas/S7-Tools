@@ -874,20 +874,21 @@ public class SocatService : ISocatService, IDisposable
 
         try
         {
-            // Prefer invoking socat directly without shell to avoid injection
-            // Split command into executable and args only if it starts with "socat "
-            string fileName;
+            // Prefer invoking socat directly; reject unsupported commands to avoid injection
+            string fileName = "socat";
             string arguments;
-            if (command.TrimStart().StartsWith("socat ", StringComparison.OrdinalIgnoreCase))
+            var trimmed = command.Trim();
+            if (trimmed.StartsWith("socat ", StringComparison.OrdinalIgnoreCase))
             {
-                fileName = "socat";
-                arguments = command.Trim().Substring(5).TrimStart();
+                arguments = trimmed.Substring(5).TrimStart();
+            }
+            else if (string.Equals(trimmed, "socat", StringComparison.OrdinalIgnoreCase))
+            {
+                arguments = string.Empty;
             }
             else
             {
-                // Fallback to shell, but keep original behavior
-                fileName = "/bin/sh";
-                arguments = $"-c \"{command.Replace("\"", "\\\"")}\"";
+                throw new InvalidOperationException("Only socat commands are allowed to be executed.");
             }
 
             var processStartInfo = new ProcessStartInfo
