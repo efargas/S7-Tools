@@ -7,10 +7,27 @@ This helps debug why the profiles.json file is not being created.
 import os
 import json
 from pathlib import Path
+import glob
 
 def test_socat_service():
-    # Get the application directory
-    app_dir = Path(__file__).parent / "src/S7Tools/bin/Debug/net8.0"
+    # Determine the application directory dynamically
+    # 1. Check for environment variable S7TOOLS_BUILD_OUTPUT
+    build_output_env = os.environ.get("S7TOOLS_BUILD_OUTPUT")
+    if build_output_env:
+        app_dir = Path(build_output_env)
+    else:
+        # 2. Search for likely build output directories
+        project_root = Path(__file__).parent / "src/S7Tools/bin"
+        candidates = []
+        for config in ["Debug", "Release"]:
+            pattern = str(project_root / config / "net*")
+            found = glob.glob(pattern)
+            candidates.extend(found)
+        if candidates:
+            # Pick the most recently modified directory
+            app_dir = Path(max(candidates, key=lambda d: os.path.getmtime(d)))
+        else:
+            raise FileNotFoundError("Could not find S7Tools build output directory. Please set S7TOOLS_BUILD_OUTPUT environment variable.")
     socat_profiles_dir = app_dir / "resources/SocatProfiles"
     profiles_file = socat_profiles_dir / "profiles.json"
 
