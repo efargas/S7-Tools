@@ -119,15 +119,17 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
                             // Generate command with the actual selected device for accurate preview
                             SelectedProfileSocatCommand = _socatService.GenerateSocatCommandForProfile(profile, deviceToUse);
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            _logger.LogWarning(ex, "Failed to generate socat command for profile '{ProfileName}' with device '{Device}'. Falling back to configuration command.", profile?.Name, deviceToUse);
                             // Fallback to configuration command generation
                             SelectedProfileSocatCommand = _socatService.GenerateSocatCommand(profile.Configuration, deviceToUse);
                         }
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Error generating socat command preview for selected profile '{ProfileName}' and device '{Device}'.", profile?.Name, selectedDevice);
                     SelectedProfileSocatCommand = "Error generating command";
                 }
             })
