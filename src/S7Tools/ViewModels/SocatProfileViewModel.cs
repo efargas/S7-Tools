@@ -381,8 +381,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
     {
         ArgumentNullException.ThrowIfNull(profile);
 
-        _originalProfile = profile.Clone();
-
+        _originalProfile = profile.ClonePreserveId();
         // Load profile properties
         ProfileName = profile.Name;
         ProfileDescription = profile.Description;
