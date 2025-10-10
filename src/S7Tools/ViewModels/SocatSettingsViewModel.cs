@@ -796,25 +796,26 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
+            var profileToDelete = SelectedProfile;
             var result = await _dialogService.ShowConfirmationAsync("Delete Profile",
-                $"Are you sure you want to delete profile '{SelectedProfile.Name}'?");
+                $"Are you sure you want to delete profile '{profileToDelete.Name}'?");
 
             if (result)
             {
                 StatusMessage = "Deleting profile...";
 
-                await _profileService.DeleteProfileAsync(SelectedProfile.Id);
+                await _profileService.DeleteProfileAsync(profileToDelete.Id);
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    Profiles.Remove(SelectedProfile);
+                    Profiles.Remove(profileToDelete);
                     ProfileCount = Profiles.Count;
                     SelectedProfile = Profiles.FirstOrDefault();
 
                     StatusMessage = "Profile deleted successfully";
                 });
 
-                _logger.LogInformation("Deleted socat profile: {ProfileName}", SelectedProfile.Name);
+                _logger.LogInformation("Deleted socat profile: {ProfileName}", profileToDelete.Name);
             }
         }
         catch (Exception ex)
