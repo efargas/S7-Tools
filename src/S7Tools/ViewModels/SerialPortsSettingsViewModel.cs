@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Helpers;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -876,68 +877,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
             _logger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
 
-            await Task.Run(() =>
-            {
-                try
-                {
-                    if (OperatingSystem.IsWindows())
-                    {
-                        System.Diagnostics.Process.Start("explorer.exe", ProfilesPath);
-                    }
-                    else if (OperatingSystem.IsLinux())
-                    {
-                        // Try different file managers commonly available on Linux
-                        var fileManagers = new[] { "xdg-open", "nautilus", "dolphin", "thunar", "pcmanfm" };
-
-                        bool opened = false;
-                        foreach (var fileManager in fileManagers)
-                        {
-                            try
-                            {
-                                var process = new System.Diagnostics.Process
-                                {
-                                    StartInfo = new System.Diagnostics.ProcessStartInfo
-                                    {
-                                        FileName = fileManager,
-                                        Arguments = ProfilesPath,
-                                        UseShellExecute = false,
-                                        CreateNoWindow = true
-                                    }
-                                };
-
-                                if (process.Start())
-                                {
-                                    opened = true;
-                                    break;
-                                }
-                            }
-                            catch
-                            {
-                                // Try next file manager
-                                continue;
-                            }
-                        }
-
-                        if (!opened)
-                        {
-                            throw new InvalidOperationException("No suitable file manager found to open directory");
-                        }
-                    }
-                    else if (OperatingSystem.IsMacOS())
-                    {
-                        System.Diagnostics.Process.Start("open", ProfilesPath);
-                    }
-                    else
-                    {
-                        throw new PlatformNotSupportedException("Opening directories in explorer is not supported on this platform");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to open file explorer for path: {Path}", ProfilesPath);
-                    throw;
-                }
-            });
+            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
 
             StatusMessage = "Profiles folder opened";
             _logger.LogInformation("Successfully opened profiles folder");
@@ -983,35 +923,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private static async Task OpenDirectoryInExplorerAsync(string path)
-    {
-        await Task.Run(() =>
-        {
-            try
-            {
-                if (OperatingSystem.IsWindows())
-                {
-                    System.Diagnostics.Process.Start("explorer.exe", path);
-                }
-                else if (OperatingSystem.IsLinux())
-                {
-                    System.Diagnostics.Process.Start("xdg-open", path);
-                }
-                else if (OperatingSystem.IsMacOS())
-                {
-                    System.Diagnostics.Process.Start("open", path);
-                }
-                else
-                {
-                    throw new PlatformNotSupportedException("Opening directories in explorer is not supported on this platform");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to open directory in explorer: {path}", ex);
-            }
-        });
-    }
+
 
     /// <summary>
     /// Refreshes the view model properties from the persisted settings.
