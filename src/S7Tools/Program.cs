@@ -33,6 +33,7 @@ sealed class Program
         // If started with --diag flag, run initialization synchronously and print diagnostics, then exit.
         if (args != null && args.Length > 0 && args.Contains("--diag"))
         {
+            var logger = serviceProvider.GetService<ILogger<Program>>();
             try
             {
                 // Run initialization synchronously for diagnostics so we can inspect storage state.
@@ -47,20 +48,50 @@ sealed class Program
                     {
                         var storageInfo = profileService.GetStorageInfoAsync().GetAwaiter().GetResult();
                         var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                        Console.WriteLine("[S7Tools] SerialPortProfileService storage info:\n" + json);
+                        logger?.LogInformation("[S7Tools] SerialPortProfileService storage info:\n{StorageInfo}", json);
+                        Console.WriteLine("[S7Tools] SerialPortProfileService storage info:\n" + json); // Keep console for --diag flag
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[S7Tools] Failed to get profile storage info: {ex}");
+                        logger?.LogError(ex, "[S7Tools] Failed to get profile storage info");
+                        Console.WriteLine($"[S7Tools] Failed to get profile storage info: {ex}"); // Keep console for --diag flag
                     }
                 }
 
-                Console.WriteLine("[S7Tools] Diagnostics complete. Exiting due to --diag flag.");
+                // Initialize SocatProfileService and ensure default profile exists
+                var socatProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISocatProfileService>();
+
+                if (socatProfileService != null)
+                {
+                    try
+                    {
+                        // Use a local async function to avoid .GetResult() deadlocks
+                        async Task LogSocatStorageAsync()
+                        {
+                            await socatProfileService.InitializeStorageAsync().ConfigureAwait(false);
+                            var storageInfo = await socatProfileService.GetStorageInfoAsync().ConfigureAwait(false);
+                            var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+                            logger?.LogInformation("[S7Tools] SocatProfileService storage info:\n{StorageInfo}", json);
+                            Console.WriteLine("[S7Tools] SocatProfileService storage info:\n" + json); // Keep console for --diag flag
+                        }
+
+                        LogSocatStorageAsync().GetAwaiter().GetResult();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError(ex, "[S7Tools] Failed to initialize socat profile storage");
+                        Console.WriteLine($"[S7Tools] Failed to initialize socat profile storage: {ex}"); // Keep console for --diag flag
+                    }
+                }
+
+                logger?.LogInformation("[S7Tools] Diagnostics complete. Exiting due to --diag flag");
+                Console.WriteLine("[S7Tools] Diagnostics complete. Exiting due to --diag flag."); // Keep console for --diag flag
                 return;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[S7Tools] Startup diagnostics failed: {ex}");
+                logger?.LogError(ex, "[S7Tools] Startup diagnostics failed");
+                Console.WriteLine($"[S7Tools] Startup diagnostics failed: {ex}"); // Keep console for --diag flag
                 // fall through to start the UI so user can still run the app
             }
         }
@@ -69,13 +100,16 @@ sealed class Program
         // This avoids blocking startup hangs while still allowing services to initialize in the background.
         _ = Task.Run(async () =>
         {
+            var logger = serviceProvider.GetService<ILogger<Program>>();
             try
             {
                 await serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
+                logger?.LogInformation("[S7Tools] Background service initialization completed successfully");
             }
             catch (Exception ex)
             {
-                // Log to console - UI will still start
+                // Log to both logger and console for critical startup failures
+                logger?.LogError(ex, "[S7Tools] Background service initialization failed");
                 Console.WriteLine($"[S7Tools] Background service initialization failed: {ex}");
             }
         });
@@ -83,7 +117,7 @@ sealed class Program
         IconProvider.Current.Register<FontAwesomeIconProvider>();
 
         BuildAvaloniaApp(serviceProvider)
-            .StartWithClassicDesktopLifetime(args);
+            .StartWithClassicDesktopLifetime(args ?? Array.Empty<string>());
     }
 
     public static AppBuilder BuildAvaloniaApp(IServiceProvider serviceProvider)

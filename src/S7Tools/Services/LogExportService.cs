@@ -174,7 +174,7 @@ public class LogExportService : ILogExportService
             sb.AppendLine(new string('-', 40));
         }
 
-        await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
+        await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8).ConfigureAwait(false);
         _logger.LogDebug("Exported {Count} logs as text to {FilePath}", logs.Count(), filePath);
     }
 
@@ -219,7 +219,7 @@ public class LogExportService : ILogExportService
         };
 
         string json = JsonSerializer.Serialize(exportData, options);
-        await File.WriteAllTextAsync(filePath, json, Encoding.UTF8);
+        await File.WriteAllTextAsync(filePath, json, Encoding.UTF8).ConfigureAwait(false);
         _logger.LogDebug("Exported {Count} logs as JSON to {FilePath}", logs.Count(), filePath);
     }
 
@@ -247,7 +247,7 @@ public class LogExportService : ILogExportService
             sb.AppendLine($"{timestamp},{level},{category},{message},{exception}");
         }
 
-        await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8);
+        await File.WriteAllTextAsync(filePath, sb.ToString(), Encoding.UTF8).ConfigureAwait(false);
         _logger.LogDebug("Exported {Count} logs as CSV to {FilePath}", logs.Count(), filePath);
     }
 

@@ -24,7 +24,8 @@ public class SettingsViewModel : ViewModelBase
             "General",
             "Appearance",
             "Advanced",
-            "Serial Ports"
+            "Serial Ports",
+            "Servers"
         });
 
         // Initialize with Logging category
@@ -77,6 +78,7 @@ public class SettingsViewModel : ViewModelBase
             "Appearance" => new AppearanceSettingsViewModel(),
             "Advanced" => new AdvancedSettingsViewModel(),
             "Serial Ports" => CreateSerialPortsSettingsViewModel(),
+            "Servers" => CreateSocatSettingsViewModel(),
             _ => new GeneralSettingsViewModel()
         };
 
@@ -104,5 +106,19 @@ public class SettingsViewModel : ViewModelBase
         var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
         return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
+    }
+
+    private SocatSettingsViewModel CreateSocatSettingsViewModel()
+    {
+        var socatProfileService = _serviceProvider.GetRequiredService<ISocatProfileService>();
+        var socatService = _serviceProvider.GetRequiredService<ISocatService>();
+        var serialPortService = _serviceProvider.GetRequiredService<ISerialPortService>();
+        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<SocatSettingsViewModel>>();
+
+        return new SocatSettingsViewModel(socatProfileService, socatService, serialPortService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
     }
 }

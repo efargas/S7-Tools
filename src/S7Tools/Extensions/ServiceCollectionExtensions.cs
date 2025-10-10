@@ -90,6 +90,10 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
         services.TryAddSingleton<ISerialPortService, SerialPortService>();
 
+        // Add Socat Services (Servers Settings - socat configuration)
+        services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
+        services.TryAddSingleton<ISocatService, SocatService>();
+
         return services;
     }
 
@@ -197,6 +201,10 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<SerialPortsSettingsViewModel>();
         services.TryAddTransient<SerialPortProfileViewModel>();
         services.TryAddTransient<SerialPortScannerViewModel>();
+
+        // Add Socat ViewModels (Servers Settings - socat configuration)
+        services.TryAddTransient<SocatSettingsViewModel>();
+        services.TryAddTransient<SocatProfileViewModel>();
 
         return services;
     }
@@ -329,23 +337,28 @@ public static class ServiceCollectionExtensions
             var profileService = serviceProvider.GetService<ISerialPortProfileService>();
             if (profileService != null)
             {
-                // Fire-and-forget initialization; any exceptions are logged inside the service
+                // Fire-and-forget initialization with proper error logging
                 _ = Task.Run(async () =>
                 {
                     try
                     {
                         await profileService.InitializeStorageAsync().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Intentionally swallow here; service logs errors
+                        // Log the error instead of swallowing it silently
+                        var logger = serviceProvider.GetService<ILogger<ISerialPortProfileService>>();
+                        logger?.LogError(ex, "Failed to initialize serial port profile storage during application startup");
                     }
                 });
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            // Log service retrieval errors instead of ignoring them
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
+            logger?.LogError(ex, "Failed to retrieve ISerialPortProfileService during service initialization");
         }
     }
 

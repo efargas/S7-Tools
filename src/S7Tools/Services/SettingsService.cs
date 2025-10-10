@@ -43,7 +43,7 @@ public class SettingsService : ISettingsService
         {
             if (File.Exists(filePath))
             {
-                var json = await File.ReadAllTextAsync(filePath);
+                var json = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
                 var settings = JsonSerializer.Deserialize<ApplicationSettings>(json);
                 if (settings != null)
                 {
@@ -90,7 +90,7 @@ public class SettingsService : ISettingsService
             };
 
             var json = JsonSerializer.Serialize(_settings, options);
-            await File.WriteAllTextAsync(filePath, json);
+            await File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

@@ -12,6 +12,27 @@ namespace S7Tools.Infrastructure.Logging.Core.Storage;
 /// </summary>
 public sealed class LogDataStore : ILogDataStore
 {
+    /// <summary>
+    /// Export format constants.
+    /// </summary>
+    public static class ExportFormats
+    {
+        /// <summary>
+        /// Plain text export format.
+        /// </summary>
+        public const string Text = "txt";
+
+        /// <summary>
+        /// JSON export format.
+        /// </summary>
+        public const string Json = "json";
+
+        /// <summary>
+        /// CSV export format.
+        /// </summary>
+        public const string Csv = "csv";
+    }
+
     private readonly object _lock = new();
     private readonly LogModel[] _buffer;
     private readonly LogDataStoreOptions _options;
@@ -154,6 +175,9 @@ public sealed class LogDataStore : ILogDataStore
                 return;
             }
 
+            var addedEntries = new List<LogModel>();
+            var startIndex = _count;
+
             lock (_lock)
             {
                 foreach (LogModel? entry in entries)
@@ -162,6 +186,7 @@ public sealed class LogDataStore : ILogDataStore
                     {
                         _buffer[_head] = entry;
                         _head = (_head + 1) % _buffer.Length;
+                        addedEntries.Add(entry);
 
                         if (_count < _buffer.Length)
                         {
@@ -175,7 +200,13 @@ public sealed class LogDataStore : ILogDataStore
             OnPropertyChanged(nameof(Count));
             OnPropertyChanged(nameof(IsFull));
             OnPropertyChanged(nameof(Entries));
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+
+            // Use Add action for better UI performance instead of Reset
+            if (addedEntries.Count > 0)
+            {
+                OnCollectionChanged(new NotifyCollectionChangedEventArgs(
+                    NotifyCollectionChangedAction.Add, addedEntries, startIndex));
+            }
         }
     }
 
@@ -251,15 +282,15 @@ public sealed class LogDataStore : ILogDataStore
     }
 
     /// <inheritdoc />
-    public async Task<string> ExportAsync(string format = "txt")
+    public async Task<string> ExportAsync(string format = ExportFormats.Text)
     {
         IReadOnlyList<LogModel> entries = Entries;
 
         return format.ToLowerInvariant() switch
         {
-            "json" => await ExportAsJsonAsync(entries).ConfigureAwait(false),
-            "csv" => await ExportAsCsvAsync(entries).ConfigureAwait(false),
-            "txt" or _ => await ExportAsTextAsync(entries).ConfigureAwait(false)
+            ExportFormats.Json => await ExportAsJsonAsync(entries).ConfigureAwait(false),
+            ExportFormats.Csv => await ExportAsCsvAsync(entries).ConfigureAwait(false),
+            ExportFormats.Text or _ => await ExportAsTextAsync(entries).ConfigureAwait(false)
         };
     }
 
@@ -375,8 +406,8 @@ public sealed class LogDataStore : ILogDataStore
             }
 
             Array.Clear(_buffer, 0, _buffer.Length);
-            _count = 0; // Restablecer el contador de entradas
-            _head = 0;  // Opcional: restablecer el puntero de cabeza
+            _count = 0; // Reset the entry counter
+            _head = 0;  // Optional: reset the head pointer
             _disposed = true;
         }
 
