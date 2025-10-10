@@ -180,7 +180,10 @@ public static class ServiceCollectionExtensions
         // Add Specialized ViewModels for MainWindow decomposition
         services.TryAddSingleton<NavigationViewModel>();
         services.TryAddSingleton<BottomPanelViewModel>();
-        services.TryAddSingleton<SettingsManagementViewModel>();
+        services.TryAddSingleton<SettingsManagementViewModel>(provider => new SettingsManagementViewModel(
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SettingsManagementViewModel>>(),
+            provider.GetRequiredService<ISettingsService>(),
+            provider.GetService<IFileDialogService>()));
 
         // Add Feature ViewModels
         services.TryAddTransient<LogViewerViewModel>();
