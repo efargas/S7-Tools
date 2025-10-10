@@ -1,10 +1,10 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Factories;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
-using System;
-using System.Collections.Generic;
 
 namespace S7Tools.Services;
 
@@ -21,7 +21,7 @@ public class ViewModelCreationParameters
     /// <summary>
     /// Gets or sets a value indicating whether to use cached instances.
     /// </summary>
-    public bool UseCachedInstance { get; set; } = false;
+    public bool UseCachedInstance { get; set; }
 
     /// <summary>
     /// Gets or sets the scope for ViewModel creation.
@@ -91,31 +91,31 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
         try
         {
             Logger.LogDebug("Creating new instance of {ViewModelType}", viewModelType.Name);
-            
+
             // Use the factory if registered, otherwise fall back to service provider
             if (CanCreate(viewModelType))
             {
                 var instance = base.Create(viewModelType, parameters);
-                
+
                 // Cache the instance if requested
                 if (parameters.UseCachedInstance)
                 {
                     _cachedInstances[viewModelType] = instance;
                 }
-                
+
                 return instance;
             }
             else
             {
                 // Fall back to direct service provider resolution
                 var instance = (ViewModelBase)_serviceProvider.GetRequiredService(viewModelType);
-                
+
                 // Cache the instance if requested
                 if (parameters.UseCachedInstance)
                 {
                     _cachedInstances[viewModelType] = instance;
                 }
-                
+
                 return instance;
             }
         }
@@ -143,7 +143,7 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
     public void ClearCache()
     {
         Logger.LogDebug("Clearing ViewModel cache with {Count} instances", _cachedInstances.Count);
-        
+
         // Dispose cached instances if they implement IDisposable
         foreach (var instance in _cachedInstances.Values)
         {
@@ -155,12 +155,12 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogWarning(ex, "Error disposing cached ViewModel instance of type {Type}", 
+                    Logger.LogWarning(ex, "Error disposing cached ViewModel instance of type {Type}",
                         instance.GetType().Name);
                 }
             }
         }
-        
+
         _cachedInstances.Clear();
     }
 
@@ -186,7 +186,7 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogWarning(ex, "Error disposing cached ViewModel instance of type {Type}", 
+                    Logger.LogWarning(ex, "Error disposing cached ViewModel instance of type {Type}",
                         viewModelType.Name);
                 }
             }
@@ -204,19 +204,19 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
     {
         // Register custom factory functions for ViewModels that need special creation logic
         // This can be extended as needed for specific ViewModels
-        
-        RegisterFactory(typeof(MainWindowViewModel), parameters => 
+
+        RegisterFactory(typeof(MainWindowViewModel), parameters =>
         {
             // Example of custom creation logic
             var instance = _serviceProvider.GetRequiredService<MainWindowViewModel>();
-            
+
             // Apply any custom initialization based on parameters
             if (parameters.Parameters.TryGetValue("InitialView", out var initialView))
             {
                 // Custom initialization logic here
                 Logger.LogDebug("Initializing MainWindowViewModel with initial view: {InitialView}", initialView);
             }
-            
+
             return (ViewModelBase)instance;
         });
 

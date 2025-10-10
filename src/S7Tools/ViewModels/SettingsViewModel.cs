@@ -1,10 +1,10 @@
 using System.Collections.ObjectModel;
-using ReactiveUI;
 using System.Reactive;
 using Microsoft.Extensions.DependencyInjection;
-using S7Tools.Services.Interfaces;
-using S7Tools.Core.Services.Interfaces;
 using Microsoft.Extensions.Logging;
+using ReactiveUI;
+using S7Tools.Core.Services.Interfaces;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
 
@@ -99,10 +99,10 @@ public class SettingsViewModel : ViewModelBase
         var portService = _serviceProvider.GetRequiredService<ISerialPortService>();
         var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-    var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-    var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-    var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
+        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
-    return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
+        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
     }
 }

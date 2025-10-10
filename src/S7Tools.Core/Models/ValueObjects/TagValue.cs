@@ -146,7 +146,7 @@ public readonly record struct TagValue
     /// <summary>
     /// Gets the value as a string.
     /// </summary>
-    public Result<string> AsString() => 
+    public Result<string> AsString() =>
         Result<string>.Success(RawValue?.ToString() ?? string.Empty);
 
     /// <summary>
@@ -211,7 +211,7 @@ public readonly record struct TagValue
     /// </summary>
     /// <param name="newQuality">The new quality.</param>
     /// <returns>A new TagValue with the updated quality.</returns>
-    public TagValue WithQuality(TagQuality newQuality) => 
+    public TagValue WithQuality(TagQuality newQuality) =>
         new(RawValue, DataType, newQuality, Timestamp);
 
     /// <summary>
@@ -219,19 +219,19 @@ public readonly record struct TagValue
     /// </summary>
     /// <param name="newTimestamp">The new timestamp.</param>
     /// <returns>A new TagValue with the updated timestamp.</returns>
-    public TagValue WithTimestamp(DateTimeOffset newTimestamp) => 
+    public TagValue WithTimestamp(DateTimeOffset newTimestamp) =>
         new(RawValue, DataType, Quality, newTimestamp);
 
     /// <summary>
     /// Determines if this value is considered valid (Good quality and not null for value types).
     /// </summary>
-    public bool IsValid => Quality == TagQuality.Good && 
+    public bool IsValid => Quality == TagQuality.Good &&
                           (RawValue is not null || DataType == PlcDataType.String);
 
     /// <summary>
     /// Returns a string representation of the tag value.
     /// </summary>
-    public override string ToString() => 
+    public override string ToString() =>
         $"{RawValue ?? "null"} ({DataType}, {Quality}, {Timestamp:yyyy-MM-dd HH:mm:ss.fff})";
 }
 

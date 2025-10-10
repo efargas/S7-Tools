@@ -1,8 +1,8 @@
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.Extensions.Logging;
+using S7Tools.Core.Logging;
 
 namespace S7Tools.Services;
 
@@ -303,7 +303,7 @@ internal class OperationContext : IOperationContext
         }
 
         var logLevel = _error == null ? LogLevel.Information : LogLevel.Error;
-        var message = _error == null 
+        var message = _error == null
             ? "Operation completed successfully: {OperationName} in {Duration}ms"
             : "Operation failed: {OperationName} in {Duration}ms - {Error}";
 

@@ -25,7 +25,7 @@ public partial class LogViewerView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        
+
         // Set up auto-scroll behavior if needed
         if (DataContext is LogViewerViewModel viewModel)
         {
@@ -45,7 +45,7 @@ public partial class LogViewerView : UserControl
         {
             viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         }
-        
+
         base.OnUnloaded(e);
     }
 

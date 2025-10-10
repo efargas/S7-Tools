@@ -1,8 +1,8 @@
+using System.ComponentModel;
+using System.Text.Json;
 using Avalonia;
 using Avalonia.Styling;
 using S7Tools.Services.Interfaces;
-using System.ComponentModel;
-using System.Text.Json;
 
 namespace S7Tools.Services;
 
@@ -26,7 +26,7 @@ public sealed class ThemeService : IThemeService
         _customColors = new Dictionary<string, string>();
         _currentTheme = ThemeMode.Dark; // Default to dark theme
         _currentThemeInfo = _availableThemes.First(t => t.Mode == _currentTheme);
-        
+
         // Apply the initial theme
         ApplyTheme(_currentThemeInfo);
     }
@@ -66,7 +66,7 @@ public sealed class ThemeService : IThemeService
         // Resolve the actual theme if auto
         var actualTheme = theme == ThemeMode.Auto ? DetectSystemTheme() : theme;
         var themeInfo = _availableThemes.FirstOrDefault(t => t.Mode == actualTheme);
-        
+
         if (themeInfo == null)
         {
             return false;
@@ -100,7 +100,7 @@ public sealed class ThemeService : IThemeService
             return SetTheme(themeMode);
         }
 
-        var themeInfo = _availableThemes.FirstOrDefault(t => 
+        var themeInfo = _availableThemes.FirstOrDefault(t =>
             t.Name.Equals(themeName, StringComparison.OrdinalIgnoreCase) ||
             t.DisplayName.Equals(themeName, StringComparison.OrdinalIgnoreCase));
 
@@ -154,7 +154,7 @@ public sealed class ThemeService : IThemeService
     public IReadOnlyDictionary<string, string> GetThemeColors()
     {
         var colors = new Dictionary<string, string>(_currentThemeInfo.Colors);
-        
+
         // Override with custom colors
         foreach (var customColor in _customColors)
         {
@@ -305,39 +305,39 @@ public sealed class ThemeService : IThemeService
             ["Foreground"] = "#000000",
             ["AccentColor"] = "#0078D4",
             ["BorderColor"] = "#E1E1E1",
-            
+
             // Activity Bar
             ["ActivityBarBackground"] = "#F3F3F3",
             ["ActivityBarForeground"] = "#000000",
             ["ActivityBarBorder"] = "#E1E1E1",
             ["ActivityBarActiveBackground"] = "#FFFFFF",
             ["ActivityBarActiveForeground"] = "#0078D4",
-            
+
             // Sidebar
             ["SidebarBackground"] = "#F8F8F8",
             ["SidebarForeground"] = "#000000",
             ["SidebarBorder"] = "#E1E1E1",
-            
+
             // Editor
             ["EditorBackground"] = "#FFFFFF",
             ["EditorForeground"] = "#000000",
             ["EditorLineHighlight"] = "#F0F0F0",
             ["EditorSelection"] = "#ADD6FF",
-            
+
             // Status Bar
             ["StatusBarBackground"] = "#0078D4",
             ["StatusBarForeground"] = "#FFFFFF",
-            
+
             // Menu Bar
             ["MenuBarBackground"] = "#F3F3F3",
             ["MenuBarForeground"] = "#000000",
             ["MenuBarHover"] = "#E1E1E1",
-            
+
             // Bottom Panel
             ["BottomPanelBackground"] = "#F8F8F8",
             ["BottomPanelForeground"] = "#000000",
             ["BottomPanelBorder"] = "#E1E1E1",
-            
+
             // Log Viewer Colors
             ["LogTrace"] = "#008000",
             ["LogDebug"] = "#0000FF",
@@ -358,39 +358,39 @@ public sealed class ThemeService : IThemeService
             ["Foreground"] = "#D4D4D4",
             ["AccentColor"] = "#0078D4",
             ["BorderColor"] = "#3C3C3C",
-            
+
             // Activity Bar
             ["ActivityBarBackground"] = "#333333",
             ["ActivityBarForeground"] = "#CCCCCC",
             ["ActivityBarBorder"] = "#3C3C3C",
             ["ActivityBarActiveBackground"] = "#1E1E1E",
             ["ActivityBarActiveForeground"] = "#FFFFFF",
-            
+
             // Sidebar
             ["SidebarBackground"] = "#252526",
             ["SidebarForeground"] = "#CCCCCC",
             ["SidebarBorder"] = "#3C3C3C",
-            
+
             // Editor
             ["EditorBackground"] = "#1E1E1E",
             ["EditorForeground"] = "#D4D4D4",
             ["EditorLineHighlight"] = "#2A2D2E",
             ["EditorSelection"] = "#264F78",
-            
+
             // Status Bar
             ["StatusBarBackground"] = "#0078D4",
             ["StatusBarForeground"] = "#FFFFFF",
-            
+
             // Menu Bar
             ["MenuBarBackground"] = "#3C3C3C",
             ["MenuBarForeground"] = "#CCCCCC",
             ["MenuBarHover"] = "#505050",
-            
+
             // Bottom Panel
             ["BottomPanelBackground"] = "#252526",
             ["BottomPanelForeground"] = "#CCCCCC",
             ["BottomPanelBorder"] = "#3C3C3C",
-            
+
             // Log Viewer Colors
             ["LogTrace"] = "#6A9955",
             ["LogDebug"] = "#569CD6",
@@ -406,7 +406,7 @@ public sealed class ThemeService : IThemeService
     {
         var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         var appFolder = Path.Combine(appDataPath, "S7Tools");
-        
+
         if (!Directory.Exists(appFolder))
         {
             Directory.CreateDirectory(appFolder);

@@ -54,30 +54,30 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
     ILogger<SerialPortsSettingsViewModel> logger)
     {
-    _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
-    _portService = portService ?? throw new ArgumentNullException(nameof(portService));
-    _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-    _fileDialogService = fileDialogService;
-    _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-    _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
-    _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
+        _portService = portService ?? throw new ArgumentNullException(nameof(portService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _fileDialogService = fileDialogService;
+        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize collections
         Profiles = new ObservableCollection<SerialPortProfile>();
         AvailablePorts = new ObservableCollection<string>();
 
-    // Initialize commands
-    InitializeCommands();
+        // Initialize commands
+        InitializeCommands();
 
-    // Initialize path commands
-    BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
-    OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
-    ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
+        // Initialize path commands
+        BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
+        OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
+        ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
 
-    // Initialize ProfilesPath from settings and subscribe to changes
-    RefreshFromSettings();
-    _settingsChangedHandler = (_, __) => RefreshFromSettings();
-    _settingsService.SettingsChanged += _settingsChangedHandler;
+        // Initialize ProfilesPath from settings and subscribe to changes
+        RefreshFromSettings();
+        _settingsChangedHandler = (_, __) => RefreshFromSettings();
+        _settingsService.SettingsChanged += _settingsChangedHandler;
 
         // Load initial data
         // Load profiles and scan ports in background but marshal collection updates to UI thread

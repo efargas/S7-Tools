@@ -1,8 +1,8 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using System.Collections.Concurrent;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 
@@ -38,7 +38,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     {
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
         _configuration = options?.CurrentValue ?? new DataStoreLoggerConfiguration();
-        
+
         // Monitor configuration changes
         options?.OnChange(config =>
         {

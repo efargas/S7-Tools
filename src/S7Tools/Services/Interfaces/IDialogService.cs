@@ -1,7 +1,7 @@
-using ReactiveUI;
-using S7Tools.Models;
 using System.Reactive;
 using System.Threading.Tasks;
+using ReactiveUI;
+using S7Tools.Models;
 
 namespace S7Tools.Services.Interfaces;
 

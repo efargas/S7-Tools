@@ -87,7 +87,7 @@ public readonly record struct Result<T>
     {
         return IsSuccess && Value is not null
             ? Result<TResult>.Success(mapper(Value))
-            : Exception is not null 
+            : Exception is not null
                 ? Result<TResult>.Failure(Error, Exception)
                 : Result<TResult>.Failure(Error);
     }
@@ -102,7 +102,7 @@ public readonly record struct Result<T>
     {
         return IsSuccess && Value is not null
             ? binder(Value)
-            : Exception is not null 
+            : Exception is not null
                 ? Result<TResult>.Failure(Error, Exception)
                 : Result<TResult>.Failure(Error);
     }

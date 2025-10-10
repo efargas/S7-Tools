@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace S7Tools.Core.Factories;
 
@@ -55,7 +55,7 @@ public abstract class BaseKeyedFactory<TKey, TBase> : IKeyedFactory<TKey, TBase>
         {
             Logger.LogDebug("Creating object for key: {Key}", key);
             var instance = factory();
-            Logger.LogDebug("Successfully created object for key: {Key}, Type: {Type}", 
+            Logger.LogDebug("Successfully created object for key: {Key}, Type: {Type}",
                 key, instance?.GetType().Name ?? "null");
             return instance;
         }
@@ -159,7 +159,7 @@ public abstract class BaseKeyedFactory<TKey, TBase, TParams> : IKeyedFactory<TKe
         {
             Logger.LogDebug("Creating object for key: {Key} with parameters", key);
             var instance = factory(parameters);
-            Logger.LogDebug("Successfully created object for key: {Key}, Type: {Type}", 
+            Logger.LogDebug("Successfully created object for key: {Key}, Type: {Type}",
                 key, instance?.GetType().Name ?? "null");
             return instance;
         }

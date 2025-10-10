@@ -15,7 +15,7 @@ namespace S7Tools.ViewModels;
 /// <summary>
 /// ViewModel for the LogViewer functionality with real-time log display, filtering, and search capabilities.
 /// </summary>
-public class LogViewerViewModel : ViewModelBase, IDisposable
+public sealed class LogViewerViewModel : ViewModelBase, IDisposable
 {
     private readonly ILogDataStore _logDataStore;
     private readonly IUIThreadService _uiThreadService;
@@ -270,7 +270,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
                 if (_logExportService == null)
                 {
                     await _dialogService.ShowErrorAsync(
-                        UIStrings.LogViewer_ExportLogsTitle, 
+                        UIStrings.LogViewer_ExportLogsTitle,
                         UIStrings.LogViewer_ExportServiceUnavailable);
                     return;
                 }
@@ -290,7 +290,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
                 if (!logsToExport.Any())
                 {
                     await _dialogService.ShowErrorAsync(
-                        UIStrings.LogViewer_ExportLogsTitle, 
+                        UIStrings.LogViewer_ExportLogsTitle,
                         UIStrings.LogViewer_NoLogsToExport);
                     return;
                 }
@@ -307,14 +307,14 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
                 else
                 {
                     await _dialogService.ShowErrorAsync(
-                        UIStrings.LogViewer_ExportFailed, 
+                        UIStrings.LogViewer_ExportFailed,
                         result.Error ?? UIStrings.LogViewer_UnknownError);
                 }
             }
             catch (Exception ex)
             {
                 await _dialogService.ShowErrorAsync(
-                    UIStrings.LogViewer_ExportFailed, 
+                    UIStrings.LogViewer_ExportFailed,
                     string.Format(UIStrings.LogViewer_ExportFailedMessage, ex.Message));
             }
         });
@@ -496,6 +496,7 @@ public class LogViewerViewModel : ViewModelBase, IDisposable
         _logDataStore.CollectionChanged -= OnLogDataStoreCollectionChanged;
 
         _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }
 

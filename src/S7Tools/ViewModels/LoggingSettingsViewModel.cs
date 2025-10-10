@@ -1,8 +1,8 @@
-using ReactiveUI;
-using S7Tools.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using System.Reactive;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using ReactiveUI;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
 
@@ -155,7 +155,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         ShowCategoryInLogs = settings.Logging.ShowCategory;
         ShowLogLevelInLogs = settings.Logging.ShowLevel;
         CurrentSettingsFilePath = _settingsService.GetDefaultSettingsPath();
-        
+
         try
         {
             var fileInfo = new FileInfo(CurrentSettingsFilePath);
@@ -169,7 +169,10 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     private async Task BrowseDefaultLogPathAsync()
     {
-        if (_fileDialogService == null) return;
+        if (_fileDialogService == null)
+        {
+            return;
+        }
 
         try
         {
@@ -189,7 +192,10 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     private async Task BrowseExportPathAsync()
     {
-        if (_fileDialogService == null) return;
+        if (_fileDialogService == null)
+        {
+            return;
+        }
 
         try
         {
@@ -359,12 +365,12 @@ public class LoggingSettingsViewModel : ViewModelBase
         var settings = _settingsService.Settings.Clone();
         settings.Logging.DefaultLogPath = DefaultLogPath;
         settings.Logging.ExportPath = ExportPath;
-        
+
         if (Enum.TryParse<LogLevel>(MinimumLogLevel, out var logLevel))
         {
             settings.Logging.MinimumLogLevel = logLevel;
         }
-        
+
         settings.Logging.AutoScroll = AutoScrollLogs;
         settings.Logging.EnableFileLogging = EnableRollingLogs;
         settings.Logging.ShowTimestamp = ShowTimestampInLogs;

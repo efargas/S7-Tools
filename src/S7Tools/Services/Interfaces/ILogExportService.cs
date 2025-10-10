@@ -1,7 +1,7 @@
-using S7Tools.Infrastructure.Logging.Core.Models;
-using S7Tools.Core.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using S7Tools.Core.Models;
+using S7Tools.Infrastructure.Logging.Core.Models;
 
 namespace S7Tools.Services.Interfaces;
 

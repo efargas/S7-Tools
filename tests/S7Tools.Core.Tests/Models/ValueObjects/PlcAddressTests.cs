@@ -21,10 +21,10 @@ public class PlcAddressTests
     [InlineData("T1", PlcAddressType.Timer, null, 1, null)]
     [InlineData("C5", PlcAddressType.Counter, null, 5, null)]
     public void Constructor_WithValidAddress_ShouldParseCorrectly(
-        string address, 
-        PlcAddressType expectedType, 
-        int? expectedDbNumber, 
-        int expectedOffset, 
+        string address,
+        PlcAddressType expectedType,
+        int? expectedDbNumber,
+        int expectedOffset,
         int? expectedBitOffset)
     {
         // Act
@@ -49,7 +49,7 @@ public class PlcAddressTests
     [InlineData("DB1.DBX0.8")] // Bit offset > 7
     [InlineData("M")]
     [InlineData("M0")]
-    [InlineData("M0.")] 
+    [InlineData("M0.")]
     [InlineData("M0.8")] // Bit offset > 7
     [InlineData("X1.0")] // Invalid memory type
     public void Constructor_WithInvalidAddress_ShouldThrowArgumentException(string invalidAddress)
@@ -108,9 +108,9 @@ public class PlcAddressTests
         var result = PlcAddress.Create(invalidAddress);
 
         // Assert
-    result.IsFailure.Should().BeTrue();
-    result.Error.Should().NotBeEmpty();
-    result.Value.Should().Be(default(PlcAddress));
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().NotBeEmpty();
+        result.Value.Should().Be(default(PlcAddress));
     }
 
     [Theory]

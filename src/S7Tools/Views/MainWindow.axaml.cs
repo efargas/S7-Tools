@@ -1,9 +1,9 @@
+using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using Avalonia.ReactiveUI;
 using ReactiveUI;
 using S7Tools.ViewModels;
-using System;
 
 namespace S7Tools.Views;
 

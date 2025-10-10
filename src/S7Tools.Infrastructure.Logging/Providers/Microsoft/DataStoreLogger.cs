@@ -1,8 +1,8 @@
+using System.Text;
 using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using System.Text;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 
@@ -53,8 +53,8 @@ public sealed class DataStoreLogger : ILogger
             return;
         }
 
-        var message = _configuration.FormatMessages && formatter != null 
-            ? formatter(state, exception) 
+        var message = _configuration.FormatMessages && formatter != null
+            ? formatter(state, exception)
             : state?.ToString() ?? string.Empty;
 
         if (_configuration.MaxMessageLength.HasValue && message.Length > _configuration.MaxMessageLength.Value)
@@ -99,7 +99,7 @@ public sealed class DataStoreLogger : ILogger
 
         var sb = new StringBuilder();
         var currentScope = scope;
-        
+
         while (currentScope != null)
         {
             if (sb.Length > 0)
@@ -144,7 +144,7 @@ public sealed class DataStoreLogger : ILogger
     {
         private static readonly AsyncLocal<LoggerScope<object>?> _current = new();
         private readonly LoggerScope<object>? _parent;
-        private bool _disposed = false;
+        private bool _disposed;
 
         public LoggerScope(TState state)
         {

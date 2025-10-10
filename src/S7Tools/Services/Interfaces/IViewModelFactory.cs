@@ -1,5 +1,5 @@
-using S7Tools.ViewModels;
 using System;
+using S7Tools.ViewModels;
 
 namespace S7Tools.Services.Interfaces;
 
@@ -14,7 +14,7 @@ public interface IViewModelFactory
     /// <typeparam name="T">The ViewModel type to create.</typeparam>
     /// <returns>The created ViewModel instance.</returns>
     T Create<T>() where T : ViewModelBase;
-    
+
     /// <summary>
     /// Creates a ViewModel of the specified type.
     /// </summary>

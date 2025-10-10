@@ -1,7 +1,7 @@
-using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace S7Tools.Core.Commands;
 
@@ -42,14 +42,14 @@ public abstract class BaseCommandHandler<TCommand> : ICommandHandler<TCommand>
         try
         {
             var result = await ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
-            
+
             if (result.IsSuccess)
             {
                 Logger.LogDebug("Successfully executed command: {CommandType}", commandType);
             }
             else
             {
-                Logger.LogWarning("Command execution failed: {CommandType}, Error: {Error}", 
+                Logger.LogWarning("Command execution failed: {CommandType}, Error: {Error}",
                     commandType, result.Error);
             }
 
@@ -100,17 +100,17 @@ public abstract class BaseCommandHandler<TCommand> : ICommandHandler<TCommand>
         {
             Logger.LogDebug("Starting operation: {OperationName}", operationName);
             var result = await operation().ConfigureAwait(false);
-            
+
             if (result.IsSuccess)
             {
                 Logger.LogDebug("Completed operation successfully: {OperationName}", operationName);
             }
             else
             {
-                Logger.LogWarning("Operation failed: {OperationName}, Error: {Error}", 
+                Logger.LogWarning("Operation failed: {OperationName}, Error: {Error}",
                     operationName, result.Error);
             }
-                
+
             return result;
         }
         catch (Exception ex)
@@ -159,14 +159,14 @@ public abstract class BaseCommandHandler<TCommand, TResult> : ICommandHandler<TC
         try
         {
             var result = await ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
-            
+
             if (result.IsSuccess)
             {
                 Logger.LogDebug("Successfully executed command: {CommandType}", commandType);
             }
             else
             {
-                Logger.LogWarning("Command execution failed: {CommandType}, Error: {Error}", 
+                Logger.LogWarning("Command execution failed: {CommandType}, Error: {Error}",
                     commandType, result.Error);
             }
 
@@ -206,17 +206,17 @@ public abstract class BaseCommandHandler<TCommand, TResult> : ICommandHandler<TC
         {
             Logger.LogDebug("Starting operation: {OperationName}", operationName);
             var result = await operation().ConfigureAwait(false);
-            
+
             if (result.IsSuccess)
             {
                 Logger.LogDebug("Completed operation successfully: {OperationName}", operationName);
             }
             else
             {
-                Logger.LogWarning("Operation failed: {OperationName}, Error: {Error}", 
+                Logger.LogWarning("Operation failed: {OperationName}, Error: {Error}",
                     operationName, result.Error);
             }
-                
+
             return result;
         }
         catch (Exception ex)

@@ -19,14 +19,14 @@ namespace S7Tools.Services;
 /// Service for serial port operations including port discovery, configuration management, and Linux stty command integration.
 /// This service provides comprehensive serial port management capabilities optimized for Linux systems.
 /// </summary>
-public class SerialPortService : ISerialPortService
+public sealed class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
     private readonly ISettingsService _settingsService;
     private readonly Timer? _monitoringTimer;
     private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private bool _isMonitoring = false;
+    private bool _isMonitoring;
 
     /// <summary>
     /// Initializes a new instance of the SerialPortService class.
@@ -805,8 +805,8 @@ public class SerialPortService : ISerialPortService
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
 
-            process.OutputDataReceived += (_, e) => { if (e.Data != null) outputBuilder.AppendLine(e.Data); };
-            process.ErrorDataReceived += (_, e) => { if (e.Data != null) errorBuilder.AppendLine(e.Data); };
+            process.OutputDataReceived += (_, e) => { if (e.Data != null) { outputBuilder.AppendLine(e.Data); } };
+            process.ErrorDataReceived += (_, e) => { if (e.Data != null) { errorBuilder.AppendLine(e.Data); } };
 
             process.Start();
             process.BeginOutputReadLine();

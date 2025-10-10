@@ -1,6 +1,6 @@
-using S7Tools.Services.Interfaces;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 

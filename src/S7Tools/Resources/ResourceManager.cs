@@ -1,11 +1,11 @@
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Resources;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Resources;
+using Microsoft.Extensions.Logging;
+using S7Tools.Core.Resources;
 
 namespace S7Tools.Resources;
 
@@ -29,7 +29,7 @@ public class ResourceManager : IResourceManager
         _resourceManagers = new ConcurrentDictionary<string, System.Resources.ResourceManager>();
         _resourceCache = new ConcurrentDictionary<string, ConcurrentDictionary<string, string>>();
         _currentCulture = CultureInfo.CurrentUICulture;
-        
+
         InitializeDefaultResources();
     }
 
@@ -61,7 +61,7 @@ public class ResourceManager : IResourceManager
         var cacheKey = $"{culture.Name}:{key}";
 
         // Try to get from cache first
-        if (_resourceCache.TryGetValue(cacheKey, out var cultureCache) && 
+        if (_resourceCache.TryGetValue(cacheKey, out var cultureCache) &&
             cultureCache.TryGetValue(key, out var cachedValue))
         {
             return cachedValue;
@@ -78,7 +78,7 @@ public class ResourceManager : IResourceManager
                     // Cache the result
                     var cache = _resourceCache.GetOrAdd(cacheKey, _ => new ConcurrentDictionary<string, string>());
                     cache.TryAdd(key, value);
-                    
+
                     _logger.LogDebug("Found resource for key: {Key}, Culture: {Culture}", key, culture.Name);
                     return value;
                 }
@@ -97,7 +97,7 @@ public class ResourceManager : IResourceManager
     public string GetString(string key, CultureInfo culture, params object[] args)
     {
         var format = GetString(key, culture);
-        
+
         if (args == null || args.Length == 0)
         {
             return format;
@@ -215,8 +215,8 @@ public class ResourceManager : IResourceManager
 
         var previousCulture = _currentCulture;
         _currentCulture = culture;
-        
-        _logger.LogInformation("Culture changed from {PreviousCulture} to {NewCulture}", 
+
+        _logger.LogInformation("Culture changed from {PreviousCulture} to {NewCulture}",
             previousCulture.Name, culture.Name);
 
         // Clear cache when culture changes
@@ -242,7 +242,7 @@ public class ResourceManager : IResourceManager
 
         var key = resourceType.FullName ?? resourceType.Name;
         _resourceManagers.AddOrUpdate(key, resourceManager, (_, _) => resourceManager);
-        
+
         _logger.LogDebug("Registered resource manager for type: {ResourceType}", resourceType.Name);
     }
 
@@ -260,7 +260,7 @@ public class ResourceManager : IResourceManager
 
         var key = resourceType.FullName ?? resourceType.Name;
         var removed = _resourceManagers.TryRemove(key, out _);
-        
+
         if (removed)
         {
             _logger.LogDebug("Unregistered resource manager for type: {ResourceType}", resourceType.Name);
@@ -284,11 +284,11 @@ public class ResourceManager : IResourceManager
         {
             // Register the main UI strings resource manager
             var uiStringsResourceManager = new System.Resources.ResourceManager(
-                "S7Tools.Resources.Strings.UIStrings", 
+                "S7Tools.Resources.Strings.UIStrings",
                 typeof(ResourceManager).Assembly);
-            
+
             RegisterResourceManager(typeof(UIStrings), uiStringsResourceManager);
-            
+
             _logger.LogDebug("Initialized default resource managers");
         }
         catch (Exception ex)
@@ -331,7 +331,7 @@ public class ResourceManager<T> : IResourceManager<T>
     public string GetString(string key, CultureInfo culture) => _baseResourceManager.GetString(key, culture);
 
     /// <inheritdoc/>
-    public string GetString(string key, CultureInfo culture, params object[] args) => 
+    public string GetString(string key, CultureInfo culture, params object[] args) =>
         _baseResourceManager.GetString(key, culture, args);
 
     /// <inheritdoc/>

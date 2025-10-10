@@ -1,19 +1,19 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Commands;
+using S7Tools.Core.Factories;
+using S7Tools.Core.Logging;
+using S7Tools.Core.Resources;
+using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Validation;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Providers.Extensions;
+using S7Tools.Models;
+using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
-using S7Tools.Core.Services.Interfaces;
-using S7Tools.Core.Commands;
-using S7Tools.Core.Factories;
-using S7Tools.Core.Resources;
-using S7Tools.Core.Validation;
-using S7Tools.Core.Logging;
-using S7Tools.Resources;
-using S7Tools.Models;
 
 namespace S7Tools.Extensions;
 
@@ -61,8 +61,8 @@ public static class ServiceCollectionExtensions
         // Add Log Export Service
         services.TryAddTransient<ILogExportService, LogExportService>();
 
-    // Add File Log Writer - will subscribe to in-memory log data store and persist to disk when enabled
-    services.TryAddSingleton<FileLogWriter>();
+        // Add File Log Writer - will subscribe to in-memory log data store and persist to disk when enabled
+        services.TryAddSingleton<FileLogWriter>();
 
         // Add File Dialog Service
         services.TryAddTransient<IFileDialogService>(provider =>
@@ -112,12 +112,12 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<EnhancedViewModelFactory>();
         services.TryAddSingleton<IViewModelFactory>(provider => provider.GetRequiredService<EnhancedViewModelFactory>());
 
-    // Add Resource Pattern Services (InMemoryResourceManager para pruebas/desarrollo)
-    services.TryAddSingleton<IResourceManager, S7Tools.Core.Resources.InMemoryResourceManager>();
-    // Si se requiere el ResourceManager decorador, cambiar aquí
+        // Add Resource Pattern Services (InMemoryResourceManager para pruebas/desarrollo)
+        services.TryAddSingleton<IResourceManager, S7Tools.Core.Resources.InMemoryResourceManager>();
+        // Si se requiere el ResourceManager decorador, cambiar aquí
 
-    // Add Validation Services
-    services.TryAddSingleton<IValidationService, S7Tools.Core.Validation.ValidationService>();
+        // Add Validation Services
+        services.TryAddSingleton<IValidationService, S7Tools.Core.Validation.ValidationService>();
 
         // Add Structured Logging Services
         services.TryAddSingleton<IStructuredLoggerFactory, StructuredLoggerFactory>();

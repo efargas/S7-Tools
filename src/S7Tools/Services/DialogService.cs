@@ -1,9 +1,9 @@
-using ReactiveUI;
-using S7Tools.Models;
-using S7Tools.Services.Interfaces;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using ReactiveUI;
+using S7Tools.Models;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 

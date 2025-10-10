@@ -205,12 +205,12 @@ public sealed class LayoutConfiguration
     /// <summary>
     /// Gets or sets a value indicating whether the sidebar is collapsed.
     /// </summary>
-    public bool IsSidebarCollapsed { get; set; } = false;
+    public bool IsSidebarCollapsed { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the bottom panel is collapsed.
     /// </summary>
-    public bool IsBottomPanelCollapsed { get; set; } = false;
+    public bool IsBottomPanelCollapsed { get; set; }
 }
 
 /// <summary>

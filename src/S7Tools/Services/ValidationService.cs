@@ -1,9 +1,9 @@
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Validation;
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using S7Tools.Core.Validation;
 
 namespace S7Tools.Services;
 
@@ -35,7 +35,7 @@ public class ValidationService : IValidationService
         }
 
         var type = typeof(T);
-        
+
         if (!_validators.TryGetValue(type, out var validatorObj))
         {
             _logger.LogWarning("No validator registered for type {Type}", type.Name);
@@ -52,10 +52,10 @@ public class ValidationService : IValidationService
         {
             _logger.LogDebug("Validating instance of type {Type}", type.Name);
             var result = validator.Validate(instance);
-            
-            _logger.LogDebug("Validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}", 
+
+            _logger.LogDebug("Validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}",
                 type.Name, result.IsValid, result.Errors.Count);
-            
+
             return result;
         }
         catch (Exception ex)
@@ -75,7 +75,7 @@ public class ValidationService : IValidationService
         }
 
         var type = typeof(T);
-        
+
         if (!_validators.TryGetValue(type, out var validatorObj))
         {
             _logger.LogWarning("No validator registered for type {Type}", type.Name);
@@ -92,10 +92,10 @@ public class ValidationService : IValidationService
         {
             _logger.LogDebug("Validating instance of type {Type} asynchronously", type.Name);
             var result = await validator.ValidateAsync(instance, cancellationToken).ConfigureAwait(false);
-            
-            _logger.LogDebug("Async validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}", 
+
+            _logger.LogDebug("Async validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}",
                 type.Name, result.IsValid, result.Errors.Count);
-            
+
             return result;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -120,7 +120,7 @@ public class ValidationService : IValidationService
 
         var type = typeof(T);
         _validators.AddOrUpdate(type, validator, (_, _) => validator);
-        
+
         _logger.LogDebug("Registered validator for type {Type}", type.Name);
     }
 
@@ -129,7 +129,7 @@ public class ValidationService : IValidationService
     {
         var type = typeof(T);
         var removed = _validators.TryRemove(type, out _);
-        
+
         if (removed)
         {
             _logger.LogDebug("Unregistered validator for type {Type}", type.Name);
@@ -138,7 +138,7 @@ public class ValidationService : IValidationService
         {
             _logger.LogWarning("No validator found to unregister for type {Type}", type.Name);
         }
-        
+
         return removed;
     }
 

@@ -1,8 +1,8 @@
+using System;
 using System.Reactive;
 using System.Reactive.Disposables;
-using System;
-using Avalonia.Controls;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Xaml.Interactivity;
 using ReactiveUI;
 
@@ -11,7 +11,7 @@ namespace S7Tools.Views;
 /// <summary>
 /// A behavior that closes the associated window when an interaction is received.
 /// </summary>
-public class CloseApplicationBehavior : Behavior<Window>
+public sealed class CloseApplicationBehavior : Behavior<Window>, IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
 
@@ -46,5 +46,14 @@ public class CloseApplicationBehavior : Behavior<Window>
     {
         base.OnDetaching();
         _disposables.Dispose();
+    }
+
+    /// <summary>
+    /// Disposes the behavior and releases associated resources.
+    /// </summary>
+    public void Dispose()
+    {
+        _disposables?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

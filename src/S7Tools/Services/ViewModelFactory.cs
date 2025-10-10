@@ -1,7 +1,7 @@
+using System;
 using Microsoft.Extensions.DependencyInjection;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
-using System;
 
 namespace S7Tools.Services;
 
@@ -11,7 +11,7 @@ namespace S7Tools.Services;
 public class ViewModelFactory : IViewModelFactory
 {
     private readonly IServiceProvider _serviceProvider;
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ViewModelFactory"/> class.
     /// </summary>
@@ -20,13 +20,13 @@ public class ViewModelFactory : IViewModelFactory
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
-    
+
     /// <inheritdoc/>
     public T Create<T>() where T : ViewModelBase
     {
         return _serviceProvider.GetRequiredService<T>();
     }
-    
+
     /// <inheritdoc/>
     public ViewModelBase Create(Type viewModelType)
     {
@@ -34,7 +34,7 @@ public class ViewModelFactory : IViewModelFactory
         {
             throw new ArgumentException($"Type {viewModelType.Name} must inherit from ViewModelBase", nameof(viewModelType));
         }
-        
+
         return (ViewModelBase)_serviceProvider.GetRequiredService(viewModelType);
     }
 }
