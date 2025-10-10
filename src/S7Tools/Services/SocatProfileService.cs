@@ -1035,7 +1035,19 @@ public class SocatProfileService : ISocatProfileService, IDisposable
             };
 
             var json = JsonSerializer.Serialize(_profiles, options);
-            await File.WriteAllTextAsync(filePath, json, cancellationToken).ConfigureAwait(false);
+            var tempFile = filePath + ".tmp";
+            await File.WriteAllTextAsync(tempFile, json, cancellationToken).ConfigureAwait(false);
+
+            // Atomically replace the original file
+            if (File.Exists(filePath))
+            {
+                var backupFile = filePath + ".bak";
+                File.Replace(tempFile, filePath, backupFile, ignoreMetadataErrors: true);
+            }
+            else
+            {
+                File.Move(tempFile, filePath);
+            }
 
             _logger.LogDebug("Saved {Count} socat profiles to {FilePath}", _profiles.Count, filePath);
         }
