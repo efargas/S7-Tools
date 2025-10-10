@@ -484,3 +484,4 @@ $RECYCLE.BIN/
 *.swp
 
 .github/agents/workspace/referent-projects/
+build_output*.txt
