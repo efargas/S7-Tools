@@ -27,7 +27,7 @@ public class SocatService : ISocatService, IDisposable
     private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = new();
     private readonly Dictionary<int, Timer> _processMonitors = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private bool _disposed = false;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the SocatService class.

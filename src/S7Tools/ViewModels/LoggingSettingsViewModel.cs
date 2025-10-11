@@ -2,6 +2,7 @@ using System.Reactive;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Helpers;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -294,7 +295,7 @@ public class LoggingSettingsViewModel : ViewModelBase
                 Directory.CreateDirectory(DefaultLogPath);
             }
 
-            await OpenDirectoryInExplorerAsync(DefaultLogPath);
+            await PlatformHelper.OpenDirectoryInExplorerAsync(DefaultLogPath);
             _logger.LogInformation("Opened default log path in explorer: {Path}", DefaultLogPath);
         }
         catch (Exception ex)
@@ -320,7 +321,7 @@ public class LoggingSettingsViewModel : ViewModelBase
                 Directory.CreateDirectory(ExportPath);
             }
 
-            await OpenDirectoryInExplorerAsync(ExportPath);
+            await PlatformHelper.OpenDirectoryInExplorerAsync(ExportPath);
             _logger.LogInformation("Opened export path in explorer: {Path}", ExportPath);
         }
         catch (Exception ex)
@@ -328,36 +329,6 @@ public class LoggingSettingsViewModel : ViewModelBase
             _logger.LogError(ex, "Error opening export path in explorer");
             SettingsStatusMessage = "Error opening export path";
         }
-    }
-
-    private static async Task OpenDirectoryInExplorerAsync(string path)
-    {
-        await Task.Run(() =>
-        {
-            try
-            {
-                if (OperatingSystem.IsWindows())
-                {
-                    System.Diagnostics.Process.Start("explorer.exe", path);
-                }
-                else if (OperatingSystem.IsLinux())
-                {
-                    System.Diagnostics.Process.Start("xdg-open", path);
-                }
-                else if (OperatingSystem.IsMacOS())
-                {
-                    System.Diagnostics.Process.Start("open", path);
-                }
-                else
-                {
-                    throw new PlatformNotSupportedException("Opening directories in explorer is not supported on this platform");
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException($"Failed to open directory in explorer: {path}", ex);
-            }
-        });
     }
 
     private async Task UpdateSettingsAsync()

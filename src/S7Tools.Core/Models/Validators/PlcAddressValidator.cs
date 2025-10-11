@@ -5,14 +5,17 @@ using S7Tools.Core.Validation;
 namespace S7Tools.Core.Models.Validators;
 
 /// <summary>
-/// Validador concreto para direcciones PLC (PlcAddress).
+/// Concrete validator for PLC addresses (PlcAddress).
 /// </summary>
 public class PlcAddressValidator : BaseValidator<PlcAddress>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PlcAddressValidator"/> class.
+    /// </summary>
     public PlcAddressValidator() : base(NullLogger.Instance) { }
 
     /// <summary>
-    /// Configura las reglas de validación para PlcAddress.
+    /// Configures the validation rules for PlcAddress.
     /// </summary>
     protected override void ConfigureRules()
     {
@@ -20,21 +23,21 @@ public class PlcAddressValidator : BaseValidator<PlcAddress>
             name: "NoEmptyValue",
             propertyName: nameof(PlcAddress.Value),
             predicate: addr => !string.IsNullOrWhiteSpace(addr.Value),
-            errorMessage: "La dirección no puede estar vacía."
+            errorMessage: "The address cannot be empty."
         ));
 
         AddRule(CreateRule(
-            name: "OffsetNoNegativo",
+            name: "NonNegativeOffset",
             propertyName: nameof(PlcAddress.Offset),
             predicate: addr => addr.Offset >= 0,
-            errorMessage: "El offset no puede ser negativo."
+            errorMessage: "The offset cannot be negative."
         ));
 
         AddRule(CreateRule(
-            name: "BitOffsetEnRango",
+            name: "BitOffsetInRange",
             propertyName: nameof(PlcAddress.BitOffset),
             predicate: addr => !addr.BitOffset.HasValue || (addr.BitOffset.Value >= 0 && addr.BitOffset.Value <= 7),
-            errorMessage: "El bit offset debe estar entre 0 y 7."
+            errorMessage: "The bit offset must be between 0 and 7."
         ));
     }
 }
