@@ -65,7 +65,7 @@ public class SerialPortConfiguration
     /// Gets or sets whether to use odd parity (PARODD flag).
     /// </summary>
     /// <value>True for odd parity, false for even parity. Default is false (even parity, -parodd).</value>
-    public bool OddParity { get; set; } = false;
+    public bool OddParity { get; set; }
 
     #endregion
 

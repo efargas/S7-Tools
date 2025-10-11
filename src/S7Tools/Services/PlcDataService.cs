@@ -26,6 +26,10 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     private S7ConnectionConfig _configuration = new("127.0.0.1");
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PlcDataService"/> class.
+    /// </summary>
+    /// <param name="logger">The logger for logging events and errors.</param>
     public PlcDataService(ILogger<PlcDataService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -33,6 +37,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
 
     #region IS7ConnectionProvider Implementation
 
+    /// <inheritdoc/>
     public ConnectionState State
     {
         get
@@ -48,6 +53,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         }
     }
 
+    /// <inheritdoc/>
     public S7ConnectionConfig Configuration
     {
         get
@@ -59,8 +65,10 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         }
     }
 
+    /// <inheritdoc/>
     public event EventHandler<ConnectionStateChangedEventArgs>? StateChanged;
 
+    /// <inheritdoc/>
     public async Task<Result> ConnectAsync(S7ConnectionConfig config, CancellationToken cancellationToken = default)
     {
         try
@@ -93,6 +101,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         }
     }
 
+    /// <inheritdoc/>
     public async Task<Result> DisconnectAsync(CancellationToken cancellationToken = default)
     {
         try
@@ -110,7 +119,8 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         }
     }
 
-     public Task<Result<PlcInfo>> GetPlcInfoAsync(CancellationToken cancellationToken = default)
+    /// <inheritdoc/>
+    public Task<Result<PlcInfo>> GetPlcInfoAsync(CancellationToken cancellationToken = default)
     {
         // S7netplus does not have a direct equivalent to GetPlcInfo, returning a simulated one for now.
         // In a real scenario, specific tags would be read to get this info.
@@ -122,7 +132,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         return Task.FromResult(Result<PlcInfo>.Success(plcInfo));
     }
 
-
+    /// <inheritdoc/>
     public Task<Result> TestConnectionAsync(S7ConnectionConfig config, CancellationToken cancellationToken = default)
     {
         // A simple test could be a quick connect/disconnect
@@ -130,6 +140,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         return Task.FromResult(Result.Success());
     }
 
+    /// <inheritdoc/>
     public async Task<Result> ReconnectAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Attempting to reconnect to PLC");
@@ -143,6 +154,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
 
     #region ITagRepository Implementation
 
+    /// <inheritdoc/>
     public async Task<Result<Tag>> ReadTagAsync(PlcAddress address, CancellationToken cancellationToken = default)
     {
        if (_plcClient == null || !_plcClient.IsConnected)
@@ -164,6 +176,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         }
     }
 
+    /// <inheritdoc/>
     public async Task<Result> WriteTagAsync(PlcAddress address, object? value, CancellationToken cancellationToken = default)
     {
         if (_plcClient == null || !_plcClient.IsConnected)
@@ -192,18 +205,21 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     // --- In-memory Tag Management (not directly related to PLC comms but part of the contract) ---
     private readonly ConcurrentDictionary<string, Tag> _managedTags = new();
 
+    /// <inheritdoc/>
     public Task<Result<IReadOnlyCollection<Tag>>> GetAllTagsAsync(CancellationToken cancellationToken = default)
     {
         var tags = _managedTags.Values.ToList().AsReadOnly();
         return Task.FromResult(Result<IReadOnlyCollection<Tag>>.Success(tags));
     }
 
+    /// <inheritdoc/>
     public Task<Result> AddTagAsync(Tag tag, CancellationToken cancellationToken = default)
     {
         _managedTags.AddOrUpdate(tag.Name, tag, (_, existing) => tag);
         return Task.FromResult(Result.Success());
     }
 
+    /// <inheritdoc/>
     public Task<Result> RemoveTagAsync(string tagName, CancellationToken cancellationToken = default)
     {
         if (_managedTags.TryRemove(tagName, out _))
@@ -213,6 +229,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         return Task.FromResult(Result.Failure($"Tag '{tagName}' not found."));
     }
 
+    /// <inheritdoc/>
     public async Task<Result<Tag>> ReadTagByNameAsync(string tagName, CancellationToken cancellationToken = default)
     {
         if (_managedTags.TryGetValue(tagName, out var tag))
@@ -222,6 +239,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         return Result<Tag>.Failure($"Tag '{tagName}' not found.");
     }
 
+    /// <inheritdoc/>
     public async Task<Result> WriteTagByNameAsync(string tagName, object? value, CancellationToken cancellationToken = default)
     {
         if (_managedTags.TryGetValue(tagName, out var tag))
@@ -231,6 +249,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         return Result.Failure($"Tag '{tagName}' not found.");
     }
 
+    /// <inheritdoc/>
     public async Task<Result<IReadOnlyCollection<Tag>>> ReadTagsAsync(IEnumerable<PlcAddress> addresses, CancellationToken cancellationToken = default)
     {
         if (_plcClient == null || !_plcClient.IsConnected)
@@ -256,6 +275,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         return Result<IReadOnlyCollection<Tag>>.Success(results);
     }
 
+    /// <inheritdoc/>
     public async Task<Result> WriteTagsAsync(IEnumerable<(PlcAddress Address, object? Value)> tagWrites, CancellationToken cancellationToken = default)
     {
         if (_plcClient == null || !_plcClient.IsConnected)
@@ -276,12 +296,14 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
         return Result.Success();
     }
 
+    /// <inheritdoc/>
     public Task<Result<IReadOnlyCollection<Tag>>> GetTagsByGroupAsync(string group, CancellationToken cancellationToken = default)
     {
         var tags = _managedTags.Values.Where(t => t.Group.Equals(group, StringComparison.OrdinalIgnoreCase)).ToList().AsReadOnly();
         return Task.FromResult(Result<IReadOnlyCollection<Tag>>.Success(tags));
     }
 
+    /// <inheritdoc/>
     public Task<Result> ValidateAddressAsync(PlcAddress address, CancellationToken cancellationToken = default)
     {
         // With S7.Net, validation happens on read/write. We can assume success here.
@@ -324,6 +346,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
 
     #region IDisposable Implementation
 
+    /// <inheritdoc/>
     public void Dispose()
     {
         if (!_disposed)

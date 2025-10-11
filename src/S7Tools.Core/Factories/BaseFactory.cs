@@ -25,6 +25,9 @@ public abstract class BaseKeyedFactory<TKey, TBase> : IKeyedFactory<TKey, TBase>
     /// </summary>
     protected Dictionary<TKey, Func<TBase>> Factories { get; }
 
+    private bool _areFactoriesRegistered;
+    private readonly object _factoriesConfigurationLock = new object();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseKeyedFactory{TKey, TBase}"/> class.
     /// </summary>
@@ -33,12 +36,23 @@ public abstract class BaseKeyedFactory<TKey, TBase> : IKeyedFactory<TKey, TBase>
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         Factories = new Dictionary<TKey, Func<TBase>>();
-        RegisterFactories();
+    }
+
+    private void EnsureFactoriesAreRegistered()
+    {
+        if (_areFactoriesRegistered) return;
+        lock (_factoriesConfigurationLock)
+        {
+            if (_areFactoriesRegistered) return;
+            RegisterFactories();
+            _areFactoriesRegistered = true;
+        }
     }
 
     /// <inheritdoc/>
     public virtual TBase Create(TKey key)
     {
+        EnsureFactoriesAreRegistered();
         if (key == null)
         {
             throw new ArgumentNullException(nameof(key));
@@ -69,12 +83,14 @@ public abstract class BaseKeyedFactory<TKey, TBase> : IKeyedFactory<TKey, TBase>
     /// <inheritdoc/>
     public virtual IEnumerable<TKey> GetAvailableKeys()
     {
+        EnsureFactoriesAreRegistered();
         return Factories.Keys.ToList();
     }
 
     /// <inheritdoc/>
     public virtual bool CanCreate(TKey key)
     {
+        EnsureFactoriesAreRegistered();
         return key != null && Factories.ContainsKey(key);
     }
 
@@ -129,6 +145,9 @@ public abstract class BaseKeyedFactory<TKey, TBase, TParams> : IKeyedFactory<TKe
     /// </summary>
     protected Dictionary<TKey, Func<TParams, TBase>> Factories { get; }
 
+    private bool _areFactoriesRegistered;
+    private readonly object _factoriesConfigurationLock = new object();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseKeyedFactory{TKey, TBase, TParams}"/> class.
     /// </summary>
@@ -137,12 +156,23 @@ public abstract class BaseKeyedFactory<TKey, TBase, TParams> : IKeyedFactory<TKe
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         Factories = new Dictionary<TKey, Func<TParams, TBase>>();
-        RegisterFactories();
+    }
+
+    private void EnsureFactoriesAreRegistered()
+    {
+        if (_areFactoriesRegistered) return;
+        lock (_factoriesConfigurationLock)
+        {
+            if (_areFactoriesRegistered) return;
+            RegisterFactories();
+            _areFactoriesRegistered = true;
+        }
     }
 
     /// <inheritdoc/>
     public virtual TBase Create(TKey key, TParams parameters)
     {
+        EnsureFactoriesAreRegistered();
         if (key == null)
         {
             throw new ArgumentNullException(nameof(key));
@@ -173,12 +203,14 @@ public abstract class BaseKeyedFactory<TKey, TBase, TParams> : IKeyedFactory<TKe
     /// <inheritdoc/>
     public virtual IEnumerable<TKey> GetAvailableKeys()
     {
+        EnsureFactoriesAreRegistered();
         return Factories.Keys.ToList();
     }
 
     /// <inheritdoc/>
     public virtual bool CanCreate(TKey key)
     {
+        EnsureFactoriesAreRegistered();
         return key != null && Factories.ContainsKey(key);
     }
 

@@ -61,6 +61,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// <param name="settings">The settings management ViewModel.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
+    /// <param name="settingsService">The application settings service.</param>
+    /// <param name="fileDialogService">The service for opening file dialogs.</param>
     /// <param name="logger">The logger instance.</param>
     public MainWindowViewModel(
         NavigationViewModel navigation,
@@ -457,8 +459,20 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// </summary>
     public void Dispose()
     {
-        _disposables.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Protected implementation of Dispose pattern.
+    /// </summary>
+    /// <param name="disposing">True if managed resources should be disposed; otherwise, false.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _disposables.Dispose();
+        }
     }
 
     #endregion

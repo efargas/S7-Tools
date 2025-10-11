@@ -23,6 +23,9 @@ public abstract class BaseValidator<T> : IValidator<T>
     /// </summary>
     protected List<ValidationRule<T>> Rules { get; }
 
+    private bool _areRulesConfigured;
+    private readonly object _rulesConfigurationLock = new object();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseValidator{T}"/> class.
     /// </summary>
@@ -31,12 +34,23 @@ public abstract class BaseValidator<T> : IValidator<T>
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         Rules = new List<ValidationRule<T>>();
-        ConfigureRules();
+    }
+
+    private void EnsureRulesAreConfigured()
+    {
+        if (_areRulesConfigured) return;
+        lock (_rulesConfigurationLock)
+        {
+            if (_areRulesConfigured) return;
+            ConfigureRules();
+            _areRulesConfigured = true;
+        }
     }
 
     /// <inheritdoc/>
     public virtual ValidationResult Validate(T instance)
     {
+        EnsureRulesAreConfigured();
         if (instance == null)
         {
             Logger.LogWarning("Validation instance is null");
@@ -74,6 +88,7 @@ public abstract class BaseValidator<T> : IValidator<T>
     /// <inheritdoc/>
     public virtual async Task<ValidationResult> ValidateAsync(T instance, CancellationToken cancellationToken = default)
     {
+        EnsureRulesAreConfigured();
         if (instance == null)
         {
             Logger.LogWarning("Validation instance is null");

@@ -15,12 +15,18 @@ public class LogDataStoreTests : IDisposable
     private readonly LogDataStoreOptions _options;
     private readonly LogDataStore _dataStore;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogDataStoreTests"/> class.
+    /// </summary>
     public LogDataStoreTests()
     {
         _options = new LogDataStoreOptions { MaxEntries = 5 };
         _dataStore = new LogDataStore(_options);
     }
 
+    /// <summary>
+    /// Verifies that the constructor initializes the data store with the correct options.
+    /// </summary>
     [Fact]
     public void Constructor_WithValidOptions_ShouldInitializeCorrectly()
     {
@@ -31,6 +37,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Entries.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws an exception when options are null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullOptions_ShouldThrowArgumentNullException()
     {
@@ -39,6 +48,9 @@ public class LogDataStoreTests : IDisposable
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that adding a valid log entry correctly updates the data store.
+    /// </summary>
     [Fact]
     public void AddEntry_WithValidEntry_ShouldAddToBuffer()
     {
@@ -55,6 +67,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Entries.First().Should().Be(logEntry);
     }
 
+    /// <summary>
+    /// Verifies that adding a null entry throws an exception.
+    /// </summary>
     [Fact]
     public void AddEntry_WithNullEntry_ShouldThrowArgumentNullException()
     {
@@ -63,6 +78,9 @@ public class LogDataStoreTests : IDisposable
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that the circular buffer behavior correctly overwrites the oldest entry when full.
+    /// </summary>
     [Fact]
     public void AddEntry_WhenBufferIsFull_ShouldOverwriteOldestEntry()
     {
@@ -90,6 +108,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Entries.Should().Contain(e => e.Message == entries[5].Message);
     }
 
+    /// <summary>
+    /// Verifies that adding an entry raises the correct PropertyChanged events.
+    /// </summary>
     [Fact]
     public void AddEntry_ShouldRaisePropertyChangedEvents()
     {
@@ -108,6 +129,9 @@ public class LogDataStoreTests : IDisposable
         propertyChangedEvents.Should().Contain(nameof(LogDataStore.Entries));
     }
 
+    /// <summary>
+    /// Verifies that adding an entry raises the CollectionChanged event with the correct arguments.
+    /// </summary>
     [Fact]
     public void AddEntry_ShouldRaiseCollectionChangedEvent()
     {
@@ -128,6 +152,9 @@ public class LogDataStoreTests : IDisposable
     Assert.True(newItems.Contains(logEntry));
     }
 
+    /// <summary>
+    /// Verifies that adding a collection of entries correctly updates the data store.
+    /// </summary>
     [Fact]
     public void AddEntries_WithValidEntries_ShouldAddAllToBuffer()
     {
@@ -148,6 +175,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Entries.Should().Contain(entries);
     }
 
+    /// <summary>
+    /// Verifies that adding a null collection of entries throws an exception.
+    /// </summary>
     [Fact]
     public void AddEntries_WithNullCollection_ShouldThrowArgumentNullException()
     {
@@ -156,6 +186,9 @@ public class LogDataStoreTests : IDisposable
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that adding an empty collection does not change the data store.
+    /// </summary>
     [Fact]
     public void AddEntries_WithEmptyCollection_ShouldNotChangeBuffer()
     {
@@ -167,6 +200,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Entries.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the Clear method removes all entries from the data store.
+    /// </summary>
     [Fact]
     public void Clear_ShouldRemoveAllEntries()
     {
@@ -187,6 +223,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Entries.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that the Clear method raises the correct notification events.
+    /// </summary>
     [Fact]
     public void Clear_ShouldRaiseNotificationEvents()
     {
@@ -210,6 +249,9 @@ public class LogDataStoreTests : IDisposable
         collectionChangedArgs!.Action.Should().Be(NotifyCollectionChangedAction.Reset);
     }
 
+    /// <summary>
+    /// Verifies that GetFilteredEntries returns only the entries matching the filter.
+    /// </summary>
     [Fact]
     public void GetFilteredEntries_WithValidFilter_ShouldReturnMatchingEntries()
     {
@@ -230,6 +272,9 @@ public class LogDataStoreTests : IDisposable
         filteredEntries.First().Message.Should().Be("Warning message");
     }
 
+    /// <summary>
+    /// Verifies that GetFilteredEntries throws an exception when the filter is null.
+    /// </summary>
     [Fact]
     public void GetFilteredEntries_WithNullFilter_ShouldThrowArgumentNullException()
     {
@@ -238,6 +283,9 @@ public class LogDataStoreTests : IDisposable
         act.Should().Throw<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that GetEntriesInTimeRange returns only entries within the specified time range.
+    /// </summary>
     [Fact]
     public void GetEntriesInTimeRange_WithValidRange_ShouldReturnMatchingEntries()
     {
@@ -261,6 +309,9 @@ public class LogDataStoreTests : IDisposable
         filteredEntries.First().Message.Should().Be("Message 2");
     }
 
+    /// <summary>
+    /// Verifies that exporting to text format produces the correct output.
+    /// </summary>
     [Fact]
     public async Task ExportAsync_WithTextFormat_ShouldReturnFormattedText()
     {
@@ -277,6 +328,9 @@ public class LogDataStoreTests : IDisposable
         result.Should().Contain("[Information]");
     }
 
+    /// <summary>
+    /// Verifies that exporting to JSON format produces valid JSON.
+    /// </summary>
     [Fact]
     public async Task ExportAsync_WithJsonFormat_ShouldReturnValidJson()
     {
@@ -293,6 +347,9 @@ public class LogDataStoreTests : IDisposable
         result.Should().Contain("\"level\": \"Information\"");
     }
 
+    /// <summary>
+    /// Verifies that exporting to CSV format produces correct CSV data.
+    /// </summary>
     [Fact]
     public async Task ExportAsync_WithCsvFormat_ShouldReturnCsvData()
     {
@@ -310,6 +367,9 @@ public class LogDataStoreTests : IDisposable
         result.Should().Contain("\"Information\"");
     }
 
+    /// <summary>
+    /// Verifies that exporting with an invalid format defaults to text.
+    /// </summary>
     [Fact]
     public async Task ExportAsync_WithInvalidFormat_ShouldDefaultToText()
     {
@@ -326,6 +386,9 @@ public class LogDataStoreTests : IDisposable
         result.Should().Contain("[Information]");
     }
 
+    /// <summary>
+    /// Verifies that the data store handles concurrent add operations correctly without data loss or race conditions.
+    /// </summary>
     [Fact]
     public void ThreadSafety_ConcurrentAddOperations_ShouldHandleCorrectly()
     {
@@ -356,6 +419,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Entries.Should().HaveCount(_options.MaxEntries);
     }
 
+    /// <summary>
+    /// Verifies that disposing the data store cleans up resources and stops operations.
+    /// </summary>
     [Fact]
     public void Dispose_ShouldCleanupResources()
     {
@@ -374,6 +440,9 @@ public class LogDataStoreTests : IDisposable
         _dataStore.Count.Should().Be(0);
     }
 
+    /// <summary>
+    /// Verifies that calling Dispose multiple times does not cause an exception.
+    /// </summary>
     [Fact]
     public void Dispose_CalledMultipleTimes_ShouldNotThrow()
     {
@@ -403,6 +472,9 @@ public class LogDataStoreTests : IDisposable
         };
     }
 
+    /// <summary>
+    /// Disposes the test resources.
+    /// </summary>
     public void Dispose()
     {
         _dataStore?.Dispose();

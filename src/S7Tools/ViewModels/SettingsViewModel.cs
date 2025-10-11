@@ -5,11 +5,18 @@ using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
 
+/// <summary>
+/// ViewModel for the main settings view, which hosts various setting categories.
+/// </summary>
 public class SettingsViewModel : ViewModelBase
 {
     private readonly IViewModelFactory _viewModelFactory;
     private readonly Dictionary<string, ViewModelBase> _categoryViewModels;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SettingsViewModel"/> class.
+    /// </summary>
+    /// <param name="viewModelFactory">The factory to create child ViewModels.</param>
     public SettingsViewModel(IViewModelFactory viewModelFactory)
     {
         _viewModelFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
@@ -39,9 +46,15 @@ public class SettingsViewModel : ViewModelBase
         });
     }
 
+    /// <summary>
+    /// Gets the collection of available settings categories.
+    /// </summary>
     public ObservableCollection<string> Categories { get; }
 
     private string _selectedCategory = "Logging";
+    /// <summary>
+    /// Gets or sets the currently selected settings category.
+    /// </summary>
     public string SelectedCategory
     {
         get => _selectedCategory;
@@ -53,12 +66,18 @@ public class SettingsViewModel : ViewModelBase
     }
 
     private ViewModelBase? _selectedCategoryViewModel;
+    /// <summary>
+    /// Gets or sets the ViewModel corresponding to the currently selected category.
+    /// </summary>
     public ViewModelBase? SelectedCategoryViewModel
     {
         get => _selectedCategoryViewModel;
         set => this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
     }
 
+    /// <summary>
+    /// Gets the command to select a new settings category.
+    /// </summary>
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
 
     private ViewModelBase GetCategoryViewModel(string category)

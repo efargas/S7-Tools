@@ -9,6 +9,9 @@ namespace S7Tools.Core.Models.Validators;
 /// </summary>
 public class PlcAddressValidator : BaseValidator<PlcAddress>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PlcAddressValidator"/> class.
+    /// </summary>
     public PlcAddressValidator() : base(NullLogger.Instance) { }
 
     /// <summary>
