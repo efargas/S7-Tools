@@ -4,6 +4,108 @@ description: 'Comprehensive memory instructions for S7Tools project development,
 applyTo:
   - 'src/**/*.cs'
   - 'src/**/*.axaml'
+  - 'tests/**/*.cs'
+  - '.copilot-tracking/**/*.md'
+---
+
+# S7Tools Project Development Memory
+
+Comprehensive memory system for S7Tools project development, including Memory Bank patterns, .NET best practices, and project-specific intelligence learned through extensive codebase analysis and external code review validation.
+
+## 🚨 CRITICAL: External Code Review Response Protocol
+
+### **External Code Review Validation Process (ESTABLISHED 2025-10-09)**
+**MANDATORY** for all external code reviews to ensure systematic validation and strategic implementation:
+
+```markdown
+# Code Review Response Protocol (Required Pattern)
+1. **Systematic Validation**: Verify each finding against actual codebase
+2. **Priority Classification**: Critical bugs vs. quality improvements
+3. **Risk Assessment**: Impact analysis for each proposed change
+4. **Strategic Implementation**: Apply safe fixes immediately, defer risky changes
+5. **Task Creation**: Document deferred improvements with detailed implementation plans
+6. **Blocking Strategy**: Prevent interference with high-priority feature development
+```
+
+### **Critical Bug Patterns to Avoid**
+**From S7Tools External Review (2025-10-09)**:
+
+```csharp
+// AVOID: Exception swallowing without logging
+try
+{
+    // Some operation
+}
+catch (Exception)
+{
+    // Silent failure - DON'T DO THIS
+}
+
+// CORRECT: Proper exception handling with logging
+try
+{
+    // Some operation
+}
+catch (Exception ex)
+{
+    _logger.LogError(ex, "Operation failed in {Method}", nameof(SomeMethod));
+    throw; // or return Result<T>.Failure(ex.Message);
+}
+```
+
+### **UI Performance Optimization Pattern**
+```csharp
+// AVOID: Inefficient bulk notifications
+foreach (var item in items)
+{
+    collection.Add(item);
+    // Triggers UI update for each item - BAD
+}
+
+// CORRECT: Batch operations with single notification
+collection.AddRange(items);
+// Single UI notification - GOOD
+```
+
+### **Code Quality Standards (ENFORCED)**
+```csharp
+// REQUIRED: ConfigureAwait(false) in library code
+public async Task<Result<T>> ServiceMethodAsync()
+{
+    await SomeAsyncOperation().ConfigureAwait(false);
+    return Result<T>.Success(value);
+}
+
+// REQUIRED: Record types for immutable data
+public record LogModel(
+    DateTime Timestamp,
+    LogLevel Level,
+    string Message
+);
+
+// REQUIRED: Constants for magic strings
+public static class ExportFormats
+{
+    public const string Text = "txt";
+    public const string Json = "json";
+    public const string Csv = "csv";
+}
+```
+
+### **Deferred Improvements Tracking (TASK004)**
+**NEVER implement these during active feature development**:
+
+1. **File-Scoped Namespaces** - Risk: 150+ file changes, merge conflicts
+2. **Extensive Result Pattern** - Risk: Breaking interface changes
+3. **Configuration Centralization** - Risk: Structural complexity
+4. **DI Simplification** - Risk: Service resolution issues
+
+**Implementation Rule**: Only after current feature (socat) is complete and stable. INTELLIGENCE & LESSONS LEARNED
+---
+description: 'Comprehensive memory instructions for S7Tools project development, including Memory Bank system patterns, .NET best practices, and project-specific intelligence.'
+applyTo:
+  - 'src/**/*.cs'
+  - 'src/**/*.axaml'
   - 'src/**/*.csproj'
   - '.copilot-tracking/**/*.md'
 ---

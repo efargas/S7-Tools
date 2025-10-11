@@ -145,7 +145,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     private void RefreshFromSettings()
     {
-        var settings = _settingsService.Settings;
+        var settings = _settingsService.GetSettings();
         DefaultLogPath = settings.Logging.DefaultLogPath;
         ExportPath = settings.Logging.ExportPath;
         MinimumLogLevel = settings.Logging.MinimumLogLevel.ToString();
@@ -356,7 +356,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     private async Task UpdateSettingsAsync()
     {
-        var settings = _settingsService.Settings.Clone();
+        var settings = _settingsService.GetSettings();
         settings.Logging.DefaultLogPath = DefaultLogPath;
         settings.Logging.ExportPath = ExportPath;
         

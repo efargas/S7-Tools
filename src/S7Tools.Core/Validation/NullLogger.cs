@@ -7,11 +7,26 @@ namespace S7Tools.Core.Validation
     /// </summary>
     public sealed class NullLogger : ILogger
     {
+        /// <summary>
+        /// Gets the singleton instance of the NullLogger.
+        /// </summary>
         public static readonly NullLogger Instance = new NullLogger();
+
         private NullLogger() { }
-        public IDisposable BeginScope<TState>(TState state) => NullScope.Instance;
+
+        /// <inheritdoc />
+        public IDisposable BeginScope<TState>(TState state) where TState : notnull => NullScope.Instance;
+
+        /// <inheritdoc />
         public bool IsEnabled(LogLevel logLevel) => false;
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) { }
-        private class NullScope : IDisposable { public static readonly NullScope Instance = new NullScope(); public void Dispose() { } }
+
+        /// <inheritdoc />
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
+
+        private sealed class NullScope : IDisposable
+        {
+            public static readonly NullScope Instance = new NullScope();
+            public void Dispose() { }
+        }
     }
 }

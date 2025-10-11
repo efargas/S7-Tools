@@ -62,7 +62,7 @@ public class SerialPortService : ISerialPortService
     {
         _logger.LogDebug("Starting serial port scan");
 
-        var settings = _settingsService.Settings.SerialPorts;
+        var settings = _settingsService.GetSettings().SerialPorts;
         var ports = new List<SerialPortInfo>();
 
         try
@@ -114,7 +114,7 @@ public class SerialPortService : ISerialPortService
             }
 
             var portType = GetPortType(portPath);
-            var isAccessible = await IsPortAccessibleAsync(portPath, _settingsService.Settings.SerialPorts.PortTestTimeoutMs, cancellationToken).ConfigureAwait(false);
+            var isAccessible = await IsPortAccessibleAsync(portPath, _settingsService.GetSettings().SerialPorts.PortTestTimeoutMs, cancellationToken).ConfigureAwait(false);
 
             var portInfo = new SerialPortInfo
             {
@@ -182,7 +182,7 @@ public class SerialPortService : ISerialPortService
             }
 
             _isMonitoring = true;
-            var settings = _settingsService.Settings.SerialPorts;
+            var settings = _settingsService.GetSettings().SerialPorts;
 
             // Initial scan to populate known ports
             var currentPorts = await ScanAvailablePortsAsync(cancellationToken).ConfigureAwait(false);
@@ -618,7 +618,7 @@ public class SerialPortService : ISerialPortService
     private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(string basePattern, SerialPortType portType, int maxPorts, CancellationToken cancellationToken)
     {
         var ports = new List<SerialPortInfo>();
-        var settings = _settingsService.Settings.SerialPorts;
+        var settings = _settingsService.GetSettings().SerialPorts;
 
         for (int i = 0; i < maxPorts; i++)
         {

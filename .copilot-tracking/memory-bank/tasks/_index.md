@@ -1,7 +1,99 @@
 # Tasks Index
 
-**Last Updated**: 2025-10-09 - Serial Ports Settings Complete
-**Total Tasks**: 2
+**Last Updated**: 2025-10-09 - Phase 4 UI Implementation COMPLETE
+**Total Tasks**: 4
+
+## Active Tasks
+
+### **[TASK003]** Servers Settings Category Implementation (socat Configuration)
+**Status**: ✅ **85% COMPLETE** - Phase 4 UI Implementation finished
+**Priority**: High
+**Started**: 2025-10-09
+**Description**: Comprehensive "Servers" settings category with socat (Serial-to-TCP Proxy) configuration and profile management
+
+#### **Current Progress: Phase 4 COMPLETE - Major Milestone Achieved**
+- ✅ **Phase 1 Complete**: Core models (SocatProfile, SocatConfiguration, SocatSettings) created with validation
+- ✅ **Phase 2 Complete**: Service layer (ISocatService, ISocatProfileService + implementations) verified complete
+- ✅ **Phase 3 Complete**: ViewModel implementation (SocatSettingsViewModel, SocatProfileViewModel) with user manual edits
+- ✅ **Phase 4 Complete**: UI implementation (SocatSettingsView.axaml, 4-row layout, build fixes applied)
+- 🔄 **Phase 5 Partial**: Integration complete, final verification pending
+- ⏳ **Phase 6 Pending**: User validation and manual testing
+
+#### **Phase 4 Achievements (NEW!)**
+
+**SocatSettingsView.axaml** (673 lines):
+- ✅ Comprehensive 4-row layout following established Serial Ports pattern
+- ✅ **Row 1**: Profile Management (DataGrid, Add/Edit/Delete/Duplicate buttons, Status display)
+- ✅ **Row 2**: Device Discovery (Device list, refresh controls, selection feedback)
+- ✅ **Row 3**: Process Management (Start/Stop controls, Status monitoring, Command preview)
+- ✅ **Row 4**: Import/Export (File operations, Settings management)
+- ✅ Complete data binding to SocatSettingsViewModel properties and commands
+- ✅ VSCode-style theming and layout consistency
+- ✅ StringFormat fixes applied (bullet point format: '• {0}' pattern)
+
+**SocatSettingsView.axaml.cs**:
+- ✅ Code-behind file with proper InitializeComponent() pattern
+- ✅ Standard constructor following established conventions
+
+**Technical Challenges Resolved**:
+- ✅ **XAML Compilation Issues**: Fixed broken StringFormat attributes in TextBlock bindings
+- ✅ **FallbackValue Syntax**: Corrected split attribute values across lines
+- ✅ **StringFormat Pattern**: Applied consistent bullet point format matching SerialPortsSettingsView
+- ✅ **Build Verification**: Clean compilation achieved after fixes
+
+**SocatProfileViewModel.cs** (892 lines):
+- ✅ Individual socat profile editing with comprehensive validation
+- ✅ Real-time socat command generation and preview
+- ✅ ReactiveUI individual property subscriptions (performance optimized)
+- ✅ Clipboard integration for command copying
+- ✅ Preset loading system with 5 configurations
+- ✅ Full integration with ISocatProfileService and ISocatService
+
+**SocatSettingsViewModel.cs** (1243 lines):
+- ✅ Profile CRUD operations (Create, Edit, Delete, Duplicate, Set Default)
+- ✅ Process management (Start, Stop, Monitor socat processes)
+- ✅ Serial port device scanning and integration
+- ✅ Import/export functionality (ready for file dialogs)
+- ✅ Path management with settings persistence
+- ✅ Real-time status monitoring and error handling
+
+**Integration Complete**:
+- ✅ **DI Registration**: Both ViewModels registered in ServiceCollectionExtensions.cs
+- ✅ **Settings Navigation**: "Servers" category added to SettingsViewModel
+- ✅ **Factory Method**: CreateSocatSettingsViewModel() implemented with full dependency injection
+
+**User Manual Edits Applied**: Post-AI implementation, user made manual edits to both ViewModels with successful build verification
+
+**Implementation Phases**:
+1. ✅ **Core Models & Data Structures** (2-3 hours) - Complete
+2. ✅ **Service Layer Implementation** (3-4 hours) - Complete (discovered during verification)
+3. ✅ **ViewModel Implementation** (4-5 hours) - Complete (with user manual edits)
+4. ⏳ **UI Implementation** (2-3 hours) - Ready to Start
+5. 🔄 **Integration & Registration** (1-2 hours) - Partial (settings integration complete)
+6. ⏳ **Testing & Validation** (2-3 hours) - Pending
+
+**Next Steps**: Begin Phase 4 - UI Implementation (4-row layout following established patterns)
+
+## Blocked Tasks
+
+### **[TASK004]** Deferred Code Improvements Implementation
+**Status**: 🚫 **BLOCKED** (Until TASK003 complete)
+**Priority**: Medium
+**Created**: 2025-10-09
+**Description**: Implementation of deferred architectural improvements from external code review - file-scoped namespaces, extensive Result pattern, configuration centralization, DI simplification
+
+#### **Blocking Reason**
+Architectural improvements could interfere with socat implementation. These quality improvements should be implemented after socat is complete and stable.
+
+**Deferred Improvements**:
+1. **File-Scoped Namespaces** (3-4 hours) - Convert all C# files to file-scoped namespace syntax
+2. **Extensive Result Pattern** (8-12 hours) - Expand Result<T> usage to all service methods
+3. **Configuration Centralization** (5-6 hours) - Create centralized configuration management
+4. **DI Simplification** (4-5 hours) - Simplify dependency injection patterns
+5. **Constants Implementation** (2-3 hours) - Replace magic strings with named constants
+
+**Total Estimated Time**: 22-30 hours across 5 phases
+**Next Action**: Monitor TASK003 completion, then unblock for implementation
 
 ## Recently Completed
 
@@ -46,9 +138,9 @@
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| Completed | 2 | 100% |
-| Active | 0 | 0% |
-| Blocked | 0 | 0% |
+| Completed | 2 | 50% |
+| Active | 1 | 25% |
+| Blocked | 1 | 25% |
 | Cancelled | 0 | 0% |
 
 ## Development Readiness

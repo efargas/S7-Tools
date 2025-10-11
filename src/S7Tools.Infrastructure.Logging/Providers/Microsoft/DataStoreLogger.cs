@@ -144,7 +144,7 @@ public sealed class DataStoreLogger : ILogger
     {
         private static readonly AsyncLocal<LoggerScope<object>?> _current = new();
         private readonly LoggerScope<object>? _parent;
-        private bool _disposed = false;
+        private bool _disposed;
 
         public LoggerScope(TState state)
         {

@@ -12,12 +12,14 @@ public class ValidationService : IValidationService
 {
     private readonly ConcurrentDictionary<Type, object> _validators = new();
 
+    /// <inheritdoc />
     public ValidationResult Validate<T>(T instance)
     {
         var validator = GetValidator<T>();
         return validator?.Validate(instance!) ?? ValidationResult.Success();
     }
 
+    /// <inheritdoc />
     public async Task<ValidationResult> ValidateAsync<T>(T instance, CancellationToken cancellationToken = default)
     {
         var validator = GetValidator<T>();
@@ -26,11 +28,13 @@ public class ValidationService : IValidationService
             : ValidationResult.Success();
     }
 
+    /// <inheritdoc />
     public void RegisterValidator<T>(IValidator<T> validator)
     {
         _validators[typeof(T)] = validator;
     }
 
+    /// <inheritdoc />
     public bool UnregisterValidator<T>()
     {
         return _validators.TryRemove(typeof(T), out _);

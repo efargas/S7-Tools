@@ -83,12 +83,20 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IGreetingService, GreetingService>();
 
         // Add PLC Services
-        services.TryAddSingleton<ITagRepository, PlcDataService>();
-        services.TryAddSingleton<IS7ConnectionProvider, PlcDataService>();
+        // Register the concrete service as a singleton, then register the interfaces
+        // to resolve to the same singleton instance. This ensures that any service
+        // requesting ITagRepository or IS7ConnectionProvider gets the same object.
+        services.TryAddSingleton<PlcDataService>();
+        services.TryAddSingleton<ITagRepository>(provider => provider.GetRequiredService<PlcDataService>());
+        services.TryAddSingleton<IS7ConnectionProvider>(provider => provider.GetRequiredService<PlcDataService>());
 
         // Add Serial Port Services
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
         services.TryAddSingleton<ISerialPortService, SerialPortService>();
+
+        // Add Socat Services (Servers Settings - socat configuration)
+        services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
+        services.TryAddSingleton<ISocatService, SocatService>();
 
         return services;
     }
@@ -186,7 +194,7 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<LogViewerViewModel>();
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
-        services.TryAddTransient<SettingsViewModel>(provider => new SettingsViewModel(provider));
+        services.TryAddTransient<SettingsViewModel>();
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
@@ -194,6 +202,10 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<SerialPortsSettingsViewModel>();
         services.TryAddTransient<SerialPortProfileViewModel>();
         services.TryAddTransient<SerialPortScannerViewModel>();
+
+        // Add Socat ViewModels (Servers Settings - socat configuration)
+        services.TryAddTransient<SocatSettingsViewModel>();
+        services.TryAddTransient<SocatProfileViewModel>();
 
         return services;
     }
@@ -326,23 +338,27 @@ public static class ServiceCollectionExtensions
             var profileService = serviceProvider.GetService<ISerialPortProfileService>();
             if (profileService != null)
             {
-                // Fire-and-forget initialization; any exceptions are logged inside the service
+                // Fire-and-forget initialization with proper error logging
                 _ = Task.Run(async () =>
                 {
                     try
                     {
                         await profileService.InitializeStorageAsync().ConfigureAwait(false);
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Intentionally swallow here; service logs errors
+                        // Log the error instead of swallowing it silently
+                        var logger = serviceProvider.GetService<ILogger<ISerialPortProfileService>>();
+                        logger?.LogError(ex, "Failed to initialize serial port profile storage during application startup");
                     }
                 });
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // ignore
+            // Log service retrieval errors instead of ignoring them
+            var logger = serviceProvider.GetService<ILogger>();
+            logger?.LogError(ex, "Failed to retrieve ISerialPortProfileService during service initialization");
         }
     }
 

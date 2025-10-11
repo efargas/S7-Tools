@@ -1,26 +1,29 @@
+using Avalonia.Data;
 using Avalonia.Data.Converters;
 using System;
 using System.Globalization;
 
 namespace S7Tools.Converters;
 
-public class BooleanToInverseBooleanConverter : IValueConverter
+/// <summary>
+/// Converts a boolean value to its inverse.
+/// </summary>
+[ValueConversion(typeof(bool), typeof(bool))]
+public sealed class BooleanToInverseBooleanConverter : IValueConverter
 {
-    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    /// <inheritdoc />
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool boolValue)
+        if (value is bool boolean)
         {
-            return !boolValue;
+            return !boolean;
         }
-        return value; // Return original value if not a boolean
+        return false;
     }
 
-    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    /// <inheritdoc />
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is bool boolValue)
-        {
-            return !boolValue;
-        }
-        return value; // Return original value if not a boolean
+        return Binding.DoNothing;
     }
 }

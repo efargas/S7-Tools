@@ -4,8 +4,14 @@ using Xunit;
 
 namespace S7Tools.Core.Tests.Resources;
 
+/// <summary>
+/// Contains unit tests for the <see cref="InMemoryResourceManager"/>.
+/// </summary>
 public class InMemoryResourceManagerTests
 {
+    /// <summary>
+    /// Verifies that adding and retrieving a resource works for the default culture.
+    /// </summary>
     [Fact]
     public void AddOrUpdate_And_GetString_Works_For_DefaultCulture()
     {
@@ -14,6 +20,9 @@ public class InMemoryResourceManagerTests
         Assert.Equal("Hola", manager.GetString("Hello"));
     }
 
+    /// <summary>
+    /// Verifies that GetString returns the key itself when the resource is not found.
+    /// </summary>
     [Fact]
     public void GetString_ReturnsKey_IfNotFound()
     {
@@ -21,6 +30,9 @@ public class InMemoryResourceManagerTests
         Assert.Equal("MissingKey", manager.GetString("MissingKey"));
     }
 
+    /// <summary>
+    /// Verifies that adding and retrieving resources works for specific cultures.
+    /// </summary>
     [Fact]
     public void AddOrUpdate_And_GetString_Works_For_SpecificCulture()
     {
@@ -33,6 +45,9 @@ public class InMemoryResourceManagerTests
         Assert.Equal("Hola", manager.GetString("Hello", es));
     }
 
+    /// <summary>
+    /// Verifies that HasResource correctly identifies an existing resource.
+    /// </summary>
     [Fact]
     public void HasResource_ReturnsTrue_IfExists()
     {
@@ -41,6 +56,9 @@ public class InMemoryResourceManagerTests
         Assert.True(manager.HasResource("Key"));
     }
 
+    /// <summary>
+    /// Verifies that GetAvailableKeys returns all registered resource keys.
+    /// </summary>
     [Fact]
     public void GetAvailableKeys_Returns_All_Keys()
     {
@@ -52,6 +70,9 @@ public class InMemoryResourceManagerTests
         Assert.Contains("B", keys);
     }
 
+    /// <summary>
+    /// Verifies that GetSupportedCultures returns all cultures for which resources are registered.
+    /// </summary>
     [Fact]
     public void GetSupportedCultures_Returns_All_Cultures()
     {
@@ -63,6 +84,9 @@ public class InMemoryResourceManagerTests
         Assert.Contains(cultures, c => c.Name == "en-US");
     }
 
+    /// <summary>
+    /// Verifies that SetCurrentCulture changes the culture used for retrieving resources.
+    /// </summary>
     [Fact]
     public void SetCurrentCulture_Changes_Culture()
     {

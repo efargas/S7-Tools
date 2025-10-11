@@ -14,11 +14,17 @@ public class DialogServiceTests
 {
     private readonly DialogService _dialogService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DialogServiceTests"/> class.
+    /// </summary>
     public DialogServiceTests()
     {
         _dialogService = new DialogService();
     }
 
+    /// <summary>
+    /// Verifies that the constructor correctly initializes the interaction properties.
+    /// </summary>
     [Fact]
     public void Constructor_ShouldInitializeInteractions()
     {
@@ -28,6 +34,9 @@ public class DialogServiceTests
         _dialogService.ShowInput.Should().NotBeNull();
     }
 
+    /// <summary>
+    /// Tests that ShowConfirmationAsync returns the expected result when a handler is registered.
+    /// </summary>
     [Fact]
     public async Task ShowConfirmationAsync_WithValidParameters_ShouldReturnExpectedResult()
     {
@@ -51,6 +60,9 @@ public class DialogServiceTests
         result.Should().Be(expectedResult);
     }
 
+    /// <summary>
+    /// Tests that ShowConfirmationAsync returns false when the handler provides a false result.
+    /// </summary>
     [Fact]
     public async Task ShowConfirmationAsync_WithHandlerReturningFalse_ShouldReturnFalse()
     {
@@ -72,6 +84,9 @@ public class DialogServiceTests
         result.Should().Be(expectedResult);
     }
 
+    /// <summary>
+    /// Tests that ShowErrorAsync completes successfully and invokes its handler.
+    /// </summary>
     [Fact]
     public async Task ShowErrorAsync_WithValidParameters_ShouldCompleteSuccessfully()
     {
@@ -96,6 +111,9 @@ public class DialogServiceTests
         handlerCalled.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that when multiple handlers are registered, the last one is used.
+    /// </summary>
     [Fact]
     public async Task ShowConfirmationAsync_WithMultipleHandlers_ShouldUseFirstHandler()
     {
@@ -126,6 +144,9 @@ public class DialogServiceTests
         result.Should().BeFalse();
     }
 
+    /// <summary>
+    /// Tests that an asynchronous handler for ShowConfirmationAsync works correctly.
+    /// </summary>
     [Fact]
     public async Task ShowConfirmationAsync_WithAsyncHandler_ShouldWorkCorrectly()
     {
@@ -148,6 +169,9 @@ public class DialogServiceTests
         result.Should().Be(expectedResult);
     }
 
+    /// <summary>
+    /// Tests that an asynchronous handler for ShowErrorAsync works correctly.
+    /// </summary>
     [Fact]
     public async Task ShowErrorAsync_WithAsyncHandler_ShouldWorkCorrectly()
     {
@@ -171,6 +195,9 @@ public class DialogServiceTests
         handlerCalled.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that ShowConfirmationAsync does not throw when called with empty or null parameters.
+    /// </summary>
     [Theory]
     [InlineData("", "Valid message")]
     [InlineData("Valid title", "")]
@@ -190,6 +217,9 @@ public class DialogServiceTests
         await act.Should().NotThrowAsync();
     }
 
+    /// <summary>
+    /// Verifies that ShowErrorAsync does not throw when called with empty or null parameters.
+    /// </summary>
     [Theory]
     [InlineData("", "Valid message")]
     [InlineData("Valid title", "")]
@@ -211,6 +241,9 @@ public class DialogServiceTests
 
     // Note: Timeout tests removed due to complexity with ReactiveUI interactions
 
+    /// <summary>
+    /// Tests that concurrent calls to ShowConfirmationAsync are handled correctly.
+    /// </summary>
     [Fact]
     public async Task ShowConfirmationAsync_ConcurrentCalls_ShouldHandleCorrectly()
     {
@@ -234,6 +267,9 @@ public class DialogServiceTests
         callCount.Should().Be(10);
     }
 
+    /// <summary>
+    /// Tests that concurrent calls to ShowErrorAsync are handled correctly.
+    /// </summary>
     [Fact]
     public async Task ShowErrorAsync_ConcurrentCalls_ShouldHandleCorrectly()
     {
@@ -256,6 +292,9 @@ public class DialogServiceTests
         callCount.Should().Be(10);
     }
 
+    /// <summary>
+    /// Tests that ShowInputAsync returns the correct successful result from its handler.
+    /// </summary>
     [Fact]
     public async Task ShowInputAsync_WithValidParameters_ShouldReturnExpectedResult()
     {
@@ -288,6 +327,9 @@ public class DialogServiceTests
         result.Value.Should().Be(expectedValue);
     }
 
+    /// <summary>
+    /// Tests that ShowInputAsync returns a cancelled result when its handler provides one.
+    /// </summary>
     [Fact]
     public async Task ShowInputAsync_WithCancelledResult_ShouldReturnCancelled()
     {

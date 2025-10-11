@@ -9,6 +9,14 @@ namespace S7Tools.Core.Tests.Models.ValueObjects;
 /// </summary>
 public class PlcAddressTests
 {
+    /// <summary>
+    /// Verifies that the constructor correctly parses various valid PLC addresses.
+    /// </summary>
+    /// <param name="address">The PLC address string to test.</param>
+    /// <param name="expectedType">The expected address type.</param>
+    /// <param name="expectedDbNumber">The expected data block number.</param>
+    /// <param name="expectedOffset">The expected offset.</param>
+    /// <param name="expectedBitOffset">The expected bit offset.</param>
     [Theory]
     [InlineData("DB1.DBX0.0", PlcAddressType.DataBlockBit, 1, 0, 0)]
     [InlineData("DB10.DBB5", PlcAddressType.DataBlockByte, 10, 5, null)]
@@ -38,6 +46,10 @@ public class PlcAddressTests
         plcAddress.BitOffset.Should().Be(expectedBitOffset);
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws an ArgumentException for various invalid PLC addresses.
+    /// </summary>
+    /// <param name="invalidAddress">The invalid PLC address string to test.</param>
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -60,6 +72,9 @@ public class PlcAddressTests
            .WithMessage($"Invalid PLC address format: {invalidAddress}*");
     }
 
+    /// <summary>
+    /// Verifies that the constructor throws an ArgumentException when the address is null.
+    /// </summary>
     [Fact]
     public void Constructor_WithNullAddress_ShouldThrowArgumentException()
     {
@@ -68,6 +83,11 @@ public class PlcAddressTests
         act.Should().Throw<ArgumentException>();
     }
 
+    /// <summary>
+    /// Verifies that the constructor normalizes lowercase addresses to uppercase.
+    /// </summary>
+    /// <param name="input">The lowercase input address.</param>
+    /// <param name="expected">The expected uppercase output address.</param>
     [Theory]
     [InlineData("db1.dbx0.0", "DB1.DBX0.0")] // Case insensitive
     [InlineData("m0.0", "M0.0")]
@@ -81,6 +101,10 @@ public class PlcAddressTests
         plcAddress.Value.Should().Be(expected);
     }
 
+    /// <summary>
+    /// Verifies that the Create factory method returns a success result for valid addresses.
+    /// </summary>
+    /// <param name="address">The valid PLC address string.</param>
     [Theory]
     [InlineData("DB1.DBX0.0")]
     [InlineData("M0.0")]
@@ -98,6 +122,10 @@ public class PlcAddressTests
         result.Value!.Value.Should().Be(address.ToUpperInvariant());
     }
 
+    /// <summary>
+    /// Verifies that the Create factory method returns a failure result for invalid addresses.
+    /// </summary>
+    /// <param name="invalidAddress">The invalid PLC address string.</param>
     [Theory]
     [InlineData("")]
     [InlineData("INVALID")]
@@ -113,6 +141,11 @@ public class PlcAddressTests
     result.Value.Should().Be(default(PlcAddress));
     }
 
+    /// <summary>
+    /// Verifies that the IsBitAddress property returns the correct value for various address types.
+    /// </summary>
+    /// <param name="address">The PLC address string.</param>
+    /// <param name="expectedIsBitAddress">The expected value for IsBitAddress.</param>
     [Theory]
     [InlineData("DB1.DBX0.0", true)]
     [InlineData("M0.0", true)]
@@ -133,6 +166,11 @@ public class PlcAddressTests
         plcAddress.IsBitAddress.Should().Be(expectedIsBitAddress);
     }
 
+    /// <summary>
+    /// Verifies that the IsDataBlockAddress property returns the correct value for various address types.
+    /// </summary>
+    /// <param name="address">The PLC address string.</param>
+    /// <param name="expectedIsDataBlockAddress">The expected value for IsDataBlockAddress.</param>
     [Theory]
     [InlineData("DB1.DBX0.0", true)]
     [InlineData("DB10.DBB5", true)]
@@ -153,6 +191,9 @@ public class PlcAddressTests
         plcAddress.IsDataBlockAddress.Should().Be(expectedIsDataBlockAddress);
     }
 
+    /// <summary>
+    /// Verifies that the implicit conversion to string returns the correct address value.
+    /// </summary>
     [Fact]
     public void ImplicitConversion_ToString_ShouldReturnValue()
     {
@@ -166,6 +207,9 @@ public class PlcAddressTests
         addressString.Should().Be("DB1.DBX0.0");
     }
 
+    /// <summary>
+    /// Verifies that the ToString method returns the correct address value.
+    /// </summary>
     [Fact]
     public void ToString_ShouldReturnValue()
     {
@@ -179,6 +223,9 @@ public class PlcAddressTests
         result.Should().Be("DB1.DBX0.0");
     }
 
+    /// <summary>
+    /// Verifies that two PlcAddress instances with the same address are considered equal.
+    /// </summary>
     [Fact]
     public void Equality_WithSameAddress_ShouldBeEqual()
     {
@@ -192,6 +239,9 @@ public class PlcAddressTests
         (address1 != address2).Should().BeFalse();
     }
 
+    /// <summary>
+    /// Verifies that two PlcAddress instances with different addresses are not considered equal.
+    /// </summary>
     [Fact]
     public void Equality_WithDifferentAddress_ShouldNotBeEqual()
     {
@@ -205,6 +255,9 @@ public class PlcAddressTests
         (address1 != address2).Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that two PlcAddress instances with the same address have the same hash code.
+    /// </summary>
     [Fact]
     public void GetHashCode_WithSameAddress_ShouldReturnSameHashCode()
     {
@@ -216,6 +269,11 @@ public class PlcAddressTests
         address1.GetHashCode().Should().Be(address2.GetHashCode());
     }
 
+    /// <summary>
+    /// Verifies that the AddressType property is correctly determined for various address formats.
+    /// </summary>
+    /// <param name="address">The PLC address string.</param>
+    /// <param name="expectedType">The expected address type.</param>
     [Theory]
     [InlineData("DB1.DBX0.0", PlcAddressType.DataBlockBit)]
     [InlineData("DB1.DBB0", PlcAddressType.DataBlockByte)]
@@ -236,6 +294,10 @@ public class PlcAddressTests
         plcAddress.AddressType.Should().Be(expectedType);
     }
 
+    /// <summary>
+    /// Verifies that the constructor succeeds with large but valid address values.
+    /// </summary>
+    /// <param name="address">The PLC address string with large values.</param>
     [Theory]
     [InlineData("DB999.DBX999.7")] // Large values
     [InlineData("M999.7")]
@@ -253,6 +315,10 @@ public class PlcAddressTests
         act.Should().NotThrow();
     }
 
+    /// <summary>
+    /// Verifies that the constructor succeeds with zero-based address values.
+    /// </summary>
+    /// <param name="address">The zero-based PLC address string.</param>
     [Theory]
     [InlineData("DB0.DBX0.0")] // DB0 should be valid
     [InlineData("M0.0")]

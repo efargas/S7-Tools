@@ -10,6 +10,9 @@ public class ResultTests
 {
     #region Result<T> Tests
 
+    /// <summary>
+    /// Verifies that a successful generic result is created with the correct value.
+    /// </summary>
     [Fact]
     public void Success_WithValue_ShouldCreateSuccessfulResult()
     {
@@ -27,6 +30,9 @@ public class ResultTests
         result.Exception.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that a failed generic result is created with the correct error message.
+    /// </summary>
     [Fact]
     public void Generic_Failure_WithErrorMessage_ShouldCreateFailedResult()
     {
@@ -44,6 +50,9 @@ public class ResultTests
         result.Exception.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that GetValueOrThrow returns the value for a successful result.
+    /// </summary>
     [Fact]
     public void GetValueOrThrow_WithSuccessfulResult_ShouldReturnValue()
     {
@@ -57,6 +66,9 @@ public class ResultTests
         value.Should().Be(42);
     }
 
+    /// <summary>
+    /// Verifies that GetValueOrThrow throws an exception for a failed result.
+    /// </summary>
     [Fact]
     public void GetValueOrThrow_WithFailedResult_ShouldThrowException()
     {
@@ -73,6 +85,9 @@ public class ResultTests
 
     #region Result (non-generic) Tests
 
+    /// <summary>
+    /// Verifies that a successful non-generic result is created correctly.
+    /// </summary>
     [Fact]
     public void Success_ShouldCreateSuccessfulResult()
     {
@@ -86,6 +101,9 @@ public class ResultTests
         result.Exception.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that a failed non-generic result is created with the correct error message.
+    /// </summary>
     [Fact]
     public void NonGeneric_Failure_WithErrorMessage_ShouldCreateFailedResult()
     {
@@ -102,6 +120,9 @@ public class ResultTests
         result.Exception.Should().BeNull();
     }
 
+    /// <summary>
+    /// Verifies that an implicit conversion from true produces a successful result.
+    /// </summary>
     [Fact]
     public void ImplicitConversion_FromTrue_ShouldCreateSuccessfulResult()
     {
@@ -112,6 +133,9 @@ public class ResultTests
         result.IsSuccess.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Verifies that an implicit conversion from false produces a failed result.
+    /// </summary>
     [Fact]
     public void ImplicitConversion_FromFalse_ShouldCreateFailedResult()
     {

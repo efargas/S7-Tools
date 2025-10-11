@@ -8,28 +8,40 @@ using Xunit;
 
 namespace S7Tools.Tests.Services;
 
-public class PlcDataServiceTests
+/// <summary>
+/// Contains unit tests for the <see cref="SimulatedPlcDataService"/>.
+/// </summary>
+public class PlcDataServiceTests : IDisposable
 {
-    private readonly Mock<ILogger<PlcDataService>> _mockLogger;
-    private readonly PlcDataService _service;
+    private readonly Mock<ILogger<SimulatedPlcDataService>> _mockLogger;
+    private readonly SimulatedPlcDataService _service;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PlcDataServiceTests"/> class.
+    /// </summary>
     public PlcDataServiceTests()
     {
-        _mockLogger = new Mock<ILogger<PlcDataService>>();
-        _service = new PlcDataService(_mockLogger.Object);
+        _mockLogger = new Mock<ILogger<SimulatedPlcDataService>>();
+        _service = new SimulatedPlcDataService(_mockLogger.Object);
     }
 
+    /// <summary>
+    /// Verifies that the PlcDataService can be instantiated successfully.
+    /// </summary>
     [Fact]
     public void PlcDataService_CanBeInstantiated()
     {
         // Arrange & Act
-        var service = new PlcDataService(_mockLogger.Object);
+        var service = new SimulatedPlcDataService(_mockLogger.Object);
 
         // Assert
         Assert.NotNull(service);
         Assert.Equal(ConnectionState.Disconnected, service.State);
     }
 
+    /// <summary>
+    /// Verifies that reading a tag when disconnected returns a failure result.
+    /// </summary>
     [Fact]
     public async Task ReadTagAsync_WhenNotConnected_ReturnsFailure()
     {
@@ -44,6 +56,9 @@ public class PlcDataServiceTests
         Assert.Contains("Not connected", result.Error);
     }
 
+    /// <summary>
+    /// Verifies that reading a tag when connected returns a success result.
+    /// </summary>
     [Fact]
     public async Task ReadTagAsync_WhenConnected_ReturnsSuccess()
     {
@@ -62,6 +77,9 @@ public class PlcDataServiceTests
         Assert.Contains("Tag_", result.Value.Name);
     }
 
+    /// <summary>
+    /// Verifies that connecting with a valid configuration returns a success result.
+    /// </summary>
     [Fact]
     public async Task ConnectAsync_WithValidConfig_ReturnsSuccess()
     {
@@ -76,6 +94,9 @@ public class PlcDataServiceTests
         Assert.Equal(ConnectionState.Connected, _service.State);
     }
 
+    /// <summary>
+    /// Verifies that disconnecting when connected returns a success result.
+    /// </summary>
     [Fact]
     public async Task DisconnectAsync_WhenConnected_ReturnsSuccess()
     {
@@ -91,6 +112,9 @@ public class PlcDataServiceTests
         Assert.Equal(ConnectionState.Disconnected, _service.State);
     }
 
+    /// <summary>
+    /// Verifies that testing a connection with a valid configuration returns a success result.
+    /// </summary>
     [Fact]
     public async Task TestConnectionAsync_WithValidConfig_ReturnsSuccess()
     {
@@ -104,6 +128,9 @@ public class PlcDataServiceTests
         Assert.True(result.IsSuccess);
     }
 
+    /// <summary>
+    /// Verifies that getting PLC info when connected returns a success result with PLC information.
+    /// </summary>
     [Fact]
     public async Task GetPlcInfoAsync_WhenConnected_ReturnsPlcInfo()
     {
@@ -120,6 +147,9 @@ public class PlcDataServiceTests
         Assert.Contains("CPU", result.Value.CpuType);
     }
 
+    /// <summary>
+    /// Verifies that adding a tag successfully adds it to the managed tags collection.
+    /// </summary>
     [Fact]
     public async Task AddTagAsync_AddsTagToManagedTags()
     {
@@ -127,6 +157,7 @@ public class PlcDataServiceTests
         var tagResult = Tag.Create("TestTag", "DB1.DBX0.0", true);
         Assert.True(tagResult.IsSuccess);
         var tag = tagResult.Value;
+        Assert.NotNull(tag);
 
         // Act
         var result = await _service.AddTagAsync(tag);
@@ -136,9 +167,13 @@ public class PlcDataServiceTests
         
         var allTagsResult = await _service.GetAllTagsAsync();
         Assert.True(allTagsResult.IsSuccess);
+        Assert.NotNull(allTagsResult.Value);
         Assert.Contains(allTagsResult.Value, t => t.Name == "TestTag");
     }
 
+    /// <summary>
+    /// Verifies that writing a tag when disconnected returns a failure result.
+    /// </summary>
     [Fact]
     public async Task WriteTagAsync_WhenNotConnected_ReturnsFailure()
     {
@@ -153,6 +188,9 @@ public class PlcDataServiceTests
         Assert.Contains("Not connected", result.Error);
     }
 
+    /// <summary>
+    /// Verifies that writing a tag when connected returns a success result.
+    /// </summary>
     [Fact]
     public async Task WriteTagAsync_WhenConnected_ReturnsSuccess()
     {
@@ -169,13 +207,22 @@ public class PlcDataServiceTests
         Assert.True(result.IsSuccess);
     }
 
+    /// <summary>
+    /// Verifies that disposing the service does not throw an exception.
+    /// </summary>
     [Fact]
     public void Dispose_DoesNotThrow()
     {
         // Arrange
-        var service = new PlcDataService(_mockLogger.Object);
+        var service = new SimulatedPlcDataService(_mockLogger.Object);
 
         // Act & Assert
         service.Dispose();
+    }
+
+    public void Dispose()
+    {
+        _service.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

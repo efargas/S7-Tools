@@ -3,6 +3,7 @@ using System.Reactive;
 using System;
 using System.Threading.Tasks;
 using System.Reactive.Linq;
+using System.Reactive.Disposables;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services;
 using Microsoft.Extensions.Logging;
@@ -14,8 +15,9 @@ namespace S7Tools.ViewModels;
 /// Delegates specific responsibilities to specialized ViewModels.
 /// This is the new, clean implementation that replaces the God Object pattern.
 /// </summary>
-public class MainWindowViewModel : ViewModelBase
+public class MainWindowViewModel : ViewModelBase, IDisposable
 {
+    private readonly CompositeDisposable _disposables = new();
     private readonly IDialogService _dialogService;
     private readonly IClipboardService _clipboardService;
     private readonly ISettingsService _settingsService;
@@ -35,7 +37,7 @@ public class MainWindowViewModel : ViewModelBase
         new SettingsManagementViewModel(),
         new DialogService(),
         new ClipboardService(),
-        new Services.SettingsService(),
+        new Services.SettingsService(LoggerFactory.Create(b => { }).CreateLogger<SettingsService>()),
         null,
         CreateDesignTimeLogger())
     {
@@ -59,6 +61,8 @@ public class MainWindowViewModel : ViewModelBase
     /// <param name="settings">The settings management ViewModel.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
+    /// <param name="settingsService">The application settings service.</param>
+    /// <param name="fileDialogService">The service for opening file dialogs.</param>
     /// <param name="logger">The logger instance.</param>
     public MainWindowViewModel(
         NavigationViewModel navigation,
@@ -99,6 +103,17 @@ public class MainWindowViewModel : ViewModelBase
         SaveConfigurationCommand = ReactiveCommand.CreateFromTask(SaveConfigurationAsync);
 
         CloseApplicationInteraction = new Interaction<Unit, Unit>();
+
+        // When LastButtonPressed changes, wait 3 seconds, then clear it and the status message.
+        this.WhenAnyValue(x => x.LastButtonPressed)
+            .Where(pressed => !string.IsNullOrEmpty(pressed))
+            .Throttle(TimeSpan.FromSeconds(3), RxApp.MainThreadScheduler)
+            .Subscribe(_ =>
+            {
+                LastButtonPressed = "";
+                StatusMessage = "Ready";
+            })
+            .DisposeWith(_disposables);
 
         _logger.LogDebug("MainWindowViewModel initialized with specialized ViewModels");
     }
@@ -353,7 +368,6 @@ public class MainWindowViewModel : ViewModelBase
 
             LastButtonPressed = $"{levelName} Log Generated";
             StatusMessage = $"Generated {levelName} log message";
-            ClearButtonPressedAfterDelay();
         }
         catch (Exception ex)
         {
@@ -426,16 +440,6 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
-    /// <summary>
-    /// Clears the button pressed message after a delay.
-    /// </summary>
-    private async void ClearButtonPressedAfterDelay()
-    {
-        await Task.Delay(3000); // Clear after 3 seconds
-        LastButtonPressed = "";
-        StatusMessage = "Ready";
-    }
-
     #endregion
 
     #region Public Methods
@@ -448,6 +452,27 @@ public class MainWindowViewModel : ViewModelBase
     public void NavigateTo(Type viewModelType)
     {
         Navigation.NavigateTo(viewModelType);
+    }
+
+    /// <summary>
+    /// Disposes the ViewModel and its resources.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Protected implementation of Dispose pattern.
+    /// </summary>
+    /// <param name="disposing">True if managed resources should be disposed; otherwise, false.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _disposables.Dispose();
+        }
     }
 
     #endregion

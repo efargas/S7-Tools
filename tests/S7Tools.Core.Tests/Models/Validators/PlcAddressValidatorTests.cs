@@ -4,10 +4,18 @@ using Xunit;
 
 namespace S7Tools.Core.Tests.Models.Validators;
 
+/// <summary>
+/// Contains unit tests for the <see cref="PlcAddressValidator"/>.
+/// </summary>
 public class PlcAddressValidatorTests
 {
     private readonly PlcAddressValidator _validator = new();
 
+    /// <summary>
+    /// Verifies that the validator correctly identifies valid and invalid PLC addresses.
+    /// </summary>
+    /// <param name="address">The PLC address string to validate.</param>
+    /// <param name="expectedValid">The expected validation result.</param>
     [Theory]
     [InlineData("DB1.DBX0.0", true)]
     [InlineData("M0.0", true)]
