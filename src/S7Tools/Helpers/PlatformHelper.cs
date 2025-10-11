@@ -35,7 +35,46 @@ public static class PlatformHelper
                 }
                 else if (OperatingSystem.IsLinux())
                 {
-                    psi = new ProcessStartInfo("xdg-open", path) { UseShellExecute = false };
+                    // Try xdg-open first
+                    var candidates = new List<(string fileName, string args)>
+                    {
+                        ("xdg-open", path),
+                        ("nautilus", path),
+                        ("dolphin", path),
+                        ("thunar", path),
+                        ("pcmanfm", path)
+                    };
+
+                    ProcessStartInfo? successPsi = null;
+                    foreach (var (fileName, args) in candidates)
+                    {
+                        try
+                        {
+                            var testPsi = new ProcessStartInfo(fileName, args)
+                            {
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            };
+                            using var proc = Process.Start(testPsi);
+                            if (proc != null && !proc.HasExited)
+                            {
+                                successPsi = testPsi;
+                                break;
+                            }
+                        }
+                        catch
+                        {
+                            // Try next candidate
+                            continue;
+                        }
+                    }
+
+                    if (successPsi == null)
+                    {
+                        throw new InvalidOperationException("No suitable file manager found to open directory on Linux.");
+                    }
+
+                    psi = successPsi;
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
