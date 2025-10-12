@@ -1,14 +1,18 @@
 using System;
+using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using S7Tools.ViewModels;
 
 namespace S7Tools;
 
+/// <summary>
+/// A data template that locates and creates views for view models.
+/// </summary>
 public class ViewLocator : IDataTemplate
 {
-
-        public Control? Build(object? param)
+    /// <inheritdoc />
+    public Control? Build(object? param)
     {
         if (param is null)
         {
@@ -49,6 +53,7 @@ public class ViewLocator : IDataTemplate
         return new TextBlock { Text = "Not Found: " + name };
     }
 
+    /// <inheritdoc />
     public bool Match(object? data)
     {
         return data is ViewModelBase;

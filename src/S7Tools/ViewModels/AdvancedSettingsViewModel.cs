@@ -16,6 +16,9 @@ public class AdvancedSettingsViewModel : ViewModelBase
     }
 
     private string _message = "Advanced settings will be available in a future update.";
+    /// <summary>
+    /// Gets or sets the message to be displayed in the advanced settings view.
+    /// </summary>
     public string Message
     {
         get => _message;

@@ -16,6 +16,9 @@ public class GeneralSettingsViewModel : ViewModelBase
     }
 
     private string _message = "General settings will be available in a future update.";
+    /// <summary>
+    /// Gets or sets the message to be displayed in the general settings view.
+    /// </summary>
     public string Message
     {
         get => _message;

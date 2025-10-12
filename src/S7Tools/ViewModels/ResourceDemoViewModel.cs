@@ -14,6 +14,10 @@ public partial class ResourceDemoViewModel : ObservableObject
     [ObservableProperty]
     private string? greeting;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ResourceDemoViewModel"/> class.
+    /// </summary>
+    /// <param name="resourceFactory">The factory to create resource managers.</param>
     public ResourceDemoViewModel(IKeyedFactory<string, IResourceManager> resourceFactory)
     {
         _resourceFactory = resourceFactory;

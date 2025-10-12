@@ -1,26 +1,53 @@
 using System;
 using System.Globalization;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
 
 namespace S7Tools.Converters
 {
-    public class GridLengthToDoubleConverter : IValueConverter
+    /// <summary>
+    /// Converts a GridLength to a double.
+    /// </summary>
+    public sealed class GridLengthToDoubleConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        /// <inheritdoc />
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value is double height && parameter is string percentage)
+            if (value is double height)
             {
-                if (double.TryParse(percentage, NumberStyles.Any, CultureInfo.InvariantCulture, out var percent))
+                var multiplier = 1.0;
+                if (parameter != null)
                 {
-                    return height * percent;
+                    if (parameter is double pDouble)
+                    {
+                        multiplier = pDouble;
+                    }
+                    else if (parameter is string pString && double.TryParse(pString, NumberStyles.Any, CultureInfo.InvariantCulture, out var pDoubleParsed))
+                    {
+                        multiplier = pDoubleParsed;
+                    }
                 }
+                return height * multiplier;
             }
-            return 0;
+
+            if (value is GridLength gridLength)
+            {
+                return gridLength.Value;
+            }
+
+            return 0.0;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        /// <inheritdoc />
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotImplementedException();
+            if (value is double d)
+            {
+                return new GridLength(d);
+            }
+            return AvaloniaProperty.UnsetValue;
         }
     }
 }

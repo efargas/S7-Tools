@@ -2,7 +2,9 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Services.Interfaces;
+using System;
 using System.Collections.Specialized;
+using System.IO;
 using System.Text;
 
 namespace S7Tools.Services;
@@ -20,6 +22,12 @@ public sealed class FileLogWriter : IDisposable
     private readonly object _sync = new();
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileLogWriter"/> class.
+    /// </summary>
+    /// <param name="dataStore">The data store to read log entries from.</param>
+    /// <param name="settingsService">The service to access application settings.</param>
+    /// <param name="logger">The logger for logging events and errors.</param>
     public FileLogWriter(ILogDataStore dataStore, ISettingsService settingsService, ILogger<FileLogWriter> logger)
     {
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
@@ -44,28 +52,28 @@ public sealed class FileLogWriter : IDisposable
         }
     }
 
-        private void DataStore_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void DataStore_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         try
         {
             if (_disposed) return;
-                var settings = _settingsService.GetSettings();
-                if (!settings.Logging.EnableFileLogging)
-                {
-                    return;
-                }
+            var settings = _settingsService.GetSettings();
+            if (!settings.Logging.EnableFileLogging)
+            {
+                return;
+            }
 
-                // Append new items if any
-                if (e.NewItems != null)
+            // Append new items if any
+            if (e.NewItems != null)
+            {
+                foreach (var item in e.NewItems)
                 {
-                    foreach (var item in e.NewItems)
+                    if (item is LogModel log)
                     {
-                        if (item is LogModel log)
-                        {
-                            AppendLogToFile(log, settings.Logging);
-                        }
+                        AppendLogToFile(log, settings.Logging);
                     }
                 }
+            }
         }
         catch (Exception ex)
         {
@@ -74,17 +82,17 @@ public sealed class FileLogWriter : IDisposable
         }
     }
 
-        private void AppendLogToFile(LogModel log, Models.LoggingSettings settings)
+    private void AppendLogToFile(LogModel log, Models.LoggingSettings settings)
     {
         try
         {
             var folder = settings.DefaultLogPath;
-                if (string.IsNullOrEmpty(folder))
-                {
-                    return;
-                }
+            if (string.IsNullOrEmpty(folder))
+            {
+                return;
+            }
 
-                Directory.CreateDirectory(folder);
+            Directory.CreateDirectory(folder);
 
             // Use timestamp-based file name pattern
             var timestamp = DateTime.Now.ToString("yyyyMMdd");
@@ -102,10 +110,10 @@ public sealed class FileLogWriter : IDisposable
             line.AppendLine(new string('-', 40));
 
             // Append text
-                lock (_sync)
-                {
-                    File.AppendAllText(filePath, line.ToString(), Encoding.UTF8);
-                }
+            lock (_sync)
+            {
+                File.AppendAllText(filePath, line.ToString(), Encoding.UTF8);
+            }
         }
         catch (Exception ex)
         {
@@ -113,6 +121,7 @@ public sealed class FileLogWriter : IDisposable
         }
     }
 
+    /// <inheritdoc />
     public void Dispose()
     {
         if (_disposed)

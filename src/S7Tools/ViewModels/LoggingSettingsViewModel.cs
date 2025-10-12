@@ -3,6 +3,8 @@ using S7Tools.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using System.Reactive;
 using System.Threading.Tasks;
+using System;
+using System.IO;
 
 namespace S7Tools.ViewModels;
 
@@ -50,6 +52,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     #region Properties
 
     private string _defaultLogPath = string.Empty;
+    /// <summary>
+    /// Gets or sets the default path for log files.
+    /// </summary>
     public string DefaultLogPath
     {
         get => _defaultLogPath;
@@ -57,6 +62,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private string _exportPath = string.Empty;
+    /// <summary>
+    /// Gets or sets the path for exporting logs.
+    /// </summary>
     public string ExportPath
     {
         get => _exportPath;
@@ -64,6 +72,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private string _minimumLogLevel = "Information";
+    /// <summary>
+    /// Gets or sets the minimum log level.
+    /// </summary>
     public string MinimumLogLevel
     {
         get => _minimumLogLevel;
@@ -71,6 +82,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private bool _autoScrollLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to automatically scroll logs.
+    /// </summary>
     public bool AutoScrollLogs
     {
         get => _autoScrollLogs;
@@ -78,6 +92,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private bool _enableRollingLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to enable rolling logs.
+    /// </summary>
     public bool EnableRollingLogs
     {
         get => _enableRollingLogs;
@@ -85,6 +102,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private bool _showTimestampInLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to show timestamps in logs.
+    /// </summary>
     public bool ShowTimestampInLogs
     {
         get => _showTimestampInLogs;
@@ -92,6 +112,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private bool _showCategoryInLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to show categories in logs.
+    /// </summary>
     public bool ShowCategoryInLogs
     {
         get => _showCategoryInLogs;
@@ -99,6 +122,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private bool _showLogLevelInLogs = true;
+    /// <summary>
+    /// Gets or sets a value indicating whether to show log levels in logs.
+    /// </summary>
     public bool ShowLogLevelInLogs
     {
         get => _showLogLevelInLogs;
@@ -106,6 +132,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private string _settingsStatusMessage = "Ready";
+    /// <summary>
+    /// Gets or sets the status message for settings operations.
+    /// </summary>
     public string SettingsStatusMessage
     {
         get => _settingsStatusMessage;
@@ -113,6 +142,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private string _currentSettingsFilePath = string.Empty;
+    /// <summary>
+    /// Gets or sets the path to the current settings file.
+    /// </summary>
     public string CurrentSettingsFilePath
     {
         get => _currentSettingsFilePath;
@@ -120,6 +152,9 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     private DateTime _settingsLastModified = DateTime.Now;
+    /// <summary>
+    /// Gets or sets the last modified date of the settings file.
+    /// </summary>
     public DateTime SettingsLastModified
     {
         get => _settingsLastModified;
@@ -130,13 +165,37 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     #region Commands
 
+    /// <summary>
+    /// Gets the command to browse for the default log path.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseDefaultLogPathCommand { get; }
+    /// <summary>
+    /// Gets the command to browse for the export path.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseExportPathCommand { get; }
+    /// <summary>
+    /// Gets the command to open the default log path.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenDefaultLogPathCommand { get; }
+    /// <summary>
+    /// Gets the command to open the export path.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenExportPathCommand { get; }
+    /// <summary>
+    /// Gets the command to save the settings.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
+    /// <summary>
+    /// Gets the command to load the settings.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> LoadSettingsCommand { get; }
+    /// <summary>
+    /// Gets the command to reset the settings to their defaults.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetSettingsCommand { get; }
+    /// <summary>
+    /// Gets the command to open the settings folder.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenSettingsFolderCommand { get; }
 
     #endregion

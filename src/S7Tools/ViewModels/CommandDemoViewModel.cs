@@ -12,6 +12,10 @@ public partial class CommandDemoViewModel : ObservableObject
 {
     private readonly IKeyedFactory<string, ICommand> _commandFactory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandDemoViewModel"/> class.
+    /// </summary>
+    /// <param name="commandFactory">The factory to create commands.</param>
     public CommandDemoViewModel(IKeyedFactory<string, ICommand> commandFactory)
     {
         _commandFactory = commandFactory;

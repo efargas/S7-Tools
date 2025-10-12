@@ -4,7 +4,9 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Models.ValueObjects;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services;
+using System;
 using Xunit;
+using System.Threading.Tasks;
 
 namespace S7Tools.Tests.Services;
 
@@ -15,6 +17,7 @@ public class PlcDataServiceTests : IDisposable
 {
     private readonly Mock<ILogger<SimulatedPlcDataService>> _mockLogger;
     private readonly SimulatedPlcDataService _service;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlcDataServiceTests"/> class.
@@ -220,9 +223,28 @@ public class PlcDataServiceTests : IDisposable
         service.Dispose();
     }
 
+    /// <summary>
+    /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+    /// </summary>
     public void Dispose()
     {
-        _service.Dispose();
+        Dispose(true);
         GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases unmanaged and - optionally - managed resources.
+    /// </summary>
+    /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                _service.Dispose();
+            }
+            _disposed = true;
+        }
     }
 }

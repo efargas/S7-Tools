@@ -44,6 +44,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
+    /// <param name="uiThreadService">The service for dispatching to the UI thread.</param>
     /// <param name="logger">The logger.</param>
     public SerialPortsSettingsViewModel(
     ISerialPortProfileService profileService,

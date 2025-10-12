@@ -20,6 +20,10 @@ public partial class PlcInputViewModel : ObservableObject
     [ObservableProperty]
     private string? validationError;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PlcInputViewModel"/> class.
+    /// </summary>
+    /// <param name="validatorFactory">The factory to create validators.</param>
     public PlcInputViewModel(IKeyedFactory<string, IValidator> validatorFactory)
     {
         _validatorFactory = validatorFactory;
