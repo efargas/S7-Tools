@@ -14,6 +14,7 @@ using S7Tools.Core.Validation;
 using S7Tools.Core.Logging;
 using S7Tools.Resources;
 using S7Tools.Models;
+using S7Tools.Core.Models.Jobs;
 
 namespace S7Tools.Extensions;
 
@@ -96,7 +97,8 @@ public static class ServiceCollectionExtensions
 
         // Add Socat Services (Servers Settings - socat configuration)
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
-        services.TryAddSingleton<ISocatService, SocatService>();
+        services.TryAddSingleton<SocatService>();
+        services.TryAddSingleton<ISocatService, SocatAdapter>();
 
         return services;
     }
@@ -133,6 +135,19 @@ public static class ServiceCollectionExtensions
         {
             var factory = provider.GetRequiredService<IStructuredLoggerFactory>();
             return factory.CreateLogger("S7Tools.Application");
+        });
+
+        // Add Bootloader Services
+        services.AddSingleton<IResourceCoordinator, ResourceCoordinator>();
+        services.AddSingleton<IJobScheduler, JobScheduler>();
+        services.AddTransient<IBootloaderService, BootloaderService>();
+        services.AddTransient<IPayloadProvider>(sp => new PayloadProviderAdapter(AppContext.BaseDirectory));
+        services.AddTransient<IPowerSupplyService, PowerSupplyAdapter>();
+        services.AddTransient<Func<JobProfileSet, IPlcClient>>(sp => profiles =>
+        {
+            var channel = new SiemensS7Bootloader.S7.Net.TcpChannel("127.0.0.1", profiles.Socat.Port);
+            var client = new SiemensS7Bootloader.S7.Net.PlcClient(channel, sp.GetRequiredService<ILoggerFactory>());
+            return new PlcClientAdapter(client);
         });
 
         return services;
@@ -206,6 +221,9 @@ public static class ServiceCollectionExtensions
         // Add Socat ViewModels (Servers Settings - socat configuration)
         services.TryAddTransient<SocatSettingsViewModel>();
         services.TryAddTransient<SocatProfileViewModel>();
+
+        // Add Task Manager ViewModel
+        services.TryAddTransient<TaskManagerViewModel>();
 
         return services;
     }

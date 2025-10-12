@@ -245,7 +245,7 @@ public class SocatService : ISocatService, IDisposable
                 processInfo.ProcessId, serialDevice, configuration.TcpPort);
 
             // Raise event
-            ProcessStarted?.Invoke(this, new SocatProcessEventArgs(processInfo));
+            ProcessStarted?.Invoke(this, new SocatProcessEventArgs{ ProcessInfo = processInfo });
 
             return processInfo;
         }
@@ -309,7 +309,7 @@ public class SocatService : ISocatService, IDisposable
                 processInfo.ProcessId, profile.Name, serialDevice, profile.Configuration.TcpPort);
 
             // Raise event
-            ProcessStarted?.Invoke(this, new SocatProcessEventArgs(processInfo));
+            ProcessStarted?.Invoke(this, new SocatProcessEventArgs{ ProcessInfo = processInfo });
 
             return processInfo;
         }
@@ -373,7 +373,7 @@ public class SocatService : ISocatService, IDisposable
                 _logger.LogInformation("Stopped socat process {ProcessId}", processId);
 
                 // Raise event
-                ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
+                ProcessStopped?.Invoke(this, new SocatProcessEventArgs{ ProcessInfo = processInfo });
 
                 return true;
             }
@@ -1091,7 +1091,7 @@ public class SocatService : ISocatService, IDisposable
                     _runningProcesses.Remove(processInfo.ProcessId);
 
                     // Raise stopped event
-                    ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
+                    ProcessStopped?.Invoke(this, new SocatProcessEventArgs { ProcessInfo = processInfo });
                 }
                 else
                 {
@@ -1113,7 +1113,7 @@ public class SocatService : ISocatService, IDisposable
                 _runningProcesses.Remove(processInfo.ProcessId);
 
                 // Raise stopped event
-                ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
+                ProcessStopped?.Invoke(this, new SocatProcessEventArgs { ProcessInfo = processInfo });
             }
 
             processInfo.LastUpdated = DateTime.UtcNow;
@@ -1230,6 +1230,21 @@ public class SocatService : ISocatService, IDisposable
             _logger.LogDebug("SocatService disposed");
         }
     }
+    public Task<int> EnsureBridgeAsync(string serialDevice, int baud, string tcpHost, int tcpPort, CancellationToken ct = default)
+    {
+        var config = new SocatConfiguration { TcpPort = tcpPort, TcpHost = tcpHost };
+        return StartSocatAsync(config, serialDevice, ct).ContinueWith(t => t.Result.ProcessId, ct);
+    }
 
+    public Task StopBridgeAsync(int tcpPort, CancellationToken ct = default)
+    {
+        return GetProcessByPortAsync(tcpPort, ct).ContinueWith(t => {
+            if (t.Result != null)
+            {
+                return StopSocatAsync(t.Result, ct);
+            }
+            return Task.CompletedTask;
+        }, ct).Unwrap();
+    }
     #endregion
 }

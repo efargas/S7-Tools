@@ -23,7 +23,6 @@
     <Window.Resources>
         <converters:BooleanToInverseBooleanConverter x:Key="BooleanToInverseBooleanConverter" />
         <converters:GridLengthToDoubleConverter x:Key="GridLengthToDoubleConverter" />
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:BooleanToColorConverter x:Key="BooleanToColorConverter" />
         
         <!-- DataTemplate for SettingsViewModel in sidebar (categories only) -->
@@ -387,7 +386,7 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0" Spacing="8"
-                                IsVisible="{Binding LastButtonPressed, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                IsVisible="{Binding LastButtonPressed}">
                         <TextBlock Text="|" Foreground="White" VerticalAlignment="Center" FontSize="12" />
                         <TextBlock Text="{Binding LastButtonPressed}" Foreground="White" VerticalAlignment="Center" FontSize="12" />
                     </StackPanel>

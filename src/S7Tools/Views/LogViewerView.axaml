@@ -16,7 +16,6 @@
     </Design.DataContext>
 
     <UserControl.Resources>
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:NullableDateTimeConverter x:Key="NullableDateTimeConverter" />
     </UserControl.Resources>
 
