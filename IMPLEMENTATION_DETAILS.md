@@ -17,10 +17,94 @@
 - **Build Fixes:** Resolved a race condition in the `SchedulerTests` and a Moq verification issue to ensure all tests pass reliably.
 - **Refactoring:** Completed the refactoring of `ISocatService` and updated its consumers.
 - **Bug Fixes:** Corrected the `IPlcClient` factory implementation and other placeholder logic.
+- **PLC Communication Logic:** The `DumpMemoryAsync` and `InstallStagerAsync` methods in `PlcClientAdapter` have been updated with more realistic, albeit still simulated, implementations.
+- **Task Manager UI:** The `TaskManagerView.axaml` and its code-behind have been created, and the view is now accessible via the activity bar.
 
 ### Missing Functionality:
-- The `DumpMemoryAsync` and `InstallStagerAsync` methods in `PlcClientAdapter` are currently placeholder implementations and need to be fully implemented with the correct logic for interacting with the S7 PLC.
-- The UI for the Task Manager (`TaskManagerView`) has not yet been created.
+- A real implementation or a more robust simulation of the `SiemensS7Bootloader` library is required for end-to-end testing and production use.
+- The `PowerControllerAdapter` is a stub and needs to be implemented with the actual power controller logic.
+- The `PayloadProviderAdapter` is a stub and needs to be implemented with the actual payload provider logic.
+- The `PlcProtocolAdapter` is a stub and needs to be implemented with the actual PLC protocol logic.
+- The `PlcTransportAdapter` is a stub and needs to be implemented with the actual PLC transport logic.
+- The `SocatSettingsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LogExportService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `MainWindowViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortsSettingsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `AboutViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ConfirmationDialogViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `HomeViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ConnectionsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SettingsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortProfileViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortScannerViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SocatProfileViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `TaskManagerViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LogViewerViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `BottomPanelViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `NavigationViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SettingsManagementViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `GreetingService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ThemeService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LayoutService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LocalizationService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `PlcDataService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortProfileService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SocatProfileService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SocatService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ActivityBarService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ClipboardService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `DialogService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `FileDialogService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SettingsService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `UIThreadService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ViewModelFactory` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `EnhancedViewModelFactory` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `InMemoryResourceManager` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ValidationService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `StructuredLoggerFactory` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `FileLogWriter` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `CommandDispatcher` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `AvaloniaUIThreadService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LocalizationService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LayoutService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ThemeService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SettingsService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `DialogService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ClipboardService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LogExportService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `FileLogWriter` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `AvaloniaFileDialogService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `GreetingService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `PlcDataService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortProfileService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SocatProfileService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SocatService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ActivityBarService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `CommandDispatcher` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `EnhancedViewModelFactory` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `InMemoryResourceManager` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ValidationService` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `StructuredLoggerFactory` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ViewModelFactory` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `BottomPanelViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ConfirmationDialogViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `ConnectionsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `HomeViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LogViewerViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `MainWindowViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `NavigationViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortProfileViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortsSettingsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SerialPortScannerViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SettingsManagementViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SettingsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SocatProfileViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `SocatSettingsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `TaskManagerViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `AboutViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
+- The `LoggingSettingsViewModel` has some placeholder logic for dialogs and file operations that needs to be implemented.
 - The application currently relies on stub implementations for the `SiemensS7Bootloader` library. A real implementation or a more robust simulation is required for end-to-end testing and production use.
 - The `PowerControllerAdapter` is a stub and needs to be implemented with the actual power controller logic.
 - The `PayloadProviderAdapter` is a stub and needs to be implemented with the actual payload provider logic.

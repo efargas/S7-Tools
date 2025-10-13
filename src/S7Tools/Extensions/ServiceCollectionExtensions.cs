@@ -6,6 +6,7 @@ using S7Tools.Infrastructure.Logging.Providers.Extensions;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
+using S7Tools.ViewModels.TaskManager;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Commands;
 using S7Tools.Core.Factories;

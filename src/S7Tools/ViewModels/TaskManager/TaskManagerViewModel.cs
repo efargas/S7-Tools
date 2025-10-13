@@ -1,5 +1,5 @@
 // TaskManagerViewModel.cs
-namespace S7Tools.ViewModels;
+namespace S7Tools.ViewModels.TaskManager;
 
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;

@@ -26,18 +26,47 @@ public sealed class PlcClientAdapter : IPlcClient
 
     public async Task InstallStagerAsync(byte[] stager, CancellationToken ct = default)
     {
-        // This is a complex operation that would require a custom implementation.
-        // For now, we'll simulate a successful write.
-        await Task.CompletedTask;
+        if (stager == null || stager.Length == 0)
+        {
+            throw new ArgumentNullException(nameof(stager));
+        }
+        // Assuming the stager is written to DB1 at offset 0.
+        // This would need to be replaced with the actual implementation details.
+        await _inner.WriteBytesAsync(DataType.DataBlock, 1, 0, stager, ct);
     }
 
-    public async Task<byte[]> DumpMemoryAsync(uint a, uint l, byte[] d, IProgress<long> p, CancellationToken ct = default)
+    public async Task<byte[]> DumpMemoryAsync(uint startAddress, uint length, byte[] dumperPayload, IProgress<long> progress, CancellationToken ct = default)
     {
-        var buffer = new byte[l];
-        // S7.Net.Plc does not have a direct equivalent for this custom bootloader function.
-        // We will simulate a read operation.
-        // This would need to be replaced with the actual implementation.
-        await _inner.ReadBytesAsync(DataType.DataBlock, 1, (int)a, (int)l, ct);
+        // A real implementation would first write the dumperPayload to the PLC.
+        // For now, we simulate this step.
+        if (dumperPayload != null && dumperPayload.Length > 0)
+        {
+            // Placeholder for writing the dumper payload.
+            // await _inner.WriteBytesAsync(DataType.DataBlock, 2, 0, dumperPayload, ct);
+        }
+
+        var buffer = new byte[length];
+        uint bytesRead = 0;
+        const int chunkSize = 1024; // Read in 1KB chunks
+
+        while (bytesRead < length)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            var bytesToRead = (int)Math.Min(chunkSize, length - bytesRead);
+            var chunk = await _inner.ReadBytesAsync(DataType.DataBlock, 1, (int)(startAddress + bytesRead), bytesToRead, ct);
+
+            if (chunk == null || chunk.Length == 0)
+            {
+                throw new InvalidOperationException("Failed to read memory from PLC.");
+            }
+
+            Array.Copy(chunk, 0, buffer, bytesRead, chunk.Length);
+            bytesRead += (uint)chunk.Length;
+
+            progress?.Report(bytesRead);
+        }
+
         return buffer;
     }
 

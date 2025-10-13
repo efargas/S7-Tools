@@ -277,6 +277,10 @@ public sealed class ActivityBarService : IActivityBarService
             new ActivityBarItem("settings", "Settings", "Application Settings", "fa-solid fa-cog")
             {
                 Order = 3
+            },
+            new ActivityBarItem("task-manager", "Task Manager", "Task Manager", "fa-solid fa-tasks")
+            {
+                Order = 4
             }
         ];
     }

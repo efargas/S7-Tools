@@ -5,6 +5,7 @@ using S7Tools.Services.Interfaces;
 using S7Tools.Services;
 using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.ViewModels.TaskManager;
 
 namespace S7Tools.ViewModels;
 
@@ -318,6 +319,18 @@ public class NavigationViewModel : ReactiveObject
                     DetailContent = settingsViewModel;
                     ShowLogStats = false;
                     _logger.LogDebug("Navigated to Settings");
+                    break;
+
+                case "task-manager":
+                    SidebarTitle = "TASK MANAGER";
+                    MainContentTitle = "Task Manager";
+                    ShowMainContentHeader = true;
+                    var taskManagerViewModel = CreateViewModel<TaskManagerViewModel>();
+                    CurrentContent = taskManagerViewModel;
+                    MainContent = taskManagerViewModel;
+                    DetailContent = taskManagerViewModel;
+                    ShowLogStats = false;
+                    _logger.LogDebug("Navigated to Task Manager");
                     break;
 
                 default:
