@@ -1,7 +1,47 @@
 # Tasks Index
 
-**Last Updated**: 2025-10-13 - All Major Tasks Complete, Documentation Updated
-**Total Tasks**: 6 (4 completed, 1 blocked, 1 pending review)
+**Last Updated**: 2025-10-13 - New Power Supply Settings Task Created
+**Total Tasks**: 7 (4 completed, 1 blocked, 1 pending review, 1 pending)
+
+## Pending
+
+### **[TASK007]** Power Supply Settings Category Implementation
+**Status**: ⏳ **PENDING** - Awaiting user approval to start
+**Priority**: High
+**Created**: 2025-10-13
+**Estimated Time**: 18-22 hours across 6 phases
+**Description**: Comprehensive "Power Supply" settings category with TCP Modbus device control and profile management
+
+#### **Scope Overview**
+- ✅ **Task Created**: Comprehensive implementation plan documented
+- ⏳ **Architecture Design**: Extensible for multiple device types (TCP Modbus, Modbus RTU, SNMP, HTTP REST)
+- ⏳ **Core Features**: Profile management, Modbus TCP connection, Power On/Off control, Connection testing
+- ⏳ **NuGet Dependencies**: Modbus library selection required (NModbus, FluentModbus, or EasyModbusTCP)
+
+#### **Implementation Phases**:
+1. ⏳ **Core Models & Data Structures** (3-4 hours) - PowerSupplyProfile, ModbusTcpConfiguration, PowerSupplySettings
+2. ⏳ **Service Layer Implementation** (4-5 hours) - IPowerSupplyService, IPowerSupplyProfileService + Modbus TCP implementation
+3. ⏳ **ViewModel Implementation** (5-6 hours) - PowerSupplySettingsViewModel, PowerSupplyProfileViewModel
+4. ⏳ **UI Implementation** (3-4 hours) - 4-row layout with connection management and power control
+5. ⏳ **Integration & Registration** (2-3 hours) - Settings integration, service registration
+6. ⏳ **Testing & Validation** (2-3 hours) - Unit tests, integration tests, user acceptance
+
+**Key Features**:
+- **TCP Modbus Configuration**: Host, Port, Device ID, Control Coil
+- **Connection Management**: Connect/Disconnect with status monitoring
+- **Power Control**: Turn On/Off, Read State with visual feedback
+- **Test Functionality**: Test connection, validate configuration
+- **Profile Management**: CRUD operations, Import/Export functionality
+- **Extensible Design**: Support for future device types (Modbus RTU, SNMP, HTTP REST)
+
+**Technical Design**:
+- **Polymorphic Configuration**: Base class with type-specific implementations
+- **Clean Architecture**: Following established Serial Ports and Socat patterns
+- **ReactiveUI Patterns**: Individual property subscriptions for optimal performance
+- **Thread Safety**: UI thread marshaling for cross-thread operations
+- **Modbus Protocol**: TCP/IP communication with coil read/write operations
+
+**Status**: Ready for implementation upon user approval and NuGet package selection
 
 ## Pending Review
 
@@ -164,11 +204,12 @@ Architectural improvements could interfere with socat implementation. These qual
 
 | Status | Count | Percentage |
 |--------|-------|------------|
-| Completed | 4 | 66.7% |
-| Pending Review | 1 | 16.7% |
-| Blocked | 1 | 16.7% |
+| Completed | 4 | 57.1% |
+| Pending Review | 1 | 14.3% |
+| Pending | 1 | 14.3% |
+| Blocked | 1 | 14.3% |
 | Cancelled | 0 | 0% |
-| **Total** | **6** | **100%** |
+| **Total** | **7** | **100%** |
 
 ## Development Readiness
 
