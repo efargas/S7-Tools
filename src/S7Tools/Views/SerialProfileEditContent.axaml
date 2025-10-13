@@ -1,0 +1,230 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             mc:Ignorable="d"
+             x:Class="S7Tools.Views.SerialProfileEditContent"
+             x:DataType="vm:SerialPortProfileViewModel">
+
+    <UserControl.Styles>
+        <!-- VSCode-style dark theme -->
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#CCCCCC" />
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#3C3C3C" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="#3C3C3C" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="ComboBox:pointerover">
+            <Setter Property="BorderBrush" Value="#007ACC" />
+        </Style>
+
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="NumericUpDown">
+            <Setter Property="Background" Value="#3C3C3C" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <!-- Group styling -->
+        <Style Selector="Border.group">
+            <Setter Property="Background" Value="#252526" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <Style Selector="TextBlock.group-title">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="#E8E8E8" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <!-- Command preview styling -->
+        <Style Selector="TextBox.command-preview">
+            <Setter Property="Background" Value="#0C0C0C" />
+            <Setter Property="Foreground" Value="#D4D4D4" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="FontFamily" Value="Consolas, 'Courier New', monospace" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="MinHeight" Value="60" />
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="16">
+
+            <!-- General Information -->
+            <Border Classes="group">
+                <StackPanel>
+                    <TextBlock Classes="group-title" Text="General Information" />
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" Margin="0,8,0,0">
+                        <Grid.Styles>
+                            <Style Selector="Grid > TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                                <Setter Property="Margin" Value="0,0,12,0" />
+                            </Style>
+                            <Style Selector="Grid > TextBox">
+                                <Setter Property="Margin" Value="0,0,0,8" />
+                            </Style>
+                        </Grid.Styles>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" />
+                        <TextBox Grid.Row="0" Grid.Column="1"
+                                 Text="{Binding ProfileName}"
+                                 Watermark="Enter profile name" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" />
+                        <TextBox Grid.Row="1" Grid.Column="1"
+                                 Text="{Binding ProfileDescription}"
+                                 Watermark="Enter profile description" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Serial Parameters -->
+            <Border Classes="group">
+                <StackPanel>
+                    <TextBlock Classes="group-title" Text="Serial Parameters" />
+
+                    <Grid ColumnDefinitions="*,12,*" RowDefinitions="Auto,Auto,Auto" Margin="0,8,0,0">
+                        <Grid.Styles>
+                            <Style Selector="StackPanel > TextBlock">
+                                <Setter Property="Margin" Value="0,0,0,4" />
+                                <Setter Property="FontWeight" Value="Medium" />
+                            </Style>
+                            <Style Selector="StackPanel > ComboBox">
+                                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            </Style>
+                        </Grid.Styles>
+
+                        <!-- Row 1: Baudrate and Parity -->
+                        <StackPanel Grid.Row="0" Grid.Column="0">
+                            <TextBlock Text="Baudrate:" />
+                            <ComboBox ItemsSource="{Binding AvailableBaudRates}"
+                                      SelectedItem="{Binding BaudRate}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="0" Grid.Column="2">
+                            <TextBlock Text="Parity:" />
+                            <ComboBox ItemsSource="{Binding AvailableParityModes}"
+                                      SelectedItem="{Binding Parity}" />
+                        </StackPanel>
+
+                        <!-- Row 2: Data Bits and Stop Bits -->
+                        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,0,0">
+                            <TextBlock Text="Character Size:" />
+                            <ComboBox ItemsSource="{Binding AvailableCharacterSizes}"
+                                      SelectedItem="{Binding CharacterSize}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="1" Grid.Column="2" Margin="0,12,0,0">
+                            <TextBlock Text="Stop Bits:" />
+                            <ComboBox ItemsSource="{Binding AvailableStopBits}"
+                                      SelectedItem="{Binding StopBits}" />
+                        </StackPanel>
+
+                        <!-- Row 3: Hardware Flow Control (checkbox) -->
+                        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,12,0,0">
+                            <CheckBox Content="Disable Hardware Flow Control (RTS/CTS)"
+                                      IsChecked="{Binding DisableHardwareFlowControl}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Advanced Options (stty flags) -->
+            <Border Classes="group">
+                <StackPanel>
+                    <TextBlock Classes="group-title" Text="Advanced Options (stty flags)" />
+
+                    <!-- Input Control Flags -->
+                    <TextBlock Text="Input Control:" FontWeight="Medium" Margin="0,8,0,4" />
+                    <UniformGrid Columns="2" Margin="0,0,0,8">
+                        <CheckBox Content="Ignore Break (ignbrk)" IsChecked="{Binding IgnoreBreak}" />
+                        <CheckBox Content="Disable Break Interrupt (brkint)" IsChecked="{Binding DisableBreakInterrupt}" />
+                        <CheckBox Content="Disable Map CR to NL (icrnl)" IsChecked="{Binding DisableMapCRtoNL}" />
+                        <CheckBox Content="Disable Bell on Queue Full (imaxbel)" IsChecked="{Binding DisableBellOnQueueFull}" />
+                        <CheckBox Content="Disable XON/XOFF Flow Control (ixon)" IsChecked="{Binding DisableXonXoffFlowControl}" />
+                        <CheckBox Content="Enable Receiver" IsChecked="{Binding EnableReceiver}" />
+                    </UniformGrid>
+
+                    <!-- Output Control Flags -->
+                    <TextBlock Text="Output Control:" FontWeight="Medium" Margin="0,8,0,4" />
+                    <UniformGrid Columns="2" Margin="0,0,0,8">
+                        <CheckBox Content="Disable Output Processing (opost)" IsChecked="{Binding DisableOutputProcessing}" />
+                        <CheckBox Content="Disable Map NL to CR-NL (onlcr)" IsChecked="{Binding DisableMapNLtoCRNL}" />
+                    </UniformGrid>
+
+                    <!-- Local Control Flags -->
+                    <TextBlock Text="Local Control:" FontWeight="Medium" Margin="0,8,0,4" />
+                    <UniformGrid Columns="2" Margin="0,0,0,8">
+                        <CheckBox Content="Disable Signal Generation (isig)" IsChecked="{Binding DisableSignalGeneration}" />
+                        <CheckBox Content="Disable Canonical Mode (icanon)" IsChecked="{Binding DisableCanonicalMode}" />
+                        <CheckBox Content="Disable Extended Processing (iexten)" IsChecked="{Binding DisableExtendedProcessing}" />
+                        <CheckBox Content="Disable Echo" IsChecked="{Binding DisableEcho}" />
+                        <CheckBox Content="Disable Echo Erase (echoe)" IsChecked="{Binding DisableEchoErase}" />
+                        <CheckBox Content="Disable Echo Kill (echok)" IsChecked="{Binding DisableEchoKill}" />
+                        <CheckBox Content="Disable Echo Control (echoctl)" IsChecked="{Binding DisableEchoControl}" />
+                        <CheckBox Content="Disable Echo Kill Erase (echoke)" IsChecked="{Binding DisableEchoKillErase}" />
+                    </UniformGrid>
+
+                    <!-- Parity Settings -->
+                    <TextBlock Text="Parity Settings:" FontWeight="Medium" Margin="0,8,0,4" />
+                    <UniformGrid Columns="2" Margin="0,0,0,8">
+                        <CheckBox Content="Parity Enabled" IsChecked="{Binding ParityEnabled}" />
+                        <CheckBox Content="Odd Parity" IsChecked="{Binding OddParity}" />
+                    </UniformGrid>
+
+                    <!-- Special Modes -->
+                    <TextBlock Text="Special Modes:" FontWeight="Medium" Margin="0,8,0,4" />
+                    <CheckBox Content="Raw Mode" IsChecked="{Binding RawMode}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Command Preview -->
+            <Border Classes="group">
+                <StackPanel>
+                    <TextBlock Classes="group-title" Text="Command Preview" />
+                    <TextBox Classes="command-preview"
+                             Text="{Binding SttyCommand}"
+                             ToolTip.Tip="This is the stty command that will be executed" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

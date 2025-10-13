@@ -26,6 +26,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortProfileService _profileService;
     private readonly ISerialPortService _portService;
     private readonly IDialogService _dialogService;
+    private readonly IProfileEditDialogService _profileEditDialogService;
+    private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<SerialPortsSettingsViewModel> _logger;
     private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
@@ -43,13 +45,18 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// <param name="profileService">The serial port profile service.</param>
     /// <param name="portService">The serial port service.</param>
     /// <param name="dialogService">The dialog service.</param>
+    /// <param name="profileEditDialogService">The profile edit dialog service.</param>
+    /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
+    /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="logger">The logger.</param>
     public SerialPortsSettingsViewModel(
     ISerialPortProfileService profileService,
     ISerialPortService portService,
     IDialogService dialogService,
+    IProfileEditDialogService profileEditDialogService,
+    IClipboardService clipboardService,
     IFileDialogService? fileDialogService,
     S7Tools.Services.Interfaces.ISettingsService settingsService,
     S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
@@ -58,6 +65,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _profileEditDialogService = profileEditDialogService ?? throw new ArgumentNullException(nameof(profileEditDialogService));
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
@@ -582,45 +591,41 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = "Opening profile editor...";
 
-            var profile = SelectedProfile;
-            var config = profile.Configuration;
+            // Create a new SerialPortProfileViewModel for editing
+            var profileViewModel = new SerialPortProfileViewModel(
+                _profileService,
+                _portService,
+                _clipboardService,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<SerialPortProfileViewModel>.Instance);
 
-            // Create comprehensive editable details string
-            var editableDetails =
-                $"Profile Configuration - {profile.Name}\n\n" +
-                $"Basic Information:\n" +
-                $"  • Name: {profile.Name}\n" +
-                $"  • Description: {profile.Description}\n" +
-                $"  • Is Default: {profile.IsDefault}\n" +
-                $"  • Read-Only: {profile.IsReadOnly}\n\n" +
-                $"Serial Port Configuration:\n" +
-                $"  • Baud Rate: {config.BaudRate} bps\n" +
-                $"  • Character Size: {config.CharacterSize} bits\n" +
-                $"  • Parity: {config.Parity}\n" +
-                $"  • Stop Bits: {config.StopBits}\n\n" +
-                $"Communication Settings:\n" +
-                $"  • Enable Receiver: {config.EnableReceiver}\n" +
-                $"  • Disable Hardware Flow Control: {config.DisableHardwareFlowControl}\n" +
-                $"  • Parity Enabled: {config.ParityEnabled}\n\n" +
-                $"Terminal Settings:\n" +
-                $"  • Disable Canonical Mode: {config.DisableCanonicalMode}\n" +
-                $"  • Disable Echo: {config.DisableEcho}\n\n" +
-                $"Metadata:\n" +
-                $"  • Created: {profile.CreatedAt:yyyy-MM-dd HH:mm:ss}\n" +
-                $"  • Modified: {profile.ModifiedAt:yyyy-MM-dd HH:mm:ss}\n\n" +
-                $"To modify this profile:\n" +
-                $"1. Use the JSON export/import feature for programmatic editing\n" +
-                $"2. Contact the development team for custom editing interface\n" +
-                $"3. Create a new profile with desired settings and delete this one";
+            // Load the profile into the ViewModel
+            profileViewModel.LoadProfile(SelectedProfile);
 
-            await _dialogService.ShowErrorAsync($"Profile Details - {profile.Name}", editableDetails);
+            // Show the profile edit dialog
+            var result = await _profileEditDialogService.ShowSerialProfileEditAsync(
+                $"Edit Profile - {SelectedProfile.Name}",
+                profileViewModel);
 
-            StatusMessage = $"Profile '{profile.Name}' details displayed for reference";
-            _logger.LogInformation("Displayed edit details for serial profile: {ProfileName}", profile.Name);
+            if (result.IsSuccess && result.ProfileViewModel != null)
+            {
+                StatusMessage = "Profile changes saved successfully";
+
+                // The profile has been saved by the dialog's SaveCommand
+                // Refresh our profiles collection to reflect the changes
+                await RefreshProfilesPreserveSelectionAsync(SelectedProfile.Id);
+
+                StatusMessage = $"Profile '{SelectedProfile.Name}' updated successfully";
+                _logger.LogInformation("Successfully edited serial profile: {ProfileName}", SelectedProfile.Name);
+            }
+            else
+            {
+                StatusMessage = "Profile editing cancelled";
+                _logger.LogInformation("Serial profile editing cancelled for: {ProfileName}", SelectedProfile.Name);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error showing profile editor");
+            _logger.LogError(ex, "Error opening profile editor");
             StatusMessage = "Error opening profile editor";
         }
     }

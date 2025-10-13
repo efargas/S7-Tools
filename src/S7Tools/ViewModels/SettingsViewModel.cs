@@ -100,12 +100,14 @@ public class SettingsViewModel : ViewModelBase
         var profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
         var portService = _serviceProvider.GetRequiredService<ISerialPortService>();
         var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        var profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
+        var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
         var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
-        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
+        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, logger);
     }
 
     private SocatSettingsViewModel CreateSocatSettingsViewModel()
@@ -114,11 +116,13 @@ public class SettingsViewModel : ViewModelBase
         var socatService = _serviceProvider.GetRequiredService<ISocatService>();
         var serialPortService = _serviceProvider.GetRequiredService<ISerialPortService>();
         var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        var profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
+        var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
         var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         var logger = _serviceProvider.GetRequiredService<ILogger<SocatSettingsViewModel>>();
 
-        return new SocatSettingsViewModel(socatProfileService, socatService, serialPortService, dialogService, fileDialogService, settingsService, uiThreadService, logger);
+        return new SocatSettingsViewModel(socatProfileService, socatService, serialPortService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, logger);
     }
 }

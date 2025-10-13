@@ -364,9 +364,9 @@ public class SocatProfileService : ISocatProfileService, IDisposable
     /// <inheritdoc />
     public async Task SetDefaultProfileAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        if (profileId <= 0)
+        if (profileId < 0)
         {
-            throw new ArgumentException("Profile ID must be greater than zero", nameof(profileId));
+            throw new ArgumentException("Profile ID must be greater than or equal to zero", nameof(profileId));
         }
 
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);

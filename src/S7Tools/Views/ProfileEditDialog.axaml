@@ -1,0 +1,146 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:S7Tools.ViewModels"
+        mc:Ignorable="d"
+        x:Class="S7Tools.Views.ProfileEditDialog"
+        Title="Edit Profile"
+        Width="600"
+        Height="700"
+        MinWidth="500"
+        MinHeight="600"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False"
+        CanResize="True"
+        SystemDecorations="BorderOnly">
+
+    <Window.Styles>
+        <!-- VSCode-style dark theme -->
+        <Style Selector="Window">
+            <Setter Property="Background" Value="#1E1E1E" />
+        </Style>
+
+        <Style Selector="TextBlock">
+            <Setter Property="Foreground" Value="#CCCCCC" />
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="Background" Value="#3C3C3C" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="Background" Value="#3C3C3C" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="ComboBox:pointerover">
+            <Setter Property="BorderBrush" Value="#007ACC" />
+        </Style>
+
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="MinWidth" Value="80" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Margin" Value="4" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#007ACC" />
+            <Setter Property="BorderBrush" Value="#007ACC" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+
+        <Style Selector="Button.primary:pointerover">
+            <Setter Property="Background" Value="#005A9E" />
+            <Setter Property="BorderBrush" Value="#005A9E" />
+        </Style>
+
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#464647" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+        </Style>
+
+        <Style Selector="Button.secondary:pointerover">
+            <Setter Property="Background" Value="#525253" />
+            <Setter Property="BorderBrush" Value="#525253" />
+        </Style>
+
+        <!-- Group styling -->
+        <Style Selector="Border.group">
+            <Setter Property="Background" Value="#252526" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="12" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <Style Selector="TextBlock.group-title">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="#E8E8E8" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+
+        <!-- Command preview styling -->
+        <Style Selector="TextBox.command-preview">
+            <Setter Property="Background" Value="#0C0C0C" />
+            <Setter Property="Foreground" Value="#D4D4D4" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="FontFamily" Value="Consolas, 'Courier New', monospace" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="MinHeight" Value="60" />
+        </Style>
+    </Window.Styles>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Content area - will be filled by specific profile dialogs via ContentPresenter -->
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <ContentPresenter x:Name="ContentArea" />
+        </ScrollViewer>
+
+        <!-- Button area -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="Cancel"
+                    Classes="secondary"
+                    x:Name="CancelButton"
+                    IsCancel="True" />
+            <Button Content="Save"
+                    Classes="primary"
+                    x:Name="SaveButton"
+                    IsDefault="True" />
+        </StackPanel>
+    </Grid>
+</Window>

@@ -55,6 +55,9 @@ public static class ServiceCollectionExtensions
         // Add Dialog Service
         services.TryAddTransient<IDialogService, DialogService>();
 
+        // Add Profile Edit Dialog Service
+        services.TryAddTransient<IProfileEditDialogService, ProfileEditDialogService>();
+
         // Add Clipboard Service
         services.TryAddTransient<IClipboardService, ClipboardService>();
 

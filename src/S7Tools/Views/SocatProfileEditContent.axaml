@@ -1,0 +1,227 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:converters="using:S7Tools.Converters"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+             x:Class="S7Tools.Views.SocatProfileEditContent"
+             x:DataType="vm:SocatProfileViewModel">
+
+  <UserControl.Resources>
+    <converters:BooleanToInverseBooleanConverter x:Key="BooleanToInverseBooleanConverter" />
+  </UserControl.Resources>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="16" Margin="16">
+
+      <!-- General Information -->
+      <Border Classes="groupBox">
+        <StackPanel Spacing="12">
+          <TextBlock Text="General" Classes="groupHeader" />
+
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="8" ColumnSpacing="12">
+
+            <!-- Profile Name -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" VerticalAlignment="Center" MinWidth="80" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding ProfileName}"
+                     IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
+                     Watermark="Enter profile name..." />
+
+            <!-- Profile Description -->
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" VerticalAlignment="Center" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ProfileDescription}"
+                     IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
+                     Watermark="Enter profile description..." />
+
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Network Configuration -->
+      <Border Classes="groupBox">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Network Configuration" Classes="groupHeader" />
+
+          <Grid ColumnDefinitions="Auto,*,16,Auto,*" RowDefinitions="Auto,Auto" RowSpacing="8" ColumnSpacing="12">
+
+            <!-- TCP Host -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Host:" VerticalAlignment="Center" MinWidth="80" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding TcpHost}"
+                     IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
+                     Watermark="localhost" />
+
+            <!-- TCP Port -->
+            <TextBlock Grid.Row="0" Grid.Column="3" Text="Port:" VerticalAlignment="Center" />
+            <NumericUpDown Grid.Row="0" Grid.Column="4"
+                           Value="{Binding TcpPort}"
+                           IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
+                           Minimum="1" Maximum="65535"
+                           FormatString="0"
+                           Watermark="1-65535"
+                           MinWidth="100" />
+
+          </Grid>
+
+          <!-- Network Options -->
+          <StackPanel Spacing="6" Margin="0,8,0,0">
+            <CheckBox Content="Fork (allow multiple connections)"
+                      IsChecked="{Binding EnableFork}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+            <CheckBox Content="Reuse Address"
+                      IsChecked="{Binding EnableReuseAddr}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+
+      <!-- socat Options -->
+      <Border Classes="groupBox">
+        <StackPanel Spacing="12">
+          <TextBlock Text="socat Options" Classes="groupHeader" />
+
+          <Grid ColumnDefinitions="Auto,*,16,Auto,*" RowDefinitions="Auto,Auto" RowSpacing="8" ColumnSpacing="12">
+
+            <!-- Debug Level -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Debug Level:" VerticalAlignment="Center" MinWidth="80" />
+            <ComboBox Grid.Row="0" Grid.Column="1"
+                      SelectedItem="{Binding DebugLevel}"
+                      ItemsSource="{Binding AvailableDebugLevels}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
+                      MinWidth="120">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock>
+                    <TextBlock.Text>
+                      <MultiBinding StringFormat="{}{0} {1}">
+                        <Binding />
+                        <Binding Converter="{x:Static converters:ObjectConverters.DebugLevelToDescription}" />
+                      </MultiBinding>
+                    </TextBlock.Text>
+                  </TextBlock>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+            <!-- Block Size -->
+            <TextBlock Grid.Row="0" Grid.Column="3" Text="Block Size:" VerticalAlignment="Center" />
+            <ComboBox Grid.Row="0" Grid.Column="4"
+                      SelectedItem="{Binding BlockSize}"
+                      ItemsSource="{Binding AvailableBlockSizes}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
+                      MinWidth="100">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding StringFormat={}{0} bytes}" />
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+
+          </Grid>
+
+          <!-- socat Flags -->
+          <StackPanel Spacing="6" Margin="0,8,0,0">
+            <CheckBox Content="Verbose Logging (-v)"
+                      IsChecked="{Binding Verbose}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+            <CheckBox Content="Hex Dump (-x)"
+                      IsChecked="{Binding HexDump}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+
+      <!-- Serial Options -->
+      <Border Classes="groupBox">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Serial Options" Classes="groupHeader" />
+
+          <StackPanel Spacing="6">
+            <CheckBox Content="Raw Mode"
+                      IsChecked="{Binding SerialRawMode}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+            <CheckBox Content="Disable Echo"
+                      IsChecked="{Binding SerialDisableEcho}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+            <CheckBox Content="Auto Configure Serial Port"
+                      IsChecked="{Binding AutoConfigureSerial}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+
+      <!-- Process Management -->
+      <Border Classes="groupBox">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Process Management" Classes="groupHeader" />
+
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" RowSpacing="8" ColumnSpacing="12">
+
+            <!-- Connection Timeout -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Connection Timeout:" VerticalAlignment="Center" MinWidth="120" />
+            <NumericUpDown Grid.Row="0" Grid.Column="1"
+                           Value="{Binding ConnectionTimeout}"
+                           IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
+                           Minimum="0" Maximum="300"
+                           FormatString="0 seconds"
+                           MinWidth="150" />
+
+          </Grid>
+
+          <!-- Process Options -->
+          <StackPanel Spacing="6" Margin="0,8,0,0">
+            <CheckBox Content="Auto Restart on Termination"
+                      IsChecked="{Binding AutoRestart}"
+                      IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}" />
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+
+      <!-- Command Preview -->
+      <Border Classes="groupBox">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Command Preview" Classes="groupHeader" />
+
+          <!-- socat Command Display -->
+          <Border Background="{DynamicResource SystemColorGrayColor1}"
+                  BorderBrush="{DynamicResource SystemColorGrayColor6}"
+                  BorderThickness="1"
+                  CornerRadius="4"
+                  Padding="12">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" MaxHeight="200">
+              <SelectableTextBlock Text="{Binding SocatCommand}"
+                                   FontFamily="Consolas,Monaco,monospace"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SystemColorGrayColor10}" />
+            </ScrollViewer>
+          </Border>
+
+        </StackPanel>
+      </Border>
+
+      <!-- Validation Errors -->
+      <Border Classes="groupBox" IsVisible="{Binding ValidationErrors.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Validation Errors" Classes="groupHeader" Foreground="{DynamicResource SystemColorRedColor8}" />
+
+          <ItemsControl ItemsSource="{Binding ValidationErrors}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}"
+                           Foreground="{DynamicResource SystemColorRedColor8}"
+                           TextWrapping="Wrap"
+                           Margin="0,2" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+        </StackPanel>
+      </Border>
+
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>

@@ -3,9 +3,34 @@
 **Session Date**: October 2025
 **Context Type**: Servers Settings Implementation (socat Configuration)
 
-## 🚀 **LATEST UPDATE: Phase 4 UI Implementation COMPLETE**
+## 🚀 **LATEST UPDATE: New Task Created - Profile Editing Dialogs Implementation**
 
-### **✨ Task Status: TASK003 - Phase 4 COMPLETE**
+### **✨ Task Status: TASK006 Created - Profile Editing Dialogs**
+**Status**: ⏳ **PENDING** - Ready to Start
+**Priority**: High
+**Created**: 2025-10-13
+**Estimated Time**: 14-18 hours across 6 phases
+
+#### **🎯 Current Objective: Comprehensive Profile Editing Dialogs**
+
+**Purpose**: Implement comprehensive profile editing functionality for both Serial and Socat profiles. When users press the "Edit" button, a popup dialog will appear with a form containing all the editable properties for the selected profile.
+
+**Key Features Required**:
+- **Serial Profile Editor** - Name, Description, Baudrate (ComboBox), Parity (ComboBox), Flow Control (ComboBox), Stop Bits, Data Bits, stty flags (Checkboxes), Save/Cancel buttons
+- **Socat Profile Editor** - Name, Description, Host, TCP Port, Block Size, Verbose/Hex Dump/Debug Level/Fork/Reuse Address flags (Checkboxes), Save/Cancel buttons
+- **Modal Dialog Experience** - Professional popup dialogs with real-time validation and command preview
+- **Architecture Integration** - Reuse existing ProfileViewModels with new specialized dialog views
+
+### **📋 Implementation Strategy**
+
+**Following Established Success Pattern**: Leverage existing comprehensive ProfileViewModels and dialog infrastructure
+- ✅ **Clean Architecture** - Interfaces in Core, implementations in Application
+- ✅ **Existing ViewModels** - SerialPortProfileViewModel and SocatProfileViewModel already contain all needed logic
+- ✅ **Dialog Infrastructure** - Professional dialog system already implemented with ReactiveUI Interactions
+- ✅ **MVVM Patterns** - Follow established ReactiveUI optimization patterns
+- ✅ **VSCode Styling** - Consistent theming with existing application interface
+
+### **✨ Previous Task Status: TASK003 - Phase 4 COMPLETE**
 **Priority**: High
 **Status**: ✅ **85% COMPLETE** - Phase 4 UI Implementation finished
 **Started**: 2025-10-09

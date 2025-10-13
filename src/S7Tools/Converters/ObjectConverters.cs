@@ -74,4 +74,24 @@ public static class ObjectConverters
     public static readonly IValueConverter SidebarWidthConverter =
         new FuncValueConverter<bool, GridLength>(isVisible =>
             isVisible ? new GridLength(300, GridUnitType.Pixel) : new GridLength(0, GridUnitType.Pixel));
+
+    /// <summary>
+    /// A value converter that converts debug level to description.
+    /// </summary>
+    public static readonly IValueConverter DebugLevelToDescription =
+        new FuncValueConverter<int, string>(level => level switch
+        {
+            0 => "(None)",
+            1 => "(-d)",
+            2 => "(-d -d)",
+            3 => "(-d -d -d)",
+            _ => $"(-d {level} times)"
+        });
+
+    /// <summary>
+    /// A value converter that converts count to visibility.
+    /// Returns true when count > 0, false otherwise.
+    /// </summary>
+    public static readonly IValueConverter CountToVisibility =
+        new FuncValueConverter<int, bool>(count => count > 0);
 }

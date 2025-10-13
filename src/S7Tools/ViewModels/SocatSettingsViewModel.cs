@@ -26,6 +26,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     private readonly ISocatService _socatService;
     private readonly ISerialPortService _serialPortService;
     private readonly IDialogService _dialogService;
+    private readonly IProfileEditDialogService _profileEditDialogService;
+    private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<SocatSettingsViewModel> _logger;
     private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
@@ -44,6 +46,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     /// <param name="socatService">The socat service.</param>
     /// <param name="serialPortService">The serial port service for device discovery.</param>
     /// <param name="dialogService">The dialog service.</param>
+    /// <param name="profileEditDialogService">The profile edit dialog service.</param>
+    /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
     /// <param name="uiThreadService">The UI thread service.</param>
@@ -53,6 +57,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         ISocatService socatService,
         ISerialPortService serialPortService,
         IDialogService dialogService,
+        IProfileEditDialogService profileEditDialogService,
+        IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
         S7Tools.Services.Interfaces.ISettingsService settingsService,
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
@@ -62,6 +68,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _profileEditDialogService = profileEditDialogService ?? throw new ArgumentNullException(nameof(profileEditDialogService));
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
@@ -737,29 +745,29 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     {
     _logger.LogInformation("=== CreateProfileAsync STARTED ===");
     _logger.LogInformation("NewProfileName: '{Name}', NewProfileDescription: '{Desc}'", NewProfileName, NewProfileDescription);
-    
+
     try
     {
     IsLoading = true;
     StatusMessage = "Creating profile...";
     _logger.LogDebug("IsLoading set to true, StatusMessage updated");
-    
+
     // Create new profile - service handles name uniqueness internally
     _logger.LogDebug("Creating new SocatProfile with name: '{Name}'", NewProfileName);
     var newProfile = SocatProfile.CreateUserProfile(NewProfileName, NewProfileDescription);
     _logger.LogDebug("Calling _profileService.CreateProfileAsync");
     var createdProfile = await _profileService.CreateProfileAsync(newProfile);
     _logger.LogInformation("Profile created successfully with ID: {ProfileId}", createdProfile.Id);
-    
+
     // Refresh list and select created profile to ensure canonical state
     _logger.LogDebug("Refreshing profiles list and selecting new profile");
     await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
-    
+
     // Clear input fields
     NewProfileName = string.Empty;
     NewProfileDescription = string.Empty;
     _logger.LogDebug("Input fields cleared");
-    
+
     StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
     _logger.LogInformation("Created new socat profile: {ProfileName}", createdProfile.Name);
     }
@@ -794,51 +802,41 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = "Opening profile editor...";
 
-            var profile = SelectedProfile;
-            var config = profile.Configuration;
+            // Create a new SocatProfileViewModel for editing
+            var profileViewModel = new SocatProfileViewModel(
+                _profileService,
+                _socatService,
+                _clipboardService,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<SocatProfileViewModel>.Instance);
 
-            // Create comprehensive editable details string
-            var editableDetails =
-                $"Profile Configuration - {profile.Name}\n\n" +
-                $"Basic Information:\n" +
-                $"  • Name: {profile.Name}\n" +
-                $"  • Description: {profile.Description}\n" +
-                $"  • Is Default: {profile.IsDefault}\n" +
-                $"  • Read-Only: {profile.IsReadOnly}\n\n" +
-                $"Network Configuration:\n" +
-                $"  • TCP Port: {config.TcpPort}\n" +
-                $"  • TCP Host: {config.TcpHost}\n\n" +
-                $"Process Options:\n" +
-                $"  • Enable Fork: {config.EnableFork}\n" +
-                $"  • Enable Reuse Address: {config.EnableReuseAddr}\n" +
-                $"  • Auto Restart: {config.AutoRestart}\n" +
-                $"  • Connection Timeout: {config.ConnectionTimeout} seconds\n\n" +
-                $"Debugging & Logging:\n" +
-                $"  • Verbose: {config.Verbose}\n" +
-                $"  • Hex Dump: {config.HexDump}\n" +
-                $"  • Debug Level: {config.DebugLevel}\n\n" +
-                $"Serial Configuration:\n" +
-                $"  • Serial Raw Mode: {config.SerialRawMode}\n" +
-                $"  • Serial Disable Echo: {config.SerialDisableEcho}\n" +
-                $"  • Auto Configure Serial: {config.AutoConfigureSerial}\n\n" +
-                $"Other Settings:\n" +
-                $"  • Block Size: {config.BlockSize} bytes\n\n" +
-                $"Metadata:\n" +
-                $"  • Created: {profile.CreatedAt:yyyy-MM-dd HH:mm:ss}\n" +
-                $"  • Modified: {profile.ModifiedAt:yyyy-MM-dd HH:mm:ss}\n\n" +
-                $"To modify this profile:\n" +
-                $"1. Use the JSON export/import feature for programmatic editing\n" +
-                $"2. Contact the development team for custom editing interface\n" +
-                $"3. Create a new profile with desired settings and delete this one";
+            // Load the profile into the ViewModel
+            profileViewModel.LoadProfile(SelectedProfile);
 
-            await _dialogService.ShowErrorAsync($"Profile Details - {profile.Name}", editableDetails);
+            // Show the profile edit dialog
+            var result = await _profileEditDialogService.ShowSocatProfileEditAsync(
+                $"Edit Profile - {SelectedProfile.Name}",
+                profileViewModel);
 
-            StatusMessage = $"Profile '{profile.Name}' details displayed for reference";
-            _logger.LogInformation("Displayed edit details for socat profile: {ProfileName}", profile.Name);
+            if (result.IsSuccess && result.ProfileViewModel != null)
+            {
+                StatusMessage = "Profile changes saved successfully";
+
+                // The profile has been saved by the dialog's SaveCommand
+                // Refresh our profiles collection to reflect the changes
+                await RefreshProfilesPreserveSelectionAsync(SelectedProfile.Id);
+
+                StatusMessage = $"Profile '{SelectedProfile.Name}' updated successfully";
+                _logger.LogInformation("Successfully edited socat profile: {ProfileName}", SelectedProfile.Name);
+            }
+            else
+            {
+                StatusMessage = "Profile editing cancelled";
+                _logger.LogInformation("Socat profile editing cancelled for: {ProfileName}", SelectedProfile.Name);
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error showing profile editor");
+            _logger.LogError(ex, "Error opening profile editor");
             StatusMessage = "Error opening profile editor";
         }
     }

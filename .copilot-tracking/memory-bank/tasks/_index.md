@@ -1,7 +1,31 @@
 # Tasks Index
 
-**Last Updated**: 2025-10-09 - Phase 4 UI Implementation COMPLETE
-**Total Tasks**: 4
+**Last Updated**: 2025-10-13 - TASK006 Profile Editing Dialogs Created
+**Total Tasks**: 5
+
+## Pending Tasks
+
+### **[TASK006]** Profile Editing Dialogs Implementation
+**Status**: ⏳ **PENDING** - Ready to Start
+**Priority**: High
+**Created**: 2025-10-13
+**Description**: Implement comprehensive profile editing dialogs for both Serial and Socat profiles with popup forms containing all editable properties
+
+#### **Implementation Requirements**
+- **Serial Profile Editor**: Name, Description, Baudrate (ComboBox), Parity (ComboBox), Flow Control (ComboBox), Stop Bits, Data Bits, stty flags (Checkboxes), Save/Cancel buttons
+- **Socat Profile Editor**: Name, Description, Host, TCP Port, Block Size, Verbose/Hex Dump/Debug Level/Fork/Reuse Address flags (Checkboxes), Save/Cancel buttons
+- **Architecture**: Reuse existing ProfileViewModels, create specialized dialog views, enhance dialog service
+- **User Experience**: Modal dialogs with real-time validation, command preview, VSCode-style theming
+
+#### **Implementation Phases**:
+1. ⏳ **Dialog Infrastructure Enhancement** (2-3 hours) - Generic base dialog, service interfaces
+2. ⏳ **Serial Profile Edit Dialog** (3-4 hours) - Serial-specific dialog with ComboBoxes and checkboxes
+3. ⏳ **Socat Profile Edit Dialog** (3-4 hours) - Socat-specific dialog with network and process options
+4. ⏳ **Settings Integration** (2-3 hours) - Update Edit commands, service registration
+5. ⏳ **UI Polish and Validation** (2-3 hours) - Form validation, styling, accessibility
+6. ⏳ **Testing and User Validation** (2-3 hours) - Functional testing, user acceptance
+
+**Next Steps**: Begin Phase 1 - Dialog Infrastructure Enhancement with ProfileEditDialog base class
 
 ## Active Tasks
 
