@@ -1,5 +1,5 @@
 // JobScheduler.cs
-namespace S7Tools.Services;
+namespace S7Tools.Services.Tasking;
 
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models.Jobs;

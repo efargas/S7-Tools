@@ -1,5 +1,5 @@
 // PlcClientAdapter.cs
-namespace S7Tools.Services;
+namespace S7Tools.Services.Adapters;
 
 using S7Tools.Core.Services.Interfaces;
 using System;

@@ -1,5 +1,5 @@
 // ResourceCoordinator.cs
-namespace S7Tools.Services;
+namespace S7Tools.Services.Tasking;
 
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;

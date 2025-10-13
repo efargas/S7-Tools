@@ -1,6 +1,6 @@
 // ResourceCoordinatorTests.cs
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Services;
+using S7Tools.Services.Tasking;
 using Xunit;
 using System.Collections.Generic;
 using System.Linq;

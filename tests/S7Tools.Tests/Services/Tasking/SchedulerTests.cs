@@ -4,7 +4,7 @@ using Moq;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Profiles;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Services;
+using S7Tools.Services.Tasking;
 using System;
 using System.Collections.Generic;
 using System.IO;

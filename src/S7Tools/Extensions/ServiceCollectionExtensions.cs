@@ -16,6 +16,9 @@ using S7Tools.Core.Logging;
 using S7Tools.Resources;
 using S7Tools.Models;
 using S7Tools.Core.Models.Jobs;
+using S7Tools.Services.Adapters;
+using S7Tools.Services.ReferenceStubs;
+using S7Tools.Services.Tasking;
 
 namespace S7Tools.Extensions;
 
@@ -143,6 +146,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IJobScheduler, JobScheduler>();
         services.AddTransient<IBootloaderService, BootloaderService>();
         services.AddTransient<IPayloadProvider>(sp => new PayloadProviderAdapter(AppContext.BaseDirectory));
+        services.AddTransient<PowerControllerAdapter>();
         services.AddTransient<IPowerSupplyService, PowerSupplyAdapter>();
         services.AddTransient<Func<JobProfileSet, IPlcClient>>(sp =>
         {

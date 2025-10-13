@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SiemensS7Bootloader.S7.Core.Commands
+namespace S7Tools.Services.ReferenceStubs
 {
     public class PowerControllerAdapter
     {

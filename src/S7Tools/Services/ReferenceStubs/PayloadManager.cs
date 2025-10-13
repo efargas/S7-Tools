@@ -2,7 +2,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace SiemensS7Bootloader.S7.Core
+namespace S7Tools.Services.ReferenceStubs
 {
     public class PayloadManager
     {

@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SiemensS7Bootloader.S7.Net
+namespace S7Tools.Services.ReferenceStubs
 {
     public class PlcProtocol
     {
