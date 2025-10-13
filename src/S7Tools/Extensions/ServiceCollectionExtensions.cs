@@ -224,6 +224,9 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<SocatSettingsViewModel>();
         services.TryAddTransient<SocatProfileViewModel>();
 
+        // Add Logging ViewModels
+        services.TryAddTransient<LoggingSettingsViewModel>();
+
         // Add Task Manager ViewModel
         services.TryAddTransient<TaskManagerViewModel>();
 
