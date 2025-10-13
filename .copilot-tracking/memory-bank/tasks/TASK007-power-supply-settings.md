@@ -222,16 +222,18 @@ Following the proven pattern:
 - Addressing Mode: Required, must be Base0 or Base1
 
 ### Phase 2: Service Layer Implementation (4-5 hours)
-**Status:** ⏳ In Progress  
+**Status:** ✅ Complete  
 **Started:** 2025-10-13  
+**Completed:** 2025-10-13  
 **Location:** `S7Tools.Core/Services/Interfaces/` and `S7Tools/Services/`
 
 **Deliverables:**
 - [x] `IPowerSupplyProfileService.cs` - Profile management interface (Core)
 - [x] `IPowerSupplyService.cs` - Power supply operations interface (Core) - Enhanced with configuration-based approach
-- [ ] `PowerSupplyProfileService.cs` - JSON-based profile persistence (In Progress)
-- [ ] `PowerSupplyService.cs` - Modbus TCP communication implementation (Planned)
-- [ ] Service registration in `ServiceCollectionExtensions.cs` (Planned)
+- [x] `PowerSupplyProfileService.cs` - JSON-based profile persistence (Complete - 1,154 lines)
+- [x] `PowerSupplyService.cs` - Modbus TCP communication implementation with NModbus (Complete - 442 lines)
+- [x] Service registration in `ServiceCollectionExtensions.cs` (Complete)
+- [x] NModbus NuGet package added (v3.0.72)
 
 **Key Features:**
 - Profile CRUD operations with smart naming
@@ -393,7 +395,7 @@ Following the proven pattern:
 
 ## Progress Tracking
 
-**Overall Status:** In Progress - [17%] Complete (Phase 1 Complete)
+**Overall Status:** In Progress - [33%] Complete (Phases 1-2 Complete)
 
 ### Subtasks
 | ID | Description | Status | Updated | Notes |
@@ -405,11 +407,12 @@ Following the proven pattern:
 | 1.4 | Create PowerSupplyProfile model | Complete | 2025-10-13 | Profile with validation attributes |
 | 1.5 | Create PowerSupplySettings model | Complete | 2025-10-13 | Settings integration |
 | 1.6 | Update ApplicationSettings | Complete | 2025-10-13 | Add PowerSupply property |
-| 2.1 | Create IPowerSupplyProfileService interface | Not Started | - | Profile management contract |
-| 2.2 | Create IPowerSupplyService interface | Not Started | - | Power supply operations contract |
-| 2.3 | Implement PowerSupplyProfileService | Not Started | - | JSON persistence with CRUD |
-| 2.4 | Implement PowerSupplyService | Not Started | - | NModbus TCP with address conversion |
-| 2.5 | Register services in DI | Not Started | - | ServiceCollectionExtensions update |
+| 2.1 | Create IPowerSupplyProfileService interface | Complete | 2025-10-13 | Profile management contract |
+| 2.2 | Create IPowerSupplyService interface | Complete | 2025-10-13 | Power supply operations contract |
+| 2.3 | Implement PowerSupplyProfileService | Complete | 2025-10-13 | JSON persistence with CRUD (1,154 lines) |
+| 2.4 | Implement PowerSupplyService | Complete | 2025-10-13 | NModbus TCP with address conversion (442 lines) |
+| 2.5 | Add NModbus package | Complete | 2025-10-13 | NModbus v3.0.72 |
+| 2.6 | Register services in DI | Complete | 2025-10-13 | ServiceCollectionExtensions update |
 | 3.1 | Create PowerSupplyProfileViewModel | Not Started | - | Profile editing with addressing mode |
 | 3.2 | Create PowerSupplySettingsViewModel | Not Started | - | Main settings ViewModel |
 | 3.3 | Implement ReactiveUI patterns | Not Started | - | Individual property subscriptions |
@@ -476,6 +479,31 @@ Following the proven pattern:
 - **Build Status**: ✅ Clean compilation (0 errors, 92 warnings)
 - **Architecture Compliance**: ✅ Follows established patterns from Serial Ports and Socat
 - **Status Changed**: Phase 1 Complete → Ready for Phase 2
+
+### 2025-10-13 - Phase 2 Implementation Complete
+- **User Request**: Continue Phase 2 implementation
+- **Completed Deliverables**:
+  - ✅ Updated `IPowerSupplyProfileService.cs` - Aligned with ISerialPortProfileService pattern
+  - ✅ Created `PowerSupplyProfileService.cs` - Full JSON-based profile persistence (1,154 lines):
+    - CRUD operations with thread safety (SemaphoreSlim)
+    - Smart profile naming with duplicate detection
+    - Import/Export JSON functionality
+    - Profile validation
+    - Default profile management
+  - ✅ Created `PowerSupplyService.cs` - Complete NModbus TCP implementation (442 lines):
+    - Configuration-based connection management
+    - NModbus TCP client integration
+    - Power control operations (TurnOn, TurnOff, ReadState, PowerCycle)
+    - Base-0/Base-1 address conversion
+    - Connection testing
+    - Legacy method compatibility
+    - Proper resource disposal
+  - ✅ Added NModbus NuGet package (v3.0.72)
+  - ✅ Updated `PowerSupplySettings.cs` - Added GetAbsoluteProfilesPath() method
+  - ✅ Updated `ServiceCollectionExtensions.cs` - Registered both services in DI container
+- **Build Status**: ✅ Clean compilation (0 errors, 89 warnings)
+- **Architecture Compliance**: ✅ Configuration-based design, thread-safe operations
+- **Status Changed**: Phase 2 Complete → Ready for Phase 3 (ViewModels)
 
 ## Technical Notes
 

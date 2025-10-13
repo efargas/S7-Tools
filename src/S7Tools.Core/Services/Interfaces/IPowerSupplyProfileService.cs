@@ -119,44 +119,23 @@ public interface IPowerSupplyProfileService
     #region Import/Export Operations
 
     /// <summary>
-    /// Exports all profiles to a JSON file.
+    /// Exports selected profiles to a JSON string.
     /// </summary>
-    /// <param name="filePath">The file path where profiles should be exported.</param>
+    /// <param name="profileIds">The collection of profile IDs to export.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    /// <exception cref="ArgumentException">Thrown when filePath is null or empty.</exception>
-    /// <exception cref="IOException">Thrown when the file cannot be written.</exception>
-    Task ExportProfilesToFileAsync(string filePath, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Imports profiles from a JSON file.
-    /// </summary>
-    /// <param name="filePath">The file path from which profiles should be imported.</param>
-    /// <param name="replaceExisting">If true, replaces existing profiles; if false, merges with existing profiles.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the number of profiles imported.</returns>
-    /// <exception cref="ArgumentException">Thrown when filePath is null or empty.</exception>
-    /// <exception cref="FileNotFoundException">Thrown when the specified file doesn't exist.</exception>
-    /// <exception cref="InvalidOperationException">Thrown when the file format is invalid.</exception>
-    Task<int> ImportProfilesFromFileAsync(string filePath, bool replaceExisting = false, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Exports profiles to a JSON string.
-    /// </summary>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the JSON string representation of all profiles.</returns>
-    Task<string> ExportProfilesToJsonAsync(CancellationToken cancellationToken = default);
+    /// <returns>A task that represents the asynchronous operation. The task result contains the JSON string representation of the selected profiles.</returns>
+    Task<string> ExportProfilesToJsonAsync(IEnumerable<int> profileIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Imports profiles from a JSON string.
     /// </summary>
-    /// <param name="json">The JSON string containing profiles to import.</param>
-    /// <param name="replaceExisting">If true, replaces existing profiles; if false, merges with existing profiles.</param>
+    /// <param name="jsonData">The JSON string containing profiles to import.</param>
+    /// <param name="overwriteExisting">If true, overwrites existing profiles with matching IDs; if false, creates new profiles with new IDs.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains the number of profiles imported.</returns>
-    /// <exception cref="ArgumentException">Thrown when json is null or empty.</exception>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the imported profiles.</returns>
+    /// <exception cref="ArgumentException">Thrown when jsonData is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the JSON format is invalid.</exception>
-    Task<int> ImportProfilesFromJsonAsync(string json, bool replaceExisting = false, CancellationToken cancellationToken = default);
+    Task<IEnumerable<PowerSupplyProfile>> ImportProfilesFromJsonAsync(string jsonData, bool overwriteExisting = false, CancellationToken cancellationToken = default);
 
     #endregion
 
@@ -166,10 +145,9 @@ public interface IPowerSupplyProfileService
     /// Validates a profile and returns any validation errors.
     /// </summary>
     /// <param name="profile">The profile to validate.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains a list of validation error messages, or an empty list if the profile is valid.</returns>
+    /// <returns>A collection of validation error messages, or an empty collection if the profile is valid.</returns>
     /// <exception cref="ArgumentNullException">Thrown when profile is null.</exception>
-    Task<List<string>> ValidateProfileAsync(PowerSupplyProfile profile, CancellationToken cancellationToken = default);
+    IEnumerable<string> ValidateProfile(PowerSupplyProfile profile);
 
     #endregion
 }

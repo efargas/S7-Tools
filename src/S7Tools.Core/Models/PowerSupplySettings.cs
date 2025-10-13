@@ -184,6 +184,21 @@ public class PowerSupplySettings
     #endregion
 
     /// <summary>
+    /// Gets the absolute path for the profiles directory.
+    /// </summary>
+    /// <param name="baseDirectory">The base directory to use if ProfilesPath is relative.</param>
+    /// <returns>The absolute path to the profiles directory.</returns>
+    public string GetAbsoluteProfilesPath(string baseDirectory)
+    {
+        if (Path.IsPathRooted(ProfilesPath))
+        {
+            return ProfilesPath;
+        }
+
+        return Path.Combine(baseDirectory, ProfilesPath);
+    }
+
+    /// <summary>
     /// Creates a copy of the current settings.
     /// </summary>
     /// <returns>A new PowerSupplySettings instance with the same values.</returns>
