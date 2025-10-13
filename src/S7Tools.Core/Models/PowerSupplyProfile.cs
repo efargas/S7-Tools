@@ -189,6 +189,28 @@ public class PowerSupplyProfile
     #region Helper Methods
 
     /// <summary>
+    /// Creates a deep copy of this profile while preserving the profile Id and flags.
+    /// This is intended for read/export operations where the persisted identity must be retained.
+    /// </summary>
+    /// <returns>A new PowerSupplyProfile instance with identical settings including Id.</returns>
+    public PowerSupplyProfile ClonePreserveId()
+    {
+        return new PowerSupplyProfile
+        {
+            Id = Id,
+            Name = Name,
+            Description = Description,
+            Configuration = Configuration.Clone(),
+            IsDefault = IsDefault,
+            IsReadOnly = IsReadOnly,
+            CreatedAt = CreatedAt,
+            ModifiedAt = ModifiedAt,
+            Version = Version,
+            Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
+        };
+    }
+
+    /// <summary>
     /// Creates a copy of this profile with a new name.
     /// </summary>
     /// <param name="newName">The name for the duplicated profile.</param>
@@ -205,6 +227,27 @@ public class PowerSupplyProfile
             IsReadOnly = false, // Duplicates are never read-only
             CreatedAt = DateTime.UtcNow,
             ModifiedAt = DateTime.UtcNow,
+            Version = Version,
+            Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
+        };
+    }
+
+    /// <summary>
+    /// Creates a clone of this profile.
+    /// </summary>
+    /// <returns>A new PowerSupplyProfile instance with new ID to be assigned.</returns>
+    public PowerSupplyProfile Clone()
+    {
+        return new PowerSupplyProfile
+        {
+            Id = 0, // Will be assigned by the service
+            Name = Name,
+            Description = Description,
+            Configuration = Configuration.Clone(),
+            IsDefault = IsDefault,
+            IsReadOnly = IsReadOnly,
+            CreatedAt = CreatedAt,
+            ModifiedAt = ModifiedAt,
             Version = Version,
             Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
         };
