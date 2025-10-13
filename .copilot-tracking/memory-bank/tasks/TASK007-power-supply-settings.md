@@ -1,14 +1,32 @@
 # [TASK007] - Power Supply Settings Category Implementation
 
-**Status:** Pending  
+**Status:** Approved - Ready to Start  
 **Added:** 2025-10-13  
 **Updated:** 2025-10-13  
 **Priority:** High  
-**Estimated Time:** 18-22 hours across 6 phases
+**Estimated Time:** 18-22 hours across 6 phases  
+**Approved By:** @efargas on 2025-10-13
 
 ## Original Request
 
 > We have to create another setting view, this time to control a power supply. There will be different types of power supply modules to control. And we need to think in future addition of different kind. For now we will start with a tcp modbus device, we need another profiler view where to configure it. It will contain modbus host, port, device id and coil to turn on and off. Then test buttons to connect/disconnect from modbus server, and to manual turn on and off. Create an task for the implementation using memory-bank instructions as always
+
+## User Feedback and Approvals
+
+**Date:** 2025-10-13  
+**User:** @efargas
+
+**Decisions:**
+1. ✅ **NModbus Library Approved** - Use NModbus for Modbus TCP communication
+2. ✅ **Test Hardware Available** - User has Modbus PLC available for testing
+3. ✅ **Addressing Mode Requirement** - Add option to use base-0 or base-1 Modbus addressing
+4. ✅ **Implementation Plan Approved** - Ready to proceed with implementation
+
+**Key Requirements Added:**
+- **Addressing Mode Configuration**: Users must be able to choose between base-0 (0-based indexing) and base-1 (1-based indexing) for Modbus coil addresses
+  - Base-0: Coil addresses start at 0 (e.g., first coil is address 0)
+  - Base-1: Coil addresses start at 1 (e.g., first coil is address 1, internally converted to 0)
+  - This setting affects both display and internal addressing calculations
 
 ## Thought Process
 
@@ -70,6 +88,14 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     public int Port { get; set; }
     public byte DeviceId { get; set; }
     public ushort OnOffCoil { get; set; }
+    public ModbusAddressingMode AddressingMode { get; set; } = ModbusAddressingMode.Base0;
+}
+
+// Addressing mode enumeration
+public enum ModbusAddressingMode
+{
+    Base0 = 0,  // 0-based addressing (coils start at 0)
+    Base1 = 1   // 1-based addressing (coils start at 1, internally converted to 0-based)
 }
 ```
 
@@ -91,6 +117,8 @@ Based on the successful Serial Ports and Socat implementations:
 
 **3. Modbus TCP Protocol Integration**
 
+Using **NModbus library** (approved by user) for Modbus TCP communication:
+
 ```csharp
 // Using NModbus library for Modbus TCP communication
 public class PowerSupplyService : IPowerSupplyService
@@ -98,22 +126,38 @@ public class PowerSupplyService : IPowerSupplyService
     private readonly ILogger<PowerSupplyService> _logger;
     private IModbusMaster? _modbusMaster;
     private TcpClient? _tcpClient;
+    private ModbusTcpConfiguration? _currentConfig;
     
     public async Task<bool> ConnectAsync(ModbusTcpConfiguration config)
     {
         // Establish TCP connection
-        // Create Modbus master
+        // Create Modbus master using NModbus factory
+        // Store configuration for addressing mode reference
+        _currentConfig = config;
         // Test communication
     }
     
     public async Task<bool> TurnOnAsync()
     {
-        // Write true to coil address
+        // Convert address based on addressing mode
+        ushort actualAddress = ConvertAddress(_currentConfig.OnOffCoil, _currentConfig.AddressingMode);
+        // Write true to coil address using NModbus
+        await _modbusMaster.WriteSingleCoilAsync(_currentConfig.DeviceId, actualAddress, true);
     }
     
     public async Task<bool> TurnOffAsync()
     {
-        // Write false to coil address
+        // Convert address based on addressing mode
+        ushort actualAddress = ConvertAddress(_currentConfig.OnOffCoil, _currentConfig.AddressingMode);
+        // Write false to coil address using NModbus
+        await _modbusMaster.WriteSingleCoilAsync(_currentConfig.DeviceId, actualAddress, false);
+    }
+    
+    private ushort ConvertAddress(ushort displayAddress, ModbusAddressingMode mode)
+    {
+        // Base-1: Subtract 1 to convert to 0-based for Modbus protocol
+        // Base-0: Use as-is
+        return mode == ModbusAddressingMode.Base1 ? (ushort)(displayAddress - 1) : displayAddress;
     }
 }
 ```
@@ -129,7 +173,7 @@ Following the proven pattern:
 ### Technical Considerations
 
 **Dependencies:**
-- NModbus or similar Modbus library for TCP communication
+- **NModbus library** (v3.x or later) - APPROVED by user for Modbus TCP communication
 - System.Net.Sockets for TCP/IP networking
 - Existing service infrastructure (IUIThreadService, ILogger, etc.)
 
@@ -153,8 +197,9 @@ Following the proven pattern:
 
 **Deliverables:**
 - [ ] `PowerSupplyType.cs` - Enum for device types (ModbusTcp, ModbusRtu, SNMP, HttpRest, Custom)
+- [ ] `ModbusAddressingMode.cs` - Enum for addressing mode (Base0, Base1)
 - [ ] `PowerSupplyConfiguration.cs` - Base configuration class (abstract)
-- [ ] `ModbusTcpConfiguration.cs` - TCP Modbus configuration implementation
+- [ ] `ModbusTcpConfiguration.cs` - TCP Modbus configuration implementation with AddressingMode property
 - [ ] `PowerSupplyProfile.cs` - Profile model with validation attributes
 - [ ] `PowerSupplySettings.cs` - Settings integration model
 - [ ] Update `ApplicationSettings.cs` - Add PowerSupply property
@@ -170,7 +215,10 @@ Following the proven pattern:
 - Host: Required, valid hostname or IP address
 - Port: Range 1-65535
 - Device ID: Range 0-247 (Modbus slave address)
-- Coil Address: Range 0-65535 (Modbus coil address)
+- Coil Address: Range depends on addressing mode
+  - Base-0: Range 0-65535 (Modbus coil address, 0-based)
+  - Base-1: Range 1-65536 (Display address, 1-based, converted to 0-based internally)
+- Addressing Mode: Required, must be Base0 or Base1
 
 ### Phase 2: Service Layer Implementation (4-5 hours)
 **Status:** Pending  
@@ -192,8 +240,9 @@ Following the proven pattern:
 - Import/export profile functionality
 
 **Technical Details:**
-- NModbus integration for Modbus TCP protocol
+- **NModbus integration** (approved library) for Modbus TCP protocol
 - TCP connection lifecycle management
+- Address conversion logic for base-0/base-1 addressing modes
 - Retry logic for transient network failures
 - Connection state tracking
 - Thread-safe operations
@@ -208,8 +257,9 @@ Following the proven pattern:
 
 **PowerSupplyProfileViewModel Features:**
 - Profile property editing (Name, Description, Type)
-- Configuration editing (Host, Port, Device ID, Coil)
-- Real-time validation feedback
+- Configuration editing (Host, Port, Device ID, Coil, Addressing Mode)
+- Address display adjustment based on addressing mode
+- Real-time validation feedback with mode-aware ranges
 - Save/Cancel operations
 - ReactiveUI individual property subscriptions
 
@@ -348,16 +398,17 @@ Following the proven pattern:
 |----|-------------|--------|---------|-------|
 | 1.1 | Create PowerSupplyType enum | Not Started | - | Extensible device type enumeration |
 | 1.2 | Create PowerSupplyConfiguration base class | Not Started | - | Abstract base with polymorphism |
-| 1.3 | Create ModbusTcpConfiguration class | Not Started | - | TCP Modbus specific implementation |
+| 1.2a | Create ModbusAddressingMode enum | Not Started | - | Base0/Base1 addressing enumeration |
+| 1.3 | Create ModbusTcpConfiguration class | Not Started | - | TCP Modbus with AddressingMode property |
 | 1.4 | Create PowerSupplyProfile model | Not Started | - | Profile with validation attributes |
 | 1.5 | Create PowerSupplySettings model | Not Started | - | Settings integration |
 | 1.6 | Update ApplicationSettings | Not Started | - | Add PowerSupply property |
 | 2.1 | Create IPowerSupplyProfileService interface | Not Started | - | Profile management contract |
 | 2.2 | Create IPowerSupplyService interface | Not Started | - | Power supply operations contract |
 | 2.3 | Implement PowerSupplyProfileService | Not Started | - | JSON persistence with CRUD |
-| 2.4 | Implement PowerSupplyService | Not Started | - | Modbus TCP communication |
+| 2.4 | Implement PowerSupplyService | Not Started | - | NModbus TCP with address conversion |
 | 2.5 | Register services in DI | Not Started | - | ServiceCollectionExtensions update |
-| 3.1 | Create PowerSupplyProfileViewModel | Not Started | - | Individual profile editing |
+| 3.1 | Create PowerSupplyProfileViewModel | Not Started | - | Profile editing with addressing mode |
 | 3.2 | Create PowerSupplySettingsViewModel | Not Started | - | Main settings ViewModel |
 | 3.3 | Implement ReactiveUI patterns | Not Started | - | Individual property subscriptions |
 | 3.4 | Implement command logic | Not Started | - | Connect, Power On/Off, CRUD operations |
@@ -376,21 +427,35 @@ Following the proven pattern:
 
 ## Progress Log
 
-### 2025-10-13
+### 2025-10-13 - Initial Planning
 - Task created based on user request for Power Supply settings implementation
 - Analyzed requirements and designed architecture following established patterns
 - Created comprehensive implementation plan with 6 phases
 - Estimated 18-22 hours total development time
 - Defined extensible architecture for multiple device types (starting with TCP Modbus)
 
+### 2025-10-13 - User Approval and Requirements Update
+- **User Feedback Received** from @efargas:
+  - ✅ NModbus library approved for implementation
+  - ✅ Physical Modbus PLC available for testing
+  - ✅ Implementation plan approved
+  - 🆕 **New Requirement**: Add base-0/base-1 addressing mode configuration option
+- **Task Updated**:
+  - Added ModbusAddressingMode enum (Base0, Base1)
+  - Updated ModbusTcpConfiguration to include AddressingMode property
+  - Added address conversion logic in service layer
+  - Updated validation to handle mode-specific address ranges
+  - Specified NModbus as the approved library throughout documentation
+- **Status Changed**: Pending → Approved - Ready to Start
+
 ## Technical Notes
 
 ### NuGet Dependencies Required
-- **NModbus** or **FluentModbus** - Modbus TCP/IP communication library
-- Evaluate options:
-  - `NModbus` (v3.x) - Mature, well-tested
-  - `FluentModbus` - Modern, async-first API
-  - `EasyModbusTCP` - Simple, lightweight
+- **NModbus** (v3.x or later) - APPROVED by user
+  - Package: `NModbus` on NuGet
+  - Mature, well-tested Modbus TCP/IP communication library
+  - Full support for Modbus TCP protocol
+  - Async operation support
 
 ### Modbus TCP Protocol Details
 
@@ -406,6 +471,27 @@ Following the proven pattern:
 **Device ID:**
 - Modbus slave address (0-247)
 - Typical: 1 for single device, 1-247 for multi-drop
+
+**Addressing Modes:**
+- **Base-0 (0-based addressing)**: 
+  - Coil addresses start at 0
+  - First coil is address 0, second is 1, etc.
+  - No conversion needed (matches Modbus protocol)
+  - Used by: Most PLCs, Modbus specifications
+  
+- **Base-1 (1-based addressing)**:
+  - Coil addresses start at 1 for user display
+  - First coil is displayed as address 1 (internally 0)
+  - Requires conversion: display_address - 1 = protocol_address
+  - Used by: Some HMI systems, user-friendly interfaces
+  
+**Address Conversion Logic:**
+```csharp
+// Convert display address to protocol address based on mode
+ushort protocolAddress = addressingMode == Base1 
+    ? (ushort)(displayAddress - 1) 
+    : displayAddress;
+```
 
 ### Error Scenarios to Handle
 
@@ -455,10 +541,10 @@ Following the proven pattern:
 - [x] Settings system functional
 
 ### Potential Blockers
-- [ ] NuGet package selection and approval
-- [ ] Modbus test server/simulator for testing
-- [ ] Network access for testing
-- [ ] Hardware power supply for integration testing
+- [x] NuGet package selection and approval - **RESOLVED: NModbus approved by user**
+- [x] Hardware power supply for integration testing - **RESOLVED: User has Modbus PLC available**
+- [ ] Network access for testing (assumed available)
+- [ ] Modbus test server/simulator for unit testing (can mock if needed)
 
 ### Mitigation Strategies
 - Use mock Modbus server for unit testing
