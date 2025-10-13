@@ -85,8 +85,6 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         _settingsChangedHandler = (_, __) => RefreshFromSettings();
         _settingsService.SettingsChanged += _settingsChangedHandler;
 
-        // Subscribe to socat service events
-        SubscribeToSocatEvents();
 
         // Load initial data
         _ = Task.Run(async () =>
@@ -523,70 +521,6 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
     }
 
-    /// <summary>
-    /// Subscribes to socat service events for real-time process monitoring.
-    /// </summary>
-    private void SubscribeToSocatEvents()
-    {
-        _socatService.ProcessStarted += async (sender, args) =>
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                RunningProcesses.Add(args.ProcessInfo);
-                RunningProcessCount = RunningProcesses.Count;
-                StatusMessage = $"socat process {args.ProcessInfo.ProcessId} started on port {args.ProcessInfo.TcpPort}";
-            });
-        };
-
-        _socatService.ProcessStopped += async (sender, args) =>
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                var existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
-                if (existingProcess != null)
-                {
-                    RunningProcesses.Remove(existingProcess);
-                    RunningProcessCount = RunningProcesses.Count;
-                    StatusMessage = $"socat process {args.ProcessInfo.ProcessId} stopped";
-                }
-            });
-        };
-
-        _socatService.ProcessError += async (sender, args) =>
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"socat process {args.ProcessInfo.ProcessId} error: {args.Error.Message}";
-                _logger.LogError(args.Error, "socat process error");
-            });
-        };
-
-        _socatService.ConnectionEstablished += async (sender, args) =>
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                var existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
-                if (existingProcess != null)
-                {
-                    existingProcess.ActiveConnections++;
-                }
-                StatusMessage = $"Connection established to process {args.ProcessInfo.ProcessId}";
-            });
-        };
-
-        _socatService.ConnectionClosed += async (sender, args) =>
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                var existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
-                if (existingProcess != null && existingProcess.ActiveConnections > 0)
-                {
-                    existingProcess.ActiveConnections--;
-                }
-                StatusMessage = $"Connection closed to process {args.ProcessInfo.ProcessId}";
-            });
-        };
-    }
 
     /// <summary>
     /// Refreshes the ProfilesPath from application settings.
@@ -910,7 +844,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = $"Starting socat on port {SelectedProfile.Configuration.TcpPort}...";
 
-            var processInfo = await _socatService.StartSocatWithProfileAsync(SelectedProfile, SelectedSerialDevice);
+            var processInfo = await _socatService.StartSocatWithProfileAsync(SelectedProfile, SelectedSerialDevice, CancellationToken.None);
 
             StatusMessage = $"socat started successfully (PID: {processInfo.ProcessId})";
             _logger.LogInformation("Started socat process: {ProcessId} for profile {ProfileName} on device {Device}",

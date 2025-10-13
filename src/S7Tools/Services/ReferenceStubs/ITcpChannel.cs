@@ -1,7 +1,7 @@
-// ITcpChannel.cs (Stub)
+// ITcpChannel.cs
 namespace SiemensS7Bootloader.S7.Net
 {
-    public interface ITcpChannel
+    public interface ITcpChannel : ICommunicationChannel
     {
     }
 }

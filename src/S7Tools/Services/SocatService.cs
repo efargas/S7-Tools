@@ -65,9 +65,6 @@ public class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public event EventHandler<SocatConnectionEventArgs>? ConnectionClosed;
 
-    /// <inheritdoc />
-    public event EventHandler<SocatDataTransferEventArgs>? DataTransferred;
-
     #endregion
 
     #region Command Generation

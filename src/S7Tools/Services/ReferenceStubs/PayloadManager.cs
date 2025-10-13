@@ -1,12 +1,13 @@
-// PayloadManager.cs (Stub)
-namespace SiemensS7Bootloader.S7.Net
-{
-    using System.Threading.Tasks;
+// PayloadManager.cs
+using System;
+using System.Threading.Tasks;
 
+namespace SiemensS7Bootloader.S7.Core
+{
     public class PayloadManager
     {
-        public PayloadManager(string baseDir) { }
-        public Task<byte[]> GetStagerPayloadAsync(string basePath) => Task.FromResult(new byte[0]);
-        public Task<byte[]> GetMemoryDumperPayloadAsync(string basePath) => Task.FromResult(new byte[0]);
+        public PayloadManager(string basePath) { }
+        public Task<byte[]> GetStagerPayloadAsync(string name) => Task.FromResult(Array.Empty<byte>());
+        public Task<byte[]> GetMemoryDumperPayloadAsync(string name) => Task.FromResult(Array.Empty<byte>());
     }
 }

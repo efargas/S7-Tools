@@ -4,6 +4,7 @@ namespace S7Tools.Services;
 using S7Tools.Core.Services.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
+using SiemensS7Bootloader.S7.Core;
 using SiemensS7Bootloader.S7.Net;
 
 public sealed class PayloadProviderAdapter : IPayloadProvider {

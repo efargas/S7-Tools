@@ -143,11 +143,13 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IBootloaderService, BootloaderService>();
         services.AddTransient<IPayloadProvider>(sp => new PayloadProviderAdapter(AppContext.BaseDirectory));
         services.AddTransient<IPowerSupplyService, PowerSupplyAdapter>();
-        services.AddTransient<Func<JobProfileSet, IPlcClient>>(sp => profiles =>
+        services.AddTransient<Func<JobProfileSet, IPlcClient>>(sp =>
         {
-            var channel = new SiemensS7Bootloader.S7.Net.TcpChannel("127.0.0.1", profiles.Socat.Port);
-            var client = new SiemensS7Bootloader.S7.Net.PlcClient(channel, sp.GetRequiredService<ILoggerFactory>());
-            return new PlcClientAdapter(client);
+            return profiles =>
+            {
+                var client = new S7.Net.Plc(S7.Net.CpuType.S71200, "127.0.0.1", profiles.Socat.Port, 0, 1);
+                return new PlcClientAdapter(client);
+            };
         });
 
         return services;
