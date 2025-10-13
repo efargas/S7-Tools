@@ -1,9 +1,9 @@
 # S7Tools Project Folder Structure Blueprint
 
-**Generated**: Current Date  
+**Generated**: 2025-10-13  
 **Project Type**: .NET 8.0 Avalonia Desktop Application  
 **Architecture**: Clean Architecture with MVVM Pattern  
-**Last Updated**: Current Session  
+**Last Updated**: 2025-10-13  
 
 ---
 
@@ -39,19 +39,34 @@ The S7Tools project follows a **multi-project solution architecture** organized 
 ```
 S7Tools/
 ├── .copilot-tracking/                    # AI-assisted development tracking
-│   ├── changes/                          # Implementation change logs
-│   ├── details/                          # Detailed implementation specifications
-│   ├── instructions/                     # Agent handoff instructions
+│   ├── bugs/                             # Bug reports and tracking
 │   ├── memory/                           # Memory keeper files (preserve)
-│   ├── plans/                            # Implementation plans and checklists
+│   ├── memory-bank/                      # Structured memory bank documentation
+│   │   ├── examples/                     # Example implementations and templates
+│   │   ├── tasks/                        # Individual task tracking files
+│   │   ├── activeContext.md              # Current development context
+│   │   ├── instructions.md               # Project-specific instructions
+│   │   ├── mvvm-lessons-learned.md       # MVVM pattern insights
+│   │   ├── productContext.md             # Product vision and context
+│   │   ├── progress.md                   # Development progress tracking
+│   │   ├── projectbrief.md               # Project overview and goals
+│   │   ├── session-summary.md            # Session summaries
+│   │   ├── systemPatterns.md             # Architecture patterns
+│   │   ├── techContext.md                # Technical environment
+│   │   └── threading-and-synchronization-patterns.md  # Threading patterns
 │   ├── prompts/                          # Implementation prompt templates
 │   ├── research/                         # Research findings and analysis
-│   ├── reviews/                          # Code and design reviews
-│   └── status/                           # Project status reports
+│   └── reviews/                          # Code and design reviews
 ├── .github/                              # GitHub-specific configurations
 │   ├── agents/                           # AI agent workspace and references
+│   │   └── workspace/                    # Agent working directory
 │   ├── chatmodes/                        # AI chat mode configurations
-│   ├── copilot/                          # GitHub Copilot configurations
+│   ├── instructions/                     # Development instructions
+│   │   ├── dotnet-architecture-good-practices.instructions.md
+│   │   └── memory-bank.instructions.md
+│   └── prompts/                          # Reusable prompt templates
+├── .vscode/                              # VS Code workspace settings
+├── Screenshots/                          # UI screenshots and documentation (if exists)
 │   └── prompts/                          # Reusable prompt templates
 ├── .qodo/                                # Qodo AI tracking (legacy)
 ├── .vscode/                              # VS Code workspace settings
@@ -59,20 +74,34 @@ S7Tools/
 ├── src/                                  # Source code root
 │   ├── S7Tools/                          # Main application project
 │   │   ├── Assets/                       # Application assets (icons, images)
+│   │   ├── Constants/                    # Application constants
 │   │   ├── Converters/                   # XAML value converters
 │   │   ├── Extensions/                   # Extension methods and utilities
+│   │   ├── Helpers/                      # Helper classes and utilities
 │   │   ├── Models/                       # Application-specific models
 │   │   ├── Resources/                    # Localization and resource files
 │   │   │   └── Strings/                  # String resources for i18n
 │   │   ├── Services/                     # Application services
-│   │   │   └── Interfaces/               # Service contracts
+│   │   │   ├── Bootloader/               # Bootloader-specific services
+│   │   │   ├── Interfaces/               # Service contracts
+│   │   │   └── Tasking/                  # Task scheduling services
 │   │   ├── Styles/                       # XAML styles and themes
 │   │   ├── ViewModels/                   # MVVM ViewModels
 │   │   └── Views/                        # XAML Views and code-behind
 │   ├── S7Tools.Core/                     # Core domain project
+│   │   ├── Commands/                     # Command pattern implementations
+│   │   ├── Factories/                    # Factory pattern implementations
+│   │   ├── Logging/                      # Logging abstractions
 │   │   ├── Models/                       # Domain models
-│   │   └── Services/                     # Core service interfaces
-│   │       └── Interfaces/               # Service contracts
+│   │   │   ├── Common/                   # Common models
+│   │   │   ├── Jobs/                     # Job-related models
+│   │   │   ├── Validators/               # Model validators
+│   │   │   └── ValueObjects/             # Value objects
+│   │   ├── Resources/                    # Resource abstractions
+│   │   ├── Services/                     # Core service interfaces
+│   │   │   └── Interfaces/               # Service contracts
+│   │   └── Validation/                   # Validation framework
+│   ├── S7Tools.Diagnostics/              # Diagnostic tools project
 │   ├── S7Tools.Infrastructure.Logging/   # Logging infrastructure
 │   │   ├── Core/                         # Core logging components
 │   │   │   ├── Configuration/            # Logger configuration
@@ -82,6 +111,17 @@ S7Tools/
 │   │       ├── Extensions/               # DI registration extensions
 │   │       └── Microsoft/                # Microsoft.Extensions.Logging integration
 │   └── S7Tools.sln                       # Visual Studio solution file
+├── tests/                                # Test projects root
+│   ├── S7Tools.Core.Tests/               # Core domain tests
+│   │   ├── Models/                       # Model tests
+│   │   ├── Resources/                    # Resource tests
+│   │   └── Validation/                   # Validation tests
+│   ├── S7Tools.Infrastructure.Logging.Tests/  # Logging infrastructure tests
+│   │   └── Core/                         # Core logging tests
+│   └── S7Tools.Tests/                    # Application tests
+│       ├── Converters/                   # Converter tests
+│       ├── Services/                     # Service tests
+│       └── ViewModels/                   # ViewModel tests
 ├── .editorconfig                         # Code style and formatting rules
 ├── .gitignore                            # Git ignore patterns
 └── README.md                             # Project documentation
