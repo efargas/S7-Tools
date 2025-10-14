@@ -6,18 +6,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using S7.Net;
-using Microsoft.Extensions.Logging;
 
 public sealed class PlcClientAdapter : IPlcClient
 {
     private readonly Plc _inner;
-    private readonly ILogger<PlcClientAdapter> _logger;
 
-    public PlcClientAdapter(Plc inner, ILogger<PlcClientAdapter> logger)
-    {
-        _inner = inner;
-        _logger = logger;
-    }
+    public PlcClientAdapter(Plc inner) => _inner = inner;
 
     public async Task HandshakeAsync(CancellationToken ct = default)
     {
@@ -36,53 +30,43 @@ public sealed class PlcClientAdapter : IPlcClient
         {
             throw new ArgumentNullException(nameof(stager));
         }
-
-        _logger.LogInformation("Simulating installing stager with payload size {PayloadSize} bytes.", stager.Length);
-
-        // Simulate a delay for writing the stager to the PLC
-        await Task.Delay(250, ct); // A slightly longer delay to simulate a more complex write operation
-
-        _logger.LogInformation("Simulated stager installation completed successfully.");
+        // Assuming the stager is written to DB1 at offset 0.
+        // This would need to be replaced with the actual implementation details.
+        await _inner.WriteBytesAsync(DataType.DataBlock, 1, 0, stager, ct);
     }
 
     public async Task<byte[]> DumpMemoryAsync(uint startAddress, uint length, byte[] dumperPayload, IProgress<long> progress, CancellationToken ct = default)
     {
-        _logger.LogInformation("Simulating memory dump from address {StartAddress} with length {Length}.", startAddress, length);
-
         // A real implementation would first write the dumperPayload to the PLC.
         // For now, we simulate this step.
         if (dumperPayload != null && dumperPayload.Length > 0)
         {
-            _logger.LogInformation("Simulating writing dumper payload ({PayloadLength} bytes) to PLC.", dumperPayload.Length);
-            // Simulate a short delay for writing the payload
-            await Task.Delay(100, ct);
+            // Placeholder for writing the dumper payload.
+            // await _inner.WriteBytesAsync(DataType.DataBlock, 2, 0, dumperPayload, ct);
         }
 
         var buffer = new byte[length];
-        var random = new Random();
-        random.NextBytes(buffer); // Fill with random data to simulate a memory dump.
-
-        long bytesRead = 0;
-        const int chunkSize = 4096; // Simulate reading in 4KB chunks
-
-        _logger.LogInformation("Simulating reading {Length} bytes in {ChunkSize} byte chunks.", length, chunkSize);
+        uint bytesRead = 0;
+        const int chunkSize = 1024; // Read in 1KB chunks
 
         while (bytesRead < length)
         {
             ct.ThrowIfCancellationRequested();
 
             var bytesToRead = (int)Math.Min(chunkSize, length - bytesRead);
+            var chunk = await _inner.ReadBytesAsync(DataType.DataBlock, 1, (int)(startAddress + bytesRead), bytesToRead, ct);
 
-            // Simulate reading a chunk
-            await Task.Delay(50, ct); // Simulate network latency for each chunk
+            if (chunk == null || chunk.Length == 0)
+            {
+                throw new InvalidOperationException("Failed to read memory from PLC.");
+            }
 
-            bytesRead += bytesToRead;
+            Array.Copy(chunk, 0, buffer, bytesRead, chunk.Length);
+            bytesRead += (uint)chunk.Length;
 
             progress?.Report(bytesRead);
-            _logger.LogDebug("Simulated reading progress: {BytesRead}/{Length} bytes.", bytesRead, length);
         }
 
-        _logger.LogInformation("Simulated memory dump completed successfully.");
         return buffer;
     }
 

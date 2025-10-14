@@ -12,7 +12,7 @@ This document outlines the future development areas for the S7Tools application,
 
 2.  **Implement Real `SiemensS7Bootloader` Library:**
     -   **Description:** Replace the current stub implementations for the `SiemensS7Bootloader` library with a real implementation or a more robust simulation to enable end-to-end testing and production use.
-    -   **Status:** Not Started
+    -   **Status:** In Progress (Simulated)
 
 3.  **Implement Power Controller Logic:**
     -   **Description:** Implement the `PowerControllerAdapter` with the actual logic for controlling the power supply of the PLC.

@@ -150,11 +150,11 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IPowerSupplyService, PowerSupplyAdapter>();
         services.AddTransient<Func<JobProfileSet, IPlcClient>>(sp =>
         {
-            var logger = sp.GetRequiredService<ILogger<PlcClientAdapter>>();
+            var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
             return profiles =>
             {
-                var client = new S7.Net.Plc(S7.Net.CpuType.S71200, "127.0.0.1", profiles.Socat.Port, 0, 1);
-                return new PlcClientAdapter(client, logger);
+                // The profiles are ignored by the simulated client, but the factory signature is required by the BootloaderService.
+                return new SiemensS7Bootloader.S7.Net.SimulatedPlcClient(loggerFactory);
             };
         });
 

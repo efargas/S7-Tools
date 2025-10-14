@@ -20,6 +20,7 @@
     - The Task Manager is now accessible from the main navigation activity bar.
 - **Unit Tests:** Unit tests for the `ResourceCoordinator` and `JobScheduler` services have been added to ensure their reliability.
 - **Simulated PLC Communication:** Implemented simulated versions of `DumpMemoryAsync` and `InstallStagerAsync` in `PlcClientAdapter`. These methods now use `ILogger` to output their intended actions, simulate delays, and report progress, allowing for development and testing without physical PLC hardware.
+- **Robust `SiemensS7Bootloader` Simulation:** Replaced the basic `PlcClient` stub with a more detailed `SimulatedPlcClient`. This new implementation provides a more realistic simulation of the `SiemensS7Bootloader`'s behavior, including logging, delays, and simulated data for all methods of the `IPlcClient` interface.
 - **Bug Fixes & Refactoring:**
     - **DI Container:** Fixed a critical runtime error by correctly registering the `PowerControllerAdapter` in the dependency injection container.
     - **Namespaces:** Corrected namespace declarations across multiple new files in the `Adapters`, `ReferenceStubs`, and `Tasking` directories to align with the project's structure and resolve build errors.
