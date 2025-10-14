@@ -89,15 +89,19 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ITagRepository, PlcDataService>();
         services.TryAddSingleton<IS7ConnectionProvider, PlcDataService>();
 
-        // Add Serial Port Services
+        // Add Profile Services using Unified IProfileManager<T> Pattern
+        // All profile services implement IProfileManager<T> through StandardProfileManager<T> base class
+        // This ensures consistent CRUD operations, validation, and business rule enforcement
+
+        // Serial Port Profile Service (Communication - Serial profiles)
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
         services.TryAddSingleton<ISerialPortService, SerialPortService>();
 
-        // Add Socat Services (Servers Settings - socat configuration)
+        // Socat Profile Service (Servers Settings - socat configuration)
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
         services.TryAddSingleton<ISocatService, SocatService>();
 
-        // Add Power Supply Services (Power Supply Control - Modbus TCP)
+        // Power Supply Profile Service (Power Supply Control - Modbus TCP)
         services.TryAddSingleton<IPowerSupplyProfileService, PowerSupplyProfileService>();
         services.TryAddSingleton<IPowerSupplyService, PowerSupplyService>();
 
@@ -212,6 +216,10 @@ public static class ServiceCollectionExtensions
         // Add Socat ViewModels (Servers Settings - socat configuration)
         services.TryAddTransient<SocatSettingsViewModel>();
         services.TryAddTransient<SocatProfileViewModel>();
+
+        // Add Power Supply ViewModels (Power Supply Control - Modbus TCP)
+        services.TryAddTransient<PowerSupplySettingsViewModel>();
+        services.TryAddTransient<PowerSupplyProfileViewModel>();
 
         return services;
     }
@@ -338,23 +346,22 @@ public static class ServiceCollectionExtensions
             // but this is where you would add it if needed
         }
 
-        // Initialize Serial Port Profile storage in background to ensure profiles folder/file are created.
+        // Initialize Profile Services using unified IProfileManager<T> pattern
+        // All profile services implement the same interface and can be initialized consistently
         try
         {
-            var profileService = serviceProvider.GetService<ISerialPortProfileService>();
-            if (profileService != null)
+            // Initialize Serial Port Profiles
+            var serialProfileService = serviceProvider.GetService<ISerialPortProfileService>();
+            if (serialProfileService != null)
             {
-                // Fire-and-forget initialization with proper error logging
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        // Initialize profile service by loading profiles
-                        await profileService.GetAllAsync().ConfigureAwait(false);
+                        await serialProfileService.GetAllAsync().ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
-                        // Log the error instead of swallowing it silently
                         var logger = serviceProvider.GetService<ILogger<ISerialPortProfileService>>();
                         logger?.LogError(ex, "Failed to initialize serial port profiles during application startup");
                     }
@@ -363,7 +370,6 @@ public static class ServiceCollectionExtensions
         }
         catch (Exception ex)
         {
-            // Log service retrieval errors instead of ignoring them
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
             logger?.LogError(ex, "Failed to retrieve ISerialPortProfileService during service initialization");
@@ -375,17 +381,14 @@ public static class ServiceCollectionExtensions
             var socatProfileService = serviceProvider.GetService<ISocatProfileService>();
             if (socatProfileService != null)
             {
-                // Fire-and-forget initialization with proper error logging
                 _ = Task.Run(async () =>
                 {
                     try
                     {
-                        // Initialize socat profile service by loading profiles
                         await socatProfileService.GetAllAsync().ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
-                        // Log the error instead of swallowing it silently
                         var logger = serviceProvider.GetService<ILogger<ISocatProfileService>>();
                         logger?.LogError(ex, "Failed to initialize socat profile storage during application startup");
                     }
@@ -394,10 +397,36 @@ public static class ServiceCollectionExtensions
         }
         catch (Exception ex)
         {
-            // Log service retrieval errors instead of ignoring them
             var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
             var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
             logger?.LogError(ex, "Failed to retrieve ISocatProfileService during service initialization");
+        }
+
+        // Initialize Power Supply Profile storage in background to ensure profiles folder/file are created.
+        try
+        {
+            var powerSupplyProfileService = serviceProvider.GetService<IPowerSupplyProfileService>();
+            if (powerSupplyProfileService != null)
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await powerSupplyProfileService.GetAllAsync().ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        var logger = serviceProvider.GetService<ILogger<IPowerSupplyProfileService>>();
+                        logger?.LogError(ex, "Failed to initialize power supply profile storage during application startup");
+                    }
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
+            logger?.LogError(ex, "Failed to retrieve IPowerSupplyProfileService during service initialization");
         }
     }
 
