@@ -1,16 +1,35 @@
 # Active Context: S7Tools Development Session
 
 **Session Date**: October 13, 2025
-**Context Type**: Full Project Review and Documentation Update
+**Context Type**: New Feature Task Creation - Power Supply Settings
 
-## 🚀 **LATEST UPDATE: Profile Editing Dialogs Implementation COMPLETE**
+## 🎯 **LATEST UPDATE: Power Supply Settings Task Created (TASK007)**
 
-### **✅ Task Status: TASK006 COMPLETED - Profile Editing Dialogs**
+### **✅ Previous Task Status: TASK006 COMPLETED - Profile Editing Dialogs**
 **Status**: ✅ **COMPLETE** - All phases successfully implemented
 **Priority**: High
 **Created**: 2025-10-13
 **Completed**: 2025-10-13
 **Total Time**: Implementation completed in recent session
+
+### **🆕 NEW TASK: TASK007 - Power Supply Settings Category**
+**Status**: ✅ **APPROVED** - Ready to start implementation
+**Priority**: High
+**Created**: 2025-10-13
+**Approved**: 2025-10-13 by @efargas
+**Estimated Time**: 18-22 hours across 6 phases
+**Description**: Comprehensive "Power Supply" settings category with TCP Modbus device control and profile management
+
+#### **User Approvals Received**
+**Date**: 2025-10-13  
+**User**: @efargas
+
+✅ **NModbus Library Approved** - Use NModbus for Modbus TCP communication  
+✅ **Test Hardware Available** - User has Modbus PLC available for testing  
+✅ **Implementation Plan Approved** - Ready to proceed with all 6 phases  
+🆕 **Addressing Mode Requirement** - Add base-0/base-1 Modbus addressing option
+
+**Key Addition**: Support for both base-0 (0-based indexing) and base-1 (1-based indexing) coil addressing modes with automatic protocol conversion.
 
 #### **🎯 Completed Objective: Comprehensive Profile Editing Dialogs**
 

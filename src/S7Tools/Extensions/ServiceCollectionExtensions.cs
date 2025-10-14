@@ -97,6 +97,10 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
         services.TryAddSingleton<ISocatService, SocatService>();
 
+        // Add Power Supply Services (Power Supply Control - Modbus TCP)
+        services.TryAddSingleton<IPowerSupplyProfileService, PowerSupplyProfileService>();
+        services.TryAddSingleton<IPowerSupplyService, PowerSupplyService>();
+
         return services;
     }
 

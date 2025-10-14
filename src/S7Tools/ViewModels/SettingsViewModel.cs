@@ -25,7 +25,8 @@ public class SettingsViewModel : ViewModelBase
             "Appearance",
             "Advanced",
             "Serial Ports",
-            "Servers"
+            "Servers",
+            "Power Supply"
         });
 
         // Initialize with Logging category
@@ -79,6 +80,7 @@ public class SettingsViewModel : ViewModelBase
             "Advanced" => new AdvancedSettingsViewModel(),
             "Serial Ports" => CreateSerialPortsSettingsViewModel(),
             "Servers" => CreateSocatSettingsViewModel(),
+            "Power Supply" => CreatePowerSupplySettingsViewModel(),
             _ => new GeneralSettingsViewModel()
         };
 
@@ -124,5 +126,20 @@ public class SettingsViewModel : ViewModelBase
         var logger = _serviceProvider.GetRequiredService<ILogger<SocatSettingsViewModel>>();
 
         return new SocatSettingsViewModel(socatProfileService, socatService, serialPortService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, logger);
+    }
+
+    private PowerSupplySettingsViewModel CreatePowerSupplySettingsViewModel()
+    {
+        var profileService = _serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
+        var powerSupplyService = _serviceProvider.GetRequiredService<IPowerSupplyService>();
+        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        var profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
+        var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
+        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<PowerSupplySettingsViewModel>>();
+
+        return new PowerSupplySettingsViewModel(profileService, powerSupplyService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, logger);
     }
 }

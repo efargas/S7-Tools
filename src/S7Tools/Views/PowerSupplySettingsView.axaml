@@ -1,0 +1,527 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:conv="using:S7Tools.Converters"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:fa="using:FluentAvalonia.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.PowerSupplySettingsView"
+             x:DataType="vm:PowerSupplySettingsViewModel"
+             Background="#1E1E1E">
+
+  <UserControl.Resources>
+    <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
+  </UserControl.Resources>
+
+  <ScrollViewer>
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Power Supply Settings"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="#CCCCCC"
+                 Margin="0,0,0,10" />
+
+      <!-- Profile Management Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Power Supply Profile Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Create New Profile -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="120" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0"
+                       Text="New Profile:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <TextBox Grid.Column="1" Grid.Row="0"
+                     Text="{Binding NewProfileName}"
+                     Watermark="Profile name..."
+                     MaxLength="20"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+
+            <TextBox Grid.Column="2" Grid.Row="0"
+                     Text="{Binding NewProfileDescription}"
+                     Watermark="Description (optional)..."
+                     MaxLength="60"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+
+            <Button Grid.Column="3" Grid.Row="0"
+                    Background="#0E639C"
+                    Foreground="White"
+                    BorderThickness="0"
+                    Padding="12,6"
+                    Command="{Binding CreateProfileCommand}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                <TextBlock Text="Create" />
+              </StackPanel>
+            </Button>
+
+            <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
+                       Text="Create a new power supply configuration profile for TCP Modbus device control"
+                       FontSize="11"
+                       Foreground="#858585"
+                       Margin="8,4,0,0" />
+          </Grid>
+
+          <!-- Profiles List -->
+          <StackPanel>
+            <!-- Toolbar above the DataGrid -->
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+              <Button Width="110" Height="34" Command="{Binding EditProfileCommand}" Background="#0E639C" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
+                  <TextBlock Text="Edit" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding DeleteProfileCommand}" Background="#D13438" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                  <TextBlock Text="Delete" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding DuplicateProfileCommand}" Background="#0E639C" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                  <TextBlock Text="Duplicate" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding SetDefaultProfileCommand}" Background="#0E639C" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
+                  <TextBlock Text="Set Default" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding RefreshProfilesCommand}" Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                  <TextBlock Text="Refresh" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <DataGrid Grid.Column="0"
+                        ItemsSource="{Binding Profiles}"
+                        SelectedItem="{Binding SelectedProfile}"
+                        Background="#3C3C3C"
+                        Foreground="#CCCCCC"
+                        GridLinesVisibility="Horizontal"
+                        HeadersVisibility="Column"
+                        CanUserReorderColumns="False"
+                        CanUserResizeColumns="True"
+                        CanUserSortColumns="True"
+                        IsReadOnly="True"
+                        Height="200"
+                        Margin="0,0,0,8">
+                <!-- Header style using Avalonia style selector -->
+                <DataGrid.Styles>
+                  <Style Selector="DataGridColumnHeader">
+                    <Setter Property="FontSize" Value="11" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="Padding" Value="8,4,32,4" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Template">
+                      <ControlTemplate>
+                        <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                          <DockPanel>
+                            <ContentPresenter Content="{TemplateBinding Content}"
+                                              DockPanel.Dock="Left"
+                                              VerticalAlignment="Center" />
+                          </DockPanel>
+                        </Border>
+                      </ControlTemplate>
+                    </Setter>
+                  </Style>
+                </DataGrid.Styles>
+
+                <DataGrid.Columns>
+                  <DataGridTextColumn Binding="{Binding Name}" Width="160" MinWidth="120">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding Description}" Width="300" MinWidth="140">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding Configuration.Type}" Width="120" MinWidth="80">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Type" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding Version}" Width="100" MinWidth="70">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Version" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="120" MinWidth="90">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Created" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding ModifiedAt, StringFormat='yyyy-MM-dd'}" Width="120" MinWidth="90">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Modified" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="90" MinWidth="70" IsReadOnly="True">
+                    <DataGridCheckBoxColumn.Header>
+                      <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridCheckBoxColumn.Header>
+                  </DataGridCheckBoxColumn>
+                </DataGrid.Columns>
+              </DataGrid>
+            </Grid>
+
+            <!-- Profile count status -->
+            <TextBlock Foreground="#858585"
+                       FontSize="11"
+                       Margin="0,4,0,0">
+              <Run Text="Total profiles: " />
+              <Run Text="{Binding ProfileCount}" FontWeight="SemiBold" />
+            </TextBlock>
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <!-- Connection Management Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Connection Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Connection Status Display -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Connection Status:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <Border Background="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#16825D'}"
+                      CornerRadius="10"
+                      Width="20"
+                      Height="20"
+                      VerticalAlignment="Center">
+                <icons:Icon Value="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-times|fa-solid fa-check'}"
+                            Foreground="White"
+                            Width="12"
+                            Height="12" />
+              </Border>
+
+              <TextBlock Text="{Binding ConnectionStatus}"
+                         Foreground="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#4EC9B0'}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Connection Control Buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Width="150" Height="38"
+                    Command="{Binding ConnectCommand}"
+                    Background="#16825D"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-plug" Width="14" Height="14" />
+                <TextBlock Text="Connect" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding DisconnectCommand}"
+                    Background="#D13438"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-plug-circle-xmark" Width="14" Height="14" />
+                <TextBlock Text="Disconnect" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding TestConnectionCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
+                <TextBlock Text="Test Connection" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Connect to the selected profile's Modbus TCP device to enable power control operations"
+                     FontSize="11"
+                     Foreground="#858585"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- Power Control Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Power Control"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Power Status Display -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Power Status:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <Border Background="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#16825D'}"
+                      CornerRadius="10"
+                      Width="20"
+                      Height="20"
+                      VerticalAlignment="Center">
+                <icons:Icon Value="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-power-off|fa-solid fa-bolt'}"
+                            Foreground="White"
+                            Width="12"
+                            Height="12" />
+              </Border>
+
+              <TextBlock Text="{Binding PowerStatus}"
+                         Foreground="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#4EC9B0'}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Power Control Buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Width="150" Height="38"
+                    Command="{Binding TurnOnCommand}"
+                    Background="#16825D"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
+                <TextBlock Text="Turn ON" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding TurnOffCommand}"
+                    Background="#D13438"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
+                <TextBlock Text="Turn OFF" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding ReadStateCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-eye" Width="14" Height="14" />
+                <TextBlock Text="Read State" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding PowerCycleCommand}"
+                    Background="#855508"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-rotate" Width="14" Height="14" />
+                <TextBlock Text="Power Cycle" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Control power supply via Modbus coil operations (Turn ON/OFF, Read current state, or Power Cycle with 5s delay)"
+                     FontSize="11"
+                     Foreground="#858585"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- Import/Export Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Import / Export"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Profiles Path -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Profiles Path:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <TextBox Grid.Column="1"
+                     Text="{Binding ProfilesPath}"
+                     IsReadOnly="True"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+
+            <Button Grid.Column="2"
+                    Width="110"
+                    Height="34"
+                    Command="{Binding BrowseProfilesPathCommand}"
+                    Background="#0E639C"
+                    Foreground="White"
+                    Margin="4,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
+                <TextBlock Text="Browse" />
+              </StackPanel>
+            </Button>
+
+            <Button Grid.Column="3"
+                    Width="110"
+                    Height="34"
+                    Command="{Binding OpenProfilesPathCommand}"
+                    Background="Transparent"
+                    BorderBrush="#464647"
+                    Foreground="#CCCCCC"
+                    Margin="4,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                <TextBlock Text="Open" />
+              </StackPanel>
+            </Button>
+
+            <Button Grid.Column="4"
+                    Width="110"
+                    Height="34"
+                    Command="{Binding ResetProfilesPathCommand}"
+                    Background="Transparent"
+                    BorderBrush="#464647"
+                    Foreground="#CCCCCC"
+                    Margin="4,0,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" />
+                <TextBlock Text="Reset" />
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <!-- Import/Export Buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Width="150" Height="38"
+                    Command="{Binding ExportProfilesCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
+                <TextBlock Text="Export Profiles" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding ImportProfilesCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-file-import" Width="14" Height="14" />
+                <TextBlock Text="Import Profiles" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Export profiles to share configurations or import profiles from backup files (JSON format)"
+                     FontSize="11"
+                     Foreground="#858585"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- Status Message -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="12"
+              IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding StatusMessage}"
+                   Foreground="#CCCCCC"
+                   FontSize="12"
+                   TextWrapping="Wrap" />
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
