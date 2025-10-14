@@ -3,8 +3,10 @@ using System.Reactive;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels;
 
@@ -115,18 +117,28 @@ public class SettingsViewModel : ViewModelBase
 
     private SocatSettingsViewModel CreateSocatSettingsViewModel()
     {
+        var unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<SocatProfile>>>();
+        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         var socatProfileService = _serviceProvider.GetRequiredService<ISocatProfileService>();
         var socatService = _serviceProvider.GetRequiredService<ISocatService>();
         var serialPortService = _serviceProvider.GetRequiredService<ISerialPortService>();
         var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        var profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
         var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
-        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        var fileDialogService = _serviceProvider.GetRequiredService<IFileDialogService>();
         var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<SocatSettingsViewModel>>();
 
-        return new SocatSettingsViewModel(socatProfileService, socatService, serialPortService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, logger);
+        return new SocatSettingsViewModel(
+            unifiedDialogService,
+            logger,
+            uiThreadService,
+            socatProfileService,
+            socatService,
+            serialPortService,
+            dialogService,
+            clipboardService,
+            fileDialogService,
+            settingsService);
     }
 
     private PowerSupplySettingsViewModel CreatePowerSupplySettingsViewModel()
@@ -134,13 +146,13 @@ public class SettingsViewModel : ViewModelBase
         var profileService = _serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
         var powerSupplyService = _serviceProvider.GetRequiredService<IPowerSupplyService>();
         var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        var profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
+        var unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
         var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
         var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<PowerSupplySettingsViewModel>>();
+        var logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>>>();
 
-        return new PowerSupplySettingsViewModel(profileService, powerSupplyService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, logger);
+        return new PowerSupplySettingsViewModel(unifiedDialogService, logger, uiThreadService, profileService, powerSupplyService, dialogService, clipboardService, fileDialogService, settingsService);
     }
 }

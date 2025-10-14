@@ -13,7 +13,6 @@ using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels;
 
@@ -21,7 +20,7 @@ namespace S7Tools.ViewModels;
 /// ViewModel for the Servers settings category, providing comprehensive socat profile management
 /// and process control capabilities for Serial-to-TCP proxy functionality.
 /// </summary>
-public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfile>
+public class SocatSettingsViewModel : ViewModelBase, IDisposable
 {
     #region Fields
 
@@ -29,10 +28,10 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     private readonly ISocatService _socatService;
     private readonly ISerialPortService _serialPortService;
     private readonly IDialogService _dialogService;
-    private readonly IUnifiedProfileDialogService _unifiedDialogService;
+    private readonly IProfileEditDialogService _profileEditDialogService;
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
-    private readonly ILogger<SocatSettingsViewModel> _specificLogger;
+    private readonly ILogger<SocatSettingsViewModel> _logger;
     private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
@@ -45,42 +44,38 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// <summary>
     /// Initializes a new instance of the SocatSettingsViewModel class.
     /// </summary>
-    /// <param name="unifiedDialogService">The unified profile dialog service.</param>
-    /// <param name="logger">The logger for the base class.</param>
-    /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="profileService">The socat profile service.</param>
     /// <param name="socatService">The socat service.</param>
     /// <param name="serialPortService">The serial port service for device discovery.</param>
     /// <param name="dialogService">The dialog service.</param>
+    /// <param name="profileEditDialogService">The profile edit dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
+    /// <param name="uiThreadService">The UI thread service.</param>
+    /// <param name="logger">The logger.</param>
     public SocatSettingsViewModel(
-        IUnifiedProfileDialogService unifiedDialogService,
-        ILogger<ProfileManagementViewModelBase<SocatProfile>> logger,
-        S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
         ISocatProfileService profileService,
         ISocatService socatService,
         ISerialPortService serialPortService,
         IDialogService dialogService,
+        IProfileEditDialogService profileEditDialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
-        S7Tools.Services.Interfaces.ISettingsService settingsService)
-        : base(logger, unifiedDialogService, uiThreadService)
+        S7Tools.Services.Interfaces.ISettingsService settingsService,
+        S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
+        ILogger<SocatSettingsViewModel> logger)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-        _unifiedDialogService = unifiedDialogService;
+        _profileEditDialogService = profileEditDialogService ?? throw new ArgumentNullException(nameof(profileEditDialogService));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-        _uiThreadService = uiThreadService;
-
-        // Create specific logger for this ViewModel
-        var loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { });
-        _specificLogger = loggerFactory.CreateLogger<SocatSettingsViewModel>();
+        _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize collections
         Profiles = new ObservableCollection<SocatProfile>();
@@ -111,7 +106,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             await RefreshRunningProcessesAsync();
         });
 
-        _specificLogger.LogInformation("SocatSettingsViewModel initialized");
+        _logger.LogInformation("SocatSettingsViewModel initialized");
 
         // Update socat command preview when either profile or device selection changes
         this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedSerialDevice)
@@ -136,7 +131,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                         }
                         catch (Exception ex)
                         {
-                            _specificLogger.LogWarning(ex, "Failed to generate socat command for profile '{ProfileName}' with device '{Device}'. Falling back to configuration command.", profile?.Name, deviceToUse);
+                            _logger.LogWarning(ex, "Failed to generate socat command for profile '{ProfileName}' with device '{Device}'. Falling back to configuration command.", profile?.Name, deviceToUse);
                             // Fallback to configuration command generation
                             if (profile != null)
                             {
@@ -147,7 +142,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 }
                 catch (Exception ex)
                 {
-                    _specificLogger.LogError(ex, "Error generating socat command preview for selected profile '{ProfileName}' and device '{Device}'.", profile?.Name, selectedDevice);
+                    _logger.LogError(ex, "Error generating socat command preview for selected profile '{ProfileName}' and device '{Device}'.", profile?.Name, selectedDevice);
                     SelectedProfileSocatCommand = "Error generating command";
                 }
             })
@@ -159,6 +154,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     #region Properties
 
     /// <summary>
+    /// Gets the collection of available socat profiles.
+    /// </summary>
+    public ObservableCollection<SocatProfile> Profiles { get; }
+
+    /// <summary>
     /// Gets the collection of available serial devices.
     /// </summary>
     public ObservableCollection<string> AvailableSerialDevices { get; }
@@ -167,6 +167,16 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// Gets the collection of running socat processes.
     /// </summary>
     public ObservableCollection<SocatProcessInfo> RunningProcesses { get; }
+
+    private SocatProfile? _selectedProfile;
+    /// <summary>
+    /// Gets or sets the currently selected profile.
+    /// </summary>
+    public SocatProfile? SelectedProfile
+    {
+        get => _selectedProfile;
+        set => this.RaiseAndSetIfChanged(ref _selectedProfile, value);
+    }
 
     private string _selectedProfileSocatCommand = string.Empty;
     /// <summary>
@@ -196,6 +206,26 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     {
         get => _selectedProcess;
         set => this.RaiseAndSetIfChanged(ref _selectedProcess, value);
+    }
+
+    private bool _isLoading;
+    /// <summary>
+    /// Gets or sets a value indicating whether a loading operation is in progress.
+    /// </summary>
+    public bool IsLoading
+    {
+        get => _isLoading;
+        set => this.RaiseAndSetIfChanged(ref _isLoading, value);
+    }
+
+    private string _statusMessage = "Ready";
+    /// <summary>
+    /// Gets or sets the current status message.
+    /// </summary>
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
 
     private bool _isScanning;
@@ -238,6 +268,17 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     {
         get => _runningProcessCount;
         set => this.RaiseAndSetIfChanged(ref _runningProcessCount, value);
+    }
+
+    private string _profilesPath = string.Empty;
+    /// <summary>
+    /// Gets or sets the current profiles directory path shown in the UI.
+    /// This value is persisted to application settings when changed.
+    /// </summary>
+    public string ProfilesPath
+    {
+        get => _profilesPath;
+        set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
     }
 
     #endregion
@@ -510,7 +551,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 StatusMessage = $"socat process {args.ProcessInfo.ProcessId} error: {args.Error.Message}";
-                _specificLogger.LogError(args.Error, "socat process error");
+                _logger.LogError(args.Error, "socat process error");
             });
         };
 
@@ -553,7 +594,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error refreshing profiles path from settings");
+            _logger.LogError(ex, "Error refreshing profiles path from settings");
             ProfilesPath = "resources/SocatProfiles";
         }
     }
@@ -588,11 +629,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             });
 
             StatusMessage = $"Loaded {ProfileCount} profile(s)";
-            _specificLogger.LogInformation("Loaded {ProfileCount} socat profiles", ProfileCount);
+            _logger.LogInformation("Loaded {ProfileCount} socat profiles", ProfileCount);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error loading profiles");
+            _logger.LogError(ex, "Error loading profiles");
             StatusMessage = "Error loading profiles";
         }
         finally
@@ -633,11 +674,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 StatusMessage = $"Found {DeviceCount} serial device(s)";
             });
 
-            _specificLogger.LogInformation("Found {DeviceCount} serial devices", DeviceCount);
+            _logger.LogInformation("Found {DeviceCount} serial devices", DeviceCount);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error scanning serial devices");
+            _logger.LogError(ex, "Error scanning serial devices");
             StatusMessage = "Error scanning devices";
         }
         finally
@@ -669,11 +710,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 StatusMessage = $"Found {RunningProcessCount} running process(es)";
             });
 
-            _specificLogger.LogInformation("Found {ProcessCount} running socat processes", RunningProcessCount);
+            _logger.LogInformation("Found {ProcessCount} running socat processes", RunningProcessCount);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error refreshing running processes");
+            _logger.LogError(ex, "Error refreshing running processes");
             StatusMessage = "Error refreshing processes";
         }
     }
@@ -683,7 +724,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     private async Task CreateProfileAsync()
     {
-        _specificLogger.LogInformation("=== CreateProfileAsync STARTED ===");
+        _logger.LogInformation("=== CreateProfileAsync STARTED ===");
 
         try
         {
@@ -698,12 +739,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             profileViewModel.ProfileName = "New Profile";
             profileViewModel.ProfileDescription = "";
 
-            // TODO: This old create method should be removed - base class now handles create operations
-            // Temporarily disabled during migration - base class now handles profile creation
-            StatusMessage = "Profile creation handled by base class";
-            await Task.CompletedTask; // Placeholder
-
-            /*
+            // Show the edit dialog for the new profile
             var result = await _profileEditDialogService.ShowSocatProfileEditAsync("Create Socat Profile", profileViewModel);
             if (result.IsSuccess && result.ProfileViewModel != null)
             {
@@ -728,22 +764,21 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
 
                 StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-                _specificLogger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
+                _logger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
             }
             else
             {
                 StatusMessage = "Profile creation cancelled";
             }
-            */
         }
         catch (OperationCanceledException)
         {
-            _specificLogger.LogInformation("Profile creation cancelled by user");
+            _logger.LogInformation("Profile creation cancelled by user");
             StatusMessage = "Profile creation cancelled";
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error creating profile");
+            _logger.LogError(ex, "Error creating profile");
             StatusMessage = "Error creating profile";
         }
         finally
@@ -779,14 +814,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             // Load the profile into the ViewModel
             profileViewModel.LoadProfile(SelectedProfile);
 
-            // TODO: Remove this method - base class now handles edit operations
-            // This method should be removed as editing is now handled by the base class
-            await Task.CompletedTask; // Placeholder to prevent compilation errors
-
-            StatusMessage = "Profile editing handled by base class";
-
-            // Old implementation commented out:
-            /*
+            // Show the profile edit dialog
             var result = await _profileEditDialogService.ShowSocatProfileEditAsync(
                 $"Edit Profile - {SelectedProfile.Name}",
                 profileViewModel);
@@ -794,20 +822,23 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             if (result.IsSuccess && result.ProfileViewModel != null)
             {
                 StatusMessage = "Profile changes saved successfully";
+
+                // The profile has been saved by the dialog's SaveCommand
+                // Refresh our profiles collection to reflect the changes
                 await RefreshProfilesPreserveSelectionAsync(profileId);
+
                 StatusMessage = $"Profile updated successfully";
-                _specificLogger.LogInformation("Successfully edited socat profile with ID: {ProfileId}", profileId);
+                _logger.LogInformation("Successfully edited socat profile with ID: {ProfileId}", profileId);
             }
             else
             {
                 StatusMessage = "Profile editing cancelled";
-                _specificLogger.LogInformation("Socat profile editing cancelled for profile ID: {ProfileId}", profileId);
+                _logger.LogInformation("Socat profile editing cancelled for profile ID: {ProfileId}", profileId);
             }
-            */
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error opening profile editor");
+            _logger.LogError(ex, "Error opening profile editor");
             StatusMessage = "Error opening profile editor";
         }
     }
@@ -847,17 +878,17 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 await RefreshProfilesPreserveSelectionAsync(null);
 
                 StatusMessage = $"Profile '{profileName}' deleted successfully";
-                _specificLogger.LogInformation("Deleted socat profile: {ProfileName}", profileName);
+                _logger.LogInformation("Deleted socat profile: {ProfileName}", profileName);
             }
             else
             {
                 StatusMessage = "Failed to delete profile";
-                _specificLogger.LogWarning("Failed to delete socat profile: {ProfileName}", profileName);
+                _logger.LogWarning("Failed to delete socat profile: {ProfileName}", profileName);
             }
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error deleting profile");
+            _logger.LogError(ex, "Error deleting profile");
             StatusMessage = "Error deleting profile";
         }
         finally
@@ -878,7 +909,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         try
         {
-            _specificLogger.LogDebug("Duplicating socat profile: {ProfileName}", SelectedProfile.Name);
+            _logger.LogDebug("Duplicating socat profile: {ProfileName}", SelectedProfile.Name);
 
             var inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Profile",
@@ -900,13 +931,13 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
 
                 StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
-                _specificLogger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
+                _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
                     originalProfile.Name, duplicatedProfile.Name);
             }
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error duplicating profile");
+            _logger.LogError(ex, "Error duplicating profile");
             StatusMessage = "Error duplicating profile";
         }
         finally
@@ -940,11 +971,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             await RefreshProfilesPreserveSelectionAsync(profileId);
 
             StatusMessage = $"'{profileName}' set as default profile";
-            _specificLogger.LogInformation("Set default socat profile: {ProfileName}", profileName);
+            _logger.LogInformation("Set default socat profile: {ProfileName}", profileName);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error setting default profile");
+            _logger.LogError(ex, "Error setting default profile");
             StatusMessage = "Error setting default profile";
         }
         finally
@@ -970,12 +1001,12 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             var processInfo = await _socatService.StartSocatWithProfileAsync(SelectedProfile, SelectedSerialDevice);
 
             StatusMessage = $"socat started successfully (PID: {processInfo.ProcessId})";
-            _specificLogger.LogInformation("Started socat process: {ProcessId} for profile {ProfileName} on device {Device}",
+            _logger.LogInformation("Started socat process: {ProcessId} for profile {ProfileName} on device {Device}",
                 processInfo.ProcessId, SelectedProfile.Name, SelectedSerialDevice);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error starting socat");
+            _logger.LogError(ex, "Error starting socat");
             StatusMessage = "Error starting socat";
         }
     }
@@ -999,7 +1030,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             if (success)
             {
                 StatusMessage = $"socat process {SelectedProcess.ProcessId} stopped successfully";
-                _specificLogger.LogInformation("Stopped socat process: {ProcessId}", SelectedProcess.ProcessId);
+                _logger.LogInformation("Stopped socat process: {ProcessId}", SelectedProcess.ProcessId);
             }
             else
             {
@@ -1008,7 +1039,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error stopping socat process");
+            _logger.LogError(ex, "Error stopping socat process");
             StatusMessage = "Error stopping socat process";
         }
     }
@@ -1025,11 +1056,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             var stoppedCount = await _socatService.StopAllSocatProcessesAsync();
 
             StatusMessage = $"Stopped {stoppedCount} socat process(es)";
-            _specificLogger.LogInformation("Stopped {Count} socat processes", stoppedCount);
+            _logger.LogInformation("Stopped {Count} socat processes", stoppedCount);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error stopping all socat processes");
+            _logger.LogError(ex, "Error stopping all socat processes");
             StatusMessage = "Error stopping all socat processes";
         }
     }
@@ -1061,11 +1092,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 StatusMessage = $"Connection to port {SelectedProcess.TcpPort} failed";
             }
 
-            _specificLogger.LogInformation("TCP connection test result: {Success} for port {Port}", success, SelectedProcess.TcpPort);
+            _logger.LogInformation("TCP connection test result: {Success} for port {Port}", success, SelectedProcess.TcpPort);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error testing TCP connection");
+            _logger.LogError(ex, "Error testing TCP connection");
             StatusMessage = "Error testing connection";
         }
     }
@@ -1102,11 +1133,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported {ProfileCount} profile(s) to {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", ProfileCount, fileName);
+            _logger.LogInformation("Exported {ProfileCount} profiles to {FileName}", ProfileCount, fileName);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error exporting profiles");
+            _logger.LogError(ex, "Error exporting profiles");
             StatusMessage = "Error exporting profiles";
         }
         finally
@@ -1129,11 +1160,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 "Import functionality will be implemented in the UI layer.");
 
             StatusMessage = "Profiles imported successfully";
-            _specificLogger.LogInformation("Imported socat profiles");
+            _logger.LogInformation("Imported socat profiles");
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error importing profiles");
+            _logger.LogError(ex, "Error importing profiles");
             StatusMessage = "Error importing profiles";
         }
     }
@@ -1160,11 +1191,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 $"Export functionality for profile '{SelectedProfile.Name}' will be implemented in the UI layer.");
 
             StatusMessage = "Profile exported successfully";
-            _specificLogger.LogInformation("Exported socat profile: {ProfileName}", SelectedProfile.Name);
+            _logger.LogInformation("Exported socat profile: {ProfileName}", SelectedProfile.Name);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error exporting selected profile");
+            _logger.LogError(ex, "Error exporting selected profile");
             StatusMessage = "Error exporting profile";
         }
     }
@@ -1197,7 +1228,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error showing profile details");
+            _logger.LogError(ex, "Error showing profile details");
             StatusMessage = "Error showing profile details";
         }
     }
@@ -1227,7 +1258,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error browsing for profiles path");
+            _logger.LogError(ex, "Error browsing for profiles path");
             StatusMessage = "Error selecting directory";
         }
     }
@@ -1247,7 +1278,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             if (string.IsNullOrEmpty(ProfilesPath))
             {
                 StatusMessage = "Profiles path not available";
-                _specificLogger.LogError("Profiles path is null or empty");
+                _logger.LogError("Profiles path is null or empty");
                 return;
             }
 
@@ -1260,10 +1291,10 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             {
                 StatusMessage = "Creating profiles folder...";
                 Directory.CreateDirectory(absolutePath);
-                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", absolutePath);
+                _logger.LogInformation("Created profiles directory: {ProfilesPath}", absolutePath);
             }
 
-            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", absolutePath);
+            _logger.LogInformation("Opening profiles folder: {ProfilesPath}", absolutePath);
 
             await Task.Run(() =>
             {
@@ -1323,17 +1354,17 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 }
                 catch (Exception ex)
                 {
-                    _specificLogger.LogWarning(ex, "Failed to open file explorer for path: {Path}", absolutePath);
+                    _logger.LogWarning(ex, "Failed to open file explorer for path: {Path}", absolutePath);
                     throw;
                 }
             });
 
             StatusMessage = "Profiles folder opened";
-            _specificLogger.LogInformation("Successfully opened profiles folder");
+            _logger.LogInformation("Successfully opened profiles folder");
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error opening profiles folder");
+            _logger.LogError(ex, "Error opening profiles folder");
             StatusMessage = "Error opening profiles folder";
         }
     }
@@ -1356,11 +1387,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             }
 
             StatusMessage = "Profiles path reset to default";
-            _specificLogger.LogInformation("Reset socat profiles path to default");
+            _logger.LogInformation("Reset socat profiles path to default");
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error resetting profiles path");
+            _logger.LogError(ex, "Error resetting profiles path");
             StatusMessage = "Error resetting profiles path";
         }
     }
@@ -1380,7 +1411,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Failed to update settings with new profiles path");
+            _logger.LogError(ex, "Failed to update settings with new profiles path");
             StatusMessage = "Failed to update settings";
         }
     }
@@ -1392,7 +1423,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// <param name="operation">The operation that was being performed.</param>
     private void HandleCommandException(Exception exception, string operation)
     {
-        _specificLogger.LogError(exception, "Error {Operation}", operation);
+        _logger.LogError(exception, "Error {Operation}", operation);
         StatusMessage = $"Error {operation}";
     }
 
@@ -1406,7 +1437,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// Disposes of the resources used by this ViewModel.
     /// </summary>
     /// <param name="disposing">Indicates whether the method is called from Dispose.</param>
-    protected override void Dispose(bool disposing)
+    protected virtual void Dispose(bool disposing)
     {
         if (!_disposed)
         {
@@ -1420,14 +1451,20 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
                 // Dispose managed resources
                 _disposables?.Dispose();
-                _specificLogger.LogInformation("SocatSettingsViewModel disposed");
+                _logger.LogInformation("SocatSettingsViewModel disposed");
             }
 
             _disposed = true;
         }
+    }
 
-        // Call base dispose
-        base.Dispose(disposing);
+    /// <summary>
+    /// Public implementation of Dispose pattern callable by consumers.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 
     #endregion
@@ -1463,72 +1500,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
         catch (Exception ex)
         {
-            _specificLogger.LogWarning(ex, "Failed to refresh socat profiles while preserving selection");
+            _logger.LogWarning(ex, "Failed to refresh socat profiles while preserving selection");
         }
-    }
-
-    #endregion
-
-    #region Abstract Method Implementations
-
-    /// <summary>
-    /// Gets the profile manager service for Socat profiles.
-    /// </summary>
-    protected override IProfileManager<SocatProfile> GetProfileManager()
-        => _profileService;
-
-    /// <summary>
-    /// Gets the default profile name for new Socat profiles.
-    /// </summary>
-    protected override string GetDefaultProfileName()
-        => "SocatDefault";
-
-    /// <summary>
-    /// Gets the profile type name for display purposes.
-    /// </summary>
-    protected override string GetProfileTypeName()
-        => "Socat";
-
-    /// <summary>
-    /// Creates a default Socat profile with standard configuration.
-    /// </summary>
-    protected override SocatProfile CreateDefaultProfile()
-        => new()
-        {
-            Name = GetDefaultProfileName(),
-            Description = "TCP to Serial proxy configuration",
-            Configuration = new SocatConfiguration
-            {
-                TcpPort = 502,
-                TcpHost = "0.0.0.0"
-            }
-        };
-
-    /// <summary>
-    /// Shows the create dialog for a new Socat profile.
-    /// </summary>
-    protected override async Task<ProfileDialogResult<SocatProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
-    {
-        // Use the unified dialog service to show Socat create dialog
-        return await _unifiedDialogService.ShowSocatCreateDialogAsync(request).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Shows the edit dialog for an existing Socat profile.
-    /// </summary>
-    protected override async Task<ProfileDialogResult<SocatProfile>> ShowEditDialogAsync(ProfileEditRequest request)
-    {
-        // Use the unified dialog service to show Socat edit dialog
-        return await _unifiedDialogService.ShowSocatEditDialogAsync(request).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Shows the duplicate dialog for copying a Socat profile.
-    /// </summary>
-    protected override async Task<ProfileDialogResult<string>> ShowDuplicateDialogAsync(ProfileDuplicateRequest request)
-    {
-        // Use the unified dialog service to show Socat duplicate dialog
-        return await _unifiedDialogService.ShowSocatDuplicateDialogAsync(request).ConfigureAwait(false);
     }
 
     #endregion
