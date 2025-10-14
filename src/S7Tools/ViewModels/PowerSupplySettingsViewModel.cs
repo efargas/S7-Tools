@@ -145,6 +145,26 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
     }
 
+    private string _newProfileName = string.Empty;
+    /// <summary>
+    /// Gets or sets the name for a new profile.
+    /// </summary>
+    public string NewProfileName
+    {
+        get => _newProfileName;
+        set => this.RaiseAndSetIfChanged(ref _newProfileName, value);
+    }
+
+    private string _newProfileDescription = string.Empty;
+    /// <summary>
+    /// Gets or sets the description for a new profile.
+    /// </summary>
+    public string NewProfileDescription
+    {
+        get => _newProfileDescription;
+        set => this.RaiseAndSetIfChanged(ref _newProfileDescription, value);
+    }
+
     private bool _isLoading;
     /// <summary>
     /// Gets or sets a value indicating whether a loading operation is in progress.
