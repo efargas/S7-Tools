@@ -32,6 +32,13 @@ public record ProfileEditResult(bool IsSuccess, ViewModelBase? ProfileViewModel)
     /// </summary>
     /// <returns>A ProfileEditResult representing cancellation.</returns>
     public static ProfileEditResult Cancelled() => new(false, null);
+
+    /// <summary>
+    /// Creates a failed profile edit result.
+    /// </summary>
+    /// <param name="error">The error message.</param>
+    /// <returns>A ProfileEditResult representing failure.</returns>
+    public static ProfileEditResult Failed(string error) => new(false, null);
 }
 
 /// <summary>
