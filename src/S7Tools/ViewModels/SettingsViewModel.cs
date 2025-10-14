@@ -107,9 +107,10 @@ public class SettingsViewModel : ViewModelBase
         var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
         var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+        var unifiedProfileDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
         var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
-        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, logger);
+        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, logger);
     }
 
     private SocatSettingsViewModel CreateSocatSettingsViewModel()

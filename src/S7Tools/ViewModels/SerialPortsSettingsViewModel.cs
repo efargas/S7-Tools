@@ -14,14 +14,18 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels;
 
 /// <summary>
 /// ViewModel for the Serial Ports settings category, providing comprehensive profile management
 /// and port discovery capabilities for Linux-based serial communication.
+///
+/// This implementation extends ProfileManagementViewModelBase to provide unified profile management
+/// while preserving existing serial port specific functionality through composition and delegation.
 /// </summary>
-public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
+public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<SerialPortProfile>
 {
     #region Fields
 
@@ -31,8 +35,9 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     private readonly IProfileEditDialogService _profileEditDialogService;
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
-    private readonly ILogger<SerialPortsSettingsViewModel> _logger;
+    private readonly ILogger<SerialPortsSettingsViewModel> _specificLogger;
     private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
+    private readonly IUnifiedProfileDialogService _unifiedDialogService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
@@ -52,17 +57,20 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
     /// <param name="uiThreadService">The UI thread service.</param>
+    /// <param name="unifiedProfileDialogService">The unified profile dialog service.</param>
     /// <param name="logger">The logger.</param>
     public SerialPortsSettingsViewModel(
-    ISerialPortProfileService profileService,
-    ISerialPortService portService,
-    IDialogService dialogService,
-    IProfileEditDialogService profileEditDialogService,
-    IClipboardService clipboardService,
-    IFileDialogService? fileDialogService,
-    S7Tools.Services.Interfaces.ISettingsService settingsService,
-    S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
-    ILogger<SerialPortsSettingsViewModel> logger)
+        ISerialPortProfileService profileService,
+        ISerialPortService portService,
+        IDialogService dialogService,
+        IProfileEditDialogService profileEditDialogService,
+        IClipboardService clipboardService,
+        IFileDialogService? fileDialogService,
+        S7Tools.Services.Interfaces.ISettingsService settingsService,
+        S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
+        IUnifiedProfileDialogService unifiedProfileDialogService,
+        ILogger<SerialPortsSettingsViewModel> logger)
+        : base(logger, unifiedProfileDialogService, uiThreadService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
@@ -71,14 +79,14 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _specificLogger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _unifiedDialogService = unifiedProfileDialogService ?? throw new ArgumentNullException(nameof(unifiedProfileDialogService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        // Initialize collections
-        Profiles = new ObservableCollection<SerialPortProfile>();
+        // Initialize serial port specific collections
         AvailablePorts = new ObservableCollection<string>();
 
-        // Initialize commands
+        // Initialize serial port specific commands
         InitializeCommands();
 
         // Initialize path commands
@@ -95,11 +103,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         // Load profiles and scan ports in background but marshal collection updates to UI thread
         _ = Task.Run(async () =>
         {
-            await LoadProfilesAsync();
+            await base.InitializeAsync();
             await ScanPortsAsync();
         });
 
-        _logger.LogInformation("SerialPortsSettingsViewModel initialized");
+        _specificLogger.LogInformation("SerialPortsSettingsViewModel initialized");
 
         // Update STTY preview when either profile or port selection changes
         this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedPort)
@@ -139,24 +147,9 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     #region Properties
 
     /// <summary>
-    /// Gets the collection of available serial port profiles.
-    /// </summary>
-    public ObservableCollection<SerialPortProfile> Profiles { get; }
-
-    /// <summary>
     /// Gets the collection of available serial ports.
     /// </summary>
     public ObservableCollection<string> AvailablePorts { get; }
-
-    private SerialPortProfile? _selectedProfile;
-    /// <summary>
-    /// Gets or sets the currently selected profile.
-    /// </summary>
-    public SerialPortProfile? SelectedProfile
-    {
-        get => _selectedProfile;
-        set => this.RaiseAndSetIfChanged(ref _selectedProfile, value);
-    }
 
     private string _selectedProfileSttyString = string.Empty;
     /// <summary>
@@ -178,26 +171,6 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _selectedPort, value);
     }
 
-    private bool _isLoading;
-    /// <summary>
-    /// Gets or sets a value indicating whether a loading operation is in progress.
-    /// </summary>
-    public bool IsLoading
-    {
-        get => _isLoading;
-        set => this.RaiseAndSetIfChanged(ref _isLoading, value);
-    }
-
-    private string _statusMessage = "Ready";
-    /// <summary>
-    /// Gets or sets the current status message.
-    /// </summary>
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
-    }
-
     private bool _isScanning;
     /// <summary>
     /// Gets or sets a value indicating whether port scanning is in progress.
@@ -207,8 +180,6 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         get => _isScanning;
         set => this.RaiseAndSetIfChanged(ref _isScanning, value);
     }
-
-
 
     private int _profileCount;
     /// <summary>
@@ -230,17 +201,75 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _portCount, value);
     }
 
-    private string _profilesPath = string.Empty;
+    #endregion
+
+    #region Abstract Method Implementations
+
     /// <summary>
-    /// Gets or sets the current profiles directory path shown in the UI.
-    /// This value is persisted to application settings when changed.
+    /// Gets the profile manager for serial port profiles.
     /// </summary>
-    public string ProfilesPath
+    /// <returns>The serial port profile manager instance.</returns>
+    protected override IProfileManager<SerialPortProfile> GetProfileManager()
     {
-        get => _profilesPath;
-        set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
+        return _profileService;
     }
 
+    /// <summary>
+    /// Gets the default profile name for create operations.
+    /// </summary>
+    /// <returns>The standardized default name "SerialDefault".</returns>
+    protected override string GetDefaultProfileName()
+    {
+        return "SerialDefault";
+    }
+
+    /// <summary>
+    /// Gets the profile type name for display and logging purposes.
+    /// </summary>
+    /// <returns>The human-readable profile type name "Serial Port".</returns>
+    protected override string GetProfileTypeName()
+    {
+        return "Serial Port";
+    }
+
+    /// <summary>
+    /// Creates a default profile instance with standard configuration.
+    /// </summary>
+    /// <returns>A new serial port profile instance with default values.</returns>
+    protected override SerialPortProfile CreateDefaultProfile()
+    {
+        return SerialPortProfile.CreateDefaultProfile();
+    }
+
+    /// <summary>
+    /// Shows the create dialog for serial port profiles.
+    /// </summary>
+    /// <param name="request">The create request with default values.</param>
+    /// <returns>The dialog result with created profile or cancellation status.</returns>
+    protected override async Task<ProfileDialogResult<SerialPortProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
+    {
+        return await _unifiedDialogService.ShowSerialCreateDialogAsync(request).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Shows the edit dialog for serial port profiles.
+    /// </summary>
+    /// <param name="request">The edit request with profile ID.</param>
+    /// <returns>The dialog result with updated profile or cancellation status.</returns>
+    protected override async Task<ProfileDialogResult<SerialPortProfile>> ShowEditDialogAsync(ProfileEditRequest request)
+    {
+        return await _unifiedDialogService.ShowSerialEditDialogAsync(request).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Shows the duplicate input dialog for serial port profiles.
+    /// </summary>
+    /// <param name="request">The duplicate request with source profile ID and suggested name.</param>
+    /// <returns>The dialog result with new profile name or cancellation status.</returns>
+    protected override async Task<ProfileDialogResult<string>> ShowDuplicateDialogAsync(ProfileDuplicateRequest request)
+    {
+        return await _unifiedDialogService.ShowSerialDuplicateDialogAsync(request).ConfigureAwait(false);
+    }
 
     #endregion
 
@@ -461,12 +490,12 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             });
             StatusMessage = $"Loaded {ProfileCount} profile(s)";
 
-            _logger.LogInformation("Loaded {ProfileCount} profiles", ProfileCount);
+            _specificLogger.LogInformation("Loaded {ProfileCount} profiles", ProfileCount);
             // ProfilesPath is managed via settings; RefreshFromSettings handles syncing
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading profiles");
+            _specificLogger.LogError(ex, "Error loading profiles");
             StatusMessage = "Error loading profiles";
         }
         finally
@@ -502,11 +531,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             PortCount = AvailablePorts.Count;
             StatusMessage = $"Found {PortCount} port(s)";
 
-            _logger.LogInformation("Found {PortCount} available ports", PortCount);
+            _specificLogger.LogInformation("Found {PortCount} available ports", PortCount);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error scanning for ports");
+            _specificLogger.LogError(ex, "Error scanning for ports");
             StatusMessage = "Error scanning for ports";
         }
         finally
@@ -558,7 +587,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
 
                 StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-                _logger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
+                _specificLogger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
             }
             else
             {
@@ -567,7 +596,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating profile");
+            _specificLogger.LogError(ex, "Error creating profile");
             StatusMessage = "Error creating profile";
         }
         finally
@@ -617,17 +646,17 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 await RefreshProfilesPreserveSelectionAsync(profileId);
 
                 StatusMessage = $"Profile updated successfully";
-                _logger.LogInformation("Successfully edited serial profile with ID: {ProfileId}", profileId);
+                _specificLogger.LogInformation("Successfully edited serial profile with ID: {ProfileId}", profileId);
             }
             else
             {
                 StatusMessage = "Profile editing cancelled";
-                _logger.LogInformation("Serial profile editing cancelled for profile ID: {ProfileId}", profileId);
+                _specificLogger.LogInformation("Serial profile editing cancelled for profile ID: {ProfileId}", profileId);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error opening profile editor");
+            _specificLogger.LogError(ex, "Error opening profile editor");
             StatusMessage = "Error opening profile editor";
         }
     }
@@ -667,17 +696,17 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 await RefreshProfilesPreserveSelectionAsync(null);
 
                 StatusMessage = $"Profile '{profileName}' deleted successfully";
-                _logger.LogInformation("Deleted profile: {ProfileName}", profileName);
+                _specificLogger.LogInformation("Deleted profile: {ProfileName}", profileName);
             }
             else
             {
                 StatusMessage = "Failed to delete profile";
-                _logger.LogWarning("Failed to delete profile: {ProfileName}", profileName);
+                _specificLogger.LogWarning("Failed to delete profile: {ProfileName}", profileName);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting profile");
+            _specificLogger.LogError(ex, "Error deleting profile");
             StatusMessage = "Error deleting profile";
         }
         finally
@@ -698,7 +727,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
-            _logger.LogDebug("Duplicating serial port profile: {ProfileName}", SelectedProfile.Name);
+            _specificLogger.LogDebug("Duplicating serial port profile: {ProfileName}", SelectedProfile.Name);
 
             var inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Profile",
@@ -718,12 +747,12 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
 
                 StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
-                _logger.LogInformation("Duplicated profile: {OriginalName} -> {NewName}", SelectedProfile?.Name, duplicatedProfile.Name);
+                _specificLogger.LogInformation("Duplicated profile: {OriginalName} -> {NewName}", SelectedProfile?.Name, duplicatedProfile.Name);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error duplicating profile");
+            _specificLogger.LogError(ex, "Error duplicating profile");
             StatusMessage = "Error duplicating profile";
         }
         finally
@@ -757,11 +786,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             await RefreshProfilesPreserveSelectionAsync(profileId);
 
             StatusMessage = $"'{profileName}' set as default profile";
-            _logger.LogInformation("Set default profile: {ProfileName}", profileName);
+            _specificLogger.LogInformation("Set default profile: {ProfileName}", profileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error setting default profile");
+            _specificLogger.LogError(ex, "Error setting default profile");
             StatusMessage = "Error setting default profile";
         }
         finally
@@ -794,11 +823,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             await _dialogService.ShowErrorAsync("Port Test Result", message);
 
             StatusMessage = success ? "Port test successful" : "Port test failed";
-            _logger.LogInformation("Port test result for {Port}: {Success}", SelectedPort, success);
+            _specificLogger.LogInformation("Port test result for {Port}: {Success}", SelectedPort, success);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error testing port");
+            _specificLogger.LogError(ex, "Error testing port");
             StatusMessage = "Error testing port";
         }
     }
@@ -835,11 +864,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported {ProfileCount} profile(s) to {Path.GetFileName(fileName)}";
-            _logger.LogInformation("Exported {ProfileCount} profiles to {FileName}", ProfileCount, fileName);
+            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", ProfileCount, fileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error exporting profiles");
+            _specificLogger.LogError(ex, "Error exporting profiles");
             StatusMessage = "Error exporting profiles";
         }
         finally
@@ -867,7 +896,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error browsing for profiles path");
+            _specificLogger.LogError(ex, "Error browsing for profiles path");
             StatusMessage = "Error selecting directory";
         }
     }
@@ -884,7 +913,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             if (string.IsNullOrEmpty(ProfilesPath))
             {
                 StatusMessage = "Profiles path not available";
-                _logger.LogError("Profiles path is null or empty");
+                _specificLogger.LogError("Profiles path is null or empty");
                 return;
             }
 
@@ -893,19 +922,19 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             {
                 StatusMessage = "Creating profiles folder...";
                 Directory.CreateDirectory(ProfilesPath);
-                _logger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
+                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
             }
 
-            _logger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
+            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
 
             await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
 
             StatusMessage = "Profiles folder opened";
-            _logger.LogInformation("Successfully opened profiles folder");
+            _specificLogger.LogInformation("Successfully opened profiles folder");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error opening profiles folder");
+            _specificLogger.LogError(ex, "Error opening profiles folder");
             StatusMessage = "Error opening profiles folder";
         }
     }
@@ -922,7 +951,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resetting profiles path");
+            _specificLogger.LogError(ex, "Error resetting profiles path");
             StatusMessage = "Error resetting profiles path";
         }
     }
@@ -939,7 +968,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to update settings with new profiles path");
+            _specificLogger.LogError(ex, "Failed to update settings with new profiles path");
             StatusMessage = "Failed to update settings";
         }
     }
@@ -958,7 +987,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to refresh profiles path from settings");
+            _specificLogger.LogWarning(ex, "Failed to refresh profiles path from settings");
         }
     }
 
@@ -995,11 +1024,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             await LoadProfilesAsync(); // Refresh the list
 
             StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
-            _logger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
+            _specificLogger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error importing profiles");
+            _specificLogger.LogError(ex, "Error importing profiles");
             StatusMessage = "Error importing profiles";
         }
         finally
@@ -1058,11 +1087,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported profile '{SelectedProfile.Name}' to {Path.GetFileName(fileName)}";
-            _logger.LogInformation("Exported profile {ProfileName} to {FileName}", SelectedProfile.Name, fileName);
+            _specificLogger.LogInformation("Exported profile {ProfileName} to {FileName}", SelectedProfile.Name, fileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error exporting profile");
+            _specificLogger.LogError(ex, "Error exporting profile");
             StatusMessage = "Error exporting profile";
         }
         finally
@@ -1097,11 +1126,11 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
             await _dialogService.ShowErrorAsync("Profile Details", details);
 
-            _logger.LogInformation("Showed details for profile: {ProfileName}", SelectedProfile.Name);
+            _specificLogger.LogInformation("Showed details for profile: {ProfileName}", SelectedProfile.Name);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error showing profile details");
+            _specificLogger.LogError(ex, "Error showing profile details");
             StatusMessage = "Error showing profile details";
         }
     }
@@ -1113,44 +1142,35 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// <param name="operation">The operation that was being performed.</param>
     private void HandleCommandException(Exception exception, string operation)
     {
-        _logger.LogError(exception, "Error {Operation}", operation);
+        _specificLogger.LogError(exception, "Error {Operation}", operation);
         StatusMessage = $"Error {operation}";
     }
 
     #endregion
 
-    #region IDisposable
-
-    /// <summary>
-    /// Disposes of the resources used by this ViewModel.
-    /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
+    #region Disposal Overrides
 
     /// <summary>
     /// Protected dispose pattern implementation.
     /// </summary>
     /// <param name="disposing">True when called from Dispose()</param>
-    protected virtual void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             try
             {
                 _disposables?.Dispose();
-                _settingsService.SettingsChanged -= (_, _) => RefreshFromSettings();
+                if (_settingsChangedHandler != null)
+                {
+                    _settingsService.SettingsChanged -= _settingsChangedHandler;
+                }
             }
             catch { }
         }
 
-        try
-        {
-            _logger.LogInformation("SerialPortsSettingsViewModel disposed");
-        }
-        catch { }
+        // Call base class disposal
+        base.Dispose(disposing);
     }
 
     #endregion
@@ -1186,7 +1206,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to refresh profiles while preserving selection");
+            _specificLogger.LogWarning(ex, "Failed to refresh profiles while preserving selection");
         }
     }
 
