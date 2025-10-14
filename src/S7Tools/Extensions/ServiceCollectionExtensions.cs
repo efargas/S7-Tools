@@ -150,10 +150,11 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IPowerSupplyService, PowerSupplyAdapter>();
         services.AddTransient<Func<JobProfileSet, IPlcClient>>(sp =>
         {
+            var logger = sp.GetRequiredService<ILogger<PlcClientAdapter>>();
             return profiles =>
             {
                 var client = new S7.Net.Plc(S7.Net.CpuType.S71200, "127.0.0.1", profiles.Socat.Port, 0, 1);
-                return new PlcClientAdapter(client);
+                return new PlcClientAdapter(client, logger);
             };
         });
 

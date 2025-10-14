@@ -8,7 +8,7 @@ This document outlines the future development areas for the S7Tools application,
 
 1.  **Complete PLC Communication Protocol Integration:**
     -   **Description:** Fully implement the `DumpMemoryAsync` and `InstallStagerAsync` methods in `PlcClientAdapter` to provide robust and reliable communication with Siemens S7 PLCs. This includes handling all aspects of the custom bootloader protocol.
-    -   **Status:** Not Started
+    -   **Status:** In Progress (Simulated)
 
 2.  **Implement Real `SiemensS7Bootloader` Library:**
     -   **Description:** Replace the current stub implementations for the `SiemensS7Bootloader` library with a real implementation or a more robust simulation to enable end-to-end testing and production use.
