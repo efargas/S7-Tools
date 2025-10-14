@@ -42,7 +42,7 @@
           <StackPanel>
             <!-- Toolbar above the DataGrid -->
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-              <Button Width="110" Height="34" Command="{Binding CreateProfileCommand}" Background="#0E639C" Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding CreateProfileCommand}" Background="#28A745" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
                   <TextBlock Text="Create" />
