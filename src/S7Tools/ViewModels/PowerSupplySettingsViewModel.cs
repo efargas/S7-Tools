@@ -145,25 +145,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
     }
 
-    private string _newProfileName = string.Empty;
-    /// <summary>
-    /// Gets or sets the name for a new profile.
-    /// </summary>
-    public string NewProfileName
-    {
-        get => _newProfileName;
-        set => this.RaiseAndSetIfChanged(ref _newProfileName, value);
-    }
 
-    private string _newProfileDescription = string.Empty;
-    /// <summary>
-    /// Gets or sets the description for a new profile.
-    /// </summary>
-    public string NewProfileDescription
-    {
-        get => _newProfileDescription;
-        set => this.RaiseAndSetIfChanged(ref _newProfileDescription, value);
-    }
 
     private bool _isLoading;
     /// <summary>
@@ -553,33 +535,63 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
     #region Profile Management Commands Implementation
 
     /// <summary>
-    /// Creates a new power supply profile.
+    /// Creates a new profile using the profile edit dialog.
     /// </summary>
     private async Task CreateProfileAsync()
     {
         try
         {
-            _logger.LogDebug("Creating new power supply profile");
-            StatusMessage = "Creating profile...";
+            _logger.LogDebug("Opening create profile dialog");
+            StatusMessage = "Opening create profile dialog...";
 
-            // Create a new profile with default values - user can edit the name/description in the edit dialog
-            var newProfile = PowerSupplyProfile.CreateUserProfile("New Power Supply Profile", "User-created profile");
-            var createdProfile = await _profileService.CreateProfileAsync(newProfile).ConfigureAwait(false);
+            // Create ViewModel for a new profile with proper dependencies
+            var profileViewModel = new PowerSupplyProfileViewModel(_profileService,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<PowerSupplyProfileViewModel>.Instance);
 
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            // Set up a default new profile
+            profileViewModel.ProfileName = "New Power Supply Profile";
+            profileViewModel.ProfileDescription = "";
+
+            // Show the edit dialog for the new profile
+            var result = await _profileEditDialogService.ShowPowerSupplyProfileEditAsync("Create Power Supply Profile", profileViewModel);
+            if (result.IsSuccess && result.ProfileViewModel != null)
             {
-                Profiles.Add(createdProfile);
-                ProfileCount = Profiles.Count;
-                SelectedProfile = createdProfile;
-            }).ConfigureAwait(false);
+                StatusMessage = "Creating profile...";
 
-            StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-            _logger.LogInformation("Created power supply profile: {ProfileName}", createdProfile.Name);
+                // Get the updated profile from the ViewModel
+                var powerSupplyProfileViewModel = (PowerSupplyProfileViewModel)result.ProfileViewModel;
+                var profileToCreate = powerSupplyProfileViewModel.CreateProfile();
+
+                // Check if name is available
+                var isAvailable = await _profileService.IsProfileNameAvailableAsync(profileToCreate.Name);
+                if (!isAvailable)
+                {
+                    StatusMessage = "Profile name already exists";
+                    return;
+                }
+
+                // Create the profile
+                var createdProfile = await _profileService.CreateProfileAsync(profileToCreate).ConfigureAwait(false);
+
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    Profiles.Add(createdProfile);
+                    ProfileCount = Profiles.Count;
+                    SelectedProfile = createdProfile;
+                }).ConfigureAwait(false);
+
+                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
+                _logger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
+            }
+            else
+            {
+                StatusMessage = "Profile creation cancelled";
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create power supply profile");
-            throw;
+            StatusMessage = "Error creating profile";
         }
     }
 

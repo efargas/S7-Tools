@@ -38,76 +38,23 @@
 
           <!-- Profiles Path was moved to Import/Export section -->
 
-          <!-- Create New Profile -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="120" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto" />
-              <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
 
-            <TextBlock Grid.Column="0" Grid.Row="0"
-                       Text="New Profile:"
-                       Foreground="#CCCCCC"
-                       VerticalAlignment="Center" />
-
-            <TextBox Grid.Column="1" Grid.Row="0"
-                     Text="{Binding NewProfileName}"
-                     Watermark="Profile name..."
-                     MaxLength="20"
-                     Background="#3C3C3C"
-                     Foreground="#CCCCCC"
-                     BorderBrush="#464647"
-                     Margin="8,0" />
-
-            <TextBox Grid.Column="2" Grid.Row="0"
-                     Text="{Binding NewProfileDescription}"
-                     Watermark="Description (optional)..."
-                     MaxLength="60"
-                     Background="#3C3C3C"
-                     Foreground="#CCCCCC"
-                     BorderBrush="#464647"
-                     Margin="8,0" />
-
-            <Button Grid.Column="3" Grid.Row="0"
-                    Background="#0E639C"
-                    Foreground="White"
-                    BorderThickness="0"
-                    Padding="12,6"
-                    Command="{Binding CreateProfileCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
-                <TextBlock Text="Create" />
-              </StackPanel>
-            </Button>
-
-            <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2"
-                       Text="Create a new serial port configuration profile"
-                       FontSize="11"
-                       Foreground="#858585"
-                       Margin="8,4,0,0" />
-          </Grid>
 
           <!-- Profiles List -->
           <StackPanel>
             <!-- Toolbar above the DataGrid -->
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+              <Button Width="110" Height="34" Command="{Binding CreateProfileCommand}" Background="#0E639C" Foreground="White">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                  <TextBlock Text="Create" />
+                </StackPanel>
+              </Button>
+
               <Button Width="110" Height="34" Command="{Binding EditProfileCommand}" Background="#0E639C" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
                   <TextBlock Text="Edit" />
-                </StackPanel>
-              </Button>
-
-              <Button Width="110" Height="34" Command="{Binding DeleteProfileCommand}" Background="#D13438" Foreground="White">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
-                  <TextBlock Text="Delete" />
                 </StackPanel>
               </Button>
 
@@ -125,10 +72,10 @@
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding ShowProfileDetailsCommand}" Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
+              <Button Width="110" Height="34" Command="{Binding DeleteProfileCommand}" Background="#D13438" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-info-circle" Width="14" Height="14" />
-                  <TextBlock Text="Details" />
+                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                  <TextBlock Text="Delete" />
                 </StackPanel>
               </Button>
 
@@ -187,46 +134,77 @@
 
               <DataGrid.Columns>
                 <!-- ID Column: First column to show profile ID -->
-                <DataGridTextColumn Binding="{Binding Id}" Width="50" MinWidth="40">
+                <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
                   <DataGridTextColumn.Header>
                     <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
-                <!-- Name: slightly smaller min width so headers don't appear too large -->
-                <DataGridTextColumn Binding="{Binding Name}" Width="160" MinWidth="120">
+                <!-- Name column -->
+                <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
                   <DataGridTextColumn.Header>
                     <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
-                <!-- Description: allow more flexible width but reduce excessive min width -->
-                <DataGridTextColumn Binding="{Binding Description}" Width="480" MinWidth="140">
+                <!-- Description column -->
+                <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
                   <DataGridTextColumn.Header>
                     <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
-                <!-- Small fixed columns use Auto so header fits content and arrow -->
+                <!-- Options column for stty command options -->
+                <DataGridTextColumn Binding="{Binding Options}" Width="150" MinWidth="100">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Options" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <!-- Flags column for additional flags -->
+                <DataGridTextColumn Binding="{Binding Flags}" Width="120" MinWidth="80">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Flags" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <!-- Baud Rate configuration column -->
                 <DataGridTextColumn Binding="{Binding Configuration.BaudRate}" Width="90" MinWidth="70">
                   <DataGridTextColumn.Header>
                     <TextBlock Text="Baud Rate" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Binding="{Binding Configuration.Parity}" Width="80" MinWidth="70">
+                <!-- Created timestamp -->
+                <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
                   <DataGridTextColumn.Header>
-                    <TextBlock Text="Parity" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="Created" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
-                <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="70" MinWidth="60">
+                <!-- Modified timestamp -->
+                <DataGridTextColumn Binding="{Binding ModifiedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Modified" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <!-- Version column -->
+                <DataGridTextColumn Binding="{Binding Version}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Version" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <!-- Default status -->
+                <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60">
                   <DataGridCheckBoxColumn.Header>
                     <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridCheckBoxColumn.Header>
                 </DataGridCheckBoxColumn>
 
-                <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="80" MinWidth="70">
+                <!-- Read-only status -->
+                <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70">
                   <DataGridCheckBoxColumn.Header>
                     <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridCheckBoxColumn.Header>

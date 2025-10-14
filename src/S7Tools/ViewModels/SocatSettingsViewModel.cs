@@ -236,25 +236,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _isScanning, value);
     }
 
-    private string _newProfileName = string.Empty;
-    /// <summary>
-    /// Gets or sets the name for a new profile being created.
-    /// </summary>
-    public string NewProfileName
-    {
-        get => _newProfileName;
-        set => this.RaiseAndSetIfChanged(ref _newProfileName, value);
-    }
 
-    private string _newProfileDescription = string.Empty;
-    /// <summary>
-    /// Gets or sets the description for a new profile being created.
-    /// </summary>
-    public string NewProfileDescription
-    {
-        get => _newProfileDescription;
-        set => this.RaiseAndSetIfChanged(ref _newProfileDescription, value);
-    }
 
     private int _profileCount;
     /// <summary>
@@ -406,11 +388,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void InitializeCommands()
     {
-        // Create profile command - enabled when name is not empty
-        var canCreateProfile = this.WhenAnyValue(x => x.NewProfileName)
-            .Select(name => !string.IsNullOrWhiteSpace(name));
-
-        CreateProfileCommand = ReactiveCommand.CreateFromTask(CreateProfileAsync, canCreateProfile);
+        // Create profile command - always enabled (uses dialog)
+        CreateProfileCommand = ReactiveCommand.CreateFromTask(CreateProfileAsync);
         CreateProfileCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "creating profile"))
             .DisposeWith(_disposables);
@@ -739,53 +718,71 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Creates a new profile with the specified name and description.
+    /// Creates a new profile using the profile edit dialog.
     /// </summary>
     private async Task CreateProfileAsync()
     {
-    _logger.LogInformation("=== CreateProfileAsync STARTED ===");
-    _logger.LogInformation("NewProfileName: '{Name}', NewProfileDescription: '{Desc}'", NewProfileName, NewProfileDescription);
+        _logger.LogInformation("=== CreateProfileAsync STARTED ===");
 
-    try
-    {
-    IsLoading = true;
-    StatusMessage = "Creating profile...";
-    _logger.LogDebug("IsLoading set to true, StatusMessage updated");
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Opening create profile dialog...";
 
-    // Create new profile - service handles name uniqueness internally
-    _logger.LogDebug("Creating new SocatProfile with name: '{Name}'", NewProfileName);
-    var newProfile = SocatProfile.CreateUserProfile(NewProfileName, NewProfileDescription);
-    _logger.LogDebug("Calling _profileService.CreateProfileAsync");
-    var createdProfile = await _profileService.CreateProfileAsync(newProfile);
-    _logger.LogInformation("Profile created successfully with ID: {ProfileId}", createdProfile.Id);
+            // Create ViewModel for a new profile with proper dependencies
+            var profileViewModel = new SocatProfileViewModel(_profileService, _socatService, _clipboardService,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<SocatProfileViewModel>.Instance);
 
-    // Refresh list and select created profile to ensure canonical state
-    _logger.LogDebug("Refreshing profiles list and selecting new profile");
-    await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
+            // Set up a default new profile
+            profileViewModel.ProfileName = "New Profile";
+            profileViewModel.ProfileDescription = "";
 
-    // Clear input fields
-    NewProfileName = string.Empty;
-    NewProfileDescription = string.Empty;
-    _logger.LogDebug("Input fields cleared");
+            // Show the edit dialog for the new profile
+            var result = await _profileEditDialogService.ShowSocatProfileEditAsync("Create Socat Profile", profileViewModel);
+            if (result.IsSuccess && result.ProfileViewModel != null)
+            {
+                StatusMessage = "Creating profile...";
 
-    StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-    _logger.LogInformation("Created new socat profile: {ProfileName}", createdProfile.Name);
-    }
-    catch (OperationCanceledException)
-    {
-    _logger.LogInformation("Profile creation cancelled by user");
-    StatusMessage = "Profile creation cancelled";
-    }
-    catch (Exception ex)
-    {
-    _logger.LogError(ex, "Error creating profile");
-    StatusMessage = $"Error creating profile: {ex.Message}";
-    }
-    finally
-    {
-    IsLoading = false;
-    _logger.LogInformation("=== CreateProfileAsync COMPLETED ===");
-    }
+                // Get the updated profile from the ViewModel
+                var socatProfileViewModel = (SocatProfileViewModel)result.ProfileViewModel;
+                var profileToCreate = socatProfileViewModel.CreateProfile();
+
+                // Check if name is available
+                var isAvailable = await _profileService.IsProfileNameAvailableAsync(profileToCreate.Name);
+                if (!isAvailable)
+                {
+                    StatusMessage = "Profile name already exists";
+                    return;
+                }
+
+                // Create the profile
+                var createdProfile = await _profileService.CreateProfileAsync(profileToCreate);
+
+                // Refresh list and select created profile to ensure canonical state
+                await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
+
+                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
+                _logger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
+            }
+            else
+            {
+                StatusMessage = "Profile creation cancelled";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("Profile creation cancelled by user");
+            StatusMessage = "Profile creation cancelled";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating profile");
+            StatusMessage = "Error creating profile";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     /// <summary>

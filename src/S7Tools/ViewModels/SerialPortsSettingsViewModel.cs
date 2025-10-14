@@ -206,25 +206,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _isScanning, value);
     }
 
-    private string _newProfileName = string.Empty;
-    /// <summary>
-    /// Gets or sets the name for a new profile being created.
-    /// </summary>
-    public string NewProfileName
-    {
-        get => _newProfileName;
-        set => this.RaiseAndSetIfChanged(ref _newProfileName, value);
-    }
 
-    private string _newProfileDescription = string.Empty;
-    /// <summary>
-    /// Gets or sets the description for a new profile being created.
-    /// </summary>
-    public string NewProfileDescription
-    {
-        get => _newProfileDescription;
-        set => this.RaiseAndSetIfChanged(ref _newProfileDescription, value);
-    }
 
     private int _profileCount;
     /// <summary>
@@ -347,11 +329,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void InitializeCommands()
     {
-        // Create profile command - enabled when name is not empty
-        var canCreateProfile = this.WhenAnyValue(x => x.NewProfileName)
-            .Select(name => !string.IsNullOrWhiteSpace(name));
-
-        CreateProfileCommand = ReactiveCommand.CreateFromTask(CreateProfileAsync, canCreateProfile);
+        // Create profile command - always enabled (uses dialog)
+        CreateProfileCommand = ReactiveCommand.CreateFromTask(CreateProfileAsync);
         CreateProfileCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "creating profile"))
             .DisposeWith(_disposables);
@@ -535,36 +514,54 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Creates a new profile with the specified name and description.
+    /// Creates a new profile using the profile edit dialog.
     /// </summary>
     private async Task CreateProfileAsync()
     {
         try
         {
             IsLoading = true;
-            StatusMessage = "Creating profile...";
+            StatusMessage = "Opening create profile dialog...";
 
-            // Check if name is available
-            var isAvailable = await _profileService.IsProfileNameAvailableAsync(NewProfileName);
-            if (!isAvailable)
+            // Create ViewModel for a new profile with proper dependencies
+            var profileViewModel = new SerialPortProfileViewModel(_profileService, _portService, _clipboardService,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<SerialPortProfileViewModel>.Instance);
+
+            // Set up a default new profile
+            profileViewModel.ProfileName = "New Profile";
+            profileViewModel.ProfileDescription = "";
+
+            // Show the edit dialog for the new profile
+            var result = await _profileEditDialogService.ShowSerialProfileEditAsync("Create Serial Profile", profileViewModel);
+            if (result.IsSuccess && result.ProfileViewModel != null)
             {
-                StatusMessage = "Profile name already exists";
-                return;
+                StatusMessage = "Creating profile...";
+
+                // Get the updated profile from the ViewModel
+                var serialProfileViewModel = (SerialPortProfileViewModel)result.ProfileViewModel;
+                var profileToCreate = serialProfileViewModel.CreateProfile();
+
+                // Check if name is available
+                var isAvailable = await _profileService.IsProfileNameAvailableAsync(profileToCreate.Name);
+                if (!isAvailable)
+                {
+                    StatusMessage = "Profile name already exists";
+                    return;
+                }
+
+                // Create the profile
+                var createdProfile = await _profileService.CreateProfileAsync(profileToCreate);
+
+                // Refresh list and select created profile to ensure canonical state
+                await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
+
+                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
+                _logger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
             }
-
-            // Create new profile
-            var newProfile = SerialPortProfile.CreateUserProfile(NewProfileName, NewProfileDescription);
-            var createdProfile = await _profileService.CreateProfileAsync(newProfile);
-
-            // Refresh list and select created profile to ensure canonical state
-            await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
-
-            // Clear input fields
-            NewProfileName = string.Empty;
-            NewProfileDescription = string.Empty;
-
-            StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-            _logger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
+            else
+            {
+                StatusMessage = "Profile creation cancelled";
+            }
         }
         catch (Exception ex)
         {
