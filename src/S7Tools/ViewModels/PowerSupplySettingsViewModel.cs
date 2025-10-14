@@ -92,6 +92,9 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
         _settingsChangedHandler = (_, __) => RefreshFromSettings();
         _settingsService.SettingsChanged += _settingsChangedHandler;
 
+        // Setup property change subscriptions
+        SetupPropertySubscriptions();
+
         // Load initial data
         _ = Task.Run(async () => await LoadProfilesAsync().ConfigureAwait(false));
 
@@ -397,6 +400,71 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
         PowerCycleCommand = ReactiveCommand.CreateFromTask(PowerCycleAsync, canPowerCycle);
         PowerCycleCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "power cycling"))
+            .DisposeWith(_disposables);
+    }
+
+    #endregion
+
+    #region Property Change Subscriptions
+
+    /// <summary>
+    /// Sets up property change subscriptions for reactive behavior.
+    /// </summary>
+    private void SetupPropertySubscriptions()
+    {
+        // Monitor connection status changes
+        this.WhenAnyValue(x => x.IsConnected)
+            .Skip(1) // Skip initial value
+            .Subscribe(connected =>
+            {
+                _logger.LogDebug("Connection status changed: {Status}", connected ? "Connected" : "Disconnected");
+                UpdateConnectionStatus();
+                
+                // Clear power status when disconnected
+                if (!connected)
+                {
+                    UpdatePowerStatus(false);
+                    PowerStatus = "Unknown";
+                }
+            })
+            .DisposeWith(_disposables);
+
+        // Monitor power status changes
+        this.WhenAnyValue(x => x.IsPowerOn)
+            .Skip(1) // Skip initial value
+            .Subscribe(powerOn =>
+            {
+                _logger.LogDebug("Power status changed: {Status}", powerOn ? "ON" : "OFF");
+            })
+            .DisposeWith(_disposables);
+
+        // Monitor selected profile changes
+        this.WhenAnyValue(x => x.SelectedProfile)
+            .Subscribe(profile =>
+            {
+                if (profile != null)
+                {
+                    _logger.LogDebug("Selected profile changed: {ProfileName}", profile.Name);
+                    StatusMessage = $"Selected: {profile.Name}";
+                }
+            })
+            .DisposeWith(_disposables);
+
+        // Monitor profiles collection count
+        this.WhenAnyValue(x => x.ProfileCount)
+            .Subscribe(count =>
+            {
+                _logger.LogDebug("Profile count changed: {Count}", count);
+            })
+            .DisposeWith(_disposables);
+
+        // Monitor profiles path changes
+        this.WhenAnyValue(x => x.ProfilesPath)
+            .Skip(1) // Skip initial value
+            .Subscribe(path =>
+            {
+                _logger.LogDebug("Profiles path changed: {Path}", path);
+            })
             .DisposeWith(_disposables);
     }
 
@@ -1078,6 +1146,89 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             _logger.LogError(ex, "Error resetting profiles path");
             throw;
         }
+    }
+
+    #endregion
+
+    #region Validation Methods
+
+    /// <summary>
+    /// Validates the selected profile configuration.
+    /// </summary>
+    /// <returns>True if the profile is valid, false otherwise.</returns>
+    private bool ValidateSelectedProfile()
+    {
+        if (SelectedProfile == null)
+        {
+            StatusMessage = "No profile selected";
+            return false;
+        }
+
+        if (SelectedProfile.Configuration == null)
+        {
+            StatusMessage = "Selected profile has no configuration";
+            return false;
+        }
+
+        var validationErrors = SelectedProfile.Validate();
+        if (validationErrors.Count > 0)
+        {
+            StatusMessage = $"Profile validation failed: {string.Join(", ", validationErrors)}";
+            _logger.LogWarning("Profile validation failed: {Errors}", string.Join(", ", validationErrors));
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Validates a profile name for uniqueness.
+    /// </summary>
+    /// <param name="name">The profile name to validate.</param>
+    /// <param name="excludeId">Optional profile ID to exclude from uniqueness check (for edits).</param>
+    /// <returns>True if the name is valid and unique, false otherwise.</returns>
+    private async Task<bool> ValidateProfileNameAsync(string name, int? excludeId = null)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            StatusMessage = "Profile name cannot be empty";
+            return false;
+        }
+
+        if (name.Length > 100)
+        {
+            StatusMessage = "Profile name cannot exceed 100 characters";
+            return false;
+        }
+
+        // Check if name is already in use (excluding current profile if editing)
+        var existingProfile = Profiles.FirstOrDefault(p => 
+            p.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
+            (!excludeId.HasValue || p.Id != excludeId.Value));
+
+        if (existingProfile != null)
+        {
+            StatusMessage = $"Profile name '{name}' is already in use";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Validates the connection state before power operations.
+    /// </summary>
+    /// <returns>True if connected, false otherwise.</returns>
+    private bool ValidateConnectionState()
+    {
+        if (!IsConnected)
+        {
+            StatusMessage = "Not connected to power supply";
+            _logger.LogWarning("Operation attempted while not connected");
+            return false;
+        }
+
+        return true;
     }
 
     #endregion
