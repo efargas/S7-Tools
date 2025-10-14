@@ -840,11 +840,11 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
                 profile.Id = _originalProfile.Id;
                 profile.CreatedAt = _originalProfile.CreatedAt;
                 profile.ModifiedAt = DateTime.UtcNow;
-                await _profileService.UpdateProfileAsync(profile);
+                await _profileService.UpdateAsync(profile);
             }
             else
             {
-                await _profileService.CreateProfileAsync(profile);
+                await _profileService.CreateAsync(profile);
             }
 
             HasChanges = false;

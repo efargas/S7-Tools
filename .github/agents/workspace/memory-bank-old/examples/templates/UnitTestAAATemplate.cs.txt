@@ -1,0 +1,17 @@
+using Xunit;
+
+namespace {NAMESPACE};
+
+public class {TEST_CLASS}
+{
+    [Fact]
+    public void {METHOD}_Should_{EXPECTED_BEHAVIOR}_Given_{CONDITION}()
+    {
+        // Arrange
+        // ...
+        // Act
+        // ...
+        // Assert
+        // ...
+    }
+}

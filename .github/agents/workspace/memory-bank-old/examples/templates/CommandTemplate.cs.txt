@@ -1,0 +1,24 @@
+// Command Pattern Template
+public interface ICommand<TOptions, TResult> { TOptions Options { get; } }
+public interface ICommandHandler<TCommand, TResult>
+    where TCommand : ICommand<TOptions, TResult>
+{
+    Task<TResult> HandleAsync(TCommand command, CancellationToken ct = default);
+}
+
+// Example Command
+public class ExportLogsCommand : ICommand<ExportLogsOptions, ExportResult>
+{
+    public ExportLogsOptions Options { get; }
+    public ExportLogsCommand(ExportLogsOptions options) => Options = options;
+}
+
+// Example Handler
+public class ExportLogsCommandHandler : ICommandHandler<ExportLogsCommand, ExportResult>
+{
+    public async Task<ExportResult> HandleAsync(ExportLogsCommand command, CancellationToken ct = default)
+    {
+        // Validate, execute, return result
+        return new ExportResult { Success = true };
+    }
+}

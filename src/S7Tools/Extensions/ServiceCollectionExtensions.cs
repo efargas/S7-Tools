@@ -349,13 +349,14 @@ public static class ServiceCollectionExtensions
                 {
                     try
                     {
-                        await profileService.InitializeStorageAsync().ConfigureAwait(false);
+                        // Initialize profile service by loading profiles
+                        await profileService.GetAllAsync().ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
                         // Log the error instead of swallowing it silently
                         var logger = serviceProvider.GetService<ILogger<ISerialPortProfileService>>();
-                        logger?.LogError(ex, "Failed to initialize serial port profile storage during application startup");
+                        logger?.LogError(ex, "Failed to initialize serial port profiles during application startup");
                     }
                 });
             }
@@ -379,7 +380,8 @@ public static class ServiceCollectionExtensions
                 {
                     try
                     {
-                        await socatProfileService.InitializeStorageAsync().ConfigureAwait(false);
+                        // Initialize socat profile service by loading profiles
+                        await socatProfileService.GetAllAsync().ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {

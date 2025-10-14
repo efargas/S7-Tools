@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -484,7 +486,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             _logger.LogDebug("Loading power supply profiles");
 
-            var profiles = await _profileService.GetAllProfilesAsync().ConfigureAwait(false);
+            var profiles = await _profileService.GetAllAsync().ConfigureAwait(false);
 
             // Marshal to UI thread for collection update
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -563,7 +565,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
                 var profileToCreate = powerSupplyProfileViewModel.CreateProfile();
 
                 // Check if name is available
-                var isAvailable = await _profileService.IsProfileNameAvailableAsync(profileToCreate.Name);
+                var isAvailable = await _profileService.IsNameUniqueAsync(profileToCreate.Name);
                 if (!isAvailable)
                 {
                     StatusMessage = "Profile name already exists";
@@ -571,14 +573,10 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
                 }
 
                 // Create the profile
-                var createdProfile = await _profileService.CreateProfileAsync(profileToCreate).ConfigureAwait(false);
+                var createdProfile = await _profileService.CreateAsync(profileToCreate).ConfigureAwait(false);
 
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    Profiles.Add(createdProfile);
-                    ProfileCount = Profiles.Count;
-                    SelectedProfile = createdProfile;
-                }).ConfigureAwait(false);
+                // Refresh and select created profile
+                await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
 
                 StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
                 _logger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
@@ -671,7 +669,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             if (confirmed)
             {
                 var profileId = SelectedProfile.Id;
-                await _profileService.DeleteProfileAsync(profileId).ConfigureAwait(false);
+                await _profileService.DeleteAsync(profileId).ConfigureAwait(false);
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
@@ -714,16 +712,12 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
 
             if (!string.IsNullOrWhiteSpace(newName))
             {
-                var duplicatedProfile = await _profileService.DuplicateProfileAsync(
+                var duplicatedProfile = await _profileService.DuplicateAsync(
                     SelectedProfile.Id,
                     newName).ConfigureAwait(false);
 
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    Profiles.Add(duplicatedProfile);
-                    ProfileCount = Profiles.Count;
-                    SelectedProfile = duplicatedProfile;
-                }).ConfigureAwait(false);
+                // Refresh and select duplicated profile
+                await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
 
                 StatusMessage = $"Profile duplicated as '{newName}'";
                 _logger.LogInformation("Duplicated power supply profile: {ProfileName} -> {NewName}",
@@ -751,7 +745,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
         {
             _logger.LogDebug("Setting default power supply profile: {ProfileName}", SelectedProfile.Name);
 
-            await _profileService.SetDefaultProfileAsync(SelectedProfile.Id).ConfigureAwait(false);
+            await _profileService.SetDefaultAsync(SelectedProfile.Id).ConfigureAwait(false);
             await LoadProfilesAsync().ConfigureAwait(false);
 
             StatusMessage = $"Profile '{SelectedProfile.Name}' set as default";
@@ -840,8 +834,8 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
 
             if (!string.IsNullOrEmpty(filePath))
             {
-                var profileIds = Profiles.Select(p => p.Id);
-                var json = await _profileService.ExportProfilesToJsonAsync(profileIds).ConfigureAwait(false);
+                var profiles = await _profileService.ExportAsync().ConfigureAwait(false);
+                var json = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
                 await System.IO.File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
 
                 StatusMessage = $"Exported {Profiles.Count} profiles to {filePath}";
@@ -878,7 +872,8 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             if (!string.IsNullOrEmpty(filePath))
             {
                 var json = await System.IO.File.ReadAllTextAsync(filePath).ConfigureAwait(false);
-                var importedProfiles = await _profileService.ImportProfilesFromJsonAsync(json, false).ConfigureAwait(false);
+                var profiles = JsonSerializer.Deserialize<List<PowerSupplyProfile>>(json) ?? new List<PowerSupplyProfile>();
+                var importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false).ConfigureAwait(false);
                 var count = importedProfiles.Count();
 
                 await LoadProfilesAsync().ConfigureAwait(false);

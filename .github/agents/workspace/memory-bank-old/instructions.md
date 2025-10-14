@@ -8,7 +8,7 @@
 ### **Memory Bank Usage - MANDATORY**
 
 **File Structure and Purpose**:
-- **instructions.md** ### **Recent Session Accomplishments**
+- **instructions.md** (t### **Recent Session Accomplishments**
 
 ### **🎉 MAJOR BREAKTHROUGH: External Code Review Validation & Bug Fixes (2025-10-09)**
 
@@ -29,6 +29,12 @@
 - ✅ **Record Type Conversion** - Converted LogModel to record type for immutability and value equality
 - ✅ **Constants for Magic Strings** - Added ExportFormats constants class to eliminate magic strings
 
+**Strategic Deferral System - TASK004 Created**:
+- ✅ **Deferred Complex Changes** - File-scoped namespaces, extensive Result pattern, configuration centralization
+- ✅ **Created Implementation Task** - TASK004 with comprehensive 22-30 hour implementation plan
+- ✅ **Blocked Until Socat Complete** - Prevents interference with high-priority feature development
+- ✅ **Risk Assessment Complete** - Documented risks and benefits for each deferred improvement
+
 **Pattern Established: Code Review Response Protocol**
 ```csharp
 // Code Review Validation Process (Required for all external reviews)
@@ -45,6 +51,22 @@
 - ✅ **Application Startup**: Verified successful application launch
 - ✅ **Architecture Compliance**: All changes maintain Clean Architecture principles
 - ✅ **Memory Bank Updated**: All patterns documented for future reference
+
+### **🎉 MAJOR BREAKTHROUGH: Unified Profile Management Architecture Complete (2025-10-14)**
+
+**Unified Profile Management Foundation**
+- ✅ **Core Architecture Interfaces** - IProfileBase, IProfileManager<T>, IProfileValidator<T>, IUnifiedProfileDialogService
+- ✅ **Base ViewModel Infrastructure** - ProfileManagementViewModelBase<T> with complete CRUD functionality
+- ✅ **Profile Model Unification** - All three profiles (Serial, Socat, PowerSupply) implement IProfileBase
+- ✅ **Thread-Safe UI Operations** - Proper IUIThreadService integration following established patterns
+- ✅ **Build Verification** - Clean compilation achieved, all interfaces properly implemented
+
+**Complete Interface Definitions**:
+- **IProfileBase.cs** (145 lines) - Unified profile interface with metadata, business rules, and operations
+- **IProfileManager.cs** (186 lines) - Generic CRUD operations with business rule enforcement
+- **IProfileValidator.cs** (235 lines) - Comprehensive validation framework with detailed error reporting
+- **IUnifiedProfileDialogService.cs** (189 lines) - Enhanced dialog service with request/response patterns
+- **ProfileManagementViewModelBase.cs** (440+ lines) - Base ViewModel with template method pattern
 
 **Technical Excellence Achieved**:
 - ✅ **Domain-Driven Design** - Rich domain models with business logic encapsulation
@@ -125,6 +147,68 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 - Document user feedback verbatim in progress.md
 - Investigate discrepancies between implementation and user experience
 
+## Unified Profile Management Patterns - ESTABLISHED (TASK008)
+
+### **Architecture Foundation Complete (2025-10-14)**
+
+**Core Interfaces Implemented**:
+- `IProfileBase` - Unified profile interface with metadata and business rules
+- `IProfileManager<T>` - Generic CRUD operations with business rule enforcement
+- `IProfileValidator<T>` - Comprehensive validation framework
+- `IUnifiedProfileDialogService` - Enhanced dialog service patterns
+- `ProfileManagementViewModelBase<T>` - Base ViewModel with template method pattern
+
+### **Profile Management Standards - MANDATORY**
+
+**Profile Interface Requirements**:
+```csharp
+// All profiles MUST implement IProfileBase
+public interface IProfileBase
+{
+    int Id { get; set; }
+    string Name { get; set; }
+    string Description { get; set; }
+    string Options { get; set; }        // Command options/flags
+    string Flags { get; set; }          // Additional flags
+    DateTime CreatedAt { get; set; }
+    DateTime ModifiedAt { get; set; }
+    bool IsDefault { get; set; }
+    bool IsReadOnly { get; set; }
+
+    // Business logic methods
+    bool CanModify();
+    bool CanDelete();
+    string GetSummary();
+    IProfileBase Clone();
+}
+```
+
+**Service Layer Standards**:
+```csharp
+// All profile services MUST implement IProfileManager<T>
+public interface IProfileManager<T> where T : class, IProfileBase
+{
+    Task<T> CreateAsync(T profile, CancellationToken cancellationToken = default);
+    Task<T> UpdateAsync(T profile, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(int profileId, CancellationToken cancellationToken = default);
+    Task<T> DuplicateAsync(int sourceProfileId, string newName, CancellationToken cancellationToken = default);
+    // ... additional operations
+}
+```
+
+**ViewModel Inheritance Pattern**:
+```csharp
+// All profile ViewModels SHOULD inherit ProfileManagementViewModelBase<T>
+public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, IDisposable
+    where TProfile : class, IProfileBase
+{
+    // Template method pattern with customization points
+    protected abstract Task<IEnumerable<TProfile>> LoadProfilesAsync();
+    protected abstract string GetDefaultProfileName();
+    protected abstract TProfile CreateDefaultProfile();
+}
+```
+
 ### **UI Standards - MANDATORY**
 
 **CRUD Button Order** (All modules MUST follow):
@@ -185,6 +269,26 @@ protected async Task RefreshProfilesAsync()
     });
 }
 ```
+
+### **Implementation Guidelines**
+
+**Phase 1 Complete** (Architecture Design):
+✅ All core interfaces implemented
+✅ Base ViewModel created
+✅ Profile models updated with IProfileBase
+✅ Thread-safe UI operations
+✅ Build verification successful
+
+**Phase 2 Ready** (Profile Model Enhancements):
+- Add missing metadata to Serial/Socat profiles
+- Update service implementations
+- Enhance DataGrid layouts
+
+**Phase 3-10 Planned**:
+- UI cleanup (remove inline inputs)
+- Button standardization
+- Dialog enhancement
+- Validation logic unification
 
 ## Application Architecture - IMMUTABLE CORE
 
@@ -479,3 +583,73 @@ public class NewFeatureViewModel : ReactiveObject, IDisposable
 **Owner**: Development Team with AI Assistance
 
 **Key Reminder**: These patterns and rules are established and working. Follow them consistently to maintain application quality and architecture integrity.
+
+## Recent Session Accomplishments
+
+### **🎉 MAJOR BREAKTHROUGH: UI Dialog Integration Complete (2025-10-09)**
+
+**Profile Name Conflict Resolution Enhancement**
+- ✅ **Replaced exception throwing** with intelligent naming strategies using automatic suffix naming (`_1`, `_2`, `_3`, etc.)
+- ✅ **Implemented fallback mechanisms** for edge cases with timestamp-based unique names
+- ✅ **Integrated comprehensive UI dialog system** for manual conflict resolution when automatic fails
+
+**Complete UI Dialog System Implementation**
+- ✅ **InputRequest/InputResult Models**: Clean data transfer objects for dialog communication
+- ✅ **IDialogService Extension**: Added `ShowInput` interaction for text input dialogs using ReactiveUI patterns
+- ✅ **DialogService Implementation**: Full ReactiveUI interaction support for confirmation, error, and input dialogs
+- ✅ **InputDialog UI Components**:
+  - Professional Avalonia XAML view with VSCode-style theming
+  - ReactiveUI ViewModel with proper command binding
+  - Keyboard navigation support (Enter/Escape keys)
+  - Focus management and user experience enhancements
+- ✅ **Application Integration**: Complete integration in `App.axaml.cs` with proper error handling and dialog handler registration
+
+**Technical Excellence Achieved**
+- ✅ **Architecture Compliance**: Clean Architecture maintained with proper dependency flow
+- ✅ **Thread Safety**: SemaphoreSlim-based concurrency control for profile operations
+- ✅ **Quality Assurance**: 168 tests passing, successful compilation with only warnings
+- ✅ **Error Handling**: Comprehensive logging and graceful fallbacks throughout
+- ✅ **User Experience**: Professional dialog interactions with smart conflict resolution
+
+**Pattern Established: ReactiveUI Dialog Integration**
+```csharp
+// Service Integration Pattern (Required for all dialog services)
+public class ServiceWithDialogs
+{
+    private readonly IDialogService _dialogService;
+
+    // Use ShowInput for text input with validation
+    var result = await _dialogService.ShowInputAsync(
+        new InputRequest("Profile Name Conflict",
+                        $"Name '{originalName}' already exists. Please enter a new name:",
+                        suggestedName,
+                        "Enter unique profile name"));
+
+    if (!result.IsCancelled && !string.IsNullOrWhiteSpace(result.Value))
+    {
+        // Process user input
+    }
+}
+
+// App.axaml.cs Registration Pattern (Required for all dialogs)
+dialogService.ShowInput.RegisterHandler(async interaction =>
+{
+    var dialog = new InputDialog
+    {
+        DataContext = new InputDialogViewModel(interaction.Input)
+    };
+    var result = await dialog.ShowDialog<InputResult?>(mainWindow);
+    interaction.SetOutput(result ?? InputResult.Cancelled());
+});
+```
+
+### **Previous Session Notes (2025-10-08)**
+
+- **UI / Serial Ports fixes**
+    - Fixed cross-thread DataGrid crash by marshaling profile collection updates to the UI thread using an injected IUIThreadService in `SerialPortsSettingsViewModel`.
+    - Added ProfilesPath control to Serial Ports settings with Browse, Open in Explorer, and Load Default actions (default path: resources/SerialProfiles).
+    - Resolved DataGrid header styling/truncation by using Avalonia `DataGrid.Styles` and smaller header padding + TextTrimming on headers.
+
+- **Persistence & Logging**
+    - Serial port profiles are now created automatically when missing; `profiles.json` is created under the app runtime resources folder (e.g. `src/S7Tools/bin/Debug/net8.0/resources/SerialProfiles/profiles.json`).
+    - Added a minimal `FileLogWriter` service to persist in-memory logs to disk under the configured `Logging.DefaultLogPath`. Registered in DI for automatic startup.

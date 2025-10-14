@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -607,7 +609,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = "Loading profiles...";
 
-            var profiles = await _profileService.GetAllProfilesAsync();
+            var profiles = await _profileService.GetAllAsync();
 
             // Update the ObservableCollection on the UI thread to avoid cross-thread exceptions
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -748,7 +750,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
                 var profileToCreate = socatProfileViewModel.CreateProfile();
 
                 // Check if name is available
-                var isAvailable = await _profileService.IsProfileNameAvailableAsync(profileToCreate.Name);
+                var isAvailable = await _profileService.IsNameUniqueAsync(profileToCreate.Name);
                 if (!isAvailable)
                 {
                     StatusMessage = "Profile name already exists";
@@ -756,7 +758,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
                 }
 
                 // Create the profile
-                var createdProfile = await _profileService.CreateProfileAsync(profileToCreate);
+                var createdProfile = await _profileService.CreateAsync(profileToCreate);
 
                 // Refresh list and select created profile to ensure canonical state
                 await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
@@ -868,7 +870,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
             var profileName = SelectedProfile.Name;
             var idToDelete = SelectedProfile.Id;
-            var success = await _profileService.DeleteProfileAsync(idToDelete);
+            var success = await _profileService.DeleteAsync(idToDelete);
 
             if (success)
             {
@@ -907,20 +909,31 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var originalProfile = SelectedProfile;
-            var newName = $"{originalProfile.Name} (Copy)";
+            _logger.LogDebug("Duplicating socat profile: {ProfileName}", SelectedProfile.Name);
 
-            IsLoading = true;
-            StatusMessage = "Duplicating profile...";
+            var inputResult = await _dialogService.ShowInputAsync(
+                "Duplicate Profile",
+                "Enter a name for the duplicate profile:",
+                $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
 
-            var duplicatedProfile = await _profileService.DuplicateProfileAsync(originalProfile.Id, newName);
+            var newName = inputResult.Value;
 
-            // Refresh and select duplicated profile
-            await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
+            if (!string.IsNullOrWhiteSpace(newName))
+            {
+                var originalProfile = SelectedProfile;
 
-            StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
-            _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
-                originalProfile.Name, duplicatedProfile.Name);
+                IsLoading = true;
+                StatusMessage = "Duplicating profile...";
+
+                var duplicatedProfile = await _profileService.DuplicateAsync(originalProfile.Id, newName);
+
+                // Refresh and select duplicated profile
+                await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
+
+                StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
+                _logger.LogInformation("Duplicated socat profile: {OriginalName} -> {NewName}",
+                    originalProfile.Name, duplicatedProfile.Name);
+            }
         }
         catch (Exception ex)
         {
@@ -952,7 +965,7 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
             var profileId = SelectedProfile.Id;
             var profileName = SelectedProfile.Name;
 
-            await _profileService.SetDefaultProfileAsync(profileId);
+            await _profileService.SetDefaultAsync(profileId);
 
             // Persisted change made; refresh profiles and keep selection
             await RefreshProfilesPreserveSelectionAsync(profileId);
@@ -1115,7 +1128,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = "Exporting profiles...";
 
-            var jsonData = await _profileService.ExportAllProfilesToJsonAsync();
+            var profiles = await _profileService.ExportAsync();
+            var jsonData = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported {ProfileCount} profile(s) to {Path.GetFileName(fileName)}";
@@ -1169,7 +1183,8 @@ public class SocatSettingsViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = "Exporting selected profile...";
 
-            var jsonData = await _profileService.ExportProfileToJsonAsync(SelectedProfile.Id);
+            var profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
+            var jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
 
             // TODO: Save to file using file dialog
             await _dialogService.ShowErrorAsync("Export Profile",

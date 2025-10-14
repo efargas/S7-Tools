@@ -46,15 +46,14 @@ sealed class Program
                 {
                     try
                     {
-                        var storageInfo = profileService.GetStorageInfoAsync().GetAwaiter().GetResult();
-                        var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                        logger?.LogInformation("[S7Tools] SerialPortProfileService storage info:\n{StorageInfo}", json);
-                        Console.WriteLine("[S7Tools] SerialPortProfileService storage info:\n" + json); // Keep console for --diag flag
+                        var profiles = profileService.GetAllAsync().GetAwaiter().GetResult();
+                        logger?.LogInformation("[S7Tools] SerialPortProfileService loaded {ProfileCount} profiles", profiles.Count());
+                        Console.WriteLine($"[S7Tools] SerialPortProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                     }
                     catch (Exception ex)
                     {
-                        logger?.LogError(ex, "[S7Tools] Failed to get profile storage info");
-                        Console.WriteLine($"[S7Tools] Failed to get profile storage info: {ex}"); // Keep console for --diag flag
+                        logger?.LogError(ex, "[S7Tools] Failed to get profile info");
+                        Console.WriteLine($"[S7Tools] Failed to get profile info: {ex}"); // Keep console for --diag flag
                     }
                 }
 
@@ -66,16 +65,14 @@ sealed class Program
                     try
                     {
                         // Use a local async function to avoid .GetResult() deadlocks
-                        async Task LogSocatStorageAsync()
+                        async Task LogSocatProfilesAsync()
                         {
-                            await socatProfileService.InitializeStorageAsync().ConfigureAwait(false);
-                            var storageInfo = await socatProfileService.GetStorageInfoAsync().ConfigureAwait(false);
-                            var json = System.Text.Json.JsonSerializer.Serialize(storageInfo, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
-                            logger?.LogInformation("[S7Tools] SocatProfileService storage info:\n{StorageInfo}", json);
-                            Console.WriteLine("[S7Tools] SocatProfileService storage info:\n" + json); // Keep console for --diag flag
+                            var profiles = await socatProfileService.GetAllAsync().ConfigureAwait(false);
+                            logger?.LogInformation("[S7Tools] SocatProfileService loaded {ProfileCount} profiles", profiles.Count());
+                            Console.WriteLine($"[S7Tools] SocatProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                         }
 
-                        LogSocatStorageAsync().GetAwaiter().GetResult();
+                        LogSocatProfilesAsync().GetAwaiter().GetResult();
                     }
                     catch (Exception ex)
                     {

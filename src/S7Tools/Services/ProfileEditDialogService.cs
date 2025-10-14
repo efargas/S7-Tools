@@ -274,7 +274,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             _logger.LogInformation("Editing serial port profile with ID: {ProfileId}", profileId);
 
             // Load the existing profile
-            var profile = await _serialPortProfileService.GetProfileByIdAsync(profileId);
+            var profile = await _serialPortProfileService.GetByIdAsync(profileId);
             if (profile == null)
             {
                 _logger.LogWarning("Serial port profile with ID {ProfileId} not found", profileId);
@@ -321,7 +321,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             _logger.LogInformation("Editing socat profile with ID: {ProfileId}", profileId);
 
             // Load the existing profile
-            var profile = await _socatProfileService.GetProfileByIdAsync(profileId);
+            var profile = await _socatProfileService.GetByIdAsync(profileId);
             if (profile == null)
             {
                 _logger.LogWarning("Socat profile with ID {ProfileId} not found", profileId);
@@ -367,7 +367,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             _logger.LogInformation("Editing power supply profile with ID: {ProfileId}", profileId);
 
             // Load the existing profile
-            var profile = await _powerSupplyProfileService.GetProfileByIdAsync(profileId);
+            var profile = await _powerSupplyProfileService.GetByIdAsync(profileId);
             if (profile == null)
             {
                 _logger.LogWarning("Power supply profile with ID {ProfileId} not found", profileId);
@@ -411,7 +411,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             _logger.LogInformation("Duplicating serial port profile with ID: {ProfileId}", sourceProfileId);
 
             // Load the source profile
-            var sourceProfile = await _serialPortProfileService.GetProfileByIdAsync(sourceProfileId);
+            var sourceProfile = await _serialPortProfileService.GetByIdAsync(sourceProfileId);
             if (sourceProfile == null)
             {
                 _logger.LogWarning("Source serial port profile with ID {ProfileId} not found", sourceProfileId);
@@ -434,7 +434,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             var newName = inputResult.Value.Trim();
 
             // Check if name is available
-            var isAvailable = await _serialPortProfileService.IsProfileNameAvailableAsync(newName);
+            var isAvailable = await _serialPortProfileService.IsNameUniqueAsync(newName);
             if (!isAvailable)
             {
                 _logger.LogWarning("Serial port profile name already exists: {ProfileName}", newName);
@@ -459,7 +459,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             _logger.LogInformation("Duplicating socat profile with ID: {ProfileId}", sourceProfileId);
 
             // Load the source profile
-            var sourceProfile = await _socatProfileService.GetProfileByIdAsync(sourceProfileId);
+            var sourceProfile = await _socatProfileService.GetByIdAsync(sourceProfileId);
             if (sourceProfile == null)
             {
                 _logger.LogWarning("Source socat profile with ID {ProfileId} not found", sourceProfileId);
@@ -482,7 +482,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             var newName = inputResult.Value.Trim();
 
             // Check if name is available
-            var isAvailable = await _socatProfileService.IsProfileNameAvailableAsync(newName);
+            var isAvailable = await _socatProfileService.IsNameUniqueAsync(newName);
             if (!isAvailable)
             {
                 _logger.LogWarning("Socat profile name already exists: {ProfileName}", newName);
@@ -507,7 +507,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             _logger.LogInformation("Duplicating power supply profile with ID: {ProfileId}", sourceProfileId);
 
             // Load the source profile
-            var sourceProfile = await _powerSupplyProfileService.GetProfileByIdAsync(sourceProfileId);
+            var sourceProfile = await _powerSupplyProfileService.GetByIdAsync(sourceProfileId);
             if (sourceProfile == null)
             {
                 _logger.LogWarning("Source power supply profile with ID {ProfileId} not found", sourceProfileId);
@@ -530,7 +530,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
             var newName = inputResult.Value.Trim();
 
             // Check if name is available
-            var isAvailable = await _powerSupplyProfileService.IsProfileNameAvailableAsync(newName);
+            var isAvailable = await _powerSupplyProfileService.IsNameUniqueAsync(newName);
             if (!isAvailable)
             {
                 _logger.LogWarning("Power supply profile name already exists: {ProfileName}", newName);

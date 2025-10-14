@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -439,7 +441,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = "Loading profiles...";
 
-            var profiles = await _profileService.GetAllProfilesAsync();
+            var profiles = await _profileService.GetAllAsync();
 
             // Update the ObservableCollection on the UI thread to avoid cross-thread exceptions
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -542,7 +544,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 var profileToCreate = serialProfileViewModel.CreateProfile();
 
                 // Check if name is available
-                var isAvailable = await _profileService.IsProfileNameAvailableAsync(profileToCreate.Name);
+                var isAvailable = await _profileService.IsNameUniqueAsync(profileToCreate.Name);
                 if (!isAvailable)
                 {
                     StatusMessage = "Profile name already exists";
@@ -550,7 +552,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
                 }
 
                 // Create the profile
-                var createdProfile = await _profileService.CreateProfileAsync(profileToCreate);
+                var createdProfile = await _profileService.CreateAsync(profileToCreate);
 
                 // Refresh list and select created profile to ensure canonical state
                 await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
@@ -657,7 +659,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
             var profileName = SelectedProfile.Name;
             var idToDelete = SelectedProfile.Id;
-            var success = await _profileService.DeleteProfileAsync(idToDelete);
+            var success = await _profileService.DeleteAsync(idToDelete);
 
             if (success)
             {
@@ -696,19 +698,28 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
-            // TODO: Implement name input dialog
-            var newName = $"{SelectedProfile.Name} (Copy)";
+            _logger.LogDebug("Duplicating serial port profile: {ProfileName}", SelectedProfile.Name);
 
-            IsLoading = true;
-            StatusMessage = "Duplicating profile...";
+            var inputResult = await _dialogService.ShowInputAsync(
+                "Duplicate Profile",
+                "Enter a name for the duplicate profile:",
+                $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
 
-            var duplicatedProfile = await _profileService.DuplicateProfileAsync(SelectedProfile.Id, newName);
+            var newName = inputResult.Value;
 
-            // Refresh and select duplicated profile
-            await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
+            if (!string.IsNullOrWhiteSpace(newName))
+            {
+                IsLoading = true;
+                StatusMessage = "Duplicating profile...";
 
-            StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
-            _logger.LogInformation("Duplicated profile: {OriginalName} -> {NewName}", SelectedProfile?.Name, duplicatedProfile.Name);
+                var duplicatedProfile = await _profileService.DuplicateAsync(SelectedProfile.Id, newName);
+
+                // Refresh and select duplicated profile
+                await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
+
+                StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
+                _logger.LogInformation("Duplicated profile: {OriginalName} -> {NewName}", SelectedProfile?.Name, duplicatedProfile.Name);
+            }
         }
         catch (Exception ex)
         {
@@ -740,7 +751,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             var profileId = SelectedProfile.Id;
             var profileName = SelectedProfile.Name;
 
-            await _profileService.SetDefaultProfileAsync(profileId);
+            await _profileService.SetDefaultAsync(profileId);
 
             // Persisted change made; refresh profiles and keep selection
             await RefreshProfilesPreserveSelectionAsync(profileId);
@@ -819,7 +830,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = "Exporting profiles...";
 
-            var jsonData = await _profileService.ExportAllProfilesToJsonAsync();
+            var profiles = await _profileService.ExportAsync();
+            var jsonData = System.Text.Json.JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported {ProfileCount} profile(s) to {Path.GetFileName(fileName)}";
@@ -976,7 +988,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             StatusMessage = "Importing profiles...";
 
             var jsonData = await File.ReadAllTextAsync(fileName);
-            var importedProfiles = await _profileService.ImportProfilesFromJsonAsync(jsonData, overwriteExisting: false);
+            var profiles = JsonSerializer.Deserialize<List<SerialPortProfile>>(jsonData) ?? new List<SerialPortProfile>();
+            var importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
 
             var importedCount = importedProfiles.Count();
             await LoadProfilesAsync(); // Refresh the list
@@ -1028,7 +1041,8 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             // the in-memory profile to allow exporting unsaved/imported profiles without throwing.
             if (SelectedProfile.Id > 0)
             {
-                jsonData = await _profileService.ExportProfileToJsonAsync(SelectedProfile.Id);
+                var profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
+                jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
             }
             else
             {
