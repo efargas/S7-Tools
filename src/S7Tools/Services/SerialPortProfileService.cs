@@ -128,11 +128,6 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
         {
             // Ensure profile name is unique with smart naming strategy
             var uniqueName = await EnsureUniqueProfileNameAsync(profile.Name, cancellationToken).ConfigureAwait(false);
-            if (uniqueName == null)
-            {
-                // User cancelled the operation
-                throw new OperationCanceledException("Profile creation was cancelled by the user");
-            }
 
             // Check maximum profiles limit
             var settings = _settingsService.Settings.SerialPorts;
@@ -202,11 +197,6 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
 
             // Ensure profile name is unique (excluding the current profile)
             var uniqueName = await EnsureUniqueProfileNameForUpdateAsync(profile.Name, profile.Id, cancellationToken).ConfigureAwait(false);
-            if (uniqueName == null)
-            {
-                // User cancelled the operation
-                throw new OperationCanceledException("Profile update was cancelled by the user");
-            }
 
             // Update existing profile
             var updatedProfile = profile.Clone();
@@ -764,12 +754,13 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
     #region Private Methods
 
     /// <summary>
-    /// Ensures the profile name is unique by adding a counter suffix if needed, with user interaction as fallback.
+    /// Ensures the profile name is unique by adding a counter suffix if needed.
+    /// NOTE: This method must be called INSIDE a semaphore-protected block.
     /// </summary>
     /// <param name="baseName">The base name to make unique.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A unique name, or null if the user cancelled the operation.</returns>
-    private async Task<string?> EnsureUniqueProfileNameAsync(string baseName, CancellationToken cancellationToken)
+    /// <returns>A unique name (never null - guaranteed to find a unique name).</returns>
+    private async Task<string> EnsureUniqueProfileNameAsync(string baseName, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(baseName))
         {
@@ -778,39 +769,40 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
 
         var candidateName = baseName.Trim();
 
-        // Check if the original name is available
+        // Check if the original name is available (direct check, no semaphore needed as we're already inside one)
         if (!_profiles.Any(p => string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
         {
             return candidateName;
         }
 
-        // Try up to 3 iterations with counter suffix
-        for (int counter = 1; counter <= 3; counter++)
+        // Try automatic naming strategy with suffix (up to 999 attempts for consistency)
+        for (int i = 1; i <= 999; i++)
         {
-            candidateName = $"{baseName}_{counter}";
+            candidateName = $"{baseName}_{i}";
             if (!_profiles.Any(p => string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
             {
-                _logger.LogInformation("Profile name '{OriginalName}' already exists, using '{UniqueName}' instead", baseName, candidateName);
+                _logger.LogInformation("Profile name '{OriginalName}' conflicts, using '{NewName}'", baseName, candidateName);
                 return candidateName;
             }
         }
 
-        // After 3 attempts, ask the user for a new name
-        _logger.LogWarning("Could not generate unique name for '{BaseName}' after 3 attempts", baseName);
+        // This should be extremely rare, but provide a timestamp-based fallback
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        candidateName = $"{baseName}_{timestamp}";
+        _logger.LogWarning("Unable to generate unique name after 999 attempts, using timestamp-based name: '{FallbackName}'", candidateName);
 
-        // Note: In a real UI application, this would show a dialog to the user
-        // For now, we'll implement a simple fallback strategy
-        return await HandleNameConflictWithUserInteractionAsync(baseName, cancellationToken).ConfigureAwait(false);
+        return candidateName;
     }
 
     /// <summary>
     /// Ensures the profile name is unique for updates by adding a counter suffix if needed, excluding the current profile.
+    /// NOTE: This method must be called INSIDE a semaphore-protected block.
     /// </summary>
     /// <param name="baseName">The base name to make unique.</param>
     /// <param name="excludeProfileId">The ID of the profile to exclude from the uniqueness check.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A unique name, or null if the user cancelled the operation.</returns>
-    private async Task<string?> EnsureUniqueProfileNameForUpdateAsync(string baseName, int excludeProfileId, CancellationToken cancellationToken)
+    /// <returns>A unique name (never null - guaranteed to find a unique name).</returns>
+    private async Task<string> EnsureUniqueProfileNameForUpdateAsync(string baseName, int excludeProfileId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(baseName))
         {
@@ -825,106 +817,23 @@ public class SerialPortProfileService : ISerialPortProfileService, IDisposable
             return candidateName;
         }
 
-        // Try up to 3 iterations with counter suffix
-        for (int counter = 1; counter <= 3; counter++)
+        // Try automatic naming strategy with suffix (up to 999 attempts for consistency)
+        for (int i = 1; i <= 999; i++)
         {
-            candidateName = $"{baseName}_{counter}";
+            candidateName = $"{baseName}_{i}";
             if (!_profiles.Any(p => p.Id != excludeProfileId && string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
             {
-                _logger.LogInformation("Profile name '{OriginalName}' already exists for update, using '{UniqueName}' instead", baseName, candidateName);
+                _logger.LogInformation("Profile name '{OriginalName}' conflicts for update, using '{NewName}'", baseName, candidateName);
                 return candidateName;
             }
         }
 
-        // After 3 attempts, use the same fallback strategy
-        _logger.LogWarning("Could not generate unique name for update '{BaseName}' after 3 attempts", baseName);
-        return await HandleNameConflictWithUserInteractionAsync(baseName, cancellationToken).ConfigureAwait(false);
-    }
+        // This should be extremely rare, but provide a timestamp-based fallback
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        candidateName = $"{baseName}_{timestamp}";
+        _logger.LogWarning("Unable to generate unique name for update after 999 attempts, using timestamp-based name: '{FallbackName}'", candidateName);
 
-    /// <summary>
-    /// Handles name conflicts by providing user interaction options.
-    /// </summary>
-    /// <param name="baseName">The base name that has conflicts.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A unique name chosen by the user, or null if cancelled.</returns>
-    private async Task<string?> HandleNameConflictWithUserInteractionAsync(string baseName, CancellationToken cancellationToken)
-    {
-        // Show dialog to user asking for a new name
-        var message = $"The profile name '{baseName}' already exists after multiple attempts to generate a unique name.\n\nPlease enter a new name for the profile:";
-        var title = "Profile Name Conflict";
-        var placeholder = "Enter a new profile name...";
-
-        _logger.LogInformation("Showing name conflict dialog for profile '{BaseName}'", baseName);
-
-        try
-        {
-            var result = await _dialogService.ShowInputAsync(title, message, baseName, placeholder).ConfigureAwait(false);
-
-            if (result.IsCancelled || string.IsNullOrWhiteSpace(result.Value))
-            {
-                _logger.LogInformation("User cancelled name conflict resolution for '{BaseName}'", baseName);
-                return null; // User cancelled
-            }
-
-            var newName = result.Value.Trim();
-
-            // Validate the new name doesn't conflict
-            if (_profiles.Any(p => string.Equals(p.Name, newName, StringComparison.OrdinalIgnoreCase)))
-            {
-                _logger.LogWarning("User provided name '{NewName}' also conflicts, showing error dialog", newName);
-
-                // Show error and ask user to try again or cancel
-                var errorMessage = $"The name '{newName}' also already exists. Please choose a different name.";
-                var retryTitle = "Name Still Conflicts";
-
-                var shouldRetry = await _dialogService.ShowConfirmationAsync(retryTitle, errorMessage + "\n\nWould you like to try again?").ConfigureAwait(false);
-
-                if (shouldRetry)
-                {
-                    // Recursive call to try again
-                    return await HandleNameConflictWithUserInteractionAsync(baseName, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    _logger.LogInformation("User chose not to retry after name conflict");
-                    return null; // User chose not to retry
-                }
-            }
-
-            _logger.LogInformation("User provided valid unique name: '{NewName}' for original '{BaseName}'", newName, baseName);
-            return newName;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred during name conflict resolution dialog for '{BaseName}'", baseName);
-
-            // Fallback to timestamp-based approach if dialog fails
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var fallbackName = $"{baseName}_{timestamp}";
-
-            if (!_profiles.Any(p => string.Equals(p.Name, fallbackName, StringComparison.OrdinalIgnoreCase)))
-            {
-                _logger.LogWarning("Dialog failed, using fallback name: '{FallbackName}'", fallbackName);
-                return fallbackName;
-            }
-
-            // If even fallback fails, generate random suffix
-            var random = new Random();
-            for (int attempt = 0; attempt < 10; attempt++)
-            {
-                var randomSuffix = random.Next(1000, 9999);
-                var randomName = $"{baseName}_{timestamp}_{randomSuffix}";
-
-                if (!_profiles.Any(p => string.Equals(p.Name, randomName, StringComparison.OrdinalIgnoreCase)))
-                {
-                    _logger.LogWarning("Using random fallback name after dialog error: '{RandomName}'", randomName);
-                    return randomName;
-                }
-            }
-
-            _logger.LogError("Could not generate any unique name for '{BaseName}' even after dialog error", baseName);
-            return null;
-        }
+        return candidateName;
     }
 
     /// <summary>

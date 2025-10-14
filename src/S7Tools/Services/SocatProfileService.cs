@@ -137,11 +137,6 @@ public class SocatProfileService : ISocatProfileService, IDisposable
 
             // Ensure profile name is unique
             var uniqueName = await EnsureUniqueProfileNameAsync(profile.Name, cancellationToken).ConfigureAwait(false);
-            if (uniqueName == null)
-            {
-                // User cancelled the operation
-                throw new OperationCanceledException("Profile creation was cancelled by the user");
-            }
 
             // Create new profile with assigned ID
             var newProfile = profile.Clone();
@@ -205,11 +200,6 @@ public class SocatProfileService : ISocatProfileService, IDisposable
 
             // Ensure profile name is unique (excluding the current profile)
             var uniqueName = await EnsureUniqueProfileNameForUpdateAsync(profile.Name, profile.Id, cancellationToken).ConfigureAwait(false);
-            if (uniqueName == null)
-            {
-                // User cancelled the operation
-                throw new OperationCanceledException("Profile update was cancelled by the user");
-            }
 
             // Update existing profile
             var updatedProfile = profile.Clone();
@@ -312,11 +302,6 @@ public class SocatProfileService : ISocatProfileService, IDisposable
 
             // Ensure new name is unique
             var uniqueName = await EnsureUniqueProfileNameAsync(newName, cancellationToken).ConfigureAwait(false);
-            if (uniqueName == null)
-            {
-                // User cancelled the operation
-                throw new OperationCanceledException("Profile duplication was cancelled by the user");
-            }
 
             // Create duplicate
             var duplicate = sourceProfile.Duplicate(uniqueName);
@@ -1091,8 +1076,8 @@ public class SocatProfileService : ISocatProfileService, IDisposable
     /// </summary>
     /// <param name="desiredName">The desired profile name.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A unique profile name, or null if user cancelled.</returns>
-    private async Task<string?> EnsureUniqueProfileNameAsync(string desiredName, CancellationToken cancellationToken)
+    /// <returns>A unique profile name (never null - guaranteed to find a unique name).</returns>
+    private async Task<string> EnsureUniqueProfileNameAsync(string desiredName, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(desiredName))
         {
@@ -1107,7 +1092,7 @@ public class SocatProfileService : ISocatProfileService, IDisposable
             return candidateName;
         }
 
-        // Try automatic naming strategy with suffix
+        // Try automatic naming strategy with suffix (up to 999 attempts for consistency)
         for (int i = 1; i <= 999; i++)
         {
             candidateName = $"{desiredName}_{i}";
@@ -1118,28 +1103,12 @@ public class SocatProfileService : ISocatProfileService, IDisposable
             }
         }
 
-        // If automatic strategy fails, use timestamp-based unique name
-        var timestampName = $"{desiredName}_{DateTime.UtcNow:yyyyMMddHHmmss}";
-        if (!_profiles.Any(p => string.Equals(p.Name, timestampName, StringComparison.OrdinalIgnoreCase)))
-        {
-            _logger.LogInformation("Profile name '{OriginalName}' conflicts, using timestamp-based name '{NewName}'", desiredName, timestampName);
-            return timestampName;
-        }
+        // This should be extremely rare, but provide a timestamp-based fallback
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        candidateName = $"{desiredName}_{timestamp}";
+        _logger.LogWarning("Unable to generate unique name after 999 attempts, using timestamp-based name: '{FallbackName}'", candidateName);
 
-        // Last resort: ask user for input via dialog service
-        var result = await _dialogService.ShowInputAsync(
-            "Profile Name Conflict",
-            $"Name '{desiredName}' already exists. Please enter a new name:",
-            timestampName,
-            "Enter unique profile name"
-        ).ConfigureAwait(false);
-        if (result.IsCancelled || string.IsNullOrWhiteSpace(result.Value))
-        {
-            _logger.LogInformation("User cancelled profile name resolution for '{OriginalName}'", desiredName);
-            return null;
-        }
-
-        return result.Value.Trim();
+        return candidateName;
     }
 
     /// <summary>
@@ -1149,8 +1118,8 @@ public class SocatProfileService : ISocatProfileService, IDisposable
     /// <param name="desiredName">The desired profile name.</param>
     /// <param name="excludeProfileId">The profile ID to exclude from name checking.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A unique profile name, or null if user cancelled.</returns>
-    private async Task<string?> EnsureUniqueProfileNameForUpdateAsync(string desiredName, int excludeProfileId, CancellationToken cancellationToken)
+    /// <returns>A unique profile name (never null - guaranteed to find a unique name).</returns>
+    private async Task<string> EnsureUniqueProfileNameForUpdateAsync(string desiredName, int excludeProfileId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(desiredName))
         {
@@ -1165,39 +1134,23 @@ public class SocatProfileService : ISocatProfileService, IDisposable
             return candidateName;
         }
 
-        // Try automatic naming strategy with suffix
+        // Try automatic naming strategy with suffix (up to 999 attempts for consistency)
         for (int i = 1; i <= 999; i++)
         {
             candidateName = $"{desiredName}_{i}";
             if (!_profiles.Any(p => p.Id != excludeProfileId && string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
             {
-                _logger.LogInformation("Profile name '{OriginalName}' conflicts during update, using '{NewName}'", desiredName, candidateName);
+                _logger.LogInformation("Profile name '{OriginalName}' conflicts for update, using '{NewName}'", desiredName, candidateName);
                 return candidateName;
             }
         }
 
-        // If automatic strategy fails, use timestamp-based unique name
-        var timestampName = $"{desiredName}_{DateTime.UtcNow:yyyyMMddHHmmss}";
-        if (!_profiles.Any(p => p.Id != excludeProfileId && string.Equals(p.Name, timestampName, StringComparison.OrdinalIgnoreCase)))
-        {
-            _logger.LogInformation("Profile name '{OriginalName}' conflicts during update, using timestamp-based name '{NewName}'", desiredName, timestampName);
-            return timestampName;
-        }
+        // This should be extremely rare, but provide a timestamp-based fallback
+        var timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        candidateName = $"{desiredName}_{timestamp}";
+        _logger.LogWarning("Unable to generate unique name for update after 999 attempts, using timestamp-based name: '{FallbackName}'", candidateName);
 
-        // Last resort: ask user for input via dialog service
-        var result = await _dialogService.ShowInputAsync(
-            "Profile Name Conflict",
-            $"Name '{desiredName}' already exists. Please enter a new name:",
-            timestampName,
-            "Enter unique profile name"
-        ).ConfigureAwait(false);
-        if (result.IsCancelled || string.IsNullOrWhiteSpace(result.Value))
-        {
-            _logger.LogInformation("User cancelled profile name resolution during update for '{OriginalName}'", desiredName);
-            return null;
-        }
-
-        return result.Value.Trim();
+        return candidateName;
     }
 
     #endregion
