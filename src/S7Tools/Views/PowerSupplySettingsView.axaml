@@ -227,7 +227,183 @@
         </StackPanel>
       </Border>
 
-      <!-- Status Message (placeholder for next increment) -->
+      <!-- Connection Management Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Connection Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Connection Status Display -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Connection Status:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <Border Background="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#16825D'}"
+                      CornerRadius="10"
+                      Width="20"
+                      Height="20"
+                      VerticalAlignment="Center">
+                <icons:Icon Value="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-times|fa-solid fa-check'}"
+                            Foreground="White"
+                            Width="12"
+                            Height="12" />
+              </Border>
+
+              <TextBlock Text="{Binding ConnectionStatus}"
+                         Foreground="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#4EC9B0'}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Connection Control Buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Width="150" Height="38"
+                    Command="{Binding ConnectCommand}"
+                    Background="#16825D"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-plug" Width="14" Height="14" />
+                <TextBlock Text="Connect" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding DisconnectCommand}"
+                    Background="#D13438"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-plug-circle-xmark" Width="14" Height="14" />
+                <TextBlock Text="Disconnect" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding TestConnectionCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
+                <TextBlock Text="Test Connection" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Connect to the selected profile's Modbus TCP device to enable power control operations"
+                     FontSize="11"
+                     Foreground="#858585"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- Power Control Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Power Control"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Power Status Display -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Power Status:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+              <Border Background="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#16825D'}"
+                      CornerRadius="10"
+                      Width="20"
+                      Height="20"
+                      VerticalAlignment="Center">
+                <icons:Icon Value="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-power-off|fa-solid fa-bolt'}"
+                            Foreground="White"
+                            Width="12"
+                            Height="12" />
+              </Border>
+
+              <TextBlock Text="{Binding PowerStatus}"
+                         Foreground="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#4EC9B0'}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Power Control Buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Width="150" Height="38"
+                    Command="{Binding TurnOnCommand}"
+                    Background="#16825D"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
+                <TextBlock Text="Turn ON" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding TurnOffCommand}"
+                    Background="#D13438"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
+                <TextBlock Text="Turn OFF" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding ReadStateCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-eye" Width="14" Height="14" />
+                <TextBlock Text="Read State" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding PowerCycleCommand}"
+                    Background="#855508"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-rotate" Width="14" Height="14" />
+                <TextBlock Text="Power Cycle" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Control power supply via Modbus coil operations (Turn ON/OFF, Read current state, or Power Cycle with 5s delay)"
+                     FontSize="11"
+                     Foreground="#858585"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- Status Message -->
       <Border Background="#252526"
               BorderBrush="#464647"
               BorderThickness="1"
