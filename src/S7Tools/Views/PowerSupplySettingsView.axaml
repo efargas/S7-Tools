@@ -403,6 +403,113 @@
         </StackPanel>
       </Border>
 
+      <!-- Import/Export Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Import / Export"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Profiles Path -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="150" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Profiles Path:"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <TextBox Grid.Column="1"
+                     Text="{Binding ProfilesPath}"
+                     IsReadOnly="True"
+                     Background="#3C3C3C"
+                     Foreground="#CCCCCC"
+                     BorderBrush="#464647"
+                     Margin="8,0" />
+
+            <Button Grid.Column="2"
+                    Width="110"
+                    Height="34"
+                    Command="{Binding BrowseProfilesPathCommand}"
+                    Background="#0E639C"
+                    Foreground="White"
+                    Margin="4,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
+                <TextBlock Text="Browse" />
+              </StackPanel>
+            </Button>
+
+            <Button Grid.Column="3"
+                    Width="110"
+                    Height="34"
+                    Command="{Binding OpenProfilesPathCommand}"
+                    Background="Transparent"
+                    BorderBrush="#464647"
+                    Foreground="#CCCCCC"
+                    Margin="4,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                <TextBlock Text="Open" />
+              </StackPanel>
+            </Button>
+
+            <Button Grid.Column="4"
+                    Width="110"
+                    Height="34"
+                    Command="{Binding ResetProfilesPathCommand}"
+                    Background="Transparent"
+                    BorderBrush="#464647"
+                    Foreground="#CCCCCC"
+                    Margin="4,0,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" />
+                <TextBlock Text="Reset" />
+              </StackPanel>
+            </Button>
+          </Grid>
+
+          <!-- Import/Export Buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Width="150" Height="38"
+                    Command="{Binding ExportProfilesCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
+                <TextBlock Text="Export Profiles" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding ImportProfilesCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-file-import" Width="14" Height="14" />
+                <TextBlock Text="Import Profiles" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Export profiles to share configurations or import profiles from backup files (JSON format)"
+                     FontSize="11"
+                     Foreground="#858585"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
       <!-- Status Message -->
       <Border Background="#252526"
               BorderBrush="#464647"
