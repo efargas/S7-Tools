@@ -220,10 +220,13 @@ public partial class App : Application
                     logger.LogDebug("Showing input dialog: {Title} - {Message}",
                         interaction.Input.Title, interaction.Input.Message);
 
+                    // Create the view model first
+                    var viewModel = new InputDialogViewModel(interaction.Input);
+
                     // Create and show input dialog
                     var dialog = new InputDialog
                     {
-                        DataContext = new InputDialogViewModel(interaction.Input)
+                        DataContext = viewModel
                     };
 
                     // Get the main window as parent
@@ -240,8 +243,11 @@ public partial class App : Application
                         }
                         else
                         {
-                            interaction.SetOutput(InputResult.Cancelled());
-                            logger.LogDebug("Input dialog returned null, treating as cancelled");
+                            // If no result, use the ViewModel's result
+                            var viewModelResult = viewModel.Result;
+                            interaction.SetOutput(viewModelResult);
+                            logger.LogDebug("Input dialog returned null, using ViewModel result: Cancelled={IsCancelled}",
+                                viewModelResult.IsCancelled);
                         }
                     }
                     else

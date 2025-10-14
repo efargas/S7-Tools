@@ -1,7 +1,45 @@
 # Tasks Index
 
-**Last Updated**: 2025-10-13 - New Power Supply Settings Task Created
-**Total Tasks**: 7 (4 completed, 1 blocked, 1 pending review, 1 pending)
+**Last Updated**: 2025-10-14 - New Unified Profile Management Task Created
+**Total Tasks**: 8 (4 completed, 1 blocked, 1 pending review, 1 approved, 1 ready to start)
+
+## Ready to Start
+
+### **[TASK008]** Unified Profile Management Standardization
+**Status**: ✅ **READY TO START** - Comprehensive implementation plan prepared
+**Priority**: High
+**Created**: 2025-10-14
+**Estimated Time**: 20-25 hours across 10 phases
+**Description**: Standardize profile management across Serial, Socat, and Power Supply modules with unified CRUD patterns, dialog-only operations, and consistent validation
+
+#### **User Requirements**
+- ✅ **Remove Name/Description Fields**: Delete inline input fields from all UIs
+- ✅ **Reorder CRUD Buttons**: Consistent layout - Create, Edit, Duplicate, Default, Delete, Refresh
+- ✅ **Dialog-Only Operations**: Create and Edit show validation dialogs
+- ✅ **Unified Validation**: Profile name uniqueness and automatic ID assignment
+- ✅ **PowerSupply Pattern**: Apply best patterns from PowerSupply to all modules
+- ✅ **Auto-Refresh**: Profile list refreshes after all operations
+
+#### **Implementation Strategy**
+- **PowerSupply as Template**: Use existing PowerSupply patterns as gold standard
+- **Clean Architecture**: Maintain interfaces in Core, implementations in Application
+- **ReactiveUI Optimization**: Apply individual property subscriptions pattern
+- **Service Layer Enhancement**: Robust validation and ID assignment logic
+- **Comprehensive Testing**: Manual validation across all three modules
+
+#### **Key Phases**:
+1. ⏳ **Architecture Design** (2-3 hours) - Unified interfaces and validation patterns
+2. ⏳ **UI Cleanup** (2-3 hours) - Remove inline input fields from all views
+3. ⏳ **Button Standardization** (1-2 hours) - Consistent CRUD button layout
+4. ⏳ **Dialog Enhancement** (3-4 hours) - Unified Create/Edit/Duplicate dialog flows
+5. ⏳ **Validation Logic** (3-4 hours) - Name uniqueness and ID assignment
+6. ⏳ **ViewModel Updates** (3-4 hours) - Remove inline inputs, use dialogs
+7. ⏳ **Service Enhancement** (2-3 hours) - Apply BUG001 lessons learned
+8. ⏳ **Testing & Validation** (2-3 hours) - Comprehensive CRUD testing
+9. ⏳ **Code Quality Review** (1-2 hours) - Architecture compliance verification
+10. ⏳ **Documentation Update** (1-2 hours) - Memory bank pattern documentation
+
+**Status**: Ready to begin Phase 1 - Architecture design and validation framework
 
 ## Approved - Ready to Start
 

@@ -53,6 +53,9 @@ public partial class ProfileEditDialog : Window
                     // Will be implemented in Phase 3
                     contentArea.Content = CreateSocatProfileContent();
                     break;
+                case ProfileType.PowerSupply:
+                    contentArea.Content = CreatePowerSupplyProfileContent();
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(request.ProfileType), request.ProfileType, "Unknown profile type");
             }
@@ -75,6 +78,15 @@ public partial class ProfileEditDialog : Window
     private Control CreateSocatProfileContent()
     {
         return new SocatProfileEditContent();
+    }
+
+    /// <summary>
+    /// Creates the content for power supply profile editing.
+    /// </summary>
+    /// <returns>A control for power supply profile editing.</returns>
+    private Control CreatePowerSupplyProfileContent()
+    {
+        return new PowerSupplyProfileEditContent();
     }
 
     /// <summary>

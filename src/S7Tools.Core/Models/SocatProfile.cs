@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Core.Models;
 
@@ -9,7 +10,7 @@ namespace S7Tools.Core.Models;
 /// Represents a named profile for socat (Serial-to-TCP Proxy) configuration that can be saved, loaded, and applied.
 /// Profiles provide a convenient way to manage different socat configurations for various network-to-serial bridge scenarios.
 /// </summary>
-public class SocatProfile
+public class SocatProfile : IProfileBase
 {
     #region Properties
 
@@ -76,6 +77,36 @@ public class SocatProfile
     /// <value>The profile format version. Default is "1.0".</value>
     [StringLength(10, ErrorMessage = "Version cannot exceed 10 characters")]
     public string Version { get; set; } = "1.0";
+
+    /// <summary>
+    /// Gets or sets command-line options specific to this socat profile.
+    /// </summary>
+    /// <value>Additional socat command options used when applying this profile.</value>
+    /// <remarks>
+    /// Options contain additional command-line parameters that can be applied
+    /// when starting socat with this profile configuration. This might include:
+    /// - Custom debug options like -d, -D, -ly
+    /// - Performance tuning parameters
+    /// - Advanced socat features
+    /// - Protocol-specific options
+    /// Example: "-d -d" for double debug output or "-ly" for syslog output
+    /// </remarks>
+    public string Options { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets additional flags specific to this socat profile type.
+    /// </summary>
+    /// <value>Additional flags or parameters for socat-specific operations.</value>
+    /// <remarks>
+    /// Flags provide extensibility for socat-specific features without breaking the interface.
+    /// For socat profiles, this might include settings like:
+    /// - auto-restart-on-failure=true
+    /// - enable-keepalive=false
+    /// - use-ssl=false
+    /// - log-transfers=true
+    /// Format: key=value pairs separated by semicolons
+    /// </remarks>
+    public string Flags { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets additional metadata for this profile.
@@ -231,6 +262,8 @@ public class SocatProfile
             CreatedAt = DateTime.UtcNow, // New creation time
             ModifiedAt = DateTime.UtcNow, // New modification time
             Version = Version,
+            Options = Options, // Copy options
+            Flags = Flags, // Copy flags
             Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
         };
     }
@@ -253,6 +286,8 @@ public class SocatProfile
             CreatedAt = CreatedAt,
             ModifiedAt = ModifiedAt,
             Version = Version,
+            Options = Options, // Copy options
+            Flags = Flags, // Copy flags
             Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
         };
     }

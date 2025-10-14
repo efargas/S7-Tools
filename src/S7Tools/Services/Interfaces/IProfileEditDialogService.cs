@@ -31,4 +31,12 @@ public interface IProfileEditDialogService
     /// <param name="profileViewModel">The SocatProfileViewModel to edit.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the edit result.</returns>
     Task<ProfileEditResult> ShowSocatProfileEditAsync(string title, SocatProfileViewModel profileViewModel);
+
+    /// <summary>
+    /// Shows a profile editing dialog for a power supply profile.
+    /// </summary>
+    /// <param name="title">The dialog title.</param>
+    /// <param name="profileViewModel">The PowerSupplyProfileViewModel to edit.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the edit result.</returns>
+    Task<ProfileEditResult> ShowPowerSupplyProfileEditAsync(string title, PowerSupplyProfileViewModel profileViewModel);
 }

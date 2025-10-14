@@ -1,0 +1,210 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
+             x:Class="S7Tools.Views.PowerSupplyProfileEditContent"
+             x:DataType="vm:PowerSupplyProfileViewModel">
+
+  <Design.DataContext>
+    <vm:PowerSupplyProfileViewModel />
+  </Design.DataContext>
+
+  <Grid Margin="20">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="16" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="16" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="24" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="16" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="16" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Header Section -->
+    <TextBlock Grid.Row="0"
+               Text="Power Supply Profile Configuration"
+               FontSize="18"
+               FontWeight="SemiBold"
+               Foreground="{DynamicResource SystemAccentColor}" />
+
+    <!-- Profile Information Section -->
+    <Border Grid.Row="2"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            CornerRadius="6"
+            Padding="16">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="12" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="12" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="12" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="120" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Section Header -->
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
+                   Text="Profile Information"
+                   FontWeight="SemiBold"
+                   FontSize="14"
+                   Margin="0,0,0,8" />
+
+        <!-- Profile Name -->
+        <TextBlock Grid.Row="2" Grid.Column="0"
+                   Text="Name:"
+                   VerticalAlignment="Center" />
+        <TextBox Grid.Row="2" Grid.Column="1"
+                 Text="{Binding ProfileName}"
+                 Watermark="Enter profile name"
+                 IsReadOnly="{Binding IsReadOnly}" />
+
+        <!-- Profile Description -->
+        <TextBlock Grid.Row="4" Grid.Column="0"
+                   Text="Description:"
+                   VerticalAlignment="Top"
+                   Margin="0,8,0,0" />
+        <TextBox Grid.Row="4" Grid.Column="1"
+                 Text="{Binding ProfileDescription}"
+                 Watermark="Enter profile description (optional)"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 MinHeight="60"
+                 MaxHeight="120"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 IsReadOnly="{Binding IsReadOnly}" />
+
+        <!-- Profile Options -->
+        <StackPanel Grid.Row="6" Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="16">
+          <CheckBox Content="Set as default profile"
+                    IsChecked="{Binding IsDefault}"
+                    IsEnabled="{Binding !IsReadOnly}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Configuration Section -->
+    <Border Grid.Row="4"
+            Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+            CornerRadius="6"
+            Padding="16">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="12" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="120" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Section Header -->
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
+                   Text="Power Supply Configuration"
+                   FontWeight="SemiBold"
+                   FontSize="14"
+                   Margin="0,0,0,8" />
+
+        <!-- Power Supply Type -->
+        <TextBlock Grid.Row="2" Grid.Column="0"
+                   Text="Type:"
+                   VerticalAlignment="Center" />
+        <ComboBox Grid.Row="2" Grid.Column="1"
+                  SelectedItem="{Binding PowerSupplyType}"
+                  IsEnabled="{Binding !IsReadOnly}"
+                  HorizontalAlignment="Left"
+                  MinWidth="200">
+          <ComboBoxItem Content="Modbus TCP" Tag="ModbusTcp" />
+          <ComboBoxItem Content="Serial RS232" Tag="SerialRs232" />
+          <ComboBoxItem Content="Serial RS485" Tag="SerialRs485" />
+          <ComboBoxItem Content="Ethernet IP" Tag="EthernetIp" />
+        </ComboBox>
+      </Grid>
+    </Border>
+
+    <!-- Information Panel -->
+    <Border Grid.Row="6"
+            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="12">
+      <StackPanel Spacing="8">
+        <TextBlock FontWeight="SemiBold" FontSize="12">
+          Power Supply Profile Information
+        </TextBlock>
+        <TextBlock FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+          • Configure the communication type for your power supply device
+        </TextBlock>
+        <TextBlock FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+          • Modbus TCP is recommended for Ethernet-connected devices
+        </TextBlock>
+        <TextBlock FontSize="11" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}">
+          • Use Serial options for direct RS232/RS485 connections
+        </TextBlock>
+      </StackPanel>
+    </Border>
+
+    <!-- Status Bar -->
+    <Border Grid.Row="10"
+            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="8,4">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Status Icon -->
+        <Border Grid.Column="0"
+                Width="16" Height="16"
+                CornerRadius="8"
+                Margin="0,0,8,0"
+                VerticalAlignment="Center">
+          <Border.Background>
+            <SolidColorBrush Color="{Binding IsValid, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='Green|Red'}" />
+          </Border.Background>
+        </Border>
+
+        <!-- Status Message -->
+        <TextBlock Grid.Column="1"
+                   Text="{Binding StatusMessage}"
+                   VerticalAlignment="Center"
+                   FontSize="12" />
+
+        <!-- Validation Status -->
+        <TextBlock Grid.Column="2"
+                   VerticalAlignment="Center"
+                   FontSize="11"
+                   FontWeight="SemiBold">
+          <TextBlock.Text>
+            <MultiBinding StringFormat="{}{0} | Changes: {1}">
+              <Binding Path="IsValid" Converter="{StaticResource BooleanToStringConverter}" ConverterParameter="Valid|Invalid" />
+              <Binding Path="HasChanges" Converter="{StaticResource BooleanToStringConverter}" ConverterParameter="Yes|No" />
+            </MultiBinding>
+          </TextBlock.Text>
+          <TextBlock.Foreground>
+            <SolidColorBrush Color="{Binding IsValid, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='Green|Red'}" />
+          </TextBlock.Foreground>
+        </TextBlock>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Core.Models;
 
@@ -9,7 +10,7 @@ namespace S7Tools.Core.Models;
 /// Represents a named profile for serial port configuration that can be saved, loaded, and applied to serial ports.
 /// Profiles provide a convenient way to manage different serial port configurations for various use cases.
 /// </summary>
-public class SerialPortProfile
+public class SerialPortProfile : IProfileBase
 {
     #region Properties
 
@@ -76,6 +77,36 @@ public class SerialPortProfile
     /// <value>The profile format version. Default is "1.0".</value>
     [StringLength(10, ErrorMessage = "Version cannot exceed 10 characters")]
     public string Version { get; set; } = "1.0";
+
+    /// <summary>
+    /// Gets or sets command-line options and switches for this profile.
+    /// </summary>
+    /// <value>Additional stty options or flags used when applying this profile.</value>
+    /// <remarks>
+    /// Options contain additional command-line parameters that can be applied
+    /// when configuring the serial port with stty. This might include:
+    /// - Custom device-specific flags
+    /// - Debugging options like -v for verbose output
+    /// - Performance tuning parameters
+    /// - Hardware-specific settings
+    /// Example: "-v --debug" or "--custom-flag=value"
+    /// </remarks>
+    public string Options { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets additional flags specific to this profile type.
+    /// </summary>
+    /// <value>Additional flags or parameters for profile-specific operations.</value>
+    /// <remarks>
+    /// Flags provide extensibility for profile-specific features without breaking the interface.
+    /// For serial profiles, this might include settings like:
+    /// - auto-detect-device=true
+    /// - force-raw-mode=false
+    /// - enable-logging=true
+    /// - use-hardware-flow-control=false
+    /// Format: key=value pairs separated by semicolons
+    /// </remarks>
+    public string Flags { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets additional metadata for this profile.
@@ -203,6 +234,8 @@ public class SerialPortProfile
             CreatedAt = DateTime.UtcNow, // New creation time
             ModifiedAt = DateTime.UtcNow, // New modification time
             Version = Version,
+            Options = Options, // Copy options
+            Flags = Flags, // Copy flags
             Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
         };
     }
@@ -225,6 +258,8 @@ public class SerialPortProfile
             CreatedAt = CreatedAt,
             ModifiedAt = ModifiedAt,
             Version = Version,
+            Options = Options, // Copy options
+            Flags = Flags, // Copy flags
             Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
         };
     }

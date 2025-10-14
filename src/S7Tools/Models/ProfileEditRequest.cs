@@ -47,5 +47,10 @@ public enum ProfileType
     /// <summary>
     /// Socat profile type.
     /// </summary>
-    Socat
+    Socat,
+
+    /// <summary>
+    /// Power supply profile type.
+    /// </summary>
+    PowerSupply
 }

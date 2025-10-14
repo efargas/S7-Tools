@@ -74,12 +74,17 @@ public class InputDialogViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
 
     /// <summary>
+    /// Event that is raised when the dialog should close.
+    /// </summary>
+    public event System.Action<InputResult>? CloseRequested;
+
+    /// <summary>
     /// Handles the OK button action.
     /// </summary>
     private void OnOk()
     {
         _result = InputResult.Success(InputValue?.Trim() ?? string.Empty);
-        // The dialog will be closed by the interaction handler
+        CloseRequested?.Invoke(_result);
     }
 
     /// <summary>
@@ -88,6 +93,6 @@ public class InputDialogViewModel : ViewModelBase
     private void OnCancel()
     {
         _result = InputResult.Cancelled();
-        // The dialog will be closed by the interaction handler
+        CloseRequested?.Invoke(_result);
     }
 }

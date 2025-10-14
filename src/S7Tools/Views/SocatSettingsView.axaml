@@ -178,6 +178,13 @@
                 </DataGrid.Styles>
 
                 <DataGrid.Columns>
+                  <!-- ID Column: First column to show profile ID -->
+                  <DataGridTextColumn Binding="{Binding Id}" Width="50" MinWidth="40">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
                   <DataGridTextColumn Binding="{Binding Name}" Width="160" MinWidth="120">
                     <DataGridTextColumn.Header>
                       <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />

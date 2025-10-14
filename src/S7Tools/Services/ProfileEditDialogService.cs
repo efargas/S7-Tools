@@ -110,4 +110,14 @@ public class ProfileEditDialogService : IProfileEditDialogService
         var request = new ProfileEditRequest(title, profileViewModel, ProfileType.Socat);
         return await ShowProfileEditDialog.Handle(request).FirstAsync();
     }
+
+    /// <inheritdoc />
+    public async Task<ProfileEditResult> ShowPowerSupplyProfileEditAsync(string title, PowerSupplyProfileViewModel profileViewModel)
+    {
+        ArgumentNullException.ThrowIfNull(title);
+        ArgumentNullException.ThrowIfNull(profileViewModel);
+
+        var request = new ProfileEditRequest(title, profileViewModel, ProfileType.PowerSupply);
+        return await ShowProfileEditDialog.Handle(request).FirstAsync();
+    }
 }

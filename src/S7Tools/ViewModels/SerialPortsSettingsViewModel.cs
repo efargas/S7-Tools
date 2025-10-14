@@ -591,6 +591,9 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = "Opening profile editor...";
 
+            // Preserve the profile ID for refresh after editing
+            var profileId = SelectedProfile.Id;
+
             // Create a new SerialPortProfileViewModel for editing
             var profileViewModel = new SerialPortProfileViewModel(
                 _profileService,
@@ -612,15 +615,15 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
 
                 // The profile has been saved by the dialog's SaveCommand
                 // Refresh our profiles collection to reflect the changes
-                await RefreshProfilesPreserveSelectionAsync(SelectedProfile.Id);
+                await RefreshProfilesPreserveSelectionAsync(profileId);
 
-                StatusMessage = $"Profile '{SelectedProfile.Name}' updated successfully";
-                _logger.LogInformation("Successfully edited serial profile: {ProfileName}", SelectedProfile.Name);
+                StatusMessage = $"Profile updated successfully";
+                _logger.LogInformation("Successfully edited serial profile with ID: {ProfileId}", profileId);
             }
             else
             {
                 StatusMessage = "Profile editing cancelled";
-                _logger.LogInformation("Serial profile editing cancelled for: {ProfileName}", SelectedProfile.Name);
+                _logger.LogInformation("Serial profile editing cancelled for profile ID: {ProfileId}", profileId);
             }
         }
         catch (Exception ex)
@@ -736,13 +739,17 @@ public class SerialPortsSettingsViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = "Setting default profile...";
 
-            await _profileService.SetDefaultProfileAsync(SelectedProfile.Id);
+            // Preserve the profile ID for refresh after setting default
+            var profileId = SelectedProfile.Id;
+            var profileName = SelectedProfile.Name;
+
+            await _profileService.SetDefaultProfileAsync(profileId);
 
             // Persisted change made; refresh profiles and keep selection
-            await RefreshProfilesPreserveSelectionAsync(SelectedProfile.Id);
+            await RefreshProfilesPreserveSelectionAsync(profileId);
 
-            StatusMessage = $"'{SelectedProfile.Name}' set as default profile";
-            _logger.LogInformation("Set default profile: {ProfileName}", SelectedProfile.Name);
+            StatusMessage = $"'{profileName}' set as default profile";
+            _logger.LogInformation("Set default profile: {ProfileName}", profileName);
         }
         catch (Exception ex)
         {

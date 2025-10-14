@@ -685,6 +685,8 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
             if (_originalProfile != null)
             {
                 profile.Id = _originalProfile.Id;
+                profile.CreatedAt = _originalProfile.CreatedAt;
+                profile.ModifiedAt = DateTime.UtcNow;
                 await _profileService.UpdateProfileAsync(profile);
             }
             else

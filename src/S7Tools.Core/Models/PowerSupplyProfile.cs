@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Core.Models;
 
@@ -9,7 +10,7 @@ namespace S7Tools.Core.Models;
 /// Represents a named profile for power supply configuration that can be saved, loaded, and applied.
 /// Profiles provide a convenient way to manage different power supply configurations for various devices and scenarios.
 /// </summary>
-public class PowerSupplyProfile
+public class PowerSupplyProfile : IProfileBase
 {
     #region Properties
 
@@ -80,6 +81,36 @@ public class PowerSupplyProfile
     /// <value>The profile format version. Default is "1.0".</value>
     [StringLength(10, ErrorMessage = "Version cannot exceed 10 characters")]
     public string Version { get; set; } = "1.0";
+
+    /// <summary>
+    /// Gets or sets command-line options specific to this power supply profile.
+    /// </summary>
+    /// <value>Additional modbus or device-specific options used when applying this profile.</value>
+    /// <remarks>
+    /// Options contain additional command-line parameters or configuration settings
+    /// that can be applied when communicating with the power supply. This might include:
+    /// - Modbus-specific options like timeout values
+    /// - Device polling intervals
+    /// - Connection retry parameters
+    /// - Protocol-specific flags
+    /// Example: "--timeout=5000 --retries=3" or "--poll-interval=100"
+    /// </remarks>
+    public string Options { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets additional flags specific to this power supply profile type.
+    /// </summary>
+    /// <value>Additional flags or parameters for power supply-specific operations.</value>
+    /// <remarks>
+    /// Flags provide extensibility for power supply-specific features without breaking the interface.
+    /// For power supply profiles, this might include settings like:
+    /// - enable-voltage-monitoring=true
+    /// - auto-safe-shutdown=false
+    /// - use-extended-registers=true
+    /// - enable-current-limiting=false
+    /// Format: key=value pairs separated by semicolons
+    /// </remarks>
+    public string Flags { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets additional metadata for this profile.
@@ -249,6 +280,8 @@ public class PowerSupplyProfile
             CreatedAt = CreatedAt,
             ModifiedAt = ModifiedAt,
             Version = Version,
+            Options = Options, // Copy options
+            Flags = Flags, // Copy flags
             Metadata = Metadata != null ? new Dictionary<string, string>(Metadata) : null
         };
     }
@@ -286,6 +319,45 @@ public class PowerSupplyProfile
         }
 
         return errors;
+    }
+
+    /// <summary>
+    /// Determines whether this profile can be modified.
+    /// </summary>
+    /// <returns>True if the profile can be modified, false if it's read-only.</returns>
+    public bool CanModify()
+    {
+        return !IsReadOnly;
+    }
+
+    /// <summary>
+    /// Determines whether this profile can be deleted.
+    /// </summary>
+    /// <returns>True if the profile can be deleted, false if it's read-only or default.</returns>
+    public bool CanDelete()
+    {
+        return !IsReadOnly && !IsDefault;
+    }
+
+    /// <summary>
+    /// Gets a summary of this profile's key settings.
+    /// </summary>
+    /// <returns>A string summarizing the profile's configuration.</returns>
+    public string GetSummary()
+    {
+        var summary = $"{Name}: {Configuration?.GetType().Name ?? "No Configuration"}";
+
+        if (IsDefault)
+        {
+            summary += " (Default)";
+        }
+
+        if (IsReadOnly)
+        {
+            summary += " (Read-Only)";
+        }
+
+        return summary;
     }
 
     /// <summary>

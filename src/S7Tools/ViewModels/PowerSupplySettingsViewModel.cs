@@ -439,7 +439,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             {
                 _logger.LogDebug("Connection status changed: {Status}", connected ? "Connected" : "Disconnected");
                 UpdateConnectionStatus();
-                
+
                 // Clear power status when disconnected
                 if (!connected)
                 {
@@ -562,27 +562,19 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             _logger.LogDebug("Creating new power supply profile");
             StatusMessage = "Creating profile...";
 
-            // Get profile name from user
-            var inputResult = await _dialogService.ShowInputAsync(
-                "Create Profile",
-                "Enter a name for the new profile:",
-                "New Power Supply Profile").ConfigureAwait(false);
+            // Create a new profile with default values - user can edit the name/description in the edit dialog
+            var newProfile = PowerSupplyProfile.CreateUserProfile("New Power Supply Profile", "User-created profile");
+            var createdProfile = await _profileService.CreateProfileAsync(newProfile).ConfigureAwait(false);
 
-            if (!string.IsNullOrWhiteSpace(inputResult.Value))
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                var newProfile = PowerSupplyProfile.CreateUserProfile(inputResult.Value, "User-created profile");
-                var createdProfile = await _profileService.CreateProfileAsync(newProfile).ConfigureAwait(false);
+                Profiles.Add(createdProfile);
+                ProfileCount = Profiles.Count;
+                SelectedProfile = createdProfile;
+            }).ConfigureAwait(false);
 
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    Profiles.Add(createdProfile);
-                    ProfileCount = Profiles.Count;
-                    SelectedProfile = createdProfile;
-                }).ConfigureAwait(false);
-
-                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-                _logger.LogInformation("Created power supply profile: {ProfileName}", createdProfile.Name);
-            }
+            StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
+            _logger.LogInformation("Created power supply profile: {ProfileName}", createdProfile.Name);
         }
         catch (Exception ex)
         {
@@ -603,18 +595,45 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
 
         try
         {
-            _logger.LogDebug("Editing power supply profile: {ProfileName}", SelectedProfile.Name);
-            StatusMessage = $"Editing profile '{SelectedProfile.Name}'...";
+            StatusMessage = "Opening profile editor...";
 
-            // For now, just show a placeholder message
-            // Full profile editing UI will be implemented in Phase 4
-            StatusMessage = $"Profile editing UI coming in Phase 4. Profile: {SelectedProfile.Name}";
-            _logger.LogInformation("Edit requested for power supply profile: {ProfileName}", SelectedProfile.Name);
+            // Preserve the profile ID for refresh after editing
+            var profileId = SelectedProfile.Id;
+
+            // Create a new PowerSupplyProfileViewModel for editing
+            var profileViewModel = new PowerSupplyProfileViewModel(
+                _profileService,
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<PowerSupplyProfileViewModel>.Instance);
+
+            // Load the profile into the ViewModel
+            profileViewModel.LoadProfile(SelectedProfile);
+
+            // Show the profile edit dialog
+            var result = await _profileEditDialogService.ShowPowerSupplyProfileEditAsync(
+                $"Edit Profile - {SelectedProfile.Name}",
+                profileViewModel);
+
+            if (result.IsSuccess && result.ProfileViewModel != null)
+            {
+                StatusMessage = "Profile changes saved successfully";
+
+                // The profile has been saved by the dialog's SaveCommand
+                // Refresh our profiles collection to reflect the changes
+                await RefreshProfilesPreserveSelectionAsync(profileId);
+
+                StatusMessage = $"Profile updated successfully";
+                _logger.LogInformation("Successfully edited power supply profile with ID: {ProfileId}", profileId);
+            }
+            else
+            {
+                StatusMessage = "Profile editing cancelled";
+                _logger.LogInformation("Power supply profile editing cancelled for profile ID: {ProfileId}", profileId);
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to edit power supply profile");
-            throw;
+            StatusMessage = "Error opening profile editor";
         }
     }
 
@@ -678,13 +697,13 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
                 "Duplicate Profile",
                 "Enter a name for the duplicate profile:",
                 $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
-            
+
             var newName = inputResult.Value;
 
             if (!string.IsNullOrWhiteSpace(newName))
             {
                 var duplicatedProfile = await _profileService.DuplicateProfileAsync(
-                    SelectedProfile.Id, 
+                    SelectedProfile.Id,
                     newName).ConfigureAwait(false);
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -695,7 +714,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
                 }).ConfigureAwait(false);
 
                 StatusMessage = $"Profile duplicated as '{newName}'";
-                _logger.LogInformation("Duplicated power supply profile: {ProfileName} -> {NewName}", 
+                _logger.LogInformation("Duplicated power supply profile: {ProfileName} -> {NewName}",
                     SelectedProfile.Name, newName);
             }
         }
@@ -730,6 +749,41 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
         {
             _logger.LogError(ex, "Failed to set default power supply profile");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Refreshes profiles while preserving the selection or selecting a specific profile by ID.
+    /// </summary>
+    /// <param name="selectProfileId">Optional profile ID to select after refresh.</param>
+    private async Task RefreshProfilesPreserveSelectionAsync(int? selectProfileId)
+    {
+        try
+        {
+            // Reload profiles from storage/service
+            await LoadProfilesAsync();
+
+            // If a specific profile Id was requested, try to select it
+            if (selectProfileId.HasValue)
+            {
+                var match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
+                if (match != null)
+                {
+                    SelectedProfile = match;
+                    return;
+                }
+            }
+
+            // Otherwise, ensure there's a sensible selection
+            if (Profiles.Count > 0 && SelectedProfile == null)
+            {
+                SelectedProfile = Profiles.First();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error refreshing profiles with selection preservation");
+            StatusMessage = "Error refreshing profiles";
         }
     }
 
@@ -779,7 +833,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
                 await System.IO.File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
 
                 StatusMessage = $"Exported {Profiles.Count} profiles to {filePath}";
-                _logger.LogInformation("Exported {Count} power supply profiles to {FilePath}", 
+                _logger.LogInformation("Exported {Count} power supply profiles to {FilePath}",
                     Profiles.Count, filePath);
             }
         }
@@ -818,7 +872,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
                 await LoadProfilesAsync().ConfigureAwait(false);
 
                 StatusMessage = $"Imported {count} profiles from {filePath}";
-                _logger.LogInformation("Imported {Count} power supply profiles from {FilePath}", 
+                _logger.LogInformation("Imported {Count} power supply profiles from {FilePath}",
                     count, filePath);
             }
         }
@@ -1085,7 +1139,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             if (!string.IsNullOrEmpty(folderPath))
             {
                 ProfilesPath = folderPath;
-                
+
                 var settings = _settingsService.Settings;
                 settings.PowerSupply.ProfilesPath = folderPath;
                 await _settingsService.SaveSettingsAsync().ConfigureAwait(false);
@@ -1111,7 +1165,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
             _logger.LogDebug("Opening profiles path: {Path}", ProfilesPath);
 
             var fullPath = System.IO.Path.GetFullPath(ProfilesPath);
-            
+
             if (!System.IO.Directory.Exists(fullPath))
             {
                 System.IO.Directory.CreateDirectory(fullPath);
@@ -1222,7 +1276,7 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
         }
 
         // Check if name is already in use (excluding current profile if editing)
-        var existingProfile = Profiles.FirstOrDefault(p => 
+        var existingProfile = Profiles.FirstOrDefault(p =>
             p.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
             (!excludeId.HasValue || p.Id != excludeId.Value));
 
@@ -1293,18 +1347,26 @@ public class PowerSupplySettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
-        if (_settingsChangedHandler != null)
+    /// <summary>
+    /// Releases unmanaged and optionally managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed && disposing)
         {
-            _settingsService.SettingsChanged -= _settingsChangedHandler;
-        }
+            if (_settingsChangedHandler != null)
+            {
+                _settingsService.SettingsChanged -= _settingsChangedHandler;
+            }
 
-        _disposables.Dispose();
-        _disposed = true;
+            _disposables.Dispose();
+            _disposed = true;
+        }
     }
 
     #endregion

@@ -146,7 +146,7 @@ public class PowerSupplyProfileService : IPowerSupplyProfileService, IDisposable
             // Create new profile with assigned ID
             var newProfile = profile.Clone();
             newProfile.Name = uniqueName; // Use the unique name
-            newProfile.Id = _nextId++;
+            newProfile.Id = GetFirstAvailableId(); // Use first available ID instead of _nextId++
             newProfile.CreatedAt = DateTime.UtcNow;
             newProfile.ModifiedAt = DateTime.UtcNow;
             // If the new profile requests to be the default, clear any existing default flags.
@@ -359,9 +359,9 @@ public class PowerSupplyProfileService : IPowerSupplyProfileService, IDisposable
     /// <inheritdoc />
     public async Task SetDefaultProfileAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        if (profileId < 0)
+        if (profileId <= 0)
         {
-            throw new ArgumentException("Profile ID must be greater than or equal to zero", nameof(profileId));
+            throw new ArgumentException("Profile ID must be greater than zero", nameof(profileId));
         }
 
         await EnsureInitializedAsync(cancellationToken).ConfigureAwait(false);
@@ -411,7 +411,7 @@ public class PowerSupplyProfileService : IPowerSupplyProfileService, IDisposable
 
             // Create system default profile
             var systemDefault = PowerSupplyProfile.CreateDefaultProfile();
-            systemDefault.Id = _nextId++;
+            systemDefault.Id = GetFirstAvailableId(); // Use first available ID
             _profiles.Add(systemDefault);
 
             await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
@@ -987,6 +987,26 @@ public class PowerSupplyProfileService : IPowerSupplyProfileService, IDisposable
             if (profiles != null)
             {
                 _profiles.Clear();
+
+                // Check if we have any profiles with invalid IDs
+                var hasInvalidIds = profiles.Any(p => p.Id <= 0);
+
+                // Fix any profiles with invalid IDs (0 or negative)
+                var nextIdToAssign = 1;
+                foreach (var profile in profiles)
+                {
+                    if (profile.Id <= 0)
+                    {
+                        profile.Id = nextIdToAssign++;
+                        _logger.LogWarning("Fixed power supply profile '{ProfileName}' with invalid ID, assigned new ID: {NewId}",
+                            profile.Name, profile.Id);
+                    }
+                    else
+                    {
+                        nextIdToAssign = Math.Max(nextIdToAssign, profile.Id + 1);
+                    }
+                }
+
                 _profiles.AddRange(profiles);
 
                 if (_profiles.Any())
@@ -995,6 +1015,13 @@ public class PowerSupplyProfileService : IPowerSupplyProfileService, IDisposable
                 }
 
                 _logger.LogInformation("Loaded {Count} profiles from {FilePath}", _profiles.Count, filePath);
+
+                // Save back if we fixed any IDs
+                if (hasInvalidIds)
+                {
+                    _logger.LogInformation("Saving power supply profiles after fixing invalid IDs");
+                    await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+                }
             }
         }
         catch (Exception ex)
@@ -1115,6 +1142,36 @@ public class PowerSupplyProfileService : IPowerSupplyProfileService, IDisposable
             _logger.LogError(ex, "Failed to save profiles to {FilePath}", filePath);
             throw;
         }
+    }
+
+    #endregion
+
+    #region Private Helper Methods
+
+    /// <summary>
+    /// Gets the first available ID starting from 1, filling gaps in the sequence.
+    /// </summary>
+    /// <returns>The first available ID (1, 2, 3, etc.)</returns>
+    private int GetFirstAvailableId()
+    {
+        if (!_profiles.Any())
+        {
+            return 1;
+        }
+
+        var existingIds = _profiles.Select(p => p.Id).Where(id => id > 0).OrderBy(id => id).ToList();
+
+        // Find the first gap in the sequence starting from 1
+        for (int i = 1; i <= existingIds.Count + 1; i++)
+        {
+            if (!existingIds.Contains(i))
+            {
+                return i;
+            }
+        }
+
+        // This should never be reached, but return a safe fallback
+        return existingIds.DefaultIfEmpty(0).Max() + 1;
     }
 
     #endregion

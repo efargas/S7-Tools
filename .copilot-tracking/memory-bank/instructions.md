@@ -52,7 +52,84 @@
 - ✅ **Architecture Compliance**: All changes maintain Clean Architecture principles
 - ✅ **Memory Bank Updated**: All patterns documented for future reference
 
-### **🎉 MAJOR BREAKTHROUGH: UI Dialog Integration Complete (2025-10-09)** file) - Development patterns, rules, and guidelines for next agent
+### **🎉 MAJOR BREAKTHROUGH: Unified Profile Management Architecture Complete (2025-10-14)**
+
+**Unified Profile Management Foundation**
+- ✅ **Core Architecture Interfaces** - IProfileBase, IProfileManager<T>, IProfileValidator<T>, IUnifiedProfileDialogService
+- ✅ **Base ViewModel Infrastructure** - ProfileManagementViewModelBase<T> with complete CRUD functionality
+- ✅ **Profile Model Unification** - All three profiles (Serial, Socat, PowerSupply) implement IProfileBase
+- ✅ **Thread-Safe UI Operations** - Proper IUIThreadService integration following established patterns
+- ✅ **Build Verification** - Clean compilation achieved, all interfaces properly implemented
+
+**Complete Interface Definitions**:
+- **IProfileBase.cs** (145 lines) - Unified profile interface with metadata, business rules, and operations
+- **IProfileManager.cs** (186 lines) - Generic CRUD operations with business rule enforcement
+- **IProfileValidator.cs** (235 lines) - Comprehensive validation framework with detailed error reporting
+- **IUnifiedProfileDialogService.cs** (189 lines) - Enhanced dialog service with request/response patterns
+- **ProfileManagementViewModelBase.cs** (440+ lines) - Base ViewModel with template method pattern
+
+**Technical Excellence Achieved**:
+- ✅ **Domain-Driven Design** - Rich domain models with business logic encapsulation
+- ✅ **SOLID Principles** - Single responsibility, dependency inversion, template method pattern
+- ✅ **Clean Architecture** - Interfaces in Core, implementations properly layered
+- ✅ **ReactiveUI Compliance** - Individual property subscriptions, proper disposal patterns
+- ✅ **Thread Safety** - UI thread marshaling using established IUIThreadService patterns
+
+**Pattern Established: Unified Profile Management Architecture**
+```csharp
+// Core Interface Pattern (Required for all profile types)
+public interface IProfileBase
+{
+    int Id { get; set; }
+    string Name { get; set; }
+    string Description { get; set; }
+    string Options { get; set; }        // Command options/flags
+    string Flags { get; set; }          // Additional flags
+    DateTime CreatedAt { get; set; }    // Creation timestamp
+    DateTime ModifiedAt { get; set; }   // Last modification
+    bool IsDefault { get; set; }
+    bool IsReadOnly { get; set; }
+
+    // Business logic methods
+    bool CanModify();
+    bool CanDelete();
+    string GetSummary();
+    IProfileBase Clone();
+}
+
+// Generic Profile Manager Pattern (Required for all profile services)
+public interface IProfileManager<T> where T : class, IProfileBase
+{
+    Task<T> CreateAsync(T profile, CancellationToken cancellationToken = default);
+    Task<T> UpdateAsync(T profile, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(int profileId, CancellationToken cancellationToken = default);
+    Task<T> DuplicateAsync(int sourceProfileId, string newName, CancellationToken cancellationToken = default);
+    Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<T?> GetByIdAsync(int profileId, CancellationToken cancellationToken = default);
+    Task<bool> SetDefaultAsync(int profileId, CancellationToken cancellationToken = default);
+}
+
+// Base ViewModel Pattern (Required for all profile management ViewModels)
+public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, IDisposable
+    where TProfile : class, IProfileBase
+{
+    // Template method pattern for customization points:
+    protected abstract Task<IEnumerable<TProfile>> LoadProfilesAsync();
+    protected abstract string GetDefaultProfileName();
+    protected abstract TProfile CreateDefaultProfile();
+    protected abstract Task<bool> ShowProfileEditDialogAsync(TProfile profile);
+    protected abstract Task<string?> ShowProfileNameInputDialogAsync(string currentName);
+}
+```
+
+**Implementation Guidelines for Profile Management**:
+1. **All profiles must implement IProfileBase** - Ensures consistent metadata and behavior
+2. **All profile services must implement IProfileManager<T>** - Provides unified CRUD operations
+3. **All profile ViewModels should inherit ProfileManagementViewModelBase<T>** - Ensures consistent UI behavior
+4. **Dialog-Only Operations** - Create, Edit, Duplicate all use dialogs, no inline input fields
+5. **Consistent Button Order** - Create - Edit - Duplicate - Default - Delete - Refresh
+6. **Enhanced DataGrid** - ID column first, complete metadata columns (Options, Flags, Created, Modified)
+7. **Thread-Safe Operations** - Always use IUIThreadService for UI thread marshaling
 - **progress.md** - Current implementation status and task progress tracking
 - **activeContext.md** - Current session context and immediate next steps for next agent
 
@@ -69,6 +146,149 @@
 - Always use "In Progress", "Blocked", or "Not Started" until user confirms
 - Document user feedback verbatim in progress.md
 - Investigate discrepancies between implementation and user experience
+
+## Unified Profile Management Patterns - ESTABLISHED (TASK008)
+
+### **Architecture Foundation Complete (2025-10-14)**
+
+**Core Interfaces Implemented**:
+- `IProfileBase` - Unified profile interface with metadata and business rules
+- `IProfileManager<T>` - Generic CRUD operations with business rule enforcement
+- `IProfileValidator<T>` - Comprehensive validation framework
+- `IUnifiedProfileDialogService` - Enhanced dialog service patterns
+- `ProfileManagementViewModelBase<T>` - Base ViewModel with template method pattern
+
+### **Profile Management Standards - MANDATORY**
+
+**Profile Interface Requirements**:
+```csharp
+// All profiles MUST implement IProfileBase
+public interface IProfileBase
+{
+    int Id { get; set; }
+    string Name { get; set; }
+    string Description { get; set; }
+    string Options { get; set; }        // Command options/flags
+    string Flags { get; set; }          // Additional flags
+    DateTime CreatedAt { get; set; }
+    DateTime ModifiedAt { get; set; }
+    bool IsDefault { get; set; }
+    bool IsReadOnly { get; set; }
+
+    // Business logic methods
+    bool CanModify();
+    bool CanDelete();
+    string GetSummary();
+    IProfileBase Clone();
+}
+```
+
+**Service Layer Standards**:
+```csharp
+// All profile services MUST implement IProfileManager<T>
+public interface IProfileManager<T> where T : class, IProfileBase
+{
+    Task<T> CreateAsync(T profile, CancellationToken cancellationToken = default);
+    Task<T> UpdateAsync(T profile, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(int profileId, CancellationToken cancellationToken = default);
+    Task<T> DuplicateAsync(int sourceProfileId, string newName, CancellationToken cancellationToken = default);
+    // ... additional operations
+}
+```
+
+**ViewModel Inheritance Pattern**:
+```csharp
+// All profile ViewModels SHOULD inherit ProfileManagementViewModelBase<T>
+public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, IDisposable
+    where TProfile : class, IProfileBase
+{
+    // Template method pattern with customization points
+    protected abstract Task<IEnumerable<TProfile>> LoadProfilesAsync();
+    protected abstract string GetDefaultProfileName();
+    protected abstract TProfile CreateDefaultProfile();
+}
+```
+
+### **UI Standards - MANDATORY**
+
+**CRUD Button Order** (All modules MUST follow):
+Create - Edit - Duplicate - Default - Delete - Refresh
+
+**DataGrid Layout** (Enhanced metadata columns):
+- ID column FIRST
+- Complete metadata: Name, Description, Options, Flags, Created, Modified, Default, ReadOnly
+
+**Dialog-Only Operations**:
+- Create: Opens dialog with default values
+- Edit: Opens dialog with existing data
+- Duplicate: Name input → direct list addition
+
+### **Validation Patterns - REQUIRED**
+
+**Name Uniqueness**:
+```csharp
+// Real-time validation in all dialogs
+public async Task<bool> IsNameUniqueAsync(string name, int? excludeId = null)
+{
+    return !_profiles.Any(p => p.Id != excludeId &&
+                          string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+}
+```
+
+**ID Assignment**:
+```csharp
+// Find first available ID starting from 1
+public async Task<int> GetNextAvailableIdAsync()
+{
+    var existingIds = _profiles.Select(p => p.Id).OrderBy(id => id).ToList();
+    for (int i = 1; i <= existingIds.Count + 1; i++)
+    {
+        if (!existingIds.Contains(i)) return i;
+    }
+    return existingIds.Count + 1;
+}
+```
+
+### **Thread Safety - CRITICAL**
+
+**UI Thread Marshaling** (Always use IUIThreadService):
+```csharp
+// REQUIRED pattern for collection updates
+private readonly IUIThreadService _uiThreadService;
+
+protected async Task RefreshProfilesAsync()
+{
+    var profiles = await LoadProfilesAsync();
+    await _uiThreadService.InvokeOnUIThreadAsync(() =>
+    {
+        _profiles.Clear();
+        foreach (var profile in profiles)
+        {
+            _profiles.Add(profile);
+        }
+    });
+}
+```
+
+### **Implementation Guidelines**
+
+**Phase 1 Complete** (Architecture Design):
+✅ All core interfaces implemented
+✅ Base ViewModel created
+✅ Profile models updated with IProfileBase
+✅ Thread-safe UI operations
+✅ Build verification successful
+
+**Phase 2 Ready** (Profile Model Enhancements):
+- Add missing metadata to Serial/Socat profiles
+- Update service implementations
+- Enhance DataGrid layouts
+
+**Phase 3-10 Planned**:
+- UI cleanup (remove inline inputs)
+- Button standardization
+- Dialog enhancement
+- Validation logic unification
 
 ## Application Architecture - IMMUTABLE CORE
 

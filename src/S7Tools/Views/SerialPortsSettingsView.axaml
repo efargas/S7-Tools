@@ -30,7 +30,7 @@
               BorderThickness="1"
               CornerRadius="4"
               Padding="16">
-  <StackPanel Spacing="8">
+        <StackPanel Spacing="8">
           <TextBlock Text="Profile Management"
                      FontSize="18"
                      FontWeight="SemiBold"
@@ -186,6 +186,13 @@
               </DataGrid.Styles>
 
               <DataGrid.Columns>
+                <!-- ID Column: First column to show profile ID -->
+                <DataGridTextColumn Binding="{Binding Id}" Width="50" MinWidth="40">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
                 <!-- Name: slightly smaller min width so headers don't appear too large -->
                 <DataGridTextColumn Binding="{Binding Name}" Width="160" MinWidth="120">
                   <DataGridTextColumn.Header>
