@@ -47,20 +47,23 @@ public interface IProfileEditDialogService
     /// <summary>
     /// Shows a profile creation dialog for a new serial port profile with default values.
     /// </summary>
+    /// <param name="defaultName">The default name for the new profile.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the edit result.</returns>
-    Task<ProfileEditResult> CreateSerialProfileAsync();
+    Task<ProfileEditResult> CreateSerialProfileAsync(string defaultName = "SerialDefault");
 
     /// <summary>
     /// Shows a profile creation dialog for a new socat profile with default values.
     /// </summary>
+    /// <param name="defaultName">The default name for the new profile.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the edit result.</returns>
-    Task<ProfileEditResult> CreateSocatProfileAsync();
+    Task<ProfileEditResult> CreateSocatProfileAsync(string defaultName = "SocatDefault");
 
     /// <summary>
     /// Shows a profile creation dialog for a new power supply profile with default values.
     /// </summary>
+    /// <param name="defaultName">The default name for the new profile.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the edit result.</returns>
-    Task<ProfileEditResult> CreatePowerSupplyProfileAsync();
+    Task<ProfileEditResult> CreatePowerSupplyProfileAsync(string defaultName = "PowerSupplyDefault");
 
     /// <summary>
     /// Shows a dialog to edit an existing serial port profile.

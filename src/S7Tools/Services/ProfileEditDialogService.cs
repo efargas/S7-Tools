@@ -87,11 +87,16 @@ public class ProfileEditDialogService : IProfileEditDialogService
 
             _staticInteraction.RegisterHandler(async interaction =>
             {
+                System.Diagnostics.Debug.WriteLine($"DEBUG: ProfileEditDialogService interaction handler called");
                 try
                 {
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Creating ProfileEditDialog for {interaction.Input.ProfileType}");
+
                     // Create and setup profile edit dialog
                     var dialog = new Views.ProfileEditDialog();
                     dialog.SetupDialog(interaction.Input);
+
+                    System.Diagnostics.Debug.WriteLine($"DEBUG: Dialog created and setup completed");
 
                     // Get the main window as parent
                     var mainWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
@@ -100,16 +105,21 @@ public class ProfileEditDialogService : IProfileEditDialogService
 
                     if (mainWindow != null)
                     {
+                        System.Diagnostics.Debug.WriteLine($"DEBUG: Showing dialog with main window as parent");
                         await dialog.ShowDialog(mainWindow);
+                        System.Diagnostics.Debug.WriteLine($"DEBUG: Dialog closed, result: {dialog.Result.IsSuccess}");
                         interaction.SetOutput(dialog.Result);
                     }
                     else
                     {
+                        System.Diagnostics.Debug.WriteLine($"ERROR: MainWindow not found for dialog parent");
                         interaction.SetOutput(ProfileEditResult.Cancelled());
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    System.Diagnostics.Debug.WriteLine($"ERROR: Exception in ProfileEditDialogService interaction handler: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
                     interaction.SetOutput(ProfileEditResult.Cancelled());
                 }
             });
@@ -161,11 +171,11 @@ public class ProfileEditDialogService : IProfileEditDialogService
     // Enhanced methods for Phase 6 - Unified Dialog System
 
     /// <inheritdoc />
-    public async Task<ProfileEditResult> CreateSerialProfileAsync()
+    public async Task<ProfileEditResult> CreateSerialProfileAsync(string defaultName = "SerialDefault")
     {
         try
         {
-            _logger.LogInformation("Creating new serial port profile with default values");
+            _logger.LogInformation("Creating new serial port profile with default name: {DefaultName}", defaultName);
 
             // Create ViewModel with default values
             var profileViewModel = new SerialPortProfileViewModel(
@@ -174,8 +184,11 @@ public class ProfileEditDialogService : IProfileEditDialogService
                 _clipboardService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<SerialPortProfileViewModel>.Instance);
 
-            // Set default values for new profile
-            // Note: The ViewModel should handle its own default initialization
+            // Set the default name
+            profileViewModel.ProfileName = defaultName;
+
+            // CRITICAL: For new profiles, mark as having changes so SaveCommand is enabled
+            profileViewModel.HasChanges = true;
 
             // Show the edit dialog for the new profile
             var result = await ShowSerialProfileEditAsync("Create Serial Port Profile", profileViewModel);
@@ -199,11 +212,11 @@ public class ProfileEditDialogService : IProfileEditDialogService
     }
 
     /// <inheritdoc />
-    public async Task<ProfileEditResult> CreateSocatProfileAsync()
+    public async Task<ProfileEditResult> CreateSocatProfileAsync(string defaultName = "SocatDefault")
     {
         try
         {
-            _logger.LogInformation("Creating new socat profile with default values");
+            _logger.LogInformation("Creating new socat profile with default name: {DefaultName}", defaultName);
 
             // Create ViewModel with default values - including ISocatService dependency
             var profileViewModel = new SocatProfileViewModel(
@@ -211,6 +224,12 @@ public class ProfileEditDialogService : IProfileEditDialogService
                 _socatService,
                 _clipboardService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<SocatProfileViewModel>.Instance);
+
+            // Set the default name
+            profileViewModel.ProfileName = defaultName;
+
+            // CRITICAL: For new profiles, mark as having changes so SaveCommand is enabled
+            profileViewModel.HasChanges = true;
 
             // Show the edit dialog for the new profile
             var result = await ShowSocatProfileEditAsync("Create Socat Profile", profileViewModel);
@@ -234,16 +253,23 @@ public class ProfileEditDialogService : IProfileEditDialogService
     }
 
     /// <inheritdoc />
-    public async Task<ProfileEditResult> CreatePowerSupplyProfileAsync()
+    public async Task<ProfileEditResult> CreatePowerSupplyProfileAsync(string defaultName = "PowerSupplyDefault")
     {
         try
         {
-            _logger.LogInformation("Creating new power supply profile with default values");
+            _logger.LogInformation("Creating new power supply profile with default name: {DefaultName}", defaultName);
+            System.Diagnostics.Debug.WriteLine($"DEBUG: CreatePowerSupplyProfileAsync called with name: {defaultName}");
 
             // Create ViewModel with default values
             var profileViewModel = new PowerSupplyProfileViewModel(
                 _powerSupplyProfileService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<PowerSupplyProfileViewModel>.Instance);
+
+            // Set the default name
+            profileViewModel.ProfileName = defaultName;
+
+            // CRITICAL: For new profiles, mark as having changes so SaveCommand is enabled
+            profileViewModel.HasChanges = true;
 
             // Show the edit dialog for the new profile
             var result = await ShowPowerSupplyProfileEditAsync("Create Power Supply Profile", profileViewModel);
@@ -288,9 +314,8 @@ public class ProfileEditDialogService : IProfileEditDialogService
                 _clipboardService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<SerialPortProfileViewModel>.Instance);
 
-            // TODO: Implement LoadFromProfile method or use profile data to initialize ViewModel
-            // For now, we'll show the dialog with a fresh ViewModel
-            // profileViewModel.LoadFromProfile(profile);
+            // Load the existing profile data into the ViewModel
+            profileViewModel.LoadProfile(profile);
 
             // Show the edit dialog
             var result = await ShowSerialProfileEditAsync("Edit Serial Port Profile", profileViewModel);
@@ -335,8 +360,8 @@ public class ProfileEditDialogService : IProfileEditDialogService
                 _clipboardService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<SocatProfileViewModel>.Instance);
 
-            // TODO: Implement LoadFromProfile method or use profile data to initialize ViewModel
-            // profileViewModel.LoadFromProfile(profile);
+            // Load the existing profile data into the ViewModel
+            profileViewModel.LoadProfile(profile);
 
             // Show the edit dialog
             var result = await ShowSocatProfileEditAsync("Edit Socat Profile", profileViewModel);
@@ -379,8 +404,8 @@ public class ProfileEditDialogService : IProfileEditDialogService
                 _powerSupplyProfileService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<PowerSupplyProfileViewModel>.Instance);
 
-            // TODO: Implement LoadFromProfile method or use profile data to initialize ViewModel
-            // profileViewModel.LoadFromProfile(profile);
+            // Load the existing profile data into the ViewModel
+            profileViewModel.LoadProfile(profile);
 
             // Show the edit dialog
             var result = await ShowPowerSupplyProfileEditAsync("Edit Power Supply Profile", profileViewModel);

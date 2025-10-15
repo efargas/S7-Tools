@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
@@ -39,6 +40,57 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
 
     /// <inheritdoc/>
     protected override string ProfileTypeName => "Socat";
+
+    /// <inheritdoc/>
+    protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
+    {
+        // Create a default socat profile with typical TCP to serial bridge configuration
+        var defaultProfile = new SocatProfile
+        {
+            Name = "SocatDefault",
+            Description = "Default socat profile for TCP to serial bridge created automatically",
+            Configuration = new SocatConfiguration
+            {
+                TcpPort = 2001,
+                EnableFork = true,
+                EnableReuseAddr = true,
+                SerialRawMode = true,
+                SerialDisableEcho = true
+            },
+            IsDefault = true,
+            IsReadOnly = false,
+            CreatedAt = DateTime.UtcNow,
+            ModifiedAt = DateTime.UtcNow,
+            Id = 1
+        };        _profiles.Add(defaultProfile);
+
+        // Ensure directory exists
+        var directory = Path.GetDirectoryName(_profilesPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // Save profiles using the same logic as SaveProfilesAsync
+        try
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+
+            var json = JsonSerializer.Serialize(_profiles, options);
+            await File.WriteAllTextAsync(_profilesPath, json, cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Created default socat profile: {ProfileName}", defaultProfile.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save default socat profile");
+            _profiles.Clear(); // Clear the in-memory profiles if save failed
+        }
+    }
 
     #endregion
 

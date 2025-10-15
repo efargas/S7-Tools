@@ -42,42 +42,42 @@
           <StackPanel>
             <!-- Toolbar above the DataGrid -->
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
-              <Button Width="110" Height="34" Command="{Binding CreateProfileCommand}" Background="#28A745" Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
                   <TextBlock Text="Create" />
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding EditProfileCommand}" Background="#0E639C" Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="#0E639C" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
                   <TextBlock Text="Edit" />
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding DuplicateProfileCommand}" Background="#0E639C" Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding DuplicateCommand}" Background="#0E639C" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
                   <TextBlock Text="Duplicate" />
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding SetDefaultProfileCommand}" Background="#0E639C" Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}" Background="#0E639C" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
                   <TextBlock Text="Set Default" />
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding DeleteProfileCommand}" Background="#D13438" Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438" Foreground="White">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
                   <TextBlock Text="Delete" />
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding RefreshProfilesCommand}" Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
+              <Button Width="110" Height="34" Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
                   <TextBlock Text="Refresh" />
@@ -215,7 +215,7 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"
-                       Text="{Binding ProfileCount, StringFormat='Total Profiles: {0}'}"
+                       Text="{Binding Profiles.Count, StringFormat='Total Profiles: {0}'}"
                        Foreground="#858585"
                        FontSize="12" />
 
@@ -662,7 +662,7 @@
               <TextBlock Text="Profile Management:"
                          Foreground="#CCCCCC"
                          FontWeight="SemiBold" />
-              <TextBlock Text="{Binding ProfileCount, StringFormat='• {0} profiles loaded'}"
+              <TextBlock Text="{Binding Profiles.Count, StringFormat='• {0} profiles loaded'}"
                          Foreground="#858585"
                          FontSize="12" />
               <TextBlock Text="{Binding StatusMessage, StringFormat='• {0}'}"

@@ -1,5 +1,4 @@
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace S7Tools.Views;
 
@@ -15,13 +14,5 @@ public partial class PowerSupplySettingsView : UserControl
     public PowerSupplySettingsView()
     {
         InitializeComponent();
-    }
-
-    /// <summary>
-    /// Initializes the component by loading the XAML.
-    /// </summary>
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
     }
 }

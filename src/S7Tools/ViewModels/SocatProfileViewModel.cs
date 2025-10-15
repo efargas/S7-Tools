@@ -673,35 +673,62 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Saves the current profile configuration.
+    /// This method is exposed publicly to allow direct invocation from the UI layer,
+    /// avoiding ReactiveCommand execution deadlocks on the UI thread.
     /// </summary>
-    private async Task SaveAsync()
+    /// <returns>A task that represents the asynchronous save operation.</returns>
+    public async Task SaveAsync()
     {
+        System.Diagnostics.Debug.WriteLine($"DEBUG: SocatProfileViewModel.SaveAsync called");
         try
         {
             StatusMessage = "Saving profile...";
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
             var profile = CreateProfile();
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created with name: {profile.Name}");
 
             if (_originalProfile != null)
             {
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Updating existing profile ID: {_originalProfile.Id}");
                 profile.Id = _originalProfile.Id;
                 profile.CreatedAt = _originalProfile.CreatedAt;
                 profile.ModifiedAt = DateTime.UtcNow;
-                await _profileService.UpdateAsync(profile);
+                await _profileService.UpdateAsync(profile).ConfigureAwait(false);
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Profile updated successfully");
             }
             else
             {
-                await _profileService.CreateAsync(profile);
+                Console.WriteLine($"🔥🔥🔥 ViewModel: Creating new profile via service...");
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Creating new profile via service");
+                _logger.LogInformation("🔥 ABOUT TO CALL _profileService.CreateAsync for profile: {ProfileName}", profile.Name);
+                Console.WriteLine($"🔥 ViewModel: About to await _profileService.CreateAsync for profile: {profile.Name}");
+                System.Diagnostics.Debug.WriteLine($"🔥 CRITICAL: Calling _profileService.CreateAsync NOW...");
+                var createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
+                Console.WriteLine($"✅✅✅ ViewModel: CreateAsync RETURNED! Profile ID: {createdProfile.Id}");
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created successfully with ID: {createdProfile.Id}");
+                _logger.LogInformation("✅ _profileService.CreateAsync RETURNED for profile: {ProfileName}, ID: {ProfileId}", createdProfile.Name, createdProfile.Id);
+
+                Console.WriteLine($"ViewModel: Setting _originalProfile to createdProfile...");
+                // Update _originalProfile with the created profile so subsequent saves are updates
+                _originalProfile = createdProfile;
+                Console.WriteLine($"ViewModel: _originalProfile set successfully ✓");
             }
 
+            Console.WriteLine($"ViewModel: Setting HasChanges = false...");
             HasChanges = false;
             StatusMessage = "Profile saved successfully";
             _logger.LogInformation("Profile saved: {ProfileName}", profile.Name);
+            Console.WriteLine($"✅ ViewModel: SocatProfileViewModel.SaveAsync completed successfully!");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: SocatProfileViewModel.SaveAsync completed successfully");
         }
         catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in SocatProfileViewModel.SaveAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             _logger.LogError(ex, "Error saving profile");
             StatusMessage = "Error saving profile";
+            throw; // Re-throw to allow caller to handle the exception
         }
     }
 

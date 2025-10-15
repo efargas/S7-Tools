@@ -45,7 +45,7 @@ public static class PlatformHelper
                         ("pcmanfm", path)
                     };
 
-                    ProcessStartInfo? successPsi = null;
+                    bool opened = false;
                     foreach (var (fileName, args) in candidates)
                     {
                         try
@@ -56,10 +56,11 @@ public static class PlatformHelper
                                 CreateNoWindow = true
                             };
                             using var proc = Process.Start(testPsi);
-                            if (proc != null && !proc.HasExited)
+                            if (proc != null)
                             {
-                                successPsi = testPsi;
-                                break;
+                                // Successfully opened the directory
+                                opened = true;
+                                return; // Exit immediately after successful open
                             }
                         }
                         catch
@@ -69,12 +70,12 @@ public static class PlatformHelper
                         }
                     }
 
-                    if (successPsi == null)
+                    if (!opened)
                     {
                         throw new InvalidOperationException("No suitable file manager found to open directory on Linux.");
                     }
 
-                    psi = successPsi;
+                    return; // Already opened, no need to execute code below
                 }
                 else if (OperatingSystem.IsMacOS())
                 {

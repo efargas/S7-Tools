@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:converters="using:S7Tools.Converters"
              mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
              x:Class="S7Tools.Views.PowerSupplyProfileEditContent"
              x:DataType="vm:PowerSupplyProfileViewModel">
@@ -10,6 +11,12 @@
   <Design.DataContext>
     <vm:PowerSupplyProfileViewModel />
   </Design.DataContext>
+
+  <UserControl.Resources>
+    <!-- Add required converters for this view -->
+    <converters:BooleanToColorConverter x:Key="BooleanToColorConverter" />
+    <converters:BooleanToStringConverter x:Key="BooleanToStringConverter" />
+  </UserControl.Resources>
 
   <Grid Margin="20">
     <Grid.RowDefinitions>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -34,7 +35,8 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     where TProfile : class, IProfileBase
 {
     private readonly ILogger _logger;
-    private readonly IUnifiedProfileDialogService _dialogService;
+    private readonly IUnifiedProfileDialogService _profileDialogService;
+    private readonly IDialogService _dialogService;
     private readonly IUIThreadService _uiThreadService;
     private readonly CompositeDisposable _disposables = new();
 
@@ -53,19 +55,37 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     /// Initializes a new instance of the <see cref="ProfileManagementViewModelBase{TProfile}"/> class.
     /// </summary>
     /// <param name="logger">The logger for this view model.</param>
-    /// <param name="dialogService">The unified profile dialog service.</param>
+    /// <param name="profileDialogService">The unified profile dialog service.</param>
+    /// <param name="dialogService">The general dialog service for confirmations.</param>
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
     protected ProfileManagementViewModelBase(
         ILogger logger,
-        IUnifiedProfileDialogService dialogService,
+        IUnifiedProfileDialogService profileDialogService,
+        IDialogService dialogService,
         IUIThreadService uiThreadService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _profileDialogService = profileDialogService ?? throw new ArgumentNullException(nameof(profileDialogService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
 
         SetupCommands();
         SetupValidation();
+
+        // Initialize profile data
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await LoadProfilesAsync().ConfigureAwait(false);
+                _logger.LogInformation("Profile management initialized for {ProfileType} with {Count} profiles",
+                    GetProfileTypeName(), Profiles.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize profiles for {ProfileType}", GetProfileTypeName());
+            }
+        });
     }
 
     #region Properties
@@ -211,6 +231,15 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     public ReactiveCommand<Unit, Unit> RefreshCommand { get; private set; } = null!;
 
     /// <summary>
+    /// Gets the command to set the selected profile as the default.
+    /// </summary>
+    /// <remarks>
+    /// Marks the currently selected profile as the default profile for this type.
+    /// Only enabled when a profile is selected and it's not already the default.
+    /// </remarks>
+    public ReactiveCommand<Unit, Unit> SetDefaultCommand { get; private set; } = null!;
+
+    /// <summary>
     /// Gets the command to browse for a different profiles directory.
     /// </summary>
     /// <remarks>
@@ -346,6 +375,11 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         DuplicateCommand = ReactiveCommand.CreateFromTask(ExecuteDuplicateAsync, hasSelection);
         DeleteCommand = ReactiveCommand.CreateFromTask(ExecuteDeleteAsync, canDelete);
 
+        // Set default command - enabled when profile is selected and not already default
+        var canSetDefault = this.WhenAnyValue(x => x.SelectedProfile)
+            .Select(profile => profile != null && !profile.IsDefault);
+        SetDefaultCommand = ReactiveCommand.CreateFromTask(ExecuteSetDefaultAsync, canSetDefault);
+
         // General commands
         RefreshCommand = ReactiveCommand.CreateFromTask(ExecuteRefreshAsync);
         BrowseCommand = ReactiveCommand.CreateFromTask(ExecuteBrowseAsync);
@@ -405,17 +439,438 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 
     #endregion
 
+    #region Helper Methods
+
+    /// <summary>
+    /// Gets the next available unique name based on a base name.
+    /// </summary>
+    /// <param name="baseName">The base name to use for generation.</param>
+    /// <returns>A unique name that doesn't conflict with existing profiles.</returns>
+    private async Task<string> GetNextAvailableNameAsync(string baseName)
+    {
+        if (await IsNameUniqueAsync(baseName).ConfigureAwait(false))
+        {
+            return baseName;
+        }
+
+        var counter = 1;
+        string candidateName;
+        do
+        {
+            candidateName = $"{baseName} ({counter})";
+            counter++;
+        }
+        while (!await IsNameUniqueAsync(candidateName).ConfigureAwait(false));
+
+        return candidateName;
+    }
+
+    /// <summary>
+    /// Checks if a profile name is unique within the current collection.
+    /// </summary>
+    /// <param name="name">The name to check for uniqueness.</param>
+    /// <param name="excludeId">Optional profile ID to exclude from the check (for editing).</param>
+    /// <returns>True if the name is unique, false otherwise.</returns>
+    private async Task<bool> IsNameUniqueAsync(string name, int? excludeId = null)
+    {
+        return await _uiThreadService.InvokeOnUIThreadAsync(() =>
+        {
+            return !Profiles.Any(p =>
+                p.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
+                (!excludeId.HasValue || p.Id != excludeId.Value));
+        }).ConfigureAwait(false);
+    }
+
+    #endregion
+
     #region Command Implementation Stubs
 
-    // These would be implemented with the actual dialog and service calls
-    private async Task ExecuteCreateAsync() => await Task.CompletedTask;
-    private async Task ExecuteEditAsync() => await Task.CompletedTask;
-    private async Task ExecuteDuplicateAsync() => await Task.CompletedTask;
-    private async Task ExecuteDeleteAsync() => await Task.CompletedTask;
-    private async Task ExecuteRefreshAsync() => await Task.CompletedTask;
-    private async Task ExecuteBrowseAsync() => await Task.CompletedTask;
-    private async Task ExecuteOpenInExplorerAsync() => await Task.CompletedTask;
-    private async Task ExecuteLoadDefaultAsync() => await Task.CompletedTask;
+    /// <summary>
+    /// Executes the create profile command with proper error handling and UI feedback.
+    /// </summary>
+    private async Task ExecuteCreateAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Creating profile...";
+            _logger.LogDebug("Starting create profile operation for {ProfileType}", GetProfileTypeName());
+            System.Diagnostics.Debug.WriteLine($"DEBUG: ExecuteCreateAsync called for {GetProfileTypeName()}");
+
+            // Create request with default name
+            var request = new ProfileCreateRequest
+            {
+                Title = $"Create {GetProfileTypeName()} Profile",
+                DefaultName = await GetNextAvailableNameAsync(GetDefaultProfileName()).ConfigureAwait(false),
+                DefaultDescription = $"New {GetProfileTypeName()} profile"
+            };
+
+            // Show create dialog using template method
+            var result = await ShowCreateDialogAsync(request).ConfigureAwait(false);
+
+            if (result.IsSuccess && result.Result != null)
+            {
+                // Validate name uniqueness
+                if (!await IsNameUniqueAsync(result.Result.Name).ConfigureAwait(false))
+                {
+                    StatusMessage = $"Profile name '{result.Result.Name}' already exists";
+                    return;
+                }
+
+                // Create profile using manager
+                var createdProfile = await GetProfileManager().CreateAsync(result.Result).ConfigureAwait(false);
+
+                // Refresh profiles from storage to ensure UI is in sync
+                await LoadProfilesAsync().ConfigureAwait(false);
+
+                // Select the newly created profile
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    var newProfile = Profiles.FirstOrDefault(p => p.Id == createdProfile.Id);
+                    if (newProfile != null)
+                    {
+                        SelectedProfile = newProfile;
+                    }
+                }).ConfigureAwait(false);
+
+                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
+                _logger.LogInformation("Created {ProfileType} profile: {ProfileName}", GetProfileTypeName(), createdProfile.Name);
+            }
+            else
+            {
+                StatusMessage = "Profile creation cancelled";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create {ProfileType} profile", GetProfileTypeName());
+            StatusMessage = $"Failed to create profile: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Executes the edit profile command with proper validation and UI feedback.
+    /// </summary>
+    private async Task ExecuteEditAsync()
+    {
+        if (SelectedProfile == null)
+        {
+            StatusMessage = "No profile selected for editing";
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Editing profile...";
+            _logger.LogDebug("Starting edit profile operation for {ProfileName}", SelectedProfile.Name);
+
+            // Create edit request with current profile
+            var request = new ProfileEditRequest
+            {
+                Title = $"Edit {GetProfileTypeName()} Profile",
+                ProfileId = SelectedProfile.Id
+            };
+
+            // Show edit dialog using template method
+            var result = await ShowEditDialogAsync(request).ConfigureAwait(false);
+
+            if (result.IsSuccess && result.Result != null)
+            {
+                // Validate name uniqueness (excluding current profile)
+                if (!await IsNameUniqueAsync(result.Result.Name, SelectedProfile.Id).ConfigureAwait(false))
+                {
+                    StatusMessage = $"Profile name '{result.Result.Name}' already exists";
+                    return;
+                }
+
+                // Update profile using manager
+                var updatedProfile = await GetProfileManager().UpdateAsync(result.Result).ConfigureAwait(false);
+
+                // Refresh profiles from storage to ensure UI is in sync
+                await LoadProfilesAsync().ConfigureAwait(false);
+
+                // Reselect the updated profile
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    var updated = Profiles.FirstOrDefault(p => p.Id == updatedProfile.Id);
+                    if (updated != null)
+                    {
+                        SelectedProfile = updated;
+                    }
+                }).ConfigureAwait(false);
+
+                StatusMessage = $"Profile '{updatedProfile.Name}' updated successfully";
+                _logger.LogInformation("Updated {ProfileType} profile: {ProfileName}", GetProfileTypeName(), updatedProfile.Name);
+            }
+            else
+            {
+                StatusMessage = "Profile edit cancelled";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to edit {ProfileType} profile: {ProfileName}", GetProfileTypeName(), SelectedProfile?.Name);
+            StatusMessage = $"Failed to edit profile: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Executes the duplicate profile command with name input and validation.
+    /// </summary>
+    private async Task ExecuteDuplicateAsync()
+    {
+        if (SelectedProfile == null)
+        {
+            StatusMessage = "No profile selected for duplication";
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Duplicating profile...";
+            _logger.LogDebug("Starting duplicate profile operation for {ProfileName}", SelectedProfile.Name);
+
+            // Create duplicate request with suggested name
+            var suggestedName = await GetNextAvailableNameAsync($"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
+            var request = new ProfileDuplicateRequest
+            {
+                Title = $"Duplicate {GetProfileTypeName()} Profile",
+                SourceProfileId = SelectedProfile.Id,
+                SuggestedName = suggestedName
+            };
+
+            // Show duplicate dialog using template method
+            var result = await ShowDuplicateDialogAsync(request).ConfigureAwait(false);
+
+            if (result.IsSuccess && !string.IsNullOrWhiteSpace(result.Result))
+            {
+                // Validate name uniqueness
+                if (!await IsNameUniqueAsync(result.Result).ConfigureAwait(false))
+                {
+                    StatusMessage = $"Profile name '{result.Result}' already exists";
+                    return;
+                }
+
+                // Duplicate profile using manager
+                var duplicatedProfile = await GetProfileManager().DuplicateAsync(SelectedProfile.Id, result.Result).ConfigureAwait(false);
+
+                // Refresh profiles from storage to ensure UI is in sync
+                await LoadProfilesAsync().ConfigureAwait(false);
+
+                // Select the newly duplicated profile
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    var duplicate = Profiles.FirstOrDefault(p => p.Id == duplicatedProfile.Id);
+                    if (duplicate != null)
+                    {
+                        SelectedProfile = duplicate;
+                    }
+                }).ConfigureAwait(false);
+
+                StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
+                _logger.LogInformation("Duplicated {ProfileType} profile: {SourceName} -> {NewName}",
+                    GetProfileTypeName(), SelectedProfile.Name, duplicatedProfile.Name);
+            }
+            else
+            {
+                StatusMessage = "Profile duplication cancelled";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to duplicate {ProfileType} profile: {ProfileName}", GetProfileTypeName(), SelectedProfile?.Name);
+            StatusMessage = $"Failed to duplicate profile: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Executes the delete profile command with confirmation and proper cleanup.
+    /// </summary>
+    private async Task ExecuteDeleteAsync()
+    {
+        if (SelectedProfile == null)
+        {
+            StatusMessage = "No profile selected for deletion";
+            return;
+        }
+
+        var profileName = SelectedProfile.Name;
+        var profileId = SelectedProfile.Id;
+
+        // Show confirmation dialog
+        var confirmed = await _dialogService.ShowConfirmationAsync(
+            $"Delete Profile",
+            $"Are you sure you want to delete the profile '{profileName}'? This action cannot be undone.").ConfigureAwait(false);
+
+        if (!confirmed)
+        {
+            _logger.LogDebug("Profile deletion cancelled by user for {ProfileName}", profileName);
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Deleting profile...";
+            _logger.LogDebug("Starting delete profile operation for {ProfileName}", profileName);
+
+            var success = await GetProfileManager().DeleteAsync(profileId).ConfigureAwait(false);
+
+            if (success)
+            {
+                // Refresh profiles from storage to ensure UI is in sync
+                await LoadProfilesAsync().ConfigureAwait(false);
+
+                // Select next available profile
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    SelectedProfile = Profiles.FirstOrDefault();
+                }).ConfigureAwait(false);
+
+                StatusMessage = $"Profile '{profileName}' deleted successfully";
+                _logger.LogInformation("Deleted {ProfileType} profile: {ProfileName}", GetProfileTypeName(), profileName);
+            }
+            else
+            {
+                StatusMessage = $"Failed to delete profile '{profileName}'";
+                _logger.LogWarning("Delete operation returned false for {ProfileType} profile: {ProfileName}", GetProfileTypeName(), profileName);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete {ProfileType} profile: {ProfileName}", GetProfileTypeName(), SelectedProfile?.Name);
+            StatusMessage = $"Failed to delete profile: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Sets the selected profile as the default profile.
+    /// </summary>
+    private async Task ExecuteSetDefaultAsync()
+    {
+        if (SelectedProfile == null)
+        {
+            return;
+        }
+
+        // Capture profile info before async operations that might change SelectedProfile
+        var profileId = SelectedProfile.Id;
+        var profileName = SelectedProfile.Name;
+
+        try
+        {
+            await GetProfileManager().SetDefaultAsync(profileId).ConfigureAwait(false);
+            await LoadProfilesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation("Profile '{Name}' set as default", profileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to set profile '{Name}' as default", profileName);
+            // Could show error message to user here
+        }
+    }
+
+    /// <summary>
+    /// Executes the refresh profiles command to reload data from storage.
+    /// </summary>
+    private async Task ExecuteRefreshAsync()
+    {
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Refreshing profiles...";
+            _logger.LogDebug("Refreshing {ProfileType} profiles", GetProfileTypeName());
+
+            // Preserve current selection
+            var currentSelectedId = SelectedProfile?.Id;
+
+            // Load all profiles from manager
+            var profiles = await GetProfileManager().GetAllAsync().ConfigureAwait(false);
+
+            // Update UI on main thread
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                Profiles.Clear();
+                foreach (var profile in profiles)
+                {
+                    Profiles.Add(profile);
+                }
+
+                // Restore selection or select first/default
+                if (currentSelectedId.HasValue)
+                {
+                    SelectedProfile = Profiles.FirstOrDefault(p => p.Id == currentSelectedId.Value);
+                }
+
+                SelectedProfile ??= Profiles.FirstOrDefault(p => p.IsDefault) ?? Profiles.FirstOrDefault();
+                HasChanges = false;
+            }).ConfigureAwait(false);
+
+            StatusMessage = $"Refreshed {Profiles.Count} profiles";
+            _logger.LogInformation("Refreshed {Count} {ProfileType} profiles", Profiles.Count, GetProfileTypeName());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to refresh {ProfileType} profiles", GetProfileTypeName());
+            StatusMessage = $"Failed to refresh profiles: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Executes the browse command for path selection.
+    /// NOTE: This is a placeholder for path management functionality.
+    /// </summary>
+    private async Task ExecuteBrowseAsync()
+    {
+        StatusMessage = "Browse functionality not yet implemented";
+        _logger.LogDebug("Browse command executed (placeholder)");
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Executes the open in explorer command for path viewing.
+    /// NOTE: This is a placeholder for path management functionality.
+    /// </summary>
+    private async Task ExecuteOpenInExplorerAsync()
+    {
+        StatusMessage = "Open in explorer functionality not yet implemented";
+        _logger.LogDebug("Open in explorer command executed (placeholder)");
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Executes the load default command for path reset.
+    /// NOTE: This is a placeholder for path management functionality.
+    /// </summary>
+    private async Task ExecuteLoadDefaultAsync()
+    {
+        StatusMessage = "Load default functionality not yet implemented";
+        _logger.LogDebug("Load default command executed (placeholder)");
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
 
     #endregion
 

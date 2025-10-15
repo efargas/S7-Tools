@@ -82,50 +82,115 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<T> CreateAsync(T profile, CancellationToken cancellationToken = default)
     {
+        Console.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
+        System.Diagnostics.Debug.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
+
         if (profile == null) throw new ArgumentNullException(nameof(profile));
 
+        Console.WriteLine($"📝 Step 1: Logging entry for profile: {profile.Name}");
+        _logger.LogInformation("🚀 StandardProfileManager.CreateAsync ENTRY for profile: {ProfileName}", profile.Name);
+        _logger.LogInformation("🔒 Waiting for semaphore in CreateAsync...");
+
+        Console.WriteLine($"📝 Step 2: About to wait for semaphore...");
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+        Console.WriteLine($"📝 Step 3: Semaphore acquired for profile: {profile.Name}");
+        _logger.LogInformation("✅ Semaphore acquired in CreateAsync for profile: {ProfileName}", profile.Name);
+
         try
         {
+            Console.WriteLine($"📝 Step 4: About to call EnsureLoadedAsync...");
+            _logger.LogInformation("📂 Calling EnsureLoadedAsync...");
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            Console.WriteLine($"📝 Step 5: EnsureLoadedAsync completed, profiles count: {_profiles.Count}");
+            _logger.LogInformation("✅ EnsureLoadedAsync completed, profiles loaded: {Count}", _profiles.Count);
 
             // Validate business rules
+            Console.WriteLine($"📝 Step 6: Validating profile name: '{profile.Name}'");
             if (string.IsNullOrWhiteSpace(profile.Name))
+            {
+                Console.WriteLine($"❌ ERROR: Profile name is empty!");
+                _logger.LogError("Profile name validation failed: name is empty");
                 throw new InvalidOperationException("Profile name cannot be empty.");
+            }
 
-            if (!await IsNameUniqueAsync(profile.Name, excludeId: null, cancellationToken).ConfigureAwait(false))
+            // Inline name uniqueness check while holding the semaphore to avoid nested WaitAsync calls
+            Console.WriteLine($"📝 Step 7: Checking name uniqueness for '{profile.Name}'...");
+            _logger.LogInformation("🔍 Checking name uniqueness for '{ProfileName}'...", profile.Name);
+            if (_profiles.Any(p => string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                Console.WriteLine($"❌ ERROR: Profile name '{profile.Name}' already exists!");
+                _logger.LogError("Profile name uniqueness validation failed: profile with name '{ProfileName}' already exists. Existing profiles: {ExistingNames}",
+                    profile.Name, string.Join(", ", _profiles.Select(p => p.Name)));
                 throw new InvalidOperationException($"A profile with the name '{profile.Name}' already exists.");
+            }
+            Console.WriteLine($"📝 Step 8: Name '{profile.Name}' is unique ✓");
+            _logger.LogDebug("✅ Name '{ProfileName}' is unique", profile.Name);
 
             // Clone the profile to avoid modifying the input
+            Console.WriteLine($"📝 Step 9: Cloning profile...");
+            _logger.LogDebug("Cloning profile...");
             var newProfile = CloneProfile(profile);
+            Console.WriteLine($"📝 Step 10: Profile cloned successfully");
 
             // Assign new ID and timestamps
-            newProfile.Id = await GetNextAvailableIdAsync(cancellationToken).ConfigureAwait(false);
+            Console.WriteLine($"📝 Step 11: Getting next available ID...");
+            _logger.LogDebug("Getting next available ID...");
+            newProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
+            Console.WriteLine($"📝 Step 12: Assigned ID: {newProfile.Id}");
+            _logger.LogDebug("Assigned ID: {ProfileId}", newProfile.Id);
+
+            Console.WriteLine($"📝 Step 13: Setting timestamps and version...");
             newProfile.CreatedAt = DateTime.UtcNow;
             newProfile.ModifiedAt = DateTime.UtcNow;
             newProfile.Version = "1.0";
+            Console.WriteLine($"📝 Step 14: Timestamps set ✓");
 
             // Handle default profile business rule
+            Console.WriteLine($"📝 Step 15: Checking if profile is default (IsDefault={newProfile.IsDefault})...");
             if (newProfile.IsDefault)
             {
+                Console.WriteLine($"📝 Step 16: Profile is default, clearing other default flags...");
+                _logger.LogDebug("Profile is marked as default, clearing other default flags...");
                 await ClearAllDefaultFlagsAsync(cancellationToken).ConfigureAwait(false);
+                Console.WriteLine($"📝 Step 17: Default flags cleared ✓");
+            }
+            else
+            {
+                Console.WriteLine($"📝 Step 16-17: Profile is not default, skipping flag clear");
             }
 
             // Add to collection
+            Console.WriteLine($"📝 Step 18: Adding profile to collection...");
+            _logger.LogDebug("Adding profile to collection...");
             _profiles.Add(newProfile);
+            Console.WriteLine($"📝 Step 19: Sorting collection...");
             _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
+            Console.WriteLine($"📝 Step 20: Profile added, collection now has {_profiles.Count} profiles");
+            _logger.LogDebug("Profile added, collection now has {Count} profiles", _profiles.Count);
 
             // Persist changes
+            Console.WriteLine($"📝 Step 21: Saving profiles to disk...");
+            _logger.LogDebug("💾 Saving profiles to disk...");
             await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+            Console.WriteLine($"📝 Step 22: Profiles saved successfully ✓");
+            _logger.LogDebug("✅ Profiles saved successfully");
 
-            _logger.LogInformation("Created {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
+            Console.WriteLine($"📝 Step 23: Profile creation complete!");
+            _logger.LogInformation("✅ Created {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
                 ProfileTypeName, newProfile.Name, newProfile.Id);
 
-            return CloneProfile(newProfile);
+            Console.WriteLine($"📝 Step 24: Cloning profile for return...");
+            var clonedProfile = CloneProfile(newProfile);
+            Console.WriteLine($"📝 Step 25: About to return cloned profile with ID: {clonedProfile.Id}");
+            return clonedProfile;
         }
         finally
         {
+            Console.WriteLine($"📝 Step 26 (FINALLY): Releasing semaphore...");
+            _logger.LogDebug("🔓 Releasing semaphore in CreateAsync");
             _semaphore.Release();
+            Console.WriteLine($"📝 Step 27 (FINALLY): Semaphore released ✓");
         }
     }
 
@@ -135,6 +200,8 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         if (profile == null) throw new ArgumentNullException(nameof(profile));
         if (profile.Id <= 0) throw new ArgumentException("Profile ID must be greater than zero.", nameof(profile));
 
+        _logger.LogDebug("StandardProfileManager.UpdateAsync called for profile: {ProfileName}, ID: {ProfileId}", profile.Name, profile.Id);
+
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -142,17 +209,31 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
             var existingProfile = _profiles.FirstOrDefault(p => p.Id == profile.Id);
             if (existingProfile == null)
+            {
+                _logger.LogError("Profile not found: ID {ProfileId}", profile.Id);
                 throw new ArgumentException($"Profile with ID {profile.Id} not found.");
+            }
 
             if (!existingProfile.CanModify())
+            {
+                _logger.LogError("Cannot modify read-only profile: {ProfileName} (ID: {ProfileId})", existingProfile.Name, existingProfile.Id);
                 throw new InvalidOperationException("Cannot modify a read-only profile.");
+            }
 
             // Validate business rules
             if (string.IsNullOrWhiteSpace(profile.Name))
+            {
+                _logger.LogError("Profile name validation failed: name is empty for ID {ProfileId}", profile.Id);
                 throw new InvalidOperationException("Profile name cannot be empty.");
+            }
 
-            if (!await IsNameUniqueAsync(profile.Name, excludeId: profile.Id, cancellationToken).ConfigureAwait(false))
+            // Inline name uniqueness check while holding the semaphore
+            if (_profiles.Any(p => p.Id != profile.Id && string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogError("Profile name uniqueness validation failed: profile with name '{ProfileName}' already exists (excluding ID {ProfileId}). Existing profiles: {ExistingNames}",
+                    profile.Name, profile.Id, string.Join(", ", _profiles.Select(p => $"{p.Name} (ID: {p.Id})")));
                 throw new InvalidOperationException($"A profile with the name '{profile.Name}' already exists.");
+            }
 
             // Clone the profile to avoid modifying the input
             var updatedProfile = CloneProfile(profile);
@@ -233,14 +314,14 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             if (sourceProfile == null)
                 throw new ArgumentException($"Source profile with ID {sourceProfileId} not found.");
 
-            // Ensure the new name is unique
-            var uniqueName = await EnsureUniqueNameAsync(newName, excludeId: null, cancellationToken).ConfigureAwait(false);
+            // Ensure the new name is unique - use Core version to avoid deadlock
+            var uniqueName = EnsureUniqueNameCore(newName, excludeId: null);
 
             // Clone the source profile
             var duplicateProfile = CloneProfile(sourceProfile);
 
             // Assign new identity and clear flags
-            duplicateProfile.Id = await GetNextAvailableIdAsync(cancellationToken).ConfigureAwait(false);
+            duplicateProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
             duplicateProfile.Name = uniqueName;
             duplicateProfile.IsDefault = false; // Duplicates are never default
             duplicateProfile.IsReadOnly = false; // Duplicates are never read-only
@@ -369,7 +450,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
             // Create system default
             var systemDefault = CreateSystemDefault();
-            systemDefault.Id = await GetNextAvailableIdAsync(cancellationToken).ConfigureAwait(false);
+            systemDefault.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
             systemDefault.IsDefault = true;
             systemDefault.IsReadOnly = true;
             systemDefault.CreatedAt = DateTime.UtcNow;
@@ -424,26 +505,41 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         try
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-
-            var candidateName = baseName;
-            var counter = 1;
-
-            while (!await IsNameUniqueAsync(candidateName, excludeId, cancellationToken).ConfigureAwait(false))
-            {
-                candidateName = $"{baseName}_{counter}";
-                counter++;
-
-                // Prevent infinite loops
-                if (counter > 1000)
-                    throw new InvalidOperationException("Unable to generate unique name after 1000 attempts.");
-            }
-
-            return candidateName;
+            return EnsureUniqueNameCore(baseName, excludeId);
         }
         finally
         {
             _semaphore.Release();
         }
+    }
+
+    /// <summary>
+    /// Ensures a profile name is unique by appending a counter if necessary.
+    /// This is the non-locking version that assumes the caller already holds the semaphore.
+    /// </summary>
+    /// <param name="baseName">The base name to make unique.</param>
+    /// <param name="excludeId">Optional profile ID to exclude from uniqueness check (for updates).</param>
+    /// <returns>A unique profile name.</returns>
+    private string EnsureUniqueNameCore(string baseName, int? excludeId = null)
+    {
+        var candidateName = baseName;
+        var counter = 1;
+
+        // Check uniqueness directly against the in-memory collection
+        // Caller must already hold the semaphore
+        while (_profiles.Any(p => p.Id != excludeId && string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
+        {
+            candidateName = $"{baseName}_{counter}";
+            counter++;
+
+            // Prevent infinite loops
+            if (counter > 1000)
+            {
+                throw new InvalidOperationException("Unable to generate unique name after 1000 attempts.");
+            }
+        }
+
+        return candidateName;
     }
 
     /// <inheritdoc/>
@@ -453,24 +549,32 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         try
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-
-            if (!_profiles.Any()) return 1;
-
-            var existingIds = _profiles.Select(p => p.Id).Where(id => id > 0).OrderBy(id => id).ToList();
-
-            // Find the first gap in the sequence
-            for (int i = 1; i <= existingIds.Count + 1; i++)
-            {
-                if (!existingIds.Contains(i))
-                    return i;
-            }
-
-            return existingIds.Count + 1;
+            return GetNextAvailableIdCore();
         }
         finally
         {
             _semaphore.Release();
         }
+    }
+
+    /// <summary>
+    /// Gets the next available profile ID without acquiring the semaphore.
+    /// This method assumes the caller already holds the semaphore lock.
+    /// </summary>
+    private int GetNextAvailableIdCore()
+    {
+        if (!_profiles.Any()) return 1;
+
+        var existingIds = _profiles.Select(p => p.Id).Where(id => id > 0).OrderBy(id => id).ToList();
+
+        // Find the first gap in the sequence
+        for (int i = 1; i <= existingIds.Count + 1; i++)
+        {
+            if (!existingIds.Contains(i))
+                return i;
+        }
+
+        return existingIds.Count + 1;
     }
 
     #endregion
@@ -500,7 +604,8 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                     // Handle name conflicts
                     if (!replaceExisting)
                     {
-                        importProfile.Name = await EnsureUniqueNameAsync(importProfile.Name, excludeId: null, cancellationToken).ConfigureAwait(false);
+                        // Use Core version to avoid deadlock since we already hold the semaphore
+                        importProfile.Name = EnsureUniqueNameCore(importProfile.Name, excludeId: null);
                     }
                     else
                     {
@@ -514,7 +619,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                     }
 
                     // Assign new ID and update timestamps
-                    importProfile.Id = await GetNextAvailableIdAsync(cancellationToken).ConfigureAwait(false);
+                    importProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
                     importProfile.CreatedAt = DateTime.UtcNow;
                     importProfile.ModifiedAt = DateTime.UtcNow;
                     importProfile.IsDefault = false; // Imported profiles are never default
@@ -586,14 +691,16 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         {
             if (!File.Exists(_profilesPath))
             {
-                _logger.LogInformation("Profile file not found, starting with empty collection: {Path}", _profilesPath);
+                _logger.LogInformation("Profile file not found, creating default profiles: {Path}", _profilesPath);
+                await CreateDefaultProfilesAsync(cancellationToken).ConfigureAwait(false);
                 return;
             }
 
             var json = await File.ReadAllTextAsync(_profilesPath, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(json))
             {
-                _logger.LogInformation("Profile file is empty, starting with empty collection: {Path}", _profilesPath);
+                _logger.LogInformation("Profile file is empty, creating default profiles: {Path}", _profilesPath);
+                await CreateDefaultProfilesAsync(cancellationToken).ConfigureAwait(false);
                 return;
             }
 
@@ -631,7 +738,8 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             var options = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
-                WriteIndented = true
+                WriteIndented = true,
+                IncludeFields = false
             };
 
             var json = JsonSerializer.Serialize(_profiles, options);
@@ -676,6 +784,18 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         var json = JsonSerializer.Serialize(profile, options);
         return JsonSerializer.Deserialize<T>(json, options)!;
     }
+
+    #endregion
+
+    #region Abstract Methods for Default Profiles
+
+    /// <summary>
+    /// Creates default profiles when no profiles file exists.
+    /// Derived classes should implement this to create appropriate default profiles.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    protected abstract Task CreateDefaultProfilesAsync(CancellationToken cancellationToken);
 
     #endregion
 

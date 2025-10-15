@@ -65,7 +65,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing create dialog for serial port profile with default name: {DefaultName}", request.DefaultName);
 
-            var result = await _profileEditDialogService.CreateSerialProfileAsync().ConfigureAwait(false);
+            var result = await _profileEditDialogService.CreateSerialProfileAsync(request.DefaultName).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is SerialPortProfileViewModel viewModel)
             {
@@ -164,7 +164,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing create dialog for socat profile with default name: {DefaultName}", request.DefaultName);
 
-            var result = await _profileEditDialogService.CreateSocatProfileAsync().ConfigureAwait(false);
+            var result = await _profileEditDialogService.CreateSocatProfileAsync(request.DefaultName).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is SocatProfileViewModel viewModel)
             {
@@ -262,8 +262,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             _logger.LogDebug("Showing create dialog for power supply profile with default name: {DefaultName}", request.DefaultName);
+            System.Diagnostics.Debug.WriteLine($"DEBUG: ShowPowerSupplyCreateDialogAsync called with name: {request.DefaultName}");
 
-            var result = await _profileEditDialogService.CreatePowerSupplyProfileAsync().ConfigureAwait(false);
+            var result = await _profileEditDialogService.CreatePowerSupplyProfileAsync(request.DefaultName).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is PowerSupplyProfileViewModel viewModel)
             {

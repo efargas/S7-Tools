@@ -42,7 +42,7 @@ public partial class SerialPortsSettingsView : UserControl
                     // Execute the command and wait for completion
                     try
                     {
-                        await viewModel.SetDefaultProfileCommand.Execute();
+                        await viewModel.SetDefaultCommand.Execute();
                     }
                     catch (Exception ex)
                     {

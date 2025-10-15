@@ -207,21 +207,21 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<LogViewerViewModel>();
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
-        services.TryAddTransient<SettingsViewModel>(provider => new SettingsViewModel(provider));
+        services.TryAddSingleton<SettingsViewModel>(provider => new SettingsViewModel(provider));
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
-        // Add Serial Port ViewModels
-        services.TryAddTransient<SerialPortsSettingsViewModel>();
+        // Add Profile Management ViewModels as Singletons to persist state across navigation
+        services.TryAddSingleton<SerialPortsSettingsViewModel>();
         services.TryAddTransient<SerialPortProfileViewModel>();
         services.TryAddTransient<SerialPortScannerViewModel>();
 
         // Add Socat ViewModels (Servers Settings - socat configuration)
-        services.TryAddTransient<SocatSettingsViewModel>();
+        services.TryAddSingleton<SocatSettingsViewModel>();
         services.TryAddTransient<SocatProfileViewModel>();
 
         // Add Power Supply ViewModels (Power Supply Control - Modbus TCP)
-        services.TryAddTransient<PowerSupplySettingsViewModel>();
+        services.TryAddSingleton<PowerSupplySettingsViewModel>();
         services.TryAddTransient<PowerSupplyProfileViewModel>();
 
         return services;

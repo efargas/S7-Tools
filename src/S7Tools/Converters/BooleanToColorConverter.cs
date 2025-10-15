@@ -20,25 +20,37 @@ public class BooleanToColorConverter : IValueConverter
     /// <returns>A color brush based on the boolean value.</returns>
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is not bool boolValue || parameter is not string paramString)
+        // Support being used for both Color and IBrush targets.
+        var boolValue = value is bool b && b;
+        var colorString = "Gray";
+
+        if (parameter is string paramString)
         {
-            return new SolidColorBrush(Colors.Gray);
+            var colors = paramString.Split('|', 2);
+            if (colors.Length == 2)
+            {
+                colorString = boolValue ? colors[0] : colors[1];
+            }
+            else if (!string.IsNullOrWhiteSpace(paramString))
+            {
+                colorString = paramString;
+            }
         }
 
-        var colors = paramString.Split('|');
-        if (colors.Length != 2)
+        // Try parse color name or hex to a Color
+        if (!Color.TryParse(colorString, out var parsedColor))
         {
-            return new SolidColorBrush(Colors.Gray);
+            parsedColor = Colors.Gray;
         }
 
-        var colorString = boolValue ? colors[0] : colors[1];
-
-        if (Color.TryParse(colorString, out var color))
+        // If target expects a Color value, return Color directly
+        if (targetType == typeof(Color) || targetType == typeof(Avalonia.Media.Color))
         {
-            return new SolidColorBrush(color);
+            return parsedColor;
         }
 
-        return new SolidColorBrush(Colors.Gray);
+        // If target expects a brush or object, return a SolidColorBrush
+        return new SolidColorBrush(parsedColor);
     }
 
     /// <summary>

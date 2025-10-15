@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace S7Tools.Core.Models;
@@ -11,6 +12,7 @@ namespace S7Tools.Core.Models;
 /// Each power supply type (Modbus TCP, Modbus RTU, SNMP, HTTP REST) implements this base class
 /// with its specific configuration properties and connection logic.
 /// </remarks>
+[JsonDerivedType(typeof(ModbusTcpConfiguration), typeDiscriminator: "modbus-tcp")]
 public abstract class PowerSupplyConfiguration
 {
     /// <summary>

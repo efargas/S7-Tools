@@ -81,6 +81,30 @@ sealed class Program
                     }
                 }
 
+                // Initialize PowerSupplyProfileService and ensure default profile exists
+                var powerSupplyProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IPowerSupplyProfileService>();
+
+                if (powerSupplyProfileService != null)
+                {
+                    try
+                    {
+                        // Use a local async function to avoid .GetResult() deadlocks
+                        async Task LogPowerSupplyProfilesAsync()
+                        {
+                            var profiles = await powerSupplyProfileService.GetAllAsync().ConfigureAwait(false);
+                            logger?.LogInformation("[S7Tools] PowerSupplyProfileService loaded {ProfileCount} profiles", profiles.Count());
+                            Console.WriteLine($"[S7Tools] PowerSupplyProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
+                        }
+
+                        LogPowerSupplyProfilesAsync().GetAwaiter().GetResult();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError(ex, "[S7Tools] Failed to initialize power supply profile storage");
+                        Console.WriteLine($"[S7Tools] Failed to initialize power supply profile storage: {ex}"); // Keep console for --diag flag
+                    }
+                }
+
                 logger?.LogInformation("[S7Tools] Diagnostics complete. Exiting due to --diag flag");
                 Console.WriteLine("[S7Tools] Diagnostics complete. Exiting due to --diag flag."); // Keep console for --diag flag
                 return;

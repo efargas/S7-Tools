@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
+using S7Tools.Helpers;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
@@ -66,7 +67,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
         S7Tools.Services.Interfaces.ISettingsService settingsService)
-        : base(logger, unifiedDialogService, uiThreadService)
+        : base(logger, unifiedDialogService, dialogService, uiThreadService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
@@ -106,7 +107,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         // Load initial data
         _ = Task.Run(async () =>
         {
-            await LoadProfilesAsync();
+            await RefreshCommand.Execute();
             await ScanSerialDevicesAsync();
             await RefreshRunningProcessesAsync();
         });
@@ -210,16 +211,6 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
 
 
-    private int _profileCount;
-    /// <summary>
-    /// Gets or sets the total number of profiles.
-    /// </summary>
-    public int ProfileCount
-    {
-        get => _profileCount;
-        set => this.RaiseAndSetIfChanged(ref _profileCount, value);
-    }
-
     private int _deviceCount;
     /// <summary>
     /// Gets or sets the total number of available devices.
@@ -244,35 +235,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
     #region Commands
 
-    /// <summary>
-    /// Gets the command to create a new profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> CreateProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to edit the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> EditProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to delete the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> DeleteProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to duplicate the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> DuplicateProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to set the selected profile as default.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> SetDefaultProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to refresh the profiles list.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> RefreshProfilesCommand { get; private set; } = null!;
+    // Socat-specific commands (CRUD commands inherited from base class)
 
     /// <summary>
     /// Gets the command to scan for available serial devices.
@@ -349,53 +312,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     private void InitializeCommands()
     {
-        // Create profile command - always enabled (uses dialog)
-        CreateProfileCommand = ReactiveCommand.CreateFromTask(CreateProfileAsync);
-        CreateProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "creating profile"))
-            .DisposeWith(_disposables);
-
-        // Edit profile command - enabled when a profile is selected and not read-only
-        var canEditProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && profile.CanModify());
-
-        EditProfileCommand = ReactiveCommand.CreateFromTask(EditProfileAsync, canEditProfile);
-        EditProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "editing profile"))
-            .DisposeWith(_disposables);
-
-        // Delete profile command - enabled when a profile is selected and can be deleted
-        var canDeleteProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && profile.CanDelete());
-
-        DeleteProfileCommand = ReactiveCommand.CreateFromTask(DeleteProfileAsync, canDeleteProfile);
-        DeleteProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "deleting profile"))
-            .DisposeWith(_disposables);
-
-        // Duplicate profile command - enabled when a profile is selected
-        var canDuplicateProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null);
-
-        DuplicateProfileCommand = ReactiveCommand.CreateFromTask(DuplicateProfileAsync, canDuplicateProfile);
-        DuplicateProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "duplicating profile"))
-            .DisposeWith(_disposables);
-
-        // Set default profile command - enabled when a profile is selected and not already default
-        var canSetDefaultProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && !profile.IsDefault);
-
-        SetDefaultProfileCommand = ReactiveCommand.CreateFromTask(SetDefaultProfileAsync, canSetDefaultProfile);
-        SetDefaultProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "setting default profile"))
-            .DisposeWith(_disposables);
-
-        // Refresh profiles command - always enabled
-        RefreshProfilesCommand = ReactiveCommand.CreateFromTask(LoadProfilesAsync);
-        RefreshProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "refreshing profiles"))
-            .DisposeWith(_disposables);
+        // CRUD commands (Create, Edit, Delete, Duplicate, SetDefault, Refresh)
+        // are provided by base class ProfileManagementViewModelBase
 
         // Scan serial devices command - always enabled
         ScanSerialDevicesCommand = ReactiveCommand.CreateFromTask(ScanSerialDevicesAsync);
@@ -446,7 +364,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .DisposeWith(_disposables);
 
         // Export profiles command - enabled when there are profiles
-        var canExport = this.WhenAnyValue(x => x.ProfileCount)
+        var canExport = this.WhenAnyValue(x => x.Profiles.Count)
             .Select(count => count > 0);
 
         ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExport);
@@ -558,48 +476,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
     }
 
-    /// <summary>
-    /// Loads all profiles from the profile service.
-    /// </summary>
-    private async Task LoadProfilesAsync()
-    {
-        try
-        {
-            IsLoading = true;
-            StatusMessage = "Loading profiles...";
-
-            var profiles = await _profileService.GetAllAsync();
-
-            // Update the ObservableCollection on the UI thread to avoid cross-thread exceptions
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                Profiles.Clear();
-                foreach (var profile in profiles.OrderBy(p => p.IsDefault ? 0 : 1).ThenBy(p => p.Name))
-                {
-                    Profiles.Add(profile);
-                }
-                ProfileCount = Profiles.Count;
-
-                // Ensure a SelectedProfile exists to avoid null-binding errors in the view.
-                if (Profiles.Count > 0 && SelectedProfile == null)
-                {
-                    SelectedProfile = Profiles.First();
-                }
-            });
-
-            StatusMessage = $"Loaded {ProfileCount} profile(s)";
-            _specificLogger.LogInformation("Loaded {ProfileCount} socat profiles", ProfileCount);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error loading profiles");
-            StatusMessage = "Error loading profiles";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
+    // LoadProfilesAsync is provided by base class ProfileManagementViewModelBase
 
     /// <summary>
     /// Scans for available serial devices.
@@ -678,139 +555,9 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
     }
 
-    /// <summary>
-    /// Creates a new profile using the profile edit dialog.
-    /// </summary>
-    private async Task CreateProfileAsync()
-    {
-        _specificLogger.LogInformation("=== CreateProfileAsync STARTED ===");
 
-        try
-        {
-            IsLoading = true;
-            StatusMessage = "Opening create profile dialog...";
 
-            // Create ViewModel for a new profile with proper dependencies
-            var profileViewModel = new SocatProfileViewModel(_profileService, _socatService, _clipboardService,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger<SocatProfileViewModel>.Instance);
 
-            // Set up a default new profile
-            profileViewModel.ProfileName = "New Profile";
-            profileViewModel.ProfileDescription = "";
-
-            // TODO: This old create method should be removed - base class now handles create operations
-            // Temporarily disabled during migration - base class now handles profile creation
-            StatusMessage = "Profile creation handled by base class";
-            await Task.CompletedTask; // Placeholder
-
-            /*
-            var result = await _profileEditDialogService.ShowSocatProfileEditAsync("Create Socat Profile", profileViewModel);
-            if (result.IsSuccess && result.ProfileViewModel != null)
-            {
-                StatusMessage = "Creating profile...";
-
-                // Get the updated profile from the ViewModel
-                var socatProfileViewModel = (SocatProfileViewModel)result.ProfileViewModel;
-                var profileToCreate = socatProfileViewModel.CreateProfile();
-
-                // Check if name is available
-                var isAvailable = await _profileService.IsNameUniqueAsync(profileToCreate.Name);
-                if (!isAvailable)
-                {
-                    StatusMessage = "Profile name already exists";
-                    return;
-                }
-
-                // Create the profile
-                var createdProfile = await _profileService.CreateAsync(profileToCreate);
-
-                // Refresh list and select created profile to ensure canonical state
-                await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
-
-                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-                _specificLogger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
-            }
-            else
-            {
-                StatusMessage = "Profile creation cancelled";
-            }
-            */
-        }
-        catch (OperationCanceledException)
-        {
-            _specificLogger.LogInformation("Profile creation cancelled by user");
-            StatusMessage = "Profile creation cancelled";
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error creating profile");
-            StatusMessage = "Error creating profile";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Edits the currently selected profile.
-    /// </summary>
-    private async Task EditProfileAsync()
-    {
-        if (SelectedProfile == null)
-        {
-            return;
-        }
-
-        try
-        {
-            StatusMessage = "Opening profile editor...";
-
-            // Preserve the profile ID for refresh after editing
-            var profileId = SelectedProfile.Id;
-
-            // Create a new SocatProfileViewModel for editing
-            var profileViewModel = new SocatProfileViewModel(
-                _profileService,
-                _socatService,
-                _clipboardService,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger<SocatProfileViewModel>.Instance);
-
-            // Load the profile into the ViewModel
-            profileViewModel.LoadProfile(SelectedProfile);
-
-            // TODO: Remove this method - base class now handles edit operations
-            // This method should be removed as editing is now handled by the base class
-            await Task.CompletedTask; // Placeholder to prevent compilation errors
-
-            StatusMessage = "Profile editing handled by base class";
-
-            // Old implementation commented out:
-            /*
-            var result = await _profileEditDialogService.ShowSocatProfileEditAsync(
-                $"Edit Profile - {SelectedProfile.Name}",
-                profileViewModel);
-
-            if (result.IsSuccess && result.ProfileViewModel != null)
-            {
-                StatusMessage = "Profile changes saved successfully";
-                await RefreshProfilesPreserveSelectionAsync(profileId);
-                StatusMessage = $"Profile updated successfully";
-                _specificLogger.LogInformation("Successfully edited socat profile with ID: {ProfileId}", profileId);
-            }
-            else
-            {
-                StatusMessage = "Profile editing cancelled";
-                _specificLogger.LogInformation("Socat profile editing cancelled for profile ID: {ProfileId}", profileId);
-            }
-            */
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error opening profile editor");
-            StatusMessage = "Error opening profile editor";
-        }
-    }
 
     /// <summary>
     /// Deletes the currently selected profile.
@@ -908,44 +655,6 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             _specificLogger.LogError(ex, "Error duplicating profile");
             StatusMessage = "Error duplicating profile";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Sets the currently selected profile as the default.
-    /// </summary>
-    private async Task SetDefaultProfileAsync()
-    {
-        if (SelectedProfile == null)
-        {
-            return;
-        }
-
-        try
-        {
-            IsLoading = true;
-            StatusMessage = "Setting default profile...";
-
-            // Preserve the profile ID for refresh after setting default
-            var profileId = SelectedProfile.Id;
-            var profileName = SelectedProfile.Name;
-
-            await _profileService.SetDefaultAsync(profileId);
-
-            // Persisted change made; refresh profiles and keep selection
-            await RefreshProfilesPreserveSelectionAsync(profileId);
-
-            StatusMessage = $"'{profileName}' set as default profile";
-            _specificLogger.LogInformation("Set default socat profile: {ProfileName}", profileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error setting default profile");
-            StatusMessage = "Error setting default profile";
         }
         finally
         {
@@ -1101,8 +810,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             var jsonData = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(fileName, jsonData);
 
-            StatusMessage = $"Exported {ProfileCount} profile(s) to {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", ProfileCount, fileName);
+            StatusMessage = $"Exported {Profiles.Count} profile(s) to {Path.GetFileName(fileName)}";
+            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", Profiles.Count, fileName);
         }
         catch (Exception ex)
         {
@@ -1124,7 +833,6 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             StatusMessage = "Importing profiles...";
 
-            // TODO: Load from file using file dialog
             await _dialogService.ShowErrorAsync("Import Profiles",
                 "Import functionality will be implemented in the UI layer.");
 
@@ -1155,7 +863,6 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             var profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
             var jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
 
-            // TODO: Save to file using file dialog
             await _dialogService.ShowErrorAsync("Export Profile",
                 $"Export functionality for profile '{SelectedProfile.Name}' will be implemented in the UI layer.");
 
@@ -1251,82 +958,18 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                 return;
             }
 
-            // Convert relative path to absolute path
-            var absolutePath = Path.IsPathRooted(ProfilesPath) ? ProfilesPath :
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ProfilesPath);
-
             // Ensure the directory exists before trying to open it
-            if (!Directory.Exists(absolutePath))
+            if (!Directory.Exists(ProfilesPath))
             {
                 StatusMessage = "Creating profiles folder...";
-                Directory.CreateDirectory(absolutePath);
-                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", absolutePath);
+                Directory.CreateDirectory(ProfilesPath);
+                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
             }
 
-            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", absolutePath);
+            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
 
-            await Task.Run(() =>
-            {
-                try
-                {
-                    if (OperatingSystem.IsWindows())
-                    {
-                        System.Diagnostics.Process.Start("explorer.exe", absolutePath);
-                    }
-                    else if (OperatingSystem.IsLinux())
-                    {
-                        // Try different file managers commonly available on Linux
-                        var fileManagers = new[] { "xdg-open", "nautilus", "dolphin", "thunar", "pcmanfm" };
-
-                        bool opened = false;
-                        foreach (var fileManager in fileManagers)
-                        {
-                            try
-                            {
-                                var process = new System.Diagnostics.Process
-                                {
-                                    StartInfo = new System.Diagnostics.ProcessStartInfo
-                                    {
-                                        FileName = fileManager,
-                                        Arguments = absolutePath,
-                                        UseShellExecute = false,
-                                        CreateNoWindow = true
-                                    }
-                                };
-
-                                if (process.Start())
-                                {
-                                    opened = true;
-                                    break;
-                                }
-                            }
-                            catch
-                            {
-                                // Try next file manager
-                                continue;
-                            }
-                        }
-
-                        if (!opened)
-                        {
-                            throw new InvalidOperationException("No suitable file manager found to open directory");
-                        }
-                    }
-                    else if (OperatingSystem.IsMacOS())
-                    {
-                        System.Diagnostics.Process.Start("open", absolutePath);
-                    }
-                    else
-                    {
-                        throw new PlatformNotSupportedException("Opening directories in explorer is not supported on this platform");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _specificLogger.LogWarning(ex, "Failed to open file explorer for path: {Path}", absolutePath);
-                    throw;
-                }
-            });
+            // Use centralized PlatformHelper for consistent cross-platform behavior
+            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
 
             StatusMessage = "Profiles folder opened";
             _specificLogger.LogInformation("Successfully opened profiles folder");
@@ -1442,7 +1085,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         try
         {
             // Reload profiles from storage/service
-            await LoadProfilesAsync();
+            await RefreshCommand.Execute();
 
             // If a specific profile Id was requested, try to select it
             if (selectProfileId.HasValue)

@@ -70,7 +70,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
         IUnifiedProfileDialogService unifiedProfileDialogService,
         ILogger<SerialPortsSettingsViewModel> logger)
-        : base(logger, unifiedProfileDialogService, uiThreadService)
+        : base(logger, unifiedProfileDialogService, dialogService, uiThreadService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
@@ -181,16 +181,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         set => this.RaiseAndSetIfChanged(ref _isScanning, value);
     }
 
-    private int _profileCount;
-    /// <summary>
-    /// Gets or sets the total number of profiles.
-    /// </summary>
-    public int ProfileCount
-    {
-        get => _profileCount;
-        set => this.RaiseAndSetIfChanged(ref _profileCount, value);
-    }
-
     private int _portCount;
     /// <summary>
     /// Gets or sets the total number of available ports.
@@ -275,35 +265,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
     #region Commands
 
-    /// <summary>
-    /// Gets the command to create a new profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> CreateProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to edit the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> EditProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to delete the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> DeleteProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to duplicate the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> DuplicateProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to set the selected profile as default.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> SetDefaultProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to refresh the profiles list.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> RefreshProfilesCommand { get; private set; } = null!;
+    // Serial Port Specific Commands (not provided by base class)
 
     /// <summary>
     /// Gets the command to scan for available ports.
@@ -356,57 +318,12 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     #region Private Methods
 
     /// <summary>
-    /// Initializes all reactive commands with their execution logic and conditions.
+    /// Initializes serial port specific reactive commands with their execution logic and conditions.
+    /// CRUD commands (Create, Edit, Delete, Duplicate, SetDefault, Refresh) are provided by base class.
     /// </summary>
     private void InitializeCommands()
     {
-        // Create profile command - always enabled (uses dialog)
-        CreateProfileCommand = ReactiveCommand.CreateFromTask(CreateProfileAsync);
-        CreateProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "creating profile"))
-            .DisposeWith(_disposables);
-
-        // Edit profile command - enabled when a profile is selected and not read-only
-        var canEditProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && profile.CanModify());
-
-        EditProfileCommand = ReactiveCommand.CreateFromTask(EditProfileAsync, canEditProfile);
-        EditProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "editing profile"))
-            .DisposeWith(_disposables);
-
-        // Delete profile command - enabled when a profile is selected and can be deleted
-        var canDeleteProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && profile.CanDelete());
-
-        DeleteProfileCommand = ReactiveCommand.CreateFromTask(DeleteProfileAsync, canDeleteProfile);
-        DeleteProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "deleting profile"))
-            .DisposeWith(_disposables);
-
-        // Duplicate profile command - enabled when a profile is selected
-        var canDuplicateProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null);
-
-        DuplicateProfileCommand = ReactiveCommand.CreateFromTask(DuplicateProfileAsync, canDuplicateProfile);
-        DuplicateProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "duplicating profile"))
-            .DisposeWith(_disposables);
-
-        // Set default profile command - enabled when a profile is selected and not already default
-        var canSetDefaultProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && !profile.IsDefault);
-
-        SetDefaultProfileCommand = ReactiveCommand.CreateFromTask(SetDefaultProfileAsync, canSetDefaultProfile);
-        SetDefaultProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "setting default profile"))
-            .DisposeWith(_disposables);
-
-        // Refresh profiles command - always enabled
-        RefreshProfilesCommand = ReactiveCommand.CreateFromTask(LoadProfilesAsync);
-        RefreshProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "refreshing profiles"))
-            .DisposeWith(_disposables);
+        // Serial port specific commands only - base class provides CRUD commands
 
         // Scan ports command - always enabled
         ScanPortsCommand = ReactiveCommand.CreateFromTask(ScanPortsAsync);
@@ -424,7 +341,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             .DisposeWith(_disposables);
 
         // Export profiles command - enabled when profiles exist
-        var canExportProfiles = this.WhenAnyValue(x => x.ProfileCount)
+        var canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
             .Select(count => count > 0);
 
         ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
@@ -458,50 +375,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         // Subscribe to settings changes to update ProfilesPath
         // no-op: primary command initialization happened above
-    }
-
-    /// <summary>
-    /// Loads all profiles from the profile service.
-    /// </summary>
-    private async Task LoadProfilesAsync()
-    {
-        try
-        {
-            IsLoading = true;
-            StatusMessage = "Loading profiles...";
-
-            var profiles = await _profileService.GetAllAsync();
-
-            // Update the ObservableCollection on the UI thread to avoid cross-thread exceptions
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                Profiles.Clear();
-                foreach (var profile in profiles.OrderBy(p => p.IsDefault ? 0 : 1).ThenBy(p => p.Name))
-                {
-                    Profiles.Add(profile);
-                }
-                ProfileCount = Profiles.Count;
-
-                // Ensure a SelectedProfile exists to avoid null-binding errors in the view.
-                if (Profiles.Count > 0 && SelectedProfile == null)
-                {
-                    SelectedProfile = Profiles.First();
-                }
-            });
-            StatusMessage = $"Loaded {ProfileCount} profile(s)";
-
-            _specificLogger.LogInformation("Loaded {ProfileCount} profiles", ProfileCount);
-            // ProfilesPath is managed via settings; RefreshFromSettings handles syncing
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error loading profiles");
-            StatusMessage = "Error loading profiles";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
     }
 
     /// <summary>
@@ -544,260 +417,12 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         }
     }
 
-    /// <summary>
-    /// Creates a new profile using the profile edit dialog.
-    /// </summary>
-    private async Task CreateProfileAsync()
-    {
-        try
-        {
-            IsLoading = true;
-            StatusMessage = "Opening create profile dialog...";
+    // CRUD methods (CreateProfileAsync, EditProfileAsync, DeleteProfileAsync,
+    // DuplicateProfileAsync, SetDefaultProfileAsync) are handled by the base class
 
-            // Create ViewModel for a new profile with proper dependencies
-            var profileViewModel = new SerialPortProfileViewModel(_profileService, _portService, _clipboardService,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger<SerialPortProfileViewModel>.Instance);
+    #endregion
 
-            // Set up a default new profile
-            profileViewModel.ProfileName = "New Profile";
-            profileViewModel.ProfileDescription = "";
-
-            // Show the edit dialog for the new profile
-            var result = await _profileEditDialogService.ShowSerialProfileEditAsync("Create Serial Profile", profileViewModel);
-            if (result.IsSuccess && result.ProfileViewModel != null)
-            {
-                StatusMessage = "Creating profile...";
-
-                // Get the updated profile from the ViewModel
-                var serialProfileViewModel = (SerialPortProfileViewModel)result.ProfileViewModel;
-                var profileToCreate = serialProfileViewModel.CreateProfile();
-
-                // Check if name is available
-                var isAvailable = await _profileService.IsNameUniqueAsync(profileToCreate.Name);
-                if (!isAvailable)
-                {
-                    StatusMessage = "Profile name already exists";
-                    return;
-                }
-
-                // Create the profile
-                var createdProfile = await _profileService.CreateAsync(profileToCreate);
-
-                // Refresh list and select created profile to ensure canonical state
-                await RefreshProfilesPreserveSelectionAsync(createdProfile.Id);
-
-                StatusMessage = $"Profile '{createdProfile.Name}' created successfully";
-                _specificLogger.LogInformation("Created new profile: {ProfileName}", createdProfile.Name);
-            }
-            else
-            {
-                StatusMessage = "Profile creation cancelled";
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error creating profile");
-            StatusMessage = "Error creating profile";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Opens the profile editor for the selected profile.
-    /// </summary>
-    private async Task EditProfileAsync()
-    {
-        if (SelectedProfile == null)
-        {
-            return;
-        }
-
-        try
-        {
-            StatusMessage = "Opening profile editor...";
-
-            // Preserve the profile ID for refresh after editing
-            var profileId = SelectedProfile.Id;
-
-            // Create a new SerialPortProfileViewModel for editing
-            var profileViewModel = new SerialPortProfileViewModel(
-                _profileService,
-                _portService,
-                _clipboardService,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger<SerialPortProfileViewModel>.Instance);
-
-            // Load the profile into the ViewModel
-            profileViewModel.LoadProfile(SelectedProfile);
-
-            // Show the profile edit dialog
-            var result = await _profileEditDialogService.ShowSerialProfileEditAsync(
-                $"Edit Profile - {SelectedProfile.Name}",
-                profileViewModel);
-
-            if (result.IsSuccess && result.ProfileViewModel != null)
-            {
-                StatusMessage = "Profile changes saved successfully";
-
-                // The profile has been saved by the dialog's SaveCommand
-                // Refresh our profiles collection to reflect the changes
-                await RefreshProfilesPreserveSelectionAsync(profileId);
-
-                StatusMessage = $"Profile updated successfully";
-                _specificLogger.LogInformation("Successfully edited serial profile with ID: {ProfileId}", profileId);
-            }
-            else
-            {
-                StatusMessage = "Profile editing cancelled";
-                _specificLogger.LogInformation("Serial profile editing cancelled for profile ID: {ProfileId}", profileId);
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error opening profile editor");
-            StatusMessage = "Error opening profile editor";
-        }
-    }
-
-    /// <summary>
-    /// Deletes the selected profile after confirmation.
-    /// </summary>
-    private async Task DeleteProfileAsync()
-    {
-        if (SelectedProfile == null)
-        {
-            return;
-        }
-
-        try
-        {
-            // Confirm deletion
-            var confirmed = await _dialogService.ShowConfirmationAsync(
-                "Delete Profile",
-                $"Are you sure you want to delete the profile '{SelectedProfile.Name}'?");
-
-            if (!confirmed)
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = "Deleting profile...";
-
-            var profileName = SelectedProfile.Name;
-            var idToDelete = SelectedProfile.Id;
-            var success = await _profileService.DeleteAsync(idToDelete);
-
-            if (success)
-            {
-                // Refresh profiles; preserve selection if possible (select next available)
-                await RefreshProfilesPreserveSelectionAsync(null);
-
-                StatusMessage = $"Profile '{profileName}' deleted successfully";
-                _specificLogger.LogInformation("Deleted profile: {ProfileName}", profileName);
-            }
-            else
-            {
-                StatusMessage = "Failed to delete profile";
-                _specificLogger.LogWarning("Failed to delete profile: {ProfileName}", profileName);
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error deleting profile");
-            StatusMessage = "Error deleting profile";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Duplicates the selected profile with a new name.
-    /// </summary>
-    private async Task DuplicateProfileAsync()
-    {
-        if (SelectedProfile == null)
-        {
-            return;
-        }
-
-        try
-        {
-            _specificLogger.LogDebug("Duplicating serial port profile: {ProfileName}", SelectedProfile.Name);
-
-            var inputResult = await _dialogService.ShowInputAsync(
-                "Duplicate Profile",
-                "Enter a name for the duplicate profile:",
-                $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
-
-            var newName = inputResult.Value;
-
-            if (!string.IsNullOrWhiteSpace(newName))
-            {
-                IsLoading = true;
-                StatusMessage = "Duplicating profile...";
-
-                var duplicatedProfile = await _profileService.DuplicateAsync(SelectedProfile.Id, newName);
-
-                // Refresh and select duplicated profile
-                await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
-
-                StatusMessage = $"Profile duplicated as '{duplicatedProfile.Name}'";
-                _specificLogger.LogInformation("Duplicated profile: {OriginalName} -> {NewName}", SelectedProfile?.Name, duplicatedProfile.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error duplicating profile");
-            StatusMessage = "Error duplicating profile";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Sets the selected profile as the default profile.
-    /// </summary>
-    private async Task SetDefaultProfileAsync()
-    {
-        if (SelectedProfile == null)
-        {
-            return;
-        }
-
-        try
-        {
-            IsLoading = true;
-            StatusMessage = "Setting default profile...";
-
-            // Preserve the profile ID for refresh after setting default
-            var profileId = SelectedProfile.Id;
-            var profileName = SelectedProfile.Name;
-
-            await _profileService.SetDefaultAsync(profileId);
-
-            // Persisted change made; refresh profiles and keep selection
-            await RefreshProfilesPreserveSelectionAsync(profileId);
-
-            StatusMessage = $"'{profileName}' set as default profile";
-            _specificLogger.LogInformation("Set default profile: {ProfileName}", profileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error setting default profile");
-            StatusMessage = "Error setting default profile";
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
+    #region Port Management Methods
 
     /// <summary>
     /// Tests the selected port with the selected profile configuration.
@@ -863,8 +488,8 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             var jsonData = System.Text.Json.JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(fileName, jsonData);
 
-            StatusMessage = $"Exported {ProfileCount} profile(s) to {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", ProfileCount, fileName);
+            StatusMessage = $"Exported {Profiles.Count} profile(s) to {Path.GetFileName(fileName)}";
+            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", Profiles.Count, fileName);
         }
         catch (Exception ex)
         {
@@ -906,14 +531,18 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// </summary>
     private async Task OpenProfilesPathAsync()
     {
+        System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortsSettingsViewModel.OpenProfilesPathAsync called - Start");
+
         try
         {
             StatusMessage = "Opening profiles folder...";
+            System.Diagnostics.Debug.WriteLine($"DEBUG: Opening profiles folder: {ProfilesPath}");
 
             if (string.IsNullOrEmpty(ProfilesPath))
             {
                 StatusMessage = "Profiles path not available";
                 _specificLogger.LogError("Profiles path is null or empty");
+                System.Diagnostics.Debug.WriteLine($"ERROR: Profiles path is null or empty");
                 return;
             }
 
@@ -923,20 +552,27 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
                 StatusMessage = "Creating profiles folder...";
                 Directory.CreateDirectory(ProfilesPath);
                 _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
+                System.Diagnostics.Debug.WriteLine($"DEBUG: Created profiles directory: {ProfilesPath}");
             }
 
             _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
+            System.Diagnostics.Debug.WriteLine($"DEBUG: About to call PlatformHelper.OpenDirectoryInExplorerAsync");
 
             await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
 
             StatusMessage = "Profiles folder opened";
             _specificLogger.LogInformation("Successfully opened profiles folder");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortsSettingsViewModel.OpenProfilesPathAsync completed successfully");
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error opening profiles folder");
             StatusMessage = "Error opening profiles folder";
+            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in SerialPortsSettingsViewModel.OpenProfilesPathAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
         }
+
+        System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortsSettingsViewModel.OpenProfilesPathAsync called - End");
     }
 
     private async Task ResetProfilesPathAsync()
@@ -1021,7 +657,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             var importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
 
             var importedCount = importedProfiles.Count();
-            await LoadProfilesAsync(); // Refresh the list
+            await RefreshCommand.Execute(); // Refresh the list
 
             StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
             _specificLogger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
@@ -1185,7 +821,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         try
         {
             // Reload profiles from storage/service
-            await LoadProfilesAsync();
+            await RefreshCommand.Execute();
 
             // If a specific profile Id was requested, try to select it
             if (selectProfileId.HasValue)
