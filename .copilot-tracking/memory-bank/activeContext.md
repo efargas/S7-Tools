@@ -1,10 +1,76 @@
 # Active Context: S7Tools Current Work Focus
 
-**Updated:** 2025-10-14
-**Current Sprint:** Unified Profile Management Architecture Complete
-**Status:** TASK009 Phase 2 COMPLETED SUCCESSFULLY - All Integration Complete
+**Updated:** 2025-10-15
+**Current Sprint:** Profile Management Bug Fixes and UI Enhancements
+**Status:** TASK010 Ready to Begin - 8 Critical Issues Identified
 
-## 🎉 MAJOR MILESTONE ACHIEVED: Phase 2 Command Implementation COMPLETED
+## � TASK010: Profile Management Issues Comprehensive Fix
+
+### Current Work Focus
+
+**Active Task**: TASK010 - Profile Management Issues Comprehensive Fix
+**Phase**: Not Started - Ready to Begin
+**Priority**: HIGH (User-reported bugs affecting core functionality)
+**Estimated Time**: 9-13 hours across 3 phases
+
+### Issues to Address (8 Total)
+
+#### Phase 1: Critical Functionality (Priority: HIGH)
+
+1. **Socat Import Not Implemented** - Shows "will be implemented in UI layer" error
+   - Solution: Copy working implementation from SerialPortsSettingsViewModel
+   - Files: `src/S7Tools/ViewModels/SocatSettingsViewModel.cs`
+
+2. **PowerSupply Export/Import Broken** - Export disabled, import not tested
+   - Solution: Test JSON serialization with polymorphic configuration
+   - Files: `src/S7Tools/ViewModels/PowerSupplySettingsViewModel.cs`
+
+3. **Socat Start Not Working** - Process may not be configured correctly
+   - Solution: Add device validation (File.Exists check), enhance monitoring
+   - Architecture: Serial configuration separate from socat start (user clarified)
+   - Files: `src/S7Tools/Services/SocatService.cs`
+
+4. **Add UI Tip for Serial Configuration**
+   - Solution: Info banner in SocatSettingsView explaining workflow
+   - Files: `src/S7Tools/Views/SocatSettingsView.axaml`
+
+#### Phase 2: UI Improvements (Priority: MEDIUM)
+
+5. **Refresh Button Not Working** - DataGrid not updating until column reorder
+   - Solution: Clear/re-add ObservableCollection pattern with UI thread marshaling
+   - Files: `src/S7Tools/ViewModels/Base/ProfileManagementViewModelBase.cs`
+
+6. **Missing Serial Profile Columns** - BaudRate, Parity, StopBits, etc.
+   - Solution: Add comprehensive DataGrid columns in XAML
+   - Files: `src/S7Tools/Views/SerialPortsSettingsView.axaml`
+
+7. **Missing Socat Profile Columns** - TcpHost, TcpPort, Verbose, etc.
+   - Solution: Add comprehensive DataGrid columns in XAML
+   - Files: `src/S7Tools/Views/SocatSettingsView.axaml`
+
+8. **Missing PowerSupply Columns** - Type, Host, Port, DeviceId, OnOffCoil
+   - Solution: Create ModbusTcpPropertyConverter for polymorphic properties
+   - Files: `src/S7Tools/Converters/ModbusTcpPropertyConverter.cs` (NEW), `src/S7Tools/Views/PowerSupplySettingsView.axaml`
+
+#### Phase 3: Verification (Priority: LOW)
+
+- End-to-end testing with comprehensive checklist
+- Performance verification (50+ profile load tests)
+
+### Architecture Decision (User Clarified)
+
+**Serial Configuration Workflow**:
+```
+1. User configures serial port → Serial Ports Settings → Applies stty configuration
+2. User starts socat → Socat Settings → Uses already-configured device
+3. Socat focuses only on TCP bridging → No serial configuration responsibility
+```
+
+**Benefits of This Approach**:
+- ✅ Serial configuration reusable across multiple tools
+- ✅ Users can test/verify serial configuration independently
+- ✅ Socat service has single responsibility (TCP bridging only)
+- ✅ Serial profile changes don't require restarting socat
 
 ### Recently Completed Work
 

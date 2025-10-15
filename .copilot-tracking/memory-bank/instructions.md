@@ -10,6 +10,39 @@
 **File Structure and Purpose**:
 - **instructions.md** ### **Recent Session Accomplishments**
 
+### **📋 NEW TASK CREATED: TASK010 - Profile Management Issues Fix (2025-10-15)**
+
+**Task Creation Complete**
+- ✅ **Comprehensive task document created** with 600+ lines of implementation details
+- ✅ **8 critical issues identified** across Serial Ports, Socat, and PowerSupply modules
+- ✅ **3-phase implementation plan** with prioritized subtasks
+- ✅ **Memory bank fully updated** (tasks/_index.md, activeContext.md, progress.md)
+
+**Issues to Address**:
+1. **Socat Import Not Implemented** - Copy from Serial implementation
+2. **PowerSupply Export/Import Broken** - Test polymorphic serialization
+3. **Socat Start Device Validation** - Add File.Exists check, enhance monitoring
+4. **Add UI Tip** - Info banner for serial configuration workflow
+5. **Refresh Button Broken** - Clear/re-add ObservableCollection pattern
+6. **Missing DataGrid Columns** - Add configuration properties across all modules
+7. **Converter Creation** - ModbusTcpPropertyConverter for polymorphic properties
+8. **End-to-End Testing** - Comprehensive verification checklist
+
+**Architecture Decision Documented** (User Clarified):
+- Serial configuration done **separately** via Serial Ports Settings
+- Socat uses **already-configured** devices (NO stty calls in socat start)
+- Separation of concerns: Serial service handles stty, Socat handles TCP bridging
+
+**Pattern Established: Bug Fix Task Creation**
+```markdown
+# Task Structure for Bug Fixes
+1. **Original Request**: Capture exact user words and context
+2. **Thought Process**: Root cause analysis and solution strategy
+3. **Implementation Plan**: 3-phase approach (Critical → UI → Verification)
+4. **Progress Tracking**: Subtasks table with status + detailed progress log
+5. **Success Criteria**: Phase-specific validation requirements
+```
+
 ### **🎉 MAJOR BREAKTHROUGH: External Code Review Validation & Bug Fixes (2025-10-09)**
 
 **Code Review Validation Complete**

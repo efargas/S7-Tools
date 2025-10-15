@@ -1,16 +1,16 @@
 # Tasks Index
 
-**Last Updated:** 2025-10-14
-**Total Tasks:** 9
-**Completed:** 7 | **In Progress:** 1 | **Pending:** 1
+**Last Updated:** 2025-10-15
+**Total Tasks:** 10
+**Completed:** 8 | **In Progress:** 1 | **Pending:** 1
 
 ## In Progress
 
-- [TASK009] Profile Management Integration Enhancement - Phase 1 COMPLETED (template architecture, dialog service, SerialPortsSettingsViewModel migration). Working on Phase 2: SocatSettingsViewModel and PowerSupplySettingsViewModel migrations.
+- [TASK010] Profile Management Issues Comprehensive Fix - Fixing 8 critical issues across Serial, Socat, PowerSupply modules: import/export functionality, DataGrid refresh, missing columns, socat start validation
 
 ## Pending
 
-- [TASK008] Unified Profile Management Architecture Implementation - COMPLETED (moved to completed section)
+None
 
 ## Completed
 
@@ -22,6 +22,7 @@
 - [TASK006] Serial Ports Settings Enhancement - Completed on 2025-10-08
 - [TASK007] Profile Management Dialog Integration - Completed on 2025-10-12
 - [TASK008] Unified Profile Management Architecture Implementation - Completed on 2025-10-14
+- [TASK009] Profile Management Integration Enhancement - Completed on 2025-10-14
 
 ## Abandoned
 
@@ -41,19 +42,20 @@ None
 **Last 7 Days:**
 
 - Completed TASK008: Unified Profile Management Architecture Implementation
-- Developed comprehensive three-phase integration plan for remaining enhancements
-- Identified specific gaps and opportunities for ViewModel migration to template base
-- 178 tests continue to pass with 100% success rate after unified interface implementation
+- Completed TASK009: Profile Management Integration Enhancement (all ViewModels migrated)
+- Created TASK010: Profile Management Issues Comprehensive Fix
+- User-reported issues documented in PROFILE_MANAGEMENT_ISSUES_ANALYSIS.md (8 issues)
+- 178 tests continue to pass with 100% success rate
 
 **Current Focus:**
 
-- TASK009 Phase 1: Create missing interfaces and migrate ViewModels to template base
-- Eliminate ~300 lines of duplicate code per ViewModel through inheritance optimization
-- Implement command stubs for standardized UI operations
-- Add comprehensive validation framework integration
+- TASK010 Phase 1: Critical functionality fixes (import/export, socat start validation)
+- Fix import functionality for Socat profiles (copy from Serial implementation)
+- Test PowerSupply export/import with polymorphic configuration
+- Add device validation to socat start process (no stty calls per architecture decision)
 
 **Next Priorities:**
 
-- Create IUnifiedProfileDialogService interface and implementation
-- Migrate SerialPortsSettingsViewModel to inherit from ProfileManagementViewModelBase
-- Verify functionality preservation throughout migration process
+- TASK010 Phase 2: UI improvements (Refresh button fix, DataGrid column additions)
+- TASK010 Phase 3: End-to-end testing and performance verification
+- User validation required before marking task complete

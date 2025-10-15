@@ -84,21 +84,48 @@
 
 ## What's Left to Build (Current & Planned)
 
-### ✅ Ready for Replication (Documentation Complete)
+### 🔄 TASK010 - Profile Management Issues Comprehensive Fix (In Progress)
 
-**SerialPortsSettingsViewModel Migration Success**: The proven migration pattern has been documented with comprehensive examples for replication:
+**Status**: Ready to Begin - Phase 1
+**Priority**: HIGH (User-reported bugs)
+**Completion**: 0% (0/10 subtasks complete)
 
-1. **SocatSettingsViewModel Migration** (Ready)
-   - **Documentation Complete**: Detailed step-by-step migration guide in `phase-2-migration-examples.md`
-   - **Pattern Established**: Identical inheritance pattern using `ProfileManagementViewModelBase<SocatProfile>`
-   - **Code Examples**: Complete constructor updates, abstract method implementations, and specific functionality preservation
-   - **Status**: Comprehensive migration blueprint ready for implementation
+**Overview**: Fixing 8 critical issues identified through user testing across Serial Ports, Socat, and PowerSupply modules.
 
-2. **PowerSupplySettingsViewModel Migration** (Ready)
-   - **Documentation Complete**: Full migration example with PowerSupply-specific implementations
-   - **Pattern Verified**: Template method approach with adapter pattern for existing dependencies
-   - **Reduction Projected**: ~455 lines of duplicate code elimination per ViewModel
-   - **Status**: Clear implementation path defined with detailed examples
+#### Phase 1: Critical Functionality Fixes (HIGH Priority)
+| ID | Issue | Status | Impact |
+|----|-------|--------|--------|
+| 1.1 | Socat Import Not Implemented | Not Started | Users cannot import Socat profiles |
+| 1.2 | PowerSupply Export/Import Broken | Not Started | Data persistence not working |
+| 1.3 | Socat Start - Device Validation Missing | Not Started | Process may fail without clear error |
+| 1.4 | UI Tip for Serial Configuration | Not Started | User workflow unclear |
+
+#### Phase 2: UI Improvements (MEDIUM Priority)
+| ID | Issue | Status | Impact |
+|----|-------|--------|--------|
+| 2.1 | Refresh Button Not Working | Not Started | DataGrid doesn't update until reorder |
+| 2.2 | Missing Serial Profile Columns | Not Started | Configuration details hidden |
+| 2.3 | Missing Socat Profile Columns | Not Started | Configuration details hidden |
+| 2.4 | Missing PowerSupply Columns | Not Started | Configuration details hidden |
+
+#### Phase 3: Verification & Testing (LOW Priority)
+| ID | Task | Status | Impact |
+|----|------|--------|--------|
+| 3.1 | End-to-End Testing | Not Started | Ensure all fixes work correctly |
+| 3.2 | Performance Verification | Not Started | Verify scalability with 50+ profiles |
+
+**Architecture Decision** (User Clarified):
+- Serial port configuration done **separately** via Serial Ports Settings
+- Socat startup uses **already-configured** devices
+- Socat service has **single responsibility** (TCP bridging only)
+
+**Next Steps**:
+1. Begin Phase 1.1: Implement Socat Import (copy from Serial implementation)
+2. Test Phase 1.2: Verify PowerSupply export/import with polymorphic configuration
+3. Enhance Phase 1.3: Add device validation to SocatService.StartSocatAsync()
+4. Add Phase 1.4: Info banner in SocatSettingsView
+
+**Estimated Completion Time**: 9-13 hours across 3 phases
 
 ### 📖 Migration Documentation Complete
 
