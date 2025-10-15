@@ -18,8 +18,28 @@ This document contains a detailed analysis of the S7Tools codebase, focusing on 
 *   **Potential Deadlock in `Program.cs`:**
     *   **File:** `src/S7Tools/Program.cs`
     *   **Issue:** The `--diag` mode initialization logic uses `.GetAwaiter().GetResult()` on asynchronous methods (e.g., `InitializeS7ToolsServicesAsync`, `GetAllAsync`). While there are attempts to mitigate deadlocks using local `async` functions, this pattern is inherently risky and can cause deadlocks, especially in different synchronization contexts.
-    *   **Recommendation:** Even for a console-based diagnostic mode, it's safer to make the `Main` method `async Task` and use `await` throughout. If that's not possible, use a dedicated async-to-sync bridge like `AsyncContext.Run`.
+    *   **Recommendation:** Even for a console-based diagnostic mode, it's safer to make the `Main` method `async Task` and use `await` throughout. For example:
 
+        ```csharp
+        static async Task Main(string[] args)
+        {
+            await InitializeS7ToolsServicesAsync();
+            // ... other async code
+        }
+        ```
+
+        If that's not possible (e.g., targeting an older .NET version), use a dedicated async-to-sync bridge like `AsyncContext.Run` from the [Nito.AsyncEx](https://www.nuget.org/packages/Nito.AsyncEx) library:
+
+        ```csharp
+        // Install-Package Nito.AsyncEx
+        using Nito.AsyncEx;
+
+        static void Main(string[] args)
+        {
+            AsyncContext.Run(() => InitializeS7ToolsServicesAsync());
+            // ... other code
+        }
+        ```
 *   **Fire-and-Forget in `Dispose` Method:**
     *   **File:** `src/S7Tools/Services/PlcDataService.cs`
     *   **Issue:** The `Dispose` method calls `_ = DisconnectAsync().ConfigureAwait(false);`. This is a fire-and-forget call within a synchronous method. If `DisconnectAsync` throws an exception, it will be an unhandled exception on the thread pool, potentially crashing the application. Furthermore, the application might close before the disconnection completes.
