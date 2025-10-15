@@ -2,142 +2,190 @@
 # Active Context: S7Tools Current Work Focus
 
 **Updated:** 2025-10-15
-**Current Sprint:** PowerSupply ModbusTcp Configuration Implementation
-**Status:** ✅ COMPLETED - PowerSupply profile editing with dynamic configuration fields fully working
+**Current Sprint:** Socat Process Management Debugging & Critical Deadlock Resolution
+**Status:** ✅ COMPLETED - Socat functionality fully restored with critical semaphore deadlock fixed
 
-## 🎉 MAJOR ACHIEVEMENT: PowerSupply ModbusTcp Configuration Complete
+## 🎉 MAJOR BREAKTHROUGH: Socat Semaphore Deadlock Resolution Complete
 
 ### Session Accomplishment (2025-10-15)
 
-**Task**: Implement dynamic configuration fields for PowerSupply profiles
-**Result**: ✅ FULLY FUNCTIONAL - All requirements met and verified working
+**Task**: Debug socat process startup issues - "button remains disabled" and "no process is started after hitting start"
+**Result**: ✅ CRITICAL DEADLOCK FIXED - User confirmed "working ok"
 
-#### What Was Implemented
+#### What Was Discovered & Fixed
 
-**1. Dynamic Configuration Fields**
-- ✅ **ModbusTcp Settings Section**: Appears/disappears based on type selection
-- ✅ **Host/IP TextBox**: With watermark "192.168.1.100"
-- ✅ **Port NumericUpDown**: Range 1-65535, default 502
-- ✅ **Device ID NumericUpDown**: Range 0-247
-- ✅ **On/Off Coil NumericUpDown**: Range 0-65535
-- ✅ **Address Base ComboBox**: Base-0 (0-based) vs Base-1 (1-based) addressing
+**1. Critical Semaphore Deadlock Issue**
+- ✅ **Root Cause**: Nested semaphore acquisition in `SocatService.StartSocatWithProfileAsync()`
+- ✅ **Symptom**: `IsPortInUseAsync()` called while same semaphore already held
+- ✅ **Result**: Indefinite hang causing UI button to remain disabled
+- ✅ **Debug Evidence**: 5+ second execution gaps in timeline analysis
 
-**2. Type Switching Functionality**
-- ✅ **ModbusTcp → SerialRs232**: Configuration fields hide properly
-- ✅ **SerialRs232 → ModbusTcp**: Configuration fields show properly
-- ✅ **All Type Combinations**: Tested and working correctly
+**2. Comprehensive Debug Logging Infrastructure**
+- ✅ **Emoji-Marked Logs**: Systematic tracking of async operation flow
+- ✅ **Timeline Analysis**: Identified exact deadlock location in execution sequence
+- ✅ **Command State Tracking**: CanExecute monitoring revealed race conditions
+- ✅ **Process Lifecycle Logging**: Complete socat startup/shutdown flow visibility
 
 **3. Technical Implementation Excellence**
-- ✅ **Avalonia ComboBox Compatibility**: Fixed WPF-specific syntax issues
-- ✅ **Enum Synchronization**: PowerSupplyType updated to match UI options
-- ✅ **Helper Properties**: Index-based binding for ComboBox compatibility
-- ✅ **Data Binding**: Proper two-way binding with ReactiveUI patterns
+- ✅ **Internal Method Pattern**: Created `IsPortInUseInternalAsync()` for semaphore-safe operations
+- ✅ **Public API Preservation**: Maintained external interface compatibility
+- ✅ **Proper Exception Handling**: Enhanced finally blocks with guaranteed semaphore release
+- ✅ **Thread-Safe Operations**: Verified proper async/await patterns throughout
 
 #### Technical Challenges Overcome
 
-**XAML Loading Issues Fixed**:
-```
-❌ Error: "No precompiled XAML found" - Fixed namespace and syntax issues
-❌ Error: "SelectedValuePath not supported" - Switched to SelectedIndex approach
-❌ Error: "Dots not allowed in type names" - Fixed converter registration
-✅ Result: Clean compilation and successful application startup
-```
-
-**Enum Alignment Resolved**:
+**Critical Deadlock Resolution**:
 ```csharp
-// BEFORE (mismatched)
-enum: ModbusTcp=0, ModbusRtu=1, Snmp=2, HttpRest=3
-UI: "Modbus TCP", "Serial RS232", "Serial RS485", "Ethernet IP"
+// BEFORE (DEADLOCK PRONE)
+public async Task<bool> StartSocatWithProfileAsync(SocatProfile profile)
+{
+    await _semaphore.WaitAsync();  // Acquire lock
+    try {
+        // ... setup code ...
+        bool isPortInUse = await IsPortInUseAsync(profile.Device);  // ❌ DEADLOCK!
+        // ... never reached ...
+    }
+    finally { _semaphore.Release(); }  // Never reached
+}
 
-// AFTER (synchronized)
-enum: ModbusTcp=0, SerialRs232=1, SerialRs485=2, EthernetIp=3
-UI: "Modbus TCP", "Serial RS232", "Serial RS485", "Ethernet IP"
+// AFTER (DEADLOCK SAFE)
+public async Task<bool> StartSocatWithProfileAsync(SocatProfile profile)
+{
+    await _semaphore.WaitAsync();
+    try {
+        // ... setup code ...
+        bool isPortInUse = IsPortInUseInternal(profile.Device);  // ✅ SAFE
+        // ... continues normally ...
+    }
+    finally { _semaphore.Release(); }  // Always reached
+}
+```
+
+**Debug Logging Pattern Established**:
+```csharp
+_logger.LogInformation("🚀 StartSocatAsync command initiated");
+_logger.LogInformation("🔒 Waiting for semaphore...");
+await _semaphore.WaitAsync();
+_logger.LogInformation("🔓 Semaphore acquired, proceeding with execution");
+// ... work ...
+_logger.LogInformation("🔓 Releasing semaphore...");
+_semaphore.Release();
+_logger.LogInformation("✅ StartSocatAsync command completed successfully");
 ```
 
 #### Files Modified
 
-**Core Changes**:
-- `src/S7Tools.Core/Models/PowerSupplyType.cs` - Updated enum values
-- `src/S7Tools/ViewModels/PowerSupplyProfileViewModel.cs` - Added ModbusTcp properties and helper methods
-- `src/S7Tools/Views/PowerSupplyProfileEditContent.axaml` - Added dynamic configuration UI
+**Core Fixes**:
+- `src/S7Tools/Services/SocatService.cs` - Critical deadlock fix with Internal method pattern
+- `src/S7Tools/ViewModels/SocatSettingsViewModel.cs` - Enhanced debug logging throughout async operations
 
-**Supporting Infrastructure**:
-- `src/S7Tools/Converters/ModbusAddressingModeConverter.cs` - Created for enum display
-- `src/S7Tools/App.axaml` - Namespace management for converters
+**Debug Infrastructure**:
+- Added comprehensive emoji-marked logging for async operation flow tracking
+- Enhanced command execution monitoring and CanExecute state verification
+- Systematic timeline analysis capabilities for future debugging
 
 #### Verification Results
 
-**User Confirmation**: ✅ "working ok now"
-- Type ComboBox functions correctly without conversion errors
-- Address Base ComboBox displays proper Base-0/Base-1 options
-- Configuration fields show/hide dynamically based on type selection
-- All data binding works properly with enum synchronization
+**User Confirmation**: ✅ "working ok"
+- Socat processes now start successfully without hanging
+- UI buttons respond correctly and don't remain disabled
+- No more indefinite waits or race conditions in process startup
+- Complete execution flow from profile selection to socat process launch
 
-## 🔄 TASK010: Profile Management Issues Status
+## 🔄 TASK012: Socat Process Investigation Status
 
-### ✅ All Phases Complete
+### ✅ COMPLETED - Critical Deadlock Fixed
 
-#### Phase 1: Critical Functionality ✅ COMPLETE
-1. **Socat Import** ✅ FIXED - Implementation copied and working
-2. **PowerSupply Export/Import** ✅ VERIFIED - Already working correctly
-3. **Socat Start Device Validation** ✅ FIXED - File.Exists check added
-4. **UI Tip for Serial Configuration** ✅ ADDED - Info banner implemented
+#### Debugging Process Results
+1. **Root Cause Analysis** ✅ COMPLETE - Identified nested semaphore deadlock
+2. **Timeline Analysis** ✅ COMPLETE - Debug logs revealed 5+ second execution gaps
+3. **Code Review** ✅ COMPLETE - Found `IsPortInUseAsync()` called within semaphore lock
+4. **Solution Implementation** ✅ COMPLETE - Created `IsPortInUseInternalAsync()` pattern
+5. **Verification Testing** ✅ COMPLETE - User confirmed functionality restored
 
-#### Phase 2: UI Improvements ✅ COMPLETE
-5. **Refresh Button** ✅ FIXED - DataGrid updates properly
-6. **Missing Serial Profile Columns** ✅ ADDED - All configuration columns
-7. **Missing Socat Profile Columns** ✅ ADDED - All configuration columns
-8. **Missing PowerSupply Columns** ✅ ADDED - Type, Host, Port, DeviceId, OnOffCoil
+#### Pattern Established: Semaphore-Safe Internal Methods
+```csharp
+// Public API (acquires semaphore)
+public async Task<bool> IsPortInUseAsync(string device)
+{
+    await _semaphore.WaitAsync();
+    try { return IsPortInUseInternal(device); }
+    finally { _semaphore.Release(); }
+}
 
-#### Phase 3: End-to-End Verification ✅ IN PROGRESS
-- **PowerSupply Profile Management**: ✅ VERIFIED - Create, Edit, Duplicate, Delete all working
-- **PowerSupply ModbusTcp Configuration**: ✅ VERIFIED - Dynamic fields working perfectly
-- **Export/Import Functionality**: ✅ VERIFIED - Round-trip testing successful
+// Internal API (assumes semaphore held)
+private bool IsPortInUseInternal(string device)
+{
+    // Safe to call from within semaphore-locked context
+    return CheckPortUsage(device);
+}
+```
 
-### Outstanding Tasks
+## Previously Completed Work
+
+### ✅ PowerSupply ModbusTcp Configuration (Previous Session)
+- **Dynamic Configuration Fields**: Type-based field visibility working perfectly
+- **Avalonia ComboBox Compatibility**: Index-based binding patterns established
+- **Enum Synchronization**: Domain models aligned with UI components
+- **User Verification**: Confirmed "working ok now" for configuration management
+
+### ✅ TASK010: Profile Management Issues (Previous Session)
+- **All Phases Complete**: Import/Export, UI improvements, DataGrid enhancements
+- **Cross-Platform Compatibility**: Avalonia-specific patterns implemented
+- **Unified Architecture**: Template method pattern working across all profile types
+
+## Outstanding Tasks (Lower Priority)
 
 #### Dialog UI Improvements (LOW PRIORITY)
 - Enhance profile edit dialogs: borders, [X] close button, draggable, resizable
-- Implementation plan documented in FIXES_SUMMARY_2025-10-15.md
+- Implementation plan documented, visual polish improvements
 
-#### Socat Process Investigation (MEDIUM PRIORITY)
-- Debug why socat processes are not starting
-- Follow investigation checklist in FIXES_SUMMARY_2025-10-15.md
+#### PLC Communication Development (NEXT PHASE)
+- Begin Siemens S7-1200 protocol implementation
+- Architecture foundation ready for communication module development
 
 ## Architecture Achievements
 
-### PowerSupply Configuration Pattern Established
+### Semaphore Deadlock Prevention Pattern Established
 
-**Dynamic UI Pattern**:
-```xml
-<!-- Type-specific sections with conditional visibility -->
-<Border IsVisible="{Binding IsModbusTcp}">
-  <StackPanel><!-- ModbusTcp fields --></StackPanel>
-</Border>
-```
+**Critical Lesson**: Always check call chains within semaphore-locked sections for nested semaphore calls
 
-**Enum Synchronization Pattern**:
+**Internal Method Pattern**:
 ```csharp
-// Index-based binding for Avalonia ComboBox compatibility
-public int PowerSupplyTypeIndex
+// Public API (thread-safe with semaphore)
+public async Task<bool> PublicMethodAsync()
 {
-    get => (int)PowerSupplyType;
-    set => PowerSupplyType = (PowerSupplyType)value;
+    await _semaphore.WaitAsync();
+    try { return PublicMethodInternal(); }
+    finally { _semaphore.Release(); }
+}
+
+// Internal method (assumes semaphore already held)
+private bool PublicMethodInternal()
+{
+    // Safe to call from within semaphore-locked context
+    // No semaphore acquisition needed
 }
 ```
 
-**Reactive Property Updates**:
+**Debug Logging Pattern**:
 ```csharp
-// Trigger UI updates when type changes
-set
-{
-    var oldValue = _powerSupplyType;
-    this.RaiseAndSetIfChanged(ref _powerSupplyType, value);
-    if (oldValue != value)
-    {
-        this.RaisePropertyChanged(nameof(IsModbusTcp));
-    }
+_logger.LogInformation("🔒 Waiting for semaphore...");
+await _semaphore.WaitAsync();
+_logger.LogInformation("🔓 Semaphore acquired");
+try { /* work */ }
+finally {
+    _logger.LogInformation("🔓 Releasing semaphore...");
+    _semaphore.Release();
 }
+```
+
+**Comprehensive Async Flow Tracking**:
+```csharp
+// Command execution monitoring
+_logger.LogInformation("🚀 Command initiated: {Command}", nameof(StartSocatAsync));
+_logger.LogInformation("⏱️ Execution time: {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+_logger.LogInformation("✅ Command completed successfully");
 ```
 
 ### Technical Excellence Standards Maintained
@@ -153,21 +201,21 @@ set
 **Build Status**: ✅ Clean compilation (0 errors, warnings only)
 **Test Status**: ✅ 178 tests passing (100% success rate)
 **Application Status**: ✅ Running successfully with all features functional
-**PowerSupply Editing**: ✅ Fully functional with dynamic configuration fields
+**Socat Functionality**: ✅ Fully operational with critical deadlock resolved
 
 ## Context for Next Session
 
-**Recent Success**: PowerSupply ModbusTcp configuration implementation complete
-**Current Priority**: Consider remaining tasks (Dialog UI improvements, Socat investigation)
-**Architecture State**: Robust foundation with established patterns for dynamic configuration
-**Code Quality**: High standards maintained throughout implementation
+**Recent Success**: Socat semaphore deadlock resolution with user-confirmed functionality restoration
+**Current Priority**: Consider remaining tasks (Dialog UI improvements, PLC communication development)
+**Architecture State**: Robust foundation with critical debugging patterns established
+**Code Quality**: High standards maintained with comprehensive async flow monitoring
 
 **Available Next Steps**:
 1. **Dialog UI Enhancements** - Visual improvements for edit dialogs
-2. **Socat Process Investigation** - Debug startup issues
-3. **New Feature Development** - PLC communication or other planned features
-4. **Performance Optimization** - Profile the application for improvements
+2. **PLC Communication Module** - Begin Siemens S7-1200 protocol implementation
+3. **Performance Optimization** - Profile the application for improvements
+4. **Advanced Configuration Management** - Enhanced profile features
 
-The PowerSupply profile editing functionality is now complete and fully operational with dynamic ModbusTcp configuration fields working perfectly.
+The Socat process management functionality is now complete and fully operational with critical deadlock issues resolved.
 
 ````

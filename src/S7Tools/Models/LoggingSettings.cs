@@ -26,7 +26,7 @@ public class LoggingSettings
     /// <summary>
     /// Gets or sets the minimum log level to display.
     /// </summary>
-    public LogLevel MinimumLogLevel { get; set; } = LogLevel.Information;
+    public LogLevel MinimumLogLevel { get; set; } = LogLevel.Trace;
 
     /// <summary>
     /// Gets or sets whether auto-scroll is enabled.

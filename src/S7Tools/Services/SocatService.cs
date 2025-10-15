@@ -25,6 +25,7 @@ public class SocatService : ISocatService, IDisposable
     private readonly ISettingsService _settingsService;
     private readonly ISerialPortService _serialPortService;
     private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = new();
+    private readonly Dictionary<int, Process> _activeProcesses = new(); // Keep actual Process objects alive
     private readonly Dictionary<int, Timer> _processMonitors = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
@@ -218,8 +219,8 @@ public class SocatService : ISocatService, IDisposable
                 throw new InvalidOperationException($"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
             }
 
-            // Check if TCP port is already in use
-            if (await IsPortInUseAsync(configuration.TcpPort, cancellationToken).ConfigureAwait(false))
+            // Check if TCP port is already in use (internal check - semaphore already held)
+            if (await IsPortInUseInternalAsync(configuration.TcpPort, cancellationToken).ConfigureAwait(false))
             {
                 throw new InvalidOperationException($"TCP port {configuration.TcpPort} is already in use");
             }
@@ -265,71 +266,114 @@ public class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("🚀🚀🚀 ENTERED StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
+            profile?.Name ?? "NULL", serialDevice ?? "NULL");
+
         ArgumentNullException.ThrowIfNull(profile, nameof(profile));
         if (string.IsNullOrWhiteSpace(serialDevice))
         {
+            _logger.LogError("❌ Serial device is null or empty");
             throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
         }
 
+        _logger.LogInformation("📋 Getting settings...");
         var settings = _settingsService.Settings.Socat;
+        _logger.LogInformation("📋 Settings obtained - MaxConcurrentInstances: {Max}", settings.MaxConcurrentInstances);
 
         // Check concurrent instances limit
+        _logger.LogInformation("🔒 Waiting for semaphore...");
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        _logger.LogInformation("🔓 Semaphore acquired");
         try
         {
+            _logger.LogInformation("📊 Checking concurrent instances: Current={Current}, Max={Max}",
+                _runningProcesses.Count, settings.MaxConcurrentInstances);
             if (_runningProcesses.Count >= settings.MaxConcurrentInstances)
             {
+                _logger.LogError("❌ Too many concurrent instances");
                 throw new InvalidOperationException($"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
             }
 
             // Validate serial device exists before starting socat
+            _logger.LogInformation("🔍 Checking if serial device exists: {Device}", serialDevice);
             if (!File.Exists(serialDevice))
             {
-                _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
+                _logger.LogError("❌ Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
                 throw new InvalidOperationException($"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
             }
+            _logger.LogInformation("✅ Serial device exists");
 
-            // Check if TCP port is already in use
-            if (await IsPortInUseAsync(profile.Configuration.TcpPort, cancellationToken).ConfigureAwait(false))
+            // Check if TCP port is already in use (internal check - semaphore already held)
+            _logger.LogInformation("🌐 Checking if TCP port {Port} is available...", profile.Configuration.TcpPort);
+            if (await IsPortInUseInternalAsync(profile.Configuration.TcpPort, cancellationToken).ConfigureAwait(false))
             {
+                _logger.LogError("❌ TCP port {Port} is already in use", profile.Configuration.TcpPort);
                 throw new InvalidOperationException($"TCP port {profile.Configuration.TcpPort} is already in use");
             }
+            _logger.LogInformation("✅ TCP port {Port} is available", profile.Configuration.TcpPort);
 
             // Prepare serial device if configured
             if (settings.AutoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
             {
-                _logger.LogDebug("Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
+                _logger.LogInformation("🔧 Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
                 var prepared = await PrepareSerialDeviceAsync(serialDevice, profile.Configuration, cancellationToken).ConfigureAwait(false);
                 if (!prepared)
                 {
+                    _logger.LogError("❌ Failed to prepare serial device {Device}", serialDevice);
                     throw new InvalidOperationException($"Failed to prepare serial device {serialDevice}");
                 }
+                _logger.LogInformation("✅ Serial device prepared");
+            }
+            else
+            {
+                _logger.LogInformation("⏭️ Skipping serial device preparation (AutoConfigure={Auto}, ProfileAuto={ProfileAuto})",
+                    settings.AutoConfigureSerialDevice, profile.Configuration.AutoConfigureSerial);
             }
 
             // Generate and validate command
+            _logger.LogInformation("📝 Generating socat command...");
             var command = GenerateSocatCommandForProfile(profile, serialDevice);
+            _logger.LogInformation("📝 Generated command: {Command}", command);
+
+            _logger.LogInformation("✅ Validating command...");
             var validation = ValidateSocatCommand(command);
             if (!validation.IsValid)
             {
+                _logger.LogError("❌ Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
                 throw new InvalidOperationException($"Invalid socat command: {string.Join(", ", validation.Errors)}");
             }
+            _logger.LogInformation("✅ Command validation passed");
 
             // Start socat process
+            _logger.LogInformation("🚀 Calling StartSocatProcessAsync...");
             var processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("🎉 StartSocatProcessAsync SUCCESS - ProcessId: {ProcessId}", processInfo.ProcessId);
 
+            _logger.LogInformation("📝 Adding process to _runningProcesses...");
             _runningProcesses[processInfo.ProcessId] = processInfo;
+            _logger.LogInformation("📝 Process added. Total running processes: {Count}", _runningProcesses.Count);
 
-            _logger.LogInformation("Started socat process {ProcessId} with profile '{Profile}' for device {Device} on TCP port {Port}",
+            _logger.LogInformation("🎉 Started socat process {ProcessId} with profile '{Profile}' for device {Device} on TCP port {Port}",
                 processInfo.ProcessId, profile.Name, serialDevice, profile.Configuration.TcpPort);
 
             // Raise event
+            _logger.LogInformation("📢 Raising ProcessStarted event...");
             ProcessStarted?.Invoke(this, new SocatProcessEventArgs(processInfo));
+            _logger.LogInformation("📢 ProcessStarted event raised");
 
+            _logger.LogInformation("🏁 StartSocatWithProfileAsync SUCCESSFUL EXIT");
             return processInfo;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "💥 EXCEPTION in StartSocatWithProfileAsync: {Message}", ex.Message);
+            throw;
         }
         finally
         {
+            _logger.LogInformation("🔓 Releasing semaphore...");
             _semaphore.Release();
+            _logger.LogInformation("🔓 Semaphore released");
         }
     }
 
@@ -363,7 +407,30 @@ public class SocatService : ISocatService, IDisposable
 
             try
             {
-                var process = Process.GetProcessById(processId);
+                Process? process = null;
+
+                // Try to get the process from our stored references first
+                if (_activeProcesses.TryGetValue(processId, out process))
+                {
+                    // Use our stored process reference
+                }
+                else
+                {
+                    // Fallback to system process lookup if not in our dictionary
+                    try
+                    {
+                        process = Process.GetProcessById(processId);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Process doesn't exist anymore
+                        processInfo.Status = SocatProcessStatus.Stopped;
+                        processInfo.IsRunning = false;
+                        _logger.LogDebug("Socat process {ProcessId} was already stopped", processId);
+                        return true;
+                    }
+                }
+
                 bool exited = false;
 
                 // Try SIGTERM on Unix-like systems
@@ -423,6 +490,19 @@ public class SocatService : ISocatService, IDisposable
             finally
             {
                 _runningProcesses.Remove(processId);
+                // Clean up the stored process reference and dispose it
+                if (_activeProcesses.TryGetValue(processId, out var storedProcess))
+                {
+                    _activeProcesses.Remove(processId);
+                    try
+                    {
+                        storedProcess.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error disposing process {ProcessId}", processId);
+                    }
+                }
                 if (_processMonitors.TryGetValue(processId, out var monitor))
                 {
                     monitor.Dispose();
@@ -471,17 +551,32 @@ public class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<IEnumerable<SocatProcessInfo>> GetRunningProcessesAsync(CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation("📋 GetRunningProcessesAsync ENTRY");
+
+        _logger.LogInformation("🔒 Waiting for semaphore...");
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        _logger.LogInformation("🔓 Semaphore acquired");
+
         try
         {
-            // Update process status before returning
-            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("📊 Current _runningProcesses count before update: {Count}", _runningProcesses.Count);
 
-            return _runningProcesses.Values.ToList();
+            // Update process status before returning
+            _logger.LogInformation("🔄 Calling UpdateProcessStatusesAsync...");
+            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("✅ UpdateProcessStatusesAsync completed");
+
+            _logger.LogInformation("📊 Final _runningProcesses count: {Count}", _runningProcesses.Count);
+            var result = _runningProcesses.Values.ToList();
+            _logger.LogInformation("📊 Returning {Count} processes", result.Count);
+
+            return result;
         }
         finally
         {
+            _logger.LogInformation("🔓 Releasing semaphore...");
             _semaphore.Release();
+            _logger.LogInformation("🏁 GetRunningProcessesAsync EXIT");
         }
     }
 
@@ -511,6 +606,50 @@ public class SocatService : ISocatService, IDisposable
     }
 
     /// <inheritdoc />
+    /// <summary>
+    /// Internal port check method that doesn't acquire semaphore (assumes already held).
+    /// Used when semaphore is already acquired to avoid deadlock.
+    /// </summary>
+    private async Task<bool> IsPortInUseInternalAsync(int tcpPort, CancellationToken cancellationToken = default)
+    {
+        if (tcpPort < 1 || tcpPort > 65535)
+        {
+            throw new ArgumentException("TCP port must be between 1 and 65535", nameof(tcpPort));
+        }
+
+        try
+        {
+            // Check our managed processes (semaphore already held)
+            var managedProcess = _runningProcesses.Values.FirstOrDefault(p => p.TcpPort == tcpPort && p.IsRunning);
+            if (managedProcess != null)
+            {
+                _logger.LogDebug("Port {Port} is in use by managed socat process {ProcessId}", tcpPort, managedProcess.ProcessId);
+                return true;
+            }
+
+            // Then, attempt to bind to the port to detect external usage
+            try
+            {
+                using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Any, tcpPort);
+                listener.Start();
+                listener.Stop();
+                _logger.LogDebug("Port {Port} is available (bind test successful)", tcpPort);
+                return false; // successfully bound -> port not in use
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                _logger.LogDebug("Port {Port} is in use (bind failed: {Error})", tcpPort, ex.Message);
+                return true; // bind failed -> port in use or insufficient privileges
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check if TCP port {Port} is in use (internal)", tcpPort);
+            // Be conservative: assume port is in use on error to avoid collisions
+            return true;
+        }
+    }
+
     public async Task<bool> IsPortInUseAsync(int tcpPort, CancellationToken cancellationToken = default)
     {
         if (tcpPort < 1 || tcpPort > 65535)
@@ -932,7 +1071,12 @@ public class SocatService : ISocatService, IDisposable
                 CreateNoWindow = true
             };
 
-            using var process = new Process { StartInfo = processStartInfo, EnableRaisingEvents = false };
+            // Create process but DON'T use 'using' - we need to keep it alive!
+            var process = new Process
+            {
+                StartInfo = processStartInfo,
+                EnableRaisingEvents = true // Enable events for proper lifecycle management
+            };
 
             StringBuilder? outputBuilder = null;
             StringBuilder? errorBuilder = null;
@@ -959,6 +1103,38 @@ public class SocatService : ISocatService, IDisposable
                     }
                 };
             }
+
+            // Set up process exit handler before starting
+            process.Exited += (sender, args) =>
+            {
+                Task.Run(async () =>
+                {
+                    await _semaphore.WaitAsync().ConfigureAwait(false);
+                    try
+                    {
+                        if (_runningProcesses.TryGetValue(process.Id, out var processInfo))
+                        {
+                            processInfo.IsRunning = false;
+                            processInfo.Status = SocatProcessStatus.Stopped;
+                            _logger.LogInformation("Socat process {ProcessId} exited with code {ExitCode}",
+                                process.Id, process.ExitCode);
+
+                            ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
+                        }
+
+                        // Clean up references
+                        _runningProcesses.Remove(process.Id);
+                        _activeProcesses.Remove(process.Id);
+
+                        // Dispose the process now that it's finished
+                        process.Dispose();
+                    }
+                    finally
+                    {
+                        _semaphore.Release();
+                    }
+                });
+            };
 
             process.Start();
 
@@ -1001,6 +1177,9 @@ public class SocatService : ISocatService, IDisposable
                 },
                 LastUpdated = DateTime.UtcNow
             };
+
+            // Store the actual Process object to keep it alive
+            _activeProcesses[process.Id] = process;
 
             return processInfo;
         }
@@ -1265,6 +1444,20 @@ public class SocatService : ISocatService, IDisposable
             {
                 _logger.LogError(ex, "Error stopping socat processes during disposal");
             }
+
+            // Dispose all stored processes
+            foreach (var process in _activeProcesses.Values)
+            {
+                try
+                {
+                    process.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error disposing process during cleanup");
+                }
+            }
+            _activeProcesses.Clear();
 
             // Dispose all monitors
             foreach (var monitor in _processMonitors.Values)

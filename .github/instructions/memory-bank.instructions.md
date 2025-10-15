@@ -16,11 +16,11 @@ flowchart TD
     PB[projectbrief.md] --> PC[productContext.md]
     PB --> SP[systemPatterns.md]
     PB --> TC[techContext.md]
-    
+
     PC --> AC[activeContext.md]
     SP --> AC
     TC --> AC
-    
+
     AC --> P[progress.md]
     AC --> TF[tasks/ folder]
 ```
@@ -83,10 +83,10 @@ Create additional files/folders within memory-bank/ when they help organize:
 flowchart TD
     Start[Start] --> ReadFiles[Read Memory Bank]
     ReadFiles --> CheckFiles{Files Complete?}
-    
+
     CheckFiles -->|No| Plan[Create Plan]
     Plan --> Document[Document in Chat]
-    
+
     CheckFiles -->|Yes| Verify[Verify Context]
     Verify --> Strategy[Develop Strategy]
     Strategy --> Present[Present Approach]
@@ -109,7 +109,7 @@ flowchart TD
     NewFile --> Think[Document Thought Process]
     Think --> Plan[Create Implementation Plan]
     Plan --> Index[Update _index.md]
-    
+
     Execute[Execute Task] --> Update[Add Progress Log Entry]
     Update --> StatusChange[Update Task Status]
     StatusChange --> IndexUpdate[Update _index.md]
@@ -129,16 +129,16 @@ Memory Bank updates occur when:
 ```mermaid
 flowchart TD
     Start[Update Process]
-    
+
     subgraph Process
         P1[Review ALL Files]
         P2[Document Current State]
         P3[Clarify Next Steps]
         P4[Update instructions]
-        
+
         P1 --> P2 --> P3 --> P4
     end
-    
+
     Start --> Process
 ```
 
@@ -151,19 +151,19 @@ The instructions files are my learning journal for each project. It captures imp
 ```mermaid
 flowchart TD
     Start{Discover New Pattern}
-    
+
     subgraph Learn [Learning Process]
         D1[Identify Pattern]
         D2[Validate with User]
         D3[Document in instructions]
     end
-    
+
     subgraph Apply [Usage]
         A1[Read instructions]
         A2[Apply Learned Patterns]
         A3[Improve Future Work]
     end
-    
+
     Start --> Learn
     Learn --> Apply
 ```
@@ -216,8 +216,8 @@ Each task file follows this format:
 ```markdown
 # [Task ID] - [Task Name]
 
-**Status:** [Pending/In Progress/Completed/Abandoned]  
-**Added:** [Date Added]  
+**Status:** [Pending/In Progress/Completed/Abandoned]
+**Added:** [Date Added]
 **Updated:** [Date Last Updated]
 
 ## Original Request
@@ -272,7 +272,7 @@ When you request **add task** or use the command **create task**, I will:
 5. Update the _index.md file to include the new task
 
 For existing tasks, the command **update task [ID]** will prompt me to:
-1. Open the specific task file 
+1. Open the specific task file
 2. Add a new progress log entry with today's date
 3. Update the task status if needed
 4. Update the _index.md file to reflect any status changes
@@ -297,3 +297,63 @@ To view tasks, the command **show tasks [filter]** will:
 4. Example usage: **show tasks active** or **show tasks tag:frontend**
 
 REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is my only link to previous work. It must be maintained with precision and clarity, as my effectiveness depends entirely on its accuracy.
+
+## CRITICAL DEBUGGING LESSONS LEARNED
+
+### Semaphore Deadlock Detection (October 15, 2025)
+
+**⚠️ HIGH PRIORITY**: This pattern caused multiple critical failures and WILL occur again if not recognized:
+
+#### The Deadly Pattern
+```csharp
+// ❌ DEADLOCK - Method A calls Method B while holding semaphore
+public async Task MethodA()
+{
+    await _semaphore.WaitAsync();  // Acquire lock
+    try {
+        await MethodB();  // ❌ DANGER: If MethodB needs same semaphore = DEADLOCK
+    }
+    finally {
+        _semaphore.Release(); // Never reached
+    }
+}
+```
+
+#### Debugging Symptoms
+- Process hangs indefinitely at specific execution point
+- Logs show semaphore acquired but never released
+- Subsequent operations hang waiting for same semaphore
+- No error messages - just silent hanging
+- UI becomes completely unresponsive
+
+#### Essential Debug Logging Pattern
+```csharp
+_logger.LogInformation("🔒 Waiting for semaphore...");
+await _semaphore.WaitAsync();
+_logger.LogInformation("🔓 Semaphore acquired");
+try { /* work */ }
+finally {
+    _logger.LogInformation("🔓 Releasing semaphore...");
+    _semaphore.Release();
+}
+```
+
+#### The Solution Pattern
+Create "Internal" versions of methods for use within locked contexts:
+```csharp
+// Public API
+public async Task<bool> CheckSomethingAsync()
+{
+    await _semaphore.WaitAsync();
+    try { return CheckSomethingInternal(); }
+    finally { _semaphore.Release(); }
+}
+
+// Internal version - assumes semaphore held
+private bool CheckSomethingInternal()
+{
+    // No semaphore acquisition - safe to call from locked context
+}
+```
+
+**CRITICAL**: Always check call chains within semaphore-locked sections for nested semaphore calls!

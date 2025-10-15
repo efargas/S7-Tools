@@ -114,6 +114,20 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         _specificLogger.LogInformation("SocatSettingsViewModel initialized");
 
+        // Debug property change tracking
+        this.WhenAnyValue(x => x.SelectedProfile)
+            .Subscribe(profile => _specificLogger.LogDebug("🔍 SelectedProfile changed to: {ProfileName} (ID: {ProfileId})",
+                profile?.Name ?? "NULL", profile?.Id.ToString() ?? "NULL"))
+            .DisposeWith(_disposables);
+
+        this.WhenAnyValue(x => x.SelectedSerialDevice)
+            .Subscribe(device => _specificLogger.LogDebug("🔌 SelectedSerialDevice changed to: {Device}", device ?? "NULL"))
+            .DisposeWith(_disposables);
+
+        this.WhenAnyValue(x => x.RunningProcessCount)
+            .Subscribe(count => _specificLogger.LogDebug("📊 RunningProcessCount changed to: {Count}", count))
+            .DisposeWith(_disposables);
+
         // Update socat command preview when either profile or device selection changes
         this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedSerialDevice)
             .Subscribe(values =>
@@ -323,9 +337,17 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         // Start socat command - enabled when both profile and device are selected
         var canStartSocat = this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedSerialDevice)
-            .Select(tuple => tuple.Item1 != null && !string.IsNullOrEmpty(tuple.Item2));
+            .Select(tuple => {
+                bool canStart = tuple.Item1 != null && !string.IsNullOrEmpty(tuple.Item2);
+                _specificLogger.LogDebug("🎛️ StartSocat CanExecute: Profile={ProfileSelected}, Device={DeviceSelected}, CanStart={CanStart}",
+                    tuple.Item1?.Name ?? "None", tuple.Item2 ?? "None", canStart);
+                return canStart;
+            });
 
         StartSocatCommand = ReactiveCommand.CreateFromTask(StartSocatAsync, canStartSocat);
+        StartSocatCommand.IsExecuting
+            .Subscribe(isExecuting => _specificLogger.LogDebug("⚙️ StartSocatCommand IsExecuting: {IsExecuting}", isExecuting))
+            .DisposeWith(_disposables);
         StartSocatCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "starting socat"))
             .DisposeWith(_disposables);
@@ -350,6 +372,9 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         // Refresh processes command - always enabled
         RefreshProcessesCommand = ReactiveCommand.CreateFromTask(RefreshRunningProcessesAsync);
+        RefreshProcessesCommand.IsExecuting
+            .Subscribe(isExecuting => _specificLogger.LogDebug("🔄 RefreshProcessesCommand IsExecuting: {IsExecuting}", isExecuting))
+            .DisposeWith(_disposables);
         RefreshProcessesCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "refreshing processes"))
             .DisposeWith(_disposables);
@@ -528,31 +553,48 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     private async Task RefreshRunningProcessesAsync()
     {
+        _specificLogger.LogInformation("📋 RefreshRunningProcessesAsync ENTRY");
+
         try
         {
             StatusMessage = "Refreshing running processes...";
+            _specificLogger.LogInformation("🔍 Calling _socatService.GetRunningProcessesAsync...");
 
             var processes = await _socatService.GetRunningProcessesAsync();
+            _specificLogger.LogInformation("📊 GetRunningProcessesAsync returned {Count} processes", processes?.Count() ?? 0);
 
+            _specificLogger.LogInformation("🔄 Invoking UI thread update...");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
+                _specificLogger.LogInformation("🧹 Clearing RunningProcesses collection...");
                 RunningProcesses.Clear();
-                foreach (var process in processes)
+
+                if (processes != null)
                 {
-                    RunningProcesses.Add(process);
+                    foreach (var process in processes)
+                    {
+                        _specificLogger.LogInformation("➕ Adding process: PID={ProcessId}, Port={Port}, Status={Status}",
+                            process.ProcessId, process.TcpPort, process.Status);
+                        RunningProcesses.Add(process);
+                    }
                 }
+
                 RunningProcessCount = RunningProcesses.Count;
+                _specificLogger.LogInformation("📈 Updated RunningProcessCount to {Count}", RunningProcessCount);
 
                 StatusMessage = $"Found {RunningProcessCount} running process(es)";
             });
+            _specificLogger.LogInformation("✅ UI thread update completed");
 
-            _specificLogger.LogInformation("Found {ProcessCount} running socat processes", RunningProcessCount);
+            _specificLogger.LogInformation("📊 Final result: Found {ProcessCount} running socat processes", RunningProcessCount);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error refreshing running processes");
-            StatusMessage = "Error refreshing processes";
+            _specificLogger.LogError(ex, "💥 EXCEPTION in RefreshRunningProcessesAsync: {Message}", ex.Message);
+            StatusMessage = $"Error refreshing processes: {ex.Message}";
         }
+
+        _specificLogger.LogInformation("🏁 RefreshRunningProcessesAsync EXIT");
     }
 
 
@@ -667,26 +709,40 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     private async Task StartSocatAsync()
     {
+        _specificLogger.LogInformation("🚀 StartSocatAsync ENTRY - SelectedProfile: {Profile}, SelectedSerialDevice: {Device}",
+            SelectedProfile?.Name ?? "NULL", SelectedSerialDevice ?? "NULL");
+
         if (SelectedProfile == null || string.IsNullOrEmpty(SelectedSerialDevice))
         {
+            _specificLogger.LogWarning("❌ StartSocatAsync ABORT - Missing selection: Profile={Profile}, Device={Device}",
+                SelectedProfile?.Name ?? "NULL", SelectedSerialDevice ?? "NULL");
             return;
         }
 
         try
         {
+            _specificLogger.LogInformation("📡 Setting status message...");
             StatusMessage = $"Starting socat on port {SelectedProfile.Configuration.TcpPort}...";
 
+            _specificLogger.LogInformation("🔧 Calling _socatService.StartSocatWithProfileAsync...");
             var processInfo = await _socatService.StartSocatWithProfileAsync(SelectedProfile, SelectedSerialDevice);
+            _specificLogger.LogInformation("✅ _socatService.StartSocatWithProfileAsync completed - ProcessId: {ProcessId}", processInfo.ProcessId);
 
             StatusMessage = $"socat started successfully (PID: {processInfo.ProcessId})";
-            _specificLogger.LogInformation("Started socat process: {ProcessId} for profile {ProfileName} on device {Device}",
+            _specificLogger.LogInformation("🎉 Started socat process: {ProcessId} for profile {ProfileName} on device {Device}",
                 processInfo.ProcessId, SelectedProfile.Name, SelectedSerialDevice);
+
+            _specificLogger.LogInformation("🔄 Refreshing running processes...");
+            await RefreshRunningProcessesAsync();
+            _specificLogger.LogInformation("✅ RefreshRunningProcessesAsync completed");
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error starting socat");
-            StatusMessage = "Error starting socat";
+            _specificLogger.LogError(ex, "💥 EXCEPTION in StartSocatAsync: {Message}", ex.Message);
+            StatusMessage = $"Error starting socat: {ex.Message}";
         }
+
+        _specificLogger.LogInformation("🏁 StartSocatAsync EXIT");
     }
 
     /// <summary>

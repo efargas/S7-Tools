@@ -8,9 +8,12 @@ applyTo:
   - '.copilot-tracking/**/*.md'
 ---
 
-# S7Tools Project Development Memory
 
-Comprehensive memory system for S7Tools project development, including Memory Bank patterns, .NET best practices, and project-specific intelligence learned through extensive codebase analysis and external code review validation.
+# DEPRECATION NOTICE
+
+This file is deprecated. All authoritative patterns, rules, and project intelligence are now consolidated in `memory-bank/systemPatterns.md`.
+
+Refer to `systemPatterns.md` for the single source of truth. This file is retained for historical reference only.
 
 ## 🚨 CRITICAL: External Code Review Response Protocol
 

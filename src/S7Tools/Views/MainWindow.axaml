@@ -25,12 +25,12 @@
         <converters:GridLengthToDoubleConverter x:Key="GridLengthToDoubleConverter" />
         <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         <converters:BooleanToColorConverter x:Key="BooleanToColorConverter" />
-        
+
         <!-- DataTemplate for SettingsViewModel in sidebar (categories only) -->
         <DataTemplate x:Key="SettingsSidebarTemplate" DataType="vm:SettingsViewModel">
             <views:SettingsCategoriesView />
         </DataTemplate>
-        
+
         <!-- DataTemplate for SettingsViewModel in main content (content only) -->
         <DataTemplate x:Key="SettingsMainContentTemplate" DataType="vm:SettingsViewModel">
             <views:SettingsView />
@@ -154,8 +154,8 @@
                                                 <Setter Property="Foreground" Value="#FFFFFF" />
                                             </Style>
                                         </Button.Styles>
-                                        <icons:Icon Width="32"
-                                                   Height="32"
+                                        <icons:Icon Width="40"
+                                                   Height="40"
                                                    Value="{Binding IconPath}"
                                                    Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}" />
                                     </Button>
@@ -225,8 +225,8 @@
                 </Border>
 
                 <!-- Sidebar GridSplitter -->
-                <GridSplitter Grid.Column="2" 
-                              Width="1" 
+                <GridSplitter Grid.Column="2"
+                              Width="1"
                               VerticalAlignment="Stretch"
                               ResizeDirection="Columns"
                               IsVisible="{Binding Navigation.IsSidebarVisible}"
@@ -240,24 +240,24 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        
+
                         <!-- Main Content Header (Optional) -->
-                        <Border Grid.Row="0" 
-                                Background="#2D2D30" 
-                                Height="35" 
-                                BorderBrush="#464647" 
+                        <Border Grid.Row="0"
+                                Background="#2D2D30"
+                                Height="35"
+                                BorderBrush="#464647"
                                 BorderThickness="0,0,0,1"
                                 IsVisible="{Binding Navigation.ShowMainContentHeader}">
-                            <TextBlock Text="{Binding Navigation.MainContentTitle}" 
-                                      Foreground="#CCCCCC" 
-                                      FontSize="11" 
-                                      FontWeight="Bold" 
-                                      VerticalAlignment="Center" 
+                            <TextBlock Text="{Binding Navigation.MainContentTitle}"
+                                      Foreground="#CCCCCC"
+                                      FontSize="11"
+                                      FontWeight="Bold"
+                                      VerticalAlignment="Center"
                                       Margin="12,0" />
                         </Border>
-                        
+
                         <!-- Main Content Container using ViewLocator -->
-                        <ContentControl Grid.Row="1" 
+                        <ContentControl Grid.Row="1"
                                        Content="{Binding Navigation.MainContent}"
                                        Background="#1E1E1E" />
                     </Grid>

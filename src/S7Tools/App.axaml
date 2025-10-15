@@ -25,7 +25,7 @@
                     <Border Background="{TemplateBinding Background}">
                         <Border x:Name="PART_Divider"
                                 Background="#464647"
-                                BorderThickness="0"/>
+                                BorderThickness="1"/>
                     </Border>
                 </ControlTemplate>
             </Setter>
@@ -33,16 +33,16 @@
                 <Setter Property="Background" Value="#007ACC"/>
             </Style>
             <Style Selector="^[ResizeDirection=Columns]">
-                <Setter Property="Width" Value="3"/>
+                <Setter Property="Width" Value="5"/>
                 <Style Selector="^ /template/ Border#PART_Divider">
-                    <Setter Property="Width" Value="3"/>
+                    <Setter Property="Width" Value="5"/>
                     <Setter Property="HorizontalAlignment" Value="Center"/>
                 </Style>
             </Style>
             <Style Selector="^[ResizeDirection=Rows]">
-                <Setter Property="Height" Value="3"/>
+                <Setter Property="Height" Value="5"/>
                 <Style Selector="^ /template/ Border#PART_Divider">
-                    <Setter Property="Height" Value="3"/>
+                    <Setter Property="Height" Value="5"/>
                     <Setter Property="VerticalAlignment" Value="Center"/>
                 </Style>
             </Style>
