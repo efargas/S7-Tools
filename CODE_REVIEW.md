@@ -68,6 +68,7 @@ This document contains a detailed analysis of the S7Tools codebase, focusing on 
         ```csharp
         // Example in constructor
         this.WhenAnyValue(x => x.LastButtonPressed)
+            .Where(name => !string.IsNullOrEmpty(name))
             .Throttle(TimeSpan.FromSeconds(3), RxApp.MainThreadScheduler)
             .Subscribe(_ =>
             {
