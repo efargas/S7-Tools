@@ -10,6 +10,8 @@ This document contains a detailed analysis of the S7Tools codebase, focusing on 
 5.  **Code Duplication & Readability**
 6.  **UI & XAML**
 7.  **General Recommendations**
+8.  **Strengths & Good Practices**
+9.  **Coding Style & Patterns Guide**
 
 ---
 
