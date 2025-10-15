@@ -1,462 +1,317 @@
-# Localization and Resource Management Guide
+# Localization and Resource Management Guide (S7Tools)
 
-## Overview
+Last Updated: 2025-10-15
+Maintained By: S7Tools Development Team
 
-S7Tools implements a comprehensive localization system to support internationalization and maintainable string management. This guide explains how to use the existing resource infrastructure.
+Overview
 
-## Architecture
+S7Tools ships with two complementary localization mechanisms:
+- ResX resources (compiled) for strongly-typed, satellite-assembly friendly strings
+- An abstract IResourceManager for flexible lookups and test-time overrides
 
-The localization system consists of several components:
+Recent refactors introduced a custom UIStrings wrapper (S7Tools.Resources.UIStrings) with safe fallbacks and an InMemoryResourceManager default DI registration for development. This guide aligns documentation with the current implementation and defines a clear migration path to consistent resource usage.
 
-### Core Components
+Architecture
 
-1. **IResourceManager** (`S7Tools.Core.Resources`) - Core interface for resource management
-2. **InMemoryResourceManager** (`S7Tools.Core.Resources`) - In-memory implementation for testing/development
-3. **ResourceManager** (`S7Tools.Resources`) - Full-featured implementation with caching
-4. **ILocalizationService** (`S7Tools.Core.Services.Interfaces`) - High-level localization service interface  
-5. **LocalizationService** (`S7Tools.Services`) - Service implementation with culture management
+Core Components
 
-### Resource Files
+1) IResourceManager (S7Tools.Core.Resources)
+- Abstraction over resource retrieval with culture support
+- Implementations: InMemoryResourceManager (default in DI), production ResourceManager (S7Tools.Resources)
 
-- **UIStrings.resx** - Main resource file containing all UI strings
-- **UIStrings.cs** - Strongly-typed accessor class for resources
+2) InMemoryResourceManager (S7Tools.Core.Resources)
+- Simple in-memory implementation used by default for development and tests
+- Allows injecting ad-hoc strings during unit testing
 
-## Usage Patterns
+3) S7Tools.Resources.ResourceManager (S7Tools/Resources/ResourceManager.cs)
+- Full-featured runtime implementation with caching and pluggable ResX resource managers
+- Registers the compiled ResX "S7Tools.Resources.Strings.UIStrings" on startup
+- Note: This class currently shares the name ResourceManager with another class in S7Tools.Core.Resources. See Naming Conflicts below
 
-### 1. Using UIStrings in ViewModels
+4) UIStrings.resx + UIStrings.Designer.cs (S7Tools/Resources/Strings)
+- Compiled resource file and generated strongly typed accessor (S7Tools.Resources.Strings.UIStrings)
+- Keys currently use underscore grouping (e.g., ActivityBar_Explorer, Menu_File)
 
-**❌ AVOID: Hardcoded Strings**
-```csharp
+5) S7Tools.Resources.UIStrings (S7Tools/Resources/UIStrings.cs)
+- Project-specific strongly-typed wrapper over IResourceManager with safe defaults
+- Exposes properties for common UI text with hardcoded fallbacks
+- Initialized in App.Initialize via DI-resolved IResourceManager
+
+6) ILocalizationService + LocalizationService (S7Tools/Services)
+- High-level service for culture switching and lookups using the compiled ResX (S7Tools.Resources.Strings.UIStrings.ResourceManager)
+- Emits CultureChanged events; sets thread and default cultures
+
+Current Wiring (as of 2025-10-15)
+
+- DI registers IResourceManager -> S7Tools.Core.Resources.InMemoryResourceManager
+- App.Initialize sets S7Tools.Resources.UIStrings.ResourceManager = IResourceManager (the in-memory instance)
+- LocalizationService uses the compiled ResX ResourceManager (S7Tools.Resources.Strings.UIStrings.ResourceManager) directly
+- Result: S7Tools.Resources.UIStrings retrieves values from IResourceManager, which by default returns fallback strings unless values are populated at runtime; LocalizationService retrieves from ResX
+
+Implications
+
+- Two sources of truth can diverge:
+  - UIStrings.cs property keys mostly use CamelCase format (e.g., ActivityBarExplorer, MenuFile)
+  - UIStrings.resx keys use underscore grouping (e.g., ActivityBar_Explorer, Menu_File)
+- With the default InMemoryResourceManager, UIStrings.cs returns its coded fallbacks, while LocalizationService returns ResX values. This is acceptable in development but not ideal for production consistency.
+
+Recommended Target State
+
+- Use S7Tools.Resources.ResourceManager (production) as the IResourceManager DI registration so that UIStrings.cs reads from ResX resources by default
+- Establish a single naming policy for keys and align UIStrings.cs property names with ResX keys
+- Prefer underscore grouping for readability and discoverability in ResX (e.g., ActivityBar_Explorer, Dialog_OK)
+
+How to Switch to Production ResourceManager
+
+1) Update DI registration (ServiceCollectionExtensions)
+- Replace:
+  services.TryAddSingleton<IResourceManager, S7Tools.Core.Resources.InMemoryResourceManager>();
+- With:
+  services.TryAddSingleton<IResourceManager, S7Tools.Resources.ResourceManager>();
+
+2) Verify App.Initialize
+- App.Initialize already sets UIStrings.ResourceManager = serviceProvider.GetRequiredService<IResourceManager>();
+- No additional change needed
+
+3) Build and run
+- UIStrings.cs will now resolve through S7Tools.Resources.ResourceManager which internally registers the ResX resource manager for S7Tools.Resources.Strings.UIStrings
+
+Key Naming Policy and Migration
+
+Policy
+- Adopt underscore-grouped keys in ResX for clarity: Group_Subgroup_Name
+  - Examples: ActivityBar_Explorer, Panel_LogViewer, Dialog_OK, Status_Ready
+- UIStrings.cs property names should map 1-to-1 to resource keys
+  - Example property: public static string ActivityBar_Explorer => ResourceManager.GetString("ActivityBar_Explorer") ?? "Explorer";
+
+Current Mismatch
+- UIStrings.cs includes several properties with CamelCase keys (e.g., ActivityBarExplorer) while UIStrings.resx uses underscores (ActivityBar_Explorer)
+- Until code is normalized, add ResX aliases to maintain compatibility:
+  - For each UIStrings.cs property using CamelCase key, add a duplicate key in UIStrings.resx matching that CamelCase name that points to the same text
+
+Normalization Plan
+- Phase A (Safe, Non-breaking): Add alias entries in UIStrings.resx for CamelCase keys currently requested by UIStrings.cs
+- Phase B (Code Align): Update S7Tools/Resources/UIStrings.cs to consume underscore-grouped keys and optionally deprecate CamelCase properties
+- Phase C (Cleanup): Remove alias keys from ResX after all call sites are aligned and verified
+
+Usage Patterns
+
+1) Using S7Tools.Resources.UIStrings in ViewModels (preferred for UI text)
+
+// Avoid hardcoded strings
 var result = await _dialogService.ShowConfirmationAsync(
-    "Exit Application", 
-    "Are you sure you want to exit?");
-```
+    UIStrings.DialogConfirmationTitle,
+    UIStrings.Confirm_ClearLogs);
 
-**✅ PREFERRED: Using UIStrings**
-```csharp
-var result = await _dialogService.ShowConfirmationAsync(
-    UIStrings.DialogExitTitle, 
-    UIStrings.DialogExitMessage);
-```
+// Status updates
+StatusMessage = UIStrings.Status_Ready;
 
-### 2. Using ILocalizationService
+// Composite messages
+var msg = string.Format(UIStrings.LogViewer_ExportSuccess, count, format);
 
-Inject the localization service in your ViewModel:
+2) Using ILocalizationService for raw key lookups or culture switching
 
-```csharp
-public class MyViewModel : ViewModelBase
+public class MyViewModel
 {
     private readonly ILocalizationService _localization;
-    
+
     public MyViewModel(ILocalizationService localization)
     {
         _localization = localization ?? throw new ArgumentNullException(nameof(localization));
     }
-    
-    private async Task ShowMessageAsync()
+
+    private async Task ShowErrorAsync()
     {
-        var title = _localization.GetString("DialogTitle");
-        var message = _localization.GetString("DialogMessage");
-        
+        var title = UIStrings.DialogErrorTitle; // strongly-typed property
+        var message = _localization.GetString("Error_ConnectionFailed"); // direct key
         await _dialogService.ShowErrorAsync(title, message);
     }
 }
-```
 
-### 3. Formatted Strings
+Formatted Strings
 
-For strings with placeholders:
-
-**Resource Entry:**
-```xml
-<data name="ExportSuccess" xml:space="preserve">
-  <value>Successfully exported {0} entries to {1}</value>
+ResX Entry Example:
+<data name="LogViewer_ExportSuccess" xml:space="preserve">
+  <value>Successfully exported {0} log entries to {1} format.</value>
+  <comment>Message after exporting logs; args: count, format</comment>
 </data>
-```
 
-**Usage:**
-```csharp
-var message = _localization.GetString("ExportSuccess", count, fileName);
-// OR using string interpolation with resources:
-var message = string.Format(UIStrings.ExportSuccess, count, fileName);
-```
+Usage:
+var message = string.Format(UIStrings.LogViewer_ExportSuccess, count, format);
+// or via ILocalizationService
+var message = _localization.GetString("LogViewer_ExportSuccess", count, format);
 
-### 4. Adding New Resource Strings
+Adding New Resource Strings
 
-#### Step 1: Add to UIStrings.resx
+Step 1: Add to UIStrings.resx (S7Tools/Resources/Strings/UIStrings.resx)
 
-Edit `src/S7Tools/Resources/Strings/UIStrings.resx`:
-
-```xml
-<data name="YourNewKey" xml:space="preserve">
-  <value>Your localized text</value>
-  <comment>Description of where this is used</comment>
+<data name="Dialog_DeleteProfile_Title" xml:space="preserve">
+  <value>Delete Profile</value>
+  <comment>Title for delete profile confirmation dialog</comment>
 </data>
-```
+<data name="Dialog_DeleteProfile_Message" xml:space="preserve">
+  <value>Are you sure you want to delete this profile?</value>
+  <comment>Message for delete profile confirmation dialog</comment>
+</data>
 
-#### Step 2: Add Property to UIStrings.cs
+Step 2: Expose via S7Tools.Resources.UIStrings
+- Add corresponding properties in S7Tools/Resources/UIStrings.cs using the same key names
 
-Edit `src/S7Tools/Resources/UIStrings.cs`:
-
-```csharp
 /// <summary>
-/// Gets the your new text description.
+/// Gets the delete profile dialog title.
 /// </summary>
-public static string YourNewKey => ResourceManager.GetString("YourNewKey") ?? "Fallback text";
-```
+public static string Dialog_DeleteProfile_Title => ResourceManager.GetString("Dialog_DeleteProfile_Title") ?? "Delete Profile";
 
-#### Step 3: Use in Your Code
+/// <summary>
+/// Gets the delete profile dialog message.
+/// </summary>
+public static string Dialog_DeleteProfile_Message => ResourceManager.GetString("Dialog_DeleteProfile_Message") ?? "Are you sure you want to delete this profile?";
 
-```csharp
-var text = UIStrings.YourNewKey;
-```
+Step 3: Use in code
+var confirmed = await _dialogService.ShowConfirmationAsync(
+    UIStrings.Dialog_DeleteProfile_Title,
+    UIStrings.Dialog_DeleteProfile_Message);
 
-## Common Patterns
+Common Patterns
 
-### Dialog Messages
+Dialog Messages
 
-```csharp
-// Confirmation dialogs
-var result = await _dialogService.ShowConfirmationAsync(
-    UIStrings.DialogConfirmationTitle,
-    UIStrings.ClearLogsConfirmation);
-
-// Error dialogs
 await _dialogService.ShowErrorAsync(
     UIStrings.DialogErrorTitle,
-    UIStrings.ErrorConnection);
+    _localization.GetString("Error_InvalidConfiguration"));
 
-// Success messages
-await _dialogService.ShowErrorAsync(
-    UIStrings.DialogInformationTitle,
-    _localization.GetString("OperationSuccess", operationName));
-```
+Status Messages
 
-### Status Messages
+StatusMessage = UIStrings.Status_Loading;
+// ... work ...
+StatusMessage = UIStrings.Status_Ready;
 
-```csharp
-StatusMessage = UIStrings.StatusLoading;
-// ... perform operation ...
-StatusMessage = UIStrings.StatusReady;
-```
+XAML Bindings (Avalonia)
 
-### Button Labels
-
-```csharp
 <Button Content="{x:Static resources:UIStrings.DialogOK}" />
 <Button Content="{x:Static resources:UIStrings.DialogCancel}" />
-```
 
-### Menu Items
+Menu Items
 
-```csharp
-<MenuItem Header="{x:Static resources:UIStrings.MenuFile}">
-    <MenuItem Header="{x:Static resources:UIStrings.MenuNewFile}" />
-    <MenuItem Header="{x:Static resources:UIStrings.MenuSave}" />
+<MenuItem Header="{x:Static resources:UIStrings.Menu_File}">
+    <MenuItem Header="{x:Static resources:UIStrings.Action_Open}" />
+    <MenuItem Header="{x:Static resources:UIStrings.Action_Save}" />
 </MenuItem>
-```
 
-## Culture Management
+Culture Management
 
-### Changing Culture at Runtime
+Changing Culture at Runtime
 
-```csharp
 public class SettingsViewModel : ViewModelBase
 {
     private readonly ILocalizationService _localization;
-    
+
     public async Task SetLanguageAsync(string cultureName)
     {
         if (_localization.SetCulture(cultureName))
         {
-            // Culture changed successfully
-            // Notify UI to refresh
             await RefreshUIAsync();
         }
     }
-    
-    public IReadOnlyList<CultureInfo> AvailableLanguages => 
-        _localization.AvailableCultures;
+
+    public IReadOnlyList<CultureInfo> AvailableLanguages => _localization.AvailableCultures;
 }
-```
 
-### Getting Current Culture
+Getting Current Culture
 
-```csharp
-var currentCulture = _localization.CurrentCulture;
-var currentUILanguage = currentCulture.DisplayName;
-```
+var currentCulture = _localization.CurrentUICulture;
+var currentLanguage = currentCulture.DisplayName;
 
-## Best Practices
+Best Practices
 
-### DO
+DO
+- Use S7Tools.Resources.UIStrings for user-visible text in UI/ViewModels
+- Use ILocalizationService for culture switching and direct key lookups
+- Add XML summaries to new UIStrings properties
+- Provide fallback values in UIStrings.cs properties
+- Group keys with prefixes (Dialog_, Menu_, Status_, LogViewer_, etc.)
 
-✅ **Use UIStrings for all user-visible text**
-```csharp
-Title = UIStrings.ApplicationTitle;
-```
+DON'T
+- Do not hardcode user-visible strings in ViewModels or services
+- Do not introduce new key naming styles; use underscore grouping
+- Do not bypass ILocalizationService for culture changes
 
-✅ **Add XML comments to resource properties**
-```csharp
-/// <summary>
-/// Gets the confirmation message for clearing logs.
-/// </summary>
-public static string ClearLogsConfirmation => ...
-```
+Migration Strategy (Hardcoded to Resources)
 
-✅ **Provide fallback values**
-```csharp
-public static string MyText => ResourceManager.GetString("MyText") ?? "Fallback";
-```
+Phase 1: Identify Hardcoded Strings
+Suggested search:
+- grep -R "\"[A-Z][a-zA-Z ]\{3,\}\"" src --include="*.cs" | grep -v "//"
 
-✅ **Group related strings with prefixes**
-```
-Dialog_ConfirmationTitle
-Dialog_ErrorTitle
-Menu_File
-Menu_Edit
-Status_Ready
-Status_Loading
-```
+Phase 2: Add Missing Resources
+- Create keys in UIStrings.resx per naming policy
+- Add properties in S7Tools/Resources/UIStrings.cs with fallbacks
+- Add comments describing usage
 
-### DON'T
+Phase 3: Refactor Code
+Before:
+var result = await _dialogService.ShowConfirmationAsync("Clear Logs", "Are you sure?");
 
-❌ **Don't hardcode strings in ViewModels**
-```csharp
-StatusMessage = "Loading..."; // BAD
-```
-
-❌ **Don't skip resource comments**
-```xml
-<data name="SomeText" xml:space="preserve">
-  <value>Text</value>
-  <!-- Missing comment explaining usage -->
-</data>
-```
-
-❌ **Don't duplicate strings**
-```csharp
-// BAD: Multiple places with same text
-var msg1 = "Are you sure?";
-var msg2 = "Are you sure?";
-
-// GOOD: Reuse resource
-var msg1 = UIStrings.ConfirmationPrompt;
-var msg2 = UIStrings.ConfirmationPrompt;
-```
-
-## Migration Strategy
-
-### Phase 1: Identify Hardcoded Strings
-
-Search codebase for hardcoded strings:
-```bash
-grep -r "\"[A-Z]" src --include="*.cs" | grep -v "//" | grep -v "<!--"
-```
-
-### Phase 2: Add Missing Resources
-
-For each hardcoded string:
-1. Add entry to UIStrings.resx
-2. Add property to UIStrings.cs
-3. Add comment explaining usage
-
-### Phase 3: Refactor Code
-
-Replace hardcoded strings with resource references:
-
-**Before:**
-```csharp
+After:
 var result = await _dialogService.ShowConfirmationAsync(
-    "Delete Profile",
-    "Are you sure you want to delete this profile?");
-```
+    UIStrings.LogViewer_ClearLogsTitle,
+    UIStrings.LogViewer_ClearLogsMessage);
 
-**After:**
-```csharp
-var result = await _dialogService.ShowConfirmationAsync(
-    UIStrings.Dialog_DeleteProfile_Title,
-    UIStrings.Dialog_DeleteProfile_Message);
-```
+Phase 4: Verify
+- Build solution
+- Run app and toggle language
+- Validate strings in all views
+- Ensure no remaining hardcoded UI text
 
-### Phase 4: Verify
+Naming Conflicts and Warnings (ResourceManager)
 
-1. Build solution to ensure no compilation errors
-2. Run application to verify strings display correctly  
-3. Test language switching if implemented
-4. Run automated tests
+- There are two classes named ResourceManager:
+  1) S7Tools.Core.Resources.ResourceManager (delegates to InMemoryResourceManager)
+  2) S7Tools.Resources.ResourceManager (production, caches and registers ResX managers)
+- This may lead to confusion and CS0436 warnings in some IDEs/builds. Plan to rename the production class to S7ToolsResourceManager and update DI registrations and usages accordingly
 
-## Example: Complete Migration
+Verification & Tests
 
-### Original Code (Hardcoded)
+Unit Tests
 
-```csharp
-public class LogViewerViewModel : ViewModelBase
-{
-    private async Task ClearLogsAsync()
-    {
-        var result = await _dialogService.ShowConfirmationAsync(
-            "Clear Logs",
-            "Are you sure you want to clear all log entries? This action cannot be undone.");
-        
-        if (result)
-        {
-            _logDataStore.Clear();
-            StatusMessage = "Logs cleared successfully";
-        }
-    }
-}
-```
-
-### Step 1: Add Resources
-
-In `UIStrings.resx`:
-```xml
-<data name="LogViewer_ClearLogsTitle" xml:space="preserve">
-  <value>Clear Logs</value>
-  <comment>Title for clear logs confirmation dialog</comment>
-</data>
-<data name="LogViewer_ClearLogsMessage" xml:space="preserve">
-  <value>Are you sure you want to clear all log entries? This action cannot be undone.</value>
-  <comment>Message for clear logs confirmation dialog</comment>
-</data>
-<data name="LogViewer_ClearedSuccess" xml:space="preserve">
-  <value>Logs cleared successfully</value>
-  <comment>Status message after logs are cleared</comment>
-</data>
-```
-
-### Step 2: Add Properties
-
-In `UIStrings.cs`:
-```csharp
-/// <summary>
-/// Gets the title for the clear logs confirmation dialog.
-/// </summary>
-public static string LogViewer_ClearLogsTitle => 
-    ResourceManager.GetString("LogViewer_ClearLogsTitle") ?? "Clear Logs";
-
-/// <summary>
-/// Gets the message for the clear logs confirmation dialog.
-/// </summary>
-public static string LogViewer_ClearLogsMessage => 
-    ResourceManager.GetString("LogViewer_ClearLogsMessage") ?? 
-    "Are you sure you want to clear all log entries? This action cannot be undone.";
-
-/// <summary>
-/// Gets the success message after logs are cleared.
-/// </summary>
-public static string LogViewer_ClearedSuccess => 
-    ResourceManager.GetString("LogViewer_ClearedSuccess") ?? "Logs cleared successfully";
-```
-
-### Step 3: Refactor Code
-
-```csharp
-public class LogViewerViewModel : ViewModelBase
-{
-    private async Task ClearLogsAsync()
-    {
-        var result = await _dialogService.ShowConfirmationAsync(
-            UIStrings.LogViewer_ClearLogsTitle,
-            UIStrings.LogViewer_ClearLogsMessage);
-        
-        if (result)
-        {
-            _logDataStore.Clear();
-            StatusMessage = UIStrings.LogViewer_ClearedSuccess;
-        }
-    }
-}
-```
-
-## Testing Localization
-
-### Unit Tests
-
-```csharp
 [Fact]
-public void LocalizationService_GetString_ReturnsExpectedValue()
+public void UIStrings_ApplicationTitle_ProvidesFallback()
 {
-    // Arrange
-    var localization = new LocalizationService();
-    
-    // Act
-    var result = localization.GetString("ApplicationTitle");
-    
-    // Assert
-    Assert.NotNull(result);
-    Assert.NotEqual("ApplicationTitle", result); // Should not return key
+    // When DI provides InMemoryResourceManager without values,
+    // UIStrings should return fallback text
+    Assert.False(string.IsNullOrEmpty(S7Tools.Resources.UIStrings.ApplicationTitle));
 }
 
 [Fact]
-public void UIStrings_ApplicationTitle_ReturnsNonEmptyString()
+public void LocalizationService_GetString_ResolvesFromResx()
 {
-    // Arrange & Act
-    var title = UIStrings.ApplicationTitle;
-    
-    // Assert
-    Assert.NotNull(title);
-    Assert.NotEmpty(title);
+    var svc = new S7Tools.Services.LocalizationService();
+    var value = svc.GetString("ApplicationTitle");
+    Assert.False(string.IsNullOrEmpty(value));
 }
-```
 
-### Manual Testing
+Manual Testing
 
-1. Run application
-2. Navigate to all views
-3. Verify all text displays correctly
-4. Check for any remaining hardcoded strings
-5. Test with different cultures if supported
+1. Start the app
+2. Navigate across views; verify text comes from UIStrings
+3. Change culture using settings; verify culture switches
+4. Run through dialogs (confirmation/error/input) and verify localized text
 
-## Future Enhancements
+Future Enhancements
 
-### Multi-Language Support
+Multi-Language Support
+- Add culture-specific resource files: UIStrings.es-ES.resx, UIStrings.de-DE.resx, etc.
+- Populate translations and rebuild
+- Expand AvailableCultures in LocalizationService or detect satellite assemblies dynamically
 
-To add additional languages:
+Resource Validation
+- Add a test that reflects over S7Tools.Resources.UIStrings properties and asserts all keys exist in UIStrings.resx
+- During migration keep fallbacks; once complete, enforce presence
 
-1. Create culture-specific resource files:
-   - `UIStrings.es-ES.resx` (Spanish)
-   - `UIStrings.de-DE.resx` (German)
-   - etc.
+Appendix: Key Mapping (Examples)
 
-2. Add translations for each key in the new files
+- ActivityBarExplorer (CamelCase in code) -> ActivityBar_Explorer (ResX)
+- MenuFile -> Menu_File
+- PanelLogViewer -> Panel_LogViewer
+- DialogOK -> Dialog_OK
 
-3. Update `LocalizationService.GetAvailableCultures()` if needed
-
-4. Test language switching functionality
-
-### Resource Validation
-
-Consider adding build-time validation:
-
-```csharp
-[Fact]
-public void AllUIStringsProperties_HaveMatchingResourceEntries()
-{
-    var properties = typeof(UIStrings).GetProperties(BindingFlags.Public | BindingFlags.Static);
-    var resourceManager = UIStrings.ResourceManager;
-    
-    foreach (var property in properties)
-    {
-        var key = property.Name;
-        var value = resourceManager.GetString(key);
-        
-        Assert.NotNull(value);
-        Assert.NotEmpty(value);
-    }
-}
-```
-
-## Support
-
-For questions or issues with localization:
-1. Check this guide first
-2. Review existing resource usage patterns in the codebase
-3. Consult the team lead or architect
-4. Update this guide with new patterns as they emerge
-
----
-
-**Last Updated**: 2025
-**Maintained By**: S7Tools Development Team
+During Phase A, ensure UIStrings.resx contains both forms if needed to avoid regressions.

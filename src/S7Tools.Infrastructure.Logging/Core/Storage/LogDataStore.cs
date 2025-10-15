@@ -392,12 +392,6 @@ public sealed class LogDataStore : ILogDataStore
     /// <inheritdoc />
     public void Dispose()
     {
-        if (_disposed)
-        {
-            return;
-        }
-
-
         lock (_lock)
         {
             if (_disposed)
@@ -409,9 +403,10 @@ public sealed class LogDataStore : ILogDataStore
             _count = 0; // Reset the entry counter
             _head = 0;  // Optional: reset the head pointer
             _disposed = true;
-        }
 
-        PropertyChanged = null;
-        CollectionChanged = null;
+            // Clear events inside lock for thread safety
+            PropertyChanged = null;
+            CollectionChanged = null;
+        }
     }
 }

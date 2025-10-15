@@ -34,6 +34,13 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     // Configuration properties
     private PowerSupplyType _powerSupplyType = PowerSupplyType.ModbusTcp;
 
+    // ModbusTcp configuration properties
+    private string _modbusTcpHost = "192.168.1.100";
+    private int _modbusTcpPort = 502;
+    private int _modbusTcpDeviceId = 1;
+    private int _modbusTcpOnOffCoil;
+    private ModbusAddressingMode _modbusTcpAddressingMode = ModbusAddressingMode.Base1; // Default to Base-1 (user-friendly)
+
     // Status properties
     private bool _isValid = true;
     private bool _hasChanges;
@@ -105,7 +112,90 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     public PowerSupplyType PowerSupplyType
     {
         get => _powerSupplyType;
-        set => this.RaiseAndSetIfChanged(ref _powerSupplyType, value);
+        set
+        {
+            var oldValue = _powerSupplyType;
+            this.RaiseAndSetIfChanged(ref _powerSupplyType, value);
+            if (oldValue != value)
+            {
+                this.RaisePropertyChanged(nameof(IsModbusTcp));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets whether the current power supply type is ModbusTcp.
+    /// Used to control visibility of ModbusTcp configuration fields.
+    /// </summary>
+    public bool IsModbusTcp => PowerSupplyType == PowerSupplyType.ModbusTcp;
+
+    /// <summary>
+    /// Gets or sets the power supply type as ComboBox index.
+    /// 0 = ModbusTcp, 1 = SerialRs232, 2 = SerialRs485, 3 = EthernetIp
+    /// </summary>
+    public int PowerSupplyTypeIndex
+    {
+        get => (int)PowerSupplyType;
+        set => PowerSupplyType = (PowerSupplyType)value;
+    }
+
+    /// <summary>
+    /// Gets or sets the ModbusTcp host/IP address.
+    /// </summary>
+    public string ModbusTcpHost
+    {
+        get => _modbusTcpHost;
+        set => this.RaiseAndSetIfChanged(ref _modbusTcpHost, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the ModbusTcp port number.
+    /// </summary>
+    public int ModbusTcpPort
+    {
+        get => _modbusTcpPort;
+        set => this.RaiseAndSetIfChanged(ref _modbusTcpPort, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the ModbusTcp device ID (slave address).
+    /// </summary>
+    public int ModbusTcpDeviceId
+    {
+        get => _modbusTcpDeviceId;
+        set => this.RaiseAndSetIfChanged(ref _modbusTcpDeviceId, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the ModbusTcp On/Off coil address.
+    /// </summary>
+    public int ModbusTcpOnOffCoil
+    {
+        get => _modbusTcpOnOffCoil;
+        set => this.RaiseAndSetIfChanged(ref _modbusTcpOnOffCoil, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the ModbusTcp addressing mode (Base-0 or Base-1).
+    /// </summary>
+    /// <remarks>
+    /// Base-0: Addresses start at 0 (protocol addressing)
+    /// Base-1: Addresses start at 1 (user-friendly, converted internally)
+    /// </remarks>
+    public ModbusAddressingMode ModbusTcpAddressingMode
+    {
+        get => _modbusTcpAddressingMode;
+        set => this.RaiseAndSetIfChanged(ref _modbusTcpAddressingMode, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the ModbusTcp addressing mode as ComboBox index.
+    /// 0 = Base-0, 1 = Base-1
+    /// </summary>
+    public int ModbusTcpAddressingModeIndex
+    {
+        get => (int)ModbusTcpAddressingMode;
+        set => ModbusTcpAddressingMode = (ModbusAddressingMode)value;
     }
 
     /// <summary>
@@ -172,6 +262,16 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
         // Load configuration properties
         PowerSupplyType = profile.Configuration.Type;
 
+        // Load ModbusTcp specific configuration if applicable
+        if (profile.Configuration is ModbusTcpConfiguration modbusTcpConfig)
+        {
+            ModbusTcpHost = modbusTcpConfig.Host;
+            ModbusTcpPort = modbusTcpConfig.Port;
+            ModbusTcpDeviceId = modbusTcpConfig.DeviceId;
+            ModbusTcpOnOffCoil = modbusTcpConfig.OnOffCoil;
+            ModbusTcpAddressingMode = modbusTcpConfig.AddressingMode;
+        }
+
         // Reset status
         HasChanges = false;
         StatusMessage = "Profile loaded";
@@ -186,11 +286,14 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     {
         var profile = new PowerSupplyProfile
         {
+            Id = _originalProfile?.Id ?? 0, // CRITICAL: Preserve ID for editing existing profiles, 0 for new profiles
             Name = ProfileName,
             Description = ProfileDescription,
             IsDefault = IsDefault,
             IsReadOnly = IsReadOnly,
-            Configuration = CreateConfigurationForType(PowerSupplyType)
+            Configuration = CreateConfigurationForType(PowerSupplyType),
+            CreatedAt = _originalProfile?.CreatedAt ?? DateTime.UtcNow, // Preserve CreatedAt for existing profiles
+            ModifiedAt = DateTime.UtcNow // Always update ModifiedAt
         };
 
         return profile;
@@ -201,15 +304,21 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// </summary>
     /// <param name="type">The power supply type.</param>
     /// <returns>A configuration object for the specified type.</returns>
-    private static PowerSupplyConfiguration CreateConfigurationForType(PowerSupplyType type)
+    private PowerSupplyConfiguration CreateConfigurationForType(PowerSupplyType type)
     {
         return type switch
         {
-            PowerSupplyType.ModbusTcp => new ModbusTcpConfiguration(),
-            PowerSupplyType.ModbusRtu => throw new NotImplementedException("Modbus RTU configuration not yet implemented"),
-            PowerSupplyType.Snmp => throw new NotImplementedException("SNMP configuration not yet implemented"),
-            PowerSupplyType.HttpRest => throw new NotImplementedException("HTTP REST configuration not yet implemented"),
-            PowerSupplyType.Custom => throw new NotImplementedException("Custom configuration not yet implemented"),
+            PowerSupplyType.ModbusTcp => new ModbusTcpConfiguration
+            {
+                Host = ModbusTcpHost,
+                Port = ModbusTcpPort,
+                DeviceId = (byte)ModbusTcpDeviceId,
+                OnOffCoil = (ushort)ModbusTcpOnOffCoil,
+                AddressingMode = ModbusTcpAddressingMode
+            },
+            PowerSupplyType.SerialRs232 => throw new NotImplementedException("Serial RS232 configuration not yet implemented"),
+            PowerSupplyType.SerialRs485 => throw new NotImplementedException("Serial RS485 configuration not yet implemented"),
+            PowerSupplyType.EthernetIp => throw new NotImplementedException("Ethernet IP configuration not yet implemented"),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown power supply type")
         };
     }

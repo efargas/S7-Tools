@@ -418,13 +418,39 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         var profileManager = GetProfileManager();
         var profiles = await profileManager.GetAllAsync().ConfigureAwait(false);
 
-        // Update collection on UI thread
+        // Store current selection to restore after refresh
+        var selectedId = SelectedProfile?.Id;
+
+        // Update collection on UI thread - Clear and re-add to force DataGrid refresh
         await _uiThreadService.InvokeOnUIThreadAsync(() =>
         {
+            // Clear collection completely
             Profiles.Clear();
+
+            // Re-add all profiles
             foreach (var profile in profiles)
             {
                 Profiles.Add(profile);
+            }
+
+            // Restore selection if possible
+            if (selectedId.HasValue)
+            {
+                var profileToSelect = Profiles.FirstOrDefault(p => p.Id == selectedId.Value);
+                if (profileToSelect != null)
+                {
+                    SelectedProfile = profileToSelect;
+                }
+                else if (Profiles.Count > 0)
+                {
+                    // If previously selected profile no longer exists, select first
+                    SelectedProfile = Profiles.First();
+                }
+            }
+            else if (Profiles.Count > 0 && SelectedProfile == null)
+            {
+                // If no previous selection, select first profile
+                SelectedProfile = Profiles.First();
             }
         });
     }    private async Task LoadProfilesPathAsync()

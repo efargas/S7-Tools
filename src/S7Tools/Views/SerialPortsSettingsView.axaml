@@ -168,12 +168,36 @@
                   </DataGridTextColumn.Header>
                 </DataGridTextColumn>
 
-                <!-- Baud Rate configuration column -->
+                <!-- Serial Configuration Columns -->
                 <DataGridTextColumn Binding="{Binding Configuration.BaudRate}" Width="90" MinWidth="70">
                   <DataGridTextColumn.Header>
                     <TextBlock Text="Baud Rate" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                   </DataGridTextColumn.Header>
                 </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding Configuration.Parity}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Parity" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding Configuration.StopBits}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Stop Bits" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding Configuration.CharacterSize}" Width="90" MinWidth="70">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Char Size" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridCheckBoxColumn Binding="{Binding Configuration.RawMode}" Width="90" MinWidth="70" IsReadOnly="True">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Raw Mode" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
 
                 <!-- Created timestamp -->
                 <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">

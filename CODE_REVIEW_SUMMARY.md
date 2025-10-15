@@ -73,29 +73,22 @@
 
 ## 🔴 Top 5 Critical Issues (Fix Immediately)
 
-### 1. Race Condition in LogDataStore ⚠️
-- **File**: `LogDataStore.cs:393-416`
-- **Risk**: Production crashes (NullReferenceException)
-- **Effort**: 30 minutes
-- **Fix**: Move event clearing inside lock
+### 1. Race Condition in LogDataStore ⚠️ (FIXED 2025-10-15)
+- **File**: `src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs`
+- **Change**: Event clearing moved inside lock; _disposed set inside the same lock
 
-### 2. PowerSupplyService Dispose Violation ⚠️
-- **File**: `PowerSupplyService.cs:456-468`
-- **Risk**: Resource leaks, CA1063 violation
-- **Effort**: 1 hour
-- **Fix**: Implement proper Dispose(bool) pattern
+### 2. PowerSupplyService Dispose Violation ⚠️ (FIXED 2025-10-15)
+- **File**: `src/S7Tools/Services/PowerSupplyService.cs`
+- **Change**: Implemented proper Dispose(bool) pattern with GC.SuppressFinalize in Dispose()
 
-### 3. PowerSupplyProfileViewModel Memory Leak ⚠️
-- **File**: `PowerSupplyProfileViewModel.cs:18`
-- **Risk**: Memory leak over time
-- **Effort**: 30 minutes
-- **Fix**: Implement IDisposable
+### 3. PowerSupplyProfileViewModel Memory Leak ⚠️ (FIXED 2025-10-15)
+- **File**: `PowerSupplyProfileViewModel.cs`
+- **Status**: Implemented IDisposable with CompositeDisposable cleanup
+- **Risk**: Resolved
 
-### 4. ResourceManager Naming Conflict ⚠️
-- **File**: `ResourceManager.cs:17`
-- **Risk**: 107+ warnings, confusion
-- **Effort**: 2 hours
-- **Fix**: Rename to S7ToolsResourceManager
+### 4. ResourceManager Naming Conflict ⚠️ (PARTIAL)
+- **File**: `src/S7Tools/Resources/ResourceManager.cs`
+- **Change**: DI switched to production ResourceManager; naming conflict still planned to be resolved by renaming to S7ToolsResourceManager
 
 ### 5. Missing ConfigureAwait(false) ⚠️
 - **Scope**: 17 files (35% of async code)

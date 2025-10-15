@@ -160,10 +160,45 @@
                     </DataGridTextColumn.Header>
                   </DataGridTextColumn>
 
+                  <!-- TCP Host configuration column -->
+                  <DataGridTextColumn Binding="{Binding Configuration.TcpHost}" Width="120" MinWidth="90">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="TCP Host" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
                   <!-- TCP Port configuration column -->
                   <DataGridTextColumn Binding="{Binding Configuration.TcpPort}" Width="80" MinWidth="70">
                     <DataGridTextColumn.Header>
                       <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- Verbose flag -->
+                  <DataGridCheckBoxColumn Binding="{Binding Configuration.Verbose}" Width="80" MinWidth="60" IsReadOnly="True">
+                    <DataGridCheckBoxColumn.Header>
+                      <TextBlock Text="Verbose" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridCheckBoxColumn.Header>
+                  </DataGridCheckBoxColumn>
+
+                  <!-- HexDump flag -->
+                  <DataGridCheckBoxColumn Binding="{Binding Configuration.HexDump}" Width="90" MinWidth="70" IsReadOnly="True">
+                    <DataGridCheckBoxColumn.Header>
+                      <TextBlock Text="Hex Dump" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridCheckBoxColumn.Header>
+                  </DataGridCheckBoxColumn>
+
+                  <!-- BlockSize configuration column -->
+                  <DataGridTextColumn Binding="{Binding Configuration.BlockSize}" Width="90" MinWidth="70">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Block Size" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- DebugLevel configuration column -->
+                  <DataGridTextColumn Binding="{Binding Configuration.DebugLevel}" Width="100" MinWidth="80">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Debug Level" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                     </DataGridTextColumn.Header>
                   </DataGridTextColumn>
 
@@ -229,6 +264,30 @@
                        Foreground="#858585"
                        FontSize="12" />
           </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Serial Configuration Info Banner -->
+      <Border Background="#264F78"
+              BorderBrush="#306998"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="12,10">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <icons:Icon Value="fa-solid fa-info-circle" Width="18" Height="18" Foreground="#9CDCFE" VerticalAlignment="Top" Margin="0,2,0,0" />
+          <StackPanel Spacing="4">
+            <TextBlock Text="Serial Configuration Workflow" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="12" />
+            <TextBlock TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="11">
+              <Run Text="1. Configure your serial port " />
+              <Run Text="first" FontWeight="Bold" />
+              <Run Text=" using " />
+              <Run Text="Serial Ports Settings" FontWeight="SemiBold" />
+              <LineBreak />
+              <Run Text="2. Then start socat with the already-configured device (socat will " />
+              <Run Text="not" FontWeight="Bold" />
+              <Run Text=" reconfigure serial settings)" />
+            </TextBlock>
+          </StackPanel>
         </StackPanel>
       </Border>
 

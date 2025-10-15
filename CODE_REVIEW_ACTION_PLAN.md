@@ -137,16 +137,17 @@ public class PowerSupplyProfileViewModel : ReactiveObject, IDisposable
 **File**: `src/S7Tools/Resources/ResourceManager.cs:17`
 
 **Problem**:
-- Class named ResourceManager conflicts with System.Resources.ResourceManager
-- Causes CS0436 warnings throughout project
-- Forces use of fully qualified names
+- Two ResourceManager classes exist (Core and S7Tools projects); conflicts with System.Resources.ResourceManager type name
+- Causes CS0436 warnings and confusion
 
-**Fix Steps**:
-1. Rename class to `S7ToolsResourceManager`
-2. Update IResourceManager interface if needed
-3. Update all DI registrations
-4. Update all usages throughout codebase
-5. Rebuild and verify CS0436 warnings gone
+**Current State (2025-10-15)**:
+- DI now uses S7Tools.Resources.ResourceManager (production) so UIStrings resolves ResX by default
+- UIStrings.resx updated with alias keys to bridge current CamelCase lookups
+
+**Fix Steps (remaining)**:
+1. Rename S7Tools.Resources.ResourceManager to `S7ToolsResourceManager`
+2. Update DI registration and all usages throughout codebase
+3. Rebuild and verify CS0436 warnings gone
 
 **Testing**: Full build and test suite verification
 
@@ -368,10 +369,10 @@ private int _processingCount;
 ## 📊 Progress Tracking
 
 ### Phase 1 Checklist
-- [ ] Issue 1: Fix Dispose pattern in PowerSupplyService
-- [ ] Issue 2: Fix race condition in LogDataStore
-- [ ] Issue 3: Fix PowerSupplyProfileViewModel IDisposable
-- [ ] Issue 4: Resolve ResourceManager naming conflict
+- [x] Issue 1: Fix Dispose pattern in PowerSupplyService (2025-10-15)
+- [x] Issue 2: Fix race condition in LogDataStore (2025-10-15)
+- [x] Issue 3: Fix PowerSupplyProfileViewModel IDisposable (present in code)
+- [ ] Issue 4: Resolve ResourceManager naming conflict (PARTIAL) — DI switched to production ResourceManager; rename pending
 - [ ] Issue 5: Add missing ConfigureAwait(false)
 - [ ] Run full test suite
 - [ ] Verify all critical warnings resolved

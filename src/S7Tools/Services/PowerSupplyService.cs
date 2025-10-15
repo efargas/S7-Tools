@@ -451,20 +451,35 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
     #region IDisposable
 
     /// <summary>
-    /// Disposes the power supply service and releases all resources.
+    /// Releases all resources used by the PowerSupplyService.
     /// </summary>
     public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Performs the actual resource cleanup.
+    /// </summary>
+    /// <param name="disposing">True to dispose managed resources; false to release unmanaged resources only.</param>
+    protected virtual void Dispose(bool disposing)
     {
         if (_disposed)
         {
             return;
         }
 
-        CleanupConnection();
-        _semaphore.Dispose();
-        _disposed = true;
+        if (disposing)
+        {
+            // Free managed resources
+            CleanupConnection();
+            _semaphore.Dispose();
+        }
 
-        GC.SuppressFinalize(this);
+        // Free unmanaged resources (none currently)
+
+        _disposed = true;
     }
 
     #endregion

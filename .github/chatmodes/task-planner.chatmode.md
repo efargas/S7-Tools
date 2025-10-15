@@ -1,6 +1,6 @@
 ---
 description: 'Advanced task planner for creating comprehensive, research-driven implementation plans with modern project management practices'
-tools: ['changes', 'codebase', 'editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTests', 'search', 'searchResults', 'terminalLastCommand', 'terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'terraform', 'Microsoft Docs', 'azure_get_schema_for_Bicep', 'context7', 'microsoft_docs_search', 'microsoft_code_sample_search', 'microsoft_docs_fetch']
+tools: ['changes', 'search/codebase', 'edit/editFiles', 'extensions', 'fetch', 'findTestFiles', 'githubRepo', 'new', 'openSimpleBrowser', 'problems', 'runCommands', 'runNotebooks', 'runTests', 'search', 'search/searchResults', 'runCommands/terminalLastCommand', 'runCommands/terminalSelection', 'testFailure', 'usages', 'vscodeAPI', 'terraform', 'Microsoft Docs', 'azure_get_schema_for_Bicep', 'context7', 'microsoft_docs_search', 'microsoft_code_sample_search', 'microsoft_docs_fetch']
 ---
 
 # Advanced Task Planner Instructions

@@ -19,38 +19,29 @@ public enum PowerSupplyType
     ModbusTcp = 0,
 
     /// <summary>
-    /// Modbus RTU (serial) power supply device.
+    /// Serial RS232 power supply device.
     /// </summary>
     /// <remarks>
-    /// Communicates with power supply via RS-232/RS-485 serial port using Modbus RTU protocol.
-    /// Requires serial port configuration and Modbus RTU framing.
+    /// Communicates with power supply via RS-232 serial port.
+    /// Requires serial port configuration.
     /// </remarks>
-    ModbusRtu = 1,
+    SerialRs232 = 1,
 
     /// <summary>
-    /// SNMP-based power supply device.
+    /// Serial RS485 power supply device.
     /// </summary>
     /// <remarks>
-    /// Communicates with power supply via SNMP (Simple Network Management Protocol).
-    /// Common in network-attached power distribution units (PDUs).
+    /// Communicates with power supply via RS-485 serial port.
+    /// Requires serial port configuration and RS-485 adapters.
     /// </remarks>
-    Snmp = 2,
+    SerialRs485 = 2,
 
     /// <summary>
-    /// HTTP REST API power supply device.
+    /// Ethernet IP power supply device.
     /// </summary>
     /// <remarks>
-    /// Communicates with power supply via HTTP/HTTPS REST API.
-    /// Modern IoT power supplies often provide REST APIs for control.
+    /// Communicates with power supply via Ethernet/IP protocol.
+    /// Industrial automation protocol for Ethernet-based devices.
     /// </remarks>
-    HttpRest = 3,
-
-    /// <summary>
-    /// Custom or proprietary protocol power supply device.
-    /// </summary>
-    /// <remarks>
-    /// For power supplies with vendor-specific or custom protocols.
-    /// Requires custom implementation of communication logic.
-    /// </remarks>
-    Custom = 99
+    EthernetIp = 3
 }

@@ -130,9 +130,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<EnhancedViewModelFactory>();
         services.TryAddSingleton<IViewModelFactory>(provider => provider.GetRequiredService<EnhancedViewModelFactory>());
 
-        // Add Resource Pattern Services (InMemoryResourceManager para pruebas/desarrollo)
-        services.TryAddSingleton<IResourceManager, S7Tools.Core.Resources.InMemoryResourceManager>();
-        // Si se requiere el ResourceManager decorador, cambiar aquí
+        // Add Resource Pattern Services - use production ResourceManager so UIStrings reads ResX by default
+        services.TryAddSingleton<IResourceManager, S7Tools.Resources.ResourceManager>();
+        // If a decorator is required in the future, change registration here
 
         // Add Validation Services
         services.TryAddSingleton<IValidationService, S7Tools.Core.Validation.ValidationService>();

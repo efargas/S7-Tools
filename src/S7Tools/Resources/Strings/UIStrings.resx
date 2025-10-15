@@ -340,4 +340,202 @@
     <value>Unknown error occurred</value>
     <comment>Generic error message for unknown errors</comment>
   </data>
+<!-- Aliases for CamelCase keys used by S7Tools.Resources.UIStrings -->
+  <!-- Menus (camelcase versions) -->
+  <data name="MenuFile" xml:space="preserve">
+    <value>File</value>
+    <comment>CamelCase alias for Menu_File</comment>
+  </data>
+  <data name="MenuEdit" xml:space="preserve">
+    <value>Edit</value>
+    <comment>CamelCase alias for Menu_Edit</comment>
+  </data>
+  <data name="MenuView" xml:space="preserve">
+    <value>View</value>
+    <comment>CamelCase alias for Menu_View</comment>
+  </data>
+  <data name="MenuHelp" xml:space="preserve">
+    <value>Help</value>
+    <comment>CamelCase alias for Menu_Help</comment>
+  </data>
+  <data name="MenuNewFile" xml:space="preserve">
+    <value>New File</value>
+    <comment>New File menu item</comment>
+  </data>
+  <data name="MenuOpenFile" xml:space="preserve">
+    <value>Open File...</value>
+    <comment>Open File menu item</comment>
+  </data>
+  <data name="MenuSave" xml:space="preserve">
+    <value>Save</value>
+    <comment>Save menu item</comment>
+  </data>
+  <data name="MenuSaveAs" xml:space="preserve">
+    <value>Save As...</value>
+    <comment>Save As menu item</comment>
+  </data>
+  <data name="MenuExit" xml:space="preserve">
+    <value>Exit</value>
+    <comment>Exit menu item</comment>
+  </data>
+
+  <!-- Activity Bar (camelcase versions) -->
+  <data name="ActivityBarExplorer" xml:space="preserve">
+    <value>Explorer</value>
+    <comment>CamelCase alias for ActivityBar_Explorer</comment>
+  </data>
+  <data name="ActivityBarConnections" xml:space="preserve">
+    <value>Connections</value>
+    <comment>CamelCase alias for ActivityBar_Connections</comment>
+  </data>
+  <data name="ActivityBarSettings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>CamelCase alias for ActivityBar_Settings</comment>
+  </data>
+
+  <!-- Panels -->
+  <data name="PanelProblems" xml:space="preserve">
+    <value>Problems</value>
+    <comment>Bottom panel tab text</comment>
+  </data>
+  <data name="PanelOutput" xml:space="preserve">
+    <value>Output</value>
+    <comment>Bottom panel tab text</comment>
+  </data>
+  <data name="PanelDebugConsole" xml:space="preserve">
+    <value>Debug Console</value>
+    <comment>Bottom panel tab text</comment>
+  </data>
+  <data name="PanelLogViewer" xml:space="preserve">
+    <value>Log Viewer</value>
+    <comment>Bottom panel tab text</comment>
+  </data>
+
+  <!-- Log Viewer (camelcase versions) -->
+  <data name="LogViewerSearchPlaceholder" xml:space="preserve">
+    <value>Search logs...</value>
+    <comment>CamelCase alias for LogViewer_Search</comment>
+  </data>
+  <data name="LogViewerLogLevel" xml:space="preserve">
+    <value>Log Level</value>
+    <comment>Log level filter label</comment>
+  </data>
+  <data name="LogViewerStartDate" xml:space="preserve">
+    <value>Start Date</value>
+    <comment>Start date filter label</comment>
+  </data>
+  <data name="LogViewerEndDate" xml:space="preserve">
+    <value>End Date</value>
+    <comment>End date filter label</comment>
+  </data>
+  <data name="LogViewerClearLogs" xml:space="preserve">
+    <value>Clear Logs</value>
+    <comment>Clear Logs button text</comment>
+  </data>
+  <data name="LogViewerExportLogs" xml:space="preserve">
+    <value>Export Logs</value>
+    <comment>Export Logs button text</comment>
+  </data>
+  <data name="LogViewerRefresh" xml:space="preserve">
+    <value>Refresh</value>
+    <comment>Refresh button text</comment>
+  </data>
+
+  <!-- Dialogs -->
+  <data name="DialogConfirmationTitle" xml:space="preserve">
+    <value>Confirmation</value>
+    <comment>Dialog title: confirmation</comment>
+  </data>
+  <data name="DialogErrorTitle" xml:space="preserve">
+    <value>Error</value>
+    <comment>Dialog title: error</comment>
+  </data>
+  <data name="DialogInformationTitle" xml:space="preserve">
+    <value>Information</value>
+    <comment>Dialog title: information</comment>
+  </data>
+  <data name="DialogWarningTitle" xml:space="preserve">
+    <value>Warning</value>
+    <comment>Dialog title: warning</comment>
+  </data>
+  <data name="DialogOK" xml:space="preserve">
+    <value>OK</value>
+    <comment>Dialog button: OK</comment>
+  </data>
+  <data name="DialogCancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Dialog button: Cancel</comment>
+  </data>
+  <data name="DialogYes" xml:space="preserve">
+    <value>Yes</value>
+    <comment>Dialog button: Yes</comment>
+  </data>
+  <data name="DialogNo" xml:space="preserve">
+    <value>No</value>
+    <comment>Dialog button: No</comment>
+  </data>
+
+  <!-- Status (camelcase versions) -->
+  <data name="StatusReady" xml:space="preserve">
+    <value>Ready</value>
+    <comment>CamelCase alias for Status_Ready</comment>
+  </data>
+  <data name="StatusLoading" xml:space="preserve">
+    <value>Loading...</value>
+    <comment>CamelCase alias for Status_Loading</comment>
+  </data>
+  <data name="StatusSaving" xml:space="preserve">
+    <value>Saving...</value>
+    <comment>Saving status message</comment>
+  </data>
+  <data name="StatusConnected" xml:space="preserve">
+    <value>Connected</value>
+    <comment>CamelCase alias for Status_Connected</comment>
+  </data>
+  <data name="StatusDisconnected" xml:space="preserve">
+    <value>Disconnected</value>
+    <comment>CamelCase alias for Status_Disconnected</comment>
+  </data>
+
+  <!-- Errors (short forms to match UIStrings.cs) -->
+  <data name="ErrorGeneric" xml:space="preserve">
+    <value>An error occurred</value>
+    <comment>Generic error message (short)</comment>
+  </data>
+  <data name="ErrorConnection" xml:space="preserve">
+    <value>Connection error</value>
+    <comment>Short connection error message</comment>
+  </data>
+  <data name="ErrorFileNotFound" xml:space="preserve">
+    <value>File not found</value>
+    <comment>Short file not found message</comment>
+  </data>
+  <data name="ErrorAccessDenied" xml:space="preserve">
+    <value>Access denied</value>
+    <comment>Short access denied message</comment>
+  </data>
+  <data name="ErrorInvalidOperation" xml:space="preserve">
+    <value>Invalid operation</value>
+    <comment>Short invalid operation message</comment>
+  </data>
+
+  <!-- Validation -->
+  <data name="ValidationRequired" xml:space="preserve">
+    <value>This field is required</value>
+    <comment>Required field validation message</comment>
+  </data>
+  <data name="ValidationInvalidFormat" xml:space="preserve">
+    <value>Invalid format</value>
+    <comment>Invalid format validation message</comment>
+  </data>
+  <data name="ValidationOutOfRange" xml:space="preserve">
+    <value>Value is out of range</value>
+    <comment>Out of range validation message</comment>
+  </data>
+
+  <!-- Misc -->
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+    <comment>Application version label</comment>
+  </data>
 </root>

@@ -13,6 +13,10 @@
 
   <UserControl.Resources>
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
+    <conv:ModbusTcpPropertyConverter x:Key="ModbusTcpHost" PropertyName="Host" />
+    <conv:ModbusTcpPropertyConverter x:Key="ModbusTcpPort" PropertyName="Port" />
+    <conv:ModbusTcpPropertyConverter x:Key="ModbusTcpDeviceId" PropertyName="DeviceId" />
+    <conv:ModbusTcpPropertyConverter x:Key="ModbusTcpOnOffCoil" PropertyName="OnOffCoil" />
   </UserControl.Resources>
 
   <ScrollViewer>
@@ -164,6 +168,34 @@
                   <DataGridTextColumn Binding="{Binding Configuration.Type}" Width="120" MinWidth="80">
                     <DataGridTextColumn.Header>
                       <TextBlock Text="Type" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- Host configuration column (ModbusTcp) -->
+                  <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpHost}}" Width="150" MinWidth="100" IsReadOnly="True">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Host" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- Port configuration column (ModbusTcp) -->
+                  <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpPort}}" Width="70" MinWidth="50" IsReadOnly="True">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- Device ID configuration column (ModbusTcp) -->
+                  <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpDeviceId}}" Width="90" MinWidth="70" IsReadOnly="True">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Device ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- OnOff Coil configuration column (ModbusTcp) -->
+                  <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpOnOffCoil}}" Width="100" MinWidth="80" IsReadOnly="True">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="OnOff Coil" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
                     </DataGridTextColumn.Header>
                   </DataGridTextColumn>
 

@@ -7,7 +7,8 @@
 ## 🚨 TOP 5 CRITICAL ISSUES - FIX IMMEDIATELY
 
 ### 1. Race Condition in LogDataStore ⚠️ CRASH RISK
-**Location**: `src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs:393-416`
+Status: FIXED (2025-10-15) — Events are cleared inside the lock and _disposed is set within the same lock.
+**Location**: `src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs`
 
 **The Bug**:
 ```csharp
@@ -51,7 +52,8 @@ public void Dispose()
 ---
 
 ### 2. PowerSupplyService Dispose Pattern Violation ⚠️ RESOURCE LEAK
-**Location**: `src/S7Tools/Services/PowerSupplyService.cs:456-468`
+Status: FIXED (2025-10-15) — Implemented Dispose(bool) pattern and moved GC.SuppressFinalize to Dispose().
+**Location**: `src/S7Tools/Services/PowerSupplyService.cs`
 
 **The Problem**: Violates CA1063 - improper Dispose pattern
 
@@ -96,7 +98,8 @@ protected virtual void Dispose(bool disposing)
 ---
 
 ### 3. PowerSupplyProfileViewModel Memory Leak ⚠️ MEMORY LEAK
-**Location**: `src/S7Tools/ViewModels/PowerSupplyProfileViewModel.cs:18`
+Status: FIXED (2025-10-15) — ViewModel implements IDisposable with CompositeDisposable cleanup.
+**Location**: `src/S7Tools/ViewModels/PowerSupplyProfileViewModel.cs`
 
 **The Problem**: Owns CompositeDisposable but doesn't implement IDisposable
 
@@ -129,7 +132,8 @@ public class PowerSupplyProfileViewModel : ReactiveObject, IDisposable
 ---
 
 ### 4. ResourceManager Naming Conflict ⚠️ CONFUSION
-**Location**: `src/S7Tools/Resources/ResourceManager.cs:17`
+Status: PARTIAL (2025-10-15) — DI now uses production S7Tools.Resources.ResourceManager; naming conflict remains. Plan: rename to S7ToolsResourceManager and update references.
+**Location**: `src/S7Tools/Resources/ResourceManager.cs`
 
 **The Problem**: Class name conflicts with System.Resources.ResourceManager
 

@@ -211,6 +211,13 @@ public class SocatService : ISocatService, IDisposable
                 throw new InvalidOperationException($"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
             }
 
+            // Validate serial device exists before starting socat
+            if (!File.Exists(serialDevice))
+            {
+                _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
+                throw new InvalidOperationException($"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
+            }
+
             // Check if TCP port is already in use
             if (await IsPortInUseAsync(configuration.TcpPort, cancellationToken).ConfigureAwait(false))
             {
@@ -273,6 +280,13 @@ public class SocatService : ISocatService, IDisposable
             if (_runningProcesses.Count >= settings.MaxConcurrentInstances)
             {
                 throw new InvalidOperationException($"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
+            }
+
+            // Validate serial device exists before starting socat
+            if (!File.Exists(serialDevice))
+            {
+                _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
+                throw new InvalidOperationException($"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
             }
 
             // Check if TCP port is already in use

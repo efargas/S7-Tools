@@ -228,8 +228,8 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         // No additional initialization needed for CRUD operations
 
         // Initialize PowerSupply-specific export/import commands
-        var canExportProfiles = this.WhenAnyValue(x => x.Profiles)
-            .Select(profiles => profiles?.Count > 0);
+        var canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
+            .Select(count => count > 0);
 
         ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
         ExportProfilesCommand.ThrownExceptions

@@ -829,20 +829,44 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     private async Task ImportProfilesAsync()
     {
+        if (_fileDialogService == null)
+        {
+            StatusMessage = "File dialog service not available";
+            return;
+        }
+
         try
         {
+            var fileName = await _fileDialogService.ShowOpenFileDialogAsync(
+                "Import Profiles",
+                "JSON files (*.json)|*.json|All files (*.*)|*.*");
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            IsLoading = true;
             StatusMessage = "Importing profiles...";
 
-            await _dialogService.ShowErrorAsync("Import Profiles",
-                "Import functionality will be implemented in the UI layer.");
+            var jsonData = await File.ReadAllTextAsync(fileName);
+            var profiles = JsonSerializer.Deserialize<List<SocatProfile>>(jsonData) ?? new List<SocatProfile>();
+            var importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
 
-            StatusMessage = "Profiles imported successfully";
-            _specificLogger.LogInformation("Imported socat profiles");
+            var importedCount = importedProfiles.Count();
+            await RefreshCommand.Execute(); // Refresh the list
+
+            StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
+            _specificLogger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error importing profiles");
             StatusMessage = "Error importing profiles";
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 

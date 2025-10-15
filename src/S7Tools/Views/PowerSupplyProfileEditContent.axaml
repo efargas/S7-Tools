@@ -107,39 +107,152 @@
             Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
             CornerRadius="6"
             Padding="16">
-      <Grid>
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="12" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="120" />
-          <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-
+      <StackPanel Spacing="12">
         <!-- Section Header -->
-        <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
-                   Text="Power Supply Configuration"
+        <TextBlock Text="Power Supply Configuration"
                    FontWeight="SemiBold"
-                   FontSize="14"
-                   Margin="0,0,0,8" />
+                   FontSize="14" />
 
-        <!-- Power Supply Type -->
-        <TextBlock Grid.Row="2" Grid.Column="0"
-                   Text="Type:"
-                   VerticalAlignment="Center" />
-        <ComboBox Grid.Row="2" Grid.Column="1"
-                  SelectedItem="{Binding PowerSupplyType}"
-                  IsEnabled="{Binding !IsReadOnly}"
-                  HorizontalAlignment="Left"
-                  MinWidth="200">
-          <ComboBoxItem Content="Modbus TCP" Tag="ModbusTcp" />
-          <ComboBoxItem Content="Serial RS232" Tag="SerialRs232" />
-          <ComboBoxItem Content="Serial RS485" Tag="SerialRs485" />
-          <ComboBoxItem Content="Ethernet IP" Tag="EthernetIp" />
-        </ComboBox>
-      </Grid>
+        <!-- Power Supply Type Selection -->
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="120" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+
+          <TextBlock Grid.Column="0"
+                     Text="Type:"
+                     VerticalAlignment="Center" />
+          <ComboBox Grid.Column="1"
+                    SelectedIndex="{Binding PowerSupplyTypeIndex}"
+                    IsEnabled="{Binding !IsReadOnly}"
+                    HorizontalAlignment="Left"
+                    MinWidth="200">
+            <ComboBoxItem Content="Modbus TCP" />
+            <ComboBoxItem Content="Serial RS232" />
+            <ComboBoxItem Content="Serial RS485" />
+            <ComboBoxItem Content="Ethernet IP" />
+          </ComboBox>
+        </Grid>
+
+        <!-- ModbusTcp Configuration -->
+        <Border BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12"
+                IsVisible="{Binding IsModbusTcp}">
+          <StackPanel Spacing="12">
+            <TextBlock Text="Modbus TCP Settings"
+                       FontWeight="SemiBold"
+                       FontSize="12"
+                       Foreground="{DynamicResource SystemAccentColor}" />
+
+            <!-- Host -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <TextBlock Grid.Column="0"
+                         Text="Host/IP:"
+                         VerticalAlignment="Center" />
+              <TextBox Grid.Column="1"
+                       Text="{Binding ModbusTcpHost}"
+                       Watermark="192.168.1.100"
+                       IsReadOnly="{Binding IsReadOnly}" />
+            </Grid>
+
+            <!-- Port -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <TextBlock Grid.Column="0"
+                         Text="Port:"
+                         VerticalAlignment="Center" />
+              <NumericUpDown Grid.Column="1"
+                             Value="{Binding ModbusTcpPort}"
+                             Minimum="1"
+                             Maximum="65535"
+                             Increment="1"
+                             FormatString="0"
+                             IsReadOnly="{Binding IsReadOnly}"
+                             HorizontalAlignment="Left"
+                             Width="120" />
+            </Grid>
+
+            <!-- Device ID -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <TextBlock Grid.Column="0"
+                         Text="Device ID:"
+                         VerticalAlignment="Center" />
+              <NumericUpDown Grid.Column="1"
+                             Value="{Binding ModbusTcpDeviceId}"
+                             Minimum="0"
+                             Maximum="247"
+                             Increment="1"
+                             FormatString="0"
+                             IsReadOnly="{Binding IsReadOnly}"
+                             HorizontalAlignment="Left"
+                             Width="120" />
+            </Grid>
+
+            <!-- On/Off Coil -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <TextBlock Grid.Column="0"
+                         Text="On/Off Coil:"
+                         VerticalAlignment="Center" />
+              <NumericUpDown Grid.Column="1"
+                             Value="{Binding ModbusTcpOnOffCoil}"
+                             Minimum="0"
+                             Maximum="65535"
+                             Increment="1"
+                             FormatString="0"
+                             IsReadOnly="{Binding IsReadOnly}"
+                             HorizontalAlignment="Left"
+                             Width="120" />
+            </Grid>
+
+            <!-- Addressing Mode -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="120" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <TextBlock Grid.Column="0"
+                         Text="Address Base:"
+                         VerticalAlignment="Center" />
+              <ComboBox Grid.Column="1"
+                        SelectedIndex="{Binding ModbusTcpAddressingModeIndex}"
+                        IsEnabled="{Binding !IsReadOnly}"
+                        HorizontalAlignment="Left"
+                        MinWidth="150">
+                <ComboBoxItem Content="Base-0 (0-based, 0-65535)" />
+                <ComboBoxItem Content="Base-1 (1-based, 1-65536)" />
+              </ComboBox>
+            </Grid>
+
+            <TextBlock FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       TextWrapping="Wrap"
+                       Text="Base-0: Protocol-native addressing (0-65535). Base-1: User-friendly addressing with display offset (1-65536)." />
+          </StackPanel>
+        </Border>
+      </StackPanel>
     </Border>
 
     <!-- Information Panel -->
