@@ -10,15 +10,24 @@
         Height="700"
         MinWidth="500"
         MinHeight="600"
+        MaxWidth="1200"
+        MaxHeight="1000"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False"
         CanResize="True"
-        SystemDecorations="BorderOnly">
+        SystemDecorations="Full"
+        BorderBrush="#464647"
+        BorderThickness="2">
 
     <Window.Styles>
-        <!-- VSCode-style dark theme -->
+        <!-- VSCode-style dark theme with enhanced visual polish -->
         <Style Selector="Window">
             <Setter Property="Background" Value="#1E1E1E" />
+        </Style>
+
+        <!-- Enhanced title bar styling -->
+        <Style Selector="Window">
+            <Setter Property="Foreground" Value="#CCCCCC" />
         </Style>
 
         <Style Selector="TextBlock">
@@ -35,6 +44,11 @@
             <Setter Property="FontSize" Value="13" />
         </Style>
 
+        <Style Selector="TextBox:focus">
+            <Setter Property="BorderBrush" Value="#007ACC" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+
         <Style Selector="ComboBox">
             <Setter Property="Background" Value="#3C3C3C" />
             <Setter Property="Foreground" Value="#CCCCCC" />
@@ -47,6 +61,25 @@
 
         <Style Selector="ComboBox:pointerover">
             <Setter Property="BorderBrush" Value="#007ACC" />
+        </Style>
+
+        <Style Selector="ComboBox:focus">
+            <Setter Property="BorderBrush" Value="#007ACC" />
+            <Setter Property="BorderThickness" Value="2" />
+        </Style>
+
+        <Style Selector="NumericUpDown">
+            <Setter Property="Background" Value="#3C3C3C" />
+            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+
+        <Style Selector="NumericUpDown:focus">
+            <Setter Property="BorderBrush" Value="#007ACC" />
+            <Setter Property="BorderThickness" Value="2" />
         </Style>
 
         <Style Selector="CheckBox">
@@ -62,6 +95,12 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Button:disabled">
+            <Setter Property="Opacity" Value="0.5" />
+            <Setter Property="Cursor" Value="Arrow" />
         </Style>
 
         <Style Selector="Button.primary">
@@ -75,6 +114,11 @@
             <Setter Property="BorderBrush" Value="#005A9E" />
         </Style>
 
+        <Style Selector="Button.primary:pressed">
+            <Setter Property="Background" Value="#004578" />
+            <Setter Property="BorderBrush" Value="#004578" />
+        </Style>
+
         <Style Selector="Button.secondary">
             <Setter Property="Background" Value="#464647" />
             <Setter Property="BorderBrush" Value="#464647" />
@@ -86,21 +130,26 @@
             <Setter Property="BorderBrush" Value="#525253" />
         </Style>
 
-        <!-- Group styling -->
+        <Style Selector="Button.secondary:pressed">
+            <Setter Property="Background" Value="#3A3A3B" />
+            <Setter Property="BorderBrush" Value="#3A3A3B" />
+        </Style>
+
+        <!-- Enhanced group styling with better visual hierarchy -->
         <Style Selector="Border.group">
             <Setter Property="Background" Value="#252526" />
             <Setter Property="BorderBrush" Value="#464647" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="4" />
-            <Setter Property="Padding" Value="12" />
-            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="Margin" Value="0,0,0,16" />
         </Style>
 
         <Style Selector="TextBlock.group-title">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="Foreground" Value="#E8E8E8" />
-            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Margin" Value="0,0,0,12" />
         </Style>
 
         <!-- Command preview styling -->
@@ -115,32 +164,62 @@
             <Setter Property="AcceptsReturn" Value="True" />
             <Setter Property="MinHeight" Value="60" />
         </Style>
+
+        <!-- Status message styling -->
+        <Style Selector="Border.status-panel">
+            <Setter Property="Background" Value="#2D2D30" />
+            <Setter Property="BorderBrush" Value="#3E3E42" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Padding" Value="12,8" />
+        </Style>
     </Window.Styles>
 
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Content area - will be filled by specific profile dialogs via ContentPresenter -->
-        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Padding="0,0,8,0">
             <ContentPresenter x:Name="ContentArea" />
         </ScrollViewer>
 
-        <!-- Button area -->
-        <StackPanel Grid.Row="1"
+        <!-- Status Bar - Always visible with keyboard shortcuts info -->
+        <Border Grid.Row="1"
+                Classes="status-panel"
+                Margin="0,16,0,12">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Ellipse Width="8" Height="8"
+                         Fill="#007ACC"
+                         VerticalAlignment="Center" />
+                <TextBlock Text="Press Ctrl+Enter to save or Escape to cancel"
+                           FontSize="12"
+                           VerticalAlignment="Center"
+                           Foreground="#CCCCCC" />
+            </StackPanel>
+        </Border>
+
+        <!-- Button area with enhanced styling -->
+        <StackPanel Grid.Row="2"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
-                    Margin="0,16,0,0">
+                    Spacing="8">
             <Button Content="Cancel"
                     Classes="secondary"
                     x:Name="CancelButton"
-                    IsCancel="True" />
+                    IsCancel="True"
+                    ToolTip.Tip="Cancel editing (Esc)" />
             <Button Content="Save"
                     Classes="primary"
                     x:Name="SaveButton"
-                    IsDefault="True" />
+                    IsDefault="True"
+                    ToolTip.Tip="Save profile (Ctrl+Enter)" />
         </StackPanel>
     </Grid>
 </Window>

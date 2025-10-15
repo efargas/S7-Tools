@@ -1,6 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:S7Tools"
+             xmlns:converters="using:S7Tools.Converters"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:sty="using:FluentAvalonia.Styling"
              xmlns:ui="using:FluentAvalonia.UI.Controls"
@@ -15,8 +16,7 @@
 
     <Application.Resources>
         <!-- Converters -->
-        <!-- Commented temporarily to fix XAML loading issue -->
-        <!-- <converters:ModbusAddressingModeConverter x:Key="ModbusAddressingModeConverter" /> -->
+        <converters:ModbusAddressingModeConverter x:Key="ModbusAddressingModeConverter" />
 
         <ControlTheme x:Key="{x:Type GridSplitter}" TargetType="GridSplitter">
             <Setter Property="Background" Value="Transparent"/>
