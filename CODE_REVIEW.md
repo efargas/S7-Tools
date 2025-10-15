@@ -22,8 +22,6 @@ This document contains a detailed analysis of the S7Tools codebase, focusing on 
     *   **Issue:** The `--diag` mode initialization logic uses `.GetAwaiter().GetResult()` on asynchronous methods (e.g., `InitializeS7ToolsServicesAsync`, `GetAllAsync`). While there are attempts to mitigate deadlocks using local `async` functions, this pattern is inherently risky and can cause deadlocks, especially in different synchronization contexts.
     *   **Recommendation:** Even for a console-based diagnostic mode, it's safer to make the `Main` method `async Task` and use `await` throughout. For example:
 
-        *   **Issue:** The `Dispose` method calls `_ = DisconnectAsync().ConfigureAwait(false);`. This is a fire-and-forget call within a synchronous method. If `DisconnectAsync` throws an exception, it will be an unhandled exception on the thread pool, potentially crashing the application. Furthermore, the application might close before the disconnection completes.
-        *   **Recommendation:** The service should implement `IAsyncDisposable` and perform the asynchronous disconnection in `DisposeAsync`. This is the standard pattern for asynchronous cleanup. The synchronous `Dispose()` method should be avoided for this service if possible. If it must be supported, it should delegate to the async version with a clear warning about potential issues, or the application shutdown logic in `App.axaml.cs` should explicitly resolve and call `DisposeAsync` on relevant services.
         {
             await InitializeS7ToolsServicesAsync();
             // ... other async code
