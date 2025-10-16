@@ -23,8 +23,8 @@ public class SettingsService : ISettingsService
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var appDirectory = Path.Combine(appDataPath, "S7Tools");
+        string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        string appDirectory = Path.Combine(appDataPath, "S7Tools");
         Directory.CreateDirectory(appDirectory);
         _defaultSettingsPath = Path.Combine(appDirectory, "settings.json");
 
@@ -40,7 +40,7 @@ public class SettingsService : ISettingsService
     /// <inheritdoc />
     public async Task LoadSettingsAsync()
     {
-        await LoadSettingsAsync(_defaultSettingsPath);
+        await LoadSettingsAsync(_defaultSettingsPath).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -52,8 +52,8 @@ public class SettingsService : ISettingsService
 
             if (File.Exists(filePath))
             {
-                var json = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
-                var settings = JsonSerializer.Deserialize<ApplicationSettings>(json);
+                string json = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
+                ApplicationSettings? settings = JsonSerializer.Deserialize<ApplicationSettings>(json);
                 if (settings != null)
                 {
                     _settings = settings;
@@ -64,20 +64,20 @@ public class SettingsService : ISettingsService
                 else
                 {
                     _logger.LogWarning("Deserialized settings object was null, using default settings");
-                    await CreateDefaultSettings(filePath);
+                    await CreateDefaultSettings(filePath).ConfigureAwait(false);
                 }
             }
             else
             {
                 _logger.LogInformation("Settings file does not exist at {FilePath}, creating default settings", filePath);
                 // Create default settings file
-                await SaveSettingsAsync(filePath);
+                await SaveSettingsAsync(filePath).ConfigureAwait(false);
             }
         }
         catch (JsonException ex)
         {
             _logger.LogError(ex, "Settings file at {FilePath} contains invalid JSON, reverting to defaults", filePath);
-            await CreateDefaultSettings(filePath);
+            await CreateDefaultSettings(filePath).ConfigureAwait(false);
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -89,7 +89,7 @@ public class SettingsService : ISettingsService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error loading settings from {FilePath}, reverting to defaults", filePath);
-            await CreateDefaultSettings(filePath);
+            await CreateDefaultSettings(filePath).ConfigureAwait(false);
         }
     }
 
@@ -104,7 +104,7 @@ public class SettingsService : ISettingsService
 
         try
         {
-            await SaveSettingsAsync(filePath);
+            await SaveSettingsAsync(filePath).ConfigureAwait(false);
             _logger.LogInformation("Default settings created and saved to {FilePath}", filePath);
         }
         catch (Exception ex)
@@ -118,7 +118,7 @@ public class SettingsService : ISettingsService
     /// <inheritdoc />
     public async Task SaveSettingsAsync()
     {
-        await SaveSettingsAsync(_defaultSettingsPath);
+        await SaveSettingsAsync(_defaultSettingsPath).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -126,7 +126,7 @@ public class SettingsService : ISettingsService
     {
         try
         {
-            var directory = Path.GetDirectoryName(filePath);
+            string? directory = Path.GetDirectoryName(filePath);
             if (!string.IsNullOrEmpty(directory))
             {
                 Directory.CreateDirectory(directory);
@@ -138,7 +138,7 @@ public class SettingsService : ISettingsService
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
-            var json = JsonSerializer.Serialize(_settings, options);
+            string json = JsonSerializer.Serialize(_settings, options);
             await File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -152,7 +152,7 @@ public class SettingsService : ISettingsService
     {
         _settings = settings.Clone();
         EnsureDirectoriesExist();
-        await SaveSettingsAsync();
+        await SaveSettingsAsync().ConfigureAwait(false);
         SettingsChanged?.Invoke(this, _settings);
     }
 
@@ -161,7 +161,7 @@ public class SettingsService : ISettingsService
     {
         _settings = new ApplicationSettings();
         EnsureDirectoriesExist();
-        await SaveSettingsAsync();
+        await SaveSettingsAsync().ConfigureAwait(false);
         SettingsChanged?.Invoke(this, _settings);
     }
 
@@ -174,23 +174,23 @@ public class SettingsService : ISettingsService
     /// <inheritdoc />
     public async Task OpenSettingsDirectoryAsync()
     {
-        var directory = Path.GetDirectoryName(_defaultSettingsPath);
+        string? directory = Path.GetDirectoryName(_defaultSettingsPath);
         if (!string.IsNullOrEmpty(directory))
         {
-            await OpenDirectoryAsync(directory);
+            await OpenDirectoryAsync(directory).ConfigureAwait(false);
         }
     }
 
     /// <inheritdoc />
     public async Task OpenLogDirectoryAsync()
     {
-        await OpenDirectoryAsync(_settings.Logging.DefaultLogPath);
+        await OpenDirectoryAsync(_settings.Logging.DefaultLogPath).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task OpenExportDirectoryAsync()
     {
-        await OpenDirectoryAsync(_settings.Logging.ExportPath);
+        await OpenDirectoryAsync(_settings.Logging.ExportPath).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -198,7 +198,7 @@ public class SettingsService : ISettingsService
     /// </summary>
     private void EnsureDirectoriesExist()
     {
-        var directoriesToCreate = new[]
+        (string, string)[] directoriesToCreate = new[]
         {
             ("ResourcesRoot", _settings.ResourcesRoot),
             ("DefaultLogPath", _settings.Logging.DefaultLogPath),
@@ -209,7 +209,7 @@ public class SettingsService : ISettingsService
             ("DumpsPath", _settings.DumpsPath)
         };
 
-        foreach (var (name, path) in directoriesToCreate)
+        foreach ((string? name, string? path) in directoriesToCreate)
         {
             if (!string.IsNullOrWhiteSpace(path))
             {

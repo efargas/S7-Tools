@@ -40,6 +40,7 @@ public class HomeViewModel : ViewModelBase
     /// </summary>
     public HomeViewModel() : this(new DesignTimeViewModelFactory())
     {
+        // Design-time factory used above; no external type reference needed
     }
 }
 

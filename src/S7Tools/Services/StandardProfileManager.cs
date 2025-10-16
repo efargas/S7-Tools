@@ -31,12 +31,35 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 {
     #region Private Fields
 
+    /// <summary>
+    /// Logger instance for this manager.
+    /// </summary>
     protected readonly ILogger _logger;
+
+    /// <summary>
+    /// Semaphore used to ensure thread-safety across profile operations.
+    /// </summary>
     protected readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    /// <summary>
+    /// In-memory cache of profiles. Access must be protected by <see cref="_semaphore"/>.
+    /// </summary>
     protected readonly List<T> _profiles = new();
+
+    /// <summary>
+    /// Absolute path to the JSON file where profiles are persisted.
+    /// </summary>
     protected readonly string _profilesPath;
-    protected bool _isLoaded = false;
-    protected bool _disposed = false;
+
+    /// <summary>
+    /// Indicates whether profiles have been loaded into memory.
+    /// </summary>
+    protected bool _isLoaded;
+
+    /// <summary>
+    /// Indicates whether this instance has been disposed.
+    /// </summary>
+    protected bool _disposed;
 
     #endregion
 
@@ -85,7 +108,10 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         Console.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
         System.Diagnostics.Debug.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
 
-        if (profile == null) throw new ArgumentNullException(nameof(profile));
+        if (profile == null)
+        {
+            throw new ArgumentNullException(nameof(profile));
+        }
 
         Console.WriteLine($"📝 Step 1: Logging entry for profile: {profile.Name}");
         _logger.LogInformation("🚀 StandardProfileManager.CreateAsync ENTRY for profile: {ProfileName}", profile.Name);
@@ -130,7 +156,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             // Clone the profile to avoid modifying the input
             Console.WriteLine($"📝 Step 9: Cloning profile...");
             _logger.LogDebug("Cloning profile...");
-            var newProfile = CloneProfile(profile);
+            T newProfile = CloneProfile(profile);
             Console.WriteLine($"📝 Step 10: Profile cloned successfully");
 
             // Assign new ID and timestamps
@@ -181,7 +207,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 ProfileTypeName, newProfile.Name, newProfile.Id);
 
             Console.WriteLine($"📝 Step 24: Cloning profile for return...");
-            var clonedProfile = CloneProfile(newProfile);
+            T clonedProfile = CloneProfile(newProfile);
             Console.WriteLine($"📝 Step 25: About to return cloned profile with ID: {clonedProfile.Id}");
             return clonedProfile;
         }
@@ -197,8 +223,15 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<T> UpdateAsync(T profile, CancellationToken cancellationToken = default)
     {
-        if (profile == null) throw new ArgumentNullException(nameof(profile));
-        if (profile.Id <= 0) throw new ArgumentException("Profile ID must be greater than zero.", nameof(profile));
+        if (profile == null)
+        {
+            throw new ArgumentNullException(nameof(profile));
+        }
+
+        if (profile.Id <= 0)
+        {
+            throw new ArgumentException("Profile ID must be greater than zero.", nameof(profile));
+        }
 
         _logger.LogDebug("StandardProfileManager.UpdateAsync called for profile: {ProfileName}, ID: {ProfileId}", profile.Name, profile.Id);
 
@@ -207,7 +240,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-            var existingProfile = _profiles.FirstOrDefault(p => p.Id == profile.Id);
+            T? existingProfile = _profiles.FirstOrDefault(p => p.Id == profile.Id);
             if (existingProfile == null)
             {
                 _logger.LogError("Profile not found: ID {ProfileId}", profile.Id);
@@ -236,7 +269,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             }
 
             // Clone the profile to avoid modifying the input
-            var updatedProfile = CloneProfile(profile);
+            T updatedProfile = CloneProfile(profile);
 
             // Preserve immutable properties
             updatedProfile.Id = existingProfile.Id;
@@ -270,18 +303,17 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<bool> DeleteAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        if (profileId <= 0) throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId));
+        if (profileId <= 0) {throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId));}
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-            var profile = _profiles.FirstOrDefault(p => p.Id == profileId);
-            if (profile == null) return false;
+            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
+            if (profile == null) {return false;}
 
-            if (!profile.CanDelete())
-                throw new InvalidOperationException("Cannot delete a read-only profile.");
+            if (!profile.CanDelete()) {throw new InvalidOperationException("Cannot delete a read-only profile.");}
 
             _profiles.Remove(profile);
 
@@ -302,23 +334,22 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<T> DuplicateAsync(int sourceProfileId, string newName, CancellationToken cancellationToken = default)
     {
-        if (sourceProfileId <= 0) throw new ArgumentException("Source profile ID must be greater than zero.", nameof(sourceProfileId));
-        if (string.IsNullOrWhiteSpace(newName)) throw new ArgumentException("New name cannot be empty.", nameof(newName));
+        if (sourceProfileId <= 0) {throw new ArgumentException("Source profile ID must be greater than zero.", nameof(sourceProfileId));}
+
+        if (string.IsNullOrWhiteSpace(newName)) { throw new ArgumentException("New name cannot be empty.", nameof(newName));}
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-            var sourceProfile = _profiles.FirstOrDefault(p => p.Id == sourceProfileId);
-            if (sourceProfile == null)
-                throw new ArgumentException($"Source profile with ID {sourceProfileId} not found.");
+            T sourceProfile = _profiles.FirstOrDefault(p => p.Id == sourceProfileId) ?? throw new ArgumentException($"Source profile with ID {sourceProfileId} not found.");
 
             // Ensure the new name is unique - use Core version to avoid deadlock
-            var uniqueName = EnsureUniqueNameCore(newName, excludeId: null);
+            string uniqueName = EnsureUniqueNameCore(newName, excludeId: null);
 
             // Clone the source profile
-            var duplicateProfile = CloneProfile(sourceProfile);
+            T duplicateProfile = CloneProfile(sourceProfile);
 
             // Assign new identity and clear flags
             duplicateProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
@@ -372,7 +403,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         try
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-            var profile = _profiles.FirstOrDefault(p => p.Id == profileId);
+            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
             return profile != null ? CloneProfile(profile) : null;
         }
         finally
@@ -388,7 +419,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         try
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-            var defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
+            T? defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
             return defaultProfile != null ? CloneProfile(defaultProfile) : null;
         }
         finally
@@ -404,16 +435,21 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task SetDefaultAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        if (profileId <= 0) throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId));
+        if (profileId <= 0)
+        {
+            throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId));
+        }
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-            var profile = _profiles.FirstOrDefault(p => p.Id == profileId);
+            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
             if (profile == null)
+            {
                 throw new ArgumentException($"Profile with ID {profileId} not found.");
+            }
 
             // Clear all default flags first
             await ClearAllDefaultFlagsAsync(cancellationToken).ConfigureAwait(false);
@@ -442,14 +478,14 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-            var defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
+            T? defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
             if (defaultProfile != null)
             {
                 return CloneProfile(defaultProfile);
             }
 
             // Create system default
-            var systemDefault = CreateSystemDefault();
+            T systemDefault = CreateSystemDefault();
             systemDefault.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
             systemDefault.IsDefault = true;
             systemDefault.IsReadOnly = true;
@@ -480,7 +516,10 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<bool> IsNameUniqueAsync(string name, int? excludeId = null, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(name)) return false;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -499,7 +538,9 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     public async Task<string> EnsureUniqueNameAsync(string baseName, int? excludeId = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(baseName))
+        {
             throw new ArgumentException("Base name cannot be empty.", nameof(baseName));
+        }
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -563,7 +604,10 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// </summary>
     private int GetNextAvailableIdCore()
     {
-        if (!_profiles.Any()) return 1;
+        if (!_profiles.Any())
+        {
+            return 1;
+        }
 
         var existingIds = _profiles.Select(p => p.Id).Where(id => id > 0).OrderBy(id => id).ToList();
 
@@ -571,7 +615,9 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         for (int i = 1; i <= existingIds.Count + 1; i++)
         {
             if (!existingIds.Contains(i))
+            {
                 return i;
+            }
         }
 
         return existingIds.Count + 1;
@@ -584,7 +630,10 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<IEnumerable<T>> ImportAsync(IEnumerable<T> profiles, bool replaceExisting = false, CancellationToken cancellationToken = default)
     {
-        if (profiles == null) throw new ArgumentNullException(nameof(profiles));
+        if (profiles == null)
+        {
+            throw new ArgumentNullException(nameof(profiles));
+        }
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -593,13 +642,16 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
             var importedProfiles = new List<T>();
 
-            foreach (var profile in profiles)
+            foreach (T profile in profiles)
             {
-                if (profile == null) continue;
+                if (profile == null)
+                {
+                    continue;
+                }
 
                 try
                 {
-                    var importProfile = CloneProfile(profile);
+                    T importProfile = CloneProfile(profile);
 
                     // Handle name conflicts
                     if (!replaceExisting)
@@ -610,7 +662,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                     else
                     {
                         // Remove existing profile with same name
-                        var existingProfile = _profiles.FirstOrDefault(p =>
+                        T? existingProfile = _profiles.FirstOrDefault(p =>
                             string.Equals(p.Name, importProfile.Name, StringComparison.OrdinalIgnoreCase));
                         if (existingProfile != null && existingProfile.CanDelete())
                         {
@@ -710,7 +762,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 WriteIndented = true
             };
 
-            var profiles = JsonSerializer.Deserialize<List<T>>(json, options);
+            List<T>? profiles = JsonSerializer.Deserialize<List<T>>(json, options);
             if (profiles != null)
             {
                 _profiles.Clear();
@@ -762,7 +814,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     {
         await Task.Run(() =>
         {
-            foreach (var profile in _profiles.Where(p => p.IsDefault))
+            foreach (T? profile in _profiles.Where(p => p.IsDefault))
             {
                 profile.IsDefault = false;
                 profile.ModifiedAt = DateTime.UtcNow;

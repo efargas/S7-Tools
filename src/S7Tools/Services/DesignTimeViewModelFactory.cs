@@ -7,7 +7,7 @@ namespace S7Tools.Services;
 /// <summary>
 /// Design-time implementation of IViewModelFactory for XAML designer support.
 /// </summary>
-internal class DesignTimeViewModelFactory : IViewModelFactory
+public class DesignTimeViewModelFactory : IViewModelFactory
 {
     /// <inheritdoc/>
     public T Create<T>() where T : ViewModelBase

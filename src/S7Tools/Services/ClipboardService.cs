@@ -11,7 +11,7 @@ namespace S7Tools.Services;
 /// </summary>
 public class ClipboardService : IClipboardService
 {
-    private IClipboard? GetClipboard()
+    private static IClipboard? GetClipboard()
     {
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
@@ -23,17 +23,17 @@ public class ClipboardService : IClipboardService
     /// <inheritdoc/>
     public async Task<string?> GetTextAsync()
     {
-        var clipboard = GetClipboard();
-        return clipboard != null ? await clipboard.GetTextAsync() : null;
+        IClipboard? clipboard = GetClipboard();
+        return clipboard != null ? await clipboard.GetTextAsync().ConfigureAwait(false) : null;
     }
 
     /// <inheritdoc/>
     public async Task SetTextAsync(string? text)
     {
-        var clipboard = GetClipboard();
+        IClipboard? clipboard = GetClipboard();
         if (clipboard != null && text != null)
         {
-            await clipboard.SetTextAsync(text);
+            await clipboard.SetTextAsync(text).ConfigureAwait(false);
         }
     }
 }

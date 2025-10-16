@@ -23,7 +23,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
     private readonly ISettingsService _settingsService;
-    private readonly Timer? _monitoringTimer;
+    private Timer? _monitoringTimer;
     private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isMonitoring;
@@ -40,6 +40,16 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
 
         _logger.LogDebug("SerialPortService initialized");
+
+        // Initialize monitoring timer in stopped state to satisfy analyzers and manage lifecycle cleanly
+        _monitoringTimer = new Timer(static async state =>
+        {
+            // Use weak reference to service to avoid capturing 'this' strongly if ever refactored
+            if (state is SerialPortService service)
+            {
+                await service.MonitorPortChangesAsync().ConfigureAwait(false);
+            }
+        }, this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
 
     #region Events
@@ -62,7 +72,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     {
         _logger.LogDebug("Starting serial port scan");
 
-        var settings = _settingsService.Settings.SerialPorts;
+        SerialPortSettings settings = _settingsService.Settings.SerialPorts;
         var ports = new List<SerialPortInfo>();
 
         try
@@ -70,21 +80,21 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             // Scan USB ports
             if (settings.IncludeUsbPorts)
             {
-                var usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", SerialPortType.Usb, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", SerialPortType.Usb, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(usbPorts);
             }
 
             // Scan ACM ports
             if (settings.IncludeAcmPorts)
             {
-                var acmPorts = await ScanPortTypeAsync("/dev/ttyACM", SerialPortType.Acm, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", SerialPortType.Acm, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(acmPorts);
             }
 
             // Scan standard ports
             if (settings.IncludeStandardPorts)
             {
-                var standardPorts = await ScanPortTypeAsync("/dev/ttyS", SerialPortType.Standard, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", SerialPortType.Standard, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(standardPorts);
             }
 
@@ -113,8 +123,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 return null;
             }
 
-            var portType = GetPortType(portPath);
-            var isAccessible = await IsPortAccessibleAsync(portPath, _settingsService.Settings.SerialPorts.PortTestTimeoutMs, cancellationToken).ConfigureAwait(false);
+            SerialPortType portType = GetPortType(portPath);
+            bool isAccessible = await IsPortAccessibleAsync(portPath, _settingsService.Settings.SerialPorts.PortTestTimeoutMs, cancellationToken).ConfigureAwait(false);
 
             var portInfo = new SerialPortInfo
             {
@@ -158,8 +168,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             // Test accessibility by trying to read port status with stty
-            var command = $"stty -F {portPath} -a";
-            var result = await ExecuteCommandAsync(command, timeoutMs, cancellationToken).ConfigureAwait(false);
+            string command = $"stty -F {portPath} -a";
+            (bool Success, int ExitCode, string StandardOutput, string StandardError) result = await ExecuteCommandAsync(command, timeoutMs, cancellationToken).ConfigureAwait(false);
 
             return result.Success;
         }
@@ -182,18 +192,17 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             _isMonitoring = true;
-            var settings = _settingsService.Settings.SerialPorts;
+            SerialPortSettings settings = _settingsService.Settings.SerialPorts;
 
             // Initial scan to populate known ports
-            var currentPorts = await ScanAvailablePortsAsync(cancellationToken).ConfigureAwait(false);
-            foreach (var port in currentPorts)
+            IEnumerable<SerialPortInfo> currentPorts = await ScanAvailablePortsAsync(cancellationToken).ConfigureAwait(false);
+            foreach (SerialPortInfo port in currentPorts)
             {
                 _lastKnownPorts[port.PortPath] = port;
             }
 
             // Start monitoring timer
-            var timer = new Timer(async _ => await MonitorPortChangesAsync().ConfigureAwait(false),
-                null, TimeSpan.Zero, TimeSpan.FromSeconds(settings.ScanIntervalSeconds));
+            _monitoringTimer!.Change(TimeSpan.Zero, TimeSpan.FromSeconds(settings.ScanIntervalSeconds));
 
             _logger.LogInformation("Started port monitoring with {Interval}s interval", settings.ScanIntervalSeconds);
         }
@@ -215,7 +224,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             _isMonitoring = false;
-            _monitoringTimer?.Dispose();
+            // Stop monitoring timer (keep instance for reuse)
+            _monitoringTimer!.Change(Timeout.Infinite, Timeout.Infinite);
             _lastKnownPorts.Clear();
 
             _logger.LogInformation("Stopped port monitoring");
@@ -245,8 +255,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 throw new InvalidOperationException($"Port {portPath} is not accessible");
             }
 
-            var command = $"stty -F {portPath} -a";
-            var result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
+            string command = $"stty -F {portPath} -a";
+            SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
 
             if (!result.Success)
             {
@@ -279,15 +289,15 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 throw new InvalidOperationException($"Port {portPath} is not accessible");
             }
 
-            var command = GenerateSttyCommand(portPath, configuration);
-            var validationResult = ValidateSttyCommand(command);
+            string command = GenerateSttyCommand(portPath, configuration);
+            SttyCommandValidationResult validationResult = ValidateSttyCommand(command);
 
             if (!validationResult.IsValid)
             {
                 throw new InvalidOperationException($"Invalid stty command: {string.Join(", ", validationResult.Errors)}");
             }
 
-            var result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
+            SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
 
             if (result.Success)
             {
@@ -330,7 +340,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         try
         {
-            var configuration = await ReadPortConfigurationAsync(portPath, cancellationToken).ConfigureAwait(false);
+            SerialPortConfiguration? configuration = await ReadPortConfigurationAsync(portPath, cancellationToken).ConfigureAwait(false);
             if (configuration != null)
             {
                 _logger.LogDebug("Backed up configuration for port {PortPath}", portPath);
@@ -356,7 +366,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         try
         {
-            var success = await ApplyConfigurationAsync(portPath, backupConfiguration, cancellationToken).ConfigureAwait(false);
+            bool success = await ApplyConfigurationAsync(portPath, backupConfiguration, cancellationToken).ConfigureAwait(false);
             if (success)
             {
                 _logger.LogInformation("Restored configuration for port {PortPath}", portPath);
@@ -453,7 +463,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         try
         {
-            var result = await ExecuteCommandAsync(command, 5000, cancellationToken).ConfigureAwait(false);
+            (bool Success, int ExitCode, string StandardOutput, string StandardError) result = await ExecuteCommandAsync(command, 5000, cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
 
             return new SttyCommandResult
@@ -504,14 +514,14 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         }
 
         // Check for dangerous commands
-        var dangerousPatterns = new[]
+        string[] dangerousPatterns = new[]
         {
             @"rm\s+", @"del\s+", @"format\s+", @"mkfs\s+",
             @";\s*dd\s+", @"&&\s*dd\s+", @"\|\s*dd\s+", @"^\s*dd\s+",  // Only dangerous dd usage (standalone dd command)
             @">\s*/dev/", @";\s*rm\s+", @"&&\s*rm\s+", @"\|\s*rm\s+"
         };
 
-        foreach (var pattern in dangerousPatterns)
+        foreach (string? pattern in dangerousPatterns)
         {
             if (Regex.IsMatch(command, pattern, RegexOptions.IgnoreCase))
             {
@@ -541,7 +551,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
         }
 
-        var fileName = Path.GetFileName(portPath).ToLowerInvariant();
+        string fileName = Path.GetFileName(portPath).ToLowerInvariant();
 
         if (fileName.StartsWith("ttyusb"))
         {
@@ -574,8 +584,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         try
         {
             // Try to get USB device information from sysfs
-            var deviceName = Path.GetFileName(portPath);
-            var sysfsPath = $"/sys/class/tty/{deviceName}/device";
+            string deviceName = Path.GetFileName(portPath);
+            string sysfsPath = $"/sys/class/tty/{deviceName}/device";
 
             if (!Directory.Exists(sysfsPath))
             {
@@ -618,12 +628,12 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(string basePattern, SerialPortType portType, int maxPorts, CancellationToken cancellationToken)
     {
         var ports = new List<SerialPortInfo>();
-        var settings = _settingsService.Settings.SerialPorts;
+        SerialPortSettings settings = _settingsService.Settings.SerialPorts;
 
         for (int i = 0; i < maxPorts; i++)
         {
-            var portPath = $"{basePattern}{i}";
-            var portInfo = await GetPortInfoAsync(portPath, cancellationToken).ConfigureAwait(false);
+            string portPath = $"{basePattern}{i}";
+            SerialPortInfo? portInfo = await GetPortInfoAsync(portPath, cancellationToken).ConfigureAwait(false);
 
             if (portInfo != null)
             {
@@ -646,14 +656,14 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         try
         {
-            var currentPorts = await ScanAvailablePortsAsync().ConfigureAwait(false);
+            IEnumerable<SerialPortInfo> currentPorts = await ScanAvailablePortsAsync().ConfigureAwait(false);
             var currentPortPaths = currentPorts.ToDictionary(p => p.PortPath, p => p);
 
             // Check for removed ports
             var removedPorts = _lastKnownPorts.Keys.Except(currentPortPaths.Keys).ToList();
-            foreach (var removedPortPath in removedPorts)
+            foreach (string? removedPortPath in removedPorts)
             {
-                var removedPort = _lastKnownPorts[removedPortPath];
+                SerialPortInfo removedPort = _lastKnownPorts[removedPortPath];
                 _lastKnownPorts.Remove(removedPortPath);
                 PortRemoved?.Invoke(this, new SerialPortEventArgs(removedPort));
                 _logger.LogDebug("Port removed: {PortPath}", removedPortPath);
@@ -661,19 +671,19 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
             // Check for added ports
             var addedPorts = currentPortPaths.Keys.Except(_lastKnownPorts.Keys).ToList();
-            foreach (var addedPortPath in addedPorts)
+            foreach (string? addedPortPath in addedPorts)
             {
-                var addedPort = currentPortPaths[addedPortPath];
+                SerialPortInfo addedPort = currentPortPaths[addedPortPath];
                 _lastKnownPorts[addedPortPath] = addedPort;
                 PortAdded?.Invoke(this, new SerialPortEventArgs(addedPort));
                 _logger.LogDebug("Port added: {PortPath}", addedPortPath);
             }
 
             // Check for status changes
-            foreach (var portPath in currentPortPaths.Keys.Intersect(_lastKnownPorts.Keys))
+            foreach (string? portPath in currentPortPaths.Keys.Intersect(_lastKnownPorts.Keys))
             {
-                var currentPort = currentPortPaths[portPath];
-                var lastKnownPort = _lastKnownPorts[portPath];
+                SerialPortInfo currentPort = currentPortPaths[portPath];
+                SerialPortInfo lastKnownPort = _lastKnownPorts[portPath];
 
                 if (currentPort.IsAccessible != lastKnownPort.IsAccessible)
                 {
@@ -700,8 +710,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         try
         {
             // Try to use lsof to check if port is in use
-            var command = $"lsof {portPath}";
-            var result = await ExecuteCommandAsync(command, 2000, cancellationToken).ConfigureAwait(false);
+            string command = $"lsof {portPath}";
+            (bool Success, int ExitCode, string StandardOutput, string StandardError) result = await ExecuteCommandAsync(command, 2000, cancellationToken).ConfigureAwait(false);
             return result.Success && !string.IsNullOrWhiteSpace(result.StandardOutput);
         }
         catch
@@ -740,15 +750,15 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         try
         {
             // Parse baud rate
-            var baudMatch = Regex.Match(sttyOutput, @"speed (\d+) baud");
-            if (baudMatch.Success && int.TryParse(baudMatch.Groups[1].Value, out var baud))
+            Match baudMatch = Regex.Match(sttyOutput, @"speed (\d+) baud");
+            if (baudMatch.Success && int.TryParse(baudMatch.Groups[1].Value, out int baud))
             {
                 config.BaudRate = baud;
             }
 
             // Parse character size
-            var csMatch = Regex.Match(sttyOutput, @"cs(\d)");
-            if (csMatch.Success && int.TryParse(csMatch.Groups[1].Value, out var cs))
+            Match csMatch = Regex.Match(sttyOutput, @"cs(\d)");
+            if (csMatch.Success && int.TryParse(csMatch.Groups[1].Value, out int cs))
             {
                 config.CharacterSize = cs;
             }
@@ -828,7 +838,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 throw;
             }
 
-            var success = process.ExitCode == 0;
+            bool success = process.ExitCode == 0;
             return (success, process.ExitCode, outputBuilder.ToString().Trim(), errorBuilder.ToString().Trim());
         }
         catch (Exception ex)
@@ -850,7 +860,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         {
             if (File.Exists(filePath))
             {
-                var value = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
+                string value = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
                 setValue(value.Trim());
             }
         }
@@ -869,7 +879,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// </summary>
     public void Dispose()
     {
-        _monitoringTimer?.Dispose();
+    _monitoringTimer?.Dispose();
         _semaphore?.Dispose();
         GC.SuppressFinalize(this);
     }

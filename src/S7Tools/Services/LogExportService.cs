@@ -45,7 +45,7 @@ public class LogExportService : ILogExportService
             _logger.LogInformation("Starting log export in {Format} format", format);
 
             // Ensure export folder exists
-            await EnsureExportFolderExistsAsync();
+            await EnsureExportFolderExistsAsync().ConfigureAwait(false);
 
             // Generate file path if not provided
             if (string.IsNullOrWhiteSpace(filePath))
@@ -65,13 +65,13 @@ public class LogExportService : ILogExportService
             switch (format)
             {
                 case ExportFormat.Text:
-                    await ExportAsTextAsync(logs, filePath);
+                    await ExportAsTextAsync(logs, filePath).ConfigureAwait(false);
                     break;
                 case ExportFormat.Json:
-                    await ExportAsJsonAsync(logs, filePath);
+                    await ExportAsJsonAsync(logs, filePath).ConfigureAwait(false);
                     break;
                 case ExportFormat.Csv:
-                    await ExportAsCsvAsync(logs, filePath);
+                    await ExportAsCsvAsync(logs, filePath).ConfigureAwait(false);
                     break;
                 default:
                     return Result.Failure($"Unsupported export format: {format}");
@@ -124,7 +124,7 @@ public class LogExportService : ILogExportService
                 _logger.LogInformation("Created export folder: {ExportPath}", _defaultExportPath);
             }
 
-            await Task.CompletedTask;
+            await Task.CompletedTask.ConfigureAwait(false);
         }
         catch (Exception ex)
         {
