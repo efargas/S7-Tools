@@ -303,7 +303,8 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<bool> DeleteAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        if (profileId <= 0) {throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId));}
+        if (profileId <= 0)
+        { throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId)); }
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -311,9 +312,11 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
             T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
-            if (profile == null) {return false;}
+            if (profile == null)
+            { return false; }
 
-            if (!profile.CanDelete()) {throw new InvalidOperationException("Cannot delete a read-only profile.");}
+            if (!profile.CanDelete())
+            { throw new InvalidOperationException("Cannot delete a read-only profile."); }
 
             _profiles.Remove(profile);
 
@@ -334,9 +337,11 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<T> DuplicateAsync(int sourceProfileId, string newName, CancellationToken cancellationToken = default)
     {
-        if (sourceProfileId <= 0) {throw new ArgumentException("Source profile ID must be greater than zero.", nameof(sourceProfileId));}
+        if (sourceProfileId <= 0)
+        { throw new ArgumentException("Source profile ID must be greater than zero.", nameof(sourceProfileId)); }
 
-        if (string.IsNullOrWhiteSpace(newName)) { throw new ArgumentException("New name cannot be empty.", nameof(newName));}
+        if (string.IsNullOrWhiteSpace(newName))
+        { throw new ArgumentException("New name cannot be empty.", nameof(newName)); }
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try

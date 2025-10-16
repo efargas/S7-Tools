@@ -11,8 +11,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
-using S7Tools.Helpers;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Helpers;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
@@ -337,7 +337,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         // Start socat command - enabled when both profile and device are selected
         var canStartSocat = this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedSerialDevice)
-            .Select(tuple => {
+            .Select(tuple =>
+            {
                 bool canStart = tuple.Item1 != null && !string.IsNullOrEmpty(tuple.Item2);
                 _specificLogger.LogDebug("🎛️ StartSocat CanExecute: Profile={ProfileSelected}, Device={DeviceSelected}, CanStart={CanStart}",
                     tuple.Item1?.Name ?? "None", tuple.Item2 ?? "None", canStart);

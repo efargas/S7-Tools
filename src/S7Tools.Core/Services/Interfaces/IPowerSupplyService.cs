@@ -88,4 +88,4 @@ public interface IPowerSupplyService
 
     #endregion
 
-    }
+}

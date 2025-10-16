@@ -26,7 +26,9 @@ public class ModbusAddressingModeConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not ModbusAddressingMode mode)
+        {
             return null;
+        }
 
         return mode switch
         {
@@ -40,12 +42,19 @@ public class ModbusAddressingModeConverter : IValueConverter
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not string str)
+        {
             return ModbusAddressingMode.Base0; // Default value
+        }
 
         if (str.Contains("Base-0"))
+        {
             return ModbusAddressingMode.Base0;
+        }
+
         if (str.Contains("Base-1"))
+        {
             return ModbusAddressingMode.Base1;
+        }
 
         return ModbusAddressingMode.Base0; // Default value
     }

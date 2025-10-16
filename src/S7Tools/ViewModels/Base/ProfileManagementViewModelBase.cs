@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -77,7 +77,9 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 
         // Track collection changes to surface HasChanges and other UI state updates
         _profilesChangedHandler = (_, __) => { HasChanges = true; };
-        try { _profiles.CollectionChanged += _profilesChangedHandler; } catch { /* ignore if handler already attached */ }
+        try
+        { _profiles.CollectionChanged += _profilesChangedHandler; }
+        catch { /* ignore if handler already attached */ }
 
         // Initialize profile data
         _ = Task.Run(async () =>
@@ -113,14 +115,18 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             {
                 if (_profilesChangedHandler != null)
                 {
-                    try { _profiles.CollectionChanged -= _profilesChangedHandler; } catch { }
+                    try
+                    { _profiles.CollectionChanged -= _profilesChangedHandler; }
+                    catch { }
                 }
 
                 this.RaiseAndSetIfChanged(ref _profiles, value);
 
                 if (_profilesChangedHandler != null)
                 {
-                    try { _profiles.CollectionChanged += _profilesChangedHandler; } catch { }
+                    try
+                    { _profiles.CollectionChanged += _profilesChangedHandler; }
+                    catch { }
                 }
             }
         }
@@ -262,9 +268,9 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     /// </remarks>
     public ReactiveCommand<Unit, Unit> SetDefaultCommand { get; private set; } = null!;
 
-    
-    
-    
+
+
+
     #endregion
 
     #region Abstract Methods - Customization Points
@@ -333,7 +339,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             StatusMessage = "Loading profiles...";
 
             await LoadProfilesAsync().ConfigureAwait(false);
-            
+
             StatusMessage = $"Loaded {Profiles.Count} {GetProfileTypeName().ToLowerInvariant()} profiles.";
             _logger.LogInformation("Profile management initialized for {ProfileType} with {Count} profiles",
                 GetProfileTypeName(), Profiles.Count);
@@ -380,7 +386,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 
         // General commands
         RefreshCommand = ReactiveCommand.CreateFromTask(ExecuteRefreshAsync);
-                        
+
         // Subscribe to command execution for logging and status updates
         CreateCommand.Subscribe(_ => _logger.LogDebug("Create command executed for {ProfileType}", GetProfileTypeName())).DisposeWith(_disposables);
         EditCommand.Subscribe(_ => _logger.LogDebug("Edit command executed for {ProfileType} profile {ProfileId}", GetProfileTypeName(), SelectedProfile?.Id)).DisposeWith(_disposables);
@@ -442,7 +448,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         });
     }
 
-    
+
     #endregion
 
     #region Helper Methods
@@ -817,9 +823,9 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         }
     }
 
-    
-    
-    
+
+
+
     #endregion
 
     #region IDisposable Implementation

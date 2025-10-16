@@ -409,7 +409,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
     #endregion
 
-    
+
     #region Data Loading Methods
 
     // Profile loading is handled by base class ProfileManagementViewModelBase
@@ -698,7 +698,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             {
                 string json = await System.IO.File.ReadAllTextAsync(filePath).ConfigureAwait(false);
                 List<PowerSupplyProfile> profiles = JsonSerializer.Deserialize<List<PowerSupplyProfile>>(json) ?? new List<PowerSupplyProfile>();
-                
+
                 if (profiles.Count == 0)
                 {
                     await _uiThreadService.InvokeOnUIThreadAsync(() =>

@@ -340,7 +340,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
 
     #endregion
 
-    
+
     #region Private Helper Methods
 
     private void EnsureConnected()

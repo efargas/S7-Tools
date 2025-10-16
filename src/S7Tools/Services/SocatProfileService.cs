@@ -62,7 +62,8 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
             CreatedAt = DateTime.UtcNow,
             ModifiedAt = DateTime.UtcNow,
             Id = 1
-        };        _profiles.Add(defaultProfile);
+        };
+        _profiles.Add(defaultProfile);
 
         // Ensure directory exists
         var directory = Path.GetDirectoryName(_profilesPath);
