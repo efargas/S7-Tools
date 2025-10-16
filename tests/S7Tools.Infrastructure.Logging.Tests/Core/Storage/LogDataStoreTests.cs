@@ -35,7 +35,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void Constructor_WithNullOptions_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => new LogDataStore(null!);
+        Func<LogDataStore> act = () => new LogDataStore(null!);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -43,7 +43,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void AddEntry_WithValidEntry_ShouldAddToBuffer()
     {
         // Arrange
-        var logEntry = CreateLogEntry("Test message", LogLevel.Information);
+        LogModel logEntry = CreateLogEntry("Test message", LogLevel.Information);
 
         // Act
         _dataStore.AddEntry(logEntry);
@@ -59,7 +59,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void AddEntry_WithNullEntry_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => _dataStore.AddEntry(null!);
+        Action act = () => _dataStore.AddEntry(null!);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -74,7 +74,7 @@ public sealed class LogDataStoreTests : IDisposable
         }
 
         // Act
-        foreach (var entry in entries)
+        foreach (LogModel entry in entries)
         {
             _dataStore.AddEntry(entry);
         }
@@ -94,7 +94,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void AddEntry_ShouldRaisePropertyChangedEvents()
     {
         // Arrange
-        var logEntry = CreateLogEntry("Test message", LogLevel.Information);
+        LogModel logEntry = CreateLogEntry("Test message", LogLevel.Information);
         var propertyChangedEvents = new List<string>();
 
         _dataStore.PropertyChanged += (sender, e) => propertyChangedEvents.Add(e.PropertyName!);
@@ -112,7 +112,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void AddEntry_ShouldRaiseCollectionChangedEvent()
     {
         // Arrange
-        var logEntry = CreateLogEntry("Test message", LogLevel.Information);
+        LogModel logEntry = CreateLogEntry("Test message", LogLevel.Information);
         NotifyCollectionChangedEventArgs? collectionChangedArgs = null;
 
         _dataStore.CollectionChanged += (sender, e) => collectionChangedArgs = e;
@@ -132,7 +132,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void AddEntries_WithValidEntries_ShouldAddAllToBuffer()
     {
         // Arrange
-        var entries = new[]
+        LogModel[] entries = new[]
         {
             CreateLogEntry("Message 1", LogLevel.Information),
             CreateLogEntry("Message 2", LogLevel.Warning),
@@ -152,7 +152,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void AddEntries_WithNullCollection_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => _dataStore.AddEntries(null!);
+        Action act = () => _dataStore.AddEntries(null!);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -171,7 +171,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void Clear_ShouldRemoveAllEntries()
     {
         // Arrange
-        var entries = new[]
+        LogModel[] entries = new[]
         {
             CreateLogEntry("Message 1", LogLevel.Information),
             CreateLogEntry("Message 2", LogLevel.Warning)
@@ -214,7 +214,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void GetFilteredEntries_WithValidFilter_ShouldReturnMatchingEntries()
     {
         // Arrange
-        var entries = new[]
+        LogModel[] entries = new[]
         {
             CreateLogEntry("Info message", LogLevel.Information),
             CreateLogEntry("Warning message", LogLevel.Warning),
@@ -223,7 +223,7 @@ public sealed class LogDataStoreTests : IDisposable
         _dataStore.AddEntries(entries);
 
         // Act
-        var filteredEntries = _dataStore.GetFilteredEntries(e => e.Level == LogLevel.Warning);
+        IEnumerable<LogModel> filteredEntries = _dataStore.GetFilteredEntries(e => e.Level == LogLevel.Warning);
 
         // Assert
         filteredEntries.Should().HaveCount(1);
@@ -234,7 +234,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void GetFilteredEntries_WithNullFilter_ShouldThrowArgumentNullException()
     {
         // Act & Assert
-        var act = () => _dataStore.GetFilteredEntries(null!);
+        Func<IEnumerable<LogModel>> act = () => _dataStore.GetFilteredEntries(null!);
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -242,8 +242,8 @@ public sealed class LogDataStoreTests : IDisposable
     public void GetEntriesInTimeRange_WithValidRange_ShouldReturnMatchingEntries()
     {
         // Arrange
-        var baseTime = DateTimeOffset.Now;
-        var entries = new[]
+        DateTimeOffset baseTime = DateTimeOffset.Now;
+        LogModel[] entries = new[]
         {
             CreateLogEntry("Message 1", LogLevel.Information, baseTime.AddMinutes(-10)),
             CreateLogEntry("Message 2", LogLevel.Information, baseTime),
@@ -252,7 +252,7 @@ public sealed class LogDataStoreTests : IDisposable
         _dataStore.AddEntries(entries);
 
         // Act
-        var filteredEntries = _dataStore.GetEntriesInTimeRange(
+        IEnumerable<LogModel> filteredEntries = _dataStore.GetEntriesInTimeRange(
             baseTime.AddMinutes(-5),
             baseTime.AddMinutes(5));
 
@@ -265,11 +265,11 @@ public sealed class LogDataStoreTests : IDisposable
     public async Task ExportAsync_WithTextFormat_ShouldReturnFormattedText()
     {
         // Arrange
-        var entry = CreateLogEntry("Test message", LogLevel.Information);
+        LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
 
         // Act
-        var result = await _dataStore.ExportAsync("txt");
+        string result = await _dataStore.ExportAsync("txt");
 
         // Assert
         result.Should().NotBeEmpty();
@@ -281,11 +281,11 @@ public sealed class LogDataStoreTests : IDisposable
     public async Task ExportAsync_WithJsonFormat_ShouldReturnValidJson()
     {
         // Arrange
-        var entry = CreateLogEntry("Test message", LogLevel.Information);
+        LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
 
         // Act
-        var result = await _dataStore.ExportAsync("json");
+        string result = await _dataStore.ExportAsync("json");
 
         // Assert
         result.Should().NotBeEmpty();
@@ -297,11 +297,11 @@ public sealed class LogDataStoreTests : IDisposable
     public async Task ExportAsync_WithCsvFormat_ShouldReturnCsvData()
     {
         // Arrange
-        var entry = CreateLogEntry("Test message", LogLevel.Information);
+        LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
 
         // Act
-        var result = await _dataStore.ExportAsync("csv");
+        string result = await _dataStore.ExportAsync("csv");
 
         // Assert
         result.Should().NotBeEmpty();
@@ -314,11 +314,11 @@ public sealed class LogDataStoreTests : IDisposable
     public async Task ExportAsync_WithInvalidFormat_ShouldDefaultToText()
     {
         // Arrange
-        var entry = CreateLogEntry("Test message", LogLevel.Information);
+        LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
 
         // Act
-        var result = await _dataStore.ExportAsync("invalid");
+        string result = await _dataStore.ExportAsync("invalid");
 
         // Assert
         result.Should().NotBeEmpty();
@@ -327,7 +327,7 @@ public sealed class LogDataStoreTests : IDisposable
     }
 
     [Fact]
-    public void ThreadSafety_ConcurrentAddOperations_ShouldHandleCorrectly()
+    public async Task ThreadSafety_ConcurrentAddOperations_ShouldHandleCorrectly()
     {
         // Arrange
         const int threadCount = 10;
@@ -342,13 +342,13 @@ public sealed class LogDataStoreTests : IDisposable
             {
                 for (int j = 0; j < entriesPerThread; j++)
                 {
-                    var entry = CreateLogEntry($"Thread {threadId} Message {j}", LogLevel.Information);
+                    LogModel entry = CreateLogEntry($"Thread {threadId} Message {j}", LogLevel.Information);
                     _dataStore.AddEntry(entry);
                 }
             }));
         }
 
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks);
 
         // Assert
         _dataStore.Count.Should().Be(_options.MaxEntries); // Should be at max capacity
@@ -367,7 +367,7 @@ public sealed class LogDataStoreTests : IDisposable
 
         // Assert
         // Should not throw when adding after dispose
-        var act = () => _dataStore.AddEntry(CreateLogEntry("After dispose", LogLevel.Information));
+        Action act = () => _dataStore.AddEntry(CreateLogEntry("After dispose", LogLevel.Information));
         act.Should().NotThrow();
 
         // Count should remain unchanged after dispose
@@ -378,7 +378,7 @@ public sealed class LogDataStoreTests : IDisposable
     public void Dispose_CalledMultipleTimes_ShouldNotThrow()
     {
         // Act & Assert
-        var act = () =>
+        Action act = () =>
         {
             _dataStore.Dispose();
             _dataStore.Dispose();

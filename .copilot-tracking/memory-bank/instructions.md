@@ -33,6 +33,12 @@ public PlcInputViewModel() // Design-time constructor
 5. Task Creation - Document deferred improvements with detailed plans
 ```
 
+### Appendix: Async Test Best Practices (xUnit)
+
+- Prefer `async Task` test methods when working with asynchronous code.
+- Avoid blocking calls in tests (`.Wait()`, `.Result`, `Task.WaitAll(...)`).
+- Use `await` and `Task.WhenAll(...)` instead to prevent deadlocks and satisfy analyzers (e.g., xUnit1031).
+
 **Technical Excellence Achieved**:
 - Build quality enhanced with strict compilation standards
 - UI performance optimized through compiled bindings

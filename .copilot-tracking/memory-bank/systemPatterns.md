@@ -259,6 +259,7 @@ Guidelines:
 - Structure: tests per project — `S7Tools.Tests`, `S7Tools.Core.Tests`, `S7Tools.Infrastructure.Logging.Tests`.
 - Current status: 178 passing tests (100%). Keep coverage high; add tests when behavior changes.
 - Patterns: AAA (Arrange–Act–Assert), include edge/concurrency cases. ViewModels should be testable without UI.
+- Async tests: Use `async Task` for test methods, avoid blocking (`.Wait()`, `.Result`, `Task.WaitAll(...)`); prefer `await` and `Task.WhenAll(...)` to satisfy analyzers (xUnit1031) and prevent deadlocks.
 
 ---
 
