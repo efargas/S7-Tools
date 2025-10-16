@@ -17,7 +17,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
 {
     private readonly ILogger<PowerSupplyService> _logger;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    
+
     private TcpClient? _tcpClient;
     private IModbusMaster? _modbusMaster;
     private PowerSupplyConfiguration? _currentConfiguration;
@@ -53,11 +53,21 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         {
             if (_isConnected)
             {
+                // If already connected with the same configuration, treat as success (idempotent connect)
+                if (_currentConfiguration is ModbusTcpConfiguration cur && configuration is ModbusTcpConfiguration req &&
+                    string.Equals(cur.Host, req.Host, StringComparison.OrdinalIgnoreCase) &&
+                    cur.Port == req.Port && cur.DeviceId == req.DeviceId &&
+                    cur.OnOffCoil == req.OnOffCoil && cur.AddressingMode == req.AddressingMode)
+                {
+                    _logger.LogDebug("ConnectAsync called while already connected with identical configuration. Returning success.");
+                    return true;
+                }
+
                 throw new InvalidOperationException("Already connected to a power supply device. Disconnect first.");
             }
 
             // Validate configuration
-            var validationErrors = configuration.Validate();
+            List<string> validationErrors = configuration.Validate();
             if (validationErrors.Count > 0)
             {
                 throw new InvalidOperationException($"Configuration validation failed: {string.Join(", ", validationErrors)}");
@@ -69,7 +79,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
                 throw new NotSupportedException($"Power supply type {configuration.Type} is not yet supported. Currently only Modbus TCP is supported.");
             }
 
-            _logger.LogInformation("Connecting to Modbus TCP power supply at {Host}:{Port}", 
+            _logger.LogInformation("Connecting to Modbus TCP power supply at {Host}:{Port}",
                 modbusTcpConfig.Host, modbusTcpConfig.Port);
 
             try
@@ -94,9 +104,9 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to connect to Modbus TCP power supply at {Host}:{Port}", 
+                _logger.LogError(ex, "Failed to connect to Modbus TCP power supply at {Host}:{Port}",
                     modbusTcpConfig.Host, modbusTcpConfig.Port);
-                
+
                 // Cleanup on failure
                 CleanupConnection();
                 throw new InvalidOperationException($"Failed to connect to power supply: {ex.Message}", ex);
@@ -136,7 +146,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         ArgumentNullException.ThrowIfNull(configuration);
 
         // Validate configuration
-        var validationErrors = configuration.Validate();
+        List<string> validationErrors = configuration.Validate();
         if (validationErrors.Count > 0)
         {
             _logger.LogWarning("Configuration validation failed: {Errors}", string.Join(", ", validationErrors));
@@ -150,7 +160,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             return false;
         }
 
-        _logger.LogInformation("Testing connection to Modbus TCP power supply at {Host}:{Port}", 
+        _logger.LogInformation("Testing connection to Modbus TCP power supply at {Host}:{Port}",
             modbusTcpConfig.Host, modbusTcpConfig.Port);
 
         TcpClient? testClient = null;
@@ -161,7 +171,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             // Create temporary TCP client
             testClient = new TcpClient();
             await testClient.ConnectAsync(modbusTcpConfig.Host, modbusTcpConfig.Port, cancellationToken).ConfigureAwait(false);
-            
+
             testClient.ReceiveTimeout = modbusTcpConfig.ReadTimeoutMs;
             testClient.SendTimeout = modbusTcpConfig.WriteTimeoutMs;
 
@@ -170,7 +180,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             testMaster = factory.CreateMaster(testClient);
 
             // Try to read the coil to verify communication
-            var coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
             await testMaster.ReadCoilsAsync(modbusTcpConfig.DeviceId, coilAddress, 1).ConfigureAwait(false);
 
             _logger.LogInformation("Connection test successful");
@@ -201,10 +211,10 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         {
             EnsureConnected();
 
-            var modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            var coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
 
-            _logger.LogInformation("Turning power ON (Device: {DeviceId}, Coil: {Coil}, Mode: {Mode})", 
+            _logger.LogInformation("Turning power ON (Device: {DeviceId}, Coil: {Coil}, Mode: {Mode})",
                 modbusTcpConfig.DeviceId, modbusTcpConfig.OnOffCoil, modbusTcpConfig.AddressingMode);
 
             await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, true).ConfigureAwait(false);
@@ -231,10 +241,10 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         {
             EnsureConnected();
 
-            var modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            var coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
 
-            _logger.LogInformation("Turning power OFF (Device: {DeviceId}, Coil: {Coil}, Mode: {Mode})", 
+            _logger.LogInformation("Turning power OFF (Device: {DeviceId}, Coil: {Coil}, Mode: {Mode})",
                 modbusTcpConfig.DeviceId, modbusTcpConfig.OnOffCoil, modbusTcpConfig.AddressingMode);
 
             await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, false).ConfigureAwait(false);
@@ -261,14 +271,14 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         {
             EnsureConnected();
 
-            var modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            var coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
 
-            _logger.LogDebug("Reading power state (Device: {DeviceId}, Coil: {Coil})", 
+            _logger.LogDebug("Reading power state (Device: {DeviceId}, Coil: {Coil})",
                 modbusTcpConfig.DeviceId, coilAddress);
 
-            var coils = await _modbusMaster!.ReadCoilsAsync(modbusTcpConfig.DeviceId, coilAddress, 1).ConfigureAwait(false);
-            var state = coils[0];
+            bool[] coils = await _modbusMaster!.ReadCoilsAsync(modbusTcpConfig.DeviceId, coilAddress, 1).ConfigureAwait(false);
+            bool state = coils[0];
 
             _logger.LogDebug("Power state read: {State}", state ? "ON" : "OFF");
             return state;
@@ -295,7 +305,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             _logger.LogInformation("Starting power cycle with {Delay}ms delay", delayMs);
 
             // Turn off
-            var offResult = await TurnOffWithoutLockAsync(cancellationToken).ConfigureAwait(false);
+            bool offResult = await TurnOffWithoutLockAsync(cancellationToken).ConfigureAwait(false);
             if (!offResult)
             {
                 _logger.LogError("Power cycle failed: Could not turn power OFF");
@@ -307,7 +317,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
 
             // Turn on
-            var onResult = await TurnOnWithoutLockAsync(cancellationToken).ConfigureAwait(false);
+            bool onResult = await TurnOnWithoutLockAsync(cancellationToken).ConfigureAwait(false);
             if (!onResult)
             {
                 _logger.LogError("Power cycle failed: Could not turn power ON");
@@ -330,65 +340,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
 
     #endregion
 
-    #region Legacy Compatibility Methods
-
-    /// <inheritdoc />
-    [Obsolete("Use ConnectAsync() with PowerSupplyConfiguration and PowerCycleAsync() instead")]
-    public async Task PowerCycleAsync(string host, int port, int coil, int delaySeconds, CancellationToken cancellationToken = default)
-    {
-        var config = new ModbusTcpConfiguration
-        {
-            Host = host,
-            Port = port,
-            DeviceId = 1,
-            OnOffCoil = (ushort)coil,
-            AddressingMode = ModbusAddressingMode.Base0
-        };
-
-        await ConnectAsync(config, cancellationToken).ConfigureAwait(false);
-        try
-        {
-            await PowerCycleAsync(delaySeconds * 1000, cancellationToken).ConfigureAwait(false);
-        }
-        finally
-        {
-            await DisconnectAsync(cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    /// <inheritdoc />
-    [Obsolete("Use ConnectAsync() with PowerSupplyConfiguration and TurnOnAsync()/TurnOffAsync() instead")]
-    public async Task SetPowerAsync(string host, int port, int coil, bool on, CancellationToken cancellationToken = default)
-    {
-        var config = new ModbusTcpConfiguration
-        {
-            Host = host,
-            Port = port,
-            DeviceId = 1,
-            OnOffCoil = (ushort)coil,
-            AddressingMode = ModbusAddressingMode.Base0
-        };
-
-        await ConnectAsync(config, cancellationToken).ConfigureAwait(false);
-        try
-        {
-            if (on)
-            {
-                await TurnOnAsync(cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await TurnOffAsync(cancellationToken).ConfigureAwait(false);
-            }
-        }
-        finally
-        {
-            await DisconnectAsync(cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    #endregion
-
+    
     #region Private Helper Methods
 
     private void EnsureConnected()
@@ -404,8 +356,8 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         // This method is called from PowerCycleAsync which already holds the lock
         try
         {
-            var modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            var coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
             await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, true).ConfigureAwait(false);
             return true;
         }
@@ -421,8 +373,8 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         // This method is called from PowerCycleAsync which already holds the lock
         try
         {
-            var modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            var coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
             await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, false).ConfigureAwait(false);
             return true;
         }
@@ -437,10 +389,10 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
     {
         _isConnected = false;
         _currentConfiguration = null;
-        
+
         _modbusMaster?.Dispose();
         _modbusMaster = null;
-        
+
         _tcpClient?.Close();
         _tcpClient?.Dispose();
         _tcpClient = null;

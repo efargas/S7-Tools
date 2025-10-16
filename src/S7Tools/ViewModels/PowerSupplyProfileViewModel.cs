@@ -114,7 +114,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
         get => _powerSupplyType;
         set
         {
-            var oldValue = _powerSupplyType;
+            PowerSupplyType oldValue = _powerSupplyType;
             this.RaiseAndSetIfChanged(ref _powerSupplyType, value);
             if (oldValue != value)
             {
@@ -333,7 +333,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     private void InitializeCommands()
     {
         // Save command - enabled when valid and has changes and not read-only
-        var canSave = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
+        IObservable<bool> canSave = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
             .Select(tuple => tuple.Item1 && tuple.Item2 && !tuple.Item3);
 
         SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync, canSave);
@@ -365,6 +365,13 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
         this.WhenAnyValue(x => x.ProfileDescription).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
         this.WhenAnyValue(x => x.IsDefault).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
         this.WhenAnyValue(x => x.PowerSupplyType).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+
+        // ModbusTcp configuration property subscriptions
+        this.WhenAnyValue(x => x.ModbusTcpHost).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+        this.WhenAnyValue(x => x.ModbusTcpPort).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+        this.WhenAnyValue(x => x.ModbusTcpDeviceId).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+        this.WhenAnyValue(x => x.ModbusTcpOnOffCoil).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+        this.WhenAnyValue(x => x.ModbusTcpAddressingMode).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -372,8 +379,8 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// </summary>
     private void ValidateConfiguration()
     {
-        var isValid = true;
-        var statusMessage = "Ready";
+        bool isValid = true;
+        string statusMessage = "Ready";
 
         // Validate profile name
         if (string.IsNullOrWhiteSpace(ProfileName))
@@ -392,6 +399,31 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
         {
             isValid = false;
             statusMessage = "Profile description is too long (max 1000 characters)";
+        }
+
+        // Validate ModbusTcp configuration if applicable
+        if (PowerSupplyType == PowerSupplyType.ModbusTcp && isValid)
+        {
+            if (string.IsNullOrWhiteSpace(ModbusTcpHost))
+            {
+                isValid = false;
+                statusMessage = "ModbusTcp host/IP address is required";
+            }
+            else if (ModbusTcpPort < 1 || ModbusTcpPort > 65535)
+            {
+                isValid = false;
+                statusMessage = "ModbusTcp port must be between 1 and 65535";
+            }
+            else if (ModbusTcpDeviceId < 0 || ModbusTcpDeviceId > 255)
+            {
+                isValid = false;
+                statusMessage = "ModbusTcp device ID must be between 0 and 255";
+            }
+            else if (ModbusTcpOnOffCoil < 0 || ModbusTcpOnOffCoil > 65535)
+            {
+                isValid = false;
+                statusMessage = "ModbusTcp coil address must be between 0 and 65535";
+            }
         }
 
         IsValid = isValid;
@@ -413,7 +445,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             StatusMessage = "Saving profile...";
             System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
-            var profile = CreateProfile();
+            PowerSupplyProfile profile = CreateProfile();
             System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created with name: {profile.Name}, ID: {profile.Id}");
 
             if (_originalProfile != null)
@@ -424,15 +456,16 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
                 profile.ModifiedAt = DateTime.UtcNow;
                 await _profileService.UpdateAsync(profile).ConfigureAwait(false);
                 System.Diagnostics.Debug.WriteLine($"DEBUG: Profile updated successfully");
+                _logger.LogInformation("Profile updated successfully: {ProfileName} (ID: {ProfileId})", profile.Name, profile.Id);
             }
             else
             {
                 System.Diagnostics.Debug.WriteLine($"DEBUG: Creating new profile");
-                _logger.LogInformation("🔥 ABOUT TO CALL _profileService.CreateAsync for profile: {ProfileName}", profile.Name);
-                System.Diagnostics.Debug.WriteLine($"🔥 CRITICAL: Calling _profileService.CreateAsync NOW...");
-                var createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
+                _logger.LogInformation("Creating new profile: {ProfileName}", profile.Name);
+                System.Diagnostics.Debug.WriteLine($"Calling _profileService.CreateAsync...");
+                PowerSupplyProfile createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
                 System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created successfully with ID: {createdProfile.Id}");
-                _logger.LogInformation("✅ _profileService.CreateAsync RETURNED for profile: {ProfileName}, ID: {ProfileId}", createdProfile.Name, createdProfile.Id);
+                _logger.LogInformation("Profile created successfully: {ProfileName} (ID: {ProfileId})", createdProfile.Name, createdProfile.Id);
 
                 // Update _originalProfile with the created profile so subsequent saves are updates
                 _originalProfile = createdProfile;
@@ -440,16 +473,30 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
 
             HasChanges = false;
             StatusMessage = "Profile saved successfully";
-            _logger.LogInformation("Profile saved: {ProfileName}", profile.Name);
+            _logger.LogInformation("Profile save operation completed: {ProfileName}", profile.Name);
             System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfileViewModel.SaveAsync completed successfully");
+        }
+        catch (InvalidOperationException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ERROR: Invalid operation in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
+            _logger.LogError(ex, "Invalid operation while saving profile: {ProfileName}", ProfileName);
+            StatusMessage = $"Save failed: {ex.Message}";
+            throw;
+        }
+        catch (ArgumentException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"ERROR: Invalid argument in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
+            _logger.LogError(ex, "Invalid profile data while saving: {ProfileName}", ProfileName);
+            StatusMessage = $"Save failed: Invalid profile data - {ex.Message}";
+            throw;
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
-            _logger.LogError(ex, "Error saving profile");
-            StatusMessage = "Error saving profile";
-            throw; // Re-throw to let the dialog handle it
+            _logger.LogError(ex, "Unexpected error saving profile: {ProfileName}", ProfileName);
+            StatusMessage = $"Save failed: {ex.Message}";
+            throw;
         }
     }
 
@@ -482,8 +529,16 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// </summary>
     private void HandleCommandException(Exception ex, string operation)
     {
-        _logger.LogError(ex, "Error {Operation}", operation);
-        StatusMessage = $"Error {operation}";
+        string errorMessage = ex switch
+        {
+            InvalidOperationException => $"Invalid operation while {operation}",
+            ArgumentException => $"Invalid data while {operation}",
+            UnauthorizedAccessException => $"Access denied while {operation}",
+            _ => $"Error {operation}"
+        };
+
+        _logger.LogError(ex, "Error {Operation}: {Message}", operation, ex.Message);
+        StatusMessage = $"{errorMessage}: {ex.Message}";
     }
 
     #endregion

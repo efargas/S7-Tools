@@ -88,43 +88,4 @@ public interface IPowerSupplyService
 
     #endregion
 
-    #region Legacy Compatibility Methods (Deprecated)
-
-    /// <summary>
-    /// Performs a power cycle operation on the PLC.
-    /// </summary>
-    /// <param name="host">Power supply controller host address.</param>
-    /// <param name="port">Power supply controller port.</param>
-    /// <param name="coil">Coil/relay number to control.</param>
-    /// <param name="delaySeconds">Delay in seconds between power off and power on.</param>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    /// <remarks>This method is deprecated. Use ConnectAsync() with configuration and PowerCycleAsync() instead.</remarks>
-    [Obsolete("Use ConnectAsync() with PowerSupplyConfiguration and PowerCycleAsync() instead. This method will be removed in a future version.")]
-    Task PowerCycleAsync(
-        string host,
-        int port,
-        int coil,
-        int delaySeconds,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Sets the power state of the PLC.
-    /// </summary>
-    /// <param name="host">Power supply controller host address.</param>
-    /// <param name="port">Power supply controller port.</param>
-    /// <param name="coil">Coil/relay number to control.</param>
-    /// <param name="on">True to power on, false to power off.</param>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    /// <remarks>This method is deprecated. Use ConnectAsync() with configuration and TurnOnAsync()/TurnOffAsync() instead.</remarks>
-    [Obsolete("Use ConnectAsync() with PowerSupplyConfiguration and TurnOnAsync()/TurnOffAsync() instead. This method will be removed in a future version.")]
-    Task SetPowerAsync(
-        string host,
-        int port,
-        int coil,
-        bool on,
-        CancellationToken cancellationToken = default);
-
-    #endregion
-}
+    }

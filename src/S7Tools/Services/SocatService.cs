@@ -534,7 +534,10 @@ public class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<int> StopAllSocatProcessesAsync(CancellationToken cancellationToken = default)
     {
-        var processIds = new List<int>();
+        // Discover external socat processes first
+        await DiscoverExternalSocatProcessesAsync(cancellationToken).ConfigureAwait(false);
+
+        List<int> processIds;
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
@@ -567,6 +570,9 @@ public class SocatService : ISocatService, IDisposable
     public async Task<IEnumerable<SocatProcessInfo>> GetRunningProcessesAsync(CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("📋 GetRunningProcessesAsync ENTRY");
+
+        // Discover external socat processes first (outside lock to avoid long hold)
+        await DiscoverExternalSocatProcessesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("🔒 Waiting for semaphore...");
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -875,18 +881,21 @@ public class SocatService : ISocatService, IDisposable
 
         try
         {
-            // Use nc (netcat) to test the connection
-            string command = $"timeout {timeoutMs / 1000} nc -z {tcpHost} {tcpPort}";
-            (bool success, int exitCode, string _, string _) = await ExecuteCommandAsync(command, timeoutMs + 1000, cancellationToken).ConfigureAwait(false);
-
-            bool connectionSuccessful = success && exitCode == 0;
-            _logger.LogDebug("TCP connection test to {Host}:{Port}: {Result}", tcpHost, tcpPort, connectionSuccessful ? "Success" : "Failed");
-
-            return connectionSuccessful;
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            cts.CancelAfter(timeoutMs);
+            using var client = new System.Net.Sockets.TcpClient();
+            await client.ConnectAsync(tcpHost, tcpPort, cts.Token).ConfigureAwait(false);
+            _logger.LogDebug("TCP connection test to {Host}:{Port}: Success", tcpHost, tcpPort);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("TCP connection test to {Host}:{Port} timed out after {TimeoutMs}ms", tcpHost, tcpPort, timeoutMs);
+            return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to test TCP connection to {Host}:{Port}", tcpHost, tcpPort);
+            _logger.LogWarning(ex, "TCP connection test to {Host}:{Port} failed", tcpHost, tcpPort);
             return false;
         }
     }
@@ -1326,6 +1335,89 @@ public class SocatService : ISocatService, IDisposable
             {
                 await UpdateProcessStatusAsync(processInfo, cancellationToken).ConfigureAwait(false);
             }
+        }
+    }
+
+    /// <summary>
+    /// Discovers external socat processes not started by this service and merges them into tracking.
+    /// </summary>
+    private async Task DiscoverExternalSocatProcessesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!(OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+            {
+                return; // discovery implemented for Unix-like systems only
+            }
+
+            (bool success, int _, string stdout, string _) = await ExecuteCommandAsync("ps -eo pid,cmd | grep socat | grep -v grep", 3000, cancellationToken).ConfigureAwait(false);
+            if (!success || string.IsNullOrWhiteSpace(stdout))
+            {
+                return;
+            }
+
+            string[] lines = stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            var regexPort = new Regex(@"TCP-LISTEN:(\d+)", RegexOptions.IgnoreCase);
+            var regexDevice = new Regex(@"(/dev/[^\s,]+)");
+
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
+            {
+                foreach (string line in lines)
+                {
+                    string trimmed = line.Trim();
+                    string[] parts = trimmed.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length < 2) continue;
+
+                    if (!int.TryParse(parts[0], out int pid)) continue;
+                    string cmd = parts[1];
+                    if (!cmd.StartsWith("socat")) continue;
+
+                    if (_runningProcesses.ContainsKey(pid)) continue; // already tracked
+
+                    int port = 0;
+                    string host = "0.0.0.0";
+                    string device = string.Empty;
+
+                    Match m = regexPort.Match(cmd);
+                    if (m.Success && int.TryParse(m.Groups[1].Value, out int parsed))
+                    {
+                        port = parsed;
+                    }
+                    Match d = regexDevice.Match(cmd);
+                    if (d.Success)
+                    {
+                        device = d.Groups[1].Value;
+                    }
+
+                    var info = new SocatProcessInfo
+                    {
+                        ProcessId = pid,
+                        TcpPort = port,
+                        TcpHost = host,
+                        SerialDevice = device,
+                        Configuration = new SocatConfiguration { TcpPort = port, TcpHost = host },
+                        Profile = null,
+                        CommandLine = cmd,
+                        StartTime = DateTime.UtcNow,
+                        IsRunning = true,
+                        Status = SocatProcessStatus.Running,
+                        ActiveConnections = 0,
+                        TransferStats = new SocatTransferStats(),
+                        LastUpdated = DateTime.UtcNow
+                    };
+
+                    _runningProcesses[pid] = info;
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error discovering external socat processes");
         }
     }
 

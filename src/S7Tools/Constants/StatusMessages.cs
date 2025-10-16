@@ -67,6 +67,50 @@ public static class StatusMessages
     /// </summary>
     public const string ImportingProfiles = "Importing profiles...";
     
+    /// <summary>
+    /// Message displayed when no profile is selected.
+    /// </summary>
+    public const string NoProfileSelected = "No profile selected";
+    
+    #endregion
+
+    #region Connection Management Messages
+    
+    /// <summary>
+    /// Message displayed when connecting to a device.
+    /// </summary>
+    public const string Connecting = "Connecting...";
+    
+    /// <summary>
+    /// Message displayed when disconnecting from a device.
+    /// </summary>
+    public const string Disconnecting = "Disconnecting...";
+    
+    /// <summary>
+    /// Message displayed when successfully disconnected from a device.
+    /// </summary>
+    public const string Disconnected = "Disconnected";
+    
+    /// <summary>
+    /// Message displayed when connection fails.
+    /// </summary>
+    public const string ConnectionFailed = "Connection failed";
+    
+    /// <summary>
+    /// Message displayed when testing a connection.
+    /// </summary>
+    public const string TestingConnection = "Testing connection...";
+    
+    /// <summary>
+    /// Message displayed when connection test is successful.
+    /// </summary>
+    public const string ConnectionTestSuccessful = "Connection test successful";
+    
+    /// <summary>
+    /// Message displayed when connection test fails.
+    /// </summary>
+    public const string ConnectionTestFailed = "Connection test failed";
+    
     #endregion
 
     #region Port Operations Messages

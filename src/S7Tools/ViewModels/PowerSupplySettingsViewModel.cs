@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Text.Json;
@@ -103,6 +104,9 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         // DON'T call LoadProfilesAsync() - base class handles profile loading automatically
 
+        // Reflect existing connection state if service is already connected
+        UpdateConnectionStatus();
+
         _specificLogger.LogInformation("PowerSupplySettingsViewModel initialized");
     }
 
@@ -151,6 +155,17 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         get => _powerStatus;
         private set => this.RaiseAndSetIfChanged(ref _powerStatus, value);
+    }
+
+    private bool _isBusy;
+    /// <summary>
+    /// Gets or sets whether a power or connection operation is in progress.
+    /// Used to gate command execution and update UI.
+    /// </summary>
+    public bool IsBusy
+    {
+        get => _isBusy;
+        private set => this.RaiseAndSetIfChanged(ref _isBusy, value);
     }
 
     #endregion
@@ -228,7 +243,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         // No additional initialization needed for CRUD operations
 
         // Initialize PowerSupply-specific export/import commands
-        var canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
+        IObservable<bool> canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
             .Select(count => count > 0);
 
         ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
@@ -248,29 +263,35 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private void InitializeConnectionCommands()
     {
-        // Connect command - enabled when not connected and profile is selected
-        var canConnect = this.WhenAnyValue(x => x.IsConnected, x => x.SelectedProfile)
-            .Select(tuple => !tuple.Item1 && tuple.Item2 != null);
+        IScheduler uiScheduler = RxApp.MainThreadScheduler;
+
+        // Connect: enabled when not connected, a profile selected, and not busy
+        IObservable<bool> canConnect = this.WhenAnyValue(x => x.IsConnected, x => x.SelectedProfile, x => x.IsBusy)
+            .Select(tuple => !tuple.Item1 && tuple.Item2 != null && !tuple.Item3);
 
         ConnectCommand = ReactiveCommand.CreateFromTask(ConnectAsync, canConnect);
         ConnectCommand.ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "connecting"))
             .DisposeWith(_disposables);
 
-        // Disconnect command - enabled when connected
-        var canDisconnect = this.WhenAnyValue(x => x.IsConnected);
+        // Disconnect: enabled when connected and not busy
+        IObservable<bool> canDisconnect = this.WhenAnyValue(x => x.IsConnected, x => x.IsBusy)
+            .Select(tuple => tuple.Item1 && !tuple.Item2);
 
         DisconnectCommand = ReactiveCommand.CreateFromTask(DisconnectAsync, canDisconnect);
         DisconnectCommand.ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "disconnecting"))
             .DisposeWith(_disposables);
 
-        // Test connection command - enabled when profile is selected
-        var canTestConnection = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null);
+        // Test connection: enabled when profile selected and not busy
+        IObservable<bool> canTestConnection = this.WhenAnyValue(x => x.SelectedProfile, x => x.IsBusy)
+            .Select(tuple => tuple.Item1 != null && !tuple.Item2);
 
         TestConnectionCommand = ReactiveCommand.CreateFromTask(TestConnectionAsync, canTestConnection);
         TestConnectionCommand.ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "testing connection"))
             .DisposeWith(_disposables);
     }
@@ -280,37 +301,41 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private void InitializePowerControlCommands()
     {
-        // Turn ON command - enabled when connected and power is off
-        var canTurnOn = this.WhenAnyValue(x => x.IsConnected, x => x.IsPowerOn)
-            .Select(tuple => tuple.Item1 && !tuple.Item2);
+        IScheduler uiScheduler = RxApp.MainThreadScheduler;
 
+        // Turn ON: enabled when connected, power is OFF, and not busy
+        IObservable<bool> canTurnOn = this.WhenAnyValue(x => x.IsConnected, x => x.IsPowerOn, x => x.IsBusy)
+            .Select(tuple => tuple.Item1 && !tuple.Item2 && !tuple.Item3);
         TurnOnCommand = ReactiveCommand.CreateFromTask(TurnOnAsync, canTurnOn);
         TurnOnCommand.ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "turning power ON"))
             .DisposeWith(_disposables);
 
-        // Turn OFF command - enabled when connected and power is on
-        var canTurnOff = this.WhenAnyValue(x => x.IsConnected, x => x.IsPowerOn)
-            .Select(tuple => tuple.Item1 && tuple.Item2);
-
+        // Turn OFF: enabled when connected, power is ON, and not busy
+        IObservable<bool> canTurnOff = this.WhenAnyValue(x => x.IsConnected, x => x.IsPowerOn, x => x.IsBusy)
+            .Select(tuple => tuple.Item1 && tuple.Item2 && !tuple.Item3);
         TurnOffCommand = ReactiveCommand.CreateFromTask(TurnOffAsync, canTurnOff);
         TurnOffCommand.ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "turning power OFF"))
             .DisposeWith(_disposables);
 
-        // Read state command - enabled when connected
-        var canReadState = this.WhenAnyValue(x => x.IsConnected);
-
+        // Read state: enabled when connected and not busy
+        IObservable<bool> canReadState = this.WhenAnyValue(x => x.IsConnected, x => x.IsBusy)
+            .Select(tuple => tuple.Item1 && !tuple.Item2);
         ReadStateCommand = ReactiveCommand.CreateFromTask(ReadStateAsync, canReadState);
         ReadStateCommand.ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "reading power state"))
             .DisposeWith(_disposables);
 
-        // Power cycle command - enabled when connected
-        var canPowerCycle = this.WhenAnyValue(x => x.IsConnected);
-
+        // Power cycle: enabled when connected and not busy
+        IObservable<bool> canPowerCycle = this.WhenAnyValue(x => x.IsConnected, x => x.IsBusy)
+            .Select(tuple => tuple.Item1 && !tuple.Item2);
         PowerCycleCommand = ReactiveCommand.CreateFromTask(PowerCycleAsync, canPowerCycle);
         PowerCycleCommand.ThrownExceptions
+            .ObserveOn(uiScheduler)
             .Subscribe(ex => HandleCommandException(ex, "power cycling"))
             .DisposeWith(_disposables);
     }
@@ -330,12 +355,13 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             .Subscribe(connected =>
             {
                 _specificLogger.LogDebug("Connection status changed: {Status}", connected ? "Connected" : "Disconnected");
-                UpdateConnectionStatus();
+                // Update connection status text based on current property value
+                ConnectionStatus = connected ? "Connected" : "Disconnected";
 
                 // Clear power status when disconnected
                 if (!connected)
                 {
-                    UpdatePowerStatus(false);
+                    IsPowerOn = false;
                     PowerStatus = "Unknown";
                 }
             })
@@ -383,6 +409,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
     #endregion
 
+    
     #region Data Loading Methods
 
     // Profile loading is handled by base class ProfileManagementViewModelBase
@@ -395,12 +422,16 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         try
         {
-            var settings = _settingsService.Settings;
+            Models.ApplicationSettings settings = _settingsService.Settings;
             ProfilesPath = settings.PowerSupply.ProfilesPath;
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Failed to refresh settings");
+            _specificLogger.LogError(ex, "Failed to refresh settings from settings service");
+            _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Warning: Failed to load settings";
+            });
         }
     }
 
@@ -422,16 +453,16 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         try
         {
-            var profileName = SelectedProfile.Name;
+            string profileName = SelectedProfile.Name;
             _specificLogger.LogDebug("Deleting power supply profile: {ProfileName}", profileName);
 
-            var confirmed = await _dialogService.ShowConfirmationAsync(
+            bool confirmed = await _dialogService.ShowConfirmationAsync(
                 "Delete Profile",
                 $"Are you sure you want to delete the profile '{profileName}'?").ConfigureAwait(false);
 
             if (confirmed)
             {
-                var profileId = SelectedProfile.Id;
+                int profileId = SelectedProfile.Id;
                 await _profileService.DeleteAsync(profileId).ConfigureAwait(false);
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -465,16 +496,16 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Duplicating power supply profile: {ProfileName}", SelectedProfile.Name);
 
-            var inputResult = await _dialogService.ShowInputAsync(
+            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Profile",
                 "Enter a name for the duplicate profile:",
                 $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
 
-            var newName = inputResult.Value;
+            string? newName = inputResult.Value;
 
             if (!string.IsNullOrWhiteSpace(newName))
             {
-                var duplicatedProfile = await _profileService.DuplicateAsync(
+                PowerSupplyProfile duplicatedProfile = await _profileService.DuplicateAsync(
                     SelectedProfile.Id,
                     newName).ConfigureAwait(false);
 
@@ -534,7 +565,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             // If a specific profile Id was requested, try to select it
             if (selectProfileId.HasValue)
             {
-                var match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
+                PowerSupplyProfile? match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
                 if (match != null)
                 {
                     SelectedProfile = match;
@@ -582,7 +613,11 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (_fileDialogService == null)
         {
-            StatusMessage = "File dialog service not available";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "File dialog service not available";
+            });
+            _specificLogger.LogWarning("Export profiles failed: File dialog service not available");
             return;
         }
 
@@ -590,7 +625,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Exporting power supply profiles");
 
-            var filePath = await _fileDialogService.ShowSaveFileDialogAsync(
+            string? filePath = await _fileDialogService.ShowSaveFileDialogAsync(
                 "Export Power Supply Profiles",
                 "*.json",
                 null,
@@ -598,19 +633,41 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
             if (!string.IsNullOrEmpty(filePath))
             {
-                var profiles = await _profileService.ExportAsync().ConfigureAwait(false);
-                var json = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
+                IEnumerable<PowerSupplyProfile> profiles = await _profileService.ExportAsync().ConfigureAwait(false);
+                string json = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
                 await System.IO.File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
 
-                StatusMessage = $"Exported {Profiles.Count} profiles to {filePath}";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Exported {Profiles.Count} profiles to {Path.GetFileName(filePath)}";
+                });
                 _specificLogger.LogInformation("Exported {Count} power supply profiles to {FilePath}",
                     Profiles.Count, filePath);
             }
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Access denied while exporting profiles to {FilePath}", ex.Message);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Export failed: Access denied to file location";
+            });
+        }
+        catch (IOException ex)
+        {
+            _specificLogger.LogError(ex, "I/O error while exporting profiles");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Export failed: {ex.Message}";
+            });
+        }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Failed to export power supply profiles");
-            throw;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Export failed: {ex.Message}";
+            });
         }
     }
 
@@ -621,7 +678,11 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (_fileDialogService == null)
         {
-            StatusMessage = "File dialog service not available";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "File dialog service not available";
+            });
+            _specificLogger.LogWarning("Import profiles failed: File dialog service not available");
             return;
         }
 
@@ -629,28 +690,69 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Importing power supply profiles");
 
-            var filePath = await _fileDialogService.ShowOpenFileDialogAsync(
+            string? filePath = await _fileDialogService.ShowOpenFileDialogAsync(
                 "Import Power Supply Profiles",
                 "*.json").ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(filePath))
             {
-                var json = await System.IO.File.ReadAllTextAsync(filePath).ConfigureAwait(false);
-                var profiles = JsonSerializer.Deserialize<List<PowerSupplyProfile>>(json) ?? new List<PowerSupplyProfile>();
-                var importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false).ConfigureAwait(false);
-                var count = importedProfiles.Count();
+                string json = await System.IO.File.ReadAllTextAsync(filePath).ConfigureAwait(false);
+                List<PowerSupplyProfile> profiles = JsonSerializer.Deserialize<List<PowerSupplyProfile>>(json) ?? new List<PowerSupplyProfile>();
+                
+                if (profiles.Count == 0)
+                {
+                    await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                    {
+                        StatusMessage = "Import failed: No valid profiles found in file";
+                    });
+                    _specificLogger.LogWarning("Import failed: No profiles found in {FilePath}", filePath);
+                    return;
+                }
+
+                IEnumerable<PowerSupplyProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false).ConfigureAwait(false);
+                int count = importedProfiles.Count();
 
                 _ = RefreshCommand.Execute();
 
-                StatusMessage = $"Imported {count} profiles from {filePath}";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Imported {count} profiles from {Path.GetFileName(filePath)}";
+                });
                 _specificLogger.LogInformation("Imported {Count} power supply profiles from {FilePath}",
                     count, filePath);
             }
         }
+        catch (FileNotFoundException ex)
+        {
+            _specificLogger.LogError(ex, "Import failed: File not found");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Import failed: File not found";
+            });
+        }
+        catch (JsonException ex)
+        {
+            _specificLogger.LogError(ex, "Import failed: Invalid JSON format");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Import failed: Invalid file format";
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Import failed: Access denied");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Import failed: Access denied to file";
+            });
+        }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Failed to import power supply profiles");
-            throw;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Import failed: {ex.Message}";
+            });
         }
     }
 
@@ -665,37 +767,46 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (SelectedProfile?.Configuration == null)
         {
-            StatusMessage = "No profile selected or configuration missing";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = Constants.StatusMessages.NoProfileSelected;
+            });
             return;
         }
 
+        await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
             _specificLogger.LogInformation("Connecting to power supply: {ProfileName}", SelectedProfile.Name);
-            StatusMessage = "Connecting...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = Constants.StatusMessages.Connecting);
 
-            var success = await _powerSupplyService.ConnectAsync(SelectedProfile.Configuration).ConfigureAwait(false);
+            bool success = await _powerSupplyService.ConnectAsync(SelectedProfile.Configuration).ConfigureAwait(false);
 
             if (success)
             {
                 UpdateConnectionStatus();
-                StatusMessage = $"Connected to {SelectedProfile.Name}";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Connected to {SelectedProfile!.Name}";
+                });
                 _specificLogger.LogInformation("Connected to power supply successfully");
 
                 // Read initial power state
-                await ReadStateAsync().ConfigureAwait(false);
+                await ReadStateCoreAsync().ConfigureAwait(false);
             }
             else
             {
-                StatusMessage = "Connection failed";
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = Constants.StatusMessages.ConnectionFailed);
                 _specificLogger.LogWarning("Failed to connect to power supply");
             }
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error connecting to power supply");
-            StatusMessage = $"Connection error: {ex.Message}";
-            throw;
+            HandleCommandException(ex, "connecting");
+        }
+        finally
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
         }
     }
 
@@ -704,23 +815,30 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private async Task DisconnectAsync()
     {
+        await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
             _specificLogger.LogInformation("Disconnecting from power supply");
-            StatusMessage = "Disconnecting...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = Constants.StatusMessages.Disconnecting);
 
             await _powerSupplyService.DisconnectAsync().ConfigureAwait(false);
 
             UpdateConnectionStatus();
-            UpdatePowerStatus(false);
-            PowerStatus = "Unknown";
-            StatusMessage = "Disconnected";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                IsPowerOn = false;
+                PowerStatus = "Unknown";
+                StatusMessage = Constants.StatusMessages.Disconnected;
+            });
             _specificLogger.LogInformation("Disconnected from power supply successfully");
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error disconnecting from power supply");
-            throw;
+            HandleCommandException(ex, "disconnecting");
+        }
+        finally
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
         }
     }
 
@@ -731,37 +849,39 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (SelectedProfile?.Configuration == null)
         {
-            StatusMessage = "No profile selected or configuration missing";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = Constants.StatusMessages.NoProfileSelected;
+            });
             return;
         }
 
+        await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
             _specificLogger.LogInformation("Testing connection to power supply: {ProfileName}", SelectedProfile.Name);
-            StatusMessage = "Testing connection...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = Constants.StatusMessages.TestingConnection);
 
-            var success = await _powerSupplyService.TestConnectionAsync(SelectedProfile.Configuration).ConfigureAwait(false);
+            bool success = await _powerSupplyService.TestConnectionAsync(SelectedProfile.Configuration).ConfigureAwait(false);
 
             if (success)
             {
-                StatusMessage = "Connection test successful ✓";
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = Constants.StatusMessages.ConnectionTestSuccessful);
                 _specificLogger.LogInformation("Connection test successful");
-
-                // Connection test successful - could show a dialog if needed
             }
             else
             {
-                StatusMessage = "Connection test failed ✗";
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = Constants.StatusMessages.ConnectionTestFailed);
                 _specificLogger.LogWarning("Connection test failed");
-
-                // Connection test failed - could show a dialog if needed
             }
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error testing connection");
-            StatusMessage = $"Connection test error: {ex.Message}";
-            throw;
+            HandleCommandException(ex, "testing connection");
+        }
+        finally
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
         }
     }
 
@@ -774,29 +894,34 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private async Task TurnOnAsync()
     {
+        await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
             _specificLogger.LogInformation("Turning power ON");
-            StatusMessage = "Turning power ON...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Turning power ON...");
 
-            var success = await _powerSupplyService.TurnOnAsync().ConfigureAwait(false);
+            bool success = await _powerSupplyService.TurnOnAsync().ConfigureAwait(false);
 
             if (success)
             {
-                UpdatePowerStatus(true);
-                StatusMessage = "Power turned ON ✓";
+                await Task.Delay(_settingsService.Settings.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
+                await ReadStateCoreAsync().ConfigureAwait(false);
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power turned ON ✓");
                 _specificLogger.LogInformation("Power turned ON successfully");
             }
             else
             {
-                StatusMessage = "Failed to turn power ON";
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Failed to turn power ON");
                 _specificLogger.LogWarning("Failed to turn power ON");
             }
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error turning power ON");
-            throw;
+            HandleCommandException(ex, "turning power ON");
+        }
+        finally
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
         }
     }
 
@@ -805,29 +930,34 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private async Task TurnOffAsync()
     {
+        await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
             _specificLogger.LogInformation("Turning power OFF");
-            StatusMessage = "Turning power OFF...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Turning power OFF...");
 
-            var success = await _powerSupplyService.TurnOffAsync().ConfigureAwait(false);
+            bool success = await _powerSupplyService.TurnOffAsync().ConfigureAwait(false);
 
             if (success)
             {
-                UpdatePowerStatus(false);
-                StatusMessage = "Power turned OFF ✓";
+                await Task.Delay(_settingsService.Settings.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
+                await ReadStateCoreAsync().ConfigureAwait(false);
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power turned OFF ✓");
                 _specificLogger.LogInformation("Power turned OFF successfully");
             }
             else
             {
-                StatusMessage = "Failed to turn power OFF";
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Failed to turn power OFF");
                 _specificLogger.LogWarning("Failed to turn power OFF");
             }
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error turning power OFF");
-            throw;
+            HandleCommandException(ex, "turning power OFF");
+        }
+        finally
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
         }
     }
 
@@ -836,21 +966,39 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private async Task ReadStateAsync()
     {
+        await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
+        try
+        {
+            await ReadStateCoreAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            HandleCommandException(ex, "reading power state");
+        }
+        finally
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
+        }
+    }
+
+    private async Task ReadStateCoreAsync()
+    {
         try
         {
             _specificLogger.LogDebug("Reading power state");
-            StatusMessage = "Reading power state...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Reading power state...");
 
-            var powerOn = await _powerSupplyService.ReadPowerStateAsync().ConfigureAwait(false);
-
+            bool powerOn = await _powerSupplyService.ReadPowerStateAsync().ConfigureAwait(false);
             UpdatePowerStatus(powerOn);
-            StatusMessage = $"Power state: {(powerOn ? "ON" : "OFF")}";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                StatusMessage = $"Power state: {(powerOn ? "ON" : "OFF")}"
+            );
             _specificLogger.LogInformation("Power state read: {State}", powerOn ? "ON" : "OFF");
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error reading power state");
-            throw;
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = $"Read state error: {ex.Message}");
         }
     }
 
@@ -859,29 +1007,55 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private async Task PowerCycleAsync()
     {
+        await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
-            _specificLogger.LogInformation("Starting power cycle");
-            StatusMessage = "Power cycling...";
+            int delayMs = _settingsService.Settings.PowerSupply.PowerStateChangeDelayMs;
 
-            var success = await _powerSupplyService.PowerCycleAsync(5000).ConfigureAwait(false);
+            _specificLogger.LogInformation("Starting power cycle (delay={Delay}ms)", delayMs);
 
-            if (success)
+            // Step 1: Turn OFF
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle: Turning power OFF...");
+            bool offOk = await _powerSupplyService.TurnOffAsync().ConfigureAwait(false);
+            if (!offOk)
             {
-                UpdatePowerStatus(true);
-                StatusMessage = "Power cycle completed ✓";
-                _specificLogger.LogInformation("Power cycle completed successfully");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle failed: could not turn OFF");
+                _specificLogger.LogWarning("Power cycle failed at OFF step");
+                return;
             }
-            else
+
+            // Step 2: Wait before ON
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = $"Power cycle: Waiting {delayMs} ms before turning ON...");
+            await Task.Delay(delayMs).ConfigureAwait(false);
+
+            // Step 3: Turn ON
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle: Turning power ON...");
+            bool onOk = await _powerSupplyService.TurnOnAsync().ConfigureAwait(false);
+            if (!onOk)
             {
-                StatusMessage = "Power cycle failed";
-                _specificLogger.LogWarning("Power cycle failed");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle failed: could not turn ON");
+                _specificLogger.LogWarning("Power cycle failed at ON step");
+                return;
             }
+
+            // Step 4: Wait to stabilize
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = $"Power cycle: Waiting {delayMs} ms to stabilize...");
+            await Task.Delay(delayMs).ConfigureAwait(false);
+
+            // Step 5: Read state
+            await ReadStateCoreAsync().ConfigureAwait(false);
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = IsPowerOn
+                ? "Power cycle completed ✓ (State: ON)"
+                : "Power cycle completed ✓ (State: OFF)");
+            _specificLogger.LogInformation("Power cycle completed successfully; final state: {State}", IsPowerOn ? "ON" : "OFF");
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error during power cycle");
-            throw;
+            HandleCommandException(ex, "power cycling");
+        }
+        finally
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
         }
     }
 
@@ -896,7 +1070,11 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (_fileDialogService == null)
         {
-            StatusMessage = "File dialog service not available";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "File dialog service not available";
+            });
+            _specificLogger.LogWarning("Browse profiles path failed: File dialog service not available");
             return;
         }
 
@@ -904,25 +1082,39 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Browsing for profiles path");
 
-            var folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+            string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
                 "Select Power Supply Profiles Folder").ConfigureAwait(false);
 
             if (!string.IsNullOrEmpty(folderPath))
             {
                 ProfilesPath = folderPath;
 
-                var settings = _settingsService.Settings;
+                Models.ApplicationSettings settings = _settingsService.Settings;
                 settings.PowerSupply.ProfilesPath = folderPath;
                 await _settingsService.SaveSettingsAsync().ConfigureAwait(false);
 
-                StatusMessage = $"Profiles path set to: {folderPath}";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Profiles path set to: {Path.GetFileName(folderPath)}";
+                });
                 _specificLogger.LogInformation("Profiles path changed to: {Path}", folderPath);
             }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Access denied while setting profiles path");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Failed to set profiles path: Access denied";
+            });
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error browsing profiles path");
-            throw;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Failed to set profiles path: {ex.Message}";
+            });
         }
     }
 
@@ -933,19 +1125,28 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         try
         {
-            StatusMessage = "Opening profiles folder...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Opening profiles folder...";
+            });
 
             if (string.IsNullOrEmpty(ProfilesPath))
             {
-                StatusMessage = "Profiles path not available";
-                _specificLogger.LogError("Profiles path is null or empty");
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = "Profiles path not configured";
+                });
+                _specificLogger.LogWarning("Cannot open profiles folder: Path is null or empty");
                 return;
             }
 
             // Ensure the directory exists before trying to open it
             if (!Directory.Exists(ProfilesPath))
             {
-                StatusMessage = "Creating profiles folder...";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = "Creating profiles folder...";
+                });
                 Directory.CreateDirectory(ProfilesPath);
                 _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
             }
@@ -955,13 +1156,27 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             // Use centralized PlatformHelper for consistent cross-platform behavior
             await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
 
-            StatusMessage = "Profiles folder opened";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Profiles folder opened";
+            });
             _specificLogger.LogInformation("Successfully opened profiles folder");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Access denied while opening profiles folder");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Failed to open folder: Access denied";
+            });
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error opening profiles folder");
-            StatusMessage = "Error opening profiles folder";
+            _specificLogger.LogError(ex, "Error opening profiles folder: {Message}", ex.Message);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Failed to open folder: {ex.Message}";
+            });
         }
     }
 
@@ -974,20 +1189,26 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Resetting profiles path to default");
 
-            var defaultPath = "resources/PowerSupplyProfiles";
+            string defaultPath = "resources/PowerSupplyProfiles";
             ProfilesPath = defaultPath;
 
-            var settings = _settingsService.Settings;
+            Models.ApplicationSettings settings = _settingsService.Settings;
             settings.PowerSupply.ProfilesPath = defaultPath;
             await _settingsService.SaveSettingsAsync().ConfigureAwait(false);
 
-            StatusMessage = $"Profiles path reset to default: {defaultPath}";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Profiles path reset to default: {defaultPath}";
+            });
             _specificLogger.LogInformation("Profiles path reset to default: {Path}", defaultPath);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error resetting profiles path");
-            throw;
+            _specificLogger.LogError(ex, "Error resetting profiles path to default");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Failed to reset profiles path: {ex.Message}";
+            });
         }
     }
 
@@ -1013,7 +1234,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             return false;
         }
 
-        var validationErrors = SelectedProfile.Validate();
+        List<string> validationErrors = SelectedProfile.Validate();
         if (validationErrors.Count > 0)
         {
             StatusMessage = $"Profile validation failed: {string.Join(", ", validationErrors)}";
@@ -1045,7 +1266,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         }
 
         // Check if name is already in use (excluding current profile if editing)
-        var existingProfile = Profiles.FirstOrDefault(p =>
+        PowerSupplyProfile? existingProfile = Profiles.FirstOrDefault(p =>
             p.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
             (!excludeId.HasValue || p.Id != excludeId.Value));
 
@@ -1083,8 +1304,12 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private void UpdateConnectionStatus()
     {
-        IsConnected = _powerSupplyService.IsConnected;
-        ConnectionStatus = IsConnected ? "Connected" : "Disconnected";
+        _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
+        {
+            bool connected = _powerSupplyService.IsConnected;
+            IsConnected = connected;
+            ConnectionStatus = connected ? "Connected" : "Disconnected";
+        });
     }
 
     /// <summary>
@@ -1092,8 +1317,11 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     private void UpdatePowerStatus(bool powerOn)
     {
-        IsPowerOn = powerOn;
-        PowerStatus = powerOn ? "ON" : "OFF";
+        _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
+        {
+            IsPowerOn = powerOn;
+            PowerStatus = powerOn ? "ON" : "OFF";
+        });
     }
 
     /// <summary>
@@ -1102,7 +1330,10 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     private void HandleCommandException(Exception ex, string operation)
     {
         _specificLogger.LogError(ex, "Error {Operation}", operation);
-        StatusMessage = $"Error {operation}: {ex.Message}";
+        _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
+        {
+            StatusMessage = $"Error {operation}: {ex.Message}";
+        });
     }
 
     #endregion
@@ -1154,7 +1385,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             // Use the unified dialog service to show PowerSupply create dialog
-            var result = await _unifiedDialogService.ShowPowerSupplyCreateDialogAsync(request).ConfigureAwait(false);
+            ProfileDialogResult<PowerSupplyProfile> result = await _unifiedDialogService.ShowPowerSupplyCreateDialogAsync(request).ConfigureAwait(false);
             System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowCreateDialogAsync result: {result.IsSuccess}");
             return result;
         }
@@ -1176,7 +1407,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             // Use the unified dialog service to show PowerSupply edit dialog
-            var result = await _unifiedDialogService.ShowPowerSupplyEditDialogAsync(request).ConfigureAwait(false);
+            ProfileDialogResult<PowerSupplyProfile> result = await _unifiedDialogService.ShowPowerSupplyEditDialogAsync(request).ConfigureAwait(false);
             System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowEditDialogAsync result: {result.IsSuccess}");
             return result;
         }
@@ -1198,7 +1429,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             // Use the unified dialog service to show PowerSupply duplicate dialog
-            var result = await _unifiedDialogService.ShowPowerSupplyDuplicateDialogAsync(request).ConfigureAwait(false);
+            ProfileDialogResult<string> result = await _unifiedDialogService.ShowPowerSupplyDuplicateDialogAsync(request).ConfigureAwait(false);
             System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowDuplicateDialogAsync result: {result.IsSuccess}");
             return result;
         }
