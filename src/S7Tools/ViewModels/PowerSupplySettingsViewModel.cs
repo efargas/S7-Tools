@@ -529,7 +529,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             // Reload profiles from storage/service
-            _ = RefreshCommand.Execute();
+            await RefreshCommand.Execute();
 
             // If a specific profile Id was requested, try to select it
             if (selectProfileId.HasValue)
@@ -563,7 +563,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             _specificLogger.LogDebug("Refreshing power supply profiles");
-            _ = RefreshCommand.Execute();
+            await RefreshCommand.Execute();
             StatusMessage = "Profiles refreshed";
         }
         catch (Exception ex)
@@ -1028,18 +1028,18 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <param name="name">The profile name to validate.</param>
     /// <param name="excludeId">Optional profile ID to exclude from uniqueness check (for edits).</param>
     /// <returns>True if the name is valid and unique, false otherwise.</returns>
-    private async Task<bool> ValidateProfileNameAsync(string name, int? excludeId = null)
+    private Task<bool> ValidateProfileNameAsync(string name, int? excludeId = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             StatusMessage = "Profile name cannot be empty";
-            return false;
+            return Task.FromResult(false);
         }
 
         if (name.Length > 100)
         {
             StatusMessage = "Profile name cannot exceed 100 characters";
-            return false;
+            return Task.FromResult(false);
         }
 
         // Check if name is already in use (excluding current profile if editing)
@@ -1050,10 +1050,10 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         if (existingProfile != null)
         {
             StatusMessage = $"Profile name '{name}' is already in use";
-            return false;
+            return Task.FromResult(false);
         }
 
-        return true;
+        return Task.FromResult(true);
     }
 
     /// <summary>

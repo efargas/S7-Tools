@@ -376,14 +376,25 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                     try
                     {
                         var portDetails = await _portService.GetPortInfoAsync(portName, cancellationToken);
-                        portInfo.Description = portDetails.Description;
-                        portInfo.Manufacturer = portDetails.UsbInfo?.VendorName ?? "Unknown";
-                        portInfo.SerialNumber = portDetails.UsbInfo?.SerialNumber ?? "Unknown";
+                        if (portDetails is not null)
+                        {
+                            portInfo.Description = portDetails.Description;
+                            portInfo.Manufacturer = portDetails.UsbInfo?.VendorName ?? "Unknown";
+                            portInfo.SerialNumber = portDetails.UsbInfo?.SerialNumber ?? "Unknown";
+                        }
+                        else
+                        {
+                            portInfo.Description = "Details unavailable";
+                            portInfo.Manufacturer = "Unknown";
+                            portInfo.SerialNumber = "Unknown";
+                        }
                     }
                     catch (Exception ex)
                     {
                         _logger.LogWarning(ex, "Could not get details for port {PortName}", portName);
                         portInfo.Description = "Details unavailable";
+                        portInfo.Manufacturer = "Unknown";
+                        portInfo.SerialNumber = "Unknown";
                     }
                 }
 
@@ -478,14 +489,25 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                 try
                 {
                     var portDetails = await _portService.GetPortInfoAsync(portName);
-                    SelectedPort.Description = portDetails.Description;
-                    SelectedPort.Manufacturer = portDetails.UsbInfo?.VendorName ?? "Unknown";
-                    SelectedPort.SerialNumber = portDetails.UsbInfo?.SerialNumber ?? "Unknown";
+                    if (portDetails is not null)
+                    {
+                        SelectedPort.Description = portDetails.Description;
+                        SelectedPort.Manufacturer = portDetails.UsbInfo?.VendorName ?? "Unknown";
+                        SelectedPort.SerialNumber = portDetails.UsbInfo?.SerialNumber ?? "Unknown";
+                    }
+                    else
+                    {
+                        SelectedPort.Description = "Details unavailable";
+                        SelectedPort.Manufacturer = "Unknown";
+                        SelectedPort.SerialNumber = "Unknown";
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(ex, "Could not get details for port {PortName}", portName);
                     SelectedPort.Description = "Details unavailable";
+                    SelectedPort.Manufacturer = "Unknown";
+                    SelectedPort.SerialNumber = "Unknown";
                 }
             }
 
