@@ -1,0 +1,2180 @@
+[
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "534b327d-f00c-4d32-af1d-88d2c5c4d3f7"
+    },
+    "FileName": "ProfileEditDialog.axaml.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Views/ProfileEditDialog.axaml.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 100,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022CreateSerialProfileContent\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "534b327d-f00c-4d32-af1d-88d2c5c4d3f7"
+    },
+    "FileName": "ProfileEditDialog.axaml.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Views/ProfileEditDialog.axaml.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 109,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022CreateSocatProfileContent\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "534b327d-f00c-4d32-af1d-88d2c5c4d3f7"
+    },
+    "FileName": "ProfileEditDialog.axaml.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Views/ProfileEditDialog.axaml.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 118,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022CreatePowerSupplyProfileContent\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "534b327d-f00c-4d32-af1d-88d2c5c4d3f7"
+    },
+    "FileName": "ProfileEditDialog.axaml.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Views/ProfileEditDialog.axaml.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 118,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreatePowerSupplyProfileContent\u0027 de \u0027Avalonia.Controls.Control\u0027 a \u0027S7Tools.Views.PowerSupplyProfileEditContent\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "534b327d-f00c-4d32-af1d-88d2c5c4d3f7"
+    },
+    "FileName": "ProfileEditDialog.axaml.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Views/ProfileEditDialog.axaml.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 109,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreateSocatProfileContent\u0027 de \u0027Avalonia.Controls.Control\u0027 a \u0027S7Tools.Views.SocatProfileEditContent\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "534b327d-f00c-4d32-af1d-88d2c5c4d3f7"
+    },
+    "FileName": "ProfileEditDialog.axaml.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Views/ProfileEditDialog.axaml.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 100,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreateSerialProfileContent\u0027 de \u0027Avalonia.Controls.Control\u0027 a \u0027S7Tools.Views.SerialProfileEditContent\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "534b327d-f00c-4d32-af1d-88d2c5c4d3f7"
+    },
+    "FileName": "ProfileEditDialog.axaml.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Views/ProfileEditDialog.axaml.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 78,
+        "CharNumber": 31,
+        "DiagnosticId": "CA2208",
+        "FormatDescription": "info CA2208: El m\u00E9todo SetupDialog pasa \u0022ProfileType\u0022 como argumento paramName a un constructor ArgumentOutOfRangeException. Reemplace este argumento por uno de los nombres de par\u00E1metros del m\u00E9todo. Tenga en cuenta que el nombre del par\u00E1metro debe corresponderse completamente (may\u00FAsculas y min\u00FAsculas) con lo declarado en el m\u00E9todo."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "594e899d-eed2-4895-97a1-484e8d39cf1f"
+    },
+    "FileName": "AboutViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/AboutViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 13,
+        "CharNumber": 19,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022Greeting\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "746c3a65-31ea-4fb2-8a58-7f1bc1611800"
+    },
+    "FileName": "ThemeService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/ThemeService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 274,
+        "CharNumber": 18,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022ApplyTheme\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "746c3a65-31ea-4fb2-8a58-7f1bc1611800"
+    },
+    "FileName": "ThemeService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/ThemeService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 202,
+        "CharNumber": 57,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "746c3a65-31ea-4fb2-8a58-7f1bc1611800"
+    },
+    "FileName": "ThemeService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/ThemeService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 170,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "e512279a-49e5-4acf-977f-90059b90675d"
+    },
+    "FileName": "CommandDemoViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/CommandDemoViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 21,
+        "CharNumber": 18,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022RunHello\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "0e0d5138-bec7-483b-b3f6-23e4de767449"
+    },
+    "FileName": "ConnectionsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/ConnectionsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 16,
+        "CharNumber": 19,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022Greeting\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "8c4b8546-7c04-4469-b6a1-76d6d6fae700"
+    },
+    "FileName": "HomeViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/HomeViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 16,
+        "CharNumber": 19,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022Greeting\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "4ce0ac70-6141-45c7-8548-c7510611c4a7"
+    },
+    "FileName": "NavigationViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/NavigationViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 373,
+        "CharNumber": 20,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022CreateLoggingTestViewModel\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "4ce0ac70-6141-45c7-8548-c7510611c4a7"
+    },
+    "FileName": "NavigationViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/NavigationViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 386,
+        "CharNumber": 20,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022CreateSettingsConfigViewModel\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "4ce0ac70-6141-45c7-8548-c7510611c4a7"
+    },
+    "FileName": "NavigationViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/NavigationViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 373,
+        "CharNumber": 20,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreateLoggingTestViewModel\u0027 de \u0027object\u0027 a \u0027string\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "4ce0ac70-6141-45c7-8548-c7510611c4a7"
+    },
+    "FileName": "NavigationViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/NavigationViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 386,
+        "CharNumber": 20,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreateSettingsConfigViewModel\u0027 de \u0027object\u0027 a \u0027string\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "48719079-23b9-45d6-8f82-0fe49e8c15c1"
+    },
+    "FileName": "LocalizationService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/LocalizationService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 228,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022GetAvailableCultures\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "67cd7025-b026-43fc-ab45-49c062664df7"
+    },
+    "FileName": "SerialPortProfileViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SerialPortProfileViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 970,
+        "CharNumber": 37,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022CreateHighSpeedConfiguration\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "67cd7025-b026-43fc-ab45-49c062664df7"
+    },
+    "FileName": "SerialPortProfileViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SerialPortProfileViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 984,
+        "CharNumber": 37,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022CreateLowLatencyConfiguration\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "a271b8d0-6d07-40eb-8131-eea38fb73521"
+    },
+    "FileName": "SerialPortService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SerialPortService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 857,
+        "CharNumber": 24,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022TryReadSysfsFileAsync\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "a271b8d0-6d07-40eb-8131-eea38fb73521"
+    },
+    "FileName": "SerialPortService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SerialPortService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 538,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1860",
+        "FormatDescription": "info CA1860: Es preferible comparar \u0022Count\u0022 con 0 en lugar de usar \u0022Any()\u0022, tanto por claridad como por rendimiento."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "a271b8d0-6d07-40eb-8131-eea38fb73521"
+    },
+    "FileName": "SerialPortService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SerialPortService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 533,
+        "CharNumber": 14,
+        "DiagnosticId": "SYSLIB1045",
+        "FormatDescription": "info SYSLIB1045: Use \u0027GeneratedRegexAttribute\u0027 para generar la implementaci\u00F3n de expresiones regulares en tiempo de compilaci\u00F3n."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "a271b8d0-6d07-40eb-8131-eea38fb73521"
+    },
+    "FileName": "SerialPortService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SerialPortService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 753,
+        "CharNumber": 31,
+        "DiagnosticId": "SYSLIB1045",
+        "FormatDescription": "info SYSLIB1045: Use \u0027GeneratedRegexAttribute\u0027 para generar la implementaci\u00F3n de expresiones regulares en tiempo de compilaci\u00F3n."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "a271b8d0-6d07-40eb-8131-eea38fb73521"
+    },
+    "FileName": "SerialPortService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SerialPortService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 760,
+        "CharNumber": 29,
+        "DiagnosticId": "SYSLIB1045",
+        "FormatDescription": "info SYSLIB1045: Use \u0027GeneratedRegexAttribute\u0027 para generar la implementaci\u00F3n de expresiones regulares en tiempo de compilaci\u00F3n."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "1cdb5c92-bf72-4710-9e2d-274d532e4f1a"
+    },
+    "FileName": "ProfileEditDialogService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/ProfileEditDialogService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 79,
+        "CharNumber": 18,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022RegisterInteractionHandler\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "0c602f1c-3564-43c7-998e-ba6959f5bd1c"
+    },
+    "FileName": "SocatService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SocatService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 1299,
+        "CharNumber": 30,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022WaitForProcessExitAsync\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "0c602f1c-3564-43c7-998e-ba6959f5bd1c"
+    },
+    "FileName": "SocatService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SocatService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 187,
+        "CharNumber": 18,
+        "DiagnosticId": "CA1860",
+        "FormatDescription": "info CA1860: Es preferible comparar \u0022Count\u0022 con 0 en lugar de usar \u0022Any()\u0022, tanto por claridad como por rendimiento."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "0c602f1c-3564-43c7-998e-ba6959f5bd1c"
+    },
+    "FileName": "SocatService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SocatService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 1028,
+        "CharNumber": 18,
+        "DiagnosticId": "CA1860",
+        "FormatDescription": "info CA1860: Es preferible comparar \u0022Count\u0022 con 0 en lugar de usar \u0022Any()\u0022, tanto por claridad como por rendimiento."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "0c602f1c-3564-43c7-998e-ba6959f5bd1c"
+    },
+    "FileName": "SocatService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SocatService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 1401,
+        "CharNumber": 48,
+        "DiagnosticId": "CA1861",
+        "FormatDescription": "info CA1861: Preferir campos \u0022static readonly\u0022 frente a argumentos de matriz constantes si se llama repetidamente al m\u00E9todo llamado y no muta la matriz pasada"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "0c602f1c-3564-43c7-998e-ba6959f5bd1c"
+    },
+    "FileName": "SocatService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SocatService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 139,
+        "CharNumber": 36,
+        "DiagnosticId": "SYSLIB1045",
+        "FormatDescription": "info SYSLIB1045: Use \u0027GeneratedRegexAttribute\u0027 para generar la implementaci\u00F3n de expresiones regulares en tiempo de compilaci\u00F3n."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "0c602f1c-3564-43c7-998e-ba6959f5bd1c"
+    },
+    "FileName": "SocatService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SocatService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 162,
+        "CharNumber": 33,
+        "DiagnosticId": "SYSLIB1045",
+        "FormatDescription": "info SYSLIB1045: Use \u0027GeneratedRegexAttribute\u0027 para generar la implementaci\u00F3n de expresiones regulares en tiempo de compilaci\u00F3n."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "da815403-c7e7-463d-88fc-bab861bb9819"
+    },
+    "FileName": "SocatSettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SocatSettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 866,
+        "CharNumber": 63,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "da815403-c7e7-463d-88fc-bab861bb9819"
+    },
+    "FileName": "SocatSettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SocatSettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 944,
+        "CharNumber": 62,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7fad434b-1c49-4bda-ac82-e66484ab0f13"
+    },
+    "FileName": "StandardProfileManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StandardProfileManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 759,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7fad434b-1c49-4bda-ac82-e66484ab0f13"
+    },
+    "FileName": "StandardProfileManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StandardProfileManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 790,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7fad434b-1c49-4bda-ac82-e66484ab0f13"
+    },
+    "FileName": "StandardProfileManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StandardProfileManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 607,
+        "CharNumber": 14,
+        "DiagnosticId": "CA1860",
+        "FormatDescription": "info CA1860: Es preferible comparar \u0022Count\u0022 con 0 en lugar de usar \u0022Any()\u0022, tanto por claridad como por rendimiento."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7fad434b-1c49-4bda-ac82-e66484ab0f13"
+    },
+    "FileName": "StandardProfileManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StandardProfileManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 226,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7fad434b-1c49-4bda-ac82-e66484ab0f13"
+    },
+    "FileName": "StandardProfileManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StandardProfileManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 111,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7fad434b-1c49-4bda-ac82-e66484ab0f13"
+    },
+    "FileName": "StandardProfileManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StandardProfileManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 633,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "c9dc2268-f1fc-4655-ad0a-37394b320e8b"
+    },
+    "FileName": "SerialPortsSettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SerialPortsSettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 136,
+        "CharNumber": 122,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "c9dc2268-f1fc-4655-ad0a-37394b320e8b"
+    },
+    "FileName": "SerialPortsSettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SerialPortsSettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 488,
+        "CharNumber": 80,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "c9dc2268-f1fc-4655-ad0a-37394b320e8b"
+    },
+    "FileName": "SerialPortsSettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SerialPortsSettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 710,
+        "CharNumber": 62,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "c9dc2268-f1fc-4655-ad0a-37394b320e8b"
+    },
+    "FileName": "SerialPortsSettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SerialPortsSettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 714,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "27da6678-fc24-49a4-8937-bca88dc939c4"
+    },
+    "FileName": "SettingsManagementViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SettingsManagementViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 503,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "27da6678-fc24-49a4-8937-bca88dc939c4"
+    },
+    "FileName": "SettingsManagementViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SettingsManagementViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 538,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "27da6678-fc24-49a4-8937-bca88dc939c4"
+    },
+    "FileName": "SettingsManagementViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SettingsManagementViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 58,
+        "CharNumber": 37,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreateDesignTimeSettingsService\u0027 de \u0027S7Tools.Services.Interfaces.ISettingsService\u0027 a \u0027S7Tools.Services.SettingsService\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "8df94ce2-f055-4b01-a0e3-5276db2f42fc"
+    },
+    "FileName": "PowerSupplySettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/PowerSupplySettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 600,
+        "CharNumber": 63,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "a48073af-d3ea-48e2-a3b0-e865a9011f4e"
+    },
+    "FileName": "SocatProfileService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SocatProfileService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 77,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "c120024a-96cf-4620-8cb7-b0fc84c8bd0d"
+    },
+    "FileName": "LayoutService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/LayoutService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 238,
+        "CharNumber": 64,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "c120024a-96cf-4620-8cb7-b0fc84c8bd0d"
+    },
+    "FileName": "LayoutService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/LayoutService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 298,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "bbcfcd68-b000-4dc6-b120-b19523741183"
+    },
+    "FileName": "SettingsService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SettingsService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 135,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9f5687af-cbad-4eef-b8ca-6e161e4e05f6"
+    },
+    "FileName": "LogExportService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/LogExportService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 214,
+        "CharNumber": 23,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "b3091a9d-32f5-43d3-a68c-340d2d2659b3"
+    },
+    "FileName": "PowerSupplyProfileService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/PowerSupplyProfileService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 77,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "17be809e-37d2-497c-a1d7-fe97d02b24f5"
+    },
+    "FileName": "SerialPortProfileService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/SerialPortProfileService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 78,
+        "CharNumber": 27,
+        "DiagnosticId": "CA1869",
+        "FormatDescription": "info CA1869: Evite crear una nueva instancia de \u0022JsonSerializerOptions\u0022 para cada operaci\u00F3n de serializaci\u00F3n. En su lugar, almacene en cach\u00E9 y reutilice instancias."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9ae0fcf7-0e7a-4431-8088-80897cb58cc8"
+    },
+    "FileName": "LogViewerViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/LogViewerViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 290,
+        "CharNumber": 22,
+        "DiagnosticId": "CA1860",
+        "FormatDescription": "info CA1860: Es preferible comparar \u0022Count\u0022 con 0 en lugar de usar \u0022Any()\u0022, tanto por claridad como por rendimiento."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9ae0fcf7-0e7a-4431-8088-80897cb58cc8"
+    },
+    "FileName": "LogViewerViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/LogViewerViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 456,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1862",
+        "FormatDescription": "info CA1862: Prefiera la sobrecarga de m\u00E9todo de comparaci\u00F3n de cadenas de \u0022string.Contains(string)\u0022 que toma un valor de enumeraci\u00F3n \u0022StringComparison\u0022 para realizar una comparaci\u00F3n sin distinci\u00F3n de may\u00FAsculas y min\u00FAsculas, pero tenga en cuenta que esto puede provocar cambios sutiles en el comportamiento, por lo que aseg\u00FArese de realizar pruebas exhaustivas despu\u00E9s de aplicar la sugerencia, o si no se requiere una comparaci\u00F3n culturalmente confidencial, considere la posibilidad de usar \u0022StringComparison.OrdinalIgnoreCase\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9ae0fcf7-0e7a-4431-8088-80897cb58cc8"
+    },
+    "FileName": "LogViewerViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/LogViewerViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 457,
+        "CharNumber": 21,
+        "DiagnosticId": "CA1862",
+        "FormatDescription": "info CA1862: Prefiera la sobrecarga de m\u00E9todo de comparaci\u00F3n de cadenas de \u0022string.Contains(string)\u0022 que toma un valor de enumeraci\u00F3n \u0022StringComparison\u0022 para realizar una comparaci\u00F3n sin distinci\u00F3n de may\u00FAsculas y min\u00FAsculas, pero tenga en cuenta que esto puede provocar cambios sutiles en el comportamiento, por lo que aseg\u00FArese de realizar pruebas exhaustivas despu\u00E9s de aplicar la sugerencia, o si no se requiere una comparaci\u00F3n culturalmente confidencial, considere la posibilidad de usar \u0022StringComparison.OrdinalIgnoreCase\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9ae0fcf7-0e7a-4431-8088-80897cb58cc8"
+    },
+    "FileName": "LogViewerViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/LogViewerViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 458,
+        "CharNumber": 38,
+        "DiagnosticId": "CA1862",
+        "FormatDescription": "info CA1862: Prefiera la sobrecarga de m\u00E9todo de comparaci\u00F3n de cadenas de \u0022string.Contains(string)\u0022 que toma un valor de enumeraci\u00F3n \u0022StringComparison\u0022 para realizar una comparaci\u00F3n sin distinci\u00F3n de may\u00FAsculas y min\u00FAsculas, pero tenga en cuenta que esto puede provocar cambios sutiles en el comportamiento, por lo que aseg\u00FArese de realizar pruebas exhaustivas despu\u00E9s de aplicar la sugerencia, o si no se requiere una comparaci\u00F3n culturalmente confidencial, considere la posibilidad de usar \u0022StringComparison.OrdinalIgnoreCase\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "995b5fe5-2f25-4627-a6c4-7572f0dba419"
+    },
+    "FileName": "MainWindowViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/MainWindowViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 51,
+        "CharNumber": 37,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreateDesignTimeSettingsService\u0027 de \u0027S7Tools.Services.Interfaces.ISettingsService\u0027 a \u0027S7Tools.Services.SettingsService\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "995b5fe5-2f25-4627-a6c4-7572f0dba419"
+    },
+    "FileName": "MainWindowViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/MainWindowViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 396,
+        "CharNumber": 38,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.LogTrace(ILogger, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "26d0f8f2-ea08-4e65-9a6a-33f18f656449"
+    },
+    "FileName": "PowerSupplyProfileViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/PowerSupplyProfileViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 307,
+        "CharNumber": 38,
+        "DiagnosticId": "CA1859",
+        "FormatDescription": "info CA1859: Cambiar el tipo de valor devuelto del m\u00E9todo \u0027CreateConfigurationForType\u0027 de \u0027S7Tools.Core.Models.PowerSupplyConfiguration\u0027 a \u0027S7Tools.Core.Models.ModbusTcpConfiguration\u0027 para mejorar el rendimiento"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "b9730998-62ac-4601-9a51-7872d94ff6c4"
+    },
+    "FileName": "AvaloniaFileDialogService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaFileDialogService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 264,
+        "CharNumber": 40,
+        "DiagnosticId": "CA1861",
+        "FormatDescription": "info CA1861: Preferir campos \u0022static readonly\u0022 frente a argumentos de matriz constantes si se llama repetidamente al m\u00E9todo llamado y no muta la matriz pasada"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "1e0b49cf-1845-4c74-b5cb-e5b5fd49c060"
+    },
+    "FileName": "SettingsViewModel.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/ViewModels/SettingsViewModel.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 23,
+        "CharNumber": 55,
+        "DiagnosticId": "CA1861",
+        "FormatDescription": "info CA1861: Preferir campos \u0022static readonly\u0022 frente a argumentos de matriz constantes si se llama repetidamente al m\u00E9todo llamado y no muta la matriz pasada"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "d4e95c45-69a2-48a3-b0c3-3b195bc97581"
+    },
+    "FileName": "ValidationService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/ValidationService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 116,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 32,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 121,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 161,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 179,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 240,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 270,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 275,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 325,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "9b0e98c4-e411-4956-984e-31091708fe48"
+    },
+    "FileName": "ServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Extensions/ServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 443,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "71fba843-6e10-4fba-b060-61545d55d92d"
+    },
+    "FileName": "ResourceManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Resources/ResourceManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 211,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "71fba843-6e10-4fba-b060-61545d55d92d"
+    },
+    "FileName": "ResourceManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Resources/ResourceManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 233,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "71fba843-6e10-4fba-b060-61545d55d92d"
+    },
+    "FileName": "ResourceManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Resources/ResourceManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 238,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "3bcdf2c7-abda-4fe6-8c51-c54076fc8d9f"
+    },
+    "FileName": "StructuredLogger.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StructuredLogger.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 62,
+        "CharNumber": 35,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.Log(ILogger, LogLevel, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "3bcdf2c7-abda-4fe6-8c51-c54076fc8d9f"
+    },
+    "FileName": "StructuredLogger.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StructuredLogger.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 83,
+        "CharNumber": 46,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.Log(ILogger, LogLevel, Exception?, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "3bcdf2c7-abda-4fe6-8c51-c54076fc8d9f"
+    },
+    "FileName": "StructuredLogger.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/StructuredLogger.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 258,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "6eca30f0-aa28-4e86-8cde-ced08afd3509"
+    },
+    "FileName": "CommandDispatcher.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/CommandDispatcher.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 51,
+        "CharNumber": 34,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.LogError(ILogger, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "6eca30f0-aa28-4e86-8cde-ced08afd3509"
+    },
+    "FileName": "CommandDispatcher.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/CommandDispatcher.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 59,
+        "CharNumber": 34,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.LogError(ILogger, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "6eca30f0-aa28-4e86-8cde-ced08afd3509"
+    },
+    "FileName": "CommandDispatcher.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/CommandDispatcher.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 102,
+        "CharNumber": 34,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.LogError(ILogger, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "6eca30f0-aa28-4e86-8cde-ced08afd3509"
+    },
+    "FileName": "CommandDispatcher.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/CommandDispatcher.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 110,
+        "CharNumber": 34,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.LogError(ILogger, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "a94e6112-8e28-4fc3-9884-de12efd570ff"
+    },
+    "FileName": "EnhancedViewModelFactory.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/EnhancedViewModelFactory.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 72,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 17,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 35,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 53,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 71,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 89,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 107,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 125,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 143,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "f8aed071-d044-42ab-9f6e-c0434d7b0e35"
+      },
+      "Id": "7eb0ae6a-19d7-415e-997b-1ad6b86892c8"
+    },
+    "FileName": "AvaloniaUIThreadService.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools/Services/AvaloniaUIThreadService.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 171,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "e0458144-9bcd-448f-98eb-0984d65f99f2"
+    },
+    "FileName": "PlcAddress.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Models/ValueObjects/PlcAddress.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 114,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1866",
+        "FormatDescription": "info CA1866: Use \u0022string.StartsWith(char)\u0022 en lugar de \u0022string.StartsWith(string)\u0022 cuando tenga una cadena con un solo car\u00E1cter."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "e0458144-9bcd-448f-98eb-0984d65f99f2"
+    },
+    "FileName": "PlcAddress.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Models/ValueObjects/PlcAddress.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 121,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1866",
+        "FormatDescription": "info CA1866: Use \u0022string.StartsWith(char)\u0022 en lugar de \u0022string.StartsWith(string)\u0022 cuando tenga una cadena con un solo car\u00E1cter."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "e0458144-9bcd-448f-98eb-0984d65f99f2"
+    },
+    "FileName": "PlcAddress.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Models/ValueObjects/PlcAddress.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 128,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1866",
+        "FormatDescription": "info CA1866: Use \u0022string.StartsWith(char)\u0022 en lugar de \u0022string.StartsWith(string)\u0022 cuando tenga una cadena con un solo car\u00E1cter."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "e0458144-9bcd-448f-98eb-0984d65f99f2"
+    },
+    "FileName": "PlcAddress.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Models/ValueObjects/PlcAddress.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 135,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1866",
+        "FormatDescription": "info CA1866: Use \u0022string.StartsWith(char)\u0022 en lugar de \u0022string.StartsWith(string)\u0022 cuando tenga una cadena con un solo car\u00E1cter."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "e0458144-9bcd-448f-98eb-0984d65f99f2"
+    },
+    "FileName": "PlcAddress.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Models/ValueObjects/PlcAddress.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 142,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1866",
+        "FormatDescription": "info CA1866: Use \u0022string.StartsWith(char)\u0022 en lugar de \u0022string.StartsWith(string)\u0022 cuando tenga una cadena con un solo car\u00E1cter."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "e0458144-9bcd-448f-98eb-0984d65f99f2"
+    },
+    "FileName": "PlcAddress.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Models/ValueObjects/PlcAddress.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 148,
+        "CharNumber": 31,
+        "DiagnosticId": "CA1866",
+        "FormatDescription": "info CA1866: Use \u0022string.StartsWith(char)\u0022 en lugar de \u0022string.StartsWith(string)\u0022 cuando tenga una cadena con un solo car\u00E1cter."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "e0458144-9bcd-448f-98eb-0984d65f99f2"
+    },
+    "FileName": "PlcAddress.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Models/ValueObjects/PlcAddress.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 11,
+        "CharNumber": 52,
+        "DiagnosticId": "SYSLIB1045",
+        "FormatDescription": "info SYSLIB1045: Use \u0027GeneratedRegexAttribute\u0027 para generar la implementaci\u00F3n de expresiones regulares en tiempo de compilaci\u00F3n."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "a0a2a93c-45ef-4466-a9e1-e8f9dd356320"
+    },
+    "FileName": "InMemoryResourceManager.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Resources/InMemoryResourceManager.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 81,
+        "CharNumber": 14,
+        "DiagnosticId": "CA1854",
+        "FormatDescription": "info CA1854: Preferir una llamada \u0022TryGetValue\u0022 en lugar de un acceso al indexador del diccionario protegido por una comprobaci\u00F3n \u0022ContainsKey\u0022 para evitar la doble b\u00FAsqueda"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "3eaddd50-4d5c-4f98-9aa0-30312aabccde"
+    },
+    "FileName": "BaseFactory.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Factories/BaseFactory.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 54,
+        "CharNumber": 29,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.LogError(ILogger, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "3eaddd50-4d5c-4f98-9aa0-30312aabccde"
+    },
+    "FileName": "BaseFactory.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Factories/BaseFactory.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 162,
+        "CharNumber": 29,
+        "DiagnosticId": "CA2254",
+        "FormatDescription": "info CA2254: La plantilla de mensaje de registro no debe variar entre las llamadas a \u0022LoggerExtensions.LogError(ILogger, string?, params object?[])\u0022"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "3eaddd50-4d5c-4f98-9aa0-30312aabccde"
+    },
+    "FileName": "BaseFactory.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Factories/BaseFactory.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 97,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "3eaddd50-4d5c-4f98-9aa0-30312aabccde"
+    },
+    "FileName": "BaseFactory.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Factories/BaseFactory.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 205,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "2c9370c3-cd0b-44b4-8694-538f22adb7ce"
+      },
+      "Id": "f66b2f9c-cbf5-4eda-b76d-5587b3d498df"
+    },
+    "FileName": "BaseValidator.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Core/Validation/BaseValidator.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 133,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "875d6b59-1598-459b-b5e6-359a75b1079e"
+    },
+    "FileName": "DataStoreLogger.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Microsoft/DataStoreLogger.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 62,
+        "CharNumber": 23,
+        "DiagnosticId": "CA1845",
+        "FormatDescription": "info CA1845: Use la cadena basada en \u0027string.Concat\u0027 y \u0022AsSpan\u0022 en lugar de \u0027Substring\u0027"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "875d6b59-1598-459b-b5e6-359a75b1079e"
+    },
+    "FileName": "DataStoreLogger.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Microsoft/DataStoreLogger.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 117,
+        "CharNumber": 41,
+        "DiagnosticId": "CA1822",
+        "FormatDescription": "info CA1822: El miembro \u0022ExtractProperties\u0022 no tiene acceso a los datos de la instancia y se puede marcar como static."
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "18e0ca86-9b0f-4514-a0fb-58c77401e5d2"
+    },
+    "FileName": "DataStoreLoggerProvider.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Microsoft/DataStoreLoggerProvider.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 57,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1513",
+        "FormatDescription": "info CA1513: Use \u0027ObjectDisposedException.ThrowIf\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "18e0ca86-9b0f-4514-a0fb-58c77401e5d2"
+    },
+    "FileName": "DataStoreLoggerProvider.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Microsoft/DataStoreLoggerProvider.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 92,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 27,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 75,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 80,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 85,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 129,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 184,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 162,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "b631dc49-700b-45de-a637-e471633f9745"
+      },
+      "Id": "977c4af6-829b-4af1-b0ac-cbc18e3f425a"
+    },
+    "FileName": "LoggingServiceCollectionExtensions.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/S7Tools.Infrastructure.Logging/Providers/Extensions/LoggingServiceCollectionExtensions.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 199,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1510",
+        "FormatDescription": "info CA1510: Use \u0027ArgumentNullException.ThrowIfNull\u0027 en lugar de iniciar expl\u00EDcitamente una nueva instancia de excepci\u00F3n"
+      }
+    ]
+  },
+  {
+    "DocumentId": {
+      "ProjectId": {
+        "Id": "999b0e13-45b3-491b-87ec-9ce5df24f2da"
+      },
+      "Id": "0f52196a-ea25-41fe-a091-5cada34b865e"
+    },
+    "FileName": "LogDataStoreTests.cs",
+    "FilePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/tests/S7Tools.Infrastructure.Logging.Tests/Core/Storage/LogDataStoreTests.cs",
+    "FileChanges": [
+      {
+        "LineNumber": 55,
+        "CharNumber": 9,
+        "DiagnosticId": "CA1826",
+        "FormatDescription": "info CA1826: No utilice m\u00E9todos Enumerable en colecciones indexables. Use la colecci\u00F3n directamente."
+      }
+    ]
+  }
+]

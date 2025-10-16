@@ -524,7 +524,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// Refreshes profiles while preserving the selection or selecting a specific profile by ID.
     /// </summary>
     /// <param name="selectProfileId">Optional profile ID to select after refresh.</param>
-    private async Task RefreshProfilesPreserveSelectionAsync(int? selectProfileId)
+    private Task RefreshProfilesPreserveSelectionAsync(int? selectProfileId)
     {
         try
         {
@@ -538,7 +538,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 if (match != null)
                 {
                     SelectedProfile = match;
-                    return;
+                    return Task.CompletedTask;
                 }
             }
 
@@ -553,12 +553,13 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Error refreshing profiles with selection preservation");
             StatusMessage = "Error refreshing profiles";
         }
+        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Refreshes the profiles list.
     /// </summary>
-    private async Task RefreshProfilesAsync()
+    private Task RefreshProfilesAsync()
     {
         try
         {
@@ -571,6 +572,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Failed to refresh power supply profiles");
             throw;
         }
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -1028,18 +1030,18 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <param name="name">The profile name to validate.</param>
     /// <param name="excludeId">Optional profile ID to exclude from uniqueness check (for edits).</param>
     /// <returns>True if the name is valid and unique, false otherwise.</returns>
-    private async Task<bool> ValidateProfileNameAsync(string name, int? excludeId = null)
+    private Task<bool> ValidateProfileNameAsync(string name, int? excludeId = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             StatusMessage = "Profile name cannot be empty";
-            return false;
+            return Task.FromResult(false);
         }
 
         if (name.Length > 100)
         {
             StatusMessage = "Profile name cannot exceed 100 characters";
-            return false;
+            return Task.FromResult(false);
         }
 
         // Check if name is already in use (excluding current profile if editing)
@@ -1050,10 +1052,10 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         if (existingProfile != null)
         {
             StatusMessage = $"Profile name '{name}' is already in use";
-            return false;
+            return Task.FromResult(false);
         }
 
-        return true;
+        return Task.FromResult(true);
     }
 
     /// <summary>

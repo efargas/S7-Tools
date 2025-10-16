@@ -375,10 +375,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                 {
                     try
                     {
-                        var portDetails = await _portService.GetPortInfoAsync(portName, cancellationToken);
-                        portInfo.Description = portDetails.Description;
-                        portInfo.Manufacturer = portDetails.UsbInfo?.VendorName ?? "Unknown";
-                        portInfo.SerialNumber = portDetails.UsbInfo?.SerialNumber ?? "Unknown";
+                        var portDetails = await _portService.GetPortInfoAsync(portName, cancellationToken).ConfigureAwait(false);
+                        if (portDetails != null)
+                        {
+                            portInfo.Description = portDetails.Description ?? "";
+                            var usbInfo = portDetails.UsbInfo;
+                            portInfo.Manufacturer = usbInfo?.VendorName ?? "Unknown";
+                            portInfo.SerialNumber = usbInfo?.SerialNumber ?? "Unknown";
+                        }
+                        else
+                        {
+                            portInfo.Description = "Details unavailable";
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -468,7 +476,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             StatusMessage = "Refreshing port information...";
 
             var portName = SelectedPort.PortName;
-            var isAccessible = await _portService.IsPortAccessibleAsync(portName);
+            var isAccessible = await _portService.IsPortAccessibleAsync(portName).ConfigureAwait(false);
 
             SelectedPort.IsAccessible = isAccessible;
             SelectedPort.LastChecked = DateTime.Now;
@@ -477,10 +485,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             {
                 try
                 {
-                    var portDetails = await _portService.GetPortInfoAsync(portName);
-                    SelectedPort.Description = portDetails.Description;
-                    SelectedPort.Manufacturer = portDetails.UsbInfo?.VendorName ?? "Unknown";
-                    SelectedPort.SerialNumber = portDetails.UsbInfo?.SerialNumber ?? "Unknown";
+                    var portDetails = await _portService.GetPortInfoAsync(portName).ConfigureAwait(false);
+                    if (portDetails != null)
+                    {
+                        SelectedPort.Description = portDetails.Description ?? "";
+                        var usbInfo = portDetails.UsbInfo;
+                        SelectedPort.Manufacturer = usbInfo?.VendorName ?? "Unknown";
+                        SelectedPort.SerialNumber = usbInfo?.SerialNumber ?? "Unknown";
+                    }
+                    else
+                    {
+                        SelectedPort.Description = "Details unavailable";
+                    }
                 }
                 catch (Exception ex)
                 {

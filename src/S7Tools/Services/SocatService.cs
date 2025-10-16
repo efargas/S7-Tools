@@ -625,7 +625,7 @@ public class SocatService : ISocatService, IDisposable
     /// Internal port check method that doesn't acquire semaphore (assumes already held).
     /// Used when semaphore is already acquired to avoid deadlock.
     /// </summary>
-    private async Task<bool> IsPortInUseInternalAsync(int tcpPort, CancellationToken cancellationToken = default)
+    private Task<bool> IsPortInUseInternalAsync(int tcpPort, CancellationToken cancellationToken = default)
     {
         if (tcpPort < 1 || tcpPort > 65535)
         {
@@ -639,7 +639,7 @@ public class SocatService : ISocatService, IDisposable
             if (managedProcess != null)
             {
                 _logger.LogDebug("Port {Port} is in use by managed socat process {ProcessId}", tcpPort, managedProcess.ProcessId);
-                return true;
+                return Task.FromResult(true);
             }
 
             // Then, attempt to bind to the port to detect external usage
@@ -649,19 +649,19 @@ public class SocatService : ISocatService, IDisposable
                 listener.Start();
                 listener.Stop();
                 _logger.LogDebug("Port {Port} is available (bind test successful)", tcpPort);
-                return false; // successfully bound -> port not in use
+                return Task.FromResult(false); // successfully bound -> port not in use
             }
             catch (System.Net.Sockets.SocketException ex)
             {
                 _logger.LogDebug("Port {Port} is in use (bind failed: {Error})", tcpPort, ex.Message);
-                return true; // bind failed -> port in use or insufficient privileges
+                return Task.FromResult(true); // bind failed -> port in use or insufficient privileges
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to check if TCP port {Port} is in use (internal)", tcpPort);
             // Be conservative: assume port is in use on error to avoid collisions
-            return true;
+            return Task.FromResult(true);
         }
     }
 
@@ -1334,7 +1334,7 @@ public class SocatService : ISocatService, IDisposable
     /// </summary>
     /// <param name="processInfo">The process information to update.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    private async Task UpdateProcessStatusAsync(SocatProcessInfo processInfo, CancellationToken cancellationToken)
+    private Task UpdateProcessStatusAsync(SocatProcessInfo processInfo, CancellationToken cancellationToken)
     {
         try
         {
@@ -1386,6 +1386,7 @@ public class SocatService : ISocatService, IDisposable
             processInfo.Status = SocatProcessStatus.Error;
             processInfo.LastError = ex.Message;
         }
+        return Task.CompletedTask;
     }
 
     /// <summary>

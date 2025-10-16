@@ -114,7 +114,7 @@ public class LogExportService : ILogExportService
     }
 
     /// <inheritdoc/>
-    public async Task EnsureExportFolderExistsAsync()
+    public Task EnsureExportFolderExistsAsync()
     {
         try
         {
@@ -124,7 +124,7 @@ public class LogExportService : ILogExportService
                 _logger.LogInformation("Created export folder: {ExportPath}", _defaultExportPath);
             }
 
-            await Task.CompletedTask.ConfigureAwait(false);
+            return Task.CompletedTask;
         }
         catch (Exception ex)
         {
