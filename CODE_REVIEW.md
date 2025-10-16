@@ -3,15 +3,16 @@
 This document contains a detailed analysis of the S7Tools codebase, focusing on identifying bugs, design pattern violations, potential improvements, and other areas of concern. The review is based on the state of the repository as of 2025-10-15.
 
 ## Table of Contents
-1.  **Critical Issues & Bugs**
-2.  **Architectural & Design Pattern Concerns**
-3.  **Async/Await and Threading**
-4.  **Error Handling & Logging**
-5.  **Code Duplication & Readability**
-6.  **UI & XAML**
-7.  **General Recommendations**
-8.  **Strengths & Good Practices**
-9.  **Coding Style & Patterns Guide**
+
+1. **Critical Issues & Bugs**
+2. **Architectural & Design Pattern Concerns**
+3. **Async/Await and Threading**
+4. **Error Handling & Logging**
+5. **Code Duplication & Readability**
+6. **UI & XAML**
+7. **General Recommendations**
+8. **Strengths & Good Practices**
+9. **Coding Style & Patterns Guide**
 
 ---
 
@@ -22,6 +23,8 @@ This document contains a detailed analysis of the S7Tools codebase, focusing on 
     *   **Issue:** The `--diag` mode initialization logic uses `.GetAwaiter().GetResult()` on asynchronous methods (e.g., `InitializeS7ToolsServicesAsync`, `GetAllAsync`). While there are attempts to mitigate deadlocks using local `async` functions, this pattern is inherently risky and can cause deadlocks, especially in different synchronization contexts.
     *   **Recommendation:** Even for a console-based diagnostic mode, it's safer to make the `Main` method `async Task` and use `await` throughout. For example:
 
+
+        ```csharp
         {
             await InitializeS7ToolsServicesAsync();
             // ... other async code
@@ -29,6 +32,7 @@ This document contains a detailed analysis of the S7Tools codebase, focusing on 
         ```
 
         If that's not possible (e.g., targeting an older .NET version), use a dedicated async-to-sync bridge like `AsyncContext.Run` from the [Nito.AsyncEx](https://www.nuget.org/packages/Nito.AsyncEx) library:
+
 
         ```csharp
         // Install-Package Nito.AsyncEx
@@ -63,6 +67,7 @@ This document contains a detailed analysis of the S7Tools codebase, focusing on 
     *   **File:** `src/S7Tools/ViewModels/MainWindowViewModel.cs`
     *   **Issue:** The `ClearButtonPressedAfterDelay` method is `async void`. `async void` methods are difficult to test and can cause application crashes if they throw unhandled exceptions. Their use should be limited to event handlers.
     *   **Recommendation:** Refactor this using a reactive approach with `ReactiveUI`. A property can be updated after a delay using `Observable.Timer` and `ObserveOn(RxApp.MainThreadScheduler)`. This is more idiomatic for MVVM with ReactiveUI and avoids the pitfalls of `async void`.
+
         ```csharp
         // Example in constructor
         this.WhenAnyValue(x => x.LastButtonPressed)

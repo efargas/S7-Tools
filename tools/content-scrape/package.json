@@ -1,0 +1,13 @@
+{
+  "name": "content-scrape",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node scrape.js"
+  },
+  "dependencies": {
+    "turndown": "^7.1.2",
+    "playwright": "^1.48.2"
+  }
+}

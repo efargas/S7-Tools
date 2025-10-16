@@ -1,0 +1,23 @@
+// Repo-wide markdownlint configuration
+{
+  "$schema": "https://raw.githubusercontent.com/markdownlint/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json",
+  "globs": [
+    "**/*.md",
+    "!**/bin/**",
+    "!**/obj/**",
+    "!**/node_modules/**",
+    "!**/bootloader-payloads/**"
+  ],
+  "ignores": [
+    ".git",
+    "**/node_modules/**",
+    "**/bin/**",
+    "**/obj/**"
+  ],
+  "markdownlint": {
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD024": { "siblings_only": true }
+  }
+}

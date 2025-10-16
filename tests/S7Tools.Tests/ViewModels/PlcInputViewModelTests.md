@@ -1,13 +1,16 @@
 # PlcInputViewModelTests (AAA)
 
 ## Arrange
+
 - Se crea una factoría de validadores con NullLogger.
 - Se instancia el ViewModel con la factoría.
 
 ## Act
+
 - Se asigna una dirección inválida ("M0.9") y se llama a `Validate()`.
 
 ## Assert
+
 - Se espera que `ValidationError` contenga el mensaje de error de bit offset.
 
 ---

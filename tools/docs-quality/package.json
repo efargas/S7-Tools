@@ -1,0 +1,15 @@
+{
+  "name": "s7tools-docs-quality",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Docs lint and link-check runner for the repo",
+  "scripts": {
+    "lint": "markdownlint-cli2 \"**/*.md\" \"!node_modules/**\" \"!**/bin/**\" \"!**/obj/**\"",
+    "links": "markdown-link-check -q -c mlc.config.json $(git ls-files '*.md' | grep -Ev '^(.github/|.copilot-tracking/|bootloader-payloads/)' | grep -v 'docs/external/codeproject-logviewer.markitdown.full.md' | tr '\n' ' ')",
+    "check": "npm run lint && npm run links"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "^0.18.0",
+    "markdown-link-check": "^3.11.2"
+  }
+}

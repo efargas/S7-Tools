@@ -1,0 +1,38 @@
+// Repo-wide markdownlint configuration
+{
+  // Removed invalid schema URL
+  "globs": [
+    "**/*.md",
+    "!**/bin/**",
+    "!**/obj/**",
+    "!**/node_modules/**",
+    "!.github/agents/workspace/**",
+    "!bootloader-payloads/**",
+    "!.copilot-tracking/**",
+    "!.github/chatmodes/**",
+    "!.github/prompts/**",
+    "!.github/copilot/**",
+    "!.github/instructions/**",
+    "!docs/external/codeproject-logviewer.markitdown.full.md",
+    "!README.md",
+    "!Project_Folders_Structure_Blueprint.md"
+  ],
+  "ignores": [
+    ".git",
+    "**/node_modules/**",
+    "**/bin/**",
+    "**/obj/**"
+  ],
+  "config": {
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD024": { "siblings_only": true },
+    "MD007": { "indent": 4 },
+    "MD009": false,
+    "MD012": false,
+    "MD030": false,
+    "MD031": false,
+    "MD040": false
+  }
+}
