@@ -1,7 +1,7 @@
 using System.Globalization;
 using S7Tools.Core.Resources;
 
-namespace S7Tools.Resources;
+namespace S7Tools.Core.Resources;
 
 /// <summary>
 /// ResourceManager implementation for dependency injection that delegates to InMemoryResourceManager.
@@ -14,7 +14,7 @@ public class ResourceManager : IResourceManager
     /// Initializes a new instance of the <see cref="ResourceManager"/> class with invariant culture.
     /// </summary>
     public ResourceManager() : this(CultureInfo.InvariantCulture) { }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="ResourceManager"/> class with the specified default culture.
     /// </summary>
@@ -28,14 +28,14 @@ public class ResourceManager : IResourceManager
     /// Gets the current culture used for resource retrieval.
     /// </summary>
     public CultureInfo CurrentCulture => _inner.CurrentCulture;
-    
+
     /// <summary>
     /// Gets the string resource for the specified key using the current culture.
     /// </summary>
     /// <param name="key">The resource key.</param>
     /// <returns>The localized string.</returns>
     public string GetString(string key) => _inner.GetString(key);
-    
+
     /// <summary>
     /// Gets the formatted string resource for the specified key using the current culture.
     /// </summary>
@@ -43,7 +43,7 @@ public class ResourceManager : IResourceManager
     /// <param name="args">The formatting arguments.</param>
     /// <returns>The formatted localized string.</returns>
     public string GetString(string key, params object[] args) => _inner.GetString(key, args);
-    
+
     /// <summary>
     /// Gets the string resource for the specified key using the specified culture.
     /// </summary>
@@ -51,7 +51,7 @@ public class ResourceManager : IResourceManager
     /// <param name="culture">The culture to use for resource retrieval.</param>
     /// <returns>The localized string.</returns>
     public string GetString(string key, CultureInfo culture) => _inner.GetString(key, culture);
-    
+
     /// <summary>
     /// Gets the formatted string resource for the specified key using the specified culture.
     /// </summary>
@@ -60,14 +60,14 @@ public class ResourceManager : IResourceManager
     /// <param name="args">The formatting arguments.</param>
     /// <returns>The formatted localized string.</returns>
     public string GetString(string key, CultureInfo culture, params object[] args) => _inner.GetString(key, culture, args);
-    
+
     /// <summary>
     /// Determines whether a resource exists for the specified key using the current culture.
     /// </summary>
     /// <param name="key">The resource key.</param>
     /// <returns>True if the resource exists; otherwise, false.</returns>
     public bool HasResource(string key) => _inner.HasResource(key);
-    
+
     /// <summary>
     /// Determines whether a resource exists for the specified key using the specified culture.
     /// </summary>
@@ -75,25 +75,25 @@ public class ResourceManager : IResourceManager
     /// <param name="culture">The culture to check.</param>
     /// <returns>True if the resource exists; otherwise, false.</returns>
     public bool HasResource(string key, CultureInfo culture) => _inner.HasResource(key, culture);
-    
+
     /// <summary>
     /// Gets all available resource keys.
     /// </summary>
     /// <returns>An enumerable collection of resource keys.</returns>
     public IEnumerable<string> GetAvailableKeys() => _inner.GetAvailableKeys();
-    
+
     /// <summary>
     /// Gets all supported cultures.
     /// </summary>
     /// <returns>An enumerable collection of supported cultures.</returns>
     public IEnumerable<CultureInfo> GetSupportedCultures() => _inner.GetSupportedCultures();
-    
+
     /// <summary>
     /// Sets the current culture for resource retrieval.
     /// </summary>
     /// <param name="culture">The culture to set as current.</param>
     public void SetCurrentCulture(CultureInfo culture) => _inner.SetCurrentCulture(culture);
-    
+
     /// <summary>
     /// Adds or updates a resource for the specified key and culture.
     /// </summary>

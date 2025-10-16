@@ -17,7 +17,7 @@ namespace S7Tools.Converters
         /// <param name="parameter">A string percentage to scale the value.</param>
         /// <param name="culture">The culture information for parsing.</param>
         /// <returns>The scaled height value, or 0 if conversion fails.</returns>
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is double height && parameter is string percentage)
             {
@@ -26,7 +26,7 @@ namespace S7Tools.Converters
                     return height * percent;
                 }
             }
-            return 0;
+            return 0d;
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace S7Tools.Converters
         /// <param name="culture">The culture information.</param>
         /// <returns>Not implemented.</returns>
         /// <exception cref="NotImplementedException">This method is not implemented.</exception>
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
         }
