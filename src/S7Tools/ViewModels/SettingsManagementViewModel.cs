@@ -57,7 +57,9 @@ public class SettingsManagementViewModel : ReactiveObject
     /// <returns>A settings service instance for design-time use.</returns>
     private static ISettingsService CreateDesignTimeSettingsService()
     {
-        return new Services.SettingsService();
+        using var loggerFactory = LoggerFactory.Create(builder => { });
+        var logger = loggerFactory.CreateLogger<Services.SettingsService>();
+        return new Services.SettingsService(logger);
     }
 
     /// <summary>

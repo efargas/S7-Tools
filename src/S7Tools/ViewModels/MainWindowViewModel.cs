@@ -23,8 +23,8 @@ public class MainWindowViewModel : ViewModelBase
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
 
-    private string _testInputText = "This is some text to test clipboard operations.";
-    private string _statusMessage = "Ready";
+    private string _testInputText = UIStrings.TestClipboardText;
+    private string _statusMessage = UIStrings.StatusReady;
     private string _lastButtonPressed = "";
 
     /// <summary>
@@ -36,10 +36,21 @@ public class MainWindowViewModel : ViewModelBase
         new SettingsManagementViewModel(),
         new DialogService(),
         new ClipboardService(),
-        new Services.SettingsService(),
+        CreateDesignTimeSettingsService(),
         null,
         CreateDesignTimeLogger())
     {
+    }
+
+    /// <summary>
+    /// Creates a design-time settings service for the designer.
+    /// </summary>
+    /// <returns>A settings service instance for design-time use.</returns>
+    private static ISettingsService CreateDesignTimeSettingsService()
+    {
+        using var loggerFactory = LoggerFactory.Create(builder => { });
+        var logger = loggerFactory.CreateLogger<Services.SettingsService>();
+        return new Services.SettingsService(logger);
     }
 
     /// <summary>
@@ -267,14 +278,14 @@ public class MainWindowViewModel : ViewModelBase
             {
                 await _clipboardService.SetTextAsync(TestInputText);
                 TestInputText = string.Empty;
-                StatusMessage = "Text cut to clipboard";
+                StatusMessage = UIStrings.ClipboardTextCut;
                 _logger.LogDebug("Text cut to clipboard");
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to cut text to clipboard");
-            StatusMessage = "Failed to cut text";
+            StatusMessage = UIStrings.ClipboardCutFailed;
         }
     }
 
@@ -288,14 +299,14 @@ public class MainWindowViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(TestInputText))
             {
                 await _clipboardService.SetTextAsync(TestInputText);
-                StatusMessage = "Text copied to clipboard";
+                StatusMessage = UIStrings.ClipboardTextCopied;
                 _logger.LogDebug("Text copied to clipboard");
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to copy text to clipboard");
-            StatusMessage = "Failed to copy text";
+            StatusMessage = UIStrings.ClipboardCopyFailed;
         }
     }
 
@@ -310,14 +321,14 @@ public class MainWindowViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(text))
             {
                 TestInputText += text;
-                StatusMessage = "Text pasted from clipboard";
+                StatusMessage = UIStrings.ClipboardTextPasted;
                 _logger.LogDebug("Text pasted from clipboard");
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to paste text from clipboard");
-            StatusMessage = "Failed to paste text";
+            StatusMessage = UIStrings.ClipboardPasteFailed;
         }
     }
 
@@ -355,13 +366,13 @@ public class MainWindowViewModel : ViewModelBase
             }
 
             LastButtonPressed = $"{levelName} Log Generated";
-            StatusMessage = $"Generated {levelName} log message";
+            StatusMessage = UIStrings.LogTestGenerated(levelName);
             ClearButtonPressedAfterDelay();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to generate {LogLevel} log message", levelName);
-            StatusMessage = $"Failed to generate {levelName} log";
+            StatusMessage = UIStrings.LogTestFailed(levelName);
         }
     }
 
@@ -374,7 +385,7 @@ public class MainWindowViewModel : ViewModelBase
         {
             var exportText = "Log Export - " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             await _clipboardService.SetTextAsync(exportText);
-            StatusMessage = "Log export copied to clipboard";
+            StatusMessage = UIStrings.LogExportCopied;
             _logger.LogInformation("Log export copied to clipboard");
         }
         catch (Exception ex)

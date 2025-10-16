@@ -373,6 +373,70 @@ public static class UIStrings
 
     #endregion
 
+    #region Clipboard Operations
+
+    /// <summary>
+    /// Gets the "Text cut to clipboard" status message.
+    /// </summary>
+    public static string ClipboardTextCut => GetStringSafe("ClipboardTextCut", "Text cut to clipboard");
+
+    /// <summary>
+    /// Gets the "Text copied to clipboard" status message.
+    /// </summary>
+    public static string ClipboardTextCopied => GetStringSafe("ClipboardTextCopied", "Text copied to clipboard");
+
+    /// <summary>
+    /// Gets the "Text pasted from clipboard" status message.
+    /// </summary>
+    public static string ClipboardTextPasted => GetStringSafe("ClipboardTextPasted", "Text pasted from clipboard");
+
+    /// <summary>
+    /// Gets the "Failed to cut text" error message.
+    /// </summary>
+    public static string ClipboardCutFailed => GetStringSafe("ClipboardCutFailed", "Failed to cut text");
+
+    /// <summary>
+    /// Gets the "Failed to copy text" error message.
+    /// </summary>
+    public static string ClipboardCopyFailed => GetStringSafe("ClipboardCopyFailed", "Failed to copy text");
+
+    /// <summary>
+    /// Gets the "Failed to paste text" error message.
+    /// </summary>
+    public static string ClipboardPasteFailed => GetStringSafe("ClipboardPasteFailed", "Failed to paste text");
+
+    #endregion
+
+    #region Log Testing
+
+    /// <summary>
+    /// Gets the formatted "Generated {0} log message" status message.
+    /// </summary>
+    /// <param name="levelName">The log level name.</param>
+    /// <returns>The formatted message.</returns>
+    public static string LogTestGenerated(string levelName) =>
+        GetStringSafe("LogTestGenerated", "Generated {0} log message").Replace("{0}", levelName);
+
+    /// <summary>
+    /// Gets the formatted "Failed to generate {0} log" error message.
+    /// </summary>
+    /// <param name="levelName">The log level name.</param>
+    /// <returns>The formatted message.</returns>
+    public static string LogTestFailed(string levelName) =>
+        GetStringSafe("LogTestFailed", "Failed to generate {0} log").Replace("{0}", levelName);
+
+    /// <summary>
+    /// Gets the "Log export copied to clipboard" status message.
+    /// </summary>
+    public static string LogExportCopied => GetStringSafe("LogExportCopied", "Log export copied to clipboard");
+
+    /// <summary>
+    /// Gets the test clipboard text.
+    /// </summary>
+    public static string TestClipboardText => GetStringSafe("TestClipboardText", "This is some text to test clipboard operations.");
+
+    #endregion
+
     /// <summary>
     /// Gets a formatted string with the specified arguments.
     /// </summary>

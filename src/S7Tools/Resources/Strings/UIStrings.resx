@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!-- 
-    Microsoft ResX Schema 
-    
+  <!--
+    Microsoft ResX Schema
+
     Version 2.0
-    
-    The primary goals of this format is to allow a simple XML format 
-    that is mostly human readable. The generation and parsing of the 
-    various data types are done through the TypeConverter classes 
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
     associated with the data types.
-    
+
     Example:
-    
+
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
     <resheader name="version">2.0</resheader>
@@ -25,32 +25,32 @@
     <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
         <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
     </data>
-                
-    There are any number of "resheader" rows that contain simple 
+
+    There are any number of "resheader" rows that contain simple
     name/value pairs.
-    
-    Each data row contains a name, and value. The row also contains a 
-    type or mimetype. Type corresponds to a .NET class that support 
-    text/value conversion. The mimetype is used for serialized objects, 
-    and tells the ResXResourceReader how to depersist the object. This is currently not 
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion. The mimetype is used for serialized objects,
+    and tells the ResXResourceReader how to depersist the object. This is currently not
     extensible. For a given mimetype the value must be set accordingly:
-    
-    Note - application/x-microsoft.net.object.binary.base64 is the format 
-    that the ResXResourceWriter will generate, however the reader can 
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
     read any of the formats listed below.
-    
+
     mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with 
+    value   : The object must be serialized with
             : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
-    
+
     mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with 
+    value   : The object must be serialized with
             : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
             : and then encoded with base64 encoding.
 
     mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array 
+    value   : The object must be serialized into a byte array
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
@@ -112,7 +112,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  
+
   <!-- Application Title and General -->
   <data name="ApplicationTitle" xml:space="preserve">
     <value>S7Tools</value>
@@ -122,7 +122,7 @@
     <value>Siemens S7 PLC Tools with Integrated LogViewer</value>
     <comment>Application description</comment>
   </data>
-  
+
   <!-- Menu Items -->
   <data name="Menu_File" xml:space="preserve">
     <value>File</value>
@@ -144,7 +144,7 @@
     <value>Help</value>
     <comment>Help menu</comment>
   </data>
-  
+
   <!-- Activity Bar Items -->
   <data name="ActivityBar_Explorer" xml:space="preserve">
     <value>Explorer</value>
@@ -162,7 +162,7 @@
     <value>Settings</value>
     <comment>Settings activity bar item</comment>
   </data>
-  
+
   <!-- Common Actions -->
   <data name="Action_Open" xml:space="preserve">
     <value>Open</value>
@@ -196,7 +196,7 @@
     <value>Export</value>
     <comment>Export action</comment>
   </data>
-  
+
   <!-- Status Messages -->
   <data name="Status_Ready" xml:space="preserve">
     <value>Ready</value>
@@ -214,7 +214,7 @@
     <value>Loading...</value>
     <comment>Loading status message</comment>
   </data>
-  
+
   <!-- Log Viewer -->
   <data name="LogViewer_Title" xml:space="preserve">
     <value>Log Viewer</value>
@@ -244,7 +244,7 @@
     <value>Message</value>
     <comment>Log message column header</comment>
   </data>
-  
+
   <!-- Themes -->
   <data name="Theme_Light" xml:space="preserve">
     <value>Light</value>
@@ -258,7 +258,7 @@
     <value>Auto</value>
     <comment>Auto theme name</comment>
   </data>
-  
+
   <!-- Error Messages -->
   <data name="Error_ConnectionFailed" xml:space="preserve">
     <value>Connection failed. Please check your settings and try again.</value>
@@ -272,7 +272,7 @@
     <value>Invalid configuration. Please check your settings.</value>
     <comment>Invalid configuration error message</comment>
   </data>
-  
+
   <!-- Confirmation Messages -->
   <data name="Dialog_ExitTitle" xml:space="preserve">
     <value>Exit Application</value>
@@ -286,7 +286,7 @@
     <value>Are you sure you want to clear all logs?</value>
     <comment>Clear logs confirmation message</comment>
   </data>
-  
+
   <!-- Tooltips -->
   <data name="Tooltip_ToggleSidebar" xml:space="preserve">
     <value>Toggle Sidebar</value>
@@ -300,7 +300,7 @@
     <value>Switch Theme</value>
     <comment>Switch theme tooltip</comment>
   </data>
-  
+
   <!-- Log Viewer Dialog Titles -->
   <data name="LogViewer_ClearLogsTitle" xml:space="preserve">
     <value>Clear Logs</value>
@@ -310,7 +310,7 @@
     <value>Export Logs</value>
     <comment>Title for export logs dialog</comment>
   </data>
-  
+
   <!-- Log Viewer Messages -->
   <data name="LogViewer_ClearLogsMessage" xml:space="preserve">
     <value>Are you sure you want to clear all log entries? This action cannot be undone.</value>
@@ -537,5 +537,51 @@
   <data name="Version" xml:space="preserve">
     <value>Version</value>
     <comment>Application version label</comment>
+  </data>
+
+  <!-- Clipboard Operations -->
+  <data name="ClipboardTextCut" xml:space="preserve">
+    <value>Text cut to clipboard</value>
+    <comment>Status message when text is cut to clipboard</comment>
+  </data>
+  <data name="ClipboardTextCopied" xml:space="preserve">
+    <value>Text copied to clipboard</value>
+    <comment>Status message when text is copied to clipboard</comment>
+  </data>
+  <data name="ClipboardTextPasted" xml:space="preserve">
+    <value>Text pasted from clipboard</value>
+    <comment>Status message when text is pasted from clipboard</comment>
+  </data>
+  <data name="ClipboardCutFailed" xml:space="preserve">
+    <value>Failed to cut text</value>
+    <comment>Error message when text cut operation fails</comment>
+  </data>
+  <data name="ClipboardCopyFailed" xml:space="preserve">
+    <value>Failed to copy text</value>
+    <comment>Error message when text copy operation fails</comment>
+  </data>
+  <data name="ClipboardPasteFailed" xml:space="preserve">
+    <value>Failed to paste text</value>
+    <comment>Error message when text paste operation fails</comment>
+  </data>
+
+  <!-- Log Testing Operations -->
+  <data name="LogTestGenerated" xml:space="preserve">
+    <value>Generated {0} log message</value>
+    <comment>Status message when test log is generated, {0} is log level name</comment>
+  </data>
+  <data name="LogTestFailed" xml:space="preserve">
+    <value>Failed to generate {0} log</value>
+    <comment>Error message when test log generation fails, {0} is log level name</comment>
+  </data>
+  <data name="LogExportCopied" xml:space="preserve">
+    <value>Log export copied to clipboard</value>
+    <comment>Status message when log export is copied to clipboard</comment>
+  </data>
+
+  <!-- Test Data -->
+  <data name="TestClipboardText" xml:space="preserve">
+    <value>This is some text to test clipboard operations.</value>
+    <comment>Sample text for testing clipboard operations</comment>
   </data>
 </root>

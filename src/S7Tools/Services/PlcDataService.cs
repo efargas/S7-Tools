@@ -10,7 +10,7 @@ namespace S7Tools.Services;
 /// Modern implementation of PLC data services with proper error handling, logging, and state management.
 /// Implements both ITagRepository and IS7ConnectionProvider interfaces using the latest .NET patterns.
 /// </summary>
-public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDisposable
+public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDisposable, IAsyncDisposable
 {
     private readonly ILogger<PlcDataService> _logger;
     private readonly ConcurrentDictionary<string, Tag> _managedTags = new();
@@ -511,22 +511,57 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
 
     #endregion
 
-    #region IDisposable Implementation
+    #region IDisposable and IAsyncDisposable Implementation
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            _logger.LogInformation("Disposing PlcDataService asynchronously");
+
+            // Disconnect if connected
+            if (State == ConnectionState.Connected)
+            {
+                try
+                {
+                    var result = await DisconnectAsync().ConfigureAwait(false);
+                    if (result.IsFailure)
+                    {
+                        _logger.LogWarning("Failed to disconnect during async disposal: {Error}", result.Error);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error during async disposal disconnection");
+                }
+            }
+
+            _disposed = true;
+            GC.SuppressFinalize(this);
+        }
+    }
 
     /// <inheritdoc />
     public void Dispose()
     {
         if (!_disposed)
         {
-            _logger.LogInformation("Disposing PlcDataService");
+            _logger.LogInformation("Disposing PlcDataService synchronously");
 
-            // Disconnect if connected
+            // For synchronous dispose, we cannot safely await async operations
+            // Instead, we'll try a quick synchronous disconnection if possible
+            // or log that async disposal should be preferred
             if (State == ConnectionState.Connected)
             {
-                _ = DisconnectAsync().ConfigureAwait(false);
+                _logger.LogWarning("PlcDataService disposed while connected. Consider using DisposeAsync() for proper disconnection.");
+
+                // Change state immediately to prevent further operations
+                ChangeState(ConnectionState.Disconnected);
             }
 
             _disposed = true;
+            GC.SuppressFinalize(this);
         }
     }
 

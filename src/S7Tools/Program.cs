@@ -22,7 +22,7 @@ namespace S7Tools;
 sealed class Program
 {
     [STAThread]
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var services = new ServiceCollection();
         ConfigureServices(services);
@@ -30,23 +30,22 @@ sealed class Program
 
         // Diagnostic initialization: ensure important services are initialized early so
         // we can validate profile storage and stty integration during startup.
-        // If started with --diag flag, run initialization synchronously and print diagnostics, then exit.
+        // If started with --diag flag, run initialization asynchronously and print diagnostics, then exit.
         if (args != null && args.Length > 0 && args.Contains("--diag"))
         {
             var logger = serviceProvider.GetService<ILogger<Program>>();
             try
             {
-                // Run initialization synchronously for diagnostics so we can inspect storage state.
-                serviceProvider.InitializeS7ToolsServicesAsync().GetAwaiter().GetResult();
+                // Run initialization asynchronously for diagnostics
+                await serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
 
-                var profileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISerialPortProfileService>()
-                                     ?? serviceProvider.GetService<S7Tools.Services.SerialPortProfileService>();
+                var profileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISerialPortProfileService>();
 
                 if (profileService != null)
                 {
                     try
                     {
-                        var profiles = profileService.GetAllAsync().GetAwaiter().GetResult();
+                        var profiles = await profileService.GetAllAsync().ConfigureAwait(false);
                         logger?.LogInformation("[S7Tools] SerialPortProfileService loaded {ProfileCount} profiles", profiles.Count());
                         Console.WriteLine($"[S7Tools] SerialPortProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                     }
@@ -64,15 +63,9 @@ sealed class Program
                 {
                     try
                     {
-                        // Use a local async function to avoid .GetResult() deadlocks
-                        async Task LogSocatProfilesAsync()
-                        {
-                            var profiles = await socatProfileService.GetAllAsync().ConfigureAwait(false);
-                            logger?.LogInformation("[S7Tools] SocatProfileService loaded {ProfileCount} profiles", profiles.Count());
-                            Console.WriteLine($"[S7Tools] SocatProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
-                        }
-
-                        LogSocatProfilesAsync().GetAwaiter().GetResult();
+                        var profiles = await socatProfileService.GetAllAsync().ConfigureAwait(false);
+                        logger?.LogInformation("[S7Tools] SocatProfileService loaded {ProfileCount} profiles", profiles.Count());
+                        Console.WriteLine($"[S7Tools] SocatProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                     }
                     catch (Exception ex)
                     {
@@ -88,15 +81,9 @@ sealed class Program
                 {
                     try
                     {
-                        // Use a local async function to avoid .GetResult() deadlocks
-                        async Task LogPowerSupplyProfilesAsync()
-                        {
-                            var profiles = await powerSupplyProfileService.GetAllAsync().ConfigureAwait(false);
-                            logger?.LogInformation("[S7Tools] PowerSupplyProfileService loaded {ProfileCount} profiles", profiles.Count());
-                            Console.WriteLine($"[S7Tools] PowerSupplyProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
-                        }
-
-                        LogPowerSupplyProfilesAsync().GetAwaiter().GetResult();
+                        var profiles = await powerSupplyProfileService.GetAllAsync().ConfigureAwait(false);
+                        logger?.LogInformation("[S7Tools] PowerSupplyProfileService loaded {ProfileCount} profiles", profiles.Count());
+                        Console.WriteLine($"[S7Tools] PowerSupplyProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                     }
                     catch (Exception ex)
                     {

@@ -23,7 +23,11 @@ public class SettingsManagementViewModelTests
     public SettingsManagementViewModelTests()
     {
         _mockLogger = new Mock<ILogger<SettingsManagementViewModel>>();
-        _settingsService = new SettingsService();
+
+        // Create a mock logger for SettingsService
+        var mockSettingsLogger = new Mock<ILogger<SettingsService>>();
+        _settingsService = new SettingsService(mockSettingsLogger.Object);
+
         _viewModel = new SettingsManagementViewModel(_mockLogger.Object, _settingsService);
     }
 
