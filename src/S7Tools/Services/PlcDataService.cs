@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.ValueObjects;
@@ -129,7 +130,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
             await Task.Delay(500, cancellationToken);
 
             // For simulation, assume connection is successful if IP is not empty
-            var success = !string.IsNullOrWhiteSpace(config.IpAddress);
+            bool success = !string.IsNullOrWhiteSpace(config.IpAddress);
 
             if (success)
             {
@@ -189,7 +190,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
 
         ChangeState(ConnectionState.Reconnecting);
 
-        var disconnectResult = await DisconnectAsync(cancellationToken);
+        Result disconnectResult = await DisconnectAsync(cancellationToken);
         if (disconnectResult.IsFailure)
         {
             _logger.LogWarning("Failed to disconnect during reconnect: {Error}", disconnectResult.Error);
@@ -220,8 +221,8 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
             await Task.Delay(50, cancellationToken);
 
             // Generate simulated value based on address type
-            var simulatedValue = GenerateSimulatedValue(address);
-            var tagResult = Tag.Create($"Tag_{address}", address.Value, simulatedValue);
+            object simulatedValue = GenerateSimulatedValue(address);
+            Result<Tag> tagResult = Tag.Create($"Tag_{address}", address.Value, simulatedValue);
 
             if (tagResult.IsFailure)
             {
@@ -229,10 +230,18 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
                 return tagResult;
             }
 
-            _logger.LogDebug("Successfully read tag {TagName} from {Address} with value {Value}",
-                tagResult.Value.Name, address, tagResult.Value.GetDisplayValue());
+            // Guard against possible null Value for nullable analysis safety
+            Tag? createdTag = tagResult.Value;
+            if (createdTag is null)
+            {
+                _logger.LogError("Tag creation indicated success but Value was null for address {Address}", address);
+                return Result<Tag>.Failure("Tag creation produced a null value");
+            }
 
-            return tagResult;
+            _logger.LogDebug("Successfully read tag {TagName} from {Address} with value {Value}",
+                createdTag.Name, address, createdTag.GetDisplayValue());
+
+            return Result<Tag>.Success(createdTag);
         }
         catch (Exception ex)
         {
@@ -251,13 +260,13 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
                 return Result<Tag>.Failure("Tag name cannot be null or empty");
             }
 
-            if (_managedTags.TryGetValue(tagName, out var existingTag))
+            if (_managedTags.TryGetValue(tagName, out Tag? existingTag))
             {
                 // Read the current value for the existing tag
-                var readResult = await ReadTagAsync(existingTag.Address, cancellationToken);
-                if (readResult.IsSuccess)
+                Result<Tag> readResult = await ReadTagAsync(existingTag.Address, cancellationToken).ConfigureAwait(false);
+                if (readResult.IsSuccess && readResult.Value is not null)
                 {
-                    var updatedTag = existingTag.WithValue(readResult.Value.Value.RawValue);
+                    Tag updatedTag = existingTag.WithValue(readResult.Value.Value.RawValue);
                     _managedTags.TryUpdate(tagName, updatedTag, existingTag);
                     return Result<Tag>.Success(updatedTag);
                 }
@@ -278,15 +287,15 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     {
         try
         {
-            var tasks = addresses.Select(address => ReadTagAsync(address, cancellationToken));
-            var results = await Task.WhenAll(tasks);
+            IEnumerable<Task<Result<Tag>>> tasks = addresses.Select(address => ReadTagAsync(address, cancellationToken));
+            Result<Tag>[] results = await Task.WhenAll(tasks);
 
             var successfulTags = new List<Tag>();
             var errors = new List<string>();
 
-            foreach (var result in results)
+            foreach (Result<Tag> result in results)
             {
-                if (result.IsSuccess)
+                if (result.IsSuccess && result.Value is not null)
                 {
                     successfulTags.Add(result.Value);
                 }
@@ -345,7 +354,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
                 return Result.Failure("Tag name cannot be null or empty");
             }
 
-            if (_managedTags.TryGetValue(tagName, out var tag))
+            if (_managedTags.TryGetValue(tagName, out Tag? tag))
             {
                 return await WriteTagAsync(tag.Address, value, cancellationToken);
             }
@@ -364,8 +373,8 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     {
         try
         {
-            var tasks = tagWrites.Select(tw => WriteTagAsync(tw.Address, tw.Value, cancellationToken));
-            var results = await Task.WhenAll(tasks);
+            IEnumerable<Task<Result>> tasks = tagWrites.Select(tw => WriteTagAsync(tw.Address, tw.Value, cancellationToken));
+            Result[] results = await Task.WhenAll(tasks);
 
             var errors = results.Where(r => r.IsFailure).Select(r => r.Error).ToList();
 
@@ -425,7 +434,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     {
         try
         {
-            var tags = _managedTags.Values.ToList().AsReadOnly();
+            ReadOnlyCollection<Tag> tags = _managedTags.Values.ToList().AsReadOnly();
             return Task.FromResult(Result<IReadOnlyCollection<Tag>>.Success(tags));
         }
         catch (Exception ex)
@@ -440,7 +449,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
     {
         try
         {
-            var tags = _managedTags.Values
+            ReadOnlyCollection<Tag> tags = _managedTags.Values
                 .Where(t => string.Equals(t.Group, group, StringComparison.OrdinalIgnoreCase))
                 .ToList()
                 .AsReadOnly();
@@ -525,7 +534,7 @@ public sealed class PlcDataService : ITagRepository, IS7ConnectionProvider, IDis
             {
                 try
                 {
-                    var result = await DisconnectAsync().ConfigureAwait(false);
+                    Result result = await DisconnectAsync().ConfigureAwait(false);
                     if (result.IsFailure)
                     {
                         _logger.LogWarning("Failed to disconnect during async disposal: {Error}", result.Error);

@@ -87,7 +87,39 @@
             </MenuItem>
         </Menu>
 
-        <!-- Main Content Area with Bottom Panel and Status Bar -->
+        <!-- Status Bar anchored to window bottom -->
+        <Border DockPanel.Dock="Bottom" Background="#007ACC" Height="24">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="8,0" Spacing="8">
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0" Spacing="8"
+                            IsVisible="{Binding Navigation.ShowLogStats}">
+                    <TextBlock Text="|" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                    <TextBlock Text="{Binding Navigation.LogStatsMessage}" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0" Spacing="8"
+                            IsVisible="{Binding LastButtonPressed, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="|" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                    <TextBlock Text="{Binding LastButtonPressed}" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="8,0">
+                    <TextBlock Text="S7Tools" Foreground="White" VerticalAlignment="Center" FontSize="12" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area with Bottom Panel -->
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" MinHeight="100" />
@@ -95,7 +127,6 @@
                 <RowDefinition Height="{Binding BottomPanel.PanelHeight, Mode=TwoWay}"
                                MinHeight="35"
                                MaxHeight="{Binding $parent[Window].Bounds.Height, Converter={StaticResource GridLengthToDoubleConverter}, ConverterParameter=0.75}" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Main Content Area -->
@@ -365,38 +396,6 @@
                     </ScrollViewer>
                 </Border>
             </Grid>
-
-            <!-- Status Bar (Full Width) -->
-            <Border Grid.Row="3" Background="#007ACC" Height="24">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="8,0" Spacing="8">
-                        <TextBlock Text="{Binding StatusMessage}" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0" Spacing="8"
-                                IsVisible="{Binding Navigation.ShowLogStats}">
-                        <TextBlock Text="|" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                        <TextBlock Text="{Binding Navigation.LogStatsMessage}" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0" Spacing="8"
-                                IsVisible="{Binding LastButtonPressed, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Text="|" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                        <TextBlock Text="{Binding LastButtonPressed}" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="8,0">
-                        <TextBlock Text="S7Tools" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                    </StackPanel>
-                </Grid>
-            </Border>
         </Grid>
     </DockPanel>
 </Window>

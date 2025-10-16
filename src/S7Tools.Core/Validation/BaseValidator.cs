@@ -27,6 +27,10 @@ public abstract class BaseValidator<T> : IValidator<T>
     /// Initializes a new instance of the <see cref="BaseValidator{T}"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        category: "Usage",
+        checkId: "CA2214:Do not call overridable methods in constructors",
+        Justification = "ConfigureRules is used to declare validation rules at construction time. Derived validators are simple and do not depend on partially constructed state beyond rule registration.")]
     protected BaseValidator(ILogger logger)
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));

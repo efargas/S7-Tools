@@ -16,7 +16,7 @@ public sealed class JobScheduler : IJobScheduler
     private readonly IBootloaderService _bootloader;
     private readonly ConcurrentQueue<Job> _queue = new();
     private readonly ConcurrentDictionary<Guid, Job> _jobs = new();
-    private int _processingCount = 0;
+    private int _processingCount;
 
     /// <inheritdoc />
     public event JobStateChanged? JobStateChanged;
@@ -45,7 +45,7 @@ public sealed class JobScheduler : IJobScheduler
         _logger.LogInformation("Enqueuing job {JobId} ({JobName}) with {ResourceCount} resources",
             job.Id, job.Name, job.Resources.Count);
 
-        var queuedJob = job with { State = JobState.Queued };
+        Job queuedJob = job with { State = JobState.Queued };
         _jobs[job.Id] = queuedJob;
         _queue.Enqueue(queuedJob);
 
@@ -63,17 +63,17 @@ public sealed class JobScheduler : IJobScheduler
         return _jobs.Values.ToList();
     }
 
-    private async Task TryStartNextAsync()
+    private Task TryStartNextAsync()
     {
         // Prevent concurrent processing attempts
         if (Interlocked.CompareExchange(ref _processingCount, 1, 0) != 0)
         {
-            return;
+            return Task.CompletedTask;
         }
 
         try
         {
-            while (_queue.TryDequeue(out var job))
+            while (_queue.TryDequeue(out Job? job))
             {
                 // Try to acquire resources for this job
                 if (!_resources.TryAcquire(job.Resources))
@@ -93,6 +93,8 @@ public sealed class JobScheduler : IJobScheduler
         {
             Interlocked.Exchange(ref _processingCount, 0);
         }
+
+        return Task.CompletedTask;
     }
 
     private async Task ExecuteJobAsync(Job job)
@@ -100,7 +102,7 @@ public sealed class JobScheduler : IJobScheduler
         try
         {
             // Update job state to running
-            var runningJob = job with { State = JobState.Running };
+            Job runningJob = job with { State = JobState.Running };
             _jobs[job.Id] = runningJob;
             JobStateChanged?.Invoke(job.Id, JobState.Running, "Starting bootloader operation");
 
@@ -124,7 +126,7 @@ public sealed class JobScheduler : IJobScheduler
                 .ConfigureAwait(false);
 
             // Update job state to completed
-            var completedJob = job with { State = JobState.Completed };
+            Job completedJob = job with { State = JobState.Completed };
             _jobs[job.Id] = completedJob;
             JobStateChanged?.Invoke(job.Id, JobState.Completed, outputFile);
 
@@ -134,7 +136,7 @@ public sealed class JobScheduler : IJobScheduler
         catch (OperationCanceledException)
         {
             _logger.LogWarning("Job {JobId} was canceled", job.Id);
-            var canceledJob = job with { State = JobState.Canceled };
+            Job canceledJob = job with { State = JobState.Canceled };
             _jobs[job.Id] = canceledJob;
             JobStateChanged?.Invoke(job.Id, JobState.Canceled, "Operation canceled");
         }
@@ -143,7 +145,7 @@ public sealed class JobScheduler : IJobScheduler
             _logger.LogError(ex, "Job {JobId} failed with error: {ErrorMessage}",
                 job.Id, ex.Message);
 
-            var failedJob = job with { State = JobState.Failed };
+            Job failedJob = job with { State = JobState.Failed };
             _jobs[job.Id] = failedJob;
             JobStateChanged?.Invoke(job.Id, JobState.Failed, ex.Message);
         }

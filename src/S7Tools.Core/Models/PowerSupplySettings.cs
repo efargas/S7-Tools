@@ -112,7 +112,7 @@ public class PowerSupplySettings
     /// Gets or sets whether to require confirmation before turning power on.
     /// </summary>
     /// <value>True to require confirmation, false otherwise. Default is false.</value>
-    public bool ConfirmPowerOn { get; set; } = false;
+    public bool ConfirmPowerOn { get; set; }
 
     /// <summary>
     /// Gets or sets the delay after power state changes in milliseconds.
@@ -167,7 +167,7 @@ public class PowerSupplySettings
     /// When enabled, all Modbus read/write operations are logged for debugging purposes.
     /// This can generate significant log volume in high-traffic scenarios.
     /// </remarks>
-    public bool LogModbusOperations { get; set; } = false;
+    public bool LogModbusOperations { get; set; }
 
     /// <summary>
     /// Gets or sets whether to log connection state changes.

@@ -29,6 +29,10 @@ public abstract class BaseKeyedFactory<TKey, TBase> : IKeyedFactory<TKey, TBase>
     /// Initializes a new instance of the <see cref="BaseKeyedFactory{TKey, TBase}"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        category: "Usage",
+        checkId: "CA2214:Do not call overridable methods in constructors",
+        Justification = "RegisterFactories only registers factory delegates and does not depend on uninitialized derived state.")]
     protected BaseKeyedFactory(ILogger logger)
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -133,6 +137,10 @@ public abstract class BaseKeyedFactory<TKey, TBase, TParams> : IKeyedFactory<TKe
     /// Initializes a new instance of the <see cref="BaseKeyedFactory{TKey, TBase, TParams}"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        category: "Usage",
+        checkId: "CA2214:Do not call overridable methods in constructors",
+        Justification = "RegisterFactories only registers factory delegates and does not depend on uninitialized derived state.")]
     protected BaseKeyedFactory(ILogger logger)
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));

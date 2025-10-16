@@ -59,7 +59,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// - Base-1 mode: Range 1-65536 (display address, internally converted to 0-based)
     /// Writing TRUE (0xFF00) turns power ON, FALSE (0x0000) turns power OFF.
     /// </remarks>
-    public ushort OnOffCoil { get; set; } = 0;
+    public ushort OnOffCoil { get; set; }
 
     /// <summary>
     /// Gets or sets the addressing mode for coil addresses.
@@ -231,13 +231,17 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     {
         // Simple hostname validation
         if (string.IsNullOrWhiteSpace(hostname) || hostname.Length > 253)
+        {
             return false;
+        }
 
         // Hostname can contain alphanumeric characters, hyphens, and dots
         foreach (char c in hostname)
         {
             if (!char.IsLetterOrDigit(c) && c != '-' && c != '.')
+            {
                 return false;
+            }
         }
 
         return true;

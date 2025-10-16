@@ -78,24 +78,44 @@ public sealed class BootloaderService : IBootloaderService
             // Stage 2: Power cycle PLC (10% progress)
             progress.Report(("power_cycle", 0.10));
             _logger.LogDebug("Power cycling PLC at {Host}:{Port} coil {Coil}",
+
                 profiles.Power.Host, profiles.Power.Port, profiles.Power.Coil);
 
-            await _power.PowerCycleAsync(
-                profiles.Power.Host,
-                profiles.Power.Port,
-                profiles.Power.Coil,
-                profiles.Power.DelaySeconds,
-                cancellationToken).ConfigureAwait(false);
+            // Use the configuration-based API: Connect -> PowerCycle -> Disconnect
+            var powerConfig = new ModbusTcpConfiguration
+            {
+                Host = profiles.Power.Host,
+                Port = profiles.Power.Port,
+                DeviceId = 1,
+                OnOffCoil = (ushort)profiles.Power.Coil,
+                AddressingMode = ModbusAddressingMode.Base0
+            };
+
+            bool connected = await _power.ConnectAsync(powerConfig, cancellationToken).ConfigureAwait(false);
+            if (!connected)
+            {
+                throw new InvalidOperationException("Failed to connect to power supply controller");
+            }
+
+            try
+            {
+                await _power.PowerCycleAsync(profiles.Power.DelaySeconds * 1000, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                await _power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+            }
 
             // Stage 3: Create PLC client and perform handshake (20% progress)
-            await using var client = _clientFactory(profiles);
+            await using IPlcClient client = _clientFactory(profiles);
 
             progress.Report(("handshake", 0.20));
             _logger.LogDebug("Performing bootloader handshake");
 
             await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
 
-            var version = await client.GetBootloaderVersionAsync(cancellationToken)
+            string version = await client.GetBootloaderVersionAsync(cancellationToken)
                 .ConfigureAwait(false);
             _logger.LogInformation("Connected to bootloader version: {Version}", version);
 
@@ -103,7 +123,7 @@ public sealed class BootloaderService : IBootloaderService
             progress.Report(("stager_install", 0.30));
             _logger.LogDebug("Installing stager payload");
 
-            var stagerPayload = await _payloads.GetStagerAsync(
+            byte[] stagerPayload = await _payloads.GetStagerAsync(
                 profiles.Payloads.BasePath,
                 cancellationToken).ConfigureAwait(false);
 
@@ -117,17 +137,17 @@ public sealed class BootloaderService : IBootloaderService
                 profiles.Memory.Start + profiles.Memory.Length,
                 profiles.Memory.Length);
 
-            var dumperPayload = await _payloads.GetMemoryDumperAsync(
+            byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
                 profiles.Payloads.BasePath,
                 cancellationToken).ConfigureAwait(false);
 
             var dumpProgress = new Progress<long>(bytesRead =>
             {
-                var percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
+                double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
                 progress.Report(("memory_dump", percent));
             });
 
-            var memoryData = await client.DumpMemoryAsync(
+            byte[] memoryData = await client.DumpMemoryAsync(
                 profiles.Memory.Start,
                 profiles.Memory.Length,
                 dumperPayload,

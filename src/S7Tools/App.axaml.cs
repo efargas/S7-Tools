@@ -42,16 +42,16 @@ public partial class App : Application
         // Initialize ResourceManager for UIStrings
         try
         {
-            var resourceManager = _serviceProvider.GetRequiredService<IResourceManager>();
+            IResourceManager resourceManager = _serviceProvider.GetRequiredService<IResourceManager>();
             UIStrings.ResourceManager = resourceManager;
 
-            var logger = _serviceProvider.GetService<ILogger<App>>();
+            ILogger<App>? logger = _serviceProvider.GetService<ILogger<App>>();
             logger?.LogDebug("UIStrings ResourceManager initialized successfully");
         }
         catch (Exception ex)
         {
             // Log error but don't crash the application
-            var logger = _serviceProvider.GetService<ILogger<App>>();
+            ILogger<App>? logger = _serviceProvider.GetService<ILogger<App>>();
             logger?.LogError(ex, "Failed to initialize UIStrings ResourceManager");
         }
     }
@@ -66,13 +66,13 @@ public partial class App : Application
             try
             {
                 // Get required services
-                var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-                var logger = _serviceProvider.GetRequiredService<ILogger<App>>();
+                IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+                ILogger<App> logger = _serviceProvider.GetRequiredService<ILogger<App>>();
 
                 // Load application settings at startup (creates defaults if missing) without blocking UI thread
                 try
                 {
-                    var settingsService = _serviceProvider.GetService<ISettingsService>();
+                    ISettingsService? settingsService = _serviceProvider.GetService<ISettingsService>();
                     _ = settingsService?.LoadSettingsAsync();
                     logger.LogInformation("Application settings loading scheduled at startup");
                 }
@@ -94,18 +94,18 @@ public partial class App : Application
                 {
                     try
                     {
-                        var settingsService = _serviceProvider.GetService<ISettingsService>();
+                        ISettingsService? settingsService = _serviceProvider.GetService<ISettingsService>();
                         if (settingsService != null)
                         {
                             // Use ConfigureAwait(false) to avoid deadlocks
                             await settingsService.SaveSettingsAsync().ConfigureAwait(false);
                         }
-                        var exitLogger = _serviceProvider.GetService<ILogger<App>>();
+                        ILogger<App>? exitLogger = _serviceProvider.GetService<ILogger<App>>();
                         exitLogger?.LogInformation("Application settings saved on exit");
                     }
                     catch (Exception ex)
                     {
-                        var exitLogger = _serviceProvider.GetService<ILogger<App>>();
+                        ILogger<App>? exitLogger = _serviceProvider.GetService<ILogger<App>>();
                         exitLogger?.LogError(ex, "Failed to save application settings on exit");
                     }
                 };
@@ -115,7 +115,7 @@ public partial class App : Application
             catch (Exception ex)
             {
                 // Log error but don't crash the application
-                var logger = _serviceProvider.GetService<ILogger<App>>();
+                ILogger<App>? logger = _serviceProvider.GetService<ILogger<App>>();
                 logger?.LogError(ex, "Error during application initialization");
 
                 // Fallback: create main window without dialog handlers
@@ -128,7 +128,7 @@ public partial class App : Application
         // Global exception handler
         AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
         {
-            var logger = _serviceProvider.GetService<ILogger<App>>();
+            ILogger<App>? logger = _serviceProvider.GetService<ILogger<App>>();
             logger?.LogError(e.ExceptionObject as Exception, "Unhandled application exception");
         };
     }
@@ -150,7 +150,7 @@ public partial class App : Application
                     logger.LogDebug("Showing confirmation dialog: {Title} - {Message}",
                         interaction.Input.Title, interaction.Input.Message);
 
-                    var result = await ShowDialogAsync<bool>(
+                    DialogResult<bool> result = await ShowDialogAsync<bool>(
                         () => new ConfirmationDialog
                         {
                             DataContext = new ConfirmationDialogViewModel(interaction.Input.Title, interaction.Input.Message)
@@ -196,7 +196,7 @@ public partial class App : Application
                     logger.LogDebug("Showing error dialog: {Title} - {Message}",
                         interaction.Input.Title, interaction.Input.Message);
 
-                    var result = await ShowDialogAsync<bool>(
+                    DialogResult<bool> result = await ShowDialogAsync<bool>(
                         () => new ConfirmationDialog
                         {
                             DataContext = new ConfirmationDialogViewModel(interaction.Input.Title, interaction.Input.Message, false)
@@ -239,7 +239,7 @@ public partial class App : Application
                     // Create the view model first
                     var viewModel = new InputDialogViewModel(interaction.Input);
 
-                    var result = await ShowDialogAsync<InputResult?>(
+                    DialogResult<InputResult?> result = await ShowDialogAsync<InputResult?>(
                         () => new InputDialog
                         {
                             DataContext = viewModel
@@ -256,7 +256,7 @@ public partial class App : Application
                     else if (result.IsSuccess && result.Value == null)
                     {
                         // If dialog returned null, use the ViewModel's result
-                        var viewModelResult = viewModel.Result;
+                        InputResult viewModelResult = viewModel.Result;
                         interaction.SetOutput(viewModelResult);
                         logger.LogDebug("Input dialog returned null, using ViewModel result: Cancelled={IsCancelled}",
                             viewModelResult.IsCancelled);
@@ -306,7 +306,7 @@ public partial class App : Application
     {
         try
         {
-            var mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+            Window? mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
 
             if (mainWindow == null)
             {
@@ -314,8 +314,8 @@ public partial class App : Application
                 return DialogResult<T>.Failure("Main window not available");
             }
 
-            var dialog = dialogFactory();
-            var result = await dialog.ShowDialog<T>(mainWindow);
+            Window dialog = dialogFactory();
+            T? result = await dialog.ShowDialog<T>(mainWindow);
             return DialogResult<T>.Success(result);
         }
         catch (Exception ex)
@@ -331,14 +331,14 @@ public partial class App : Application
     /// <param name="title">Error title.</param>
     /// <param name="message">Error message.</param>
     /// <param name="logger">Logger instance.</param>
-    private async Task ShowCriticalErrorNotificationAsync(string title, string message, ILogger logger)
+    private Task ShowCriticalErrorNotificationAsync(string title, string message, ILogger logger)
     {
         try
         {
             logger.LogError("Critical UI Error: {Title} - {Message}", title, message);
 
             // Try to show a simple message box as fallback
-            var mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+            Window? mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
             if (mainWindow != null)
             {
                 var errorDialog = new ConfirmationDialog
@@ -364,6 +364,9 @@ public partial class App : Application
         {
             logger.LogError(ex, "Failed to show critical error notification");
         }
+
+        // No awaited work in this method; return a completed task.
+        return Task.CompletedTask;
     }
 
     /// <summary>

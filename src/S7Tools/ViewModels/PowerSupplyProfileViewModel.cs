@@ -15,7 +15,7 @@ namespace S7Tools.ViewModels;
 /// ViewModel for editing PowerSupply profiles.
 /// Handles creation, editing, and validation of PowerSupply profile configurations.
 /// </summary>
-public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
+public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged, IDisposable
 {
     #region Private Fields
 
@@ -520,3 +520,6 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
 
     #endregion
 }
+
+// Partial class implementation for disposal pattern
+// Removed duplicate partial Dispose implementation to avoid conflicts
