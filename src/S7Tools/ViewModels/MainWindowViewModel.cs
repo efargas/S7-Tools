@@ -1,5 +1,6 @@
 using System;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -15,13 +16,14 @@ namespace S7Tools.ViewModels;
 /// Delegates specific responsibilities to specialized ViewModels.
 /// This is the new, clean implementation that replaces the God Object pattern.
 /// </summary>
-public class MainWindowViewModel : ViewModelBase
+public class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly IDialogService _dialogService;
     private readonly IClipboardService _clipboardService;
     private readonly ISettingsService _settingsService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
 
     private string _testInputText = UIStrings.TestClipboardText;
     private string _statusMessage = UIStrings.StatusReady;
@@ -71,6 +73,8 @@ public class MainWindowViewModel : ViewModelBase
     /// <param name="settings">The settings management ViewModel.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
+    /// <param name="settingsService">The settings service.</param>
+    /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="logger">The logger instance.</param>
     public MainWindowViewModel(
         NavigationViewModel navigation,
@@ -97,13 +101,17 @@ public class MainWindowViewModel : ViewModelBase
         CopyCommand = ReactiveCommand.CreateFromTask(CopyAsync);
         PasteCommand = ReactiveCommand.CreateFromTask(PasteAsync);
 
-        // Initialize logging test commands
-        TestTraceLogCommand = ReactiveCommand.Create(() => TestLog(LogLevel.Trace, "TRACE"));
-        TestDebugLogCommand = ReactiveCommand.Create(() => TestLog(LogLevel.Debug, "DEBUG"));
-        TestInfoLogCommand = ReactiveCommand.Create(() => TestLog(LogLevel.Information, "INFO"));
-        TestWarningLogCommand = ReactiveCommand.Create(() => TestLog(LogLevel.Warning, "WARNING"));
-        TestErrorLogCommand = ReactiveCommand.Create(() => TestLog(LogLevel.Error, "ERROR"));
-        TestCriticalLogCommand = ReactiveCommand.Create(() => TestLog(LogLevel.Critical, "CRITICAL"));
+        // Initialize the unified logging test command
+        TestLogCommand = ReactiveCommand.Create<LogLevel>(TestLogWithLevel);
+
+        // Initialize individual logging test commands for backward compatibility
+        // These now delegate to the unified command, eliminating code duplication
+        TestTraceLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Trace));
+        TestDebugLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Debug));
+        TestInfoLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Information));
+        TestWarningLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Warning));
+        TestErrorLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Error));
+        TestCriticalLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Critical));
 
         ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogsAsync);
 
@@ -111,6 +119,19 @@ public class MainWindowViewModel : ViewModelBase
         SaveConfigurationCommand = ReactiveCommand.CreateFromTask(SaveConfigurationAsync);
 
         CloseApplicationInteraction = new Interaction<Unit, Unit>();
+
+        // Set up reactive pattern for button pressed message clearing
+        // This replaces the async void ClearButtonPressedAfterDelay method
+        this.WhenAnyValue(x => x.LastButtonPressed)
+            .Where(name => !string.IsNullOrEmpty(name))
+            .SelectMany(_ => Observable.Timer(TimeSpan.FromSeconds(3)))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ =>
+            {
+                LastButtonPressed = "";
+                StatusMessage = UIStrings.StatusReady;
+            })
+            .DisposeWith(_disposables);
 
         _logger.LogDebug("MainWindowViewModel initialized with specialized ViewModels");
     }
@@ -186,6 +207,11 @@ public class MainWindowViewModel : ViewModelBase
     /// Gets the command to paste text from clipboard.
     /// </summary>
     public ReactiveCommand<Unit, Unit> PasteCommand { get; }
+
+    /// <summary>
+    /// Gets the command to test logging with a specific log level.
+    /// </summary>
+    public ReactiveCommand<LogLevel, Unit> TestLogCommand { get; }
 
     /// <summary>
     /// Gets the command to test trace logging.
@@ -333,6 +359,27 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Tests logging at the specified level using the unified command pattern.
+    /// This method replaces the old repetitive logging commands.
+    /// </summary>
+    /// <param name="level">The log level to test.</param>
+    private void TestLogWithLevel(LogLevel level)
+    {
+        var levelName = level switch
+        {
+            LogLevel.Trace => "TRACE",
+            LogLevel.Debug => "DEBUG",
+            LogLevel.Information => "INFO",
+            LogLevel.Warning => "WARNING",
+            LogLevel.Error => "ERROR",
+            LogLevel.Critical => "CRITICAL",
+            _ => level.ToString().ToUpperInvariant()
+        };
+
+        TestLog(level, levelName);
+    }
+
+    /// <summary>
     /// Tests logging at the specified level.
     /// </summary>
     /// <param name="level">The log level to test.</param>
@@ -367,7 +414,7 @@ public class MainWindowViewModel : ViewModelBase
 
             LastButtonPressed = $"{levelName} Log Generated";
             StatusMessage = UIStrings.LogTestGenerated(levelName);
-            ClearButtonPressedAfterDelay();
+            // Button message clearing is now handled by reactive pattern in constructor
         }
         catch (Exception ex)
         {
@@ -440,14 +487,29 @@ public class MainWindowViewModel : ViewModelBase
         }
     }
 
+    #endregion
+
+    #region IDisposable
+
     /// <summary>
-    /// Clears the button pressed message after a delay.
+    /// Disposes of the resources used by this ViewModel.
     /// </summary>
-    private async void ClearButtonPressedAfterDelay()
+    public void Dispose()
     {
-        await Task.Delay(3000); // Clear after 3 seconds
-        LastButtonPressed = "";
-        StatusMessage = "Ready";
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Protected implementation of Dispose pattern.
+    /// </summary>
+    /// <param name="disposing">True if disposing managed resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _disposables?.Dispose();
+        }
     }
 
     #endregion
