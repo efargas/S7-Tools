@@ -11,6 +11,8 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <!-- Suppress XML doc noise for UI layer only -->
+    <NoWarn>$(NoWarn);CS1591;CS1572</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

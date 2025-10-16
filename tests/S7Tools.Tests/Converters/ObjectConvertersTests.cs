@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using S7Tools.Converters;
@@ -12,10 +13,10 @@ public class ObjectConvertersTests
     {
         // Arrange
         var converter = ObjectConverters.IsNotNull;
-        var value = "test";
+        string value = "test";
 
         // Act
-        var result = converter.Convert(value, typeof(bool), null, null);
+        object? result = converter.Convert(value, typeof(bool), (object?)null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.True((bool)result!);
@@ -28,7 +29,7 @@ public class ObjectConvertersTests
         var converter = ObjectConverters.IsNotNull;
 
         // Act
-        var result = converter.Convert(null, typeof(bool), null, null);
+        object? result = converter.Convert(null, typeof(bool), (object?)null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.False((bool)result!);
@@ -41,7 +42,7 @@ public class ObjectConvertersTests
         var converter = ObjectConverters.LogLevelToColor;
 
         // Act
-        var result = converter.Convert(LogLevel.Information, typeof(Color), null, null);
+        object? result = converter.Convert(LogLevel.Information, typeof(Color), (object?)null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal(Color.FromRgb(0, 150, 0), result);
@@ -54,7 +55,7 @@ public class ObjectConvertersTests
         var converter = ObjectConverters.LogLevelToColor;
 
         // Act
-        var result = converter.Convert(LogLevel.Error, typeof(Color), null, null);
+        object? result = converter.Convert(LogLevel.Error, typeof(Color), (object?)null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal(Color.FromRgb(220, 20, 60), result);
