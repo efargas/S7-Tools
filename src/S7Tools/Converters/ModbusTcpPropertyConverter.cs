@@ -29,7 +29,9 @@ public class ModbusTcpPropertyConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not ModbusTcpConfiguration config)
+        {
             return null;
+        }
 
         var propertyName = parameter as string ?? PropertyName;
 

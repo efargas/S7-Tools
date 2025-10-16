@@ -879,7 +879,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// </summary>
     public void Dispose()
     {
-    _monitoringTimer?.Dispose();
+        _monitoringTimer?.Dispose();
         _semaphore?.Dispose();
         GC.SuppressFinalize(this);
     }

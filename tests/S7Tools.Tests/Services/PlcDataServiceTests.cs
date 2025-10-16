@@ -129,14 +129,14 @@ public sealed class PlcDataServiceTests : IDisposable
         var tag = tagResult.Value;
 
         // Act
-    var result = await _service.AddTagAsync(tag!);
+        var result = await _service.AddTagAsync(tag!);
 
         // Assert
         Assert.True(result.IsSuccess);
 
         var allTagsResult = await _service.GetAllTagsAsync();
         Assert.True(allTagsResult.IsSuccess);
-    Assert.Contains(allTagsResult.Value!, t => t.Name == "TestTag");
+        Assert.Contains(allTagsResult.Value!, t => t.Name == "TestTag");
     }
 
     [Fact]

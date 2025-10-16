@@ -21,7 +21,7 @@ namespace S7Tools.Services;
 /// </summary>
 public class SocatService : ISocatService, IDisposable
 {
-    #pragma warning disable CS0067 // Events may be declared for external subscriptions; not used in this assembly
+#pragma warning disable CS0067 // Events may be declared for external subscriptions; not used in this assembly
     private readonly ILogger<SocatService> _logger;
     private readonly ISettingsService _settingsService;
     private readonly ISerialPortService _serialPortService;
@@ -82,7 +82,7 @@ public class SocatService : ISocatService, IDisposable
     /// Occurs when data is transferred through a socat process (for monitoring purposes).
     /// </summary>
     public event EventHandler<SocatDataTransferEventArgs>? DataTransferred;
-    #pragma warning restore CS0067
+#pragma warning restore CS0067
 
     #endregion
 
@@ -1367,13 +1367,26 @@ public class SocatService : ISocatService, IDisposable
                 {
                     string trimmed = line.Trim();
                     string[] parts = trimmed.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length < 2) continue;
+                    if (parts.Length < 2)
+                    {
+                        continue;
+                    }
 
-                    if (!int.TryParse(parts[0], out int pid)) continue;
+                    if (!int.TryParse(parts[0], out int pid))
+                    {
+                        continue;
+                    }
+
                     string cmd = parts[1];
-                    if (!cmd.StartsWith("socat")) continue;
+                    if (!cmd.StartsWith("socat"))
+                    {
+                        continue;
+                    }
 
-                    if (_runningProcesses.ContainsKey(pid)) continue; // already tracked
+                    if (_runningProcesses.ContainsKey(pid))
+                    {
+                        continue; // already tracked
+                    }
 
                     int port = 0;
                     string host = "0.0.0.0";

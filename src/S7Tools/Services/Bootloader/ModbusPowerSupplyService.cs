@@ -63,8 +63,10 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     public Task<bool> TurnOnAsync(CancellationToken cancellationToken = default)
     {
         if (!_isConnected)
+        {
             throw new InvalidOperationException("Not connected to power supply");
-        
+        }
+
         _logger.LogInformation("Turning power ON");
         return Task.FromResult(true);
     }
@@ -73,8 +75,10 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     public Task<bool> TurnOffAsync(CancellationToken cancellationToken = default)
     {
         if (!_isConnected)
+        {
             throw new InvalidOperationException("Not connected to power supply");
-        
+        }
+
         _logger.LogInformation("Turning power OFF");
         return Task.FromResult(true);
     }
@@ -83,8 +87,10 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     public Task<bool> ReadPowerStateAsync(CancellationToken cancellationToken = default)
     {
         if (!_isConnected)
+        {
             throw new InvalidOperationException("Not connected to power supply");
-        
+        }
+
         _logger.LogDebug("Reading power state");
         return Task.FromResult(false); // Stub: returns OFF
     }
@@ -93,16 +99,18 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     public async Task<bool> PowerCycleAsync(int delayMs = 5000, CancellationToken cancellationToken = default)
     {
         if (!_isConnected)
+        {
             throw new InvalidOperationException("Not connected to power supply");
-        
+        }
+
         _logger.LogInformation("Starting power cycle with {Delay}ms delay", delayMs);
-        
+
         await TurnOffAsync(cancellationToken).ConfigureAwait(false);
         await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
         await TurnOnAsync(cancellationToken).ConfigureAwait(false);
-        
+
         _logger.LogInformation("Power cycle complete");
         return true;
     }
 
-    }
+}

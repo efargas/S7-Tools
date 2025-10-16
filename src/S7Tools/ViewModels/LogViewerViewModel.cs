@@ -507,10 +507,10 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
 /// </summary>
 internal class DesignTimeLogDataStore : ILogDataStore
 {
-    #pragma warning disable CS0067 // Events may be wired by designer; suppress 'never used'
+#pragma warning disable CS0067 // Events may be wired by designer; suppress 'never used'
     public event PropertyChangedEventHandler? PropertyChanged;
     public event System.Collections.Specialized.NotifyCollectionChangedEventHandler? CollectionChanged;
-    #pragma warning restore CS0067
+#pragma warning restore CS0067
 
     public DesignTimeLogDataStore()
     {
