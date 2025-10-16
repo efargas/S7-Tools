@@ -19,6 +19,12 @@ namespace S7Tools.ViewModels;
 /// </summary>
 public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 {
+    #region Constants
+
+    private const int MaxScanHistoryEntries = 50;
+
+    #endregion
+
     #region Fields
 
     private readonly ISerialPortService _portService;
@@ -427,8 +433,8 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
             ScanHistory.Insert(0, scanResult);
 
-            // Keep only last 50 scan results
-            while (ScanHistory.Count > 50)
+            // Keep only last MaxScanHistoryEntries scan results
+            while (ScanHistory.Count > MaxScanHistoryEntries)
             {
                 ScanHistory.RemoveAt(ScanHistory.Count - 1);
             }
