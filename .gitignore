@@ -488,5 +488,5 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-.github/agents/workspace/referent-projects/
+.github/agents/workspace/reference-projects/LogViewerControl
 build_output*.txt
