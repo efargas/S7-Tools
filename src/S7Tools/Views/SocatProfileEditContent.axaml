@@ -89,7 +89,7 @@
                       IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
                       MinWidth="120">
               <ComboBox.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate DataType="sys:Int32">
                   <TextBlock>
                     <TextBlock.Text>
                       <MultiBinding StringFormat="{}{0} {1}">
@@ -110,7 +110,7 @@
                       IsEnabled="{Binding IsReadOnly, Converter={StaticResource BooleanToInverseBooleanConverter}}"
                       MinWidth="100">
               <ComboBox.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate DataType="sys:Int32">
                   <TextBlock Text="{Binding StringFormat={}{0} bytes}" />
                 </DataTemplate>
               </ComboBox.ItemTemplate>
@@ -209,7 +209,7 @@
 
           <ItemsControl ItemsSource="{Binding ValidationErrors}">
             <ItemsControl.ItemTemplate>
-              <DataTemplate>
+              <DataTemplate DataType="sys:String">
                 <TextBlock Text="{Binding}"
                            Foreground="{DynamicResource SystemColorRedColor8}"
                            TextWrapping="Wrap"

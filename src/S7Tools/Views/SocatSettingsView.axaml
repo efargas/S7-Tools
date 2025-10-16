@@ -6,6 +6,7 @@
              xmlns:conv="using:S7Tools.Converters"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.SocatSettingsView"
              x:DataType="vm:SocatSettingsViewModel"
@@ -347,7 +348,7 @@
                 </ListBox.ItemsPanel>
 
                 <ListBox.ItemTemplate>
-                  <DataTemplate>
+                  <DataTemplate DataType="sys:String">
                     <Border Background="#2D2D2D"
                             CornerRadius="0"
                             Padding="8,6"

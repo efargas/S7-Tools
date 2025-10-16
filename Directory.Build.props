@@ -3,9 +3,24 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-    <WarningsNotAsErrors>CS8618;CS8625;CS8603;CS8604;CS8602;CS8600;CS8601;CS8765</WarningsNotAsErrors>
+    <!-- Nullable warnings that are acceptable for now -->
+    <WarningsNotAsErrors>CS8618;CS8625;CS8603;CS8604;CS8602;CS8600;CS8601;CS8765;CS8767;CS8619</WarningsNotAsErrors>
+    <!-- Missing XML documentation warnings for design-time classes -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS1591;CS1572</WarningsNotAsErrors>
+    <!-- Async without await warnings for placeholder methods -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS1998</WarningsNotAsErrors>
+    <!-- Unused events/fields in design-time and interface implementations -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0067;CS0649</WarningsNotAsErrors>
+    <!-- Type conflicts that are intentional -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0436</WarningsNotAsErrors>
+    <!-- Obsolete API usage warnings for planned refactoring -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CS0618</WarningsNotAsErrors>
+    <!-- Code analysis warnings that are acceptable -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);CA1819;CA1805;CA1001;CA1812;CA2214</WarningsNotAsErrors>
+    <!-- xUnit analyzer warnings for test projects -->
+    <WarningsNotAsErrors>$(WarningsNotAsErrors);xUnit1031</WarningsNotAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
