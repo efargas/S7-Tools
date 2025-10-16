@@ -85,6 +85,14 @@
 - Rebuilt solution: now 0 errors, 0 warnings.
 - Rationale: aligns with async guidelines, prevents potential deadlocks, and improves test reliability.
 
+### 2025-10-16 — Profile Create/Edit Auto-Refresh & Dialog Close
+
+- Fixed Create/Edit flows to close dialog on successful Save and auto-refresh the profiles list.
+- Implemented refresh-and-reselect pattern by replacing the ObservableCollection instance after reload.
+- Verified Duplicate/Delete and Set Default continue to update the UI immediately.
+- Addressed PowerSupply editor StatusMessage reporting for consistent error feedback.
+- Build: PASS, Tests: PASS (178/178). User confirmation: "perfectly working now".
+
 ## 📋 Next Development Focus
 
 ### Available Development Paths

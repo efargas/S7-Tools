@@ -51,7 +51,7 @@ public partial class ProfileEditDialog : Window
         System.Diagnostics.Debug.WriteLine($"DEBUG: DataContext set to: {request.ProfileViewModel?.GetType().Name ?? "null"}");
 
         // Set the content based on profile type
-        var contentArea = this.FindControl<ContentPresenter>("ContentArea");
+        ContentPresenter? contentArea = this.FindControl<ContentPresenter>("ContentArea");
         if (contentArea != null)
         {
             System.Diagnostics.Debug.WriteLine($"DEBUG: ContentArea found, setting content for {request.ProfileType}");
@@ -125,8 +125,8 @@ public partial class ProfileEditDialog : Window
     /// </summary>
     private void SetupEventHandlers()
     {
-        var saveButton = this.FindControl<Button>("SaveButton");
-        var cancelButton = this.FindControl<Button>("CancelButton");
+        Button? saveButton = this.FindControl<Button>("SaveButton");
+        Button? cancelButton = this.FindControl<Button>("CancelButton");
 
         if (saveButton != null)
         {
@@ -226,6 +226,7 @@ public partial class ProfileEditDialog : Window
                 _isSaving = true;
                 System.Diagnostics.Debug.WriteLine($"🔒 Set _isSaving = true, starting save operation");
 
+                bool savedSuccessfully = false;
                 try
                 {
                     // Call SaveAsync directly (not via ReactiveCommand) to avoid UI thread deadlock
@@ -249,9 +250,7 @@ public partial class ProfileEditDialog : Window
                         System.Diagnostics.Debug.WriteLine("✅ PowerSupply SaveAsync completed successfully");
                     }
 
-                    Result = ProfileEditResult.Success(profileViewModel);
-                    System.Diagnostics.Debug.WriteLine($"✅ Profile save successful, closing dialog with Success result");
-                    Close();
+                    savedSuccessfully = true;
                 }
                 catch (Exception ex)
                 {
@@ -265,7 +264,7 @@ public partial class ProfileEditDialog : Window
 
                     // Update the ViewModel's StatusMessage which is displayed in the dialog UI
                     // This makes the error visible to the user so they understand why save failed
-                    var errorMessage = $"Save failed: {ex.Message}";
+                    string errorMessage = $"Save failed: {ex.Message}";
 
                     // Update StatusMessage on each ViewModel type
                     if (profileViewModel is SerialPortProfileViewModel serialVm)
@@ -280,14 +279,21 @@ public partial class ProfileEditDialog : Window
                     }
                     else if (profileViewModel is PowerSupplyProfileViewModel powerVm)
                     {
-                        // PowerSupplyProfileViewModel.StatusMessage setter is private, skip update
-                        System.Diagnostics.Debug.WriteLine($"DEBUG: Cannot update PowerSupplyProfileViewModel StatusMessage (setter is private)");
+                        powerVm.StatusMessage = errorMessage;
+                        System.Diagnostics.Debug.WriteLine($"DEBUG: Updated PowerSupplyProfileViewModel StatusMessage: {errorMessage}");
                     }
                 }
                 finally
                 {
                     _isSaving = false;
                     System.Diagnostics.Debug.WriteLine($"🔓 Set _isSaving = false, save operation completed");
+                }
+
+                if (savedSuccessfully)
+                {
+                    Result = ProfileEditResult.Success(profileViewModel);
+                    System.Diagnostics.Debug.WriteLine($"✅ Profile save successful, closing dialog with Success result");
+                    Close();
                 }
             }
             else

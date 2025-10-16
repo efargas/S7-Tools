@@ -222,7 +222,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     public string StatusMessage
     {
         get => _statusMessage;
-        private set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
+        set => this.RaiseAndSetIfChanged(ref _statusMessage, value);
     }
 
     #endregion

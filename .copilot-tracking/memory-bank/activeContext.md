@@ -40,6 +40,15 @@
 - 🛠️ **Development Experience Improved**: Strict compilation standards, clean repository management
 
 **System Health**: ✅ All improvements successfully implemented with comprehensive testing and verification
+## ✅ Recent Fix: Profile Create/Edit Auto-Refresh & Dialog Close (2025-10-16)
+
+- Fixed Create/Edit flows so that on successful Save the dialog closes reliably and the profiles list updates automatically.
+- Adopted the refresh-and-reselect pattern: after dialog success, reload the collection, replace the ObservableCollection instance, and reselect the appropriate item.
+- Ensured Duplicate/Delete and Set Default remain consistent with the same refresh behavior.
+- Resolved PowerSupply editor status reporting so error messages can be surfaced consistently from the dialog.
+- User confirmation: "perfectly working now".
+
+Optional enhancements captured as a new task (Pending): unify editor status reporting and centralize name uniqueness validation (see TASK015).
 
 ## 📋 Next Development Focus
 

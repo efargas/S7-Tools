@@ -29,16 +29,23 @@ All external code reviews must follow this protocol:
 try { /* ... */ } catch (Exception) { /* silent */ }
 // GOOD: Log and rethrow
 try { /* ... */ } catch (Exception ex) { _logger.LogError(ex, "Operation failed"); throw; }
-```
 
 #### Example: Batch UI Notification
 ```csharp
 // BAD: Triggers UI update for each item
-foreach (var item in items) collection.Add(item);
-// GOOD: Single notification
-collection.AddRange(items);
 ```
 
+
+### 4.4 Dialog Success → Refresh-and-Reselect Pattern (MANDATORY)
+
+When Create/Edit/Duplicate dialogs complete successfully:
+
+- Close the dialog only after SaveAsync succeeds; report errors via the ViewModel's StatusMessage.
+- Refresh the list by reloading from the manager and replacing the entire ObservableCollection instance.
+- Reselect the relevant profile after refresh (by Id when editing, by name when creating/duplicating) to preserve user context.
+- For Delete/Set Default, follow the same refresh pattern and adjust selection sensibly (next/previous or first item).
+
+Rationale: Avalonia DataGrid reliably updates when the collection instance changes; replacing the collection avoids stale bindings and ensures immediate UI sync.
 ### Deferred Improvements Rule
 
 Never implement high-risk, broad refactors (e.g., file-scoped namespaces, Result pattern overhaul, DI simplification) during active feature development. Instead, document as tasks and defer until the current feature is stable.
