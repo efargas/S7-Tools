@@ -268,4 +268,29 @@ public interface IUnifiedProfileDialogService
         System.Func<string, Task<ProfileValidationResult>>? validator = null);
 
     #endregion
+
+    #region Job Profile Operations
+
+    /// <summary>
+    /// Shows a create dialog for a new job profile with pre-populated default values.
+    /// </summary>
+    /// <param name="request">Create request with default values and configuration.</param>
+    /// <returns>Dialog result with the created profile or cancellation status.</returns>
+    Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobCreateDialogAsync(ProfileCreateRequest request);
+
+    /// <summary>
+    /// Shows an edit dialog for an existing job profile.
+    /// </summary>
+    /// <param name="request">Edit request with profile ID and configuration.</param>
+    /// <returns>Dialog result with the updated profile or cancellation status.</returns>
+    Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobEditDialogAsync(ProfileEditRequest request);
+
+    /// <summary>
+    /// Shows a duplicate dialog for creating a copy of an existing job profile.
+    /// </summary>
+    /// <param name="request">Duplicate request with source profile and suggested name.</param>
+    /// <returns>Dialog result with the new profile name or cancellation status.</returns>
+    Task<ProfileDialogResult<string>> ShowJobDuplicateDialogAsync(ProfileDuplicateRequest request);
+
+    #endregion
 }

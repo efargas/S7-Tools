@@ -207,6 +207,110 @@ All profile ViewModels inherit from a `ProfileManagementViewModelBase<TProfile>`
 
 See: `PROFILE_MANAGEMENT_FIXES_SUMMARY.md` for recent fixes (e.g., Edit dialog now loads existing data into VM via LoadProfile()).
 
+### 4.4 Task Manager and Jobs UI Patterns (TASK017 Phase 4)
+
+#### TaskManagerViewModel Pattern
+Real-time task monitoring with state-based reactive collections:
+
+```csharp
+// State-based reactive collections for task organization
+public ObservableCollection<TaskExecution> ActiveTasks { get; }
+public ObservableCollection<TaskExecution> ScheduledTasks { get; }
+public ObservableCollection<TaskExecution> FinishedTasks { get; }
+
+// Auto-refresh with configurable intervals
+private readonly Timer _refreshTimer;
+public TimeSpan AutoRefreshInterval { get; set; } = TimeSpan.FromSeconds(2);
+
+// Reactive commands with proper CanExecute validation
+public ReactiveCommand<TaskExecution, Unit> StartTaskCommand { get; }
+public ReactiveCommand<TaskExecution, Unit> PauseTaskCommand { get; }
+```
+
+#### JobsManagementViewModel Pattern
+Extends ProfileManagementViewModelBase with job-specific operations:
+
+```csharp
+// Job-specific collections for UI organization
+public ObservableCollection<JobProfile> AllJobs { get; }
+public ObservableCollection<JobProfile> JobTemplates { get; }
+public ObservableCollection<JobProfile> UserJobs { get; }
+
+// Template management commands
+public ReactiveCommand<Unit, Unit> CreateFromTemplateCommand { get; }
+public ReactiveCommand<Unit, Unit> SaveAsTemplateCommand { get; }
+
+// Job-to-task integration
+public ReactiveCommand<Unit, Unit> CreateTaskFromJobCommand { get; }
+```
+
+#### VSCode-Style Activity Bar Integration
+Activity enhancement pattern for new activities:
+
+```csharp
+// In ActivityBarService, add new activities
+activities.Add(new ActivityBarItem
+{
+    Id = "taskmanager",
+    Label = "Task Manager",
+    Icon = "TaskManagerIcon",
+    IsVisible = true
+});
+
+// In NavigationViewModel, add navigation cases
+case "taskmanager":
+    Content = new TaskManagerViewModel(_serviceProvider);
+    break;
+case "jobs":
+    Content = new JobsManagementViewModel(_serviceProvider);
+    break;
+```
+
+#### Multi-Tab Interface Pattern (TaskManagerView)
+Avalonia XAML pattern for state-based tab organization:
+
+```xml
+<TabControl Grid.Row="1">
+  <TabItem Header="Active">
+    <DataGrid ItemsSource="{Binding ActiveTasks}">
+      <!-- Task columns with progress indicators -->
+    </DataGrid>
+  </TabItem>
+  <TabItem Header="Scheduled">
+    <DataGrid ItemsSource="{Binding ScheduledTasks}">
+      <!-- Scheduled task columns -->
+    </DataGrid>
+  </TabItem>
+</TabControl>
+```
+
+#### Expandable Details Pattern (JobsManagementView)
+DataGrid with expandable details for complex data:
+
+```xml
+<DataGrid ItemsSource="{Binding AllJobs}">
+  <DataGrid.RowDetailsTemplate>
+    <DataTemplate>
+      <StackPanel Margin="20,10">
+        <!-- Job details: memory regions, timing, profiles -->
+      </StackPanel>
+    </DataTemplate>
+  </DataGrid.RowDetailsTemplate>
+</DataGrid>
+```
+
+#### Avalonia StringFormat Standards
+Correct StringFormat syntax for Avalonia (escape braces):
+
+```xml
+<!-- Correct: Use {} to escape literal braces -->
+<TextBlock Text="{Binding Progress, StringFormat='{}{0:F1}%'}" />
+<TextBlock Text="{Binding Count, StringFormat='{}{0} items'}" />
+
+<!-- Incorrect: Direct braces cause parsing errors -->
+<TextBlock Text="{Binding Progress, StringFormat='{0:F1}%'}" />
+```
+
 ---
 
 ## 5) Services, DI, and Error Handling
@@ -944,7 +1048,7 @@ public class ProfileException : S7ToolsException
 {
     public int? ProfileId { get; init; }
     public string? ProfileName { get; init; }
-    
+
     public ProfileException(string message, int profileId, string profileName)
         : base(message)
     {
@@ -974,17 +1078,17 @@ public async Task<T> UpdateAsync(T profile, CancellationToken ct = default)
     {
         throw new ProfileNotFoundException(profile.Id);
     }
-    
+
     if (!existingProfile.CanModify())
     {
         throw new ReadOnlyProfileModificationException(existingProfile.Id, existingProfile.Name);
     }
-    
+
     if (string.IsNullOrWhiteSpace(profile.Name))
     {
         throw new ValidationException("Name", "Profile name cannot be empty.");
     }
-    
+
     // ... rest of implementation
 }
 
@@ -1046,7 +1150,7 @@ public async Task UpdateAsync_ProfileNotFound_ThrowsProfileNotFoundException()
     // Arrange
     var manager = new ProfileManager();
     var profile = new Profile { Id = 999, Name = "Test" };
-    
+
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ProfileNotFoundException>(
         () => manager.UpdateAsync(profile)
@@ -1194,3 +1298,267 @@ public class SomeService
 
 ```csharp
 // Unit test example
+[Test]
+public async Task ShouldCreateValidProfile()
+{
+    // Arrange
+    var profile = new SerialPortProfile { Name = "Test", Device = "/dev/ttyUSB0" };
+
+    // Act
+    var result = await _service.CreateAsync(profile);
+
+    // Assert
+    Assert.That(result.IsValid, Is.True);
+}
+```
+
+---
+
+## Task Manager and Jobs System Patterns (Phase 3 Complete)
+
+### **Enhanced Bootloader Service Pattern**
+
+The Enhanced Bootloader Service implements a decorator pattern to extend existing bootloader functionality with TaskExecution integration, retry mechanisms, and comprehensive error handling.
+
+#### **Service Architecture**
+
+```csharp
+// Enhanced service wraps existing service with additional capabilities
+public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDisposable
+{
+    private readonly IBootloaderService _baseBootloaderService;
+    private readonly IResourceCoordinator _resourceCoordinator;
+    private readonly IValidationService _validationService;
+    private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
+    private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
+
+    // Wrap base service call with enhanced functionality
+    public async Task<byte[]> DumpWithTaskTrackingAsync(
+        TaskExecution taskExecution,
+        JobProfileSet profiles,
+        CancellationToken cancellationToken = default)
+    {
+        await _operationSemaphore.WaitAsync(cancellationToken);
+        try
+        {
+            // Update TaskExecution state
+            taskExecution.UpdateState(TaskState.Running, "Initializing bootloader operation");
+
+            // Create progress reporter that updates TaskExecution
+            var progressReporter = new Progress<(string stage, double percent)>(progress =>
+            {
+                var (stage, percent) = progress;
+                var operation = GetUserFriendlyOperationName(stage);
+                taskExecution.UpdateProgress(percent * 100.0, operation);
+            });
+
+            // Execute with retry logic
+            return await ExecuteWithRetryAsync(
+                () => _baseBootloaderService.DumpAsync(profiles, progressReporter, cancellationToken),
+                RetryableOperations.All,
+                taskExecution,
+                cancellationToken);
+        }
+        finally
+        {
+            _operationSemaphore.Release();
+        }
+    }
+}
+```
+
+#### **Retry Pattern with Exponential Backoff**
+
+```csharp
+// Configurable retry mechanism for different operation types
+private async Task<T> ExecuteWithRetryAsync<T>(
+    Func<Task<T>> operation,
+    RetryableOperations retryableOperation,
+    TaskExecution taskExecution,
+    CancellationToken cancellationToken)
+{
+    var maxRetries = GetMaxRetriesForOperation(retryableOperation);
+    var currentDelay = _retryConfiguration.InitialRetryDelay;
+
+    for (int attempt = 0; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            if (attempt > 0)
+            {
+                taskExecution.UpdateProgress(
+                    taskExecution.ProgressPercentage,
+                    $"Retrying operation (attempt {attempt + 1}/{maxRetries + 1})");
+
+                await Task.Delay(currentDelay, cancellationToken);
+            }
+
+            return await operation();
+        }
+        catch (OperationCanceledException)
+        {
+            throw; // Don't retry cancellation
+        }
+        catch (Exception ex) when (attempt < maxRetries)
+        {
+            // Calculate next delay with exponential backoff
+            if (_retryConfiguration.UseExponentialBackoff)
+            {
+                currentDelay = TimeSpan.FromMilliseconds(
+                    Math.Min(
+                        currentDelay.TotalMilliseconds * _retryConfiguration.BackoffMultiplier,
+                        _retryConfiguration.MaxRetryDelay.TotalMilliseconds));
+            }
+        }
+    }
+
+    throw new BootloaderOperationException($"Operation failed after {maxRetries + 1} attempts");
+}
+```
+
+#### **Resource Coordination Pattern**
+
+```csharp
+// Resource validation before operation execution
+public async Task<ValidationResult> ValidateResourcesAsync(
+    JobProfileSet profiles,
+    CancellationToken cancellationToken = default)
+{
+    var validationErrors = new List<string>();
+
+    // Check resource availability through coordinator
+    var resourceKeys = ExtractResourceKeys(profiles);
+    var canAcquire = _resourceCoordinator.TryAcquire(resourceKeys);
+
+    if (canAcquire)
+    {
+        // Release immediately since this is just validation
+        _resourceCoordinator.Release(resourceKeys);
+    }
+    else
+    {
+        validationErrors.Add("Required resources are not available or locked by another task");
+    }
+
+    return validationErrors.Count == 0
+        ? ValidationResult.Success()
+        : ValidationResult.Failure(validationErrors.Select(error =>
+            new ValidationError("Resource", error)).ToArray());
+}
+
+// Extract resource keys from job profiles
+private static IEnumerable<ResourceKey> ExtractResourceKeys(JobProfileSet profiles)
+{
+    return new[]
+    {
+        new ResourceKey("serial", profiles.Serial.Device),
+        new ResourceKey("tcp", profiles.Socat.Port.ToString()),
+        new ResourceKey("modbus", $"{profiles.Power.Host}:{profiles.Power.Port}")
+    };
+}
+```
+
+#### **Progress Mapping Pattern**
+
+```csharp
+// Convert technical stage names to user-friendly operation descriptions
+private static string GetUserFriendlyOperationName(string stage)
+{
+    return stage switch
+    {
+        "socat_setup" => "Setting up network bridge",
+        "power_cycle" => "Power cycling PLC",
+        "handshake" => "Establishing bootloader connection",
+        "stager_install" => "Installing bootloader stager",
+        "memory_dump" => "Dumping memory",
+        "teardown" => "Cleaning up resources",
+        "complete" => "Operation complete",
+        _ => stage.Replace("_", " ")
+    };
+}
+```
+
+### **Service Registration Pattern for Task Manager**
+
+```csharp
+// Comprehensive service registration for task manager and jobs system
+public static IServiceCollection AddS7ToolsTaskManagerServices(this IServiceCollection services)
+{
+    ArgumentNullException.ThrowIfNull(services);
+
+    // Job Management Services
+    services.TryAddSingleton<IJobManager, JobManager>();
+
+    // Task Scheduling Services
+    services.TryAddSingleton<ITaskScheduler, EnhancedTaskScheduler>();
+
+    // Resource Coordination Services
+    services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
+
+    // Bootloader Services (base and enhanced)
+    services.TryAddSingleton<IBootloaderService, Services.Bootloader.BootloaderService>();
+    services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
+
+    // Payload Services
+    services.TryAddSingleton<IPayloadProvider, Services.Bootloader.FilePayloadProvider>();
+
+    return services;
+}
+```
+
+### **TaskExecution State Management Pattern**
+
+```csharp
+// Rich TaskExecution model with state transitions and progress tracking
+public class TaskExecution
+{
+    public void UpdateState(TaskState newState, string? message = null)
+    {
+        State = newState;
+
+        switch (newState)
+        {
+            case TaskState.Queued:
+                QueuedAt = DateTime.UtcNow;
+                break;
+            case TaskState.Running:
+                StartedAt = DateTime.UtcNow;
+                break;
+            case TaskState.Completed:
+            case TaskState.Failed:
+            case TaskState.Cancelled:
+                CompletedAt = DateTime.UtcNow;
+                break;
+        }
+
+        if (!string.IsNullOrEmpty(message))
+        {
+            CurrentOperation = message;
+        }
+    }
+
+    public void UpdateProgress(double percentage, string operation, Dictionary<string, object>? progressData = null)
+    {
+        ProgressPercentage = Math.Clamp(percentage, 0.0, 100.0);
+        CurrentOperation = operation;
+
+        if (progressData != null)
+        {
+            foreach (var kvp in progressData)
+            {
+                ProgressData[kvp.Key] = kvp.Value;
+            }
+        }
+    }
+}
+```
+
+### **Key Design Principles Applied**
+
+1. **Decorator Pattern**: Enhanced bootloader service wraps existing service without breaking changes
+2. **Retry Resilience**: Configurable retry policies with exponential backoff for different failure scenarios
+3. **Resource Coordination**: Proper resource locking and conflict detection prevents concurrent access issues
+4. **Progress Abstraction**: Clean separation between technical progress reporting and user-friendly status updates
+5. **State Management**: Rich TaskExecution model tracks complete lifecycle with timestamps and progress data
+6. **Error Context**: Domain-specific exceptions with comprehensive error information and retry attempt tracking
+7. **Clean Disposal**: Proper resource cleanup with semaphore disposal and memory management

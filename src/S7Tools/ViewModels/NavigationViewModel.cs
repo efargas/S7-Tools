@@ -320,6 +320,30 @@ public class NavigationViewModel : ReactiveObject
                     _logger.LogDebug("Navigated to Settings");
                     break;
 
+                case "taskmanager":
+                    SidebarTitle = "TASK MANAGER";
+                    MainContentTitle = "Task Manager";
+                    ShowMainContentHeader = true;
+                    var taskManagerViewModel = CreateViewModel<TaskManagerViewModel>();
+                    CurrentContent = CreateViewModel<HomeViewModel>(); // Minimal sidebar content
+                    MainContent = taskManagerViewModel; // Task manager in main area
+                    DetailContent = taskManagerViewModel;
+                    ShowLogStats = false;
+                    _logger.LogDebug("Navigated to Task Manager");
+                    break;
+
+                case "jobs":
+                    SidebarTitle = "JOBS MANAGEMENT";
+                    MainContentTitle = "Jobs Management";
+                    ShowMainContentHeader = true;
+                    var jobsViewModel = CreateViewModel<JobsManagementViewModel>();
+                    CurrentContent = CreateViewModel<HomeViewModel>(); // Minimal sidebar content
+                    MainContent = jobsViewModel; // Jobs management in main area
+                    DetailContent = jobsViewModel;
+                    ShowLogStats = false;
+                    _logger.LogDebug("Navigated to Jobs Management");
+                    break;
+
                 default:
                     SidebarTitle = "EXPLORER";
                     MainContentTitle = "";

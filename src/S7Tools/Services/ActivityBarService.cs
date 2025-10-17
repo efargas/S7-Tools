@@ -266,17 +266,25 @@ public sealed class ActivityBarService : IActivityBarService
             {
                 Order = 0
             },
-            new ActivityBarItem("connections", "Connections", "PLC Connections", "fa-solid fa-plug")
+            new ActivityBarItem("taskmanager", "Task Manager", "Task Manager - Monitor and control task execution", "fa-solid fa-tasks")
             {
                 Order = 1
             },
-            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "fa-solid fa-list-alt")
+            new ActivityBarItem("jobs", "Jobs", "Jobs Management - Create and manage job profiles", "fa-solid fa-briefcase")
             {
                 Order = 2
             },
-            new ActivityBarItem("settings", "Settings", "Application Settings", "fa-solid fa-cog")
+            new ActivityBarItem("connections", "Connections", "PLC Connections", "fa-solid fa-plug")
             {
                 Order = 3
+            },
+            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "fa-solid fa-list-alt")
+            {
+                Order = 4
+            },
+            new ActivityBarItem("settings", "Settings", "Application Settings", "fa-solid fa-cog")
+            {
+                Order = 5
             }
         ];
     }

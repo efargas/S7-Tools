@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Commands;
 using S7Tools.Core.Factories;
 using S7Tools.Core.Logging;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Resources;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
@@ -14,6 +15,8 @@ using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.Services.Jobs;
+using S7Tools.Services.Tasking;
 using S7Tools.ViewModels;
 
 namespace S7Tools.Extensions;
@@ -163,6 +166,46 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
+    /// Adds S7Tools task manager and jobs services to the service collection.
+    /// This includes job management, task scheduling, and bootloader orchestration services.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsTaskManagerServices(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        // Add Job Management Services
+        services.TryAddSingleton<IJobManager, JobManager>();
+
+        // Add Task Scheduling Services
+        services.TryAddSingleton<ITaskScheduler, EnhancedTaskScheduler>();
+
+        // Add Resource Coordination Services
+        services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
+
+        // Add Bootloader Services
+        services.TryAddSingleton<IBootloaderService, Services.Bootloader.BootloaderService>();
+        services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
+
+        // Add Payload Services
+        services.TryAddSingleton<IPayloadProvider, Services.Bootloader.FilePayloadProvider>();
+
+        // Add PLC Client Factory
+        services.TryAddTransient<Func<JobProfileSet, IPlcClient>>(provider =>
+        {
+            return profiles =>
+            {
+                // This would be implemented based on the profile configuration
+                // For now, return a mock implementation
+                return provider.GetRequiredService<IPlcClient>();
+            };
+        });
+
+        return services;
+    }
+
+    /// <summary>
     /// Adds S7Tools ViewModels to the service collection.
     /// </summary>
     /// <param name="services">The service collection to add ViewModels to.</param>
@@ -214,6 +257,10 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<PowerSupplySettingsViewModel>();
         services.TryAddTransient<PowerSupplyProfileViewModel>();
 
+        // Add Task Management ViewModels (Task Manager and Jobs Management)
+        services.TryAddSingleton<TaskManagerViewModel>();
+        services.TryAddSingleton<JobsManagementViewModel>();
+
         return services;
     }
 
@@ -237,6 +284,9 @@ public static class ServiceCollectionExtensions
 
         // Add logging services
         services.AddS7ToolsLogging(configureDataStore);
+
+        // Add task manager and jobs services
+        services.AddS7ToolsTaskManagerServices();
 
         // Add ViewModels
         services.AddS7ToolsViewModels();
