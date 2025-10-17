@@ -71,14 +71,15 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <inheritdoc/>
     protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Creating default job profiles");
+    _logger.LogInformation("Creating default job profiles");
 
-        // Create the system default job profile
-        var defaultProfile = CreateSystemDefault();
-        _profiles.Add(defaultProfile);
+    // Create the system default job profile
+    var defaultProfile = CreateSystemDefault();
+    _profiles.Add(defaultProfile);
 
-        // Create a few example templates
-        var basicTemplate = JobProfile.CreateUserProfile("Basic Memory Dump", "Simple 4KB memory dump template");
+    // Create a few example templates
+    var basicTemplate = JobProfile.CreateUserProfile("Basic Memory Dump", "Simple 4KB memory dump template");
+    await Task.Yield();
         basicTemplate.IsTemplate = true;
         basicTemplate.Id = 2;
         _profiles.Add(basicTemplate);
@@ -305,11 +306,12 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <inheritdoc/>
     public async Task<IEnumerable<JobProfile>> GetJobsByStateAsync(JobState state, CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Getting jobs by state: {State}", state);
+    _logger.LogDebug("Getting jobs by state: {State}", state);
 
-        // Note: JobProfile doesn't track execution state - this is tracked by TaskExecution
-        // For now, return all jobs since this is profile management, not execution management
-        return await GetAllAsync(cancellationToken).ConfigureAwait(false);
+    // Note: JobProfile doesn't track execution state - this is tracked by TaskExecution
+    // For now, return all jobs since this is profile management, not execution management
+    // Await the GetAllAsync call and return the result directly
+    return await GetAllAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
@@ -390,6 +392,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
             profile.Touch();
         }
         await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+        await Task.Yield();
     }
 
     /// <summary>
@@ -398,9 +401,10 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     private async Task SaveProfilesAsync(CancellationToken cancellationToken)
     {
-        // This method should be implemented by the base class
-        // For now, just log that saving would happen
-        _logger.LogDebug("Saving {Count} job profiles to {Path}", _profiles.Count, _profilesPath);
+    // This method should be implemented by the base class
+    // For now, just log that saving would happen
+    _logger.LogDebug("Saving {Count} job profiles to {Path}", _profiles.Count, _profilesPath);
+    await Task.Yield();
     }
 
     /// <summary>

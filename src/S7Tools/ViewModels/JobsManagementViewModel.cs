@@ -265,7 +265,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         // TODO: Implement job-specific create dialog
         // For now, create a basic job profile
         var defaultJob = JobProfile.CreateUserProfile(request.DefaultName, request.DefaultDescription);
-
+        await Task.Yield();
         return new ProfileDialogResult<JobProfile>
         {
             IsSuccess = true,
@@ -283,7 +283,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         // TODO: Implement job-specific edit dialog
         // For now, return the existing profile unchanged
         JobProfile? existingJob = await _jobManager.GetByIdAsync(request.ProfileId);
-
+        await Task.Yield();
         return new ProfileDialogResult<JobProfile>
         {
             IsSuccess = existingJob != null,
@@ -300,6 +300,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     {
         // TODO: Implement input dialog for job duplication
         // For now, return the suggested name
+        await Task.Yield();
         return new ProfileDialogResult<string>
         {
             IsSuccess = true,
@@ -475,6 +476,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             // For now, just show a placeholder message
             StatusMessage = "Job import functionality not yet implemented";
             _logger.LogInformation("Job import requested but not yet implemented");
+            await Task.Yield();
         }
         catch (Exception ex)
         {
@@ -504,6 +506,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             StatusMessage = $"Export functionality for job '{SelectedProfile.Name}' not yet implemented";
             _logger.LogInformation("Job export requested for {JobId} ({JobName}) but not yet implemented",
                 SelectedProfile.Id, SelectedProfile.Name);
+            await Task.Yield();
         }
         catch (Exception ex)
         {
@@ -533,6 +536,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             StatusMessage = $"Task creation from job '{SelectedProfile.Name}' not yet implemented";
             _logger.LogInformation("Task creation requested from job {JobId} ({JobName}) but not yet implemented",
                 SelectedProfile.Id, SelectedProfile.Name);
+            await Task.Yield();
         }
         catch (Exception ex)
         {
@@ -558,6 +562,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             StatusMessage = "Validating job...";
 
             ValidationResult validationResult = await _jobManager.ValidateJobAsync(SelectedProfile);
+            await Task.Yield();
 
             if (validationResult.IsValid)
             {

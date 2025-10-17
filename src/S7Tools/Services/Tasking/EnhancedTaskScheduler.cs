@@ -323,6 +323,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<IReadOnlyCollection<TaskExecution>> GetQueuedTasksAsync(CancellationToken cancellationToken = default)
     {
+        await Task.Yield();
         return _tasks.Values
             .Where(t => t.State == TaskState.Queued)
             .OrderByDescending(t => t.Priority)
@@ -333,7 +334,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<IReadOnlyCollection<TaskExecution>> GetRunningTasksAsync(CancellationToken cancellationToken = default)
     {
-        return _tasks.Values.Where(t => t.State == TaskState.Running).ToList();
+    await Task.Yield();
+    return _tasks.Values.Where(t => t.State == TaskState.Running).ToList();
     }
 
     #endregion
@@ -422,6 +424,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         _isRunning = true;
         _logger.LogInformation("Task scheduler started");
+        await Task.Yield();
     }
 
     /// <inheritdoc/>
@@ -449,6 +452,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
 
         _logger.LogInformation("Task scheduler stopped");
+        await Task.Yield();
     }
 
     /// <inheritdoc/>
@@ -461,6 +465,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         _maxConcurrentTasks = maxConcurrentTasks;
         _logger.LogInformation("Set max concurrent tasks to {MaxConcurrentTasks}", maxConcurrentTasks);
+        await Task.Yield();
     }
 
     #endregion
@@ -481,6 +486,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
 
         _logger.LogInformation("Cleaned up {Count} old tasks older than {MaxAge}", oldTasks.Count, maxAge);
+        await Task.Yield();
         return oldTasks.Count;
     }
 
@@ -495,6 +501,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             ? TimeSpan.FromTicks((long)_executionTimes.Average(t => t.Ticks))
             : TimeSpan.Zero;
 
+        await Task.Yield();
         return new SchedulerStatistics
         {
             TotalTasksProcessed = _totalTasksProcessed,
