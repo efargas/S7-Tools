@@ -16,6 +16,7 @@ using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
+using S7Tools.Services.Bootloader;
 using S7Tools.Services.Tasking;
 using S7Tools.ViewModels;
 
@@ -178,8 +179,8 @@ public static class ServiceCollectionExtensions
         // Add JobManagerOptions configuration
         services.Configure<S7Tools.Core.Models.Jobs.JobManagerOptions>(options =>
         {
-            // TODO: Replace with actual path or load from settings
-            options.ProfilesPath = "src/S7Tools/bin/Debug/net8.0/resources/JobProfiles/profiles.json";
+            // Persist job profiles in the committed resources folder
+            options.ProfilesPath = "src/resources/JobProfiles/profiles.json";
         });
 
         // Add Job Management Services using options pattern
@@ -198,13 +199,16 @@ public static class ServiceCollectionExtensions
         // Add Payload Services
         services.TryAddSingleton<IPayloadProvider, Services.Bootloader.FilePayloadProvider>();
 
+        // Register PLC Client stub
+        services.TryAddTransient<IPlcClient, PlcClientStub>();
+
         // Add PLC Client Factory
         services.TryAddTransient<Func<JobProfileSet, IPlcClient>>(provider =>
         {
             return profiles =>
             {
                 // This would be implemented based on the profile configuration
-                // For now, return a mock implementation
+                // For now, return a stub implementation that logs calls
                 return provider.GetRequiredService<IPlcClient>();
             };
         });

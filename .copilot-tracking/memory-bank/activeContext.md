@@ -1,22 +1,21 @@
 # Active Context: S7Tools Development
 
 **Last Updated:** 2025-10-17
-**Current Phase:** TASK017 Implementation - Phase 4 COMPLETE ✅
-**Status:** � Task Manager and Jobs System - UI Implementation COMPLETE
+**Current Phase:** TASK017 Implementation — Reopened Scope
+**Status:** In Progress — Scheduler/DI baseline complete; next: UI wizard + details panels and MemoryRegionProfile polish
 
 ## Current Session Summary
 
-### � TASK017: Task Manager and Jobs Implementation (PHASE 4 COMPLETE)
+### 🔄 TASK017: Task Manager and Jobs Implementation (Reopened)
 
 **Objective:** Implement core S7Tools functionality for automated job management and PLC memory dumping
 
 **Current Status:**
-- ✅ **Phase 1 Complete**: Domain models and service interfaces implemented
-- ✅ **Phase 2 Complete**: Service implementations with template and resource coordination
-- ✅ **Phase 3 Complete**: Enhanced bootloader integration with TaskExecution tracking, retry mechanisms, and comprehensive logging
-- ✅ **Phase 4 COMPLETE**: UI implementation with ViewModels, Views, and VSCode-style activity bar integration
-- ⏳ **Phase 5 Ready**: Advanced features and real-time task execution
-- ⏳ **Phase 6 Pending**: Testing and integration
+- ✅ Phases 1–4 previously completed
+- 🔄 New work added: Refactor red-marked UI areas in screenshots (Jobs details, Task Manager lists)
+- 🔄 New work added: Implement Job Creator wizard with per-step profile ComboBoxes and inline details panel
+- 🔄 New work added: Add MemoryDumpProfile to unified profiles and wire into Job/validation
+- ⏳ Phase 5/6 pending after refactor and profile integration
 
 ### ✅ Major Accomplishments This Session
 
@@ -39,8 +38,9 @@
   - Real-time progress tracking and statistics
   - Task lifecycle management (pause, resume, restart, cancel)
   - Performance monitoring and cleanup operations
+  - Scheduled tasks (Local timezone): store schedule, auto-promote when due, immediate promotion if time passed
 
-#### Phase 4: UI Implementation (COMPLETE) - NEW
+#### Phase 4: UI Implementation (COMPLETE)
 - ✅ **TaskManagerViewModel**: Real-time task monitoring with reactive state collections
   - State-based task organization (Active, Scheduled, Finished) with reactive filtering
   - Real-time progress tracking with auto-refresh capabilities
@@ -64,6 +64,24 @@
   - Enhanced IUnifiedProfileDialogService with job-specific methods
   - Implemented job dialog stubs with proper error handling and logging
   - Foundation ready for complete job dialog implementation
+
+### Immediate Focus (Reopened Scope)
+
+1. Job Creator wizard experience (main content area, not dialog)
+  - Steps: Serial → Socat → Power Supply → Memory Region → Timing/Output → Review
+  - Each step uses a ComboBox to choose a profile and shows read-only details below
+  - Back/Next/Finish navigation with validation gating
+2. Jobs Management details panel refactor
+  - Group information into Basic Info, Profiles, Timing, Paths, Status
+  - Improve visual layout per red-highlighted areas in screenshots
+3. Task Manager lists polish
+  - Header/column alignment and counts per screenshots
+4. MemoryRegionProfile
+  - Ensure model + service (StandardProfileManager pattern)
+  - Keep Job.MemoryRegionProfileId and include in validators
+5. Wiring and configuration hygiene
+  - ProfilesPath now at `src/resources/JobProfiles/profiles.json`
+  - PLC client currently uses a stub (`PlcClientStub`) via DI factory until real client is provided
 
 #### Integration Achievements
 - ✅ **Clean Architecture Maintained**: Proper dependency flow with Domain → Application → Infrastructure
@@ -93,7 +111,7 @@
 - Template system enabling job reuse and standardization
 
 ### Current Build Status
-- ✅ **Compilation**: Clean build with 0 errors, 32 warnings (all acceptable/expected for stub implementations)
+- ✅ **Compilation**: Build passes after scheduler/DI updates; warnings acceptable for stub implementations
 - ✅ **Architecture**: All new components follow established patterns
 - ✅ **Integration**: Complete UI integration with VSCode-style interface patterns
 - ✅ **Validation**: Comprehensive error handling and business rule enforcement

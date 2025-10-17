@@ -101,6 +101,11 @@ public class MyViewModel : ReactiveObject, IDisposable
 - Separation of concerns: Serial service handles stty, Socat handles TCP bridging
 
 **Pattern Established: Bug Fix Task Creation**
+**Scheduler/DI Baseline (2025-10-17)**
+- Scheduled execution added to `EnhancedTaskScheduler` using Local timezone; due tasks auto-promote to queue.
+- `JobManagerOptions.ProfilesPath` set to `src/resources/JobProfiles/profiles.json`.
+- `PlcClientStub` registered and used by the factory until the reference client is available.
+
 ```markdown
 # Task Structure for Bug Fixes
 1. **Original Request**: Capture exact user words and context

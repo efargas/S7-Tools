@@ -68,4 +68,13 @@ This document provides essential onboarding, architecture, and coding standards 
 
 ---
 
+## Current Baseline Notes (for continuity)
+
+- Scheduler uses Local timezone; due scheduled tasks are auto-promoted to the queue.
+- Job profiles path (Options): `src/resources/JobProfiles/profiles.json`.
+- `PlcClientStub` is registered as a temporary implementation of `IPlcClient`; factory resolves it until the real client is provided.
+- Next major focus: Implement Job Creator wizard in main content area, refactor Jobs details panel, and polish MemoryRegionProfile integration.
+
+---
+
 **For any coding agent: Always align with the latest `systemPatterns.md` and never introduce new patterns or rules without updating the Memory Bank.**

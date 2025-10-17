@@ -2,11 +2,11 @@
 
 **Last Updated:** 2025-10-17
 **Total Tasks:** 15
-**Completed:** 13 | **In Progress:** 0 | **Pending:** 2 | **Abandoned:** 1
+**Completed:** 12 | **In Progress:** 1 | **Pending:** 2 | **Abandoned:** 1
 
 ## In Progress
 
-*No tasks currently in progress*
+- [TASK017] Task Manager and Jobs Implementation - Reopened; scheduler/DI baseline done; next: UI wizard and details panel polish, MemoryRegionProfile (2025-10-17)
 
 ## Pending
 
@@ -14,7 +14,7 @@
 
 ## Completed
 
-- [TASK017] Task Manager and Jobs Implementation - **Phase 4 COMPLETE** (All UI implementation finished: TaskManagerViewModel, JobsManagementViewModel, VSCode-style views, activity bar integration) - Completed 2025-10-17
+<!-- Phase 4 complete previously; task reopened with new scope -->
 
 
 ## Abandoned

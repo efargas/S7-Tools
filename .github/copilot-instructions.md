@@ -82,6 +82,15 @@ public static IServiceCollection AddS7ToolsFoundationServices(this IServiceColle
 
 Services are initialized in parallel during startup via `InitializeS7ToolsServicesAsync()`.
 
+### Task Scheduling Semantics
+- Use Local timezone for scheduled tasks (not UTC). Due scheduled tasks are promoted automatically to the queue; if scheduled in the past, enqueue immediately.
+
+### Job Profiles Storage
+- Job profiles are persisted at `src/resources/JobProfiles/profiles.json` via Options pattern. Ensure this file exists or create it with an empty array `[]` on first run.
+
+### PLC Client Stub (Temporary)
+- Until the reference PLC client is integrated, `PlcClientStub` implements `IPlcClient` and is wired through DI and the factory. It logs operations and returns zeroed dumps; do not rely on it for real hardware behavior.
+
 ## Custom Exception Hierarchy
 
 Use domain-specific exceptions in `S7Tools.Core/Exceptions/`:

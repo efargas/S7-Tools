@@ -1,6 +1,6 @@
 # [TASK017] - Task Manager and Jobs Implementation
 
-**Status:** In Progress
+**Status:** In Progress (Reopened with UI refactor + new profile work)
 **Added:** 2025-01-17
 **Updated:** 2025-10-17
 **Priority:** High
@@ -9,6 +9,21 @@
 ## Summary
 
 Implement the core S7Tools functionality: Task Manager and Jobs system for automated S7-1200 PLC memory dumping operations. This includes VSCode-style activity bar navigation, job creation/management, task scheduling, and parallel execution with resource coordination.
+
+## New Requirements (2025-10-17)
+
+Based on the latest UI review (see screenshots), we are reopening this task with additional scope:
+
+- Refactor the new views highlighted in red to improve layout and readability.
+- Add the memory-dump profiler as MemoryRegionProfile in the unified profile system.
+- Convert the Job Creator into a wizard-style flow:
+  - Each step selects one profile type (Serial, Socat, Power Supply, Memory Dump) via a ComboBox.
+  - Display the full details of the selected profile directly below the selection (read-only panel), so users can verify configuration without leaving the step.
+  - Provide Back/Next/Finish navigation with validation gating.
+
+Assumptions:
+- The "memory-dump profiler" refers to the existing MemoryRegionProfile concept; we will use the name MemoryRegionProfile (not introduce a new type).
+- The wizard will be presented in the main content area (Job Creator view), not in a dialog, following our ReactiveUI and MVVM patterns.
 
 ## Context & Motivation
 
@@ -51,7 +66,7 @@ Jobs Activity:
 
 #### 1.1 Job Domain Models
 - **Job** - Complete job configuration with GUID, name, profiles, timings
-- **MemoryRegionProfile** - Start address, size, output path configuration
+- **MemoryRegionProfile** - Start address, size (or regions), output path, naming patterns, dump strategy
 - **JobExecutionContext** - Runtime state and progress tracking
 - **TaskState** - Enumeration for task lifecycle states
 
@@ -60,6 +75,7 @@ Jobs Activity:
 - **ITaskScheduler** - Task queuing, scheduling, and execution coordination
 - **IResourceCoordinator** - Resource conflict detection and allocation
 - **IBootloaderOrchestrator** - S7-1200 bootloader operation sequence
+- **IMemoryRegionProfileService (NEW)** - Profile manager for MemoryRegionProfile using StandardProfileManager pattern
 
 #### 1.3 Extended Models
 ```csharp
@@ -211,12 +227,18 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<Job>
 }
 ```
 
-#### 4.4 Job Configuration Dialog
+#### 4.4 Job Creator Wizard (Main Content Area)
 - **Job Details** - Name, description, template options
-- **Profile Selection** - Dropdowns for Serial, Socat, PowerSupply, Memory Region profiles
-- **Timing Configuration** - Power on/off timing controls
-- **Output Settings** - Path selection, naming patterns
-- **Validation** - Real-time validation with error display
+- **Wizard Flow (NEW)**
+  - Step 1: Select Serial Profile → ComboBox + details panel below
+  - Step 2: Select Socat Profile → ComboBox + details panel below
+  - Step 3: Select Power Supply Profile → ComboBox + details panel below
+  - Step 4: Select Memory Region Profile → ComboBox + details panel below
+  - Step 5: Timing & Output → power timings, output path, naming
+  - Step 6: Review & Confirm → summary of all selections
+- **Profile Selection** - ComboBoxes for each profile type; read-only details panel shows full information for the selected profile
+- **Navigation** - Back / Next / Finish buttons; presented in the main content area (not a dialog)
+- **Validation** - Real-time validation with gating: Next/Finish disabled until the current step is valid
 
 ### Phase 5: Advanced Features (8-12 hours)
 
@@ -285,6 +307,20 @@ public class DumpProgress
 }
 ```
 
+## Subtasks (NEW)
+
+| ID | Description | Status | Updated |
+|----|-------------|--------|---------|
+| 1.1 | Add MemoryRegionProfile model (Core) | Not Started | 2025-10-17 |
+| 1.2 | Add IMemoryRegionProfileService + implementation | Not Started | 2025-10-17 |
+| 1.3 | Update Job to reference MemoryRegionProfileId and adjust validators | Not Started | 2025-10-17 |
+| 2.1 | Refactor Jobs Management details panel layout | Not Started | 2025-10-17 |
+| 2.2 | Polish Task Manager tables and headers | Not Started | 2025-10-17 |
+| 4.1 | Implement Job Creator wizard scaffold (steps, nav) | Not Started | 2025-10-17 |
+| 4.2 | Add per-step profile ComboBoxes + details view | Not Started | 2025-10-17 |
+| 4.3 | Add validation gating for Next/Finish | Not Started | 2025-10-17 |
+| 6.1 | Unit tests for MemoryDumpProfile service/validation | Not Started | 2025-10-17 |
+
 ## Success Criteria
 
 ### Functional Requirements
@@ -293,6 +329,9 @@ public class DumpProgress
 3. **Parallel Processing** - Run multiple jobs simultaneously when resources don't conflict
 4. **Resource Management** - Prevent resource conflicts and queue conflicting tasks
 5. **Progress Monitoring** - Real-time progress updates and detailed logging
+6. **UI Refactor** - Jobs details panel improved; Task Manager tables polished as per screenshots
+7. **Wizard Flow** - Job Creator wizard (main content) with per-step ComboBoxes and details panel
+8. **Memory Region Profile** - Profile integrated and usable in jobs
 
 ### Technical Requirements
 1. **Clean Architecture** - Maintain separation of concerns and dependency flow
@@ -379,6 +418,7 @@ public class DumpProgress
 2. **Integration Tests** - End-to-end workflow simulation
 3. **UI Tests** - ViewModel behavior and command execution
 4. **Performance Tests** - Resource usage and response times
+5. **Wizard Tests** - Step navigation, validation gating, and review summary correctness
 
 ## Timeline Estimate
 
@@ -397,7 +437,19 @@ This implementation will establish S7Tools as a complete PLC memory dumping solu
 
 ## Progress Log
 
+### 2025-10-17 - Scope Update (UI Refactor + MemoryRegionProfile)
+- Reopened TASK017 with new UI requirements highlighted in screenshots
+- Planned Job Creator wizard with per-step profile selection and inline details display
+- Confirmed MemoryRegionProfile as the profile used for memory-dump configuration
+- Added new subtasks, acceptance criteria, and test plan updates
+
 ### 2025-10-17 - Phase 4 UI Implementation Complete ✅
+### 2025-10-17 - Scheduler/DI Baseline Updates
+- Implemented scheduled execution in `EnhancedTaskScheduler` with Local timezone semantics; auto-promotion of due tasks.
+- Configured `JobManagerOptions.ProfilesPath` to `src/resources/JobProfiles/profiles.json` via DI.
+- Added `PlcClientStub` implementing `IPlcClient` and wired DI factory to resolve it.
+- Seeded `profiles.json` to avoid first run issues; solution builds successfully.
+- Next: Implement Job Creator wizard (main content), details panel refactor, and polish MemoryRegionProfile integration.
 - ✅ **Phase 1 Complete**: Core domain models implemented
   - Created `JobProfile` class implementing `IProfileBase` for unified profile management
     - Template support with `CreateFromTemplateAsync()` and `SetAsTemplateAsync()` operations

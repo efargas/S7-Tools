@@ -25,6 +25,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
     private readonly ConcurrentQueue<Guid> _taskQueue = new();
+    private readonly ConcurrentDictionary<Guid, DateTime> _scheduledTasks = new();
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
     private readonly Timer _processingTimer;
     private readonly Timer _cleanupTimer;
@@ -102,7 +103,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _logger.LogInformation("Creating task from job profile '{JobName}' (ID: {JobId}) with priority {Priority}",
             jobProfile.Name, jobProfile.Id, priority);
 
-        var executionJob = jobProfile.ToExecutionJob();
+        Job executionJob = jobProfile.ToExecutionJob();
         var taskExecution = new TaskExecution
         {
             TaskId = Guid.NewGuid(),
@@ -127,7 +128,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<bool> EnqueueTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             _logger.LogWarning("Task {TaskId} not found for enqueue", taskId);
             return Task.FromResult(false);
@@ -151,7 +152,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<bool> ScheduleTaskAsync(Guid taskId, DateTime scheduledTime, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             _logger.LogWarning("Task {TaskId} not found for scheduling", taskId);
             return Task.FromResult(false);
@@ -163,22 +164,39 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        task.UpdateState(TaskState.Scheduled, $"Scheduled for {scheduledTime}");
-        task.ProgressData["ScheduledTime"] = scheduledTime;
+        // Normalize to Local timezone per requirement
+        DateTime localTime = scheduledTime.Kind switch
+        {
+            DateTimeKind.Unspecified => DateTime.SpecifyKind(scheduledTime, DateTimeKind.Local),
+            DateTimeKind.Utc => scheduledTime.ToLocalTime(),
+            _ => scheduledTime
+        };
+
+        task.UpdateState(TaskState.Scheduled, $"Scheduled for {localTime}");
+        task.ProgressData["ScheduledTime"] = localTime;
+        _scheduledTasks[taskId] = localTime;
 
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Scheduled task {TaskId} ({JobName}) for {ScheduledTime}",
-            taskId, task.JobName, scheduledTime);
+            taskId, task.JobName, localTime);
 
-        // TODO: Implement scheduled task execution
-    return Task.FromResult(true);
+        // If time already passed or is now, promote to queue immediately
+        if (localTime <= DateTime.Now)
+        {
+            _scheduledTasks.TryRemove(taskId, out _);
+            task.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
+            TaskStateChanged?.Invoke(task);
+            _taskQueue.Enqueue(taskId);
+        }
+
+        return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
     public Task<bool> CancelTaskAsync(Guid taskId, string? reason = null, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             _logger.LogWarning("Task {TaskId} not found for cancellation", taskId);
             return Task.FromResult(false);
@@ -191,6 +209,12 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
 
         task.UpdateState(TaskState.Cancelled, reason ?? "Task cancelled by user");
+
+        // Remove from schedule if present
+        if (_scheduledTasks.TryRemove(taskId, out _))
+        {
+            _logger.LogDebug("Removed task {TaskId} from scheduled tasks on cancel", taskId);
+        }
 
         // Release resources if they were locked
         if (task.LockedResources.Count > 0)
@@ -212,7 +236,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<bool> PauseTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             _logger.LogWarning("Task {TaskId} not found for pausing", taskId);
             return Task.FromResult(false);
@@ -234,7 +258,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<bool> ResumeTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             _logger.LogWarning("Task {TaskId} not found for resuming", taskId);
             return Task.FromResult(false);
@@ -256,7 +280,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<TaskExecution?> RestartTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var originalTask))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? originalTask))
         {
             _logger.LogWarning("Task {TaskId} not found for restart", taskId);
             return null;
@@ -269,7 +293,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
 
         // Get the original job profile
-        var jobProfile = await _jobManager.GetByIdAsync(originalTask.JobProfileId, cancellationToken).ConfigureAwait(false);
+        JobProfile? jobProfile = await _jobManager.GetByIdAsync(originalTask.JobProfileId, cancellationToken).ConfigureAwait(false);
         if (jobProfile == null)
         {
             _logger.LogError("Job profile {JobProfileId} not found for task restart", originalTask.JobProfileId);
@@ -277,7 +301,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
 
         // Create a new task
-        var newTask = await CreateTaskAsync(jobProfile, originalTask.Priority, cancellationToken).ConfigureAwait(false);
+        TaskExecution newTask = await CreateTaskAsync(jobProfile, originalTask.Priority, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("Restarted task {OriginalTaskId} as new task {NewTaskId} for job '{JobName}'",
             taskId, newTask.TaskId, jobProfile.Name);
@@ -298,7 +322,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<TaskExecution?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        _tasks.TryGetValue(taskId, out var task);
+        _tasks.TryGetValue(taskId, out TaskExecution? task);
     return Task.FromResult(task);
     }
 
@@ -345,13 +369,13 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<bool> CanExecuteTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             return false;
         }
 
         // Check if job profile can be executed
-        var canExecuteJob = await _jobManager.CanExecuteJobAsync(task.JobProfileId, cancellationToken).ConfigureAwait(false);
+        bool canExecuteJob = await _jobManager.CanExecuteJobAsync(task.JobProfileId, cancellationToken).ConfigureAwait(false);
         if (!canExecuteJob)
         {
             return false;
@@ -364,7 +388,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<DateTime?> GetEstimatedStartTimeAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             return null;
         }
@@ -374,7 +398,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return task.StartedAt;
         }
 
-        if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out var scheduledObj))
+        if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
         {
             return scheduledObj as DateTime?;
         }
@@ -382,10 +406,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         // For queued tasks, estimate based on running tasks and queue position
         if (task.State == TaskState.Queued)
         {
-            var runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
-            var queuedTasks = await GetQueuedTasksAsync(cancellationToken).ConfigureAwait(false);
+            IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
+            IReadOnlyCollection<TaskExecution> queuedTasks = await GetQueuedTasksAsync(cancellationToken).ConfigureAwait(false);
 
-            var queuePosition = queuedTasks.TakeWhile(t => t.TaskId != taskId).Count();
+            int queuePosition = queuedTasks.TakeWhile(t => t.TaskId != taskId).Count();
             var estimatedWaitTime = TimeSpan.FromMinutes(queuePosition * 5); // Rough estimate
 
             return DateTime.UtcNow.Add(estimatedWaitTime);
@@ -397,7 +421,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<ResourceUsageInfo> GetResourceUsageAsync(CancellationToken cancellationToken = default)
     {
-        var runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
+        IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
         var allResources = runningTasks.SelectMany(t => t.LockedResources).ToList();
         var resourceLocks = allResources.ToDictionary(r => r, r => runningTasks.First(t => t.LockedResources.Contains(r)).TaskId);
 
@@ -441,7 +465,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         if (graceful)
         {
             // Wait for running tasks to complete
-            var runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
+            IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Waiting for {Count} running tasks to complete", runningTasks.Count);
 
             while (runningTasks.Any())
@@ -475,12 +499,12 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
-        var cutoffTime = DateTime.UtcNow - maxAge;
+        DateTime cutoffTime = DateTime.UtcNow - maxAge;
         var oldTasks = _tasks.Values
             .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
             .ToList();
 
-        foreach (var task in oldTasks)
+        foreach (TaskExecution? task in oldTasks)
         {
             _tasks.TryRemove(task.TaskId, out _);
         }
@@ -497,7 +521,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             .GroupBy(t => t.State)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        var averageExecutionTime = _executionTimes.Count > 0
+        TimeSpan averageExecutionTime = _executionTimes.Count > 0
             ? TimeSpan.FromTicks((long)_executionTimes.Average(t => t.Ticks))
             : TimeSpan.Zero;
 
@@ -550,8 +574,25 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         await _schedulerSemaphore.WaitAsync().ConfigureAwait(false);
         try
         {
-            var runningCount = _tasks.Values.Count(t => t.State == TaskState.Running);
-            var availableSlots = _maxConcurrentTasks - runningCount;
+            // Promote due scheduled tasks
+            if (_scheduledTasks.Count > 0)
+            {
+                DateTime nowLocal = DateTime.Now;
+                var dueTaskIds = _scheduledTasks.Where(kvp => kvp.Value <= nowLocal).Select(kvp => kvp.Key).ToList();
+                foreach (Guid dueId in dueTaskIds)
+                {
+                    if (_tasks.TryGetValue(dueId, out TaskExecution? scheduledTask) && scheduledTask.State == TaskState.Scheduled)
+                    {
+                        scheduledTask.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
+                        TaskStateChanged?.Invoke(scheduledTask);
+                        _taskQueue.Enqueue(dueId);
+                    }
+                    _scheduledTasks.TryRemove(dueId, out _);
+                }
+            }
+
+            int runningCount = _tasks.Values.Count(t => t.State == TaskState.Running);
+            int availableSlots = _maxConcurrentTasks - runningCount;
 
             if (availableSlots <= 0)
             {
@@ -560,9 +601,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
             var tasksToStart = new List<Guid>();
 
-            while (tasksToStart.Count < availableSlots && _taskQueue.TryDequeue(out var taskId))
+            while (tasksToStart.Count < availableSlots && _taskQueue.TryDequeue(out Guid taskId))
             {
-                if (_tasks.TryGetValue(taskId, out var task) && task.State == TaskState.Queued)
+                if (_tasks.TryGetValue(taskId, out TaskExecution? task) && task.State == TaskState.Queued)
                 {
                     // Try to acquire resources
                     if (_resourceCoordinator.TryAcquire(task.LockedResources))
@@ -579,7 +620,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             }
 
             // Start the tasks
-            foreach (var taskId in tasksToStart)
+            foreach (Guid taskId in tasksToStart)
             {
                 _ = Task.Run(() => ExecuteTaskAsync(taskId));
             }
@@ -596,7 +637,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <param name="taskId">The ID of the task to execute.</param>
     private async Task ExecuteTaskAsync(Guid taskId)
     {
-        if (!_tasks.TryGetValue(taskId, out var task))
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
         {
             _logger.LogError("Task {TaskId} not found for execution", taskId);
             return;
@@ -608,7 +649,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             TaskStateChanged?.Invoke(task);
 
             // Get the job profile
-            var jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false);
+            JobProfile? jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false);
             if (jobProfile == null)
             {
                 throw new InvalidOperationException($"Job profile {task.JobProfileId} not found");
@@ -622,12 +663,12 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             });
 
             // Execute the job
-            var executionJob = jobProfile.ToExecutionJob();
-            var dumpData = await _bootloaderService.DumpAsync(executionJob.Profiles, progress, CancellationToken.None)
+            Job executionJob = jobProfile.ToExecutionJob();
+            byte[] dumpData = await _bootloaderService.DumpAsync(executionJob.Profiles, progress, CancellationToken.None)
                 .ConfigureAwait(false);
 
             // Save the output
-            var outputFile = Path.Combine(jobProfile.OutputPath, $"dump-{task.TaskId:N}.bin");
+            string outputFile = Path.Combine(jobProfile.OutputPath, $"dump-{task.TaskId:N}.bin");
             Directory.CreateDirectory(jobProfile.OutputPath);
             await File.WriteAllBytesAsync(outputFile, dumpData, CancellationToken.None).ConfigureAwait(false);
 

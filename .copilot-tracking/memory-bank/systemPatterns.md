@@ -317,6 +317,9 @@ Correct StringFormat syntax for Avalonia (escape braces):
 
 - Register all services in a central extension (e.g., `ServiceCollectionExtensions`).
 - Depend on abstractions from Core; avoid concrete coupling.
+- Job profiles persistence path (current): `src/resources/JobProfiles/profiles.json` via options pattern.
+- PLC Client: a temporary `PlcClientStub` is registered; factory resolves it until the real client is provided.
+- Scheduling semantics: Scheduler uses Local timezone for task scheduling; due scheduled tasks are promoted to queue automatically.
 - Centralized error handling pattern:
 
 ```csharp

@@ -1,9 +1,16 @@
 # Progress Status: S7Tools Development
 
 **Updated:** October 17, 2025
-**Overall Status:** 🎉 TASK017 Phase 4 COMPLETE - Task Manager and Jobs UI Implementation
-**Build Status:** ✅ Clean (0 errors, 32 warnings - all acceptable/expected)
+**Overall Status:** 🔄 TASK017 Reopened — Scheduler/DI baseline complete; next: UI wizard + MemoryRegionProfile polish
+**Build Status:** ✅ Build passes (warnings acceptable due to stub implementations)
 **Test Status:** ✅ All tests passing
+
+## 🔄 TASK017 — Scope Update (2025-10-17)
+
+New requirements added:
+- Refactor new views highlighted in screenshots (Jobs details panel, Task Manager tables)
+- Confirm and use MemoryRegionProfile for memory-dump configuration (no new type)
+- Convert Job Creator to wizard style in the main content area with per-step profile ComboBoxes and inline details panel
 
 ## 🎉 COMPLETED: TASK017 Phase 4 - UI Implementation
 
@@ -74,6 +81,15 @@
 - Enhanced progress monitoring with detailed breakdowns
 - Resource conflict detection and resolution UI
 - Advanced scheduling and recurring job capabilities
+
+### Scheduler & DI Baseline Updates (2025-10-17)
+
+Delivered in this session:
+- ✅ Scheduled execution implemented in `EnhancedTaskScheduler` (Local timezone). Due tasks auto-promote from Scheduled to Queued; past times enqueue immediately.
+- ✅ Job profiles persistence path configured via DI: `src/resources/JobProfiles/profiles.json`.
+- ✅ PLC client stub (`PlcClientStub`) added and registered; factory resolves stub until real client is integrated.
+- ✅ Seed `profiles.json` created to avoid first-run file-not-found issues.
+- ✅ Build validated successfully post-changes.
 
 ## 🎉 COMPLETED: TASK016 - Code Review Recommendations Implementation
 

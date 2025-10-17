@@ -73,8 +73,8 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     {
     _logger.LogInformation("Creating default job profiles");
 
-    // Create the system default job profile
-    var defaultProfile = CreateSystemDefault();
+        // Create the system default job profile
+        JobProfile defaultProfile = CreateSystemDefault();
     _profiles.Add(defaultProfile);
 
     // Create a few example templates
@@ -283,7 +283,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         {
             try
             {
-                var directory = Path.GetDirectoryName(job.OutputPath);
+                string? directory = Path.GetDirectoryName(job.OutputPath);
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
                     errors.Add(new ValidationError("OutputPath", "Output directory does not exist and cannot be created"));
@@ -425,7 +425,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         {
             try
             {
-                var json = await File.ReadAllTextAsync(_profilesPath, cancellationToken).ConfigureAwait(false);
+                string json = await File.ReadAllTextAsync(_profilesPath, cancellationToken).ConfigureAwait(false);
                 List<JobProfile>? profiles = System.Text.Json.JsonSerializer.Deserialize<List<JobProfile>>(json);
 
                 if (profiles != null)
