@@ -6,27 +6,35 @@
 
 ## Core Mission
 
-Build a professional-grade desktop application for **Siemens S7-1200 PLC communication** with **VSCode-like interface** and **advanced logging capabilities**. The application provides unified profile management for Serial Ports, Socat proxies, and Power Supply configurations.
+Build a professional-grade desktop application for **Siemens S7-1200 PLC memory analysis** with **automated job management** and **VSCode-like interface**. The application provides systematic memory dumping capabilities through bootloader access, unified profile management, and intelligent resource coordination for parallel operations.
 
 ## Primary Goals
 
-### 1. Unified Profile Management System
-- **Standardized CRUD operations** across all profile types (Serial, Socat, PowerSupply)
+### 1. Automated Memory Dumping System
+- **Job Management** - Create, schedule, and execute complex memory dump operations
+- **Task Coordination** - Parallel execution with intelligent resource management
+- **Bootloader Integration** - Systematic S7-1200 bootloader access and memory extraction
+- **Progress Monitoring** - Real-time operation tracking with detailed logging
+
+### 2. Unified Profile Management System
+- **Standardized CRUD operations** across all profile types (Serial, Socat, PowerSupply, Memory Regions)
 - **IProfileManager<T> interface** providing consistent behavior
 - **Dialog-based editing** with validation and business rule enforcement
 - **Export/Import capabilities** with conflict resolution
 
-### 2. Professional Desktop Experience
-- **VSCode-inspired UI** with activity bars, sidebars, and panels
+### 3. Professional Desktop Experience
+- **VSCode-inspired UI** with activity bars, sidebars, and collapsible groups
+- **Task Manager Activity** - Job creation, scheduling, monitoring, and management
+- **Jobs Activity** - Job configuration, templates, and batch operations
 - **Cross-platform support** (Windows, Linux, macOS) via Avalonia UI
 - **Real-time logging system** with filtering, search, and export
-- **Responsive design** with proper thread safety
 
-### 3. Industrial-Grade Architecture
+### 4. Industrial-Grade Architecture
 - **Clean Architecture** with clear layer separation
+- **Resource Coordination** - Prevent conflicts and optimize hardware utilization
 - **Dependency Injection** throughout the application
 - **Reactive MVVM** using ReactiveUI patterns
-- **Comprehensive testing** with 178+ passing tests
+- **Comprehensive testing** with growing test suite
 
 ## Technology Foundation
 
@@ -45,10 +53,12 @@ Build a professional-grade desktop application for **Siemens S7-1200 PLC communi
 ## Success Criteria
 
 ### Functional Requirements
-1. **Profile Management**: Create, edit, delete, duplicate profiles with full validation
-2. **Configuration Export**: JSON-based export/import with metadata preservation
-3. **Real-time Logging**: Circular buffer logging with live filtering and search
-4. **Cross-platform Deployment**: Single codebase running on all major platforms
+1. **Job Management**: Create, edit, delete, schedule jobs with complete validation and template support
+2. **Task Execution**: Automated bootloader operations with memory dumping capabilities
+3. **Resource Coordination**: Parallel execution when possible, intelligent queuing for conflicts
+4. **Profile Management**: Unified CRUD operations for all profile types
+5. **Real-time Monitoring**: Progress tracking, operation logging, and status reporting
+6. **Cross-platform Deployment**: Single codebase running on all major platforms
 
 ### Technical Requirements
 1. **Clean Compilation**: Zero errors with minimal warnings
@@ -58,22 +68,23 @@ Build a professional-grade desktop application for **Siemens S7-1200 PLC communi
 
 ## Current Status
 
-**Phase:** Major Architecture Implementation Complete
+**Phase:** Foundation Architecture Complete - Preparing Core Functionality Implementation
 **Build Status:** ✅ Clean compilation (0 errors)
-**Test Status:** ✅ 178 tests passing (100% success rate)
+**Test Status:** ✅ 206 tests passing (100% success rate)
 **Architecture:** ✅ Unified IProfileManager<T> interface fully implemented
 
 ### Recent Achievements
 - ✅ **Unified Profile Architecture**: IProfileManager<T> interface with StandardProfileManager<T> base class
-- ✅ **Complete Service Migration**: All three profile services using unified interface
-- ✅ **ViewModels Integration**: All UI components updated to use standardized methods
-- ✅ **Build Verification**: Clean compilation with zero compilation errors achieved
+- ✅ **Complete Service Migration**: All profile services using unified interface
+- ✅ **Custom Exception Implementation**: Domain-specific exceptions across all services
+- ✅ **Code Quality Improvements**: Zero errors, zero warnings build status
+- ✅ **Profile Management UI**: Create/Edit auto-refresh with dialog close fixes
 
-### Active Work
-- **TASK008 Phase 1**: Architecture + ViewModels Integration **COMPLETE**
-- **Dependency Injection Updates**: Service registration optimization
-- **ProfileManagementViewModelBase Integration**: Template method pattern verification
-- **Build Verification and Testing**: Comprehensive functionality validation
+### Active Work Preparation
+- **TASK017**: Task Manager and Jobs Implementation (Pending)
+- **Core Functionality**: Bootloader integration and memory dumping operations
+- **UI Enhancement**: VSCode-style activity bar with Task Manager and Jobs activities
+- **Resource Coordination**: Parallel execution engine with conflict resolution
 
 ## Key Constraints
 
@@ -91,19 +102,28 @@ Build a professional-grade desktop application for **Siemens S7-1200 PLC communi
 
 ## Future Roadmap
 
-### Phase 1: Foundation (COMPLETE)
+### Phase 1: Foundation Architecture (COMPLETE)
 - ✅ Unified Profile Management Architecture
 - ✅ Clean Architecture Implementation
 - ✅ Build System and Testing Framework
+- ✅ Custom Exception Implementation
 
-### Phase 2: Integration (IN PROGRESS)
-- 🔄 Dependency Injection Optimization
-- 🔄 Template Method Pattern Integration
-- ⏳ UI Standardization and Enhancement
+### Phase 2: Core Functionality Implementation (CURRENT)
+- 🔄 Task Manager and Jobs System (TASK017)
+- 🔄 Bootloader Integration Enhancement
+- 🔄 Resource Coordination Engine
+- ⏳ Memory Dumping Operations
 
 ### Phase 3: Advanced Features (PLANNED)
-- ⏳ PLC Communication Protocol Integration
-- ⏳ Advanced Configuration Management
-- ⏳ Plugin Architecture Implementation
+- ⏳ Parallel Execution Optimization
+- ⏳ Job Templates and Batch Operations
+- ⏳ Advanced Progress Monitoring
+- ⏳ Export/Import Enhancements
+
+### Phase 4: Production Readiness (PLANNED)
+- ⏳ Performance Optimization
+- ⏳ Security Hardening
+- ⏳ Comprehensive Documentation
+- ⏳ Deployment Automation
 
 This project brief serves as the foundation for all memory bank documentation and guides architectural decisions throughout development.

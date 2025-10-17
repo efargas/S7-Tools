@@ -1,98 +1,126 @@
 # Product Context: S7Tools
 
-**Last Updated**: Current Session  
-**Context Type**: Product Vision and User Experience  
+**Last Updated**: Current Session
+**Context Type**: Product Vision and User Experience
 
 ## Why This Project Exists
 
 ### **Problem Statement**
 
-Industrial automation engineers working with **Siemens S7-1200 PLCs** face several critical challenges:
+Industrial automation engineers and security researchers working with **Siemens S7-1200 PLCs** face several critical challenges:
 
 1. **Fragmented Tooling** - Existing tools are often proprietary, expensive, or lack modern UI/UX
-2. **Limited Debugging Capabilities** - Poor logging and real-time monitoring options
-3. **Inefficient Workflows** - Cumbersome interfaces that slow down development and troubleshooting
-4. **Cross-Platform Limitations** - Most tools are Windows-only, limiting deployment flexibility
-5. **Poor Integration** - Tools don't integrate well with modern development workflows
+2. **Limited Memory Analysis** - No unified tools for systematic PLC memory dumping and analysis
+3. **Manual Bootloader Operations** - Complex manual processes for memory extraction via bootloader access
+4. **Inefficient Workflows** - Cumbersome interfaces that slow down development and security research
+5. **Cross-Platform Limitations** - Most tools are Windows-only, limiting deployment flexibility
+6. **Poor Job Management** - No systematic approach to manage, schedule, and execute memory dump operations
+7. **Resource Conflicts** - Manual coordination required when using shared hardware resources
 
 ### **Market Gap**
 
-The industrial automation software market lacks:
+The industrial automation and PLC security research market lacks:
 - **Modern, intuitive interfaces** comparable to contemporary development tools
-- **Comprehensive logging systems** for real-time debugging and monitoring
+- **Systematic memory analysis tools** for PLC firmware and bootloader research
+- **Automated job management** for complex multi-step hardware operations
+- **Resource coordination systems** for parallel hardware operations
 - **Cross-platform solutions** that work on Windows, Linux, and macOS
-- **Open, extensible architectures** that can be customized for specific needs
+- **Open, extensible architectures** that can be customized for specific research needs
 
 ## Problems S7Tools Solves
 
 ### **Primary Problems**
 
-#### 1. **Inefficient PLC Development Workflow**
-- **Current State**: Engineers use multiple disconnected tools for PLC communication, monitoring, and debugging
-- **S7Tools Solution**: Unified interface with integrated logging, monitoring, and communication tools
-- **Impact**: Reduced context switching and improved productivity
+#### 1. **Complex PLC Memory Analysis Workflow**
+- **Current State**: Manual, error-prone processes for extracting and analyzing PLC memory via bootloader access
+- **S7Tools Solution**: Automated job management system with systematic memory dump operations
+- **Impact**: Reduced manual effort and improved reliability for security research and firmware analysis
 
-#### 2. **Poor Real-Time Debugging Experience**
-- **Current State**: Limited logging capabilities and poor visibility into PLC communication
-- **S7Tools Solution**: Advanced logging system with real-time display, filtering, and export capabilities
-- **Impact**: Faster problem identification and resolution
+#### 2. **Lack of Systematic Job Management**
+- **Current State**: Manual coordination of hardware resources and multi-step operations
+- **S7Tools Solution**: Task Manager with job scheduling, queuing, and parallel execution capabilities
+- **Impact**: Efficient resource utilization and systematic operation execution
 
-#### 3. **Outdated User Interfaces**
-- **Current State**: Industrial software often has outdated, unintuitive interfaces
-- **S7Tools Solution**: Modern VSCode-like interface with familiar navigation patterns
-- **Impact**: Reduced learning curve and improved user satisfaction
+#### 3. **Resource Coordination Complexity**
+- **Current State**: Manual tracking of hardware resource usage (serial ports, power supplies, network ports)
+- **S7Tools Solution**: Automated resource coordination with conflict detection and resolution
+- **Impact**: Parallel operations when possible, intelligent queuing when resources conflict
 
-#### 4. **Platform Lock-in**
-- **Current State**: Most industrial tools are Windows-only
-- **S7Tools Solution**: Cross-platform desktop application using Avalonia UI
-- **Impact**: Deployment flexibility and broader accessibility
+#### 4. **Poor Real-Time Operation Monitoring**
+- **Current State**: Limited visibility into long-running bootloader operations and memory dump progress
+- **S7Tools Solution**: Advanced logging system with real-time progress tracking and detailed operation logs
+- **Impact**: Better visibility and control over complex hardware operations
+
+#### 5. **Outdated User Interfaces**
+- **Current State**: Command-line tools and outdated interfaces for complex multi-step operations
+- **S7Tools Solution**: Modern VSCode-like interface with task management and job configuration
+- **Impact**: Reduced learning curve and improved user productivity
 
 ### **Secondary Problems**
 
-#### 1. **Limited Extensibility**
-- **Current State**: Proprietary tools with limited customization options
-- **S7Tools Solution**: Service-oriented architecture with plugin potential
-- **Impact**: Customizable workflows and future extensibility
+#### 1. **Limited Automation for Complex Operations**
+- **Current State**: Manual execution of multi-step bootloader operations
+- **S7Tools Solution**: Job templates and automated execution sequences
+- **Impact**: Consistent, repeatable operations with reduced human error
 
 #### 2. **Poor Integration with Modern Development Practices**
 - **Current State**: Industrial tools don't integrate with modern CI/CD or version control
 - **S7Tools Solution**: Modern .NET architecture compatible with contemporary development practices
 - **Impact**: Better integration with existing development workflows
 
+#### 3. **Lack of Operation Standardization**
+- **Current State**: Inconsistent approaches to PLC memory analysis across teams
+- **S7Tools Solution**: Standardized job definitions, templates, and execution workflows
+- **Impact**: Improved collaboration and knowledge sharing
+
 ## How S7Tools Should Work
 
 ### **Core User Experience**
 
-#### **Primary Workflow: PLC Monitoring and Debugging**
+#### **Primary Workflow: Automated PLC Memory Dumping**
 
-1. **Connection Setup**
-   - User opens S7Tools and navigates to Connections view
-   - Configures PLC connection parameters (IP, rack, slot, timeouts)
-   - Tests connection and saves configuration for future use
+1. **Job Configuration**
+   - User navigates to Jobs activity in the sidebar
+   - Creates new job with name, description, and configuration
+   - Selects required profiles: Serial Port, Socat, Power Supply, Memory Region
+   - Configures timing parameters: power on/off delays, operation timeouts
+   - Sets output path and naming conventions
 
-2. **Real-Time Monitoring**
-   - User selects tags or data blocks to monitor
-   - Real-time data display with automatic refresh
-   - Visual indicators for data changes and connection status
+2. **Task Management**
+   - User switches to Task Manager activity
+   - Reviews job configuration in main content area
+   - Initiates task execution with start button
+   - Monitors real-time progress with detailed operation logs
+   - Manages multiple concurrent tasks with resource coordination
 
-3. **Debugging and Logging**
-   - All PLC communication automatically logged with timestamps
-   - User can filter logs by level, time range, or search terms
-   - Export capabilities for offline analysis and reporting
+3. **Automated Execution Sequence**
+   - System configures serial port using stty and selected profile
+   - Launches socat server with conflict detection
+   - Establishes modbus connection to power supply
+   - Executes power cycle sequence (OFF → delay → ON → boot delay)
+   - Enters bootloader mode via power cycle (OFF → delay → ON)
+   - Performs bootloader handshaking and version verification
+   - Installs stager payload (with optional user confirmation)
+   - Installs dumper payload and executes memory dump
+   - Saves memory dump to configured output path
 
-4. **Data Analysis**
-   - Historical data visualization with charts and graphs
-   - Export data in multiple formats (CSV, JSON, Excel)
-   - Integration with external analysis tools
+4. **Parallel Operations & Resource Management**
+   - System automatically detects resource conflicts
+   - Executes jobs in parallel when using different hardware resources
+   - Queues conflicting jobs for sequential execution
+   - Shares power supplies across different output channels when possible
 
 ### **User Interface Design Philosophy**
 
 #### **VSCode-Inspired Design**
-- **Activity Bar** - Primary navigation with icons for major functions
-- **Sidebar** - Context-sensitive content based on selected activity
-- **Main Editor Area** - Primary workspace for data visualization and editing
-- **Bottom Panel** - Logging, debugging, and status information
-- **Status Bar** - Connection status, application state, and quick actions
+- **Activity Bar** - Primary navigation: Task Manager, Jobs, Settings, Logs
+- **Sidebar** - Context-sensitive content with collapsible groups:
+  - Task Manager: Created Jobs, Scheduled Tasks, Queued Tasks, Active Tasks, Finished Tasks
+  - Jobs: All Jobs, Job Templates, Job Categories
+  - Settings: Serial Profiles, Socat Profiles, Power Supply Profiles, Memory Region Profiles
+- **Main Content Area** - Job configuration, task details, execution progress, and results
+- **Bottom Panel** - Real-time logging, operation details, and system status
+- **Status Bar** - Hardware connection status, active task count, and system health
 
 #### **Design Principles**
 1. **Familiarity** - Leverage patterns developers already know from VSCode
@@ -103,22 +131,23 @@ The industrial automation software market lacks:
 
 ### **Key User Scenarios**
 
-#### **Scenario 1: Daily PLC Monitoring**
-- **User**: Maintenance engineer monitoring production line
-- **Goal**: Quickly check PLC status and identify any issues
-- **Experience**: Opens S7Tools, connects to PLC, views real-time dashboard with key metrics
-- **Success**: Can identify and diagnose issues within minutes
+#### **Scenario 1: Security Researcher - PLC Firmware Analysis**
+- **User**: Security researcher analyzing S7-1200 firmware for vulnerabilities
+- **Goal**: Extract complete memory dumps for offline analysis and reverse engineering
+- **Experience**: Creates job template for systematic memory extraction, configures multiple memory regions, schedules batch operations
+- **Success**: Obtains complete memory dumps with consistent methodology and detailed operation logs
 
-#### **Scenario 2: Troubleshooting Communication Issues**
-- **User**: Automation engineer debugging PLC communication problems
-- **Goal**: Identify root cause of intermittent communication failures
-- **Experience**: Uses advanced logging to capture detailed communication traces, filters by error level
-- **Success**: Pinpoints exact cause of communication issues using log analysis
+#### **Scenario 2: Automation Engineer - Bootloader Development**
+- **User**: Engineer developing custom bootloader functionality
+- **Goal**: Test bootloader operations and validate memory access patterns
+- **Experience**: Uses job templates for iterative testing, monitors real-time progress, analyzes operation logs for timing optimization
+- **Success**: Validates bootloader functionality with systematic testing and comprehensive logging
 
-#### **Scenario 3: System Integration Testing**
-- **User**: System integrator validating PLC integration
-- **Goal**: Verify all data points are communicating correctly
-- **Experience**: Sets up comprehensive monitoring of all tags, exports data for validation
+#### **Scenario 3: Research Team - Parallel Memory Analysis**
+- **User**: Research team with multiple S7-1200 devices and test setups
+- **Goal**: Efficiently analyze multiple devices in parallel without resource conflicts
+- **Experience**: Configures multiple jobs with different hardware resources, system automatically coordinates parallel execution
+- **Success**: Maximizes hardware utilization while preventing resource conflicts and data corruption
 - **Success**: Generates comprehensive test reports proving system functionality
 
 ## User Experience Goals
@@ -184,6 +213,6 @@ The industrial automation software market lacks:
 
 ---
 
-**Document Status**: Living document reflecting current product vision  
-**Next Review**: After user feedback collection  
+**Document Status**: Living document reflecting current product vision
+**Next Review**: After user feedback collection
 **Owner**: Product Team and UX Design
