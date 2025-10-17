@@ -33,7 +33,7 @@ public class CommandDispatcher : ICommandDispatcher
         if (command == null)
         {
             const string error = "Command cannot be null";
-            _logger.LogError(error);
+            _logger.LogError("{Error}", error);
             return CommandResult.Failure(error);
         }
 
@@ -48,7 +48,7 @@ public class CommandDispatcher : ICommandDispatcher
             if (handler == null)
             {
                 var error = $"No handler registered for command type: {commandType.Name}";
-                _logger.LogError(error);
+                _logger.LogError("{Error}", error);
                 return CommandResult.Failure(error);
             }
 
@@ -56,7 +56,7 @@ public class CommandDispatcher : ICommandDispatcher
             if (handleMethod == null)
             {
                 var error = $"HandleAsync method not found on handler for command type: {commandType.Name}";
-                _logger.LogError(error);
+                _logger.LogError("{Error}", error);
                 return CommandResult.Failure(error);
             }
 
@@ -82,7 +82,7 @@ public class CommandDispatcher : ICommandDispatcher
         if (command == null)
         {
             const string error = "Command cannot be null";
-            _logger.LogError(error);
+            _logger.LogError("{Error}", error);
             return CommandResult<TResult>.Failure(error);
         }
 
@@ -99,7 +99,7 @@ public class CommandDispatcher : ICommandDispatcher
             if (handler == null)
             {
                 var error = $"No handler registered for command type: {commandType.Name}";
-                _logger.LogError(error);
+                _logger.LogError("{Error}", error);
                 return CommandResult<TResult>.Failure(error);
             }
 
@@ -107,7 +107,7 @@ public class CommandDispatcher : ICommandDispatcher
             if (handleMethod == null)
             {
                 var error = $"HandleAsync method not found on handler for command type: {commandType.Name}";
-                _logger.LogError(error);
+                _logger.LogError("{Error}", error);
                 return CommandResult<TResult>.Failure(error);
             }
 

@@ -451,11 +451,12 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             // Apply search text filter
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                var searchLower = SearchText.ToLowerInvariant();
+                var term = SearchText;
                 filtered = filtered.Where(entry =>
-                    entry.Message.ToLowerInvariant().Contains(searchLower) ||
-                    entry.Category.ToLowerInvariant().Contains(searchLower) ||
-                    (entry.Exception?.ToString().ToLowerInvariant().Contains(searchLower) ?? false));
+                    (!string.IsNullOrEmpty(entry.Message) && entry.Message.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(entry.Category) && entry.Category.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(entry.Exception?.ToString()) && entry.Exception!.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
+                );
             }
 
             // Apply date range filter

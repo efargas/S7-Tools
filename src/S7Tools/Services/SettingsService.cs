@@ -15,6 +15,8 @@ public class SettingsService : ISettingsService
     private readonly ILogger<SettingsService> _logger;
     private ApplicationSettings _settings = new();
     private readonly string _defaultSettingsPath;
+    private static readonly JsonSerializerOptions ReadOptions = new() { PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions WriteOptions = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     /// <summary>
     /// Initializes a new instance of the SettingsService class.
@@ -54,7 +56,7 @@ public class SettingsService : ISettingsService
             if (File.Exists(filePath))
             {
                 string json = await File.ReadAllTextAsync(filePath).ConfigureAwait(false);
-                ApplicationSettings? settings = JsonSerializer.Deserialize<ApplicationSettings>(json);
+                ApplicationSettings? settings = JsonSerializer.Deserialize<ApplicationSettings>(json, ReadOptions);
                 if (settings != null)
                 {
                     _settings = settings;
@@ -133,13 +135,7 @@ public class SettingsService : ISettingsService
                 Directory.CreateDirectory(directory);
             }
 
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            string json = JsonSerializer.Serialize(_settings, options);
+            string json = JsonSerializer.Serialize(_settings, WriteOptions);
             await File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
         }
         catch (Exception)

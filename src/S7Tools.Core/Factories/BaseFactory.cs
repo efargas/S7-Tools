@@ -48,17 +48,17 @@ public abstract class BaseKeyedFactory<TKey, TBase> : IKeyedFactory<TKey, TBase>
             throw new ArgumentNullException(nameof(key));
         }
 
-        if (!Factories.TryGetValue(key, out var factory))
+        if (!Factories.TryGetValue(key, out Func<TBase>? factory))
         {
-            var error = $"No factory registered for key: {key}";
-            Logger.LogError(error);
+            string error = $"No factory registered for key: {key}";
+            Logger.LogError("{Error}", error);
             throw new InvalidOperationException(error);
         }
 
         try
         {
             Logger.LogDebug("Creating object for key: {Key}", key);
-            var instance = factory();
+            TBase? instance = factory();
             Logger.LogDebug("Successfully created object for key: {Key}, Type: {Type}",
                 key, instance?.GetType().Name ?? "null");
             return instance;
@@ -156,17 +156,17 @@ public abstract class BaseKeyedFactory<TKey, TBase, TParams> : IKeyedFactory<TKe
             throw new ArgumentNullException(nameof(key));
         }
 
-        if (!Factories.TryGetValue(key, out var factory))
+        if (!Factories.TryGetValue(key, out Func<TParams, TBase>? factory))
         {
-            var error = $"No factory registered for key: {key}";
-            Logger.LogError(error);
+            string error = $"No factory registered for key: {key}";
+            Logger.LogError("{Error}", error);
             throw new InvalidOperationException(error);
         }
 
         try
         {
             Logger.LogDebug("Creating object for key: {Key} with parameters", key);
-            var instance = factory(parameters);
+            TBase? instance = factory(parameters);
             Logger.LogDebug("Successfully created object for key: {Key}, Type: {Type}",
                 key, instance?.GetType().Name ?? "null");
             return instance;

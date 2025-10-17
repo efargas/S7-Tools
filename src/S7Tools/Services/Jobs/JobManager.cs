@@ -31,22 +31,22 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     #region Constructor
 
     /// <summary>
-    /// Initializes a new instance of the JobManager class.
+    /// Initializes a new instance of the JobManager class using options pattern.
     /// </summary>
-    /// <param name="profilesPath">The file path where job profiles are persisted.</param>
+    /// <param name="options">The options containing the profiles path.</param>
     /// <param name="logger">The logger instance for this manager.</param>
     /// <param name="resourceCoordinator">The resource coordinator for checking resource availability.</param>
     /// <param name="serialProfileService">The serial profile service for validation.</param>
     /// <param name="socatProfileService">The socat profile service for validation.</param>
     /// <param name="powerSupplyProfileService">The power supply profile service for validation.</param>
     public JobManager(
-        string profilesPath,
+        Microsoft.Extensions.Options.IOptions<S7Tools.Core.Models.Jobs.JobManagerOptions> options,
         ILogger<JobManager> logger,
         IResourceCoordinator resourceCoordinator,
         ISerialPortProfileService serialProfileService,
         ISocatProfileService socatProfileService,
         IPowerSupplyProfileService powerSupplyProfileService)
-        : base(profilesPath, logger)
+        : base(options.Value.ProfilesPath, logger)
     {
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
         _serialProfileService = serialProfileService ?? throw new ArgumentNullException(nameof(serialProfileService));

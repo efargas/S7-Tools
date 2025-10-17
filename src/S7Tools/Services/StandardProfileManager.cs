@@ -62,6 +62,19 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// </summary>
     protected bool _disposed;
 
+    // Cache serializer options to avoid per-call allocations (CA1869)
+    private static readonly JsonSerializerOptions ReadOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true
+    };
+    private static readonly JsonSerializerOptions WriteOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true,
+        IncludeFields = false
+    };
+
     #endregion
 
     #region Constructor
@@ -606,7 +619,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// </summary>
     private int GetNextAvailableIdCore()
     {
-        if (!_profiles.Any())
+        if (_profiles.Count == 0)
         {
             return 1;
         }
@@ -755,13 +768,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 return;
             }
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                WriteIndented = true
-            };
-
-            List<T>? profiles = JsonSerializer.Deserialize<List<T>>(json, options);
+            List<T>? profiles = JsonSerializer.Deserialize<List<T>>(json, ReadOptions);
             if (profiles != null)
             {
                 _profiles.Clear();
@@ -786,14 +793,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     {
         try
         {
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                WriteIndented = true,
-                IncludeFields = false
-            };
-
-            string json = JsonSerializer.Serialize(_profiles, options);
+            string json = JsonSerializer.Serialize(_profiles, WriteOptions);
             await File.WriteAllTextAsync(_profilesPath, json, cancellationToken).ConfigureAwait(false);
 
             _logger.LogDebug("Saved {Count} {ProfileType} profiles to: {Path}",
@@ -826,14 +826,8 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// </summary>
     private static T CloneProfile(T profile)
     {
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            WriteIndented = false
-        };
-
-        string json = JsonSerializer.Serialize(profile, options);
-        return JsonSerializer.Deserialize<T>(json, options)!;
+        string json = JsonSerializer.Serialize(profile, WriteOptions);
+        return JsonSerializer.Deserialize<T>(json, ReadOptions)!;
     }
 
     #endregion

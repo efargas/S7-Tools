@@ -95,7 +95,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     #region Task Lifecycle Management
 
     /// <inheritdoc/>
-    public async Task<TaskExecution> CreateTaskAsync(JobProfile jobProfile, TaskPriority priority = TaskPriority.Normal, CancellationToken cancellationToken = default)
+    public Task<TaskExecution> CreateTaskAsync(JobProfile jobProfile, TaskPriority priority = TaskPriority.Normal, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(jobProfile);
 
@@ -121,22 +121,22 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _logger.LogInformation("Created task {TaskId} for job '{JobName}' with {ResourceCount} resources",
             taskExecution.TaskId, jobProfile.Name, executionJob.Resources.Count);
 
-        return taskExecution;
+    return Task.FromResult(taskExecution);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> EnqueueTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public Task<bool> EnqueueTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
         {
             _logger.LogWarning("Task {TaskId} not found for enqueue", taskId);
-            return false;
+            return Task.FromResult(false);
         }
 
         if (task.State != TaskState.Created)
         {
             _logger.LogWarning("Task {TaskId} is in state {State}, cannot enqueue", taskId, task.State);
-            return false;
+            return Task.FromResult(false);
         }
 
         task.UpdateState(TaskState.Queued, "Task queued for execution");
@@ -145,22 +145,22 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Enqueued task {TaskId} ({JobName})", taskId, task.JobName);
-        return true;
+    return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ScheduleTaskAsync(Guid taskId, DateTime scheduledTime, CancellationToken cancellationToken = default)
+    public Task<bool> ScheduleTaskAsync(Guid taskId, DateTime scheduledTime, CancellationToken cancellationToken = default)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
         {
             _logger.LogWarning("Task {TaskId} not found for scheduling", taskId);
-            return false;
+            return Task.FromResult(false);
         }
 
         if (task.State != TaskState.Created && task.State != TaskState.Queued)
         {
             _logger.LogWarning("Task {TaskId} is in state {State}, cannot schedule", taskId, task.State);
-            return false;
+            return Task.FromResult(false);
         }
 
         task.UpdateState(TaskState.Scheduled, $"Scheduled for {scheduledTime}");
@@ -172,22 +172,22 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskId, task.JobName, scheduledTime);
 
         // TODO: Implement scheduled task execution
-        return true;
+    return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> CancelTaskAsync(Guid taskId, string? reason = null, CancellationToken cancellationToken = default)
+    public Task<bool> CancelTaskAsync(Guid taskId, string? reason = null, CancellationToken cancellationToken = default)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
         {
             _logger.LogWarning("Task {TaskId} not found for cancellation", taskId);
-            return false;
+            return Task.FromResult(false);
         }
 
         if (!task.CanCancel)
         {
             _logger.LogWarning("Task {TaskId} is in state {State}, cannot cancel", taskId, task.State);
-            return false;
+            return Task.FromResult(false);
         }
 
         task.UpdateState(TaskState.Cancelled, reason ?? "Task cancelled by user");
@@ -206,51 +206,51 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _logger.LogInformation("Cancelled task {TaskId} ({JobName}). Reason: {Reason}",
             taskId, task.JobName, reason ?? "No reason provided");
 
-        return true;
+    return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> PauseTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public Task<bool> PauseTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
         {
             _logger.LogWarning("Task {TaskId} not found for pausing", taskId);
-            return false;
+            return Task.FromResult(false);
         }
 
         if (task.State != TaskState.Running)
         {
             _logger.LogWarning("Task {TaskId} is not running, cannot pause", taskId);
-            return false;
+            return Task.FromResult(false);
         }
 
         task.UpdateState(TaskState.Paused, "Task paused by user");
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Paused task {TaskId} ({JobName})", taskId, task.JobName);
-        return true;
+    return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
-    public async Task<bool> ResumeTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public Task<bool> ResumeTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         if (!_tasks.TryGetValue(taskId, out var task))
         {
             _logger.LogWarning("Task {TaskId} not found for resuming", taskId);
-            return false;
+            return Task.FromResult(false);
         }
 
         if (task.State != TaskState.Paused)
         {
             _logger.LogWarning("Task {TaskId} is not paused, cannot resume", taskId);
-            return false;
+            return Task.FromResult(false);
         }
 
         task.UpdateState(TaskState.Running, "Task resumed");
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Resumed task {TaskId} ({JobName})", taskId, task.JobName);
-        return true;
+    return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
@@ -290,34 +290,34 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     #region Task Query Operations
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyCollection<TaskExecution>> GetAllTasksAsync(CancellationToken cancellationToken = default)
+    public Task<IReadOnlyCollection<TaskExecution>> GetAllTasksAsync(CancellationToken cancellationToken = default)
     {
-        return _tasks.Values.ToList();
+    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.ToList());
     }
 
     /// <inheritdoc/>
-    public async Task<TaskExecution?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+    public Task<TaskExecution?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         _tasks.TryGetValue(taskId, out var task);
-        return task;
+    return Task.FromResult(task);
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyCollection<TaskExecution>> GetTasksByStateAsync(TaskState state, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyCollection<TaskExecution>> GetTasksByStateAsync(TaskState state, CancellationToken cancellationToken = default)
     {
-        return _tasks.Values.Where(t => t.State == state).ToList();
+    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.State == state).ToList());
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyCollection<TaskExecution>> GetTasksByPriorityAsync(TaskPriority priority, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyCollection<TaskExecution>> GetTasksByPriorityAsync(TaskPriority priority, CancellationToken cancellationToken = default)
     {
-        return _tasks.Values.Where(t => t.Priority == priority).ToList();
+    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.Priority == priority).ToList());
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyCollection<TaskExecution>> GetTasksByJobProfileAsync(int jobProfileId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyCollection<TaskExecution>> GetTasksByJobProfileAsync(int jobProfileId, CancellationToken cancellationToken = default)
     {
-        return _tasks.Values.Where(t => t.JobProfileId == jobProfileId).ToList();
+    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.JobProfileId == jobProfileId).ToList());
     }
 
     /// <inheritdoc/>
@@ -518,7 +518,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private void ProcessTasks(object? state)
     {
         if (!_isRunning || _disposed)
+        {
             return;
+        }
 
         _ = Task.Run(async () =>
         {
@@ -545,7 +547,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             var availableSlots = _maxConcurrentTasks - runningCount;
 
             if (availableSlots <= 0)
+            {
                 return;
+            }
 
             var tasksToStart = new List<Guid>();
 
@@ -673,7 +677,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private void PerformCleanup(object? state)
     {
         if (_disposed)
+        {
             return;
+        }
 
         _ = Task.Run(async () =>
         {
@@ -696,15 +702,27 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes the EnhancedTaskScheduler, releasing managed and unmanaged resources.
+    /// </summary>
+    /// <param name="disposing">True to release managed resources; false for native only.</param>
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed)
+        {
             return;
-
+        }
+        if (disposing)
+        {
+            _processingTimer?.Dispose();
+            _cleanupTimer?.Dispose();
+            _schedulerSemaphore?.Dispose();
+        }
         _disposed = true;
-
-        _processingTimer?.Dispose();
-        _cleanupTimer?.Dispose();
-        _schedulerSemaphore?.Dispose();
-
         _logger.LogInformation("EnhancedTaskScheduler disposed");
     }
 

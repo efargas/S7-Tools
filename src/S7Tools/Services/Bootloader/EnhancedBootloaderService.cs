@@ -239,7 +239,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
     }
 
     /// <inheritdoc />
-    public async Task<BootloaderInfo> GetBootloaderInfoAsync(
+    public Task<BootloaderInfo> GetBootloaderInfoAsync(
         JobProfileSet profiles,
         CancellationToken cancellationToken = default)
     {
@@ -275,7 +275,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             _logger.LogDebug("Retrieved bootloader info: Version={Version}, Model={Model}",
                 bootloaderInfo.Version, bootloaderInfo.PlcModel);
 
-            return bootloaderInfo;
+            return Task.FromResult(bootloaderInfo);
         }
         catch (Exception ex)
         {
@@ -285,7 +285,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
     }
 
     /// <inheritdoc />
-    public async Task<TimeSpan?> EstimateOperationTimeAsync(
+    public Task<TimeSpan?> EstimateOperationTimeAsync(
         JobProfileSet profiles,
         CancellationToken cancellationToken = default)
     {
@@ -306,12 +306,12 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             _logger.LogDebug("Estimated operation time: {EstimatedTime} for {MemorySize} bytes",
                 estimatedTime, profiles.Memory.Length);
 
-            return estimatedTime;
+            return Task.FromResult<TimeSpan?>(estimatedTime);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to estimate operation time: {ErrorMessage}", ex.Message);
-            return null;
+            return Task.FromResult<TimeSpan?>(null);
         }
     }
 

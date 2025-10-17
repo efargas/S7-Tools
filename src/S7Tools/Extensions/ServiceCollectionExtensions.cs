@@ -175,7 +175,14 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Add Job Management Services
+        // Add JobManagerOptions configuration
+        services.Configure<S7Tools.Core.Models.Jobs.JobManagerOptions>(options =>
+        {
+            // TODO: Replace with actual path or load from settings
+            options.ProfilesPath = "src/S7Tools/bin/Debug/net8.0/resources/JobProfiles/profiles.json";
+        });
+
+        // Add Job Management Services using options pattern
         services.TryAddSingleton<IJobManager, JobManager>();
 
         // Add Task Scheduling Services

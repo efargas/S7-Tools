@@ -10,8 +10,9 @@ namespace S7Tools.Benchmarks;
 /// </summary>
 [MemoryDiagnoser]
 [SimpleJob(warmupCount: 3, iterationCount: 5)]
-public class LoggingPerformanceBenchmarks
+public class LoggingPerformanceBenchmarks : IDisposable
 {
+    private bool _disposed;
     private ILogDataStore _logDataStore = null!;
     private LogModel _testLogEntry = null!;
 
@@ -43,7 +44,33 @@ public class LoggingPerformanceBenchmarks
     [GlobalCleanup]
     public void Cleanup()
     {
-        _logDataStore?.Dispose();
+        Dispose();
+    }
+
+    /// <summary>
+    /// Implements IDisposable to clean up resources.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes the LoggingPerformanceBenchmarks, releasing managed and unmanaged resources.
+    /// </summary>
+    /// <param name="disposing">True to release managed resources; false for native only.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+        if (disposing)
+        {
+            _logDataStore?.Dispose();
+        }
+        _disposed = true;
     }
 
     /// <summary>

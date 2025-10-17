@@ -58,8 +58,8 @@ public class StructuredLogger : IStructuredLogger
             ["LogType"] = "Structured"
         };
 
-        using var scope = BeginScope(enrichedProperties);
-        _baseLogger.Log(logLevel, message);
+    using var scope = BeginScope(enrichedProperties);
+    _baseLogger.Log(logLevel, "{Message}", message);
     }
 
     /// <inheritdoc/>
@@ -79,8 +79,8 @@ public class StructuredLogger : IStructuredLogger
             ["ExceptionMessage"] = exception.Message
         };
 
-        using var scope = BeginScope(enrichedProperties);
-        _baseLogger.Log(logLevel, exception, message);
+    using var scope = BeginScope(enrichedProperties);
+    _baseLogger.Log(logLevel, exception, "{Message}", message);
     }
 
     /// <inheritdoc/>
@@ -144,7 +144,7 @@ public class StructuredLogger : IStructuredLogger
         }
 
         using var scope = BeginScope(eventProperties);
-        _baseLogger.LogInformation("Event: {EventName}", eventName);
+    _baseLogger.LogInformation("Event: {EventName}", eventName);
     }
 
     /// <inheritdoc/>
@@ -175,7 +175,7 @@ public class StructuredLogger : IStructuredLogger
         }
 
         using var scope = BeginScope(errorProperties);
-        _baseLogger.LogError(exception, "Error in {Context}: {ExceptionMessage}", context, exception.Message);
+    _baseLogger.LogError(exception, "Error in {Context}: {ExceptionMessage}", context, exception.Message);
     }
 }
 

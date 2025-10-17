@@ -357,7 +357,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
     #region Job Profile Operations
 
     /// <inheritdoc />
-    public async Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobCreateDialogAsync(ProfileCreateRequest request)
+    public Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobCreateDialogAsync(ProfileCreateRequest request)
     {
         try
         {
@@ -376,17 +376,17 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
             };
 
             _logger.LogInformation("Job create dialog completed successfully for profile: {ProfileName}", profile.Name);
-            return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Success(profile);
+            return Task.FromResult(ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Success(profile));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while showing job create dialog");
-            return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Failure($"Error creating profile: {ex.Message}");
+            return Task.FromResult(ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Failure($"Error creating profile: {ex.Message}"));
         }
     }
 
     /// <inheritdoc />
-    public async Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobEditDialogAsync(ProfileEditRequest request)
+    public Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobEditDialogAsync(ProfileEditRequest request)
     {
         try
         {
@@ -395,17 +395,17 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
             // TODO: Implement actual job edit dialog
             // For now, return cancelled as we don't have the actual dialog implementation
             _logger.LogDebug("Job edit dialog cancelled - not yet implemented");
-            return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Cancelled();
+            return Task.FromResult(ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Cancelled());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while showing job edit dialog for ID: {ProfileId}", request.ProfileId);
-            return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Failure($"Error editing profile: {ex.Message}");
+            return Task.FromResult(ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Failure($"Error editing profile: {ex.Message}"));
         }
     }
 
     /// <inheritdoc />
-    public async Task<ProfileDialogResult<string>> ShowJobDuplicateDialogAsync(ProfileDuplicateRequest request)
+    public Task<ProfileDialogResult<string>> ShowJobDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
         try
         {
@@ -415,12 +415,12 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
             // TODO: Implement actual job duplicate dialog
             // For now, return cancelled as we don't have the actual dialog implementation
             _logger.LogDebug("Job duplicate dialog cancelled - not yet implemented");
-            return ProfileDialogResult<string>.Cancelled();
+            return Task.FromResult(ProfileDialogResult<string>.Cancelled());
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while showing job duplicate dialog for ID: {SourceProfileId}", request.SourceProfileId);
-            return ProfileDialogResult<string>.Failure($"Error duplicating profile: {ex.Message}");
+            return Task.FromResult(ProfileDialogResult<string>.Failure($"Error duplicating profile: {ex.Message}"));
         }
     }
 

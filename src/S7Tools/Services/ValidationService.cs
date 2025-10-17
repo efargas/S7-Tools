@@ -113,10 +113,7 @@ public class ValidationService : IValidationService
     /// <inheritdoc/>
     public void RegisterValidator<T>(IValidator<T> validator)
     {
-        if (validator == null)
-        {
-            throw new ArgumentNullException(nameof(validator));
-        }
+        ArgumentNullException.ThrowIfNull(validator);
 
         var type = typeof(T);
         _validators.AddOrUpdate(type, validator, (_, _) => validator);
