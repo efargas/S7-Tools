@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools.Core.Tests", "..\te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools.Infrastructure.Logging.Tests", "..\tests\S7Tools.Infrastructure.Logging.Tests\S7Tools.Infrastructure.Logging.Tests.csproj", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567892}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S7Tools.Benchmarks", "..\benchmarks\S7Tools.Benchmarks\S7Tools.Benchmarks.csproj", "{65868C5A-5377-4B2A-86D8-74F8C6B79D51}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567892}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567892}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567892}.Release|Any CPU.Build.0 = Release|Any CPU
+		{65868C5A-5377-4B2A-86D8-74F8C6B79D51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{65868C5A-5377-4B2A-86D8-74F8C6B79D51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{65868C5A-5377-4B2A-86D8-74F8C6B79D51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{65868C5A-5377-4B2A-86D8-74F8C6B79D51}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

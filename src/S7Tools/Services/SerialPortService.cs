@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Models;
@@ -104,7 +105,9 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to scan serial ports");
-            throw new InvalidOperationException("Port scanning failed due to system issues", ex);
+            throw new ValidationException(
+                "PortScan",
+                "Port scanning failed due to system issues");
         }
     }
 
@@ -252,7 +255,10 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         {
             if (!await IsPortAccessibleAsync(portPath, cancellationToken: cancellationToken).ConfigureAwait(false))
             {
-                throw new InvalidOperationException($"Port {portPath} is not accessible");
+                throw new ConnectionException(
+                    portPath,
+                    "SerialPort",
+                    $"Port {portPath} is not accessible");
             }
 
             string command = $"stty -F {portPath} -a";
@@ -260,7 +266,9 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
             if (!result.Success)
             {
-                throw new InvalidOperationException($"Failed to read port configuration: {result.StandardError}");
+                throw new ValidationException(
+                    "PortConfiguration",
+                    $"Failed to read port configuration: {result.StandardError}");
             }
 
             return ParseSttyOutput(result.StandardOutput);
@@ -286,7 +294,10 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         {
             if (!await IsPortAccessibleAsync(portPath, cancellationToken: cancellationToken).ConfigureAwait(false))
             {
-                throw new InvalidOperationException($"Port {portPath} is not accessible");
+                throw new ConnectionException(
+                    portPath,
+                    "SerialPort",
+                    $"Port {portPath} is not accessible");
             }
 
             string command = GenerateSttyCommand(portPath, configuration);
@@ -294,7 +305,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
             if (!validationResult.IsValid)
             {
-                throw new InvalidOperationException($"Invalid stty command: {string.Join(", ", validationResult.Errors)}");
+                throw new ValidationException(validationResult.Errors);
             }
 
             SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);

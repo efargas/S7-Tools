@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Models;
@@ -224,20 +225,27 @@ public class SocatService : ISocatService, IDisposable
         {
             if (_runningProcesses.Count >= settings.MaxConcurrentInstances)
             {
-                throw new InvalidOperationException($"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
+                throw new ConfigurationException(
+                    "MaxConcurrentInstances",
+                    $"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
             }
 
             // Validate serial device exists before starting socat
             if (!File.Exists(serialDevice))
             {
                 _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
-                throw new InvalidOperationException($"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
+                throw new ValidationException(
+                    "SerialDevice",
+                    $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
             }
 
             // Check if TCP port is already in use (internal check - semaphore already held)
             if (await IsPortInUseInternalAsync(configuration.TcpPort, cancellationToken).ConfigureAwait(false))
             {
-                throw new InvalidOperationException($"TCP port {configuration.TcpPort} is already in use");
+                throw new ConnectionException(
+                    $"0.0.0.0:{configuration.TcpPort}",
+                    "TCP",
+                    $"TCP port {configuration.TcpPort} is already in use");
             }
 
             // Prepare serial device if configured
@@ -247,7 +255,9 @@ public class SocatService : ISocatService, IDisposable
                 bool prepared = await PrepareSerialDeviceAsync(serialDevice, configuration, cancellationToken).ConfigureAwait(false);
                 if (!prepared)
                 {
-                    throw new InvalidOperationException($"Failed to prepare serial device {serialDevice}");
+                    throw new ValidationException(
+                        "SerialDevice",
+                        $"Failed to prepare serial device {serialDevice}");
                 }
             }
 
@@ -256,7 +266,7 @@ public class SocatService : ISocatService, IDisposable
             SocatCommandValidationResult validation = ValidateSocatCommand(command);
             if (!validation.IsValid)
             {
-                throw new InvalidOperationException($"Invalid socat command: {string.Join(", ", validation.Errors)}");
+                throw new ValidationException(validation.Errors);
             }
 
             // Start socat process
@@ -306,7 +316,9 @@ public class SocatService : ISocatService, IDisposable
             if (_runningProcesses.Count >= settings.MaxConcurrentInstances)
             {
                 _logger.LogError("❌ Too many concurrent instances");
-                throw new InvalidOperationException($"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
+                throw new ConfigurationException(
+                    "MaxConcurrentInstances",
+                    $"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
             }
 
             // Validate serial device exists before starting socat
@@ -314,7 +326,9 @@ public class SocatService : ISocatService, IDisposable
             if (!File.Exists(serialDevice))
             {
                 _logger.LogError("❌ Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
-                throw new InvalidOperationException($"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
+                throw new ValidationException(
+                    "SerialDevice",
+                    $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
             }
             _logger.LogInformation("✅ Serial device exists");
 
@@ -323,7 +337,10 @@ public class SocatService : ISocatService, IDisposable
             if (await IsPortInUseInternalAsync(profile.Configuration.TcpPort, cancellationToken).ConfigureAwait(false))
             {
                 _logger.LogError("❌ TCP port {Port} is already in use", profile.Configuration.TcpPort);
-                throw new InvalidOperationException($"TCP port {profile.Configuration.TcpPort} is already in use");
+                throw new ConnectionException(
+                    $"0.0.0.0:{profile.Configuration.TcpPort}",
+                    "TCP",
+                    $"TCP port {profile.Configuration.TcpPort} is already in use");
             }
             _logger.LogInformation("✅ TCP port {Port} is available", profile.Configuration.TcpPort);
 
@@ -335,7 +352,9 @@ public class SocatService : ISocatService, IDisposable
                 if (!prepared)
                 {
                     _logger.LogError("❌ Failed to prepare serial device {Device}", serialDevice);
-                    throw new InvalidOperationException($"Failed to prepare serial device {serialDevice}");
+                    throw new ValidationException(
+                        "SerialDevice",
+                        $"Failed to prepare serial device {serialDevice}");
                 }
                 _logger.LogInformation("✅ Serial device prepared");
             }
@@ -355,7 +374,7 @@ public class SocatService : ISocatService, IDisposable
             if (!validation.IsValid)
             {
                 _logger.LogError("❌ Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
-                throw new InvalidOperationException($"Invalid socat command: {string.Join(", ", validation.Errors)}");
+                throw new ValidationException(validation.Errors);
             }
             _logger.LogInformation("✅ Command validation passed");
 
@@ -1089,7 +1108,9 @@ public class SocatService : ISocatService, IDisposable
             }
             else
             {
-                throw new InvalidOperationException("Only socat commands are allowed to be executed.");
+                throw new ValidationException(
+                    "Command",
+                    "Only socat commands are allowed to be executed.");
             }
 
             var processStartInfo = new ProcessStartInfo
@@ -1181,7 +1202,10 @@ public class SocatService : ISocatService, IDisposable
             {
                 int exitCode = process.ExitCode;
                 string? stderr = settings.CaptureProcessOutput ? errorBuilder?.ToString() : string.Empty;
-                throw new InvalidOperationException($"Socat process exited immediately with code {exitCode}. {stderr}");
+                throw new ConnectionException(
+                    $"{configuration.TcpHost}:{configuration.TcpPort}",
+                    "Socat",
+                    $"Socat process exited immediately with code {exitCode}. {stderr}");
             }
 
             var processInfo = new SocatProcessInfo
@@ -1217,7 +1241,11 @@ public class SocatService : ISocatService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to start socat process with command: {Command}", command);
-            throw new InvalidOperationException($"Failed to start socat process: {ex.Message}", ex);
+            throw new ConnectionException(
+                $"{configuration.TcpHost}:{configuration.TcpPort}",
+                "Socat",
+                $"Failed to start socat process: {ex.Message}",
+                ex);
         }
     }
 

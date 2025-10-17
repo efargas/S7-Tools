@@ -8,6 +8,7 @@ using S7Tools.Core.Resources;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
 using S7Tools.Infrastructure.Logging.Core.Models;
+using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Infrastructure.Logging.Providers.Extensions;
 using S7Tools.Models;
 using S7Tools.Resources;
@@ -29,10 +30,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddS7ToolsFoundationServices(this IServiceCollection services)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         // Add UI Thread Service
         services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
@@ -73,7 +71,7 @@ public static class ServiceCollectionExtensions
         // Add File Dialog Service
         services.TryAddTransient<IFileDialogService>(provider =>
         {
-            var logger = provider.GetRequiredService<ILogger<AvaloniaFileDialogService>>();
+            ILogger<AvaloniaFileDialogService> logger = provider.GetRequiredService<ILogger<AvaloniaFileDialogService>>();
             return new AvaloniaFileDialogService(logger, () =>
             {
                 // Get the main window from the application
@@ -118,10 +116,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddS7ToolsAdvancedServices(this IServiceCollection services)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         // Add Command Pattern Services
         services.TryAddSingleton<ICommandDispatcher, CommandDispatcher>();
@@ -130,8 +125,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<EnhancedViewModelFactory>();
         services.TryAddSingleton<IViewModelFactory>(provider => provider.GetRequiredService<EnhancedViewModelFactory>());
 
-        // Add Resource Pattern Services - use production ResourceManager so UIStrings reads ResX by default
-        services.TryAddSingleton<IResourceManager, S7Tools.Resources.ResourceManager>();
+        // Add Resource Pattern Services - use production S7ToolsResourceManager so UIStrings reads ResX by default
+        // Renamed from ResourceManager to S7ToolsResourceManager to avoid collision with System.Resources.ResourceManager
+        services.TryAddSingleton<IResourceManager, S7Tools.Resources.S7ToolsResourceManager>();
         // If a decorator is required in the future, change registration here
 
         // Add Validation Services
@@ -141,7 +137,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IStructuredLoggerFactory, StructuredLoggerFactory>();
         services.TryAddTransient(typeof(IStructuredLogger), provider =>
         {
-            var factory = provider.GetRequiredService<IStructuredLoggerFactory>();
+            IStructuredLoggerFactory factory = provider.GetRequiredService<IStructuredLoggerFactory>();
             return factory.CreateLogger("S7Tools.Application");
         });
 
@@ -158,10 +154,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<LogDataStoreOptions>? configureDataStore = null)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         // Add DataStore logging services
         services.AddDataStoreLogging(configureDataStore);
@@ -176,10 +169,7 @@ public static class ServiceCollectionExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddS7ToolsViewModels(this IServiceCollection services)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         // Add ViewModel Factory
         services.TryAddSingleton<IViewModelFactory, ViewModelFactory>();
@@ -237,10 +227,7 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<LogDataStoreOptions>? configureDataStore = null)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         // Add foundation services
         services.AddS7ToolsFoundationServices();
@@ -267,15 +254,9 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         Action<S7ToolsServiceConfiguration> configureServices)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
-        if (configureServices == null)
-        {
-            throw new ArgumentNullException(nameof(configureServices));
-        }
+        ArgumentNullException.ThrowIfNull(configureServices);
 
         var configuration = new S7ToolsServiceConfiguration();
         configureServices(configuration);
@@ -317,119 +298,141 @@ public static class ServiceCollectionExtensions
 
     /// <summary>
     /// Initializes S7Tools services that require initialization after the service provider is built.
+    /// Uses parallel initialization for profile services to improve startup performance.
     /// </summary>
     /// <param name="serviceProvider">The service provider to initialize services from.</param>
     /// <returns>A task representing the asynchronous initialization operation.</returns>
     public static async Task InitializeS7ToolsServicesAsync(this IServiceProvider serviceProvider)
     {
-        if (serviceProvider == null)
-        {
-            throw new ArgumentNullException(nameof(serviceProvider));
-        }
+        ArgumentNullException.ThrowIfNull(serviceProvider);
+
+        var startTime = System.Diagnostics.Stopwatch.StartNew();
+        ILoggerFactory? loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+        ILogger? startupLogger = loggerFactory?.CreateLogger("S7Tools.Startup");
+
+        startupLogger?.LogInformation("Starting S7Tools service initialization...");
 
         // Initialize Layout Service
-        var layoutService = serviceProvider.GetService<ILayoutService>();
+        ILayoutService? layoutService = serviceProvider.GetService<ILayoutService>();
         if (layoutService != null)
         {
             await layoutService.LoadLayoutAsync().ConfigureAwait(false);
+            startupLogger?.LogDebug("Layout service initialized");
         }
 
         // Initialize Theme Service
-        var themeService = serviceProvider.GetService<IThemeService>();
+        IThemeService? themeService = serviceProvider.GetService<IThemeService>();
         if (themeService != null)
         {
             await themeService.LoadThemeConfigurationAsync().ConfigureAwait(false);
+            startupLogger?.LogDebug("Theme service initialized");
         }
 
         // Initialize Localization Service (if needed)
-        var localizationService = serviceProvider.GetService<ILocalizationService>();
+        ILocalizationService? localizationService = serviceProvider.GetService<ILocalizationService>();
         if (localizationService != null)
         {
             // Localization service doesn't require async initialization currently
             // but this is where you would add it if needed
+            startupLogger?.LogDebug("Localization service ready");
         }
 
-        // Initialize Profile Services using unified IProfileManager<T> pattern
+        // Initialize Profile Services in parallel using unified IProfileManager<T> pattern
         // All profile services implement the same interface and can be initialized consistently
-        try
+        // This parallel approach improves startup time by loading profiles concurrently
+        var profileInitTasks = new List<Task>();
+
+        // Initialize Serial Port Profiles
+        ISerialPortProfileService? serialProfileService = serviceProvider.GetService<ISerialPortProfileService>();
+        if (serialProfileService != null)
         {
-            // Initialize Serial Port Profiles
-            var serialProfileService = serviceProvider.GetService<ISerialPortProfileService>();
-            if (serialProfileService != null)
-            {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await serialProfileService.GetAllAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        var logger = serviceProvider.GetService<ILogger<ISerialPortProfileService>>();
-                        logger?.LogError(ex, "Failed to initialize serial port profiles during application startup");
-                    }
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
-            logger?.LogError(ex, "Failed to retrieve ISerialPortProfileService during service initialization");
+            profileInitTasks.Add(InitializeProfileServiceAsync(
+                serialProfileService,
+                "Serial Port",
+                serviceProvider.GetService<ILogger<ISerialPortProfileService>>(),
+                startupLogger));
         }
 
-        // Initialize Socat Profile storage in background to ensure profiles folder/file are created.
-        try
+        // Initialize Socat Profiles
+        ISocatProfileService? socatProfileService = serviceProvider.GetService<ISocatProfileService>();
+        if (socatProfileService != null)
         {
-            var socatProfileService = serviceProvider.GetService<ISocatProfileService>();
-            if (socatProfileService != null)
-            {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await socatProfileService.GetAllAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        var logger = serviceProvider.GetService<ILogger<ISocatProfileService>>();
-                        logger?.LogError(ex, "Failed to initialize socat profile storage during application startup");
-                    }
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
-            logger?.LogError(ex, "Failed to retrieve ISocatProfileService during service initialization");
+            profileInitTasks.Add(InitializeProfileServiceAsync(
+                socatProfileService,
+                "Socat",
+                serviceProvider.GetService<ILogger<ISocatProfileService>>(),
+                startupLogger));
         }
 
-        // Initialize Power Supply Profile storage in background to ensure profiles folder/file are created.
+        // Initialize Power Supply Profiles
+        IPowerSupplyProfileService? powerSupplyProfileService = serviceProvider.GetService<IPowerSupplyProfileService>();
+        if (powerSupplyProfileService != null)
+        {
+            profileInitTasks.Add(InitializeProfileServiceAsync(
+                powerSupplyProfileService,
+                "Power Supply",
+                serviceProvider.GetService<ILogger<IPowerSupplyProfileService>>(),
+                startupLogger));
+        }
+
+        // Wait for all profile services to initialize in parallel
+        if (profileInitTasks.Count > 0)
+        {
+            await Task.WhenAll(profileInitTasks).ConfigureAwait(false);
+        }
+
+        startTime.Stop();
+        startupLogger?.LogInformation(
+            "S7Tools service initialization completed in {ElapsedMs}ms ({ProfileCount} profile services initialized in parallel)",
+            startTime.ElapsedMilliseconds,
+            profileInitTasks.Count);
+    }
+
+    /// <summary>
+    /// Initializes a profile service asynchronously with comprehensive error handling and logging.
+    /// This helper method is used for parallel profile service initialization.
+    /// </summary>
+    /// <typeparam name="T">The profile type that implements IProfileBase.</typeparam>
+    /// <param name="profileService">The profile service to initialize.</param>
+    /// <param name="serviceName">The friendly name of the service for logging.</param>
+    /// <param name="serviceLogger">The logger specific to the service.</param>
+    /// <param name="startupLogger">The startup logger for overall initialization tracking.</param>
+    /// <returns>A task representing the asynchronous initialization operation.</returns>
+    private static async Task InitializeProfileServiceAsync<T>(
+        Core.Services.Interfaces.IProfileManager<T> profileService,
+        string serviceName,
+        ILogger? serviceLogger,
+        ILogger? startupLogger) where T : class, Core.Services.Interfaces.IProfileBase
+    {
+        var serviceStartTime = System.Diagnostics.Stopwatch.StartNew();
+
         try
         {
-            var powerSupplyProfileService = serviceProvider.GetService<IPowerSupplyProfileService>();
-            if (powerSupplyProfileService != null)
-            {
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await powerSupplyProfileService.GetAllAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        var logger = serviceProvider.GetService<ILogger<IPowerSupplyProfileService>>();
-                        logger?.LogError(ex, "Failed to initialize power supply profile storage during application startup");
-                    }
-                });
-            }
+            startupLogger?.LogDebug("Initializing {ServiceName} profile service...", serviceName);
+
+            // Load profiles to ensure storage is initialized
+            await profileService.GetAllAsync().ConfigureAwait(false);
+
+            serviceStartTime.Stop();
+            startupLogger?.LogInformation(
+                "{ServiceName} profile service initialized successfully in {ElapsedMs}ms",
+                serviceName,
+                serviceStartTime.ElapsedMilliseconds);
         }
         catch (Exception ex)
         {
-            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            var logger = loggerFactory?.CreateLogger("S7Tools.Startup");
-            logger?.LogError(ex, "Failed to retrieve IPowerSupplyProfileService during service initialization");
+            serviceStartTime.Stop();
+            serviceLogger?.LogError(ex,
+                "Failed to initialize {ServiceName} profile service during application startup (after {ElapsedMs}ms)",
+                serviceName,
+                serviceStartTime.ElapsedMilliseconds);
+
+            startupLogger?.LogWarning(
+                "{ServiceName} profile service initialization failed but application will continue",
+                serviceName);
+
+            // Don't rethrow - allow application to start even if profile initialization fails
+            // The service will attempt to load profiles again when accessed
         }
     }
 
@@ -440,27 +443,24 @@ public static class ServiceCollectionExtensions
     /// <returns>A task representing the asynchronous shutdown operation.</returns>
     public static async Task ShutdownS7ToolsServicesAsync(this IServiceProvider serviceProvider)
     {
-        if (serviceProvider == null)
-        {
-            throw new ArgumentNullException(nameof(serviceProvider));
-        }
+        ArgumentNullException.ThrowIfNull(serviceProvider);
 
         // Save Layout Service configuration
-        var layoutService = serviceProvider.GetService<ILayoutService>();
+        ILayoutService? layoutService = serviceProvider.GetService<ILayoutService>();
         if (layoutService != null)
         {
             await layoutService.SaveLayoutAsync().ConfigureAwait(false);
         }
 
         // Save Theme Service configuration
-        var themeService = serviceProvider.GetService<IThemeService>();
+        IThemeService? themeService = serviceProvider.GetService<IThemeService>();
         if (themeService != null)
         {
             await themeService.SaveThemeConfigurationAsync().ConfigureAwait(false);
         }
 
         // Dispose logging services
-        var logDataStore = serviceProvider.GetService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
+        ILogDataStore? logDataStore = serviceProvider.GetService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
         logDataStore?.Dispose();
     }
 }

@@ -908,6 +908,153 @@ public async Task<Result<T>> PerformOperationAsync<T>()
 }
 ```
 
+### **Custom Domain Exceptions Pattern (October 2025)**
+
+**Decision**: Use domain-specific exceptions instead of generic exceptions
+**Rationale**: Better error semantics, improved debugging, and exception filtering
+**Location**: `S7Tools.Core/Exceptions/`
+
+#### Exception Hierarchy
+
+```csharp
+// Base exception for all S7Tools domain errors
+S7ToolsException (base)
+├── ProfileException (profile-related errors)
+│   ├── ProfileNotFoundException
+│   ├── DuplicateProfileNameException
+│   ├── DefaultProfileDeletionException
+│   └── ReadOnlyProfileModificationException
+├── ConnectionException (connection errors)
+├── ValidationException (validation errors)
+└── ConfigurationException (configuration errors)
+```
+
+#### Implementation Pattern
+
+```csharp
+// Base exception
+public class S7ToolsException : Exception
+{
+    public S7ToolsException(string message) : base(message) { }
+    public S7ToolsException(string message, Exception inner) : base(message, inner) { }
+}
+
+// Profile exception with context
+public class ProfileException : S7ToolsException
+{
+    public int? ProfileId { get; init; }
+    public string? ProfileName { get; init; }
+    
+    public ProfileException(string message, int profileId, string profileName)
+        : base(message)
+    {
+        ProfileId = profileId;
+        ProfileName = profileName;
+    }
+}
+
+// Specific exception
+public class ProfileNotFoundException : ProfileException
+{
+    public ProfileNotFoundException(int profileId)
+        : base($"Profile with ID {profileId} was not found.", profileId, null)
+    {
+    }
+}
+```
+
+#### Usage in Services
+
+```csharp
+// ✅ GOOD: Use domain-specific exceptions
+public async Task<T> UpdateAsync(T profile, CancellationToken ct = default)
+{
+    T? existingProfile = _profiles.FirstOrDefault(p => p.Id == profile.Id);
+    if (existingProfile == null)
+    {
+        throw new ProfileNotFoundException(profile.Id);
+    }
+    
+    if (!existingProfile.CanModify())
+    {
+        throw new ReadOnlyProfileModificationException(existingProfile.Id, existingProfile.Name);
+    }
+    
+    if (string.IsNullOrWhiteSpace(profile.Name))
+    {
+        throw new ValidationException("Name", "Profile name cannot be empty.");
+    }
+    
+    // ... rest of implementation
+}
+
+// ❌ BAD: Generic exceptions
+public async Task<T> UpdateAsync(T profile, CancellationToken ct = default)
+{
+    if (existingProfile == null)
+    {
+        throw new ArgumentException($"Profile with ID {profile.Id} not found.");
+    }
+}
+```
+
+#### Exception Handling in ViewModels
+
+```csharp
+// Catch specific exceptions for targeted handling
+try
+{
+    await _profileManager.UpdateAsync(profile);
+}
+catch (ProfileNotFoundException ex)
+{
+    StatusMessage = $"Profile not found: {ex.ProfileId}";
+}
+catch (DuplicateProfileNameException ex)
+{
+    StatusMessage = $"A profile named '{ex.DuplicateName}' already exists.";
+}
+catch (ReadOnlyProfileModificationException ex)
+{
+    StatusMessage = $"Cannot modify read-only profile '{ex.ProfileName}'.";
+}
+catch (ValidationException ex)
+{
+    StatusMessage = $"Validation failed: {string.Join(", ", ex.ValidationErrors)}";
+}
+catch (S7ToolsException ex)
+{
+    // Catch-all for other domain exceptions
+    StatusMessage = $"Operation failed: {ex.Message}";
+}
+```
+
+#### Benefits
+
+- **Better Error Semantics**: Exceptions clearly indicate what went wrong
+- **Improved Debugging**: Context properties (ProfileId, ProfileName) provide detailed information
+- **Exception Filtering**: ViewModels can catch specific exception types for targeted handling
+- **Clean Architecture**: Exceptions defined in Core layer, available to all layers
+- **Type Safety**: Compile-time checking of exception handling
+
+#### Testing Pattern
+
+```csharp
+[Fact]
+public async Task UpdateAsync_ProfileNotFound_ThrowsProfileNotFoundException()
+{
+    // Arrange
+    var manager = new ProfileManager();
+    var profile = new Profile { Id = 999, Name = "Test" };
+    
+    // Act & Assert
+    var exception = await Assert.ThrowsAsync<ProfileNotFoundException>(
+        () => manager.UpdateAsync(profile)
+    );
+    Assert.Equal(999, exception.ProfileId);
+}
+```
+
 ---
 
 ## Threading and Concurrency Patterns

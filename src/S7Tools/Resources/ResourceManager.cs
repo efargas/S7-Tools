@@ -11,19 +11,20 @@ namespace S7Tools.Resources;
 
 /// <summary>
 /// Implementation of resource manager for handling localized resources.
+/// Renamed from ResourceManager to S7ToolsResourceManager to avoid collision with System.Resources.ResourceManager.
 /// </summary>
-public class ResourceManager : IResourceManager
+public class S7ToolsResourceManager : IResourceManager
 {
-    private readonly ILogger<ResourceManager> _logger;
+    private readonly ILogger<S7ToolsResourceManager> _logger;
     private readonly ConcurrentDictionary<string, System.Resources.ResourceManager> _resourceManagers;
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, string>> _resourceCache;
     private CultureInfo _currentCulture;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ResourceManager"/> class.
+    /// Initializes a new instance of the <see cref="S7ToolsResourceManager"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public ResourceManager(ILogger<ResourceManager> logger)
+    public S7ToolsResourceManager(ILogger<S7ToolsResourceManager> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _resourceManagers = new ConcurrentDictionary<string, System.Resources.ResourceManager>();
@@ -58,25 +59,25 @@ public class ResourceManager : IResourceManager
         }
 
         culture ??= _currentCulture;
-        var cacheKey = $"{culture.Name}:{key}";
+        string cacheKey = $"{culture.Name}:{key}";
 
         // Try to get from cache first
-        if (_resourceCache.TryGetValue(cacheKey, out var cultureCache) &&
-            cultureCache.TryGetValue(key, out var cachedValue))
+        if (_resourceCache.TryGetValue(cacheKey, out ConcurrentDictionary<string, string>? cultureCache) &&
+            cultureCache.TryGetValue(key, out string? cachedValue))
         {
             return cachedValue;
         }
 
         // Try to get from resource managers
-        foreach (var resourceManager in _resourceManagers.Values)
+        foreach (System.Resources.ResourceManager resourceManager in _resourceManagers.Values)
         {
             try
             {
-                var value = resourceManager.GetString(key, culture);
+                string? value = resourceManager.GetString(key, culture);
                 if (!string.IsNullOrEmpty(value))
                 {
                     // Cache the result
-                    var cache = _resourceCache.GetOrAdd(cacheKey, _ => new ConcurrentDictionary<string, string>());
+                    ConcurrentDictionary<string, string> cache = _resourceCache.GetOrAdd(cacheKey, _ => new ConcurrentDictionary<string, string>());
                     cache.TryAdd(key, value);
 
                     _logger.LogDebug("Found resource for key: {Key}, Culture: {Culture}", key, culture.Name);
@@ -96,7 +97,7 @@ public class ResourceManager : IResourceManager
     /// <inheritdoc/>
     public string GetString(string key, CultureInfo culture, params object[] args)
     {
-        var format = GetString(key, culture);
+        string format = GetString(key, culture);
 
         if (args == null || args.Length == 0)
         {
@@ -130,11 +131,11 @@ public class ResourceManager : IResourceManager
 
         culture ??= _currentCulture;
 
-        foreach (var resourceManager in _resourceManagers.Values)
+        foreach (System.Resources.ResourceManager resourceManager in _resourceManagers.Values)
         {
             try
             {
-                var value = resourceManager.GetString(key, culture);
+                string? value = resourceManager.GetString(key, culture);
                 if (!string.IsNullOrEmpty(value))
                 {
                     return true;
@@ -154,11 +155,11 @@ public class ResourceManager : IResourceManager
     {
         var keys = new HashSet<string>();
 
-        foreach (var resourceManager in _resourceManagers.Values)
+        foreach (System.Resources.ResourceManager resourceManager in _resourceManagers.Values)
         {
             try
             {
-                var resourceSet = resourceManager.GetResourceSet(_currentCulture, true, false);
+                ResourceSet? resourceSet = resourceManager.GetResourceSet(_currentCulture, true, false);
                 if (resourceSet != null)
                 {
                     foreach (System.Collections.DictionaryEntry entry in resourceSet)
@@ -185,12 +186,12 @@ public class ResourceManager : IResourceManager
         var cultures = new HashSet<CultureInfo> { CultureInfo.InvariantCulture };
 
         // Add commonly supported cultures
-        var commonCultures = new[]
+        string[] commonCultures = new[]
         {
             "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "zh-CN", "ja-JP"
         };
 
-        foreach (var cultureName in commonCultures)
+        foreach (string? cultureName in commonCultures)
         {
             try
             {
@@ -208,12 +209,9 @@ public class ResourceManager : IResourceManager
     /// <inheritdoc/>
     public void SetCurrentCulture(CultureInfo culture)
     {
-        if (culture == null)
-        {
-            throw new ArgumentNullException(nameof(culture));
-        }
+        ArgumentNullException.ThrowIfNull(culture);
 
-        var previousCulture = _currentCulture;
+        CultureInfo previousCulture = _currentCulture;
         _currentCulture = culture;
 
         _logger.LogInformation("Culture changed from {PreviousCulture} to {NewCulture}",
@@ -230,17 +228,11 @@ public class ResourceManager : IResourceManager
     /// <param name="resourceManager">The resource manager to register.</param>
     public void RegisterResourceManager(Type resourceType, System.Resources.ResourceManager resourceManager)
     {
-        if (resourceType == null)
-        {
-            throw new ArgumentNullException(nameof(resourceType));
-        }
+        ArgumentNullException.ThrowIfNull(resourceType);
 
-        if (resourceManager == null)
-        {
-            throw new ArgumentNullException(nameof(resourceManager));
-        }
+        ArgumentNullException.ThrowIfNull(resourceManager);
 
-        var key = resourceType.FullName ?? resourceType.Name;
+        string key = resourceType.FullName ?? resourceType.Name;
         _resourceManagers.AddOrUpdate(key, resourceManager, (_, _) => resourceManager);
 
         _logger.LogDebug("Registered resource manager for type: {ResourceType}", resourceType.Name);
@@ -258,15 +250,15 @@ public class ResourceManager : IResourceManager
             return false;
         }
 
-        var key = resourceType.FullName ?? resourceType.Name;
-        var removed = _resourceManagers.TryRemove(key, out _);
+        string key = resourceType.FullName ?? resourceType.Name;
+        bool removed = _resourceManagers.TryRemove(key, out _);
 
         if (removed)
         {
             _logger.LogDebug("Unregistered resource manager for type: {ResourceType}", resourceType.Name);
             // Clear related cache entries
             var keysToRemove = _resourceCache.Keys.Where(k => k.Contains(key)).ToList();
-            foreach (var cacheKey in keysToRemove)
+            foreach (string? cacheKey in keysToRemove)
             {
                 _resourceCache.TryRemove(cacheKey, out _);
             }
@@ -285,7 +277,7 @@ public class ResourceManager : IResourceManager
             // Register the main UI strings resource manager
             var uiStringsResourceManager = new System.Resources.ResourceManager(
                 "S7Tools.Resources.Strings.UIStrings",
-                typeof(ResourceManager).Assembly);
+                typeof(S7ToolsResourceManager).Assembly);
 
             RegisterResourceManager(typeof(UIStrings), uiStringsResourceManager);
 
@@ -302,15 +294,15 @@ public class ResourceManager : IResourceManager
 /// Typed resource manager for strongly-typed resource access.
 /// </summary>
 /// <typeparam name="T">The type representing the resource category.</typeparam>
-public class ResourceManager<T> : IResourceManager<T>
+public class S7ToolsResourceManager<T> : IResourceManager<T>
 {
     private readonly IResourceManager _baseResourceManager;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ResourceManager{T}"/> class.
+    /// Initializes a new instance of the <see cref="S7ToolsResourceManager{T}"/> class.
     /// </summary>
     /// <param name="baseResourceManager">The base resource manager.</param>
-    public ResourceManager(IResourceManager baseResourceManager)
+    public S7ToolsResourceManager(IResourceManager baseResourceManager)
     {
         _baseResourceManager = baseResourceManager ?? throw new ArgumentNullException(nameof(baseResourceManager));
     }

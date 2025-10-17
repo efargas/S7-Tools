@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NModbus;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 
@@ -63,14 +64,20 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
                     return true;
                 }
 
-                throw new InvalidOperationException("Already connected to a power supply device. Disconnect first.");
+                string connectionTarget = _currentConfiguration is ModbusTcpConfiguration current
+                    ? $"{current.Host}:{current.Port}"
+                    : "Unknown";
+                throw new ConnectionException(
+                    connectionTarget,
+                    "ModbusTCP",
+                    "Already connected to a power supply device. Disconnect first.");
             }
 
             // Validate configuration
             List<string> validationErrors = configuration.Validate();
             if (validationErrors.Count > 0)
             {
-                throw new InvalidOperationException($"Configuration validation failed: {string.Join(", ", validationErrors)}");
+                throw new ValidationException(validationErrors);
             }
 
             // Currently only Modbus TCP is supported
@@ -109,7 +116,11 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
 
                 // Cleanup on failure
                 CleanupConnection();
-                throw new InvalidOperationException($"Failed to connect to power supply: {ex.Message}", ex);
+                throw new ConnectionException(
+                    $"{modbusTcpConfig.Host}:{modbusTcpConfig.Port}",
+                    "ModbusTCP",
+                    $"Failed to connect to power supply: {ex.Message}",
+                    ex);
             }
         }
         finally
@@ -286,7 +297,15 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to read power state: {Message}", ex.Message);
-            throw new InvalidOperationException($"Failed to read power state: {ex.Message}", ex);
+
+            string connectionTarget = _currentConfiguration is ModbusTcpConfiguration config
+                ? $"{config.Host}:{config.Port}"
+                : "Unknown";
+            throw new ConnectionException(
+                connectionTarget,
+                "ModbusTCP",
+                $"Failed to read power state: {ex.Message}",
+                ex);
         }
         finally
         {
@@ -347,7 +366,10 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
     {
         if (!_isConnected || _modbusMaster == null || _tcpClient == null)
         {
-            throw new InvalidOperationException("Not connected to power supply. Call ConnectAsync() first.");
+            throw new ConnectionException(
+                "Unknown",
+                "ModbusTCP",
+                "Not connected to power supply. Call ConnectAsync() first.");
         }
     }
 

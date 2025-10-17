@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
 using S7Tools.Models;
 using S7Tools.Services.Interfaces;
 
@@ -141,9 +142,11 @@ public class SettingsService : ISettingsService
             string json = JsonSerializer.Serialize(_settings, options);
             await File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new InvalidOperationException($"Failed to save settings to {filePath}", ex);
+            throw new ConfigurationException(
+                "SettingsSave",
+                $"Failed to save settings to {filePath}");
         }
     }
 

@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Models;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
@@ -38,7 +39,7 @@ public sealed class FileLogWriter : IDisposable
         // Ensure folder exists at startup if enabled
         try
         {
-            var settings = _settingsService.Settings;
+            ApplicationSettings settings = _settingsService.Settings;
             if (settings.Logging.EnableFileLogging)
             {
                 Directory.CreateDirectory(settings.Logging.DefaultLogPath);
@@ -59,7 +60,7 @@ public sealed class FileLogWriter : IDisposable
                 return;
             }
 
-            var settings = _settingsService.Settings;
+            ApplicationSettings settings = _settingsService.Settings;
             if (!settings.Logging.EnableFileLogging)
             {
                 return;
@@ -68,7 +69,7 @@ public sealed class FileLogWriter : IDisposable
             // Append new items if any
             if (e.NewItems != null)
             {
-                foreach (var item in e.NewItems)
+                foreach (object? item in e.NewItems)
                 {
                     if (item is LogModel log)
                     {
@@ -88,7 +89,7 @@ public sealed class FileLogWriter : IDisposable
     {
         try
         {
-            var folder = settings.DefaultLogPath;
+            string folder = settings.DefaultLogPath;
             if (string.IsNullOrEmpty(folder))
             {
                 return;
@@ -97,9 +98,9 @@ public sealed class FileLogWriter : IDisposable
             Directory.CreateDirectory(folder);
 
             // Use timestamp-based file name pattern
-            var timestamp = DateTime.Now.ToString("yyyyMMdd");
-            var fileName = settings.LogFileNamePattern.Replace("{timestamp}", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
-            var filePath = Path.Combine(folder, fileName);
+            string timestamp = DateTime.Now.ToString("yyyyMMdd");
+            string fileName = settings.LogFileNamePattern.Replace("{timestamp}", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
+            string filePath = Path.Combine(folder, fileName);
 
             var line = new StringBuilder();
             line.AppendFormat("[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] {2}", log.Timestamp, log.Level, log.Category);

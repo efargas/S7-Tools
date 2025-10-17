@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Services;
@@ -76,7 +77,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Ensure the directory exists
-        var directory = Path.GetDirectoryName(_profilesPath);
+        string? directory = Path.GetDirectoryName(_profilesPath);
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
@@ -108,10 +109,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         Console.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
         System.Diagnostics.Debug.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
 
-        if (profile == null)
-        {
-            throw new ArgumentNullException(nameof(profile));
-        }
+        ArgumentNullException.ThrowIfNull(profile);
 
         Console.WriteLine($"📝 Step 1: Logging entry for profile: {profile.Name}");
         _logger.LogInformation("🚀 StandardProfileManager.CreateAsync ENTRY for profile: {ProfileName}", profile.Name);
@@ -137,7 +135,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             {
                 Console.WriteLine($"❌ ERROR: Profile name is empty!");
                 _logger.LogError("Profile name validation failed: name is empty");
-                throw new InvalidOperationException("Profile name cannot be empty.");
+                throw new ValidationException("Name", "Profile name cannot be empty.");
             }
 
             // Inline name uniqueness check while holding the semaphore to avoid nested WaitAsync calls
@@ -148,7 +146,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 Console.WriteLine($"❌ ERROR: Profile name '{profile.Name}' already exists!");
                 _logger.LogError("Profile name uniqueness validation failed: profile with name '{ProfileName}' already exists. Existing profiles: {ExistingNames}",
                     profile.Name, string.Join(", ", _profiles.Select(p => p.Name)));
-                throw new InvalidOperationException($"A profile with the name '{profile.Name}' already exists.");
+                throw new DuplicateProfileNameException(profile.Name);
             }
             Console.WriteLine($"📝 Step 8: Name '{profile.Name}' is unique ✓");
             _logger.LogDebug("✅ Name '{ProfileName}' is unique", profile.Name);
@@ -223,10 +221,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<T> UpdateAsync(T profile, CancellationToken cancellationToken = default)
     {
-        if (profile == null)
-        {
-            throw new ArgumentNullException(nameof(profile));
-        }
+        ArgumentNullException.ThrowIfNull(profile);
 
         if (profile.Id <= 0)
         {
@@ -244,20 +239,20 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             if (existingProfile == null)
             {
                 _logger.LogError("Profile not found: ID {ProfileId}", profile.Id);
-                throw new ArgumentException($"Profile with ID {profile.Id} not found.");
+                throw new ProfileNotFoundException(profile.Id);
             }
 
             if (!existingProfile.CanModify())
             {
                 _logger.LogError("Cannot modify read-only profile: {ProfileName} (ID: {ProfileId})", existingProfile.Name, existingProfile.Id);
-                throw new InvalidOperationException("Cannot modify a read-only profile.");
+                throw new ReadOnlyProfileModificationException(existingProfile.Id, existingProfile.Name);
             }
 
             // Validate business rules
             if (string.IsNullOrWhiteSpace(profile.Name))
             {
                 _logger.LogError("Profile name validation failed: name is empty for ID {ProfileId}", profile.Id);
-                throw new InvalidOperationException("Profile name cannot be empty.");
+                throw new ValidationException("Name", "Profile name cannot be empty.");
             }
 
             // Inline name uniqueness check while holding the semaphore
@@ -265,7 +260,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             {
                 _logger.LogError("Profile name uniqueness validation failed: profile with name '{ProfileName}' already exists (excluding ID {ProfileId}). Existing profiles: {ExistingNames}",
                     profile.Name, profile.Id, string.Join(", ", _profiles.Select(p => $"{p.Name} (ID: {p.Id})")));
-                throw new InvalidOperationException($"A profile with the name '{profile.Name}' already exists.");
+                throw new DuplicateProfileNameException(profile.Name);
             }
 
             // Clone the profile to avoid modifying the input
@@ -283,7 +278,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             }
 
             // Replace the existing profile
-            var index = _profiles.IndexOf(existingProfile);
+            int index = _profiles.IndexOf(existingProfile);
             _profiles[index] = updatedProfile;
 
             // Persist changes
@@ -316,7 +311,13 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             { return false; }
 
             if (!profile.CanDelete())
-            { throw new InvalidOperationException("Cannot delete a read-only profile."); }
+            {
+                if (profile.IsDefault)
+                {
+                    throw new DefaultProfileDeletionException(profile.Id, profile.Name);
+                }
+                throw new ReadOnlyProfileModificationException(profile.Id, profile.Name);
+            }
 
             _profiles.Remove(profile);
 
@@ -348,7 +349,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-            T sourceProfile = _profiles.FirstOrDefault(p => p.Id == sourceProfileId) ?? throw new ArgumentException($"Source profile with ID {sourceProfileId} not found.");
+            T sourceProfile = _profiles.FirstOrDefault(p => p.Id == sourceProfileId) ?? throw new ProfileNotFoundException(sourceProfileId);
 
             // Ensure the new name is unique - use Core version to avoid deadlock
             string uniqueName = EnsureUniqueNameCore(newName, excludeId: null);
@@ -450,11 +451,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
-            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
-            if (profile == null)
-            {
-                throw new ArgumentException($"Profile with ID {profileId} not found.");
-            }
+            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId) ?? throw new ProfileNotFoundException(profileId);
 
             // Clear all default flags first
             await ClearAllDefaultFlagsAsync(cancellationToken).ConfigureAwait(false);
@@ -568,8 +565,8 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <returns>A unique profile name.</returns>
     private string EnsureUniqueNameCore(string baseName, int? excludeId = null)
     {
-        var candidateName = baseName;
-        var counter = 1;
+        string candidateName = baseName;
+        int counter = 1;
 
         // Check uniqueness directly against the in-memory collection
         // Caller must already hold the semaphore
@@ -635,10 +632,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<IEnumerable<T>> ImportAsync(IEnumerable<T> profiles, bool replaceExisting = false, CancellationToken cancellationToken = default)
     {
-        if (profiles == null)
-        {
-            throw new ArgumentNullException(nameof(profiles));
-        }
+        ArgumentNullException.ThrowIfNull(profiles);
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -753,7 +747,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 return;
             }
 
-            var json = await File.ReadAllTextAsync(_profilesPath, cancellationToken).ConfigureAwait(false);
+            string json = await File.ReadAllTextAsync(_profilesPath, cancellationToken).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(json))
             {
                 _logger.LogInformation("Profile file is empty, creating default profiles: {Path}", _profilesPath);
@@ -799,7 +793,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 IncludeFields = false
             };
 
-            var json = JsonSerializer.Serialize(_profiles, options);
+            string json = JsonSerializer.Serialize(_profiles, options);
             await File.WriteAllTextAsync(_profilesPath, json, cancellationToken).ConfigureAwait(false);
 
             _logger.LogDebug("Saved {Count} {ProfileType} profiles to: {Path}",
@@ -838,7 +832,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             WriteIndented = false
         };
 
-        var json = JsonSerializer.Serialize(profile, options);
+        string json = JsonSerializer.Serialize(profile, options);
         return JsonSerializer.Deserialize<T>(json, options)!;
     }
 

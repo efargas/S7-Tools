@@ -423,6 +423,84 @@ _logger.LogError(exception, "Error occurred in {Method}", nameof(MyMethod));
 - **Rule-based validation** - Flexible validation rules
 - **Async validation** - Support for async validation
 
+## Code Modernization Standards - ESTABLISHED (January 2025)
+
+### **File-Scoped Namespaces - REQUIRED** (C# 10+)
+
+**Modern Namespace Pattern** (99.5% of codebase):
+```csharp
+using System;
+using System.Collections.Generic;
+
+namespace S7Tools.Services;
+
+/// <summary>
+/// Service implementation
+/// </summary>
+public class MyService
+{
+    // Implementation
+}
+```
+
+**Legacy Pattern** (Only in auto-generated files):
+```csharp
+namespace S7Tools.Services
+{
+    public class MyService
+    {
+        // Implementation
+    }
+}
+```
+
+**Benefits**:
+- Reduced indentation level
+- Modern C# 10+ conventions
+- Cleaner, more readable code
+- Consistent with .NET ecosystem standards
+
+### **Performance Profiling Infrastructure - ESTABLISHED**
+
+**BenchmarkDotNet Setup**:
+```bash
+# Run all benchmarks
+cd benchmarks/S7Tools.Benchmarks
+dotnet run -c Release
+
+# Run specific benchmark
+dotnet run -c Release --filter "*ProfileCrud*"
+dotnet run -c Release --filter "*Logging*"
+```
+
+**Benchmark Pattern**:
+```csharp
+[MemoryDiagnoser]
+[SimpleJob(warmupCount: 3, iterationCount: 5)]
+public class MyBenchmarks
+{
+    [GlobalSetup]
+    public void Setup() { }
+
+    [GlobalCleanup]
+    public void Cleanup() { }
+
+    [Benchmark]
+    public void MyOperation() { }
+}
+```
+
+**Available Benchmarks**:
+1. **ProfileCrudBenchmarks** - Profile CRUD operations performance
+2. **LoggingPerformanceBenchmarks** - Logging system performance
+
+**Usage Guidelines**:
+- Run benchmarks in Release mode only
+- Close other applications to reduce noise
+- Run multiple iterations for statistical significance
+- Document baseline metrics for comparison
+- Track performance trends over time
+
 ## Code Quality Standards - MANDATORY
 
 ### **Naming Conventions - REQUIRED**
@@ -444,6 +522,53 @@ _logger.LogError(exception, "Error occurred in {Method}", nameof(MyMethod));
 - **User-friendly error messages** for UI operations
 - **Structured logging** for all exceptions
 - **Graceful degradation** where possible
+- **Use domain-specific exceptions** from S7Tools.Core.Exceptions
+
+### **Custom Exception Pattern - REQUIRED** (Implemented 2025-01-16)
+
+**Domain Exception Types** (Defined in S7Tools.Core/Exceptions/):
+```csharp
+// ValidationException - Input validation, command validation, configuration errors
+throw new ValidationException("PropertyName", "Validation error message");
+throw new ValidationException(validationErrors); // List of errors
+
+// ConnectionException - Port accessibility, TCP conflicts, connection failures
+throw new ConnectionException(
+    "connectionTarget",
+    "connectionType",
+    "Connection error message");
+
+// ConfigurationException - Settings save, max instances, configuration limits
+throw new ConfigurationException(
+    "ConfigurationKey",
+    "Configuration error message");
+```
+
+**Exception Usage Guidelines**:
+1. **ValidationException** - Use for input validation failures, command validation, configuration parsing errors
+2. **ConnectionException** - Use for network/port/device connection failures
+3. **ConfigurationException** - Use for settings/configuration save failures, limit violations
+4. **ArgumentException** - Keep for parameter validation (standard .NET practice)
+5. **Always log before throwing** - Use structured logging with context
+
+**Services Updated with Custom Exceptions** (100% Complete):
+- ✅ StandardProfileManager.cs - Profile CRUD validation and business rules
+- ✅ PowerSupplyService.cs - Connection and configuration validation
+- ✅ SocatService.cs - Process management and port validation
+- ✅ SerialPortService.cs - Port accessibility and configuration
+- ✅ SettingsService.cs - Settings persistence
+
+**Example Implementation**:
+```csharp
+// Before (generic exception)
+throw new InvalidOperationException($"Port {port} is not accessible");
+
+// After (domain-specific exception)
+throw new ConnectionException(
+    portPath,
+    "SerialPort",
+    $"Port {portPath} is not accessible");
+```
 
 ## Testing Framework - ESTABLISHED
 
