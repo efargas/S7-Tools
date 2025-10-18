@@ -122,7 +122,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _logger.LogInformation("Created task {TaskId} for job '{JobName}' with {ResourceCount} resources",
             taskExecution.TaskId, jobProfile.Name, executionJob.Resources.Count);
 
-    return Task.FromResult(taskExecution);
+        return Task.FromResult(taskExecution);
     }
 
     /// <inheritdoc/>
@@ -146,7 +146,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Enqueued task {TaskId} ({JobName})", taskId, task.JobName);
-    return Task.FromResult(true);
+        return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
@@ -230,7 +230,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _logger.LogInformation("Cancelled task {TaskId} ({JobName}). Reason: {Reason}",
             taskId, task.JobName, reason ?? "No reason provided");
 
-    return Task.FromResult(true);
+        return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
@@ -252,7 +252,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Paused task {TaskId} ({JobName})", taskId, task.JobName);
-    return Task.FromResult(true);
+        return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
@@ -274,7 +274,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Resumed task {TaskId} ({JobName})", taskId, task.JobName);
-    return Task.FromResult(true);
+        return Task.FromResult(true);
     }
 
     /// <inheritdoc/>
@@ -316,32 +316,32 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetAllTasksAsync(CancellationToken cancellationToken = default)
     {
-    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.ToList());
     }
 
     /// <inheritdoc/>
     public Task<TaskExecution?> GetTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
         _tasks.TryGetValue(taskId, out TaskExecution? task);
-    return Task.FromResult(task);
+        return Task.FromResult(task);
     }
 
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetTasksByStateAsync(TaskState state, CancellationToken cancellationToken = default)
     {
-    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.State == state).ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.State == state).ToList());
     }
 
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetTasksByPriorityAsync(TaskPriority priority, CancellationToken cancellationToken = default)
     {
-    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.Priority == priority).ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.Priority == priority).ToList());
     }
 
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetTasksByJobProfileAsync(int jobProfileId, CancellationToken cancellationToken = default)
     {
-    return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.JobProfileId == jobProfileId).ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.JobProfileId == jobProfileId).ToList());
     }
 
     /// <inheritdoc/>
@@ -358,8 +358,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<IReadOnlyCollection<TaskExecution>> GetRunningTasksAsync(CancellationToken cancellationToken = default)
     {
-    await Task.Yield();
-    return _tasks.Values.Where(t => t.State == TaskState.Running).ToList();
+        await Task.Yield();
+        return _tasks.Values.Where(t => t.State == TaskState.Running).ToList();
     }
 
     #endregion

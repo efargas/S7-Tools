@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
@@ -253,7 +254,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     {
         ClearLogsCommand = ReactiveCommand.CreateFromTask(async () =>
         {
-            var result = await _dialogService.ShowConfirmationAsync(
+            bool result = await _dialogService.ShowConfirmationAsync(
                 UIStrings.LogViewer_ClearLogsTitle,
                 UIStrings.LogViewer_ClearLogsMessage);
 
@@ -276,7 +277,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
                 }
 
                 // Parse the format string to determine export format
-                var format = formatString?.ToLowerInvariant() switch
+                ExportFormat format = formatString?.ToLowerInvariant() switch
                 {
                     "txt" or "text" => ExportFormat.Text,
                     "json" => ExportFormat.Json,
@@ -296,7 +297,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
                 }
 
                 // Export the logs
-                var result = await _logExportService.ExportLogsAsync(logsToExport, format);
+                Result result = await _logExportService.ExportLogsAsync(logsToExport, format);
 
                 if (result.IsSuccess)
                 {
@@ -323,7 +324,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         {
             if (logEntry != null)
             {
-                var logText = $"[{logEntry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
+                string logText = $"[{logEntry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
                 await _clipboardService.SetTextAsync(logText);
             }
         });
@@ -365,12 +366,12 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void LoadLogEntries()
     {
-        var entries = _logDataStore.Entries;
+        IReadOnlyList<LogModel> entries = _logDataStore.Entries;
 
         _uiThreadService.InvokeOnUIThread(() =>
         {
             LogEntries.Clear();
-            foreach (var entry in entries)
+            foreach (LogModel entry in entries)
             {
                 LogEntries.Add(entry);
             }
@@ -443,7 +444,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     {
         _uiThreadService.InvokeOnUIThread(() =>
         {
-            var filtered = LogEntries.AsEnumerable();
+            IEnumerable<LogModel> filtered = LogEntries.AsEnumerable();
 
             // Apply log level filter
             filtered = filtered.Where(entry => entry.Level >= SelectedLogLevel);
@@ -451,7 +452,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             // Apply search text filter
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                var term = SearchText;
+                string term = SearchText;
                 filtered = filtered.Where(entry =>
                     (!string.IsNullOrEmpty(entry.Message) && entry.Message.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
                     (!string.IsNullOrEmpty(entry.Category) && entry.Category.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
@@ -467,13 +468,13 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
 
             if (EndDate.HasValue)
             {
-                var endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
+                DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
                 filtered = filtered.Where(entry => entry.Timestamp <= endDateOffset);
             }
 
             // Update filtered collection
             FilteredLogEntries.Clear();
-            foreach (var entry in filtered.OrderBy(e => e.Timestamp))
+            foreach (LogModel? entry in filtered.OrderBy(e => e.Timestamp))
             {
                 FilteredLogEntries.Add(entry);
             }

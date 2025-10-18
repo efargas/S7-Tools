@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using S7Tools.ViewModels;
@@ -25,10 +26,10 @@ public class ViewLocator : IDataTemplate
 
         // Map typical ViewModel namespace to Views namespace and replace suffix
         // e.g. S7Tools.ViewModels.SerialPortsSettingsViewModel -> S7Tools.Views.SerialPortsSettingsView
-        var vmType = param.GetType();
-        var vmFullName = vmType.FullName ?? string.Empty;
+        Type vmType = param.GetType();
+        string vmFullName = vmType.FullName ?? string.Empty;
 
-        var name = vmFullName
+        string name = vmFullName
             .Replace(".ViewModels.", ".Views.", StringComparison.Ordinal)
             .Replace("ViewModel", "View", StringComparison.Ordinal);
 
@@ -38,14 +39,14 @@ public class ViewLocator : IDataTemplate
         // If not found, try to get it from the same assembly as the ViewModel
         if (type == null)
         {
-            var viewModelAssembly = vmType.Assembly;
+            Assembly viewModelAssembly = vmType.Assembly;
             type = viewModelAssembly.GetType(name);
         }
 
         // Fallback: search for a type in the ViewModel assembly with the same class name under any namespace
         if (type == null)
         {
-            var shortName = vmType.Name.Replace("ViewModel", "View", StringComparison.Ordinal);
+            string shortName = vmType.Name.Replace("ViewModel", "View", StringComparison.Ordinal);
             type = vmType.Assembly.GetTypes().FirstOrDefault(t => t.Name == shortName);
         }
 

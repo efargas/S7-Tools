@@ -1,1 +1,126 @@
-[]
+[
+  {
+    "Id": 1,
+    "Name": "jyguguyg",
+    "Description": "jgugy",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-17T18:40:41.7590355Z",
+    "ModifiedAt": "2025-10-17T18:40:41.7590432Z",
+    "Version": "1.0",
+    "IsDefault": false,
+    "IsReadOnly": false,
+    "IsTemplate": false,
+    "Metadata": {
+      "Type": "User",
+      "Author": "miniyo88"
+    },
+    "SerialProfileId": 3,
+    "SocatProfileId": 2,
+    "PowerSupplyProfileId": 5,
+    "MemoryRegion": {
+      "Start": 536879104,
+      "Length": 16384
+    },
+    "Payloads": {
+      "BasePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/resources/payloads/"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 60000,
+    "PowerOffDelayMs": 1000,
+    "UseDefaultPath": true
+  },
+  {
+    "Id": 2,
+    "Name": "jyguguyg (Copy)",
+    "Description": "jgugy",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-17T18:58:00.003705Z",
+    "ModifiedAt": "2025-10-17T18:58:00.0037056Z",
+    "Version": "1.0",
+    "IsDefault": false,
+    "IsReadOnly": false,
+    "IsTemplate": false,
+    "Metadata": {
+      "Type": "User",
+      "Author": "miniyo88"
+    },
+    "SerialProfileId": 3,
+    "SocatProfileId": 2,
+    "PowerSupplyProfileId": 5,
+    "MemoryRegion": {
+      "Start": 536879104,
+      "Length": 16384
+    },
+    "Payloads": {
+      "BasePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/resources/payloads/"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 60000,
+    "PowerOffDelayMs": 1000,
+    "UseDefaultPath": true
+  },
+  {
+    "Id": 3,
+    "Name": "jyguguyg (Copy) (Copy)",
+    "Description": "jgugy",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-17T20:31:55.2688048Z",
+    "ModifiedAt": "2025-10-17T20:31:55.2688074Z",
+    "Version": "1.0",
+    "IsDefault": false,
+    "IsReadOnly": false,
+    "IsTemplate": false,
+    "Metadata": {
+      "Type": "User",
+      "Author": "miniyo88"
+    },
+    "SerialProfileId": 3,
+    "SocatProfileId": 2,
+    "PowerSupplyProfileId": 5,
+    "MemoryRegion": {
+      "Start": 536879104,
+      "Length": 16384
+    },
+    "Payloads": {
+      "BasePath": "/home/miniyo88/Desktop/GH_WS/S7-Tool/Github/S7-Tools/src/resources/payloads/"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 60000,
+    "PowerOffDelayMs": 1000,
+    "UseDefaultPath": true
+  },
+  {
+    "Id": 4,
+    "Name": "ikhih",
+    "Description": "lihloihl",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-17T22:12:22.4280619Z",
+    "ModifiedAt": "2025-10-17T22:12:22.4280713Z",
+    "Version": "1.0",
+    "IsDefault": false,
+    "IsReadOnly": false,
+    "IsTemplate": false,
+    "Metadata": {
+      "Type": "User",
+      "Author": "miniyo88"
+    },
+    "SerialProfileId": 2,
+    "SocatProfileId": 1,
+    "PowerSupplyProfileId": 5,
+    "MemoryRegion": {
+      "Start": 536870912,
+      "Length": 4096
+    },
+    "Payloads": {
+      "BasePath": "./bootloader-payloads"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 5000,
+    "PowerOffDelayMs": 2000,
+    "UseDefaultPath": true
+  }
+]

@@ -6,7 +6,7 @@
 set -e
 
 # Default output directory
-OUTPUT_DIR="${1:-../../src/Resources/payloads}"
+OUTPUT_DIR="${1:-../../src/resources/payloads}"
 IMAGE_NAME="siemens-s7-payloads-enhanced"
 
 echo "=== SiemensS7-Bootloader Payload Extraction (Volume Method) ==="
@@ -45,7 +45,7 @@ This directory contains the compiled payloads extracted from the Docker build pr
 
 ### hello_loop/
 - **hello_loop.bin**: Binary payload for hello loop demonstration
-- **hello_loop.ihex**: Intel HEX format  
+- **hello_loop.ihex**: Intel HEX format
 - **hello_loop**: ELF executable
 
 ### tic_tac_toe/

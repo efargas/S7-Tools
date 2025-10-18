@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:views="using:S7Tools.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
+             x:Class="S7Tools.Views.TaskManagerShellView"
+             x:DataType="vm:TaskManagerShellViewModel"
+             Background="#1E1E1E">
+
+  <!-- Main Content Only - categories handled by sidebar; view resolved via ViewLocator -->
+  <ContentControl Content="{Binding SelectedCategoryViewModel}">
+    <ContentControl.DataTemplates>
+      <DataTemplate DataType="vm:TaskRunnerViewModel">
+        <views:TaskRunnerView />
+      </DataTemplate>
+      <DataTemplate DataType="vm:ActiveTasksViewModel">
+        <views:ActiveTasksView />
+      </DataTemplate>
+      <DataTemplate DataType="vm:ScheduledTasksViewModel">
+        <views:ScheduledTasksView />
+      </DataTemplate>
+      <DataTemplate DataType="vm:HistoryTasksViewModel">
+        <views:HistoryTasksView />
+      </DataTemplate>
+      <DataTemplate DataType="vm:TaskCreatorViewModel">
+        <views:TaskCreatorView />
+      </DataTemplate>
+    </ContentControl.DataTemplates>
+  </ContentControl>
+</UserControl>

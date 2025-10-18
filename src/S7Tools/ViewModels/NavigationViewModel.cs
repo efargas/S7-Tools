@@ -45,7 +45,7 @@ public class NavigationViewModel : ReactiveObject
     /// <returns>A logger instance for design-time use.</returns>
     private static ILogger<NavigationViewModel> CreateDesignTimeLogger()
     {
-        using var loggerFactory = LoggerFactory.Create(builder => { });
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
         return loggerFactory.CreateLogger<NavigationViewModel>();
     }
 
@@ -219,7 +219,7 @@ public class NavigationViewModel : ReactiveObject
             return;
         }
 
-        var currentSelectedItem = _activityBarService.SelectedItem;
+        ActivityBarItem? currentSelectedItem = _activityBarService.SelectedItem;
 
         // VSCode behavior: clicking on selected item toggles sidebar
         if (currentSelectedItem != null && currentSelectedItem.Id == itemId)
@@ -288,7 +288,7 @@ public class NavigationViewModel : ReactiveObject
                     SidebarTitle = "CONNECTIONS";
                     MainContentTitle = "PLC Connections";
                     ShowMainContentHeader = true;
-                    var connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
+                    ConnectionsViewModel? connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
                     CurrentContent = connectionsViewModel;
                     MainContent = connectionsViewModel?.DetailContent;
                     DetailContent = connectionsViewModel?.DetailContent;
@@ -312,7 +312,7 @@ public class NavigationViewModel : ReactiveObject
                     SidebarTitle = "SETTINGS";
                     MainContentTitle = "Settings Configuration";
                     ShowMainContentHeader = true;
-                    var settingsViewModel = CreateViewModel<SettingsViewModel>();
+                    SettingsViewModel? settingsViewModel = CreateViewModel<SettingsViewModel>();
                     CurrentContent = settingsViewModel; // Categories in sidebar
                     MainContent = settingsViewModel; // Content in main area
                     DetailContent = settingsViewModel;
@@ -324,10 +324,10 @@ public class NavigationViewModel : ReactiveObject
                     SidebarTitle = "TASK MANAGER";
                     MainContentTitle = "Task Manager";
                     ShowMainContentHeader = true;
-                    var taskManagerViewModel = CreateViewModel<TaskManagerViewModel>();
-                    CurrentContent = CreateViewModel<HomeViewModel>(); // Minimal sidebar content
-                    MainContent = taskManagerViewModel; // Task manager in main area
-                    DetailContent = taskManagerViewModel;
+                    TaskManagerShellViewModel? taskManagerShell = CreateViewModel<TaskManagerShellViewModel>();
+                    CurrentContent = taskManagerShell; // Sidebar categories
+                    MainContent = taskManagerShell; // Main content resolved via ViewLocator
+                    DetailContent = taskManagerShell;
                     ShowLogStats = false;
                     _logger.LogDebug("Navigated to Task Manager");
                     break;
@@ -336,8 +336,9 @@ public class NavigationViewModel : ReactiveObject
                     SidebarTitle = "JOBS MANAGEMENT";
                     MainContentTitle = "Jobs Management";
                     ShowMainContentHeader = true;
-                    var jobsViewModel = CreateViewModel<JobsManagementViewModel>();
-                    CurrentContent = CreateViewModel<HomeViewModel>(); // Minimal sidebar content
+                    JobsManagementViewModel? jobsViewModel = CreateViewModel<JobsManagementViewModel>();
+                    // Show Jobs-specific sidebar (menu) and main content
+                    CurrentContent = jobsViewModel; // Sidebar will use JobsSidebarView DataTemplate
                     MainContent = jobsViewModel; // Jobs management in main area
                     DetailContent = jobsViewModel;
                     ShowLogStats = false;

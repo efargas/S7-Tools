@@ -1,0 +1,50 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.ActiveTasksView"
+             x:DataType="vm:ActiveTasksViewModel">
+
+  <Grid RowDefinitions="Auto,*">
+    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
+            CornerRadius="4,4,0,0" Padding="12,8">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="Currently Running Tasks" FontWeight="Medium" />
+        <TextBlock Grid.Column="1" Text="{Binding Manager.ActiveTasks.Count, StringFormat='{}{0} tasks'}"
+                   FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+      </Grid>
+    </Border>
+
+    <DataGrid Grid.Row="1" ItemsSource="{Binding Manager.ActiveTasks}"
+              IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
+              GridLinesVisibility="Horizontal" HeadersVisibility="Column">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
+        <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
+        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
+        <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="100" />
+        <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
+        <DataGridTextColumn Header="Elapsed" Binding="{Binding ExecutionTime}" Width="80" />
+        <DataGridTemplateColumn Header="Actions" Width="120">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button Content="Stop" FontSize="10" Padding="6,2"
+                        Command="{Binding $parent[UserControl].DataContext.Manager.StopTaskCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="Stop this task" />
+                <Button Content="Details" FontSize="10" Padding="6,2"
+                        Command="{Binding $parent[UserControl].DataContext.Manager.CreateTaskCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="Show task details" />
+              </StackPanel>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+  </Grid>
+
+</UserControl>

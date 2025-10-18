@@ -1,0 +1,101 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:converters="using:S7Tools.Converters"
+             xmlns:views="using:S7Tools.Views"
+             mc:Ignorable="d"
+             x:Class="S7Tools.Views.JobWizardView"
+             x:DataType="vm:JobWizardViewModel"
+             Background="#1E1E1E">
+
+  <UserControl.Resources>
+    <converters:EnumEqualsConverter x:Key="EnumEqualsConverter" />
+    <converters:IntLessOrEqualZeroToBoolConverter x:Key="IntLessOrEqualZeroToBoolConverter" />
+    <converters:BooleanToInverseBooleanConverter x:Key="InvBool" />
+  </UserControl.Resources>
+
+  <ScrollViewer>
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Title + Step + Busy -->
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="{Binding WizardTitle}" FontSize="24" FontWeight="Bold" Foreground="#CCCCCC" />
+          <TextBlock Text="—" Foreground="#CCCCCC" />
+          <TextBlock Text="{Binding CurrentStep}" Foreground="#CCCCCC" />
+        </StackPanel>
+        <ProgressBar Grid.Column="1" Width="140" IsVisible="{Binding IsBusy}" IsIndeterminate="True" />
+      </Grid>
+
+      <!-- 1) Name/Description -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Create Job Wizard — Serial" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+          <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding JobName}" Watermark="job name"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding JobDescription}" Watermark="optional description"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- 2) Select Serial Profile + info -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16">
+        <StackPanel Spacing="12">
+          <TextBlock Text="1) Select Serial Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+          <ComboBox ItemsSource="{Binding SerialProfiles}" SelectedItem="{Binding SelectedSerial}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Name}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Serial Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
+              <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSerial.Name}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Baud:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSerial.Configuration.BaudRate}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Flags:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSerial.Flags}" Foreground="#CCCCCC" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <!-- 3) Serial Device Scanner (same control as in settings) -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Serial Devices" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+          <views:SerialPortScannerView DataContext="{Binding SerialScanner}" />
+        </StackPanel>
+      </Border>
+
+      <!-- 4) Wizard Buttons + Status -->
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="0" Text="{Binding Status}" Foreground="#858585" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Button Content="Cancel" Command="{Binding CancelCommand}" />
+          <Button Content="Back" Command="{Binding BackCommand}" />
+          <Button Content="Next" Command="{Binding NextCommand}" />
+          <Button Content="Finish" Command="{Binding FinishCommand}" />
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

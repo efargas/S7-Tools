@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Models;
+using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -47,7 +48,7 @@ public class SettingsManagementViewModel : ReactiveObject
     /// <returns>A logger instance for design-time use.</returns>
     private static ILogger<SettingsManagementViewModel> CreateDesignTimeLogger()
     {
-        using var loggerFactory = LoggerFactory.Create(builder => { });
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
         return loggerFactory.CreateLogger<SettingsManagementViewModel>();
     }
 
@@ -57,8 +58,8 @@ public class SettingsManagementViewModel : ReactiveObject
     /// <returns>A settings service instance for design-time use.</returns>
     private static ISettingsService CreateDesignTimeSettingsService()
     {
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<Services.SettingsService>();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
+        ILogger<SettingsService> logger = loggerFactory.CreateLogger<Services.SettingsService>();
         return new Services.SettingsService(logger);
     }
 
@@ -239,7 +240,7 @@ public class SettingsManagementViewModel : ReactiveObject
         {
             if (_fileDialogService != null)
             {
-                var selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                string? selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
                     "Select Default Log Path",
                     DefaultLogPath);
 
@@ -276,7 +277,7 @@ public class SettingsManagementViewModel : ReactiveObject
         {
             if (_fileDialogService != null)
             {
-                var selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                string? selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
                     "Select Export Path",
                     ExportPath);
 
@@ -311,7 +312,7 @@ public class SettingsManagementViewModel : ReactiveObject
     {
         try
         {
-            var settings = _settingsService.Settings;
+            ApplicationSettings settings = _settingsService.Settings;
 
             // Map settings to ViewModel properties
             DefaultLogPath = settings.Logging.DefaultLogPath;
@@ -341,12 +342,12 @@ public class SettingsManagementViewModel : ReactiveObject
         try
         {
             // Get current settings from service
-            var settings = _settingsService.Settings.Clone();
+            ApplicationSettings settings = _settingsService.Settings.Clone();
 
             // Update settings from ViewModel properties
             settings.Logging.DefaultLogPath = DefaultLogPath;
             settings.Logging.ExportPath = ExportPath;
-            settings.Logging.MinimumLogLevel = Enum.TryParse<LogLevel>(MinimumLogLevel, out var level)
+            settings.Logging.MinimumLogLevel = Enum.TryParse<LogLevel>(MinimumLogLevel, out LogLevel level)
                 ? level
                 : LogLevel.Information;
             settings.Logging.AutoScroll = AutoScrollLogs;
@@ -425,7 +426,7 @@ public class SettingsManagementViewModel : ReactiveObject
         {
             await _settingsService.OpenSettingsDirectoryAsync();
 
-            var settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath);
+            string? settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath);
             SettingsStatusMessage = $"Opened settings folder: {settingsDir}";
             _logger.LogInformation("Opened settings folder: {Path}", settingsDir);
         }
@@ -470,7 +471,7 @@ public class SettingsManagementViewModel : ReactiveObject
             }
 
             // Validate log level
-            var validLogLevels = new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };
+            string[] validLogLevels = new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };
             if (!validLogLevels.Contains(MinimumLogLevel))
             {
                 _logger.LogWarning("Invalid log level: {LogLevel}. Resetting to Information.", MinimumLogLevel);
@@ -497,7 +498,7 @@ public class SettingsManagementViewModel : ReactiveObject
         try
         {
             // Get the complete settings from the service
-            var settings = _settingsService.Settings;
+            ApplicationSettings settings = _settingsService.Settings;
 
             // Serialize to JSON with pretty formatting
             var options = new JsonSerializerOptions
@@ -506,7 +507,7 @@ public class SettingsManagementViewModel : ReactiveObject
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
-            var json = JsonSerializer.Serialize(settings, options);
+            string json = JsonSerializer.Serialize(settings, options);
             _logger.LogInformation("Settings exported to JSON ({Length} characters)", json.Length);
 
             return json;
@@ -541,7 +542,7 @@ public class SettingsManagementViewModel : ReactiveObject
                 PropertyNameCaseInsensitive = true
             };
 
-            var importedSettings = JsonSerializer.Deserialize<ApplicationSettings>(json, options);
+            ApplicationSettings? importedSettings = JsonSerializer.Deserialize<ApplicationSettings>(json, options);
 
             if (importedSettings == null)
             {

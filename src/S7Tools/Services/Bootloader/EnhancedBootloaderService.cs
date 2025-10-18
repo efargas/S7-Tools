@@ -1,10 +1,10 @@
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
-using System.Linq;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -50,7 +50,8 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
     {
         _retryConfiguration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _logger.LogInformation("Bootloader retry configuration updated: {Configuration}",
-            new {
+            new
+            {
                 MaxConnectionRetries = configuration.MaxConnectionRetries,
                 MaxCommunicationRetries = configuration.MaxCommunicationRetries,
                 MaxMemoryOperationRetries = configuration.MaxMemoryOperationRetries,

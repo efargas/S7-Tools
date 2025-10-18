@@ -1,0 +1,50 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Card-like container for info sections (explicit dark theme palette for reliable contrast) -->
+  <Style Selector="Border.InfoCard">
+    <Setter Property="Background" Value="#3C3C3C"/>
+    <Setter Property="BorderBrush" Value="#464647"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="6"/>
+    <Setter Property="Padding" Value="12"/>
+    <Setter Property="Margin" Value="0,8,0,0"/>
+  </Style>
+
+  <!-- Default foreground for any TextBlock within an InfoCard -->
+  <Style Selector="Border.InfoCard TextBlock">
+    <Setter Property="Foreground" Value="#CCCCCC"/>
+  </Style>
+
+  <!-- Two-column label/value listing note: ColumnDefinitions must be set on each Grid (not styleable) -->
+
+  <!-- Section header inside cards -->
+  <Style Selector="TextBlock.InfoHeader">
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="#FFFFFF"/>
+    <Setter Property="Margin" Value="0,0,0,8"/>
+  </Style>
+
+  <!-- Label and value presentation -->
+  <Style Selector="TextBlock.InfoLabel">
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="#CCCCCC"/>
+    <Setter Property="Margin" Value="0,2,12,2"/>
+  </Style>
+
+  <Style Selector="TextBlock.InfoValue">
+    <Setter Property="Foreground" Value="#9E9E9E"/>
+    <Setter Property="Margin" Value="0,2,0,2"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+
+  <!-- Badge styles for small flags -->
+  <Style Selector="Border.InfoBadge">
+    <Setter Property="CornerRadius" Value="12"/>
+    <Setter Property="Padding" Value="6,2"/>
+    <Setter Property="Margin" Value="0,0,8,0"/>
+    <Setter Property="Background" Value="#0E639C"/>
+    <Setter Property="BorderBrush" Value="#0E639C"/>
+  </Style>
+
+</Styles>

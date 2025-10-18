@@ -47,7 +47,7 @@ public class BottomPanelViewModel : ReactiveObject
     /// <returns>A logger instance for design-time use.</returns>
     private static ILogger<BottomPanelViewModel> CreateDesignTimeLogger()
     {
-        using var loggerFactory = LoggerFactory.Create(builder => { });
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
         return loggerFactory.CreateLogger<BottomPanelViewModel>();
     }
 
@@ -171,7 +171,7 @@ public class BottomPanelViewModel : ReactiveObject
             return;
         }
 
-        var currentSelectedTab = SelectedTab;
+        PanelTabItem? currentSelectedTab = SelectedTab;
 
         // VSCode behavior: clicking on selected tab toggles bottom panel
         if (currentSelectedTab != null && currentSelectedTab.Id == tab.Id)
@@ -189,7 +189,7 @@ public class BottomPanelViewModel : ReactiveObject
             }
 
             // Update IsSelected property on all tabs
-            foreach (var tabItem in Tabs)
+            foreach (PanelTabItem tabItem in Tabs)
             {
                 tabItem.IsSelected = (tabItem.Id == tab.Id);
             }

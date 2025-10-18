@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.TaskCreatorView"
+             x:DataType="vm:TaskCreatorViewModel">
+
+  <Grid RowDefinitions="Auto,*">
+    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
+            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      <TextBlock Text="Task Creator" FontWeight="SemiBold" FontSize="18" />
+    </Border>
+
+    <StackPanel Grid.Row="1" Margin="16" Spacing="12">
+      <TextBlock Text="Create and schedule new tasks" FontSize="14" />
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Content="Create Immediate Task" Command="{Binding Manager.CreateTaskCommand}" />
+        <Button Content="Schedule Task" Command="{Binding Manager.ScheduleTaskCommand}" />
+      </StackPanel>
+
+      <!-- Placeholder content; future: dedicated creator form -->
+      <Border Background="{DynamicResource SystemRegionBrush}" Padding="12" CornerRadius="4">
+        <TextBlock Text="Task creation form coming soon..." Foreground="{DynamicResource SystemBaseMediumBrush}" />
+      </Border>
+    </StackPanel>
+  </Grid>
+
+</UserControl>

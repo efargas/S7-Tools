@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:converters="using:S7Tools.Converters"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.JobsManagementView"
              x:DataType="vm:JobsManagementViewModel">
@@ -11,10 +12,10 @@
     <vm:JobsManagementViewModel />
   </Design.DataContext>
 
-  <Grid RowDefinitions="Auto,*,Auto">
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
 
-    <!-- Header Section -->
-    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
+  <!-- Header Section -->
+  <Border Grid.Row="0" Grid.ColumnSpan="1" Background="{DynamicResource SystemRegionBrush}"
             BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
       <Grid ColumnDefinitions="*,Auto">
 
@@ -26,12 +27,13 @@
                    Width="200" VerticalAlignment="Center" />
         </StackPanel>
 
-        <!-- Action Buttons -->
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-          <Button Content="Create" Command="{Binding CreateCommand}"
-                  ToolTip.Tip="Create a new job profile" />
-          <Button Content="Edit" Command="{Binding EditCommand}"
-                  ToolTip.Tip="Edit the selected job profile" />
+  <!-- Action Buttons -->
+  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+            IsVisible="{Binding IsWizardMode, Converter={x:Static converters:BooleanConverters.Not}}">
+    <Button Content="Create (Wizard)" Command="{Binding StartWizardCommand}"
+                  ToolTip.Tip="Create a new job profile using the wizard" />
+    <Button Content="Edit" Command="{Binding StartWizardFromSelectedCommand}"
+      ToolTip.Tip="Open wizard prefilled from selected job" />
           <Button Content="Duplicate" Command="{Binding DuplicateCommand}"
                   ToolTip.Tip="Duplicate the selected job profile" />
           <Button Content="Delete" Command="{Binding DeleteCommand}"
@@ -40,11 +42,19 @@
       </Grid>
     </Border>
 
-    <!-- Main Content - Job Profile List -->
-    <Grid Grid.Row="1" Margin="16" RowDefinitions="*,Auto">
+    <!-- Main Content - Wizard or Job Profile List -->
+    <Grid Grid.Row="1" Grid.Column="0" Margin="16" RowDefinitions="*,Auto">
+
+      <!-- Wizard Content -->
+      <Border Grid.Row="0" Background="#252526" Padding="12" CornerRadius="6">
+        <ContentControl
+                      IsVisible="{Binding IsWizardMode}"
+                      Content="{Binding WizardVM}" />
+      </Border>
 
       <!-- Jobs DataGrid -->
-      <DataGrid Grid.Row="0" ItemsSource="{Binding Profiles}"
+  <DataGrid Grid.Row="0" IsVisible="{Binding IsWizardMode, Converter={x:Static converters:BooleanConverters.Not}}"
+                ItemsSource="{Binding Profiles}"
                 SelectedItem="{Binding SelectedProfile}"
                 IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
                 GridLinesVisibility="Horizontal" HeadersVisibility="Column"
@@ -64,99 +74,69 @@
       </DataGrid>
 
       <!-- Job Details Panel -->
-      <Expander Grid.Row="1" Header="Job Details" IsExpanded="True" Margin="0,16,0,0">
-        <Border Background="{DynamicResource SystemRegionBrush}"
-                BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="1"
-                CornerRadius="4" Padding="16" Margin="0,8,0,0">
+  <Expander Grid.Row="1" Header="Job Details" IsExpanded="True" Margin="0,16,0,0"
+                IsVisible="{Binding IsWizardMode, Converter={x:Static converters:BooleanConverters.Not}}">
+        <Border Classes="InfoCard">
           <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
 
             <!-- Basic Information -->
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Basic Information" FontWeight="SemiBold" />
-            <StackPanel Grid.Row="1" Grid.Column="0" Spacing="8">
-              <Grid ColumnDefinitions="100,*">
-                <TextBlock Grid.Column="0" Text="Name:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.Name}" />
-              </Grid>
-              <Grid ColumnDefinitions="100,*">
-                <TextBlock Grid.Column="0" Text="Description:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.Description}" TextWrapping="Wrap" />
-              </Grid>
-              <Grid ColumnDefinitions="100,*">
-                <TextBlock Grid.Column="0" Text="Version:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.Version}" />
-              </Grid>
-            </StackPanel>
+            <TextBlock Grid.Row="0" Grid.Column="0" Classes="InfoHeader" Text="Basic Information" />
+            <Grid Grid.Row="1" Grid.Column="0" Classes="InfoList" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="InfoLabel" Text="Name:" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.Name}" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Classes="InfoLabel" Text="Description:" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.Description}" />
+              <TextBlock Grid.Row="2" Grid.Column="0" Classes="InfoLabel" Text="Version:" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.Version}" />
+            </Grid>
 
             <!-- Profile References -->
-            <TextBlock Grid.Row="0" Grid.Column="1" Text="Profile References" FontWeight="SemiBold" />
-            <StackPanel Grid.Row="1" Grid.Column="1" Spacing="8">
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Serial Profile ID:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.SerialProfileId}" />
-              </Grid>
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Socat Profile ID:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.SocatProfileId}" />
-              </Grid>
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Power Supply ID:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.PowerSupplyProfileId}" />
-              </Grid>
-            </StackPanel>
+            <TextBlock Grid.Row="0" Grid.Column="1" Classes="InfoHeader" Text="Profile References" />
+            <Grid Grid.Row="1" Grid.Column="1" Classes="InfoList" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="InfoLabel" Text="Serial Profile ID:" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.SerialProfileId}" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Classes="InfoLabel" Text="Socat Profile ID:" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.SocatProfileId}" />
+              <TextBlock Grid.Row="2" Grid.Column="0" Classes="InfoLabel" Text="Power Supply ID:" />
+              <TextBlock Grid.Row="2" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.PowerSupplyProfileId}" />
+            </Grid>
 
             <!-- Memory Configuration -->
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Memory Configuration" FontWeight="SemiBold" />
-            <StackPanel Grid.Row="3" Grid.Column="0" Spacing="8">
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Start Address:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.MemoryRegion.Start, StringFormat='0x{0:X8}'}" />
-              </Grid>
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Size:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.MemoryRegion.Length, StringFormat='0x{0:X} bytes'}" />
-              </Grid>
-            </StackPanel>
+            <TextBlock Grid.Row="2" Grid.Column="0" Classes="InfoHeader" Text="Memory Configuration" />
+            <Grid Grid.Row="3" Grid.Column="0" Classes="InfoList" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="InfoLabel" Text="Start Address:" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.MemoryRegion.Start, StringFormat='0x{0:X8}'}" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Classes="InfoLabel" Text="Size:" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.MemoryRegion.Length, StringFormat='0x{0:X} bytes'}" />
+            </Grid>
 
             <!-- Timing Configuration -->
-            <TextBlock Grid.Row="2" Grid.Column="1" Text="Timing Configuration" FontWeight="SemiBold" />
-            <StackPanel Grid.Row="3" Grid.Column="1" Spacing="8">
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Power On Time:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.PowerOnTimeMs, StringFormat='{}{0} ms'}" />
-              </Grid>
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Power Off Delay:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.PowerOffDelayMs, StringFormat='{}{0} ms'}" />
-              </Grid>
-            </StackPanel>
+            <TextBlock Grid.Row="2" Grid.Column="1" Classes="InfoHeader" Text="Timing Configuration" />
+            <Grid Grid.Row="3" Grid.Column="1" Classes="InfoList" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="InfoLabel" Text="Power On Time:" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.PowerOnTimeMs, StringFormat='{}{0} ms'}" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Classes="InfoLabel" Text="Power Off Delay:" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.PowerOffDelayMs, StringFormat='{}{0} ms'}" />
+            </Grid>
 
             <!-- Payload Configuration -->
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Payload Configuration" FontWeight="SemiBold" />
-            <StackPanel Grid.Row="5" Grid.Column="0" Spacing="8">
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Payloads Path:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.Payloads.BasePath}" />
-              </Grid>
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Output Path:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.OutputPath}" />
-              </Grid>
-            </StackPanel>
+            <TextBlock Grid.Row="4" Grid.Column="0" Classes="InfoHeader" Text="Payload Configuration" />
+            <Grid Grid.Row="5" Grid.Column="0" Classes="InfoList" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="InfoLabel" Text="Payloads Path:" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.Payloads.BasePath}" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Classes="InfoLabel" Text="Output Path:" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.OutputPath}" />
+            </Grid>
 
             <!-- Status Information -->
-            <TextBlock Grid.Row="4" Grid.Column="1" Text="Status Information" FontWeight="SemiBold" />
-            <StackPanel Grid.Row="5" Grid.Column="1" Spacing="8">
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Created:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.CreatedAt, StringFormat='MM/dd/yyyy HH:mm'}" />
-              </Grid>
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Modified:" FontWeight="Medium" />
-                <TextBlock Grid.Column="1" Text="{Binding SelectedProfile.ModifiedAt, StringFormat='MM/dd/yyyy HH:mm'}" />
-              </Grid>
-              <Grid ColumnDefinitions="120,*">
-                <TextBlock Grid.Column="0" Text="Flags:" FontWeight="Medium" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+            <TextBlock Grid.Row="4" Grid.Column="1" Classes="InfoHeader" Text="Status Information" />
+            <Grid Grid.Row="5" Grid.Column="1" Classes="InfoList" RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
+              <TextBlock Grid.Row="0" Grid.Column="0" Classes="InfoLabel" Text="Created:" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.CreatedAt, StringFormat='MM/dd/yyyy HH:mm'}" />
+              <TextBlock Grid.Row="1" Grid.Column="0" Classes="InfoLabel" Text="Modified:" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Classes="InfoValue" Text="{Binding SelectedProfile.ModifiedAt, StringFormat='MM/dd/yyyy HH:mm'}" />
+              <TextBlock Grid.Row="2" Grid.Column="0" Classes="InfoLabel" Text="Flags:" />
+              <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
                   <Border Background="{DynamicResource SystemAccentBrush}" CornerRadius="12" Padding="6,2"
                           IsVisible="{Binding SelectedProfile.IsDefault}">
                     <TextBlock Text="Default" Foreground="{DynamicResource SystemAltHighBrush}" FontSize="10" />
@@ -170,15 +150,14 @@
                     <TextBlock Text="Read-Only" Foreground="{DynamicResource SystemBaseHighBrush}" FontSize="10" />
                   </Border>
                 </StackPanel>
-              </Grid>
-            </StackPanel>
+            </Grid>
           </Grid>
         </Border>
       </Expander>
     </Grid>
 
-    <!-- Status Bar -->
-    <Border Grid.Row="2" Background="{DynamicResource SystemRegionBrush}"
+  <!-- Status Bar -->
+  <Border Grid.Row="2" Grid.ColumnSpan="1" Background="{DynamicResource SystemRegionBrush}"
             BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,1,0,0" Padding="16,8">
       <Grid ColumnDefinitions="*,Auto,Auto">
         <TextBlock Grid.Column="0" Text="{Binding StatusMessage}"

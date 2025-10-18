@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using S7Tools.Core.Factories;
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.ValueObjects;
 using S7Tools.Core.Validation;
 
@@ -44,11 +45,11 @@ public partial class PlcInputViewModel : ObservableObject
     [RelayCommand]
     private void Validate()
     {
-        var validator = _validatorFactory.Create("PlcAddress");
-        var result = PlcAddress.Create(Address ?? string.Empty);
+        IValidator validator = _validatorFactory.Create("PlcAddress");
+        Result<PlcAddress> result = PlcAddress.Create(Address ?? string.Empty);
         if (result.IsSuccess)
         {
-            var validation = validator.Validate(result.Value);
+            ValidationResult validation = validator.Validate(result.Value);
             ValidationError = validation.IsValid ? null : string.Join("; ", validation.Errors.Select(e => e.ErrorMessage));
         }
         else

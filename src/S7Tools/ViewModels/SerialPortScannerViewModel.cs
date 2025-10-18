@@ -270,7 +270,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     private void InitializeCommands()
     {
         // Scan ports command - enabled when not currently scanning
-        var canScan = this.WhenAnyValue(x => x.IsScanning)
+        IObservable<bool> canScan = this.WhenAnyValue(x => x.IsScanning)
             .Select(scanning => !scanning);
 
         ScanPortsCommand = ReactiveCommand.CreateFromTask(ScanPortsAsync, canScan);
@@ -279,12 +279,12 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
 
         // Stop scan command - enabled when currently scanning
-        var canStopScan = this.WhenAnyValue(x => x.IsScanning);
+        IObservable<bool> canStopScan = this.WhenAnyValue(x => x.IsScanning);
 
         StopScanCommand = ReactiveCommand.Create(StopScan, canStopScan);
 
         // Refresh port info command - enabled when a port is selected and not scanning
-        var canRefreshPortInfo = this.WhenAnyValue(x => x.SelectedPort, x => x.IsScanning)
+        IObservable<bool> canRefreshPortInfo = this.WhenAnyValue(x => x.SelectedPort, x => x.IsScanning)
             .Select(tuple => tuple.Item1 != null && !tuple.Item2);
 
         RefreshPortInfoCommand = ReactiveCommand.CreateFromTask(RefreshPortInfoAsync, canRefreshPortInfo);
@@ -293,7 +293,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
 
         // Test selected port command - enabled when a port is selected and not scanning
-        var canTestSelectedPort = this.WhenAnyValue(x => x.SelectedPort, x => x.IsScanning)
+        IObservable<bool> canTestSelectedPort = this.WhenAnyValue(x => x.SelectedPort, x => x.IsScanning)
             .Select(tuple => tuple.Item1 != null && !tuple.Item2);
 
         TestSelectedPortCommand = ReactiveCommand.CreateFromTask(TestSelectedPortAsync, canTestSelectedPort);
@@ -302,13 +302,13 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
 
         // Clear history command - enabled when history is not empty
-        var canClearHistory = this.WhenAnyValue(x => x.ScanHistory.Count)
+        IObservable<bool> canClearHistory = this.WhenAnyValue(x => x.ScanHistory.Count)
             .Select(count => count > 0);
 
         ClearHistoryCommand = ReactiveCommand.Create(ClearHistory, canClearHistory);
 
         // Export results command - enabled when ports are found
-        var canExportResults = this.WhenAnyValue(x => x.TotalPortsFound)
+        IObservable<bool> canExportResults = this.WhenAnyValue(x => x.TotalPortsFound)
             .Select(count => count > 0);
 
         ExportResultsCommand = ReactiveCommand.CreateFromTask(ExportResultsAsync, canExportResults);
@@ -317,7 +317,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
 
         // Copy port info command - enabled when a port is selected
-        var canCopyPortInfo = this.WhenAnyValue(x => x.SelectedPort)
+        IObservable<bool> canCopyPortInfo = this.WhenAnyValue(x => x.SelectedPort)
             .Select(port => port != null);
 
         CopyPortInfoCommand = ReactiveCommand.CreateFromTask(CopyPortInfoAsync, canCopyPortInfo);
@@ -340,21 +340,21 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         {
             IsScanning = true;
             StatusMessage = "Scanning for ports...";
-            var startTime = DateTime.Now;
+            DateTime startTime = DateTime.Now;
 
             _scanCancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = _scanCancellationTokenSource.Token;
+            CancellationToken cancellationToken = _scanCancellationTokenSource.Token;
 
             // Get available ports
-            var availablePorts = await _portService.ScanAvailablePortsAsync(cancellationToken);
+            IEnumerable<Core.Services.Interfaces.SerialPortInfo> availablePorts = await _portService.ScanAvailablePortsAsync(cancellationToken);
 
             // Extract port paths and filter
-            var portPaths = availablePorts.Select(p => p.PortPath);
-            var filteredPorts = FilterPorts(portPaths);
+            IEnumerable<string> portPaths = availablePorts.Select(p => p.PortPath);
+            IEnumerable<string> filteredPorts = FilterPorts(portPaths);
 
             // Create port info objects
             var portInfos = new List<SerialPortInfo>();
-            foreach (var portName in filteredPorts)
+            foreach (string portName in filteredPorts)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -375,11 +375,11 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                 {
                     try
                     {
-                        var portDetails = await _portService.GetPortInfoAsync(portName, cancellationToken).ConfigureAwait(false);
+                        Core.Services.Interfaces.SerialPortInfo? portDetails = await _portService.GetPortInfoAsync(portName, cancellationToken).ConfigureAwait(false);
                         if (portDetails != null)
                         {
                             portInfo.Description = portDetails.Description ?? "";
-                            var usbInfo = portDetails.UsbInfo;
+                            UsbDeviceInfo? usbInfo = portDetails.UsbInfo;
                             portInfo.Manufacturer = usbInfo?.VendorName ?? "Unknown";
                             portInfo.SerialNumber = usbInfo?.SerialNumber ?? "Unknown";
                         }
@@ -400,13 +400,13 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
             // Update UI
             DiscoveredPorts.Clear();
-            foreach (var portInfo in portInfos.OrderBy(p => p.PortName))
+            foreach (SerialPortInfo? portInfo in portInfos.OrderBy(p => p.PortName))
             {
                 DiscoveredPorts.Add(portInfo);
             }
 
             // Update statistics
-            var endTime = DateTime.Now;
+            DateTime endTime = DateTime.Now;
             LastScanTime = endTime;
             LastScanDuration = endTime - startTime;
             TotalPortsFound = DiscoveredPorts.Count;
@@ -475,8 +475,8 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = "Refreshing port information...";
 
-            var portName = SelectedPort.PortName;
-            var isAccessible = await _portService.IsPortAccessibleAsync(portName).ConfigureAwait(false);
+            string portName = SelectedPort.PortName;
+            bool isAccessible = await _portService.IsPortAccessibleAsync(portName).ConfigureAwait(false);
 
             SelectedPort.IsAccessible = isAccessible;
             SelectedPort.LastChecked = DateTime.Now;
@@ -485,11 +485,11 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             {
                 try
                 {
-                    var portDetails = await _portService.GetPortInfoAsync(portName).ConfigureAwait(false);
+                    Core.Services.Interfaces.SerialPortInfo? portDetails = await _portService.GetPortInfoAsync(portName).ConfigureAwait(false);
                     if (portDetails != null)
                     {
                         SelectedPort.Description = portDetails.Description ?? "";
-                        var usbInfo = portDetails.UsbInfo;
+                        UsbDeviceInfo? usbInfo = portDetails.UsbInfo;
                         SelectedPort.Manufacturer = usbInfo?.VendorName ?? "Unknown";
                         SelectedPort.SerialNumber = usbInfo?.SerialNumber ?? "Unknown";
                     }
@@ -530,7 +530,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             StatusMessage = "Testing port...";
 
             var defaultConfig = SerialPortConfiguration.CreateDefault();
-            var success = await _portService.ApplyConfigurationAsync(SelectedPort.PortName, defaultConfig);
+            bool success = await _portService.ApplyConfigurationAsync(SelectedPort.PortName, defaultConfig);
 
             SelectedPort.LastTestResult = success ? "Success" : "Failed";
             SelectedPort.LastTested = DateTime.Now;
@@ -612,7 +612,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     /// <returns>The filtered list of ports.</returns>
     private IEnumerable<string> FilterPorts(IEnumerable<string> ports)
     {
-        var filtered = ports.AsEnumerable();
+        IEnumerable<string> filtered = ports.AsEnumerable();
 
         // Apply type filters
         if (!IncludeUsbPorts)

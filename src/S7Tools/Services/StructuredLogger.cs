@@ -58,8 +58,8 @@ public class StructuredLogger : IStructuredLogger
             ["LogType"] = "Structured"
         };
 
-    using var scope = BeginScope(enrichedProperties);
-    _baseLogger.Log(logLevel, "{Message}", message);
+        using IDisposable? scope = BeginScope(enrichedProperties);
+        _baseLogger.Log(logLevel, "{Message}", message);
     }
 
     /// <inheritdoc/>
@@ -79,8 +79,8 @@ public class StructuredLogger : IStructuredLogger
             ["ExceptionMessage"] = exception.Message
         };
 
-    using var scope = BeginScope(enrichedProperties);
-    _baseLogger.Log(logLevel, exception, "{Message}", message);
+        using IDisposable? scope = BeginScope(enrichedProperties);
+        _baseLogger.Log(logLevel, exception, "{Message}", message);
     }
 
     /// <inheritdoc/>
@@ -109,13 +109,13 @@ public class StructuredLogger : IStructuredLogger
 
         if (properties != null)
         {
-            foreach (var kvp in properties)
+            foreach (KeyValuePair<string, object> kvp in properties)
             {
                 metricProperties[kvp.Key] = kvp.Value;
             }
         }
 
-        using var scope = BeginScope(metricProperties);
+        using IDisposable? scope = BeginScope(metricProperties);
         _baseLogger.LogInformation("Metric: {MetricName} = {MetricValue} {MetricUnit}", metricName, value, unit);
     }
 
@@ -137,14 +137,14 @@ public class StructuredLogger : IStructuredLogger
 
         if (properties != null)
         {
-            foreach (var kvp in properties)
+            foreach (KeyValuePair<string, object> kvp in properties)
             {
                 eventProperties[kvp.Key] = kvp.Value;
             }
         }
 
-        using var scope = BeginScope(eventProperties);
-    _baseLogger.LogInformation("Event: {EventName}", eventName);
+        using IDisposable? scope = BeginScope(eventProperties);
+        _baseLogger.LogInformation("Event: {EventName}", eventName);
     }
 
     /// <inheritdoc/>
@@ -168,14 +168,14 @@ public class StructuredLogger : IStructuredLogger
 
         if (properties != null)
         {
-            foreach (var kvp in properties)
+            foreach (KeyValuePair<string, object> kvp in properties)
             {
                 errorProperties[kvp.Key] = kvp.Value;
             }
         }
 
-        using var scope = BeginScope(errorProperties);
-    _baseLogger.LogError(exception, "Error in {Context}: {ExceptionMessage}", context, exception.Message);
+        using IDisposable? scope = BeginScope(errorProperties);
+        _baseLogger.LogError(exception, "Error in {Context}: {ExceptionMessage}", context, exception.Message);
     }
 }
 
@@ -302,7 +302,7 @@ internal class OperationContext : IOperationContext
             endProperties["ExceptionMessage"] = _exception.Message;
         }
 
-        var logLevel = _error == null ? LogLevel.Information : LogLevel.Error;
+        LogLevel logLevel = _error == null ? LogLevel.Information : LogLevel.Error;
         var message = _error == null
             ? "Operation completed successfully: {OperationName} in {Duration}ms"
             : "Operation failed: {OperationName} in {Duration}ms - {Error}";
@@ -337,7 +337,7 @@ public class StructuredLoggerFactory : IStructuredLoggerFactory
     /// <inheritdoc/>
     public IStructuredLogger CreateLogger(string categoryName)
     {
-        var baseLogger = _loggerFactory.CreateLogger(categoryName);
+        ILogger baseLogger = _loggerFactory.CreateLogger(categoryName);
         return new StructuredLogger(baseLogger, categoryName);
     }
 

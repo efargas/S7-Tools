@@ -69,7 +69,7 @@ public class SettingsViewModel : ViewModelBase
 
     private ViewModelBase GetCategoryViewModel(string category)
     {
-        if (_categoryViewModels.TryGetValue(category, out var existingViewModel))
+        if (_categoryViewModels.TryGetValue(category, out ViewModelBase? existingViewModel))
         {
             return existingViewModel;
         }
@@ -92,41 +92,41 @@ public class SettingsViewModel : ViewModelBase
 
     private LoggingSettingsViewModel CreateLoggingSettingsViewModel()
     {
-        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
+        ISettingsService settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        ILogger<LoggingSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
 
         return new LoggingSettingsViewModel(settingsService, fileDialogService, logger);
     }
 
     private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()
     {
-        var profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
-        var portService = _serviceProvider.GetRequiredService<ISerialPortService>();
-        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        var profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
-        var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
-        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        var unifiedProfileDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
+        ISerialPortProfileService profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
+        ISerialPortService portService = _serviceProvider.GetRequiredService<ISerialPortService>();
+        IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        IProfileEditDialogService profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
+        IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
+        IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        ISettingsService settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+        IUnifiedProfileDialogService unifiedProfileDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
+        ILogger<SerialPortsSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
         return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, logger);
     }
 
     private SocatSettingsViewModel CreateSocatSettingsViewModel()
     {
-        var unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<SocatProfile>>>();
-        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        var socatProfileService = _serviceProvider.GetRequiredService<ISocatProfileService>();
-        var socatService = _serviceProvider.GetRequiredService<ISocatService>();
-        var serialPortService = _serviceProvider.GetRequiredService<ISerialPortService>();
-        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
-        var fileDialogService = _serviceProvider.GetRequiredService<IFileDialogService>();
-        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        IUnifiedProfileDialogService unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
+        ILogger<ProfileManagementViewModelBase<SocatProfile>> logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<SocatProfile>>>();
+        IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+        ISocatProfileService socatProfileService = _serviceProvider.GetRequiredService<ISocatProfileService>();
+        ISocatService socatService = _serviceProvider.GetRequiredService<ISocatService>();
+        ISerialPortService serialPortService = _serviceProvider.GetRequiredService<ISerialPortService>();
+        IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
+        IFileDialogService fileDialogService = _serviceProvider.GetRequiredService<IFileDialogService>();
+        ISettingsService settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
 
         return new SocatSettingsViewModel(
             unifiedDialogService,
@@ -143,15 +143,15 @@ public class SettingsViewModel : ViewModelBase
 
     private PowerSupplySettingsViewModel CreatePowerSupplySettingsViewModel()
     {
-        var profileService = _serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
-        var powerSupplyService = _serviceProvider.GetRequiredService<IPowerSupplyService>();
-        var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        var unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
-        var clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
-        var fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        var settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
-        var uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>>>();
+        IPowerSupplyProfileService profileService = _serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
+        IPowerSupplyService powerSupplyService = _serviceProvider.GetRequiredService<IPowerSupplyService>();
+        IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        IUnifiedProfileDialogService unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
+        IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
+        IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        ISettingsService settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
+        ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>> logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>>>();
 
         return new PowerSupplySettingsViewModel(unifiedDialogService, logger, uiThreadService, profileService, powerSupplyService, dialogService, clipboardService, fileDialogService, settingsService);
     }

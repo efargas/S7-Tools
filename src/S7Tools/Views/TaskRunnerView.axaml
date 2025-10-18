@@ -1,0 +1,81 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.TaskRunnerView"
+             x:DataType="vm:TaskRunnerViewModel">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Header Section (copied from TaskManagerView) -->
+    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
+            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+          <TextBlock Text="Task Runner" FontWeight="SemiBold" FontSize="18" VerticalAlignment="Center" />
+          <Border Background="{DynamicResource SystemAccentBrush}" CornerRadius="12" Padding="8,4">
+            <TextBlock Text="{Binding Manager.RunningTasksCount, StringFormat='Active: {0}'}"
+                       Foreground="{DynamicResource SystemAltHighBrush}" FontSize="12" FontWeight="Medium" />
+          </Border>
+          <Border Background="{DynamicResource SystemBaseLowBrush}" CornerRadius="12" Padding="8,4">
+            <TextBlock Text="{Binding Manager.TotalTasksCount, StringFormat='Total: {0}'}"
+                       Foreground="{DynamicResource SystemBaseHighBrush}" FontSize="12" />
+          </Border>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,16,0">
+          <TextBlock Text="Auto-refresh:" VerticalAlignment="Center" FontSize="12" />
+          <ToggleButton IsChecked="{Binding Manager.IsAutoRefreshEnabled}" ToolTip.Tip="Toggle automatic task list refresh" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+          <Button Content="Refresh" Command="{Binding Manager.RefreshTasksCommand}" />
+          <Button Content="Clear History" Command="{Binding Manager.ClearFinishedTasksCommand}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Body: Active tasks list (inlined to avoid nested xmlns) -->
+    <DataGrid Grid.Row="1" ItemsSource="{Binding Manager.ActiveTasks}"
+              IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
+              GridLinesVisibility="Horizontal" HeadersVisibility="Column" Margin="16,0,16,0">
+      <DataGrid.Columns>
+        <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
+        <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
+        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
+        <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="100" />
+        <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
+        <DataGridTextColumn Header="Elapsed" Binding="{Binding ExecutionTime}" Width="80" />
+        <DataGridTemplateColumn Header="Actions" Width="120">
+          <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button Content="Stop" FontSize="10" Padding="6,2"
+                        Command="{Binding $parent[UserControl].DataContext.Manager.StopTaskCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="Stop this task" />
+                <Button Content="Details" FontSize="10" Padding="6,2"
+                        Command="{Binding $parent[UserControl].DataContext.Manager.CreateTaskCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="Show task details" />
+              </StackPanel>
+            </DataTemplate>
+          </DataGridTemplateColumn.CellTemplate>
+        </DataGridTemplateColumn>
+      </DataGrid.Columns>
+    </DataGrid>
+
+    <!-- Status Bar -->
+    <Border Grid.Row="2" Background="{DynamicResource SystemRegionBrush}"
+            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,1,0,0" Padding="16,8">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="{Binding Manager.StatusMessage}"
+                   Foreground="{DynamicResource SystemBaseMediumBrush}" FontSize="12" />
+        <TextBlock Grid.Column="1" Text="{Binding Manager.LastUpdated, StringFormat='Last updated: {0:HH:mm:ss}'}"
+                   Foreground="{DynamicResource SystemBaseMediumBrush}" FontSize="12" />
+      </Grid>
+    </Border>
+  </Grid>
+
+</UserControl>

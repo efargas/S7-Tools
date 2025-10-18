@@ -7,6 +7,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
+using S7Tools.Core.Models;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Providers.Extensions;
@@ -26,26 +28,43 @@ sealed class Program
     {
         var services = new ServiceCollection();
         ConfigureServices(services);
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
+
+        // Mitigate GLX/OpenGL renderer blacklist (e.g., SVGA3D) by forcing software rendering on Linux
+        // This avoids Avalonia.OpenGL.OpenGlException during startup on some VMs/drivers
+        try
+        {
+            if (OperatingSystem.IsLinux())
+            {
+                // Force Avalonia to prefer software (Skia) rendering
+                Environment.SetEnvironmentVariable("AVALONIA_RENDERING_MODE", "Software");
+                // Hint Mesa to avoid hardware GL paths in constrained environments
+                Environment.SetEnvironmentVariable("LIBGL_ALWAYS_SOFTWARE", "1");
+            }
+        }
+        catch
+        {
+            // Non-fatal; continue with defaults
+        }
 
         // Diagnostic initialization: ensure important services are initialized early so
         // we can validate profile storage and stty integration during startup.
         // If started with --diag flag, run initialization asynchronously and print diagnostics, then exit.
         if (args != null && args.Length > 0 && args.Contains("--diag"))
         {
-            var logger = serviceProvider.GetService<ILogger<Program>>();
+            ILogger<Program>? logger = serviceProvider.GetService<ILogger<Program>>();
             try
             {
                 // Run initialization asynchronously for diagnostics
                 await serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
 
-                var profileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISerialPortProfileService>();
+                ISerialPortProfileService? profileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISerialPortProfileService>();
 
                 if (profileService != null)
                 {
                     try
                     {
-                        var profiles = await profileService.GetAllAsync().ConfigureAwait(false);
+                        IEnumerable<SerialPortProfile> profiles = await profileService.GetAllAsync().ConfigureAwait(false);
                         logger?.LogInformation("[S7Tools] SerialPortProfileService loaded {ProfileCount} profiles", profiles.Count());
                         Console.WriteLine($"[S7Tools] SerialPortProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                     }
@@ -57,13 +76,13 @@ sealed class Program
                 }
 
                 // Initialize SocatProfileService and ensure default profile exists
-                var socatProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISocatProfileService>();
+                ISocatProfileService? socatProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISocatProfileService>();
 
                 if (socatProfileService != null)
                 {
                     try
                     {
-                        var profiles = await socatProfileService.GetAllAsync().ConfigureAwait(false);
+                        IEnumerable<SocatProfile> profiles = await socatProfileService.GetAllAsync().ConfigureAwait(false);
                         logger?.LogInformation("[S7Tools] SocatProfileService loaded {ProfileCount} profiles", profiles.Count());
                         Console.WriteLine($"[S7Tools] SocatProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                     }
@@ -75,13 +94,13 @@ sealed class Program
                 }
 
                 // Initialize PowerSupplyProfileService and ensure default profile exists
-                var powerSupplyProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IPowerSupplyProfileService>();
+                IPowerSupplyProfileService? powerSupplyProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IPowerSupplyProfileService>();
 
                 if (powerSupplyProfileService != null)
                 {
                     try
                     {
-                        var profiles = await powerSupplyProfileService.GetAllAsync().ConfigureAwait(false);
+                        IEnumerable<PowerSupplyProfile> profiles = await powerSupplyProfileService.GetAllAsync().ConfigureAwait(false);
                         logger?.LogInformation("[S7Tools] PowerSupplyProfileService loaded {ProfileCount} profiles", profiles.Count());
                         Console.WriteLine($"[S7Tools] PowerSupplyProfileService loaded {profiles.Count()} profiles"); // Keep console for --diag flag
                     }
@@ -108,7 +127,7 @@ sealed class Program
         // This avoids blocking startup hangs while still allowing services to initialize in the background.
         _ = Task.Run(async () =>
         {
-            var logger = serviceProvider.GetService<ILogger<Program>>();
+            ILogger<Program>? logger = serviceProvider.GetService<ILogger<Program>>();
             try
             {
                 await serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);

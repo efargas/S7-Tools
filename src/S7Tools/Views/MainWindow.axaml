@@ -250,6 +250,12 @@
                                 <DataTemplate DataType="vm:SettingsViewModel">
                                     <views:SettingsCategoriesView />
                                 </DataTemplate>
+                                <DataTemplate DataType="vm:JobsManagementViewModel">
+                                    <views:JobsSidebarView />
+                                </DataTemplate>
+                                <DataTemplate DataType="vm:TaskManagerShellViewModel">
+                                    <views:TaskManagerSidebarView />
+                                </DataTemplate>
                             </ContentControl.DataTemplates>
                         </ContentControl>
                     </Grid>

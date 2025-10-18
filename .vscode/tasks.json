@@ -23,6 +23,28 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
+			"label": "dotnet-meteor: Run",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"src/S7Tools/S7Tools.csproj",
+				"--configuration",
+				"Debug"
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
 			"label": "dotnet: build",
 			"type": "shell",
 			"command": "dotnet",
@@ -89,7 +111,9 @@
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
-				"format"
+				"format",
+				"src/S7Tools.sln"
+
 			],
 			"group": "build"
 		}

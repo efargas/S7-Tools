@@ -50,8 +50,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// <returns>A settings service instance for design-time use.</returns>
     private static ISettingsService CreateDesignTimeSettingsService()
     {
-        using var loggerFactory = LoggerFactory.Create(builder => { });
-        var logger = loggerFactory.CreateLogger<Services.SettingsService>();
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
+        ILogger<SettingsService> logger = loggerFactory.CreateLogger<Services.SettingsService>();
         return new Services.SettingsService(logger);
     }
 
@@ -61,7 +61,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// <returns>A logger instance for design-time use.</returns>
     private static ILogger<MainWindowViewModel> CreateDesignTimeLogger()
     {
-        using var loggerFactory = LoggerFactory.Create(builder => { });
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
         return loggerFactory.CreateLogger<MainWindowViewModel>();
     }
 
@@ -274,7 +274,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var result = await _dialogService.ShowConfirmationAsync(
+            bool result = await _dialogService.ShowConfirmationAsync(
                 UIStrings.Dialog_ExitTitle,
                 UIStrings.Confirm_Exit);
             if (result)
@@ -343,7 +343,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var text = await _clipboardService.GetTextAsync();
+            string? text = await _clipboardService.GetTextAsync();
             if (!string.IsNullOrEmpty(text))
             {
                 TestInputText += text;
@@ -365,7 +365,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// <param name="level">The log level to test.</param>
     private void TestLogWithLevel(LogLevel level)
     {
-        var levelName = level switch
+        string levelName = level switch
         {
             LogLevel.Trace => "TRACE",
             LogLevel.Debug => "DEBUG",
@@ -388,7 +388,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var message = $"This is a {levelName} level log message generated at {DateTime.Now}";
+            string message = $"This is a {levelName} level log message generated at {DateTime.Now}";
 
             switch (level)
             {
@@ -430,7 +430,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var exportText = "Log Export - " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string exportText = "Log Export - " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             await _clipboardService.SetTextAsync(exportText);
             StatusMessage = UIStrings.LogExportCopied;
             _logger.LogInformation("Log export copied to clipboard");
@@ -449,7 +449,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var path = await (_fileDialogService?.ShowOpenFileDialogAsync("Load Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*") ?? Task.FromResult<string?>(null));
+            string? path = await (_fileDialogService?.ShowOpenFileDialogAsync("Load Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*") ?? Task.FromResult<string?>(null));
             if (!string.IsNullOrWhiteSpace(path))
             {
                 await _settingsService.LoadSettingsAsync(path);
@@ -471,8 +471,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var defaultName = "settings.json";
-            var path = await (_fileDialogService?.ShowSaveFileDialogAsync("Save Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*", defaultFileName: defaultName) ?? Task.FromResult<string?>(null));
+            string defaultName = "settings.json";
+            string? path = await (_fileDialogService?.ShowSaveFileDialogAsync("Save Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*", defaultFileName: defaultName) ?? Task.FromResult<string?>(null));
             if (!string.IsNullOrWhiteSpace(path))
             {
                 await _settingsService.SaveSettingsAsync(path);

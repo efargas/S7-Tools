@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Helpers;
+using S7Tools.Models;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -146,7 +147,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     private void RefreshFromSettings()
     {
-        var settings = _settingsService.Settings;
+        ApplicationSettings settings = _settingsService.Settings;
         DefaultLogPath = settings.Logging.DefaultLogPath;
         ExportPath = settings.Logging.ExportPath;
         MinimumLogLevel = settings.Logging.MinimumLogLevel.ToString();
@@ -177,7 +178,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
         try
         {
-            var result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Default Log Directory", DefaultLogPath);
+            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Default Log Directory", DefaultLogPath);
             if (!string.IsNullOrEmpty(result))
             {
                 DefaultLogPath = result;
@@ -200,7 +201,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
         try
         {
-            var result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Export Directory", ExportPath);
+            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Export Directory", ExportPath);
             if (!string.IsNullOrEmpty(result))
             {
                 ExportPath = result;
@@ -333,11 +334,11 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     private async Task UpdateSettingsAsync()
     {
-        var settings = _settingsService.Settings.Clone();
+        ApplicationSettings settings = _settingsService.Settings.Clone();
         settings.Logging.DefaultLogPath = DefaultLogPath;
         settings.Logging.ExportPath = ExportPath;
 
-        if (Enum.TryParse<LogLevel>(MinimumLogLevel, out var logLevel))
+        if (Enum.TryParse<LogLevel>(MinimumLogLevel, out LogLevel logLevel))
         {
             settings.Logging.MinimumLogLevel = logLevel;
         }

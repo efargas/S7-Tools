@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:converters="using:S7Tools.Converters"
+             mc:Ignorable="d"
+             x:Class="S7Tools.Views.SerialPortScannerView"
+             x:DataType="vm:SerialPortScannerViewModel">
+
+  <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
+    <StackPanel Orientation="Horizontal" Spacing="8">
+      <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" />
+  <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
+  <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
+      <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC"/>
+      <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E"/>
+    </StackPanel>
+
+    <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+  <ListBox Height="140"
+               ItemsSource="{Binding DiscoveredPorts}"
+               SelectedItem="{Binding SelectedPort}"
+  IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"
+               Background="#3C3C3C" Foreground="#CCCCCC"
+               BorderBrush="#464647"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+               ScrollViewer.VerticalScrollBarVisibility="Disabled">
+        <ListBox.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Vertical" ItemWidth="220" ItemHeight="36" />
+          </ItemsPanelTemplate>
+        </ListBox.ItemsPanel>
+        <ListBox.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="InfoCard">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="{Binding DisplayName}" Foreground="#FFFFFF" />
+                <TextBlock Text="{Binding PortName}" Foreground="#9E9E9E"/>
+                <Border Classes="InfoBadge" IsVisible="{Binding IsAccessible}">
+                  <TextBlock Text="OK" FontSize="10" Foreground="#FFFFFF"/>
+                </Border>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </ScrollViewer>
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+      <TextBlock Text="Found:"/>
+      <TextBlock Text="{Binding TotalPortsFound}" FontWeight="SemiBold"/>
+      <TextBlock Text=","/>
+      <TextBlock Text="Accessible:"/>
+      <TextBlock Text="{Binding AccessiblePortsCount}" FontWeight="SemiBold"/>
+    </StackPanel>
+  </Grid>
+
+</UserControl>

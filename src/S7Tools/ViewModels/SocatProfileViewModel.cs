@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -389,7 +390,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         IsReadOnly = profile.IsReadOnly;
 
         // Load configuration properties
-        var config = profile.Configuration;
+        SocatConfiguration config = profile.Configuration;
         TcpPort = config.TcpPort;
         TcpHost = config.TcpHost;
         EnableFork = config.EnableFork;
@@ -439,11 +440,11 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
     private void InitializeCommands()
     {
         // Save command - enabled when valid and has changes and not read-only
-        var canSave = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
+        IObservable<bool> canSave = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
             .Select(tuple => tuple.Item1 && tuple.Item2 && !tuple.Item3);
 
-        var backgroundScheduler = RxApp.TaskpoolScheduler;
-        var uiScheduler = RxApp.MainThreadScheduler;
+        IScheduler backgroundScheduler = RxApp.TaskpoolScheduler;
+        IScheduler uiScheduler = RxApp.MainThreadScheduler;
 
         SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync, canSave, backgroundScheduler);
         SaveCommand
@@ -456,7 +457,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         CancelCommand = ReactiveCommand.Create(Cancel);
 
         // Reset to default command - enabled when not read-only
-        var canReset = this.WhenAnyValue(x => x.IsReadOnly)
+        IObservable<bool> canReset = this.WhenAnyValue(x => x.IsReadOnly)
             .Select(readOnly => !readOnly);
 
         ResetToDefaultCommand = ReactiveCommand.Create(ResetToDefault, canReset);
@@ -606,7 +607,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var config = CreateConfiguration();
+            SocatConfiguration config = CreateConfiguration();
             SocatCommand = _socatService.GenerateSocatCommand(config, "/dev/ttyUSB0");
         }
         catch (Exception ex)
@@ -642,9 +643,9 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
             }
 
             // Validate configuration
-            var config = CreateConfiguration();
-            var configErrors = config.Validate();
-            foreach (var error in configErrors)
+            SocatConfiguration config = CreateConfiguration();
+            List<string> configErrors = config.Validate();
+            foreach (string error in configErrors)
             {
                 ValidationErrors.Add(error);
             }
@@ -652,8 +653,8 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
             // Validate socat command
             if (!string.IsNullOrEmpty(SocatCommand) && SocatCommand != "Error generating command")
             {
-                var commandValidation = _socatService.ValidateSocatCommand(SocatCommand);
-                foreach (var error in commandValidation.Errors)
+                SocatCommandValidationResult commandValidation = _socatService.ValidateSocatCommand(SocatCommand);
+                foreach (string error in commandValidation.Errors)
                 {
                     ValidationErrors.Add($"Command validation: {error}");
                 }
@@ -685,7 +686,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
             StatusMessage = "Saving profile...";
             System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
-            var profile = CreateProfile();
+            SocatProfile profile = CreateProfile();
             System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created with name: {profile.Name}");
 
             if (_originalProfile != null)
@@ -704,7 +705,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
                 _logger.LogInformation("🔥 ABOUT TO CALL _profileService.CreateAsync for profile: {ProfileName}", profile.Name);
                 Console.WriteLine($"🔥 ViewModel: About to await _profileService.CreateAsync for profile: {profile.Name}");
                 System.Diagnostics.Debug.WriteLine($"🔥 CRITICAL: Calling _profileService.CreateAsync NOW...");
-                var createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
+                SocatProfile createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
                 Console.WriteLine($"✅✅✅ ViewModel: CreateAsync RETURNED! Profile ID: {createdProfile.Id}");
                 System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created successfully with ID: {createdProfile.Id}");
                 _logger.LogInformation("✅ _profileService.CreateAsync RETURNED for profile: {ProfileName}, ID: {ProfileId}", createdProfile.Name, createdProfile.Id);
@@ -851,7 +852,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
             if (isInUse)
             {
                 StatusMessage = $"TCP port {TcpPort} is currently in use";
-                var processInfo = await _socatService.GetProcessByPortAsync(TcpPort);
+                SocatProcessInfo? processInfo = await _socatService.GetProcessByPortAsync(TcpPort);
                 if (processInfo != null)
                 {
                     StatusMessage += $" by process {processInfo.ProcessId}";

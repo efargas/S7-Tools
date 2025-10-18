@@ -113,7 +113,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedPort)
             .Subscribe(values =>
             {
-                var (profile, selectedPort) = values;
+                (SerialPortProfile? profile, string? selectedPort) = values;
                 try
                 {
                     if (profile == null)
@@ -123,7 +123,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
                     else
                     {
                         // Use the actual selected port if available, otherwise use placeholder
-                        var portToUse = !string.IsNullOrEmpty(selectedPort) ? selectedPort : "/dev/ttyS0";
+                        string portToUse = !string.IsNullOrEmpty(selectedPort) ? selectedPort : "/dev/ttyS0";
 
                         try
                         {
@@ -332,7 +332,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             .DisposeWith(_disposables);
 
         // Test port command - enabled when both profile and port are selected
-        var canTestPort = this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedPort)
+        IObservable<bool> canTestPort = this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedPort)
             .Select(tuple => tuple.Item1 != null && !string.IsNullOrEmpty(tuple.Item2));
 
         TestPortCommand = ReactiveCommand.CreateFromTask(TestPortAsync, canTestPort);
@@ -341,7 +341,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             .DisposeWith(_disposables);
 
         // Export profiles command - enabled when profiles exist
-        var canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
+        IObservable<bool> canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
             .Select(count => count > 0);
 
         ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
@@ -356,7 +356,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             .DisposeWith(_disposables);
 
         // Export selected profile command - enabled when a profile is selected and has a valid Id
-        var canExportSelectedProfile = this.WhenAnyValue(x => x.SelectedProfile)
+        IObservable<bool> canExportSelectedProfile = this.WhenAnyValue(x => x.SelectedProfile)
             .Select(profile => profile != null && profile.Id > 0);
 
         ExportSelectedProfileCommand = ReactiveCommand.CreateFromTask(ExportSelectedProfileAsync, canExportSelectedProfile);
@@ -365,7 +365,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             .DisposeWith(_disposables);
 
         // Show profile details command - enabled when a profile is selected
-        var canShowProfileDetails = this.WhenAnyValue(x => x.SelectedProfile)
+        IObservable<bool> canShowProfileDetails = this.WhenAnyValue(x => x.SelectedProfile)
             .Select(profile => profile != null);
 
         ShowProfileDetailsCommand = ReactiveCommand.CreateFromTask(ShowProfileDetailsAsync, canShowProfileDetails);
@@ -387,16 +387,16 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             IsScanning = true;
             StatusMessage = "Scanning for ports...";
 
-            var portInfos = await _portService.ScanAvailablePortsAsync();
+            IEnumerable<Core.Services.Interfaces.SerialPortInfo> portInfos = await _portService.ScanAvailablePortsAsync();
 
             AvailablePorts.Clear();
 
             // Sort ports with ttyUSB* first (external serial adapters), then others alphabetically
-            var sortedPortInfos = portInfos
+            IOrderedEnumerable<Core.Services.Interfaces.SerialPortInfo> sortedPortInfos = portInfos
                 .OrderBy(p => !p.PortPath.Contains("/ttyUSB")) // ttyUSB* ports come first (false sorts before true)
                 .ThenBy(p => p.PortPath); // Then sort alphabetically within each group
 
-            foreach (var portInfo in sortedPortInfos)
+            foreach (Core.Services.Interfaces.SerialPortInfo? portInfo in sortedPortInfos)
             {
                 AvailablePorts.Add(portInfo.PortPath);
             }
@@ -439,9 +439,9 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             StatusMessage = "Testing port configuration...";
 
             // Apply configuration to test the port
-            var success = await _portService.ApplyConfigurationAsync(SelectedPort, SelectedProfile.Configuration);
+            bool success = await _portService.ApplyConfigurationAsync(SelectedPort, SelectedProfile.Configuration);
 
-            var message = success
+            string message = success
                 ? $"Port {SelectedPort} test successful"
                 : $"Port {SelectedPort} test failed";
 
@@ -470,7 +470,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         try
         {
-            var fileName = await _fileDialogService.ShowSaveFileDialogAsync(
+            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
                 "Export Profiles",
                 "JSON files (*.json)|*.json|All files (*.*)|*.*",
                 null,
@@ -484,8 +484,8 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             IsLoading = true;
             StatusMessage = "Exporting profiles...";
 
-            var profiles = await _profileService.ExportAsync();
-            var jsonData = System.Text.Json.JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
+            IEnumerable<SerialPortProfile> profiles = await _profileService.ExportAsync();
+            string jsonData = System.Text.Json.JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported {Profiles.Count} profile(s) to {Path.GetFileName(fileName)}";
@@ -512,7 +512,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         try
         {
-            var result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Profiles Directory", ProfilesPath);
+            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Profiles Directory", ProfilesPath);
             if (!string.IsNullOrEmpty(result))
             {
                 ProfilesPath = result;
@@ -580,8 +580,8 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         try
         {
             // Reset to default path inside application resources
-            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var defaultPath = Path.Combine(baseDir, "resources", "SerialProfiles");
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            string defaultPath = Path.Combine(baseDir, "resources", "SerialProfiles");
             ProfilesPath = defaultPath;
             await UpdateProfilesPathInSettingsAsync();
         }
@@ -597,7 +597,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         try
         {
             // Persist through the injected settings service
-            var settings = _settingsService.Settings.Clone();
+            Models.ApplicationSettings settings = _settingsService.Settings.Clone();
             settings.SerialPorts.ProfilesPath = ProfilesPath;
             await _settingsService.UpdateSettingsAsync(settings).ConfigureAwait(false);
             StatusMessage = "Profiles path updated";
@@ -618,7 +618,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         try
         {
-            var settings = _settingsService.Settings;
+            Models.ApplicationSettings settings = _settingsService.Settings;
             ProfilesPath = settings.SerialPorts?.ProfilesPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SerialProfiles");
         }
         catch (Exception ex)
@@ -640,7 +640,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         try
         {
-            var fileName = await _fileDialogService.ShowOpenFileDialogAsync(
+            string? fileName = await _fileDialogService.ShowOpenFileDialogAsync(
                 "Import Profiles",
                 "JSON files (*.json)|*.json|All files (*.*)|*.*");
 
@@ -652,11 +652,11 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             IsLoading = true;
             StatusMessage = "Importing profiles...";
 
-            var jsonData = await File.ReadAllTextAsync(fileName);
-            var profiles = JsonSerializer.Deserialize<List<SerialPortProfile>>(jsonData) ?? new List<SerialPortProfile>();
-            var importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
+            string jsonData = await File.ReadAllTextAsync(fileName);
+            List<SerialPortProfile> profiles = JsonSerializer.Deserialize<List<SerialPortProfile>>(jsonData) ?? new List<SerialPortProfile>();
+            IEnumerable<SerialPortProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
 
-            var importedCount = importedProfiles.Count();
+            int importedCount = importedProfiles.Count();
             await RefreshCommand.Execute(); // Refresh the list
 
             StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
@@ -685,7 +685,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         try
         {
-            var fileName = await _fileDialogService.ShowSaveFileDialogAsync(
+            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
                 "Export Profile",
                 "JSON files (*.json)|*.json|All files (*.*)|*.*",
                 null,
@@ -706,7 +706,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             // the in-memory profile to allow exporting unsaved/imported profiles without throwing.
             if (SelectedProfile.Id > 0)
             {
-                var profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
+                SerialPortProfile? profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
                 jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
             }
             else
@@ -748,7 +748,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         try
         {
-            var details = $"Profile: {SelectedProfile.Name}\n" +
+            string details = $"Profile: {SelectedProfile.Name}\n" +
                          $"Description: {SelectedProfile.Description}\n" +
                          $"Baud Rate: {SelectedProfile.Configuration.BaudRate}\n" +
                          $"Character Size: {SelectedProfile.Configuration.CharacterSize}\n" +
@@ -826,7 +826,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             // If a specific profile Id was requested, try to select it
             if (selectProfileId.HasValue)
             {
-                var match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
+                SerialPortProfile? match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
                 if (match != null)
                 {
                     SelectedProfile = match;

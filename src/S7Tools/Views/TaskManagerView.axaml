@@ -50,7 +50,7 @@
     </Border>
 
     <!-- Main Content - Task Lists in Tabs -->
-    <TabControl Grid.Row="1" Margin="16">
+  <TabControl Grid.Row="1" Margin="16" SelectedIndex="{Binding SelectedTabIndex}">
 
       <!-- Active Tasks Tab -->
       <TabItem Header="Active Tasks">

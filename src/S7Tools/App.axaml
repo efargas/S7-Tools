@@ -53,5 +53,6 @@
         <FluentTheme />
         <sty:FluentAvaloniaTheme />
         <StyleInclude Source="/Styles/Styles.axaml" />
+        <StyleInclude Source="/Styles/InfoStyles.axaml" />
     </Application.Styles>
 </Application>

@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.ViewModels;
 
 namespace S7Tools.Views;
@@ -62,10 +63,10 @@ public partial class LogViewerView : UserControl
             if (viewModel.AutoScroll && viewModel.FilteredLogEntries.Count > 0)
             {
                 // Find the DataGrid and scroll to the last item
-                var dataGrid = this.FindControl<DataGrid>("LogDataGrid");
+                DataGrid? dataGrid = this.FindControl<DataGrid>("LogDataGrid");
                 if (dataGrid != null && viewModel.FilteredLogEntries.Count > 0)
                 {
-                    var lastItem = viewModel.FilteredLogEntries[^1];
+                    LogModel lastItem = viewModel.FilteredLogEntries[^1];
                     dataGrid.ScrollIntoView(lastItem, null);
                 }
             }

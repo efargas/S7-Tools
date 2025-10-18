@@ -489,7 +489,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
         IsReadOnly = profile.IsReadOnly;
 
         // Load configuration properties
-        var config = profile.Configuration;
+        SerialPortConfiguration config = profile.Configuration;
         BaudRate = config.BaudRate;
         CharacterSize = config.CharacterSize;
         Parity = config.Parity;
@@ -550,7 +550,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
     private void InitializeCommands()
     {
         // Save command - enabled when valid and has changes and not read-only
-        var canSave = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
+        IObservable<bool> canSave = this.WhenAnyValue(x => x.IsValid, x => x.HasChanges, x => x.IsReadOnly)
             .Select(tuple => tuple.Item1 && tuple.Item2 && !tuple.Item3);
 
         SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync, canSave);
@@ -562,7 +562,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
         CancelCommand = ReactiveCommand.Create(Cancel);
 
         // Reset to default command - enabled when not read-only
-        var canReset = this.WhenAnyValue(x => x.IsReadOnly)
+        IObservable<bool> canReset = this.WhenAnyValue(x => x.IsReadOnly)
             .Select(readOnly => !readOnly);
 
         ResetToDefaultCommand = ReactiveCommand.Create(ResetToDefault, canReset);
@@ -769,7 +769,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            var config = CreateConfiguration();
+            SerialPortConfiguration config = CreateConfiguration();
             SttyCommand = _portService.GenerateSttyCommand("/dev/ttyUSB0", config);
         }
         catch (Exception ex)
@@ -805,9 +805,9 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
             }
 
             // Validate configuration
-            var config = CreateConfiguration();
-            var configErrors = config.Validate();
-            foreach (var error in configErrors)
+            SerialPortConfiguration config = CreateConfiguration();
+            List<string> configErrors = config.Validate();
+            foreach (string error in configErrors)
             {
                 ValidationErrors.Add(error);
             }
@@ -838,7 +838,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
             StatusMessage = "Saving profile...";
             System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
-            var profile = CreateProfile();
+            SerialPortProfile profile = CreateProfile();
             System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created with name: {profile.Name}");
 
             if (_originalProfile != null)
@@ -855,7 +855,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
                 System.Diagnostics.Debug.WriteLine($"DEBUG: Creating new profile via service");
                 _logger.LogInformation("🔥 ABOUT TO CALL _profileService.CreateAsync for profile: {ProfileName}", profile.Name);
                 System.Diagnostics.Debug.WriteLine($"🔥 CRITICAL: Calling _profileService.CreateAsync NOW...");
-                var createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
+                SerialPortProfile createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
                 System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created successfully with ID: {createdProfile.Id}");
                 _logger.LogInformation("✅ _profileService.CreateAsync RETURNED for profile: {ProfileName}, ID: {ProfileId}", createdProfile.Name, createdProfile.Id);
 

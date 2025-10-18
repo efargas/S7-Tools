@@ -14,9 +14,9 @@ using S7Tools.Infrastructure.Logging.Providers.Extensions;
 using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services;
+using S7Tools.Services.Bootloader;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
-using S7Tools.Services.Bootloader;
 using S7Tools.Services.Tasking;
 using S7Tools.ViewModels;
 
@@ -270,7 +270,14 @@ public static class ServiceCollectionExtensions
 
         // Add Task Management ViewModels (Task Manager and Jobs Management)
         services.TryAddSingleton<TaskManagerViewModel>();
+        services.TryAddSingleton<TaskRunnerViewModel>();
+        services.TryAddSingleton<ActiveTasksViewModel>();
+        services.TryAddSingleton<ScheduledTasksViewModel>();
+        services.TryAddSingleton<HistoryTasksViewModel>();
+        services.TryAddSingleton<TaskCreatorViewModel>();
+        services.TryAddSingleton<TaskManagerShellViewModel>();
         services.TryAddSingleton<JobsManagementViewModel>();
+        services.TryAddTransient<JobWizardViewModel>();
 
         return services;
     }

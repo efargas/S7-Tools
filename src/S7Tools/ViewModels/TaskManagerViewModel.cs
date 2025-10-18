@@ -62,6 +62,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private int _failedTasksCount;
     private TimeSpan _averageExecutionTime;
     private string _resourceUtilization = string.Empty;
+    private int _selectedTabIndex;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskManagerViewModel"/> class.
@@ -280,6 +281,15 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         get => _resourceUtilization;
         private set => this.RaiseAndSetIfChanged(ref _resourceUtilization, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the selected tab index in the TaskManagerView.
+    /// </summary>
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set => this.RaiseAndSetIfChanged(ref _selectedTabIndex, Math.Clamp(value, 0, 2));
     }
 
     // Last update timestamp for UI display
@@ -918,7 +928,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         {
             IsLoading = false;
         }
-    }    private async Task ExecuteCreateTaskAsync()
+    }
+    private async Task ExecuteCreateTaskAsync()
     {
         try
         {

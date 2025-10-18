@@ -80,7 +80,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         _uiThreadService = uiThreadService;
 
         // Create specific logger for this ViewModel
-        var loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { });
+        ILoggerFactory loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { });
         _specificLogger = loggerFactory.CreateLogger<SocatSettingsViewModel>();
 
         // Initialize collections
@@ -132,7 +132,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedSerialDevice)
             .Subscribe(values =>
             {
-                var (profile, selectedDevice) = values;
+                (SocatProfile? profile, string? selectedDevice) = values;
                 try
                 {
                     if (profile == null)
@@ -142,7 +142,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
                     else
                     {
                         // Use the actual selected device if available, otherwise use placeholder
-                        var deviceToUse = !string.IsNullOrEmpty(selectedDevice) ? selectedDevice : "/dev/ttyUSB0";
+                        string deviceToUse = !string.IsNullOrEmpty(selectedDevice) ? selectedDevice : "/dev/ttyUSB0";
 
                         try
                         {
@@ -336,7 +336,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .DisposeWith(_disposables);
 
         // Start socat command - enabled when both profile and device are selected
-        var canStartSocat = this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedSerialDevice)
+        IObservable<bool> canStartSocat = this.WhenAnyValue(x => x.SelectedProfile, x => x.SelectedSerialDevice)
             .Select(tuple =>
             {
                 bool canStart = tuple.Item1 != null && !string.IsNullOrEmpty(tuple.Item2);
@@ -354,7 +354,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .DisposeWith(_disposables);
 
         // Stop socat command - enabled when a process is selected
-        var canStopSocat = this.WhenAnyValue(x => x.SelectedProcess)
+        IObservable<bool> canStopSocat = this.WhenAnyValue(x => x.SelectedProcess)
             .Select(process => process != null && process.IsRunning);
 
         StopSocatCommand = ReactiveCommand.CreateFromTask(StopSocatAsync, canStopSocat);
@@ -363,7 +363,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .DisposeWith(_disposables);
 
         // Stop all socat command - enabled when there are running processes
-        var canStopAllSocat = this.WhenAnyValue(x => x.RunningProcessCount)
+        IObservable<bool> canStopAllSocat = this.WhenAnyValue(x => x.RunningProcessCount)
             .Select(count => count > 0);
 
         StopAllSocatCommand = ReactiveCommand.CreateFromTask(StopAllSocatAsync, canStopAllSocat);
@@ -381,7 +381,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .DisposeWith(_disposables);
 
         // Test connection command - enabled when a process is selected
-        var canTestConnection = this.WhenAnyValue(x => x.SelectedProcess)
+        IObservable<bool> canTestConnection = this.WhenAnyValue(x => x.SelectedProcess)
             .Select(process => process != null && process.IsRunning);
 
         TestConnectionCommand = ReactiveCommand.CreateFromTask(TestConnectionAsync, canTestConnection);
@@ -390,7 +390,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .DisposeWith(_disposables);
 
         // Export profiles command - enabled when there are profiles
-        var canExport = this.WhenAnyValue(x => x.Profiles.Count)
+        IObservable<bool> canExport = this.WhenAnyValue(x => x.Profiles.Count)
             .Select(count => count > 0);
 
         ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExport);
@@ -405,7 +405,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .DisposeWith(_disposables);
 
         // Export selected profile command - enabled when a profile is selected
-        var canExportSelected = this.WhenAnyValue(x => x.SelectedProfile)
+        IObservable<bool> canExportSelected = this.WhenAnyValue(x => x.SelectedProfile)
             .Select(profile => profile != null);
 
         ExportSelectedProfileCommand = ReactiveCommand.CreateFromTask(ExportSelectedProfileAsync, canExportSelected);
@@ -439,7 +439,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                var existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
+                SocatProcessInfo? existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
                 if (existingProcess != null)
                 {
                     RunningProcesses.Remove(existingProcess);
@@ -462,7 +462,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                var existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
+                SocatProcessInfo? existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
                 if (existingProcess != null)
                 {
                     existingProcess.ActiveConnections++;
@@ -475,7 +475,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                var existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
+                SocatProcessInfo? existingProcess = RunningProcesses.FirstOrDefault(p => p.ProcessId == args.ProcessInfo.ProcessId);
                 if (existingProcess != null && existingProcess.ActiveConnections > 0)
                 {
                     existingProcess.ActiveConnections--;
@@ -492,7 +492,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     {
         try
         {
-            var settings = _settingsService.Settings;
+            Models.ApplicationSettings settings = _settingsService.Settings;
             ProfilesPath = settings.Socat?.ProfilesPath ?? "resources/SocatProfiles";
         }
         catch (Exception ex)
@@ -514,20 +514,20 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             IsScanning = true;
             StatusMessage = "Scanning for serial devices...";
 
-            var deviceInfos = await _serialPortService.ScanAvailablePortsAsync();
-            var devices = deviceInfos.Select(info => info.PortPath);
+            IEnumerable<Core.Services.Interfaces.SerialPortInfo> deviceInfos = await _serialPortService.ScanAvailablePortsAsync();
+            IEnumerable<string> devices = deviceInfos.Select(info => info.PortPath);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 AvailableSerialDevices.Clear();
-                foreach (var device in devices.OrderBy(d => d))
+                foreach (string? device in devices.OrderBy(d => d))
                 {
                     AvailableSerialDevices.Add(device);
                 }
                 DeviceCount = AvailableSerialDevices.Count;
 
                 // Select first USB device if available
-                var usbDevice = AvailableSerialDevices.FirstOrDefault(d => d.Contains("ttyUSB") || d.Contains("ttyACM"));
+                string? usbDevice = AvailableSerialDevices.FirstOrDefault(d => d.Contains("ttyUSB") || d.Contains("ttyACM"));
                 if (usbDevice != null)
                 {
                     SelectedSerialDevice = usbDevice;
@@ -561,7 +561,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             StatusMessage = "Refreshing running processes...";
             _specificLogger.LogInformation("🔍 Calling _socatService.GetRunningProcessesAsync...");
 
-            var processes = await _socatService.GetRunningProcessesAsync();
+            IEnumerable<SocatProcessInfo>? processes = await _socatService.GetRunningProcessesAsync();
             _specificLogger.LogInformation("📊 GetRunningProcessesAsync returned {Count} processes", processes?.Count() ?? 0);
 
             _specificLogger.LogInformation("🔄 Invoking UI thread update...");
@@ -572,7 +572,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
                 if (processes != null)
                 {
-                    foreach (var process in processes)
+                    foreach (SocatProcessInfo process in processes)
                     {
                         _specificLogger.LogInformation("➕ Adding process: PID={ProcessId}, Port={Port}, Status={Status}",
                             process.ProcessId, process.TcpPort, process.Status);
@@ -615,7 +615,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         try
         {
             // Confirm deletion
-            var confirmed = await _dialogService.ShowConfirmationAsync(
+            bool confirmed = await _dialogService.ShowConfirmationAsync(
                 "Delete Profile",
                 $"Are you sure you want to delete the profile '{SelectedProfile.Name}'?");
 
@@ -627,9 +627,9 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             IsLoading = true;
             StatusMessage = "Deleting profile...";
 
-            var profileName = SelectedProfile.Name;
-            var idToDelete = SelectedProfile.Id;
-            var success = await _profileService.DeleteAsync(idToDelete);
+            string profileName = SelectedProfile.Name;
+            int idToDelete = SelectedProfile.Id;
+            bool success = await _profileService.DeleteAsync(idToDelete);
 
             if (success)
             {
@@ -670,21 +670,21 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             _specificLogger.LogDebug("Duplicating socat profile: {ProfileName}", SelectedProfile.Name);
 
-            var inputResult = await _dialogService.ShowInputAsync(
+            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Profile",
                 "Enter a name for the duplicate profile:",
                 $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
 
-            var newName = inputResult.Value;
+            string? newName = inputResult.Value;
 
             if (!string.IsNullOrWhiteSpace(newName))
             {
-                var originalProfile = SelectedProfile;
+                SocatProfile originalProfile = SelectedProfile;
 
                 IsLoading = true;
                 StatusMessage = "Duplicating profile...";
 
-                var duplicatedProfile = await _profileService.DuplicateAsync(originalProfile.Id, newName);
+                SocatProfile duplicatedProfile = await _profileService.DuplicateAsync(originalProfile.Id, newName);
 
                 // Refresh and select duplicated profile
                 await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
@@ -726,7 +726,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             StatusMessage = $"Starting socat on port {SelectedProfile.Configuration.TcpPort}...";
 
             _specificLogger.LogInformation("🔧 Calling _socatService.StartSocatWithProfileAsync...");
-            var processInfo = await _socatService.StartSocatWithProfileAsync(SelectedProfile, SelectedSerialDevice);
+            SocatProcessInfo processInfo = await _socatService.StartSocatWithProfileAsync(SelectedProfile, SelectedSerialDevice);
             _specificLogger.LogInformation("✅ _socatService.StartSocatWithProfileAsync completed - ProcessId: {ProcessId}", processInfo.ProcessId);
 
             StatusMessage = $"socat started successfully (PID: {processInfo.ProcessId})";
@@ -760,7 +760,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             StatusMessage = $"Stopping socat process {SelectedProcess.ProcessId}...";
 
-            var success = await _socatService.StopSocatAsync(SelectedProcess);
+            bool success = await _socatService.StopSocatAsync(SelectedProcess);
 
             if (success)
             {
@@ -788,7 +788,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             StatusMessage = "Stopping all socat processes...";
 
-            var stoppedCount = await _socatService.StopAllSocatProcessesAsync();
+            int stoppedCount = await _socatService.StopAllSocatProcessesAsync();
 
             StatusMessage = $"Stopped {stoppedCount} socat process(es)";
             _specificLogger.LogInformation("Stopped {Count} socat processes", stoppedCount);
@@ -814,7 +814,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             StatusMessage = $"Testing connection to port {SelectedProcess.TcpPort}...";
 
-            var success = await _socatService.TestTcpConnectionAsync(
+            bool success = await _socatService.TestTcpConnectionAsync(
                 SelectedProcess.TcpHost ?? "localhost",
                 SelectedProcess.TcpPort);
 
@@ -849,7 +849,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         try
         {
-            var fileName = await _fileDialogService.ShowSaveFileDialogAsync(
+            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
                 "Export Profiles",
                 "JSON files (*.json)|*.json|All files (*.*)|*.*",
                 null,
@@ -863,8 +863,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             IsLoading = true;
             StatusMessage = "Exporting profiles...";
 
-            var profiles = await _profileService.ExportAsync();
-            var jsonData = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
+            IEnumerable<SocatProfile> profiles = await _profileService.ExportAsync();
+            string jsonData = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(fileName, jsonData);
 
             StatusMessage = $"Exported {Profiles.Count} profile(s) to {Path.GetFileName(fileName)}";
@@ -894,7 +894,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         try
         {
-            var fileName = await _fileDialogService.ShowOpenFileDialogAsync(
+            string? fileName = await _fileDialogService.ShowOpenFileDialogAsync(
                 "Import Profiles",
                 "JSON files (*.json)|*.json|All files (*.*)|*.*");
 
@@ -906,11 +906,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             IsLoading = true;
             StatusMessage = "Importing profiles...";
 
-            var jsonData = await File.ReadAllTextAsync(fileName);
-            var profiles = JsonSerializer.Deserialize<List<SocatProfile>>(jsonData) ?? new List<SocatProfile>();
-            var importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
+            string jsonData = await File.ReadAllTextAsync(fileName);
+            List<SocatProfile> profiles = JsonSerializer.Deserialize<List<SocatProfile>>(jsonData) ?? new List<SocatProfile>();
+            IEnumerable<SocatProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
 
-            var importedCount = importedProfiles.Count();
+            int importedCount = importedProfiles.Count();
             await RefreshCommand.Execute(); // Refresh the list
 
             StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
@@ -941,8 +941,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             StatusMessage = "Exporting selected profile...";
 
-            var profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
-            var jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
+            SocatProfile? profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
+            string jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
 
             await _dialogService.ShowErrorAsync("Export Profile",
                 $"Export functionality for profile '{SelectedProfile.Name}' will be implemented in the UI layer.");
@@ -969,7 +969,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         try
         {
-            var details = $"Profile: {SelectedProfile.Name}\n" +
+            string details = $"Profile: {SelectedProfile.Name}\n" +
                          $"Description: {SelectedProfile.Description}\n" +
                          $"TCP Port: {SelectedProfile.Configuration.TcpPort}\n" +
                          $"Verbose: {SelectedProfile.Configuration.Verbose}\n" +
@@ -1003,7 +1003,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         try
         {
-            var result = await _fileDialogService.ShowFolderBrowserDialogAsync(
+            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync(
                 "Select Profiles Directory",
                 ProfilesPath);
 
@@ -1072,7 +1072,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             ProfilesPath = "resources/SocatProfiles";
 
             // Update settings
-            var settings = _settingsService.Settings;
+            Models.ApplicationSettings settings = _settingsService.Settings;
             if (settings.Socat != null)
             {
                 settings.Socat.ProfilesPath = ProfilesPath;
@@ -1097,7 +1097,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         try
         {
             // Persist through the injected settings service
-            var settings = _settingsService.Settings.Clone();
+            Models.ApplicationSettings settings = _settingsService.Settings.Clone();
             settings.Socat.ProfilesPath = ProfilesPath;
             await _settingsService.UpdateSettingsAsync(settings).ConfigureAwait(false);
             StatusMessage = "Profiles path updated";
@@ -1171,7 +1171,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             // If a specific profile Id was requested, try to select it
             if (selectProfileId.HasValue)
             {
-                var match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
+                SocatProfile? match = Profiles.FirstOrDefault(p => p.Id == selectProfileId.Value);
                 if (match != null)
                 {
                     SelectedProfile = match;

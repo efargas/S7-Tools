@@ -31,4 +31,13 @@
   <PropertyGroup Condition="'$(IsTestProject)' != 'true'">
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!-- Debugging experience improvements: ensure rich, portable symbols and no optimization in Debug -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <!-- Avoid overly strict determinism which can sometimes confuse source mapping in certain toolchains -->
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
 </Project>

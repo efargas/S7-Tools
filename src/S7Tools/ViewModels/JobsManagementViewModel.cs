@@ -37,6 +37,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 {
     private readonly IJobManager _jobManager;
     private readonly ILogger<JobsManagementViewModel> _logger;
+    private readonly IUIThreadService _uiThreadService;
     private readonly CompositeDisposable _localDisposables = new();
 
     // Job-specific collections for UI organization
@@ -57,16 +58,20 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <param name="profileDialogService">The unified profile dialog service.</param>
     /// <param name="dialogService">The general dialog service for confirmations.</param>
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
+    /// <param name="viewModelFactory">Factory to create child ViewModels (e.g., JobWizardViewModel).</param>
     public JobsManagementViewModel(
         ILogger<JobsManagementViewModel> logger,
         IJobManager jobManager,
         IUnifiedProfileDialogService profileDialogService,
         IDialogService dialogService,
-        IUIThreadService uiThreadService)
+        IUIThreadService uiThreadService,
+        IViewModelFactory viewModelFactory)
         : base(logger, profileDialogService, dialogService, uiThreadService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
+        _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+        _vmFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
 
         SetupJobSpecificCommands();
         SetupJobCollections();
@@ -215,6 +220,16 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// </remarks>
     public ReactiveCommand<Unit, Unit> ValidateJobCommand { get; private set; } = null!;
 
+    /// <summary>
+    /// Gets the command to launch the in-content Job Creator wizard.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> StartWizardCommand { get; private set; } = null!;
+    /// <summary>
+    /// Gets the command to launch the Job Creator wizard pre-populated from the selected job.
+    /// Acts like "Create (Wizard)" but uses current job configuration as defaults.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> StartWizardFromSelectedCommand { get; private set; } = null!;
+
     #endregion
 
     #region ProfileManagementViewModelBase Implementation
@@ -335,11 +350,17 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         CreateTaskFromJobCommand = ReactiveCommand.CreateFromTask(ExecuteCreateTaskFromJobAsync, hasSelectedJob);
         ValidateJobCommand = ReactiveCommand.CreateFromTask(ExecuteValidateJobAsync, hasSelectedJob);
 
+        // Job Creator Wizard
+    StartWizardCommand = ReactiveCommand.Create(StartWizard);
+    StartWizardFromSelectedCommand = ReactiveCommand.Create(StartWizardFromSelected, hasSelectedJob);
+
         // Subscribe to command execution for logging
         CreateFromTemplateCommand.Subscribe(_ => _logger.LogDebug("Create from template command executed")).DisposeWith(_localDisposables);
         SaveAsTemplateCommand.Subscribe(_ => _logger.LogDebug("Save as template command executed for job {JobId}", SelectedProfile?.Id)).DisposeWith(_localDisposables);
         ImportJobCommand.Subscribe(_ => _logger.LogDebug("Import job command executed")).DisposeWith(_localDisposables);
         ExportJobCommand.Subscribe(_ => _logger.LogDebug("Export job command executed for job {JobId}", SelectedProfile?.Id)).DisposeWith(_localDisposables);
+        StartWizardCommand.Subscribe(_ => _logger.LogInformation("Job Creator wizard opened")).DisposeWith(_localDisposables);
+        StartWizardFromSelectedCommand.Subscribe(_ => _logger.LogInformation("Job Creator wizard opened from selected job {JobId}", SelectedProfile?.Id)).DisposeWith(_localDisposables);
     }
 
     private void SetupJobCollections()
@@ -592,6 +613,178 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     #endregion
 
     #region Helper Methods
+    private readonly IViewModelFactory _vmFactory;
+
+    private bool _isWizardMode;
+    public bool IsWizardMode
+    {
+        get => _isWizardMode;
+        set => this.RaiseAndSetIfChanged(ref _isWizardMode, value);
+    }
+
+    private JobWizardViewModel? _wizardVM;
+    public JobWizardViewModel? WizardVM
+    {
+        get => _wizardVM;
+        private set => this.RaiseAndSetIfChanged(ref _wizardVM, value);
+    }
+
+    private void StartWizard()
+    {
+        try
+        {
+            // Create wizard VM via factory
+            JobWizardViewModel wizard = _vmFactory.Create<JobWizardViewModel>();
+            WizardVM = wizard;
+            IsWizardMode = true;
+
+            // Handle cancel
+            wizard.CancelCommand.Subscribe(_ =>
+            {
+                IsWizardMode = false;
+                WizardVM = null;
+                _logger.LogInformation("Job Creator wizard cancelled");
+            }).DisposeWith(_localDisposables);
+
+            // Handle finish
+            wizard.FinishCommand.Subscribe(async _ =>
+            {
+                try
+                {
+                    if (wizard.Completed && wizard.CreatedJobId.HasValue)
+                    {
+                        // Refresh and select the newly created job
+                        await LoadProfilesAsync().ConfigureAwait(false);
+                        await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                        {
+                            SelectedProfile = Profiles.FirstOrDefault(p => p.Id == wizard.CreatedJobId!.Value)
+                                              ?? Profiles.FirstOrDefault();
+                        }).ConfigureAwait(false);
+
+                        StatusMessage = "Job created successfully";
+                        _logger.LogInformation("Job Creator wizard finished, selected job {JobId}", wizard.CreatedJobId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to finalize wizard result");
+                    StatusMessage = $"Error finalizing wizard: {ex.Message}";
+                }
+                finally
+                {
+                    IsWizardMode = false;
+                    WizardVM = null;
+                }
+            }).DisposeWith(_localDisposables);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start Job Creator wizard");
+            StatusMessage = $"Error opening wizard: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Starts the wizard and preselects combo boxes from the currently selected job profile.
+    /// </summary>
+    private void StartWizardFromSelected()
+    {
+        if (SelectedProfile == null)
+        {
+            StatusMessage = "No job selected to prefill wizard";
+            return;
+        }
+
+        try
+        {
+            JobWizardViewModel wizard = _vmFactory.Create<JobWizardViewModel>();
+            // Preselect IDs from current job
+            wizard.PreselectSerialId = SelectedProfile.SerialProfileId;
+            wizard.PreselectSocatId = SelectedProfile.SocatProfileId;
+            wizard.PreselectPowerId = SelectedProfile.PowerSupplyProfileId;
+            wizard.PreselectJobName = SelectedProfile.Name + " (Copy)";
+            wizard.PreselectJobDescription = SelectedProfile.Description ?? string.Empty;
+            WizardVM = wizard;
+            IsWizardMode = true;
+
+            // Wire cancel/finish like StartWizard
+            wizard.CancelCommand.Subscribe(_ =>
+            {
+                IsWizardMode = false;
+                WizardVM = null;
+                _logger.LogInformation("Job Creator wizard (from selected) cancelled");
+            }).DisposeWith(_localDisposables);
+
+            wizard.FinishCommand.Subscribe(async _ =>
+            {
+                try
+                {
+                    if (wizard.Completed && wizard.CreatedJobId.HasValue)
+                    {
+                        await LoadProfilesAsync().ConfigureAwait(false);
+                        await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                        {
+                            SelectedProfile = Profiles.FirstOrDefault(p => p.Id == wizard.CreatedJobId!.Value)
+                                              ?? Profiles.FirstOrDefault();
+                        }).ConfigureAwait(false);
+
+                        StatusMessage = "Job created successfully";
+                        _logger.LogInformation("Wizard (from selected) finished, selected job {JobId}", wizard.CreatedJobId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to finalize wizard result (from selected)");
+                    StatusMessage = $"Error finalizing wizard: {ex.Message}";
+                }
+                finally
+                {
+                    IsWizardMode = false;
+                    WizardVM = null;
+                }
+            }).DisposeWith(_localDisposables);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start Job Creator wizard (from selected)");
+            StatusMessage = $"Error opening wizard: {ex.Message}";
+        }
+    }
+
+    // Side menu for Jobs management (settings-like sidebar)
+    public ObservableCollection<string> SideMenuItems { get; } = new(new[]
+    {
+        "Main View",
+        "Create (Wizard)",
+        "Edit (Wizard)"
+    });
+
+    private string? _selectedSideMenuItem;
+    public string? SelectedSideMenuItem
+    {
+        get => _selectedSideMenuItem;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedSideMenuItem, value);
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return;
+            }
+
+            switch (value)
+            {
+                case "Main View":
+                    IsWizardMode = false;
+                    break;
+                case "Create (Wizard)":
+                    StartWizard();
+                    break;
+                case "Edit (Wizard)":
+                    StartWizardFromSelected();
+                    break;
+            }
+        }
+    }
 
     /// <summary>
     /// Loads profiles and updates job-specific collections.

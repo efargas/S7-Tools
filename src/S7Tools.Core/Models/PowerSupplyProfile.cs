@@ -345,7 +345,7 @@ public class PowerSupplyProfile : IProfileBase
     /// <returns>A string summarizing the profile's configuration.</returns>
     public string GetSummary()
     {
-        var summary = $"{Name}: {Configuration?.GetType().Name ?? "No Configuration"}";
+        string summary = $"{Name}: {Configuration?.GetType().Name ?? "No Configuration"}";
 
         if (IsDefault)
         {

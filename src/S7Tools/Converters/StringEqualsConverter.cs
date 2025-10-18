@@ -18,8 +18,8 @@ public sealed class StringEqualsConverter : IValueConverter
     /// <returns>True if the strings are equal (case-insensitive); otherwise, false.</returns>
     public object? Convert(object? value, Type targetType, object? parameter, System.Globalization.CultureInfo culture)
     {
-        var s1 = value as string;
-        var s2 = parameter as string;
+        string? s1 = value as string;
+        string? s2 = parameter as string;
         return string.Equals(s1, s2, StringComparison.OrdinalIgnoreCase);
     }
 
