@@ -57,7 +57,7 @@ You **MUST** consider the user input before proceeding (if not empty).
    **Detection & Creation Logic**:
    - Check if the following command succeeds to determine if the repository is a git repo (create/verify .gitignore if so):
 
-     ```sh
+     ```bash
      git rev-parse --git-dir 2>/dev/null
      ```
    - Check if Dockerfile* exists or Docker in plan.md → create/verify .dockerignore
