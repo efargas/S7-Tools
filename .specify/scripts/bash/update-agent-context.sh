@@ -153,22 +153,37 @@ extract_plan_field() {
     local field_pattern="$1"
     local plan_file="$2"
 
-    # Escape regex metacharacters in field pattern to avoid unintended matches
-    local esc_pattern
-    esc_pattern=$(printf '%s' "$field_pattern" | sed 's/[][^$.*/\\+?|(){}]/\\&/g')
+    # Normalize the sought field to uppercase for case-insensitive compare
+    local needle_uc
+    needle_uc=$(printf '%s' "$field_pattern" | awk '{print toupper($0)}')
 
-    # Match case-insensitively, tolerate extra spaces around the label and colon
-    # Use awk to robustly strip the prefix and trailing spaces
-    awk -v IGNORECASE=1 -v pat="$esc_pattern" '
-      BEGIN{found=""}
-      # Match lines like **Field Name**: value (tolerant spacing)
-      $0 ~ "^\\*\\*"[[:space:]]* pat [[:space:]]*"\\*\\*[[:space:]]*:[[:space:]]*" {
-        line=$0
-        sub("^\\*\\*[[:space:]]*" pat "[[:space:]]*\\*\\*[[:space:]]*:[[:space:]]*", "", line)
-        gsub(/^[ \t]+|[ \t]+$/, "", line)
-        if (toupper(line) != "NEEDS CLARIFICATION" && toupper(line) != "N/A") {
-          print line
-          exit
+    awk -v needle_uc="$needle_uc" '
+      function trim(s){ sub(/^[ \t\r\n]+/, "", s); sub(/[ \t\r\n]+$/, "", s); return s }
+      BEGIN { IGNORECASE=1 }
+      {
+        # Look for lines like: **Field Name**: value
+        # Extract between the first pair of ** and the following **, then the value after colon
+        if ($0 ~ /^\*\*[[:space:]]*.*\*\*[[:space:]]*:[[:space:]]*./) {
+          line = $0
+          # Extract label
+          label = line
+          sub(/^\*\*[[:space:]]*/, "", label)
+          sub(/\*\*.*$/, "", label)  # crude, will adjust below
+        }
+      }
+      {
+        # More robust extraction:
+        match($0, /^\*\*[[:space:]]*([^*][^*]*)[[:space:]]*\*\*[[:space:]]*:[[:space:]]*(.*)$/, m)
+        if (m[1] != "" && m[2] != "") {
+          label = trim(m[1])
+          value = trim(m[2])
+          if (toupper(label) == needle_uc) {
+            up = toupper(value)
+            if (up != "NEEDS CLARIFICATION" && up != "N/A") {
+              print value
+            }
+            exit
+          }
         }
       }
     ' "$plan_file" 2>/dev/null || true
