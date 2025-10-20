@@ -119,7 +119,12 @@ find_feature_dir_by_prefix() {
     else
         # Multiple matches - this shouldn't happen with proper naming convention
         echo "ERROR: Multiple spec directories found with prefix '$prefix': ${matches[*]}" >&2
-        echo "Please ensure only one spec directory exists per numeric prefix." >&2
+        echo "Action required: Review the listed directories in '$specs_dir'." >&2
+        echo "To resolve, choose which directory to keep, merge their contents if needed, and delete the extras. For example:" >&2
+        echo "  ls -l \"$specs_dir/$prefix-*\"" >&2
+        echo "  # Inspect each directory and decide which to keep" >&2
+        echo "  rm -r \"$specs_dir/<dir-to-remove>\"" >&2
+        echo "Only one spec directory should exist per numeric prefix." >&2
         echo "$specs_dir/$branch_name"  # Return something to avoid breaking the script
     fi
 }
