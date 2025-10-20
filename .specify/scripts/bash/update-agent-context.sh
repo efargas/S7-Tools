@@ -152,13 +152,26 @@ validate_environment() {
 extract_plan_field() {
     local field_pattern="$1"
     local plan_file="$2"
-    
-    grep "^\*\*${field_pattern}\*\*: " "$plan_file" 2>/dev/null | \
-        head -1 | \
-        sed "s|^\*\*${field_pattern}\*\*: ||" | \
-        sed 's/^[ \t]*//;s/[ \t]*$//' | \
-        grep -v "NEEDS CLARIFICATION" | \
-        grep -v "^N/A$" || echo ""
+
+    # Escape regex metacharacters in field pattern to avoid unintended matches
+    local esc_pattern
+    esc_pattern=$(printf '%s' "$field_pattern" | sed 's/[][^$.*/\\+?|(){}]/\\&/g')
+
+    # Match case-insensitively, tolerate extra spaces around the label and colon
+    # Use awk to robustly strip the prefix and trailing spaces
+    awk -v IGNORECASE=1 -v pat="$esc_pattern" '
+      BEGIN{found=""}
+      # Match lines like **Field Name**: value (tolerant spacing)
+      $0 ~ "^\\*\\*"[[:space:]]* pat [[:space:]]*"\\*\\*[[:space:]]*:[[:space:]]*" {
+        line=$0
+        sub("^\\*\\*[[:space:]]*" pat "[[:space:]]*\\*\\*[[:space:]]*:[[:space:]]*", "", line)
+        gsub(/^[ \t]+|[ \t]+$/, "", line)
+        if (toupper(line) != "NEEDS CLARIFICATION" && toupper(line) != "N/A") {
+          print line
+          exit
+        }
+      }
+    ' "$plan_file" 2>/dev/null || true
 }
 
 parse_plan_data() {
