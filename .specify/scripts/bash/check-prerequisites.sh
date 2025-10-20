@@ -128,8 +128,13 @@ docs=()
 [[ -f "$DATA_MODEL" ]] && docs+=("data-model.md")
 
 # Check contracts directory (only if it exists and has files)
-if [[ -d "$CONTRACTS_DIR" ]] && [[ -n "$(ls -A "$CONTRACTS_DIR" 2>/dev/null)" ]]; then
-    docs+=("contracts/")
+if [[ -d "$CONTRACTS_DIR" ]]; then
+    shopt -s nullglob dotglob
+    files=("$CONTRACTS_DIR"/*)
+    shopt -u nullglob dotglob
+    if (( ${#files[@]} )); then
+        docs+=("contracts/")
+    fi
 fi
 
 [[ -f "$QUICKSTART" ]] && docs+=("quickstart.md")
