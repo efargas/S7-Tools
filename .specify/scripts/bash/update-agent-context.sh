@@ -356,12 +356,27 @@ create_new_agent_file() {
         fi
     done
     
-    # Convert literal "\n" sequences to actual newlines in a portable way
-    awk '{
-      out=$0
-      gsub(/\\n/,"\n", out)
-      printf "%s\n", out
-    }' "$temp_file" > "${temp_file}.new" && mv "${temp_file}.new" "$temp_file"
+    # Convert literal "\n" sequences to actual newlines with robust error handling
+    conv_tmp="${temp_file}.new"
+    if awk '{
+        out=$0
+        gsub(/\\n/, "\n", out)
+        printf "%s\n", out
+      }' "$temp_file" > "$conv_tmp"; then
+        # Preserve mode
+        chmod --reference="$temp_file" "$conv_tmp" 2>/dev/null || true
+        if mv "$conv_tmp" "$temp_file"; then
+          :
+        else
+          log_error "Failed to replace temporary file after newline conversion"
+          rm -f "$conv_tmp"
+          return 1
+        fi
+    else
+        log_error "Failed converting literal \\n to newlines"
+        rm -f "$conv_tmp"
+        return 1
+    fi
     
     # Clean up backup files
     rm -f "$temp_file.bak" "$temp_file.bak2"
