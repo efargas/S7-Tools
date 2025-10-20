@@ -436,7 +436,7 @@ update_existing_agent_file() {
             echo "$line" >> "$temp_file"
             in_changes_section=false
             continue
-        elif [[ $in_changes_section == true ]] && [[ "$line" == "- "* ]]; then
+        elif [[ $in_changes_section == true ]] && [[ "$line" =~ ^-\ .+ ]]; then
             # Keep only first 2 existing changes
             if [[ $existing_changes_count -lt 2 ]]; then
                 echo "$line" >> "$temp_file"
