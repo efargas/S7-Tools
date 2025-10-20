@@ -109,8 +109,22 @@ cleanup() {
     exit $exit_code
 }
 
-# Set up cleanup trap
-trap cleanup EXIT INT TERM
+# Set up cleanup trap safely: ignore signals during critical sections
+trap 'cleanup' EXIT
+trap '' INT TERM
+
+# ... later, around critical mv operations:
+# Move temp file to target atomically with signals ignored
+{
+  trap '' INT TERM
+  if ! mv "$temp_file" "$target_file"; then
+      log_error "Failed to update target file"
+      rm -f "$temp_file"
+      trap cleanup EXIT
+      exit 1
+  fi
+  trap cleanup EXIT
+} 2>/dev/null
 
 #==============================================================================
 # Validation Functions
