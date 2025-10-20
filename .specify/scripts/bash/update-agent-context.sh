@@ -356,9 +356,12 @@ create_new_agent_file() {
         fi
     done
     
-    # Convert \n sequences to actual newlines
-    newline=$(printf '\n')
-    sed -i.bak2 "s/\\\\n/${newline}/g" "$temp_file"
+    # Convert literal "\n" sequences to actual newlines in a portable way
+    awk '{
+      out=$0
+      gsub(/\\n/,"\n", out)
+      printf "%s\n", out
+    }' "$temp_file" > "${temp_file}.new" && mv "${temp_file}.new" "$temp_file"
     
     # Clean up backup files
     rm -f "$temp_file.bak" "$temp_file.bak2"
