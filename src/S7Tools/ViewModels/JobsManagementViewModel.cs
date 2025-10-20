@@ -16,6 +16,103 @@ using S7Tools.ViewModels.Base;
 namespace S7Tools.ViewModels;
 
 /// <summary>
+/// Wrapper ViewModel for JobsMainContentView to prevent circular references.
+/// This exposes the JobsManagementViewModel properties but is a separate object.
+/// </summary>
+public class JobsMainContentViewModel : ViewModelBase, IDisposable
+{
+    private readonly JobsManagementViewModel _parent;
+    private readonly CompositeDisposable _disposables = new();
+    private bool _disposed;
+
+    public JobsMainContentViewModel(JobsManagementViewModel parent)
+    {
+        _parent = parent ?? throw new ArgumentNullException(nameof(parent));
+
+        // Subscribe to parent property changes and re-raise them
+        // Use proper property change forwarding to ensure UI updates
+        _parent.WhenAnyValue(x => x.SelectedProfile)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(SelectedProfile));
+            })
+            .DisposeWith(_disposables);
+
+        _parent.WhenAnyValue(x => x.Profiles)
+            .Subscribe(_ =>
+            {
+                this.RaisePropertyChanged(nameof(Profiles));
+            })
+            .DisposeWith(_disposables);
+
+        _parent.WhenAnyValue(x => x.StatusMessage)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(StatusMessage)))
+            .DisposeWith(_disposables);
+
+        _parent.WhenAnyValue(x => x.IsLoading)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(IsLoading)))
+            .DisposeWith(_disposables);
+
+        // Subscribe to collection-specific property changes
+        _parent.WhenAnyValue(x => x.AllJobs)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(AllJobs)))
+            .DisposeWith(_disposables);
+
+        _parent.WhenAnyValue(x => x.JobTemplates)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(JobTemplates)))
+            .DisposeWith(_disposables);
+
+        _parent.WhenAnyValue(x => x.UserJobs)
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(UserJobs)))
+            .DisposeWith(_disposables);
+    }
+
+    // Expose parent properties for data binding
+    public ObservableCollection<JobProfile> Profiles => _parent.Profiles;
+    public JobProfile? SelectedProfile
+    {
+        get => _parent.SelectedProfile;
+        set => _parent.SelectedProfile = value;
+    }
+    public ObservableCollection<JobProfile> AllJobs => _parent.AllJobs;
+    public ObservableCollection<JobProfile> JobTemplates => _parent.JobTemplates;
+    public ObservableCollection<JobProfile> UserJobs => _parent.UserJobs;
+    public string StatusMessage => _parent.StatusMessage ?? string.Empty;
+    public bool IsLoading => _parent.IsLoading;
+
+    // Expose parent commands
+    public ReactiveCommand<Unit, Unit> CreateCommand => _parent.CreateWizardCommand; // Use wizard instead of base create
+    public ReactiveCommand<Unit, Unit> EditCommand => _parent.EditCommand;
+    public ReactiveCommand<Unit, Unit> DuplicateCommand => _parent.DuplicateCommand;
+    public ReactiveCommand<Unit, Unit> DeleteCommand => _parent.DeleteCommand;
+    public ReactiveCommand<Unit, Unit> RefreshCommand => _parent.RefreshCommand;
+    public ReactiveCommand<Unit, Unit> SetDefaultCommand => _parent.SetDefaultCommand;
+
+    // Job-specific commands
+    public ReactiveCommand<Unit, Unit> CreateFromTemplateCommand => _parent.CreateFromTemplateCommand;
+    public ReactiveCommand<Unit, Unit> SaveAsTemplateCommand => _parent.SaveAsTemplateCommand;
+    public ReactiveCommand<Unit, Unit> ImportJobCommand => _parent.ImportJobCommand;
+    public ReactiveCommand<Unit, Unit> ExportJobCommand => _parent.ExportJobCommand;
+    public ReactiveCommand<Unit, Unit> CreateTaskFromJobCommand => _parent.CreateTaskFromJobCommand;
+    public ReactiveCommand<Unit, Unit> ValidateJobCommand => _parent.ValidateJobCommand;
+
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed && disposing)
+        {
+            _disposables?.Dispose();
+            _disposed = true;
+        }
+    }
+}
+
+/// <summary>
 /// ViewModel for managing job profiles using the unified profile management pattern.
 /// Provides job-specific operations including template management and job categories.
 /// </summary>
@@ -38,17 +135,15 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     private readonly IJobManager _jobManager;
     private readonly ILogger<JobsManagementViewModel> _logger;
     private readonly IUIThreadService _uiThreadService;
+    private readonly IUnifiedProfileDialogService _unifiedDialogService;
+    private readonly IDialogService _dialogService;
+    private readonly IViewModelFactory? _viewModelFactory;
     private readonly CompositeDisposable _localDisposables = new();
 
     // Job-specific collections for UI organization
     private ObservableCollection<JobProfile> _allJobs = new();
     private ObservableCollection<JobProfile> _jobTemplates = new();
     private ObservableCollection<JobProfile> _userJobs = new();
-
-    // Additional UI state for job management
-    private string _selectedCategory = "All";
-    private bool _showTemplatesOnly;
-    private string _categoryFilter = string.Empty;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JobsManagementViewModel"/> class.
@@ -58,23 +153,26 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <param name="profileDialogService">The unified profile dialog service.</param>
     /// <param name="dialogService">The general dialog service for confirmations.</param>
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
-    /// <param name="viewModelFactory">Factory to create child ViewModels (e.g., JobWizardViewModel).</param>
+    /// <param name="viewModelFactory">The view model factory for creating child ViewModels.</param>
     public JobsManagementViewModel(
         ILogger<JobsManagementViewModel> logger,
         IJobManager jobManager,
         IUnifiedProfileDialogService profileDialogService,
         IDialogService dialogService,
         IUIThreadService uiThreadService,
-        IViewModelFactory viewModelFactory)
+        IViewModelFactory? viewModelFactory = null)
         : base(logger, profileDialogService, dialogService, uiThreadService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
-        _vmFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
+        _unifiedDialogService = profileDialogService ?? throw new ArgumentNullException(nameof(profileDialogService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _viewModelFactory = viewModelFactory;
 
         SetupJobSpecificCommands();
         SetupJobCollections();
+        SetupSideMenuItems();
 
         // Subscribe to profile changes to update job-specific collections
         this.WhenAnyValue(x => x.Profiles)
@@ -123,43 +221,44 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         private set => this.RaiseAndSetIfChanged(ref _userJobs, value);
     }
 
+    #endregion
+
+    #region Sidebar Navigation (Settings Pattern)
+
     /// <summary>
-    /// Gets or sets the selected job category for filtering.
+    /// Gets the collection of sidebar menu items for navigation.
     /// </summary>
-    /// <remarks>
-    /// Category filter for organizing jobs by type, purpose, or target hardware.
-    /// Default categories include "All", "Templates", "User Jobs", and custom categories.
-    /// </remarks>
-    public string SelectedCategory
+    public ObservableCollection<string> SideMenuItems { get; } = new();
+
+    private string? _selectedSideMenuItem = "Main View";
+    /// <summary>
+    /// Gets or sets the selected sidebar menu item.
+    /// </summary>
+    public string? SelectedSideMenuItem
     {
-        get => _selectedCategory;
-        set => this.RaiseAndSetIfChanged(ref _selectedCategory, value);
+        get => _selectedSideMenuItem;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedSideMenuItem, value);
+            this.RaisePropertyChanged(nameof(SelectedContentViewModel));
+        }
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether to show only job templates.
+    /// Gets the selected content ViewModel for the main area based on sidebar selection.
+    /// This follows the same pattern as SettingsViewModel.SelectedCategoryViewModel.
     /// </summary>
-    /// <remarks>
-    /// Filter toggle for focusing on template management operations.
-    /// When enabled, only templates are shown in the main job list.
-    /// </remarks>
-    public bool ShowTemplatesOnly
+    public object? SelectedContentViewModel
     {
-        get => _showTemplatesOnly;
-        set => this.RaiseAndSetIfChanged(ref _showTemplatesOnly, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the category filter text for custom category filtering.
-    /// </summary>
-    /// <remarks>
-    /// Free-text filter for finding jobs by category metadata.
-    /// Supports partial matching for flexible job discovery.
-    /// </remarks>
-    public string CategoryFilter
-    {
-        get => _categoryFilter;
-        set => this.RaiseAndSetIfChanged(ref _categoryFilter, value);
+        get
+        {
+            return SelectedSideMenuItem switch
+            {
+                "Create (Wizard)" => CreateWizardViewModel(),
+                "Edit (Wizard)" => CreateWizardViewModelFromSelected(),
+                _ => CreateMainJobsContentViewModel() // Main View uses a dedicated ViewModel
+            };
+        }
     }
 
     #endregion
@@ -221,14 +320,13 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     public ReactiveCommand<Unit, Unit> ValidateJobCommand { get; private set; } = null!;
 
     /// <summary>
-    /// Gets the command to launch the in-content Job Creator wizard.
+    /// Gets the command to create a new job using the wizard interface.
     /// </summary>
-    public ReactiveCommand<Unit, Unit> StartWizardCommand { get; private set; } = null!;
-    /// <summary>
-    /// Gets the command to launch the Job Creator wizard pre-populated from the selected job.
-    /// Acts like "Create (Wizard)" but uses current job configuration as defaults.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> StartWizardFromSelectedCommand { get; private set; } = null!;
+    /// <remarks>
+    /// Navigates to the wizard instead of opening the direct create dialog.
+    /// Provides a guided step-by-step job creation experience.
+    /// </remarks>
+    public ReactiveCommand<Unit, Unit> CreateWizardCommand { get; private set; } = null!;
 
     #endregion
 
@@ -277,15 +375,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <returns>The dialog result with created job or cancellation status.</returns>
     protected override async Task<ProfileDialogResult<JobProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
-        // TODO: Implement job-specific create dialog
-        // For now, create a basic job profile
-        var defaultJob = JobProfile.CreateUserProfile(request.DefaultName, request.DefaultDescription);
-        await Task.Yield();
-        return new ProfileDialogResult<JobProfile>
-        {
-            IsSuccess = true,
-            Result = defaultJob
-        };
+        return await _unifiedDialogService.ShowJobCreateDialogAsync(request).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -295,15 +385,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <returns>The dialog result with updated job or cancellation status.</returns>
     protected override async Task<ProfileDialogResult<JobProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
-        // TODO: Implement job-specific edit dialog
-        // For now, return the existing profile unchanged
-        JobProfile? existingJob = await _jobManager.GetByIdAsync(request.ProfileId);
-        await Task.Yield();
-        return new ProfileDialogResult<JobProfile>
-        {
-            IsSuccess = existingJob != null,
-            Result = existingJob
-        };
+        return await _unifiedDialogService.ShowJobEditDialogAsync(request).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -313,19 +395,44 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <returns>The dialog result with new profile name or cancellation status.</returns>
     protected override async Task<ProfileDialogResult<string>> ShowDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
-        // TODO: Implement input dialog for job duplication
-        // For now, return the suggested name
-        await Task.Yield();
-        return new ProfileDialogResult<string>
+        try
         {
-            IsSuccess = true,
-            Result = request.SuggestedName
-        };
+            _logger.LogDebug("Showing duplicate input dialog for job profile ID: {SourceProfileId}", request.SourceProfileId);
+
+            // Use the input dialog service since the job-specific duplicate dialog is not implemented yet
+            var inputResult = await _dialogService.ShowInputAsync(
+                request.Title,
+                "Enter a name for the duplicated job profile:",
+                request.SuggestedName,
+                "Job profile name").ConfigureAwait(false);
+
+            if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
+                _logger.LogDebug("Job duplicate dialog cancelled");
+                return ProfileDialogResult<string>.Cancelled();
+            }
+
+            _logger.LogDebug("Job duplicate dialog completed with name: {Name}", inputResult.Value);
+            return ProfileDialogResult<string>.Success(inputResult.Value.Trim());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error showing duplicate dialog for job profile ID: {SourceProfileId}", request.SourceProfileId);
+            return ProfileDialogResult<string>.Failure($"Error duplicating profile: {ex.Message}");
+        }
     }
 
     #endregion
 
     #region Private Implementation
+
+    private void SetupSideMenuItems()
+    {
+        SideMenuItems.Clear();
+        SideMenuItems.Add("Main View");
+        SideMenuItems.Add("Create (Wizard)");
+        SideMenuItems.Add("Edit (Wizard)");
+    }
 
     private void SetupJobSpecificCommands()
     {
@@ -350,25 +457,21 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         CreateTaskFromJobCommand = ReactiveCommand.CreateFromTask(ExecuteCreateTaskFromJobAsync, hasSelectedJob);
         ValidateJobCommand = ReactiveCommand.CreateFromTask(ExecuteValidateJobAsync, hasSelectedJob);
 
-        // Job Creator Wizard
-    StartWizardCommand = ReactiveCommand.Create(StartWizard);
-    StartWizardFromSelectedCommand = ReactiveCommand.Create(StartWizardFromSelected, hasSelectedJob);
+        // Override the Create command to navigate to wizard instead of direct dialog
+        CreateWizardCommand = ReactiveCommand.Create(ExecuteCreateWizard);
 
         // Subscribe to command execution for logging
         CreateFromTemplateCommand.Subscribe(_ => _logger.LogDebug("Create from template command executed")).DisposeWith(_localDisposables);
         SaveAsTemplateCommand.Subscribe(_ => _logger.LogDebug("Save as template command executed for job {JobId}", SelectedProfile?.Id)).DisposeWith(_localDisposables);
         ImportJobCommand.Subscribe(_ => _logger.LogDebug("Import job command executed")).DisposeWith(_localDisposables);
         ExportJobCommand.Subscribe(_ => _logger.LogDebug("Export job command executed for job {JobId}", SelectedProfile?.Id)).DisposeWith(_localDisposables);
-        StartWizardCommand.Subscribe(_ => _logger.LogInformation("Job Creator wizard opened")).DisposeWith(_localDisposables);
-        StartWizardFromSelectedCommand.Subscribe(_ => _logger.LogInformation("Job Creator wizard opened from selected job {JobId}", SelectedProfile?.Id)).DisposeWith(_localDisposables);
+        CreateWizardCommand.Subscribe(_ => _logger.LogDebug("Create wizard command executed")).DisposeWith(_localDisposables);
     }
 
     private void SetupJobCollections()
     {
-        // Set up reactive updates for job-specific collections
-        this.WhenAnyValue(x => x.ShowTemplatesOnly, x => x.CategoryFilter)
-            .Subscribe(_ => UpdateJobCollections())
-            .DisposeWith(_localDisposables);
+        // Job collections are updated automatically when Profiles collection changes
+        // No additional reactive subscriptions needed for filtering
     }
 
     private void UpdateJobCollections()
@@ -397,6 +500,138 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update job collections");
+        }
+    }
+
+    #endregion
+
+    #region Content ViewModel Creation (Settings Pattern)
+
+    private object? CreateWizardViewModel()
+    {
+        try
+        {
+            // Create a new JobWizardViewModel for creating a new job
+            _logger.LogInformation("Creating new job wizard");
+
+            // Try to use the factory if available, otherwise fall back to placeholder
+            if (_viewModelFactory != null)
+            {
+                try
+                {
+                    var wizard = _viewModelFactory.Create<JobWizardViewModel>();
+                    _logger.LogDebug("Successfully created JobWizardViewModel via factory");
+
+                    // Subscribe to wizard completion to auto-refresh
+                    wizard.WhenAnyValue(w => w.Completed)
+                        .Where(completed => completed)
+                        .Take(1) // Only handle the first completion
+                        .Subscribe(async _ =>
+                        {
+                            try
+                            {
+                                _logger.LogInformation("Wizard completed, refreshing jobs list and selecting created job");
+
+                                // Wait a moment for the job to be fully persisted
+                                await Task.Delay(500);
+
+                                // Use the public refresh method
+                                await RefreshJobsAsync();
+
+                                // If a job was created, select it after refresh
+                                if (wizard.CreatedJobId.HasValue)
+                                {
+                                    await SelectCreatedJobAsync(wizard.CreatedJobId.Value);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to handle wizard completion");
+                            }
+                        })
+                        .DisposeWith(_localDisposables);
+
+                    return wizard;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to create JobWizardViewModel via factory, falling back to placeholder");
+                }
+            }
+
+            // Fallback to placeholder when factory is not available or fails
+            return new JobWizardPlaceholderViewModel("Create New Job", "Use the job creation wizard to create a new job profile with guided setup.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create job wizard");
+            return CreateMainJobsContentViewModel(); // Fallback to main view
+        }
+    }
+
+    private object? CreateWizardViewModelFromSelected()
+    {
+        try
+        {
+            if (SelectedProfile == null)
+            {
+                StatusMessage = "No job selected to edit";
+                return CreateMainJobsContentViewModel(); // Fallback to main view
+            }
+
+            // Create a JobWizardViewModel pre-populated with selected job data
+            _logger.LogInformation("Creating job wizard from selected job {JobId}", SelectedProfile.Id);
+
+            // Try to use the factory if available, otherwise fall back to placeholder
+            if (_viewModelFactory != null)
+            {
+                try
+                {
+                    var wizard = _viewModelFactory.Create<JobWizardViewModel>();
+
+                    // Pre-populate the wizard with selected job data
+                    wizard.PreselectJobName = SelectedProfile.Name + " (Copy)";
+                    wizard.PreselectJobDescription = SelectedProfile.Description;
+                    wizard.PreselectSerialId = SelectedProfile.SerialProfileId;
+                    wizard.PreselectSocatId = SelectedProfile.SocatProfileId;
+                    wizard.PreselectPowerId = SelectedProfile.PowerSupplyProfileId;
+                    wizard.IsEditMode = true;
+
+                    _logger.LogDebug("Successfully created JobWizardViewModel for editing job {JobId}", SelectedProfile.Id);
+                    return wizard;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to create JobWizardViewModel via factory for editing, falling back to placeholder");
+                }
+            }
+
+            // Fallback to placeholder when factory is not available or fails
+            return new JobWizardPlaceholderViewModel($"Edit Job: {SelectedProfile.Name}",
+                $"Use the job editing wizard to modify the job profile '{SelectedProfile.Name}' with guided setup.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create job wizard from selected job");
+            return CreateMainJobsContentViewModel(); // Fallback to main view
+        }
+    }
+
+    private object CreateMainJobsContentViewModel()
+    {
+        try
+        {
+            // Create a dedicated content ViewModel for the main jobs view
+            // This prevents circular references by not returning 'this'
+            _logger.LogDebug("Creating main jobs content ViewModel");
+
+            // Return wrapper ViewModel that will be resolved to JobsMainContentView by ViewLocator
+            return new JobsMainContentViewModel(this);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create main jobs content ViewModel");
+            return new JobsMainContentViewModel(this); // Safe fallback
         }
     }
 
@@ -610,181 +845,27 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         }
     }
 
+    private void ExecuteCreateWizard()
+    {
+        try
+        {
+            _logger.LogInformation("Navigating to create wizard");
+
+            // Navigate to the wizard by setting the sidebar selection
+            SelectedSideMenuItem = "Create (Wizard)";
+
+            StatusMessage = "Opening job creation wizard...";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to navigate to create wizard");
+            StatusMessage = "Error opening wizard";
+        }
+    }
+
     #endregion
 
     #region Helper Methods
-    private readonly IViewModelFactory _vmFactory;
-
-    private bool _isWizardMode;
-    public bool IsWizardMode
-    {
-        get => _isWizardMode;
-        set => this.RaiseAndSetIfChanged(ref _isWizardMode, value);
-    }
-
-    private JobWizardViewModel? _wizardVM;
-    public JobWizardViewModel? WizardVM
-    {
-        get => _wizardVM;
-        private set => this.RaiseAndSetIfChanged(ref _wizardVM, value);
-    }
-
-    private void StartWizard()
-    {
-        try
-        {
-            // Create wizard VM via factory
-            JobWizardViewModel wizard = _vmFactory.Create<JobWizardViewModel>();
-            WizardVM = wizard;
-            IsWizardMode = true;
-
-            // Handle cancel
-            wizard.CancelCommand.Subscribe(_ =>
-            {
-                IsWizardMode = false;
-                WizardVM = null;
-                _logger.LogInformation("Job Creator wizard cancelled");
-            }).DisposeWith(_localDisposables);
-
-            // Handle finish
-            wizard.FinishCommand.Subscribe(async _ =>
-            {
-                try
-                {
-                    if (wizard.Completed && wizard.CreatedJobId.HasValue)
-                    {
-                        // Refresh and select the newly created job
-                        await LoadProfilesAsync().ConfigureAwait(false);
-                        await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                        {
-                            SelectedProfile = Profiles.FirstOrDefault(p => p.Id == wizard.CreatedJobId!.Value)
-                                              ?? Profiles.FirstOrDefault();
-                        }).ConfigureAwait(false);
-
-                        StatusMessage = "Job created successfully";
-                        _logger.LogInformation("Job Creator wizard finished, selected job {JobId}", wizard.CreatedJobId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to finalize wizard result");
-                    StatusMessage = $"Error finalizing wizard: {ex.Message}";
-                }
-                finally
-                {
-                    IsWizardMode = false;
-                    WizardVM = null;
-                }
-            }).DisposeWith(_localDisposables);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to start Job Creator wizard");
-            StatusMessage = $"Error opening wizard: {ex.Message}";
-        }
-    }
-
-    /// <summary>
-    /// Starts the wizard and preselects combo boxes from the currently selected job profile.
-    /// </summary>
-    private void StartWizardFromSelected()
-    {
-        if (SelectedProfile == null)
-        {
-            StatusMessage = "No job selected to prefill wizard";
-            return;
-        }
-
-        try
-        {
-            JobWizardViewModel wizard = _vmFactory.Create<JobWizardViewModel>();
-            // Preselect IDs from current job
-            wizard.PreselectSerialId = SelectedProfile.SerialProfileId;
-            wizard.PreselectSocatId = SelectedProfile.SocatProfileId;
-            wizard.PreselectPowerId = SelectedProfile.PowerSupplyProfileId;
-            wizard.PreselectJobName = SelectedProfile.Name + " (Copy)";
-            wizard.PreselectJobDescription = SelectedProfile.Description ?? string.Empty;
-            WizardVM = wizard;
-            IsWizardMode = true;
-
-            // Wire cancel/finish like StartWizard
-            wizard.CancelCommand.Subscribe(_ =>
-            {
-                IsWizardMode = false;
-                WizardVM = null;
-                _logger.LogInformation("Job Creator wizard (from selected) cancelled");
-            }).DisposeWith(_localDisposables);
-
-            wizard.FinishCommand.Subscribe(async _ =>
-            {
-                try
-                {
-                    if (wizard.Completed && wizard.CreatedJobId.HasValue)
-                    {
-                        await LoadProfilesAsync().ConfigureAwait(false);
-                        await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                        {
-                            SelectedProfile = Profiles.FirstOrDefault(p => p.Id == wizard.CreatedJobId!.Value)
-                                              ?? Profiles.FirstOrDefault();
-                        }).ConfigureAwait(false);
-
-                        StatusMessage = "Job created successfully";
-                        _logger.LogInformation("Wizard (from selected) finished, selected job {JobId}", wizard.CreatedJobId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to finalize wizard result (from selected)");
-                    StatusMessage = $"Error finalizing wizard: {ex.Message}";
-                }
-                finally
-                {
-                    IsWizardMode = false;
-                    WizardVM = null;
-                }
-            }).DisposeWith(_localDisposables);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to start Job Creator wizard (from selected)");
-            StatusMessage = $"Error opening wizard: {ex.Message}";
-        }
-    }
-
-    // Side menu for Jobs management (settings-like sidebar)
-    public ObservableCollection<string> SideMenuItems { get; } = new(new[]
-    {
-        "Main View",
-        "Create (Wizard)",
-        "Edit (Wizard)"
-    });
-
-    private string? _selectedSideMenuItem;
-    public string? SelectedSideMenuItem
-    {
-        get => _selectedSideMenuItem;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _selectedSideMenuItem, value);
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                return;
-            }
-
-            switch (value)
-            {
-                case "Main View":
-                    IsWizardMode = false;
-                    break;
-                case "Create (Wizard)":
-                    StartWizard();
-                    break;
-                case "Edit (Wizard)":
-                    StartWizardFromSelected();
-                    break;
-            }
-        }
-    }
 
     /// <summary>
     /// Loads profiles and updates job-specific collections.
@@ -800,6 +881,57 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         {
             _logger.LogError(ex, "Failed to load job profiles");
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Public method to refresh the jobs list from external callers (like wizard completion).
+    /// </summary>
+    public async Task RefreshJobsAsync()
+    {
+        try
+        {
+            _logger.LogDebug("Refreshing jobs list");
+
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                RefreshCommand.Execute().Subscribe();
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to refresh jobs list");
+        }
+    }
+
+    /// <summary>
+    /// Selects a job by ID after a short delay to allow for the collection to be refreshed.
+    /// </summary>
+    /// <param name="jobId">The ID of the job to select.</param>
+    private async Task SelectCreatedJobAsync(int jobId)
+    {
+        try
+        {
+            // Wait a bit for the refresh to complete
+            await Task.Delay(500);
+
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                var jobToSelect = Profiles.FirstOrDefault(j => j.Id == jobId);
+                if (jobToSelect != null)
+                {
+                    SelectedProfile = jobToSelect;
+                    _logger.LogDebug("Selected newly created job {JobId}", jobId);
+                }
+                else
+                {
+                    _logger.LogWarning("Could not find newly created job {JobId} for selection", jobId);
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to select newly created job {JobId}", jobId);
         }
     }
 

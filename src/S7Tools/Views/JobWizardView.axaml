@@ -4,7 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels"
              xmlns:converters="using:S7Tools.Converters"
-             xmlns:views="using:S7Tools.Views"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:fa="using:FluentAvalonia.UI.Controls"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d"
              x:Class="S7Tools.Views.JobWizardView"
              x:DataType="vm:JobWizardViewModel"
@@ -32,53 +34,307 @@
         <ProgressBar Grid.Column="1" Width="140" IsVisible="{Binding IsBusy}" IsIndeterminate="True" />
       </Grid>
 
-      <!-- 1) Name/Description -->
-      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Create Job Wizard — Serial" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+      <!-- Step 1: Serial Configuration -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
+              IsVisible="{Binding IsSerialStep}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Step 1: Job Details &amp; Serial Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+
+          <!-- Job Name and Description -->
           <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Job Name:" Foreground="#CCCCCC" VerticalAlignment="Center" />
             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding JobName}" Watermark="job name"/>
 
             <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="#CCCCCC" VerticalAlignment="Center" />
             <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding JobDescription}" Watermark="optional description"/>
           </Grid>
-        </StackPanel>
-      </Border>
 
-      <!-- 2) Select Serial Profile + info -->
-      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16">
-        <StackPanel Spacing="12">
-          <TextBlock Text="1) Select Serial Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
-          <ComboBox ItemsSource="{Binding SerialProfiles}" SelectedItem="{Binding SelectedSerial}">
-            <ComboBox.ItemTemplate>
-              <DataTemplate>
-                <TextBlock Text="{Binding Name}"/>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+          <!-- Serial Profile Selection -->
+          <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
+            <TextBlock Grid.Column="0" Text="Serial Profile:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding SerialProfiles}" SelectedItem="{Binding SelectedSerial}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
 
+          <!-- Serial Profile Details -->
           <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
             <StackPanel Spacing="6">
-              <TextBlock Text="Serial Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
+              <TextBlock Text="Serial Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
               <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSerial.Name}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Baud:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSerial.Configuration.BaudRate}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSerial.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Baud Rate:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSerial.Configuration.BaudRate, FallbackValue='N/A'}" Foreground="#CCCCCC" />
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Flags:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSerial.Flags}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSerial.Flags, FallbackValue='N/A'}" Foreground="#CCCCCC" />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- Port Discovery Section -->
+          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="12">
+              <!-- Row 1: Port Discovery Title + Scan Ports Button -->
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Text="Port Discovery"
+                           FontSize="16"
+                           FontWeight="SemiBold"
+                           Foreground="#CCCCCC"
+                           VerticalAlignment="Center" />
+
+                <Button Grid.Column="2"
+                        Background="#0E639C"
+                        Foreground="White"
+                        BorderThickness="0"
+                        Padding="12,8"
+                        Command="{Binding ScanPortsCommand}"
+                        IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icons:Icon Value="fa-solid fa-search" Width="16" Height="16" />
+                    <TextBlock Text="Scan Ports" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+
+              <!-- Row 2: The wrap list with the scanned ports -->
+              <Grid Background="Transparent">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                  <ListBox x:Name="PortsListBox"
+                           Height="160"
+                           ItemsSource="{Binding AvailablePorts}"
+                           SelectedItem="{Binding SelectedPort}"
+                           Background="#3C3C3C"
+                           Foreground="#CCCCCC"
+                           BorderBrush="#464647"
+                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                           ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                           Focusable="False">
+                    <!-- Use a WrapPanel so ports fill top->down then next column with proper spacing -->
+                    <ListBox.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
+                      </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+
+                    <ListBox.ItemTemplate>
+                      <DataTemplate DataType="sys:String">
+                        <!-- No rounded corners, tighter width, proper spacing -->
+                        <Border Background="#2D2D2D"
+                                CornerRadius="0"
+                                Padding="8,6"
+                                Margin="6,3"
+                                Width="130"
+                                Height="26">
+                          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                            <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#0E639C" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" />
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </ScrollViewer>
+
+                <!-- Overlay: semi-transparent backdrop with a centered ProgressRing when scanning -->
+                <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                  <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <fa:ProgressRing Width="64" Height="64" IsActive="{Binding IsScanning}" />
+                  </Grid>
+                </Border>
               </Grid>
             </StackPanel>
           </Border>
         </StackPanel>
       </Border>
 
-      <!-- 3) Serial Device Scanner (same control as in settings) -->
-      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Serial Devices" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
-          <views:SerialPortScannerView DataContext="{Binding SerialScanner}" />
+      <!-- Step 2: Socat Profile Selection -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
+              IsVisible="{Binding IsSocatStep}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Step 2: Socat Network Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+
+          <!-- Socat Profile Selection -->
+          <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
+            <TextBlock Grid.Column="0" Text="Socat Profile:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding SocatProfiles}" SelectedItem="{Binding SelectedSocat}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
+
+          <!-- Socat Profile Details -->
+          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Socat Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSocat.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="TCP Port:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSocat.Configuration.TcpPort, FallbackValue='N/A'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="TCP Host:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSocat.Configuration.TcpHost, FallbackValue='All Interfaces'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Flags:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSocat.Flags, FallbackValue='N/A'}" Foreground="#CCCCCC" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <!-- Step 3: Power Supply Profile Selection -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
+              IsVisible="{Binding IsPowerStep}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Step 3: Power Supply Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+
+          <!-- Power Supply Profile Selection -->
+          <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
+            <TextBlock Grid.Column="0" Text="Power Profile:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding PowerProfiles}" SelectedItem="{Binding SelectedPower}">
+              <ComboBox.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Text="{Binding Name}"/>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+          </Grid>
+
+          <!-- Power Supply Profile Details -->
+          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Power Supply Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPower.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Host:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPowerHost, FallbackValue='N/A'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Port:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPowerPort, FallbackValue='N/A'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Device ID:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedPowerDeviceId, FallbackValue='N/A'}" Foreground="#CCCCCC" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <!-- Step 4: Memory Region Configuration -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
+              IsVisible="{Binding IsMemoryStep}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Step 4: Memory Region Configuration" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+
+          <!-- Memory Configuration -->
+          <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Start Address:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding MemoryStart}" Watermark="e.g., 0x1000"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Length (bytes):" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding MemoryLength}" Watermark="e.g., 1024"/>
+          </Grid>
+
+          <!-- Memory Region Preview -->
+          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Memory Region Preview" FontWeight="SemiBold" Foreground="#CCCCCC" />
+              <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Start:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding MemoryStart, FallbackValue='Not set'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Length:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MemoryLength, FallbackValue='Not set'}" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="End Address:" Foreground="#CCCCCC" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding MemoryEndAddress, FallbackValue='Not calculated'}" Foreground="#CCCCCC" />
+              </Grid>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <!-- Step 5: Timing and Output Configuration -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
+              IsVisible="{Binding IsTimingOutputStep}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Step 5: Timing &amp; Output Configuration" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+
+          <!-- Timing Configuration -->
+          <Grid ColumnDefinitions="150,*,150,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="8">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Power On Time:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding PowerOnTimeMs}" Watermark="milliseconds"/>
+
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Power Off Delay:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding PowerOffDelayMs}" Watermark="milliseconds"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Payloads Path:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" ColumnDefinitions="*,Auto">
+              <TextBox Grid.Column="0" Text="{Binding PayloadsBasePath}" Watermark="path to payloads"/>
+              <Button Grid.Column="1" Content="Browse" Command="{Binding BrowsePayloadsPathCommand}" Margin="8,0,0,0"/>
+            </Grid>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Output Path:" Foreground="#CCCCCC" VerticalAlignment="Center" />
+            <Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" ColumnDefinitions="*,Auto">
+              <TextBox Grid.Column="0" Text="{Binding OutputPath}" Watermark="output directory"/>
+              <Button Grid.Column="1" Content="Browse" Command="{Binding BrowseOutputPathCommand}" Margin="8,0,0,0"/>
+            </Grid>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Step 6: Review and Confirm -->
+      <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
+              IsVisible="{Binding IsReviewStep}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Step 6: Review &amp; Confirm" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
+
+          <!-- Job Summary -->
+          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="8">
+              <TextBlock Text="Job Configuration Summary" FontWeight="SemiBold" Foreground="#CCCCCC" />
+
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Job Name:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding JobName, FallbackValue='Unnamed Job'}" Foreground="#FFFFFF" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding JobDescription, FallbackValue='No description'}" Foreground="#FFFFFF" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Serial Profile:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSerial.Name, FallbackValue='Not selected'}" Foreground="#FFFFFF" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Socat Profile:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSocat.Name, FallbackValue='Not selected'}" Foreground="#FFFFFF" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Power Profile:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedPower.Name, FallbackValue='Not selected'}" Foreground="#FFFFFF" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Memory Region:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding MemoryStart, StringFormat='{}{0} - {1} bytes', FallbackValue='Not configured'}" Foreground="#FFFFFF" />
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Power Timing:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding PowerOnTimeMs, StringFormat='{}On: {0}ms, Off: {1}ms', FallbackValue='Not configured'}" Foreground="#FFFFFF" />
+
+                <TextBlock Grid.Row="7" Grid.Column="0" Text="Payloads:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding PayloadsBasePath, FallbackValue='Not specified'}" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" />
+
+                <TextBlock Grid.Row="8" Grid.Column="0" Text="Output:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding OutputPath, FallbackValue='Not specified'}" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" />
+              </Grid>
+            </StackPanel>
+          </Border>
         </StackPanel>
       </Border>
 

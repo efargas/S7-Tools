@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
@@ -59,6 +60,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private PowerSupplyProfile? _selectedPower;
     // Removed power device scan from wizard per UX guidance
 
+    // Port scanning
+    private bool _isScanning;
+    private string? _selectedPort;
+    private readonly CancellationTokenSource _scanCancellationTokenSource = new();
+
     // Memory
     private uint _memoryStart = 0x20000000;
     private uint _memoryLength = 0x1000;
@@ -94,6 +100,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         SerialProfiles = new ObservableCollection<SerialPortProfile>();
         SocatProfiles = new ObservableCollection<SocatProfile>();
         PowerProfiles = new ObservableCollection<PowerSupplyProfile>();
+        AvailablePorts = new ObservableCollection<string>();
         // Initialize memory presets
         MemoryPresets.Add(new MemoryPreset("4KB Boot Sector", 0x20000000u, 0x1000u));
         MemoryPresets.Add(new MemoryPreset("8KB Region", 0x20001000u, 0x2000u));
@@ -163,6 +170,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         BrowsePayloadsPathCommand = ReactiveCommand.CreateFromTask(BrowsePayloadsPathAsync);
         BrowseOutputPathCommand = ReactiveCommand.CreateFromTask(BrowseOutputPathAsync);
 
+        // Port scanning
+        ScanPortsCommand = ReactiveCommand.CreateFromTask(ScanPortsAsync);
+
         // Load data
         _ = LoadAsync();
     }
@@ -177,6 +187,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public ObservableCollection<SerialPortProfile> SerialProfiles { get; }
     public ObservableCollection<SocatProfile> SocatProfiles { get; }
     public ObservableCollection<PowerSupplyProfile> PowerProfiles { get; }
+    public ObservableCollection<string> AvailablePorts { get; }
     // Serial device scanner VM for UI embedding
     public SerialPortScannerViewModel SerialScanner { get; }
 
@@ -186,14 +197,38 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public ReactiveCommand<Unit, Unit> FinishCommand { get; }
     public ReactiveCommand<Unit, Unit> BrowsePayloadsPathCommand { get; }
     public ReactiveCommand<Unit, Unit> BrowseOutputPathCommand { get; }
+    public ReactiveCommand<Unit, Unit> ScanPortsCommand { get; }
 
     public bool CancelRequested { get; private set; }
 
     public WizardStep CurrentStep
     {
         get => _currentStep;
-        set => this.RaiseAndSetIfChanged(ref _currentStep, value);
+        set
+        {
+            var oldValue = _currentStep;
+            this.RaiseAndSetIfChanged(ref _currentStep, value);
+
+            // Notify step visibility changes when the step actually changes
+            if (oldValue != value)
+            {
+                this.RaisePropertyChanged(nameof(IsSerialStep));
+                this.RaisePropertyChanged(nameof(IsSocatStep));
+                this.RaisePropertyChanged(nameof(IsPowerStep));
+                this.RaisePropertyChanged(nameof(IsMemoryStep));
+                this.RaisePropertyChanged(nameof(IsTimingOutputStep));
+                this.RaisePropertyChanged(nameof(IsReviewStep));
+            }
+        }
     }
+
+    // Helper properties for step visibility
+    public bool IsSerialStep => CurrentStep == WizardStep.Serial;
+    public bool IsSocatStep => CurrentStep == WizardStep.Socat;
+    public bool IsPowerStep => CurrentStep == WizardStep.Power;
+    public bool IsMemoryStep => CurrentStep == WizardStep.Memory;
+    public bool IsTimingOutputStep => CurrentStep == WizardStep.TimingOutput;
+    public bool IsReviewStep => CurrentStep == WizardStep.Review;
 
     public string JobName
     {
@@ -233,6 +268,18 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         private set => this.RaiseAndSetIfChanged(ref _status, value);
     }
 
+    public bool IsScanning
+    {
+        get => _isScanning;
+        private set => this.RaiseAndSetIfChanged(ref _isScanning, value);
+    }
+
+    public string? SelectedPort
+    {
+        get => _selectedPort;
+        set => this.RaiseAndSetIfChanged(ref _selectedPort, value);
+    }
+
     public SerialPortProfile? SelectedSerial
     {
         get => _selectedSerial;
@@ -255,6 +302,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             this.RaisePropertyChanged(nameof(PowerConfigurationType));
             this.RaisePropertyChanged(nameof(PowerConfigurationHost));
             this.RaisePropertyChanged(nameof(PowerConfigurationPort));
+            this.RaisePropertyChanged(nameof(SelectedPowerHost));
+            this.RaisePropertyChanged(nameof(SelectedPowerPort));
+            this.RaisePropertyChanged(nameof(SelectedPowerDeviceId));
         }
     }
 
@@ -263,13 +313,40 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public uint MemoryStart
     {
         get => _memoryStart;
-        set => this.RaiseAndSetIfChanged(ref _memoryStart, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _memoryStart, value);
+            this.RaisePropertyChanged(nameof(MemoryEndAddress));
+        }
     }
 
     public uint MemoryLength
     {
         get => _memoryLength;
-        set => this.RaiseAndSetIfChanged(ref _memoryLength, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _memoryLength, value);
+            this.RaisePropertyChanged(nameof(MemoryEndAddress));
+        }
+    }
+
+    /// <summary>
+    /// Gets the calculated end address of the memory region (Start + Length).
+    /// </summary>
+    public string MemoryEndAddress
+    {
+        get
+        {
+            try
+            {
+                var endAddress = MemoryStart + MemoryLength;
+                return $"0x{endAddress:X}";
+            }
+            catch
+            {
+                return "Not calculated";
+            }
+        }
     }
 
     public MemoryPreset? SelectedMemoryPreset
@@ -283,6 +360,51 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 MemoryStart = value.Start;
                 MemoryLength = value.Length;
             }
+        }
+    }
+
+    /// <summary>
+    /// Gets the host from the selected power supply configuration (if it's ModbusTcp).
+    /// </summary>
+    public string SelectedPowerHost
+    {
+        get
+        {
+            if (SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp)
+            {
+                return modbusTcp.Host;
+            }
+            return "N/A";
+        }
+    }
+
+    /// <summary>
+    /// Gets the port from the selected power supply configuration (if it's ModbusTcp).
+    /// </summary>
+    public string SelectedPowerPort
+    {
+        get
+        {
+            if (SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp)
+            {
+                return modbusTcp.Port.ToString();
+            }
+            return "N/A";
+        }
+    }
+
+    /// <summary>
+    /// Gets the device ID from the selected power supply configuration (if it's ModbusTcp).
+    /// </summary>
+    public string SelectedPowerDeviceId
+    {
+        get
+        {
+            if (SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp)
+            {
+                return modbusTcp.DeviceId.ToString();
+            }
+            return "N/A";
         }
     }
 
@@ -486,8 +608,57 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         return Unit.Default;
     }
 
-    public bool Completed { get; private set; }
-    public int? CreatedJobId { get; private set; }
+    private async Task ScanPortsAsync()
+    {
+        if (IsScanning)
+        {
+            return;
+        }
+
+        try
+        {
+            IsScanning = true;
+            Status = "Scanning for ports...";
+
+            // Execute the scanner's scan command and wait for completion
+            await SerialScanner.ScanPortsCommand.Execute();
+
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                AvailablePorts.Clear();
+                foreach (var port in SerialScanner.DiscoveredPorts)
+                {
+                    AvailablePorts.Add(port.PortName);
+                }
+
+                Status = $"Found {AvailablePorts.Count} port(s)";
+            }).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to scan ports in job wizard");
+            Status = $"Error scanning ports: {ex.Message}";
+        }
+        finally
+        {
+            IsScanning = false;
+        }
+    }
+
+    private bool _completed;
+    private int? _createdJobId;
+
+    public bool Completed
+    {
+        get => _completed;
+        private set => this.RaiseAndSetIfChanged(ref _completed, value);
+    }
+
+    public int? CreatedJobId
+    {
+        get => _createdJobId;
+        private set => this.RaiseAndSetIfChanged(ref _createdJobId, value);
+    }
 
     public void Dispose()
     {
@@ -500,6 +671,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         if (disposing)
         {
             _disposables.Dispose();
+            _scanCancellationTokenSource?.Cancel();
+            _scanCancellationTokenSource?.Dispose();
+            SerialScanner?.Dispose();
             // no resources
         }
     }

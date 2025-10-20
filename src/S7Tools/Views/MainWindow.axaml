@@ -296,7 +296,19 @@
                         <!-- Main Content Container using ViewLocator -->
                         <ContentControl Grid.Row="1"
                                        Content="{Binding Navigation.MainContent}"
-                                       Background="#1E1E1E" />
+                                       Background="#1E1E1E">
+                            <ContentControl.DataTemplates>
+                                <!-- Implicit DataTemplate for JobWizardViewModel -->
+                                <DataTemplate DataType="vm:JobWizardViewModel">
+                                    <views:JobWizardView />
+                                </DataTemplate>
+
+                                <!-- Implicit DataTemplate for JobsManagementViewModel (uses content switching) -->
+                                <DataTemplate DataType="vm:JobsManagementViewModel">
+                                    <views:JobsMainView />
+                                </DataTemplate>
+                            </ContentControl.DataTemplates>
+                        </ContentControl>
                     </Grid>
                 </Border>
             </Grid>
