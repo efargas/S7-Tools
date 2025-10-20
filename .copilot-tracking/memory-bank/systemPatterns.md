@@ -1,9 +1,49 @@
 # System Patterns: S7Tools — Consolidated Architecture Guide (v2.0)
 
-Last Updated: 2025-10-15
-Scope: Architecture, patterns, rules, critical fixes, logging/debugging, localization, do/don’t, memory bank usage, task workflow, templates, and testing standards.
+Last Updated: 2025-10-20
+Scope: Architecture, patterns, rules, critical fixes, logging/debugging, localization, do/don't, memory bank usage, task workflow, templates, and testing standards.
 
 This living guide consolidates the current rules and lessons for S7Tools. It supersedes previous scattered notes and removes deprecated or duplicate content.
+
+---
+
+## Constitutional Governance Framework
+
+**Reference**: `.specify/memory/constitution.md` v1.0.0 (Ratified: 2025-10-20)
+
+S7Tools operates under a formal constitutional governance framework that establishes **5 NON-NEGOTIABLE core principles**:
+
+### Article II: Clean Architecture Boundaries
+- Domain (S7Tools.Core) has NO external dependencies
+- Application layer depends only on Domain
+- Infrastructure layers depend only on Domain
+- All boundaries strictly enforced via project references
+
+### Article III: MVVM with ReactiveUI
+- All ViewModels inherit from `ReactiveObject`
+- Properties use `RaiseAndSetIfChanged` pattern
+- Commands use `ReactiveCommand` with validation
+- No code-behind logic in Views
+
+### Article IV: Test-First Quality Gates (NON-NEGOTIABLE)
+- ALL new features require unit tests BEFORE implementation
+- Minimum 80% code coverage for new code
+- Integration tests for complex workflows
+- No feature commits without accompanying test commits
+
+### Article V: Thread Safety & Concurrency
+- Use `IUIThreadService` for all UI thread operations
+- Implement Internal Method Pattern for semaphore operations
+- Never block UI thread with I/O operations
+- Proper async/await patterns with `ConfigureAwait(false)`
+
+### Article VI: Observability, Versioning & Simplicity
+- Structured logging via `ILogger<T>` with semantic context
+- All public APIs have XML documentation
+- Follow semantic versioning for all releases
+- Prefer simple, maintainable solutions over complex abstractions
+
+**Constitutional Compliance**: All templates in `.specify/templates/` require Constitution Check sections. Any violation of these principles requires formal amendment process.
 
 ---
 
