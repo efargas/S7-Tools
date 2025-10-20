@@ -13,7 +13,7 @@ Sync Impact Report
 - Templates reviewed:
 	- .specify/templates/plan-template.md ✅ aligned (Constitution Check placeholder retained)
 	- .specify/templates/spec-template.md ✅ aligned
-	- .specify/templates/tasks-template.md ⚠ pending (task categories should be reviewed to reflect "Test-First" enforcement)
+	- .specify/templates/tasks-template.md ✅ aligned
 - Follow-up TODOs:
 	- None; all template placeholders in this file replaced. If a project-level ratification date formal record is required,
 		add it to project governance metadata outside this file.
