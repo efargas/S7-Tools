@@ -9,9 +9,9 @@ This PR establishes the first formal governance framework for S7Tools through a 
 ### 📜 Constitution (`.specify/memory/constitution.md`)
 - **Version**: 1.0.0
 - **Ratified**: October 20, 2025
-- **Core Principles**: 
+- **Core Principles**:
   - I. Clean Architecture & Layered Boundaries
-  - II. MVVM (ReactiveUI) & UI Contracts  
+  - II. MVVM (ReactiveUI) & UI Contracts
   - III. Test-First Quality Gates (NON-NEGOTIABLE)
   - IV. Thread Safety & Concurrency Contracts
   - V. Observability, Versioning & Simplicity
@@ -21,7 +21,7 @@ This PR establishes the first formal governance framework for S7Tools through a 
 - **Spec Template**: Added Constitution Compliance section for impact assessment
 - **Tasks Template**: Enforced test-first discipline, made tests mandatory per Article III
 
-### 📚 Documentation  
+### 📚 Documentation
 - **CHANGELOG.md**: Added comprehensive ratification record with technical details
 - **Sync Impact Report**: Included in constitution file documenting all changes and template alignments
 
@@ -31,7 +31,7 @@ This PR introduces several **non-negotiable** requirements:
 
 ### Test-First Discipline (Article III)
 - All user stories MUST include tests written FIRST that FAIL before implementation
-- Tests follow AAA pattern (Arrange-Act-Assert) 
+- Tests follow AAA pattern (Arrange-Act-Assert)
 - Async tests use `async Task` (no `.Result`/`.Wait`)
 - CI must pass before merging
 
@@ -62,7 +62,7 @@ This PR introduces several **non-negotiable** requirements:
 - Existing code grandfathered but should migrate toward constitutional compliance
 - New changes to existing features must follow constitutional requirements
 
-### For New Features  
+### For New Features
 - Must include Constitution Check in planning phase
 - All user stories require test-first implementation
 - Service registration must follow constitutional patterns
@@ -70,7 +70,7 @@ This PR introduces several **non-negotiable** requirements:
 ## Validation
 
 - [x] All template placeholders resolved with concrete governance rules
-- [x] Templates updated to reference constitution requirements  
+- [x] Templates updated to reference constitution requirements
 - [x] CHANGELOG entry created with ratification record
 - [x] Sync Impact Report documents all changes and alignments
 - [x] Constitution version properly set (1.0.0) with ratification date
