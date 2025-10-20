@@ -19,7 +19,8 @@
 #   Text mode: FEATURE_DIR:... \n AVAILABLE_DOCS: \n ✓/✗ file.md
 #   Paths only: REPO_ROOT: ... \n BRANCH: ... \n FEATURE_DIR: ... etc.
 
-set -e
+set -euo pipefail
+trap 'echo "ERROR: Script failed at line $LINENO" >&2' ERR
 
 # Parse command line arguments
 JSON_MODE=false
