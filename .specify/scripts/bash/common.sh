@@ -157,5 +157,19 @@ EOF
 }
 
 check_file() { [[ -f "$1" ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
-check_dir() { [[ -d "$1" && -n $(ls -A "$1" 2>/dev/null) ]] && echo "  ✓ $2" || echo "  ✗ $2"; }
+check_dir() {
+  local dir="$1"
+  local label="$2"
+  if [[ -d "$dir" ]]; then
+    # Safely detect if directory has any non-hidden or hidden (non . and ..) entries
+    shopt -s nullglob dotglob
+    local entries=("$dir"/*)
+    shopt -u nullglob dotglob
+    if (( ${#entries[@]} > 0 )); then
+      echo "  ✓ $label"
+      return
+    fi
+  fi
+  echo "  ✗ $label"
+}
 
