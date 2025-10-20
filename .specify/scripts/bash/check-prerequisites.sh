@@ -20,7 +20,7 @@
 #   Paths only: REPO_ROOT: ... \n BRANCH: ... \n FEATURE_DIR: ... etc.
 
 set -euo pipefail
-trap 'echo "ERROR: Script failed at line $LINENO" >&2' ERR
+trap 'rc=$?; echo "ERROR: Script failed at line $LINENO (exit $rc)" >&2; exit $rc' ERR
 
 # Parse command line arguments
 JSON_MODE=false
