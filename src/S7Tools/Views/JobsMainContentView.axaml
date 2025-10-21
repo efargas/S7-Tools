@@ -6,7 +6,6 @@
              xmlns:conv="using:S7Tools.Converters"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
-             xmlns:jobsViews="using:S7Tools.Views.Jobs"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.JobsMainContentView"
              x:DataType="vm:JobsMainContentViewModel"
@@ -16,17 +15,7 @@
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
-  <!-- Main Grid with collapsible right panel -->
-  <Grid x:Name="MainGrid">
-    <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="*" />
-      <ColumnDefinition Width="48" />
-      <ColumnDefinition Width="Auto" />
-      <ColumnDefinition Width="0" MinWidth="300" MaxWidth="600" />
-    </Grid.ColumnDefinitions>
-
-    <!-- Left Panel: Jobs Management -->
-    <ScrollViewer Grid.Column="0">
+  <ScrollViewer>
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Jobs Management"
@@ -405,123 +394,5 @@
         </StackPanel>
       </Border>
     </StackPanel>
-    </ScrollViewer>
-
-    <!-- Right Panel Activity Bar (when collapsed) -->
-    <Border Grid.Column="1"
-            x:Name="ActivityBar"
-            Background="#2D2D30"
-            BorderBrush="#464647"
-            BorderThickness="1,0,0,0"
-            Width="48"
-            IsVisible="True">
-      <StackPanel Spacing="8" Margin="8">
-        <!-- Job Info Toggle Button -->
-        <Button x:Name="JobInfoToggle"
-                Width="32"
-                Height="32"
-                Background="Transparent"
-                BorderThickness="0"
-                Command="{Binding ToggleJobInfoCommand}"
-                ToolTip.Tip="Job Information">
-          <icons:Icon Value="fa-solid fa-info-circle"
-                      Width="16"
-                      Height="16"
-                      Foreground="#CCCCCC" />
-        </Button>
-
-        <!-- Other activity buttons can go here -->
-        <Button Width="32"
-                Height="32"
-                Background="Transparent"
-                BorderThickness="0"
-                ToolTip.Tip="Job History">
-          <icons:Icon Value="fa-solid fa-history"
-                      Width="16"
-                      Height="16"
-                      Foreground="#666666" />
-        </Button>
-
-        <Button Width="32"
-                Height="32"
-                Background="Transparent"
-                BorderThickness="0"
-                ToolTip.Tip="Job Templates">
-          <icons:Icon Value="fa-solid fa-file-alt"
-                      Width="16"
-                      Height="16"
-                      Foreground="#666666" />
-        </Button>
-      </StackPanel>
-    </Border>
-
-    <!-- GridSplitter for resizing -->
-    <GridSplitter Grid.Column="2"
-                  x:Name="JobInfoSplitter"
-                  Background="#464647"
-                  Width="4"
-                  IsVisible="{Binding IsJobInfoVisible}"
-                  IsHitTestVisible="{Binding IsJobInfoVisible}"
-                  VerticalAlignment="Stretch"
-                  ResizeDirection="Columns"
-                  ShowsPreview="True"
-                  Cursor="SizeWestEast" />
-
-    <!-- Job Information Panel -->
-    <Border Grid.Column="3"
-            x:Name="JobInfoPanel"
-            Background="#252526"
-            BorderBrush="#464647"
-            BorderThickness="1,0,0,0"
-            IsVisible="False">
-      <Grid RowDefinitions="Auto,*">
-        <!-- Panel Header with Close Button -->
-        <Border Grid.Row="0"
-                Background="#2D2D30"
-                BorderBrush="#464647"
-                BorderThickness="0,0,0,1"
-                Padding="12,8">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <icons:Icon Grid.Column="0"
-                        Value="fa-solid fa-info-circle"
-                        Width="16"
-                        Height="16"
-                        Foreground="#CCCCCC"
-                        VerticalAlignment="Center"
-                        Margin="0,0,8,0" />
-
-            <TextBlock Grid.Column="1"
-                       Text="Job Information"
-                       FontSize="16"
-                       FontWeight="SemiBold"
-                       Foreground="#CCCCCC"
-                       VerticalAlignment="Center" />
-
-            <Button Grid.Column="2"
-                    x:Name="CloseJobInfoPanel"
-                    Width="24"
-                    Height="24"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Click="OnCloseJobInfoPanelClick"
-                    ToolTip.Tip="Close Panel">
-              <icons:Icon Value="fa-solid fa-times"
-                          Width="12"
-                          Height="12"
-                          Foreground="#CCCCCC" />
-            </Button>
-          </Grid>
-        </Border>
-
-        <!-- Job Info Display Content -->
-        <jobsViews:JobInfoDisplayView Grid.Row="1" x:Name="JobInfoDisplay" />
-      </Grid>
-    </Border>
-  </Grid>
+  </ScrollViewer>
 </UserControl>
