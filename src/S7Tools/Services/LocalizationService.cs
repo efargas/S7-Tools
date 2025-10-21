@@ -48,7 +48,7 @@ public sealed class LocalizationService : ILocalizationService
 
         try
         {
-            var value = _resourceManager.GetString(key, _currentUICulture);
+            string? value = _resourceManager.GetString(key, _currentUICulture);
             return value ?? key;
         }
         catch
@@ -60,7 +60,7 @@ public sealed class LocalizationService : ILocalizationService
     /// <inheritdoc />
     public string GetString(string key, params object[] args)
     {
-        var format = GetString(key);
+        string format = GetString(key);
 
         if (args == null || args.Length == 0)
         {
@@ -89,7 +89,7 @@ public sealed class LocalizationService : ILocalizationService
 
         try
         {
-            var result = _resourceManager.GetString(key, _currentUICulture);
+            string? result = _resourceManager.GetString(key, _currentUICulture);
             if (result != null)
             {
                 value = result;
@@ -112,8 +112,8 @@ public sealed class LocalizationService : ILocalizationService
             return false;
         }
 
-        var bestMatch = GetBestMatchingCulture(culture);
-        var oldCulture = _currentUICulture;
+        CultureInfo bestMatch = GetBestMatchingCulture(culture);
+        CultureInfo oldCulture = _currentUICulture;
 
         if (bestMatch.Equals(_currentUICulture))
         {
@@ -169,7 +169,7 @@ public sealed class LocalizationService : ILocalizationService
     /// <inheritdoc />
     public void ResetToSystemCulture()
     {
-        var systemCulture = CultureInfo.InstalledUICulture;
+        CultureInfo systemCulture = CultureInfo.InstalledUICulture;
         SetCulture(systemCulture);
     }
 
@@ -195,7 +195,7 @@ public sealed class LocalizationService : ILocalizationService
         }
 
         // Exact match
-        var exactMatch = _availableCultures.FirstOrDefault(c =>
+        CultureInfo? exactMatch = _availableCultures.FirstOrDefault(c =>
             c.Name.Equals(culture.Name, StringComparison.OrdinalIgnoreCase));
         if (exactMatch != null)
         {
@@ -203,7 +203,7 @@ public sealed class LocalizationService : ILocalizationService
         }
 
         // Language match (e.g., "en" for "en-US")
-        var languageMatch = _availableCultures.FirstOrDefault(c =>
+        CultureInfo? languageMatch = _availableCultures.FirstOrDefault(c =>
             c.TwoLetterISOLanguageName.Equals(culture.TwoLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
         if (languageMatch != null)
         {
@@ -213,7 +213,7 @@ public sealed class LocalizationService : ILocalizationService
         // Parent culture match
         if (!culture.IsNeutralCulture)
         {
-            var parentMatch = _availableCultures.FirstOrDefault(c =>
+            CultureInfo? parentMatch = _availableCultures.FirstOrDefault(c =>
                 c.Name.Equals(culture.Parent.Name, StringComparison.OrdinalIgnoreCase));
             if (parentMatch != null)
             {
@@ -235,7 +235,7 @@ public sealed class LocalizationService : ILocalizationService
         // Add other supported cultures
         // Note: In a real implementation, you would scan for available resource files
         // or maintain a configuration of supported cultures
-        var supportedCultureNames = new[]
+        string[] supportedCultureNames = new[]
         {
             "en-US", // English (United States)
             "en-GB", // English (United Kingdom)
@@ -259,7 +259,7 @@ public sealed class LocalizationService : ILocalizationService
             "hu-HU"  // Hungarian (Hungary)
         };
 
-        foreach (var cultureName in supportedCultureNames)
+        foreach (string? cultureName in supportedCultureNames)
         {
             try
             {

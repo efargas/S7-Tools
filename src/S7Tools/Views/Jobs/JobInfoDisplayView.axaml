@@ -1,0 +1,265 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:S7Tools.ViewModels.Jobs"
+             xmlns:profiles="clr-namespace:S7Tools.ViewModels.Profiles"
+             xmlns:converters="clr-namespace:S7Tools.Converters"
+             xmlns:controls="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.Jobs.JobInfoDisplayView"
+             x:DataType="vm:JobInfoDisplayViewModel">
+
+  <Design.DataContext>
+    <vm:JobInfoDisplayViewModel />
+  </Design.DataContext>
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.SectionHeader">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Margin" Value="0,8,0,4" />
+      <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}" />
+    </Style>
+
+    <Style Selector="TextBlock.InfoLabel">
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Margin" Value="0,2" />
+      <Setter Property="MinWidth" Value="120" />
+    </Style>
+
+    <Style Selector="TextBlock.InfoValue">
+      <Setter Property="Margin" Value="8,2,0,2" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection">
+      <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="Margin" Value="0,4" />
+    </Style>
+
+    <Style Selector="Border.WarningSection">
+      <Setter Property="Background" Value="{DynamicResource SystemFillColorCriticalBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="Margin" Value="0,8,0,4" />
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer>
+    <StackPanel Spacing="8" Margin="12">
+
+      <!-- Job Basic Information -->
+      <Border Classes="ProfileSection">
+        <StackPanel>
+          <TextBlock Classes="SectionHeader" Text="Job Information" />
+          <TextBlock Text="{Binding JobBasicInfo}"
+                     TextWrapping="Wrap"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- Missing Profiles Warning -->
+      <Border Classes="WarningSection"
+              IsVisible="{Binding HasMissingProfiles}">
+        <StackPanel>
+          <TextBlock Classes="SectionHeader"
+                     Text="⚠️ Missing Profiles"
+                     Foreground="{DynamicResource SystemFillColorCriticalBrush}" />
+          <ItemsControl ItemsSource="{Binding MissingProfileWarnings}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding}"
+                           Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                           Margin="0,2" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Serial Profile Details -->
+      <Border Classes="ProfileSection"
+              IsVisible="{Binding SerialProfileDetails, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel>
+          <TextBlock Classes="SectionHeader" Text="📡 Serial Port Profile" />
+          <ContentControl Content="{Binding SerialProfileDetails}">
+            <ContentControl.ContentTemplate>
+              <DataTemplate x:DataType="profiles:IProfileDetailsViewModel">
+                <StackPanel>
+                  <DockPanel Margin="0,4">
+                    <TextBlock Classes="InfoLabel" Text="Profile:" />
+                    <TextBlock Classes="InfoValue" Text="{Binding ProfileName}" FontWeight="SemiBold" />
+                  </DockPanel>
+
+                  <!-- Basic Properties -->
+                  <TextBlock Text="Configuration:"
+                             FontWeight="Medium"
+                             Margin="0,8,0,4" />
+                  <ItemsControl ItemsSource="{Binding BasicProperties}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Configuration Properties -->
+                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
+                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ContentControl.ContentTemplate>
+          </ContentControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Socat Profile Details -->
+      <Border Classes="ProfileSection"
+              IsVisible="{Binding SocatProfileDetails, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel>
+          <TextBlock Classes="SectionHeader" Text="🌉 Socat Bridge Profile" />
+          <ContentControl Content="{Binding SocatProfileDetails}">
+            <ContentControl.ContentTemplate>
+              <DataTemplate x:DataType="profiles:IProfileDetailsViewModel">
+                <StackPanel>
+                  <DockPanel Margin="0,4">
+                    <TextBlock Classes="InfoLabel" Text="Profile:" />
+                    <TextBlock Classes="InfoValue" Text="{Binding ProfileName}" FontWeight="SemiBold" />
+                  </DockPanel>
+
+                  <!-- Basic Properties -->
+                  <TextBlock Text="Configuration:"
+                             FontWeight="Medium"
+                             Margin="0,8,0,4" />
+                  <ItemsControl ItemsSource="{Binding BasicProperties}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Configuration Properties -->
+                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
+                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ContentControl.ContentTemplate>
+          </ContentControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Power Supply Profile Details -->
+      <Border Classes="ProfileSection"
+              IsVisible="{Binding PowerSupplyProfileDetails, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel>
+          <TextBlock Classes="SectionHeader" Text="⚡ Power Supply Profile" />
+          <ContentControl Content="{Binding PowerSupplyProfileDetails}">
+            <ContentControl.ContentTemplate>
+              <DataTemplate x:DataType="profiles:IProfileDetailsViewModel">
+                <StackPanel>
+                  <DockPanel Margin="0,4">
+                    <TextBlock Classes="InfoLabel" Text="Profile:" />
+                    <TextBlock Classes="InfoValue" Text="{Binding ProfileName}" FontWeight="SemiBold" />
+                  </DockPanel>
+
+                  <!-- Basic Properties -->
+                  <TextBlock Text="Configuration:"
+                             FontWeight="Medium"
+                             Margin="0,8,0,4" />
+                  <ItemsControl ItemsSource="{Binding BasicProperties}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Configuration Properties -->
+                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
+                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ContentControl.ContentTemplate>
+          </ContentControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Memory Region Details -->
+      <Border Classes="ProfileSection"
+              IsVisible="{Binding MemoryRegionProfileDetails, Converter={x:Static ObjectConverters.IsNotNull}}">
+        <StackPanel>
+          <TextBlock Classes="SectionHeader" Text="💾 Memory Region" />
+          <ContentControl Content="{Binding MemoryRegionProfileDetails}">
+            <ContentControl.ContentTemplate>
+              <DataTemplate x:DataType="profiles:IProfileDetailsViewModel">
+                <StackPanel>
+                  <!-- Basic Properties -->
+                  <ItemsControl ItemsSource="{Binding BasicProperties}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </DataTemplate>
+            </ContentControl.ContentTemplate>
+          </ContentControl>
+        </StackPanel>
+      </Border>
+
+      <!-- Refresh Button -->
+      <Button Content="🔄 Refresh Job Details"
+              Command="{Binding RefreshCommand}"
+              HorizontalAlignment="Center"
+              Margin="0,16,0,8" />
+
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>

@@ -193,7 +193,7 @@ public class SocatConfiguration
     /// <returns>A SocatConfiguration suitable for high-speed communication.</returns>
     public static SocatConfiguration CreateHighSpeed()
     {
-        var config = CreateDefault();
+        SocatConfiguration config = CreateDefault();
         config.Verbose = false; // Disable verbose for performance
         config.HexDump = false; // Disable hex dump for performance
         config.BlockSize = 8192; // Larger block size for better throughput
@@ -207,7 +207,7 @@ public class SocatConfiguration
     /// <returns>A SocatConfiguration suitable for debugging and troubleshooting.</returns>
     public static SocatConfiguration CreateDebug()
     {
-        var config = CreateDefault();
+        SocatConfiguration config = CreateDefault();
         config.Verbose = true; // Enable verbose
         config.HexDump = true; // Enable hex dump
         config.BlockSize = 1; // Smaller block size for detailed logging
@@ -221,7 +221,7 @@ public class SocatConfiguration
     /// <returns>A SocatConfiguration with minimal logging.</returns>
     public static SocatConfiguration CreateMinimal()
     {
-        var config = CreateDefault();
+        SocatConfiguration config = CreateDefault();
         config.Verbose = false; // No verbose output
         config.HexDump = false; // No hex dump
         config.DebugLevel = 0; // No debug output
@@ -314,7 +314,7 @@ public class SocatConfiguration
             tcpOptions.Add("reuseaddr");
         }
 
-        var tcpPart = $"TCP-LISTEN:{TcpPort}";
+        string tcpPart = $"TCP-LISTEN:{TcpPort}";
         if (tcpOptions.Count > 0)
         {
             tcpPart += "," + string.Join(",", tcpOptions);
@@ -333,7 +333,7 @@ public class SocatConfiguration
             serialOptions.Add("echo=0");
         }
 
-        var serialPart = serialDevice;
+        string serialPart = serialDevice;
         if (serialOptions.Count > 0)
         {
             serialPart += "," + string.Join(",", serialOptions);
@@ -352,7 +352,7 @@ public class SocatConfiguration
     {
         var errors = new List<string>();
 
-        if (TcpPort < 1 || TcpPort > 65535)
+        if (TcpPort is < 1 or > 65535)
         {
             errors.Add("TCP port must be between 1 and 65535");
         }
@@ -362,17 +362,17 @@ public class SocatConfiguration
             errors.Add("Host cannot exceed 255 characters");
         }
 
-        if (BlockSize < 1 || BlockSize > 65536)
+        if (BlockSize is < 1 or > 65536)
         {
             errors.Add("Block size must be between 1 and 65536 bytes");
         }
 
-        if (DebugLevel < 0 || DebugLevel > 3)
+        if (DebugLevel is < 0 or > 3)
         {
             errors.Add("Debug level must be between 0 and 3");
         }
 
-        if (ConnectionTimeout < 0 || ConnectionTimeout > 3600)
+        if (ConnectionTimeout is < 0 or > 3600)
         {
             errors.Add("Timeout must be between 0 and 3600 seconds");
         }
@@ -410,7 +410,7 @@ public class SocatConfiguration
             features.Add("Raw");
         }
 
-        var featuresStr = features.Count > 0 ? $" ({string.Join(", ", features)})" : "";
+        string featuresStr = features.Count > 0 ? $" ({string.Join(", ", features)})" : "";
 
         return $"SocatConfiguration: TCP:{TcpPort}, Block:{BlockSize}, Debug:{DebugLevel}{featuresStr}";
     }

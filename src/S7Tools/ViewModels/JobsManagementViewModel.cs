@@ -12,6 +12,7 @@ using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Jobs;
 
 namespace S7Tools.ViewModels;
 
@@ -66,6 +67,11 @@ public class JobsMainContentViewModel : ViewModelBase, IDisposable
             .Subscribe(_ => this.RaisePropertyChanged(nameof(UserJobs)))
             .DisposeWith(_disposables);
     }
+
+    /// <summary>
+    /// Gets the JobInfoDisplayViewModel for the job details panel.
+    /// </summary>
+    public ViewModels.Jobs.JobInfoDisplayViewModel? JobInfoDisplayViewModel { get; internal set; }
 
     // Expose parent properties for data binding
     public ObservableCollection<JobProfile> Profiles => _parent.Profiles;
@@ -625,8 +631,28 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             // This prevents circular references by not returning 'this'
             _logger.LogDebug("Creating main jobs content ViewModel");
 
-            // Return wrapper ViewModel that will be resolved to JobsMainContentView by ViewLocator
-            return new JobsMainContentViewModel(this);
+            // Create the wrapper ViewModel
+            var contentViewModel = new JobsMainContentViewModel(this);
+
+            // Create the JobInfoDisplayViewModel using the factory if available
+            if (_viewModelFactory != null)
+            {
+                try
+                {
+                    contentViewModel.JobInfoDisplayViewModel = _viewModelFactory.Create<JobInfoDisplayViewModel>();
+                    _logger.LogDebug("Successfully created JobInfoDisplayViewModel via factory");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to create JobInfoDisplayViewModel via factory");
+                }
+            }
+            else
+            {
+                _logger.LogDebug("ViewModelFactory not available for JobInfoDisplayViewModel creation");
+            }
+
+            return contentViewModel;
         }
         catch (Exception ex)
         {

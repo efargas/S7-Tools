@@ -6,6 +6,7 @@
              xmlns:conv="using:S7Tools.Converters"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
+             xmlns:jobsViews="using:S7Tools.Views.Jobs"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.JobsMainContentView"
              x:DataType="vm:JobsMainContentViewModel"
@@ -15,7 +16,11 @@
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <!-- Main Grid with resizable panels -->
+  <Grid ColumnDefinitions="*,Auto,300" MinWidth="400">
+
+    <!-- Left Panel: Jobs Management -->
+    <ScrollViewer Grid.Column="0">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Jobs Management"
@@ -395,4 +400,37 @@
       </Border>
     </StackPanel>
   </ScrollViewer>
+
+    <!-- GridSplitter for resizing panels -->
+    <GridSplitter Grid.Column="1"
+                  Background="#464647"
+                  BorderBrush="#666666"
+                  BorderThickness="1,0"
+                  Width="5"
+                  ResizeDirection="Columns"
+                  ShowsPreview="True" />
+
+    <!-- Right Panel: Job Information Display -->
+    <Border Grid.Column="2"
+            Background="#252526"
+            BorderBrush="#464647"
+            BorderThickness="1,0,0,0">
+      <StackPanel>
+        <!-- Info Panel Header -->
+        <Border Background="#2D2D30"
+                BorderBrush="#464647"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+          <TextBlock Text="📋 Job Information"
+                     FontSize="16"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+        </Border>
+
+        <!-- Job Info Display Content -->
+        <jobsViews:JobInfoDisplayView x:Name="JobInfoDisplay" />
+      </StackPanel>
+    </Border>
+
+  </Grid>
 </UserControl>
