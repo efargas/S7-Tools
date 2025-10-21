@@ -422,7 +422,7 @@
                 Height="32"
                 Background="Transparent"
                 BorderThickness="0"
-                Click="OnJobInfoToggleClick"
+                Command="{Binding ToggleJobInfoCommand}"
                 ToolTip.Tip="Job Information">
           <icons:Icon Value="fa-solid fa-info-circle"
                       Width="16"
