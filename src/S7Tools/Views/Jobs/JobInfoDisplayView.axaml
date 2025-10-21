@@ -470,7 +470,7 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <Border Classes="PropertyTable" MaxHeight="200">
+                  <Border Classes="PropertyTable" MaxHeight="{Binding ProfileTableMaxHeight, FallbackValue=200}">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                       <StackPanel>
