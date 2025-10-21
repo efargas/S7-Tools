@@ -52,16 +52,28 @@ public partial class JobsMainContentView : UserControl, IDisposable
 
     private void OnJobInfoToggleClick(object? sender, RoutedEventArgs e)
     {
-        // Show the job info panel and hide the activity bar
+        // Show the job info panel, splitter, and hide the activity bar
         ActivityBar.IsVisible = false;
         JobInfoPanel.IsVisible = true;
+        JobInfoSplitter.IsVisible = true;
+
+        // Update column widths for expanded state
+        MainGrid.ColumnDefinitions[1].Width = new GridLength(0);  // Hide activity bar column
+        MainGrid.ColumnDefinitions[2].Width = GridLength.Auto;     // Show splitter column
+        MainGrid.ColumnDefinitions[3].Width = new GridLength(400, GridUnitType.Pixel);  // Show panel column
     }
 
     private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
     {
-        // Hide the job info panel and show the activity bar
+        // Hide the job info panel, splitter, and show the activity bar
         JobInfoPanel.IsVisible = false;
+        JobInfoSplitter.IsVisible = false;
         ActivityBar.IsVisible = true;
+
+        // Update column widths for collapsed state
+        MainGrid.ColumnDefinitions[1].Width = new GridLength(48, GridUnitType.Pixel);  // Show activity bar column
+        MainGrid.ColumnDefinitions[2].Width = new GridLength(0);   // Hide splitter column
+        MainGrid.ColumnDefinitions[3].Width = new GridLength(0);   // Hide panel column
     }
 
     public void Dispose()

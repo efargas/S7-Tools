@@ -16,11 +16,60 @@
   </Design.DataContext>
 
   <UserControl.Styles>
-    <!-- Content styling -->
+    <!-- Property table styling for better appearance -->
+    <Style Selector="Border.PropertyTable">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Margin" Value="0,4" />
+    </Style>
+
+    <!-- Property header styling -->
+    <Style Selector="Border.PropertyHeader">
+      <Setter Property="Background" Value="#2D2D30" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyHeaderText">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Property row styling with alternating background -->
+    <Style Selector="Border.PropertyRow">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="24" />
+    </Style>
+
+    <Style Selector="Border.PropertyRow:nth-child(even)">
+      <Setter Property="Background" Value="#2A2A2B" />
+    </Style>
+
+    <!-- Property text styling -->
+    <Style Selector="TextBlock.PropertyName">
+      <Setter Property="FontWeight" Value="Medium" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyValue">
+      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+        <!-- Expander and section styling remains the same -->
     <Style Selector="TextBlock.InfoLabel">
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Margin" Value="0,2" />
-      <!--Setter Property="MinWidth" Value="120" /-->
       <Setter Property="Foreground" Value="#CCCCCC" />
     </Style>
 
@@ -421,45 +470,135 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <ItemsControl ItemsSource="{Binding BasicProperties}" Margin="0,4,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding BasicProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border>
 
                   <!-- Configuration Properties -->
-                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
-                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,0,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
 
-                  <!-- Advanced Properties -->
-                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
-                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,8,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding ConfigurationProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border><!-- Advanced Properties -->
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding AdvancedProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border></StackPanel>
               </DataTemplate>
             </ContentControl.ContentTemplate>
           </ContentControl>
@@ -493,45 +632,135 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <ItemsControl ItemsSource="{Binding BasicProperties}" Margin="0,4,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding BasicProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border>
 
                   <!-- Configuration Properties -->
-                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
-                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,0,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
 
-                  <!-- Advanced Properties -->
-                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
-                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,8,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding ConfigurationProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border><!-- Advanced Properties -->
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding AdvancedProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border></StackPanel>
               </DataTemplate>
             </ContentControl.ContentTemplate>
           </ContentControl>
@@ -565,45 +794,135 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <ItemsControl ItemsSource="{Binding BasicProperties}" Margin="0,4,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding BasicProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border>
 
                   <!-- Configuration Properties -->
-                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
-                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,0,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
 
-                  <!-- Advanced Properties -->
-                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
-                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,8,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding ConfigurationProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border><!-- Advanced Properties -->
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding AdvancedProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border></StackPanel>
               </DataTemplate>
             </ContentControl.ContentTemplate>
           </ContentControl>
@@ -630,46 +949,142 @@
             <ContentControl.ContentTemplate>
               <DataTemplate x:DataType="profiles:IProfileDetailsViewModel">
                 <StackPanel Spacing="8">
+                  <!-- Profile Name -->
+                  <DockPanel Margin="0,4">
+                    <TextBlock Classes="InfoLabel" Text="Profile:" />
+                    <TextBlock Classes="InfoValue" Text="{Binding ProfileName}" FontWeight="SemiBold" />
+                  </DockPanel>
+
                   <!-- All Properties in one section -->
-                  <ItemsControl ItemsSource="{Binding BasicProperties}" Margin="0,4,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding BasicProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border>
 
                   <!-- Configuration Properties -->
-                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
-                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,0,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
 
-                  <!-- Advanced Properties -->
-                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
-                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
-                                Margin="0,8,0,0">
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate>
-                        <DockPanel Margin="0,2">
-                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
-                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
-                        </DockPanel>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding ConfigurationProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border><!-- Advanced Properties -->
+                  <Border Classes="PropertyTable" MaxHeight="200"
+                          IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                          Margin="0,8,0,0">
+                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                      <StackPanel>
+                        <!-- Header -->
+                        <Border Classes="PropertyHeader">
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
+                            <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                          </Grid>
+                        </Border>
+
+                        <!-- Property Rows -->
+                        <ItemsControl ItemsSource="{Binding AdvancedProperties}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border Classes="PropertyRow">
+                                <Grid>
+                                  <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="*" />
+                                  </Grid.ColumnDefinitions>
+                                  <TextBlock Grid.Column="0"
+                                             Text="{Binding Label}"
+                                             Classes="PropertyName" />
+                                  <TextBlock Grid.Column="1"
+                                             Text="{Binding Value}"
+                                             Classes="PropertyValue"
+                                             ToolTip.Tip="{Binding Tooltip}" />
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </ScrollViewer>
+                  </Border></StackPanel>
               </DataTemplate>
             </ContentControl.ContentTemplate>
           </ContentControl>

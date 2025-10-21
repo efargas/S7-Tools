@@ -17,11 +17,12 @@
   </UserControl.Resources>
 
   <!-- Main Grid with collapsible right panel -->
-  <Grid>
+  <Grid x:Name="MainGrid">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*" />
-      <ColumnDefinition Width="Auto" />
-      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="48" />
+      <ColumnDefinition Width="0" />
+      <ColumnDefinition Width="0" MinWidth="300" MaxWidth="600" />
     </Grid.ColumnDefinitions>
 
     <!-- Left Panel: Jobs Management -->
@@ -454,13 +455,22 @@
       </StackPanel>
     </Border>
 
-    <!-- Right Panel: Job Information Display (when expanded) -->
-    <Border Grid.Column="2"
+    <!-- GridSplitter for resizing -->
+    <GridSplitter Grid.Column="2"
+                  x:Name="JobInfoSplitter"
+                  Background="#464647"
+                  Width="4"
+                  IsVisible="False"
+                  VerticalAlignment="Stretch"
+                  ResizeDirection="Columns"
+                  Cursor="SizeWestEast" />
+
+    <!-- Job Information Panel -->
+    <Border Grid.Column="3"
             x:Name="JobInfoPanel"
             Background="#252526"
             BorderBrush="#464647"
             BorderThickness="1,0,0,0"
-            Width="350"
             IsVisible="False">
       <Grid RowDefinitions="Auto,*">
         <!-- Panel Header with Close Button -->
