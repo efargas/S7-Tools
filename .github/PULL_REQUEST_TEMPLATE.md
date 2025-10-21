@@ -7,21 +7,24 @@ This PR establishes the first formal governance framework for S7Tools through a 
 ## Changes Made
 
 ### 📜 Constitution (`.specify/memory/constitution.md`)
+
 - **Version**: 1.0.0
 - **Ratified**: October 20, 2025
 - **Core Principles**:
-  - I. Clean Architecture & Layered Boundaries
-  - II. MVVM (ReactiveUI) & UI Contracts
-  - III. Test-First Quality Gates (NON-NEGOTIABLE)
-  - IV. Thread Safety & Concurrency Contracts
-  - V. Observability, Versioning & Simplicity
+    - I. Clean Architecture & Layered Boundaries
+    - II. MVVM (ReactiveUI) & UI Contracts
+    - III. Test-First Quality Gates (NON-NEGOTIABLE)
+    - IV. Thread Safety & Concurrency Contracts
+    - V. Observability, Versioning & Simplicity
 
 ### 📋 Template Updates
+
 - **Plan Template**: Added Constitution Check requirements for compliance verification
 - **Spec Template**: Added Constitution Compliance section for impact assessment
 - **Tasks Template**: Enforced test-first discipline, made tests mandatory per Article III
 
 ### 📚 Documentation
+
 - **CHANGELOG.md**: Added comprehensive ratification record with technical details
 - **Sync Impact Report**: Included in constitution file documenting all changes and template alignments
 
@@ -30,21 +33,25 @@ This PR establishes the first formal governance framework for S7Tools through a 
 This PR introduces several **non-negotiable** requirements:
 
 ### Test-First Discipline (Article III)
+
 - All user stories MUST include tests written FIRST that FAIL before implementation
 - Tests follow AAA pattern (Arrange-Act-Assert)
 - Async tests use `async Task` (no `.Result`/`.Wait`)
 - CI must pass before merging
 
 ### Clean Architecture (Article I)
+
 - Core assemblies have no UI/infrastructure dependencies
 - Dependencies flow inward only
 - Public APIs in Core must be minimal and stable
 
 ### Service Registration (Additional Constraints)
+
 - All services MUST register in `ServiceCollectionExtensions.cs`
 - Never register directly in `Program.cs`
 
 ### Thread Safety (Article IV)
+
 - Use `IUIThreadService` for UI updates from background threads
 - Follow internal-method pattern for semaphore/lock APIs
 
@@ -59,10 +66,12 @@ This PR introduces several **non-negotiable** requirements:
 ## Migration Guide
 
 ### For Existing Features
+
 - Existing code grandfathered but should migrate toward constitutional compliance
 - New changes to existing features must follow constitutional requirements
 
 ### For New Features
+
 - Must include Constitution Check in planning phase
 - All user stories require test-first implementation
 - Service registration must follow constitutional patterns
@@ -78,6 +87,7 @@ This PR introduces several **non-negotiable** requirements:
 ## Approval Requirements
 
 Per Article VI.2 of the constitution itself:
+
 - At least one approving review from project maintainer required
 - For high-impact governance changes (like this one), two approvers recommended
 

@@ -1,4 +1,3 @@
-// Repo-wide markdownlint configuration
 {
   "$schema": "https://raw.githubusercontent.com/markdownlint/markdownlint-cli2/main/schema/markdownlint-cli2-config-schema.json",
   "globs": [
