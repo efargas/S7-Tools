@@ -84,6 +84,50 @@ public class ProfileDetailsService : IProfileDetailsService
                 });
             }
 
+            // Add Options if present
+            if (!string.IsNullOrEmpty(profile.Options))
+            {
+                basicProperties.Add(new PropertyDisplayItem
+                {
+                    Label = "Options",
+                    Value = profile.Options,
+                    Tooltip = "Additional command-line options or configuration settings"
+                });
+            }
+
+            // Add Flags if present
+            if (!string.IsNullOrEmpty(profile.Flags))
+            {
+                basicProperties.Add(new PropertyDisplayItem
+                {
+                    Label = "Flags",
+                    Value = profile.Flags,
+                    Tooltip = "Additional flags or parameters for profile-specific operations"
+                });
+            }
+
+            // Add metadata
+            basicProperties.Add(new PropertyDisplayItem
+            {
+                Label = "Version",
+                Value = profile.Version,
+                Tooltip = "Profile format version"
+            });
+
+            basicProperties.Add(new PropertyDisplayItem
+            {
+                Label = "Created",
+                Value = profile.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                Tooltip = "When this profile was created"
+            });
+
+            basicProperties.Add(new PropertyDisplayItem
+            {
+                Label = "Modified",
+                Value = profile.ModifiedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                Tooltip = "When this profile was last modified"
+            });
+
             // Add type-specific configuration properties
             AddConfigurationProperties(profile, configurationProperties);
 
@@ -232,6 +276,8 @@ public class ProfileDetailsService : IProfileDetailsService
         }
 
         SerialPortConfiguration config = profile.Configuration;
+
+        // Basic Serial Settings
         properties.Add(new PropertyDisplayItem
         {
             Label = "Baud Rate",
@@ -259,6 +305,187 @@ public class ProfileDetailsService : IProfileDetailsService
             Value = config.StopBits.ToString(),
             Tooltip = "Number of stop bits"
         });
+
+        // Control Flags
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Enable Receiver",
+            Value = config.EnableReceiver ? "Yes" : "No",
+            Tooltip = "Enable receiver (CREAD flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Hardware Flow Control",
+            Value = config.DisableHardwareFlowControl ? "Disabled" : "Enabled",
+            Tooltip = "Hardware flow control (-crtscts flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Parity Enabled",
+            Value = config.ParityEnabled ? "Yes" : "No",
+            Tooltip = "Parity checking enabled (parenb flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Odd Parity",
+            Value = config.OddParity ? "Yes" : "No",
+            Tooltip = "Use odd parity (parodd flag)"
+        });
+
+        // Input Flags
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Ignore Break",
+            Value = config.IgnoreBreak ? "Yes" : "No",
+            Tooltip = "Ignore break conditions (ignbrk flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Break Interrupt",
+            Value = config.DisableBreakInterrupt ? "Disabled" : "Enabled",
+            Tooltip = "Signal interrupt on break (-brkint flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "CR to NL Mapping",
+            Value = config.DisableMapCRtoNL ? "Disabled" : "Enabled",
+            Tooltip = "Map CR to NL on input (-icrnl flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Bell on Queue Full",
+            Value = config.DisableBellOnQueueFull ? "Disabled" : "Enabled",
+            Tooltip = "Ring bell on input queue full (-imaxbel flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "XON/XOFF Flow Control",
+            Value = config.DisableXonXoffFlowControl ? "Disabled" : "Enabled",
+            Tooltip = "XON/XOFF flow control (-ixon flag)"
+        });
+
+        // Output Flags
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Output Processing",
+            Value = config.DisableOutputProcessing ? "Disabled" : "Enabled",
+            Tooltip = "Output processing (-opost flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "NL to CR-NL Mapping",
+            Value = config.DisableMapNLtoCRNL ? "Disabled" : "Enabled",
+            Tooltip = "Map NL to CR-NL on output (-onlcr flag)"
+        });
+
+        // Local Flags
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Canonical Mode",
+            Value = config.DisableCanonicalMode ? "Disabled" : "Enabled",
+            Tooltip = "Canonical input processing (-icanon flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Signal Generation",
+            Value = config.DisableSignalGeneration ? "Disabled" : "Enabled",
+            Tooltip = "Signal generation (-isig flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Extended Processing",
+            Value = config.DisableExtendedProcessing ? "Disabled" : "Enabled",
+            Tooltip = "Extended input processing (-iexten flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Echo",
+            Value = config.DisableEcho ? "Disabled" : "Enabled",
+            Tooltip = "Echo input characters (-echo flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Echo Erase",
+            Value = config.DisableEchoErase ? "Disabled" : "Enabled",
+            Tooltip = "Echo erase characters (-echoe flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Echo Kill",
+            Value = config.DisableEchoKill ? "Disabled" : "Enabled",
+            Tooltip = "Echo kill characters (-echok flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Echo Control",
+            Value = config.DisableEchoControl ? "Disabled" : "Enabled",
+            Tooltip = "Echo control characters (-echoctl flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Echo Kill Erase",
+            Value = config.DisableEchoKillErase ? "Disabled" : "Enabled",
+            Tooltip = "Echo kill with erase (-echoke flag)"
+        });
+
+        // Special Modes
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Raw Mode",
+            Value = config.RawMode ? "Enabled" : "Disabled",
+            Tooltip = "Raw mode disables all input and output processing"
+        });
+
+        // Metadata
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Config Version",
+            Value = config.Version,
+            Tooltip = "Configuration format version"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Config Created",
+            Value = config.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Tooltip = "When this configuration was created"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Config Modified",
+            Value = config.ModifiedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Tooltip = "When this configuration was last modified"
+        });
+
+        // Additional metadata if present
+        if (config.Metadata != null && config.Metadata.Count > 0)
+        {
+            foreach (var metadata in config.Metadata)
+            {
+                properties.Add(new PropertyDisplayItem
+                {
+                    Label = $"Metadata: {metadata.Key}",
+                    Value = metadata.Value,
+                    Tooltip = "Additional configuration metadata"
+                });
+            }
+        }
     }
 
     private static void AddSocatProperties(SocatProfile profile, ObservableCollection<PropertyDisplayItem> properties)
@@ -275,6 +502,8 @@ public class ProfileDetailsService : IProfileDetailsService
         }
 
         SocatConfiguration config = profile.Configuration;
+
+        // TCP Settings
         properties.Add(new PropertyDisplayItem
         {
             Label = "TCP Port",
@@ -284,10 +513,126 @@ public class ProfileDetailsService : IProfileDetailsService
 
         properties.Add(new PropertyDisplayItem
         {
-            Label = "Host",
-            Value = string.IsNullOrEmpty(config.TcpHost) ? "localhost" : config.TcpHost,
+            Label = "TCP Host",
+            Value = string.IsNullOrEmpty(config.TcpHost) ? "All interfaces" : config.TcpHost,
             Tooltip = "Host address for TCP connection"
         });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Fork Mode",
+            Value = config.EnableFork ? "Enabled" : "Disabled",
+            Tooltip = "Allow multiple concurrent connections"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Reuse Address",
+            Value = config.EnableReuseAddr ? "Enabled" : "Disabled",
+            Tooltip = "Enable address reuse option"
+        });
+
+        // Socat Flags
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Verbose Logging",
+            Value = config.Verbose ? "Enabled" : "Disabled",
+            Tooltip = "Enable verbose mode (-v flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Hex Dump",
+            Value = config.HexDump ? "Enabled" : "Disabled",
+            Tooltip = "Enable hex dump of transferred data (-x flag)"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Block Size",
+            Value = $"{config.BlockSize} bytes",
+            Tooltip = "Block size for data transfers"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Debug Level",
+            Value = config.DebugLevel.ToString(),
+            Tooltip = "Debug level (number of -d flags)"
+        });
+
+        // Serial Device Settings
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Serial Raw Mode",
+            Value = config.SerialRawMode ? "Enabled" : "Disabled",
+            Tooltip = "Enable raw mode for the serial device"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Serial Echo",
+            Value = config.SerialDisableEcho ? "Disabled" : "Enabled",
+            Tooltip = "Echo on the serial device"
+        });
+
+        // Process Management
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Auto Configure Serial",
+            Value = config.AutoConfigureSerial ? "Yes" : "No",
+            Tooltip = "Automatically configure serial port with stty before starting socat"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Connection Timeout",
+            Value = config.ConnectionTimeout == 0 ? "No timeout" : $"{config.ConnectionTimeout} seconds",
+            Tooltip = "Timeout for TCP connections"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Auto Restart",
+            Value = config.AutoRestart ? "Enabled" : "Disabled",
+            Tooltip = "Restart socat automatically if it terminates unexpectedly"
+        });
+
+        // Metadata
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Config Version",
+            Value = config.Version,
+            Tooltip = "Configuration format version"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Config Created",
+            Value = config.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Tooltip = "When this configuration was created"
+        });
+
+        properties.Add(new PropertyDisplayItem
+        {
+            Label = "Config Modified",
+            Value = config.ModifiedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Tooltip = "When this configuration was last modified"
+        });
+
+        // Additional metadata if present
+        if (config.Metadata != null && config.Metadata.Count > 0)
+        {
+            foreach (var metadata in config.Metadata)
+            {
+                properties.Add(new PropertyDisplayItem
+                {
+                    Label = $"Metadata: {metadata.Key}",
+                    Value = metadata.Value,
+                    Tooltip = "Additional configuration metadata"
+                });
+            }
+        }
     }
 
     private static void AddPowerSupplyProperties(PowerSupplyProfile profile, ObservableCollection<PropertyDisplayItem> properties)
@@ -305,11 +650,11 @@ public class ProfileDetailsService : IProfileDetailsService
 
         PowerSupplyConfiguration config = profile.Configuration;
 
-        // Add common configuration properties
+        // Common configuration properties
         properties.Add(new PropertyDisplayItem
         {
             Label = "Device Type",
-            Value = config.GetType().Name.Replace("Configuration", ""),
+            Value = config.Type.ToString(),
             Tooltip = "Power supply communication protocol"
         });
 
@@ -329,7 +674,71 @@ public class ProfileDetailsService : IProfileDetailsService
                 Value = tcpConfig.Port.ToString(),
                 Tooltip = "TCP port for Modbus communication"
             });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Device ID",
+                Value = tcpConfig.DeviceId.ToString(),
+                Tooltip = "Modbus device/slave ID"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "On/Off Coil",
+                Value = tcpConfig.OnOffCoil.ToString(),
+                Tooltip = "Modbus coil address for power on/off control"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Addressing Mode",
+                Value = tcpConfig.AddressingMode.ToString(),
+                Tooltip = "Modbus addressing mode (Base0 or Base1)"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Connection Timeout",
+                Value = $"{tcpConfig.ConnectionTimeoutMs} ms",
+                Tooltip = "Timeout for establishing connection"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Read Timeout",
+                Value = $"{tcpConfig.ReadTimeoutMs} ms",
+                Tooltip = "Timeout for read operations"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Write Timeout",
+                Value = $"{tcpConfig.WriteTimeoutMs} ms",
+                Tooltip = "Timeout for write operations"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Auto Reconnect",
+                Value = tcpConfig.EnableAutoReconnect ? "Enabled" : "Disabled",
+                Tooltip = "Automatically reconnect on connection loss"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Max Retry Attempts",
+                Value = tcpConfig.MaxRetryAttempts.ToString(),
+                Tooltip = "Maximum number of retry attempts for operations"
+            });
+
+            properties.Add(new PropertyDisplayItem
+            {
+                Label = "Connection String",
+                Value = tcpConfig.GenerateConnectionString(),
+                Tooltip = "Generated connection string for this configuration"
+            });
         }
+        // Note: RTU and other configurations can be added here when implemented
     }
 
     private static string GetProfileTypeName<T>(T profile) where T : class, IProfileBase

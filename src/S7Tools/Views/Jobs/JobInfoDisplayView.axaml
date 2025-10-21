@@ -445,6 +445,20 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
+
+                  <!-- Advanced Properties -->
+                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
+                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                                Margin="0,8,0,0">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
                 </StackPanel>
               </DataTemplate>
             </ContentControl.ContentTemplate>
@@ -494,6 +508,20 @@
                   <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
                                 IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                                 Margin="0,0,0,0">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Advanced Properties -->
+                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
+                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                                Margin="0,8,0,0">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <DockPanel Margin="0,2">
@@ -561,6 +589,20 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
+
+                  <!-- Advanced Properties -->
+                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
+                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                                Margin="0,8,0,0">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
                 </StackPanel>
               </DataTemplate>
             </ContentControl.ContentTemplate>
@@ -590,6 +632,34 @@
                 <StackPanel Spacing="8">
                   <!-- All Properties in one section -->
                   <ItemsControl ItemsSource="{Binding BasicProperties}" Margin="0,4,0,0">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Configuration Properties -->
+                  <ItemsControl ItemsSource="{Binding ConfigurationProperties}"
+                                IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                                Margin="0,0,0,0">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2">
+                          <TextBlock Classes="InfoLabel" Text="{Binding Label}" />
+                          <TextBlock Classes="InfoValue" Text="{Binding Value}" />
+                        </DockPanel>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <!-- Advanced Properties -->
+                  <ItemsControl ItemsSource="{Binding AdvancedProperties}"
+                                IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
+                                Margin="0,8,0,0">
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
                         <DockPanel Margin="0,2">
