@@ -478,7 +478,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="Auto" MinWidth="120" SharedSizeScope="PropertyLabels" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
