@@ -278,7 +278,7 @@ public class SerialPortConfiguration
     /// <returns>A SerialPortConfiguration suitable for text communication.</returns>
     public static SerialPortConfiguration CreateTextMode()
     {
-        SerialPortConfiguration config = CreateDefault();
+        var config = CreateDefault();
         config.DisableCanonicalMode = false; // Enable canonical mode for line-based input
         config.DisableEcho = false; // Enable echo for interactive communication
         config.RawMode = false; // Disable raw mode for text processing

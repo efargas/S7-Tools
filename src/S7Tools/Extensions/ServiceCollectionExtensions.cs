@@ -63,15 +63,6 @@ public static class ServiceCollectionExtensions
         // Add Unified Profile Dialog Service (delegates to ProfileEditDialogService)
         services.TryAddTransient<IUnifiedProfileDialogService, UnifiedProfileDialogService>();
 
-        // Add Profile Details Service for job information display
-        services.TryAddSingleton<IProfileDetailsService, ProfileDetailsService>();
-
-        // Add Error Display Service for consistent error messaging
-        services.TryAddSingleton<IErrorDisplayService, ErrorDisplayService>();
-
-        // Add Job Info Display ViewModel for job details panel
-        services.TryAddTransient<ViewModels.Jobs.JobInfoDisplayViewModel>();
-
         // Add Clipboard Service
         services.TryAddTransient<IClipboardService, ClipboardService>();
 
