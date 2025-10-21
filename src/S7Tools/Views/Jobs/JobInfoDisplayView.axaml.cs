@@ -39,14 +39,14 @@ public partial class JobInfoDisplayView : UserControl
             // Find all expanders in the view
             var expanders = this.GetLogicalDescendants().OfType<Expander>().ToList();
 
-            foreach (var expander in expanders)
+            foreach (Expander? expander in expanders)
             {
                 expander.Expanding += (s, args) =>
                 {
                     if (s is Expander currentExpander)
                     {
                         // Collapse all other expanders when this one expands
-                        foreach (var otherExpander in expanders.Where(e => e != currentExpander))
+                        foreach (Expander? otherExpander in expanders.Where(e => e != currentExpander))
                         {
                             otherExpander.IsExpanded = false;
                         }

@@ -510,5 +510,6 @@
         <!-- Job Info Display Content -->
         <jobsViews:JobInfoDisplayView Grid.Row="1" x:Name="JobInfoDisplay" />
       </Grid>
-    </Border>  </Grid>
+    </Border>
+  </Grid>
 </UserControl>

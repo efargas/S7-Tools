@@ -191,7 +191,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
 
     private void UpdateJobBasicInfo(JobProfile job)
     {
-        var info = $"Job: {job.Name}";
+        string info = $"Job: {job.Name}";
 
         if (!string.IsNullOrEmpty(job.Description))
         {
@@ -218,7 +218,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var profile = await _serialService.GetByIdAsync(job.SerialProfileId);
+            SerialPortProfile? profile = await _serialService.GetByIdAsync(job.SerialProfileId);
             SerialProfileDetails = _profileDetailsService.CreateProfileDetailsViewModel(profile);
         }
         catch (Exception ex)
@@ -239,7 +239,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var profile = await _socatService.GetByIdAsync(job.SocatProfileId);
+            SocatProfile? profile = await _socatService.GetByIdAsync(job.SocatProfileId);
             SocatProfileDetails = _profileDetailsService.CreateProfileDetailsViewModel(profile);
         }
         catch (Exception ex)
@@ -260,7 +260,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var profile = await _powerService.GetByIdAsync(job.PowerSupplyProfileId);
+            PowerSupplyProfile? profile = await _powerService.GetByIdAsync(job.PowerSupplyProfileId);
             PowerSupplyProfileDetails = _profileDetailsService.CreateProfileDetailsViewModel(profile);
         }
         catch (Exception ex)

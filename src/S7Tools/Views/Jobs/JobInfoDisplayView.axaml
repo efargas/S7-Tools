@@ -20,7 +20,7 @@
     <Style Selector="TextBlock.InfoLabel">
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Margin" Value="0,2" />
-      <Setter Property="MinWidth" Value="120" />
+      <!--Setter Property="MinWidth" Value="120" /-->
       <Setter Property="Foreground" Value="#CCCCCC" />
     </Style>
 
@@ -84,7 +84,7 @@
                              IsVisible="{TemplateBinding IsExpanded}"
                              Content="{TemplateBinding Content}"
                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                             Padding="12,8" />
+                             Padding="0,0" />
           </StackPanel>
         </ControlTemplate>
       </Setter>
