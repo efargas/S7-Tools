@@ -137,6 +137,20 @@
                 </DataGridTextColumn.Header>
               </DataGridTextColumn>
 
+              <!-- Options column -->
+              <DataGridTextColumn Binding="{Binding Options}" Width="150" MinWidth="100">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Options" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <!-- Flags column -->
+              <DataGridTextColumn Binding="{Binding Flags}" Width="120" MinWidth="80">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Flags" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
               <!-- Created timestamp -->
               <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
                 <DataGridTextColumn.Header>

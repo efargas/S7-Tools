@@ -147,6 +147,20 @@
                     </DataGridTextColumn.Header>
                   </DataGridTextColumn>
 
+                  <!-- Options column for socat command options -->
+                  <DataGridTextColumn Binding="{Binding Options}" Width="150" MinWidth="100">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Options" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- Flags column for additional flags -->
+                  <DataGridTextColumn Binding="{Binding Flags}" Width="120" MinWidth="80">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Flags" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
                   <!-- TCP Host configuration column -->
                   <DataGridTextColumn Binding="{Binding Configuration.TcpHost}" Width="120" MinWidth="90">
                     <DataGridTextColumn.Header>
