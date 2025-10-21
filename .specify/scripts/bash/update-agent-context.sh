@@ -106,25 +106,11 @@ cleanup() {
     local exit_code=$?
     rm -f /tmp/agent_update_*_$$
     rm -f /tmp/manual_additions_$$
-    exit $exit_code
+    return $exit_code
 }
 
-# Set up cleanup trap safely: ignore signals during critical sections
+# Set up cleanup trap safely
 trap 'cleanup' EXIT
-trap '' INT TERM
-
-# ... later, around critical mv operations:
-# Move temp file to target atomically with signals ignored
-{
-  trap '' INT TERM
-  if ! mv "$temp_file" "$target_file"; then
-      log_error "Failed to update target file"
-      rm -f "$temp_file"
-      trap cleanup EXIT
-      exit 1
-  fi
-  trap cleanup EXIT
-} 2>/dev/null
 
 #==============================================================================
 # Validation Functions
@@ -175,28 +161,16 @@ extract_plan_field() {
       function trim(s){ sub(/^[ \t\r\n]+/, "", s); sub(/[ \t\r\n]+$/, "", s); return s }
       BEGIN { IGNORECASE=1 }
       {
-        # Look for lines like: **Field Name**: value
-        # Extract between the first pair of ** and the following **, then the value after colon
-        if ($0 ~ /^\*\*[[:space:]]*.*\*\*[[:space:]]*:[[:space:]]*./) {
-          line = $0
-          # Extract label
-          label = line
-          sub(/^\*\*[[:space:]]*/, "", label)
-          sub(/\*\*.*$/, "", label)  # crude, will adjust below
-        }
-      }
-      {
-        # More robust extraction:
-        match($0, /^\*\*[[:space:]]*([^*][^*]*)[[:space:]]*\*\*[[:space:]]*:[[:space:]]*(.*)$/, m)
-        if (m[1] != "" && m[2] != "") {
+        # Look for lines like: **Field Name**: value and extract them
+        if (match($0, /^\*\*[[:space:]]*([^*]+)[[:space:]]*\*\*[[:space:]]*:[[:space:]]*(.*)$/, m)) {
           label = trim(m[1])
           value = trim(m[2])
           if (toupper(label) == needle_uc) {
             up = toupper(value)
-            if (up != "NEEDS CLARIFICATION" && up != "N/A") {
+            if (up != "NEEDS CLARIFICATION" && up != "N/A" && value != "") {
               print value
+              exit
             }
-            exit
           }
         }
       }

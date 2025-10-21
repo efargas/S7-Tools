@@ -8,8 +8,8 @@
              xmlns:fa="using:FluentAvalonia.UI.Controls"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="S7Tools.Views.SocatSettingsView"
-             x:DataType="vm:SocatSettingsViewModel"
+             x:Class="S7Tools.Views.SerialPortsSettingsView"
+             x:DataType="vm:SerialPortsSettingsViewModel"
              Background="#1E1E1E">
 
   <UserControl.Resources>
@@ -19,7 +19,7 @@
   <ScrollViewer>
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
-      <TextBlock Text="Servers Settings"
+      <TextBlock Text="Serial Ports Settings"
                  FontSize="24"
                  FontWeight="Bold"
                  Foreground="#CCCCCC"
@@ -32,10 +32,12 @@
               CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="8">
-          <TextBlock Text="socat Profile Management"
+          <TextBlock Text="Profile Management"
                      FontSize="18"
                      FontWeight="SemiBold"
                      Foreground="#CCCCCC" />
+
+          <!-- Profiles Path was moved to Import/Export section -->
 
 
 
@@ -104,128 +106,137 @@
                         IsReadOnly="True"
                         Height="200"
                         Margin="0,0,0,8">
-                <!-- Header style using Avalonia style selector -->
-                <DataGrid.Styles>
-                  <Style Selector="DataGridColumnHeader">
+              <!-- Header style using Avalonia style selector (matches LogViewer pattern) -->
+              <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                  <!-- Reduce font size and right padding so headers take less horizontal space -->
                     <Setter Property="FontSize" Value="11" />
                     <Setter Property="FontWeight" Value="SemiBold" />
+                    <!-- Left padding small, right padding larger to reserve space for sort glyph -->
                     <Setter Property="Padding" Value="8,4,32,4" />
                     <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <!-- Ensure header content is actually displayed by binding Content to the presenter -->
                     <Setter Property="Template">
                       <ControlTemplate>
                         <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
                           <DockPanel>
+                            <!-- Header content: present the header Content (TemplateBinding Content) -->
                             <ContentPresenter Content="{TemplateBinding Content}"
                                               DockPanel.Dock="Left"
                                               VerticalAlignment="Center" />
+
+                            <!-- (removed duplicate presenter that caused "already has a visual parent" errors) -->
                           </DockPanel>
                         </Border>
                       </ControlTemplate>
                     </Setter>
-                  </Style>
-                </DataGrid.Styles>
+                </Style>
+              </DataGrid.Styles>
 
-                <DataGrid.Columns>
-                  <!-- ID Column: First column to show profile ID -->
-                  <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+              <DataGrid.Columns>
+                <!-- ID Column: First column to show profile ID -->
+                <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- Name column -->
-                  <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <!-- Name column -->
+                <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- Description column -->
-                  <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <!-- Description column -->
+                <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- TCP Host configuration column -->
-                  <DataGridTextColumn Binding="{Binding Configuration.TcpHost}" Width="120" MinWidth="90">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="TCP Host" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <!-- Options column for stty command options -->
+                <DataGridTextColumn Binding="{Binding Options}" Width="150" MinWidth="100">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Options" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- TCP Port configuration column -->
-                  <DataGridTextColumn Binding="{Binding Configuration.TcpPort}" Width="80" MinWidth="70">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <!-- Flags column for additional flags -->
+                <DataGridTextColumn Binding="{Binding Flags}" Width="120" MinWidth="80">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Flags" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- Verbose flag -->
-                  <DataGridCheckBoxColumn Binding="{Binding Configuration.Verbose}" Width="80" MinWidth="60" IsReadOnly="True">
-                    <DataGridCheckBoxColumn.Header>
-                      <TextBlock Text="Verbose" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridCheckBoxColumn.Header>
-                  </DataGridCheckBoxColumn>
+                <!-- Serial Configuration Columns -->
+                <DataGridTextColumn Binding="{Binding Configuration.BaudRate}" Width="90" MinWidth="70">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Baud Rate" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- HexDump flag -->
-                  <DataGridCheckBoxColumn Binding="{Binding Configuration.HexDump}" Width="90" MinWidth="70" IsReadOnly="True">
-                    <DataGridCheckBoxColumn.Header>
-                      <TextBlock Text="Hex Dump" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridCheckBoxColumn.Header>
-                  </DataGridCheckBoxColumn>
+                <DataGridTextColumn Binding="{Binding Configuration.Parity}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Parity" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- BlockSize configuration column -->
-                  <DataGridTextColumn Binding="{Binding Configuration.BlockSize}" Width="90" MinWidth="70">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="Block Size" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Configuration.StopBits}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Stop Bits" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- DebugLevel configuration column -->
-                  <DataGridTextColumn Binding="{Binding Configuration.DebugLevel}" Width="100" MinWidth="80">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="Debug Level" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Configuration.CharacterSize}" Width="90" MinWidth="70">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Char Size" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- Created timestamp -->
-                  <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="Created" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <DataGridCheckBoxColumn Binding="{Binding Configuration.RawMode}" Width="90" MinWidth="70" IsReadOnly="True">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Raw Mode" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
 
-                  <!-- Modified timestamp -->
-                  <DataGridTextColumn Binding="{Binding ModifiedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="Modified" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <!-- Created timestamp -->
+                <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Created" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- Version column -->
-                  <DataGridTextColumn Binding="{Binding Version}" Width="80" MinWidth="60">
-                    <DataGridTextColumn.Header>
-                      <TextBlock Text="Version" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridTextColumn.Header>
-                  </DataGridTextColumn>
+                <!-- Modified timestamp -->
+                <DataGridTextColumn Binding="{Binding ModifiedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Modified" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- Default status -->
-                  <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60">
-                    <DataGridCheckBoxColumn.Header>
-                      <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridCheckBoxColumn.Header>
-                  </DataGridCheckBoxColumn>
+                <!-- Version column -->
+                <DataGridTextColumn Binding="{Binding Version}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Version" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-                  <!-- Read-only status -->
-                  <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70">
-                    <DataGridCheckBoxColumn.Header>
-                      <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                    </DataGridCheckBoxColumn.Header>
-                  </DataGridCheckBoxColumn>
-                </DataGrid.Columns>
-              </DataGrid>
-            </Grid>
+                <!-- Default status -->
+                <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
+
+                <!-- Read-only status -->
+                <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
+              </DataGrid.Columns>
+            </DataGrid>
+          </Grid>
           </StackPanel>
 
           <!-- Profile Statistics -->
@@ -235,6 +246,8 @@
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+
+            <!-- Profiles Path controls removed from here and moved to Import/Export section -->
 
             <TextBlock Grid.Column="0"
                        Text="{Binding Profiles.Count, StringFormat='Total Profiles: {0}'}"
@@ -254,38 +267,14 @@
         </StackPanel>
       </Border>
 
-      <!-- Serial Configuration Info Banner -->
-      <Border Background="#264F78"
-              BorderBrush="#306998"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="12,10">
-        <StackPanel Orientation="Horizontal" Spacing="10">
-          <icons:Icon Value="fa-solid fa-info-circle" Width="18" Height="18" Foreground="#9CDCFE" VerticalAlignment="Top" Margin="0,2,0,0" />
-          <StackPanel Spacing="4">
-            <TextBlock Text="Serial Configuration Workflow" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="12" />
-            <TextBlock TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="11">
-              <Run Text="1. Configure your serial port " />
-              <Run Text="first" FontWeight="Bold" />
-              <Run Text=" using " />
-              <Run Text="Serial Ports Settings" FontWeight="SemiBold" />
-              <LineBreak />
-              <Run Text="2. Then start socat with the already-configured device (socat will " />
-              <Run Text="not" FontWeight="Bold" />
-              <Run Text=" reconfigure serial settings)" />
-            </TextBlock>
-          </StackPanel>
-        </StackPanel>
-      </Border>
-
-      <!-- Serial Device Discovery Section -->
+      <!-- Port Discovery Section -->
       <Border Background="#252526"
               BorderBrush="#464647"
               BorderThickness="1"
               CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="16">
-          <!-- Row 1: Device Discovery Title + Scan Devices Button -->
+          <!-- Row 1: Port Discovery Title + Scan Ports Button -->
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
@@ -294,7 +283,7 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"
-                       Text="Serial Device Discovery"
+                       Text="Port Discovery"
                        FontSize="18"
                        FontWeight="SemiBold"
                        Foreground="#CCCCCC"
@@ -305,44 +294,46 @@
                     Foreground="White"
                     BorderThickness="0"
                     Padding="12,8"
-                    Command="{Binding ScanSerialDevicesCommand}"
+                    Command="{Binding ScanPortsCommand}"
                     IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <icons:Icon Value="fa-solid fa-search" Width="16" Height="16" />
-                <TextBlock Text="Scan Devices" />
+                <TextBlock Text="Scan Ports" />
               </StackPanel>
             </Button>
           </Grid>
 
-          <!-- Row 2: Available Serial Devices -->
+          <!-- Row 2: The wrap list with the scanned ports -->
           <Grid Background="Transparent">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-              <ListBox x:Name="DevicesListBox"
+              <ListBox x:Name="PortsListBox"
                        Height="160"
-                       ItemsSource="{Binding AvailableSerialDevices}"
-                       SelectedItem="{Binding SelectedSerialDevice}"
+                       ItemsSource="{Binding AvailablePorts}"
+                       SelectedItem="{Binding SelectedPort}"
                        Background="#3C3C3C"
                        Foreground="#CCCCCC"
                        BorderBrush="#464647"
                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                        ScrollViewer.VerticalScrollBarVisibility="Disabled"
                        Focusable="False">
+                <!-- Use a WrapPanel so ports fill top->down then next column with proper spacing -->
                 <ListBox.ItemsPanel>
                   <ItemsPanelTemplate>
-                    <WrapPanel Orientation="Vertical" ItemWidth="150" ItemHeight="32" />
+                    <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
                   </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
 
                 <ListBox.ItemTemplate>
                   <DataTemplate DataType="sys:String">
+                    <!-- No rounded corners, tighter width, proper spacing -->
                     <Border Background="#2D2D2D"
                             CornerRadius="0"
                             Padding="8,6"
                             Margin="6,3"
-                            Width="140"
+                            Width="130"
                             Height="26">
                       <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                        <icons:Icon Value="fa-solid fa-microchip" Width="12" Height="12" Foreground="#0E639C" VerticalAlignment="Center" />
+                        <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#0E639C" VerticalAlignment="Center" />
                         <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" />
                       </StackPanel>
                     </Border>
@@ -351,7 +342,7 @@
               </ListBox>
             </ScrollViewer>
 
-            <!-- Scanning overlay -->
+            <!-- Overlay: semi-transparent backdrop with a centered ProgressRing when scanning -->
             <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
               <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                 <fa:ProgressRing Width="64" Height="64" IsActive="{Binding IsScanning}" />
@@ -359,7 +350,7 @@
             </Border>
           </Grid>
 
-          <!-- Row 3: Status and Selection Info -->
+          <!-- Row 3: Found ports text and Selected port text -->
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
@@ -374,19 +365,18 @@
                        VerticalAlignment="Center" />
 
             <TextBlock Grid.Column="1"
-                       Text="{Binding SelectedSerialDevice, StringFormat='• Selected: {0}', FallbackValue='• Selected: None'}"
+                       Text="{Binding SelectedPort, StringFormat='Selected: {0}', FallbackValue='Selected: None'}"
                        Foreground="#858585"
                        FontSize="12"
                        VerticalAlignment="Center" />
 
             <TextBlock Grid.Column="2"
-                       Text="{Binding DeviceCount, StringFormat='• {0} devices found'}"
+                       Text=""
                        Foreground="#858585"
-                       FontSize="12"
-                       VerticalAlignment="Center" />
+                       FontSize="12" />
           </Grid>
 
-          <!-- Row 4: Actions and Command Preview -->
+          <!-- Row 4: Test Port Button + STTY Command inline -->
           <Grid>
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
@@ -394,35 +384,22 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="4" Margin="0,0,16,0">
-              <TextBlock Text="Actions:" Foreground="#CCCCCC" FontWeight="SemiBold" />
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Background="#0E639C"
-                        Foreground="White"
-                        BorderThickness="0"
-                        Padding="12,8"
-                        Command="{Binding StartSocatCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
-                    <TextBlock Text="Start socat" />
-                  </StackPanel>
-                </Button>
-
-                <Button Background="#D13438"
-                        Foreground="White"
-                        BorderThickness="0"
-                        Padding="12,8"
-                        Command="{Binding StopSocatCommand}">
-                  <StackPanel Orientation="Horizontal" Spacing="6">
-                    <icons:Icon Value="fa-solid fa-stop" Width="14" Height="14" />
-                    <TextBlock Text="Stop" />
-                  </StackPanel>
-                </Button>
-              </StackPanel>
+              <TextBlock Text="Test Port:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,8"
+                      Command="{Binding TestPortCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
+                  <TextBlock Text="Test Port" />
+                </StackPanel>
+              </Button>
             </StackPanel>
 
             <StackPanel Grid.Column="1" Spacing="4">
-              <TextBlock Text="socat Command Preview:" Foreground="#CCCCCC" FontWeight="SemiBold" />
-              <TextBox Text="{Binding SelectedProfileSocatCommand}"
+              <TextBlock Text="Profile STTY Command:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <TextBox Text="{Binding SelectedProfileSttyString}"
                        IsReadOnly="True"
                        Background="#1E1E1E"
                        Foreground="#CCCCCC"
@@ -434,152 +411,7 @@
         </StackPanel>
       </Border>
 
-      <!-- Process Management Section -->
-      <Border Background="#252526"
-              BorderBrush="#464647"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="16">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0"
-                       Text="Running Processes"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="#CCCCCC"
-                       VerticalAlignment="Center" />
-
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-              <Button Background="#D13438"
-                      Foreground="White"
-                      BorderThickness="0"
-                      Padding="12,8"
-                      Command="{Binding StopAllSocatCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-stop-circle" Width="16" Height="16" />
-                  <TextBlock Text="Stop All" />
-                </StackPanel>
-              </Button>
-
-              <Button Background="Transparent"
-                      BorderBrush="#464647"
-                      Foreground="#CCCCCC"
-                      BorderThickness="1"
-                      Padding="12,8"
-                      Command="{Binding RefreshProcessesCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-sync" Width="16" Height="16" />
-                  <TextBlock Text="Refresh" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
-          </Grid>
-
-          <!-- Running Processes List -->
-          <DataGrid ItemsSource="{Binding RunningProcesses}"
-                    SelectedItem="{Binding SelectedProcess}"
-                    Background="#3C3C3C"
-                    Foreground="#CCCCCC"
-                    GridLinesVisibility="Horizontal"
-                    HeadersVisibility="Column"
-                    CanUserReorderColumns="False"
-                    CanUserResizeColumns="True"
-                    CanUserSortColumns="True"
-                    IsReadOnly="True"
-                    Height="150">
-            <DataGrid.Styles>
-              <Style Selector="DataGridColumnHeader">
-                <Setter Property="FontSize" Value="11" />
-                <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Padding" Value="8,4,32,4" />
-                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                <Setter Property="Template">
-                  <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                      <DockPanel>
-                        <ContentPresenter Content="{TemplateBinding Content}"
-                                          DockPanel.Dock="Left"
-                                          VerticalAlignment="Center" />
-                      </DockPanel>
-                    </Border>
-                  </ControlTemplate>
-                </Setter>
-              </Style>
-            </DataGrid.Styles>
-
-            <DataGrid.Columns>
-              <DataGridTextColumn Binding="{Binding ProcessId}" Width="80" MinWidth="60">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="PID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding Profile.Name}" Width="140" MinWidth="100">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Profile" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding SerialDevice}" Width="120" MinWidth="100">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Serial Device" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding TcpPort}" Width="80" MinWidth="70">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding Status}" Width="100" MinWidth="80">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Status" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding StartTime, StringFormat='HH:mm:ss'}" Width="80" MinWidth="70">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Started" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-            </DataGrid.Columns>
-          </DataGrid>
-
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0"
-                       Text="{Binding RunningProcessCount, StringFormat='Running: {0} socat processes'}"
-                       Foreground="#858585"
-                       FontSize="12"
-                       VerticalAlignment="Center" />
-
-            <Button Grid.Column="1"
-                    Background="#0E639C"
-                    Foreground="White"
-                    BorderThickness="0"
-                    Padding="12,6"
-                    Command="{Binding TestConnectionCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-network-wired" Width="14" Height="14" />
-                <TextBlock Text="Test Connection" />
-              </StackPanel>
-            </Button>
-          </Grid>
-        </StackPanel>
-      </Border>
-
-      <!-- Import/Export Section -->
+            <!-- Import/Export Section -->
       <Border Background="#252526"
               BorderBrush="#464647"
               BorderThickness="1"
@@ -717,13 +549,13 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Spacing="4">
-              <TextBlock Text="socat Operations:"
+              <TextBlock Text="Port Discovery:"
                          Foreground="#CCCCCC"
                          FontWeight="SemiBold" />
-              <TextBlock Text="{Binding DeviceCount, StringFormat='• {0} devices discovered'}"
+              <TextBlock Text="{Binding PortCount, StringFormat='• {0} ports discovered'}"
                          Foreground="#858585"
                          FontSize="12" />
-              <TextBlock Text="{Binding RunningProcessCount, StringFormat='• {0} processes running'}"
+              <TextBlock Text="{Binding SelectedPort, StringFormat='• Selected: {0}', FallbackValue='• No port selected'}"
                          Foreground="#858585"
                          FontSize="12" />
             </StackPanel>

@@ -150,6 +150,20 @@
                     </DataGridTextColumn.Header>
                   </DataGridTextColumn>
 
+                  <!-- Options column for modbus/device options -->
+                  <DataGridTextColumn Binding="{Binding Options}" Width="150" MinWidth="100">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Options" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <!-- Flags column for additional flags -->
+                  <DataGridTextColumn Binding="{Binding Flags}" Width="120" MinWidth="80">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="Flags" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
                   <!-- Type configuration column -->
                   <DataGridTextColumn Binding="{Binding Configuration.Type}" Width="120" MinWidth="80">
                     <DataGridTextColumn.Header>
