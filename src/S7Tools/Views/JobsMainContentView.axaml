@@ -460,9 +460,11 @@
                   x:Name="JobInfoSplitter"
                   Background="#464647"
                   Width="4"
-                  IsVisible="False"
+                  IsVisible="{Binding IsJobInfoVisible}"
+                  IsHitTestVisible="{Binding IsJobInfoVisible}"
                   VerticalAlignment="Stretch"
                   ResizeDirection="Columns"
+                  ShowsPreview="True"
                   Cursor="SizeWestEast" />
 
     <!-- Job Information Panel -->
