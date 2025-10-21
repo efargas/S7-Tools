@@ -555,7 +555,8 @@
                         </ItemsControl>
                       </StackPanel>
                     </ScrollViewer>
-                  </Border><!-- Advanced Properties -->
+                  </Border>
+                  <!-- Advanced Properties -->
                   <Border Classes="PropertyTable" MaxHeight="200"
                           IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
