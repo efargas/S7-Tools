@@ -20,14 +20,13 @@
   <Grid x:Name="MainGrid">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="48" />
       <ColumnDefinition Width="0" />
-      <ColumnDefinition Width="48" MinWidth="48" MaxWidth="600" />
+      <ColumnDefinition Width="0" MinWidth="300" MaxWidth="600" />
     </Grid.ColumnDefinitions>
 
     <!-- Left Panel: Jobs Management -->
-    <ScrollViewer Grid.Column="0"
-                  HorizontalScrollBarVisibility="Auto"
-                  VerticalScrollBarVisibility="Auto">
+    <ScrollViewer Grid.Column="0">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Jobs Management"
@@ -409,7 +408,7 @@
     </ScrollViewer>
 
     <!-- Right Panel Activity Bar (when collapsed) -->
-    <Border Grid.Column="2"
+    <Border Grid.Column="1"
             x:Name="ActivityBar"
             Background="#2D2D30"
             BorderBrush="#464647"
@@ -457,7 +456,7 @@
     </Border>
 
     <!-- GridSplitter for resizing -->
-    <GridSplitter Grid.Column="1"
+    <GridSplitter Grid.Column="2"
                   x:Name="JobInfoSplitter"
                   Background="#464647"
                   Width="4"
@@ -467,7 +466,7 @@
                   Cursor="SizeWestEast" />
 
     <!-- Job Information Panel -->
-    <Border Grid.Column="2"
+    <Border Grid.Column="3"
             x:Name="JobInfoPanel"
             Background="#252526"
             BorderBrush="#464647"

@@ -12,11 +12,13 @@ public partial class JobsMainContentView : UserControl, IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
     private bool _disposed;
+    private double _lastPanelWidth = 400; // Store the last panel width for restoration
 
     public JobsMainContentView()
     {
         InitializeComponent();
         SetupBindings();
+        SetupLayoutEvents();
     }
 
     private void SetupBindings()
@@ -50,6 +52,14 @@ public partial class JobsMainContentView : UserControl, IDisposable
             .DisposeWith(_disposables);
     }
 
+    private void SetupLayoutEvents()
+    {
+        // Subscribe to GridSplitter events for real-time layout feedback
+        // Note: Avalonia GridSplitter doesn't expose resize events directly
+        // The layout updates happen automatically during resize operations
+        // Panel width constraints are enforced by the MinWidth/MaxWidth in XAML
+    }
+
     private void OnJobInfoToggleClick(object? sender, RoutedEventArgs e)
     {
         // Show the job info panel, splitter, and hide the activity bar
@@ -58,22 +68,28 @@ public partial class JobsMainContentView : UserControl, IDisposable
         JobInfoSplitter.IsVisible = true;
 
         // Update column widths for expanded state
-        MainGrid.ColumnDefinitions[1].Width = new GridLength(0);  // Hide activity bar column
-        MainGrid.ColumnDefinitions[2].Width = GridLength.Auto;     // Show splitter column
-        MainGrid.ColumnDefinitions[3].Width = new GridLength(400, GridUnitType.Pixel);  // Show panel column
-    }
+        MainGrid.ColumnDefinitions[1].Width = new GridLength(4, GridUnitType.Pixel); // Show splitter (4px)
 
-    private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
+        // Restore the last panel width (with constraints enforcement)
+        var targetWidth = Math.Max(300, Math.Min(600, _lastPanelWidth));
+        MainGrid.ColumnDefinitions[2].Width = new GridLength(targetWidth, GridUnitType.Pixel);
+    }    private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
     {
+        // Store the current panel width before closing (for restoration)
+        var currentWidth = MainGrid.ColumnDefinitions[2].Width;
+        if (currentWidth.IsAbsolute)
+        {
+            _lastPanelWidth = currentWidth.Value;
+        }
+
         // Hide the job info panel, splitter, and show the activity bar
         JobInfoPanel.IsVisible = false;
         JobInfoSplitter.IsVisible = false;
         ActivityBar.IsVisible = true;
 
         // Update column widths for collapsed state
-        MainGrid.ColumnDefinitions[1].Width = new GridLength(48, GridUnitType.Pixel);  // Show activity bar column
-        MainGrid.ColumnDefinitions[2].Width = new GridLength(0);   // Hide splitter column
-        MainGrid.ColumnDefinitions[3].Width = new GridLength(0);   // Hide panel column
+        MainGrid.ColumnDefinitions[1].Width = new GridLength(0); // Hide splitter
+        MainGrid.ColumnDefinitions[2].Width = new GridLength(48, GridUnitType.Pixel); // Show activity bar
     }
 
     public void Dispose()
