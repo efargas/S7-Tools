@@ -470,7 +470,7 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <Border Classes="PropertyTable" MaxHeight="200">
+                  <Border Classes="PropertyTable">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                       <StackPanel>
@@ -478,7 +478,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -493,7 +493,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -513,7 +513,7 @@
                   </Border>
 
                   <!-- Configuration Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -523,7 +523,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -538,7 +538,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -556,7 +556,7 @@
                       </StackPanel>
                     </ScrollViewer>
                   </Border><!-- Advanced Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -566,7 +566,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -581,7 +581,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -632,7 +632,7 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <Border Classes="PropertyTable" MaxHeight="200">
+                  <Border Classes="PropertyTable">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                       <StackPanel>
@@ -640,7 +640,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -655,7 +655,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -675,7 +675,7 @@
                   </Border>
 
                   <!-- Configuration Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -685,7 +685,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -700,7 +700,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -718,7 +718,7 @@
                       </StackPanel>
                     </ScrollViewer>
                   </Border><!-- Advanced Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -728,7 +728,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -743,7 +743,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -794,7 +794,7 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <Border Classes="PropertyTable" MaxHeight="200">
+                  <Border Classes="PropertyTable">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                       <StackPanel>
@@ -802,7 +802,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -817,7 +817,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -837,7 +837,7 @@
                   </Border>
 
                   <!-- Configuration Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -847,7 +847,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -862,7 +862,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -880,7 +880,7 @@
                       </StackPanel>
                     </ScrollViewer>
                   </Border><!-- Advanced Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -890,7 +890,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -905,7 +905,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -956,7 +956,7 @@
                   </DockPanel>
 
                   <!-- All Properties in one section -->
-                  <Border Classes="PropertyTable" MaxHeight="200">
+                  <Border Classes="PropertyTable">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                                   VerticalScrollBarVisibility="Auto">
                       <StackPanel>
@@ -964,7 +964,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -979,7 +979,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -999,7 +999,7 @@
                   </Border>
 
                   <!-- Configuration Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding ConfigurationProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -1009,7 +1009,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -1024,7 +1024,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
@@ -1042,7 +1042,7 @@
                       </StackPanel>
                     </ScrollViewer>
                   </Border><!-- Advanced Properties -->
-                  <Border Classes="PropertyTable" MaxHeight="200"
+                  <Border Classes="PropertyTable"
                           IsVisible="{Binding AdvancedProperties.Count, Converter={x:Static converters:ObjectConverters.CountToVisibility}}"
                           Margin="0,8,0,0">
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"
@@ -1052,7 +1052,7 @@
                         <Border Classes="PropertyHeader">
                           <Grid>
                             <Grid.ColumnDefinitions>
-                              <ColumnDefinition Width="120" />
+                              <ColumnDefinition Width="180" />
                               <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="Setting" Classes="PropertyHeaderText" />
@@ -1067,7 +1067,7 @@
                               <Border Classes="PropertyRow">
                                 <Grid>
                                   <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120" />
+                                    <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                   </Grid.ColumnDefinitions>
                                   <TextBlock Grid.Column="0"
