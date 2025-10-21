@@ -38,6 +38,28 @@
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="0" />
       <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Transitions" Value="" />
+    </Style>
+
+    <!-- Override profile section grid and children -->
+    <Style Selector="Border.ProfileSection Expander Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander Grid icons|Icon">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander Grid TextBlock">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander ToggleButton ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
     </Style>
 
     <Style Selector="Border.WarningSection">
@@ -46,6 +68,28 @@
       <Setter Property="BorderThickness" Value="0,1,0,0" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="0" />
+      <Setter Property="Transitions" Value="" />
+    </Style>
+
+    <!-- Override warning section grid and children -->
+    <Style Selector="Border.WarningSection Expander Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.WarningSection Expander Grid icons|Icon">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.WarningSection Expander Grid TextBlock">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.WarningSection Expander ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.WarningSection Expander ToggleButton ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
     </Style>
 
     <!-- Complete Expander template override -->
@@ -53,9 +97,10 @@
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
       <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Transitions" Value="" />
       <Setter Property="Template">
         <ControlTemplate>
-          <StackPanel>
+          <StackPanel Transitions="">
             <!-- Header -->
             <ToggleButton Name="PART_Toggle"
                          IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"
@@ -67,7 +112,8 @@
                          Background="Transparent"
                          BorderThickness="0"
                          Content="{TemplateBinding Header}"
-                         ContentTemplate="{TemplateBinding HeaderTemplate}">
+                         ContentTemplate="{TemplateBinding HeaderTemplate}"
+                         Transitions="">
               <ToggleButton.Template>
                 <ControlTemplate>
                   <ContentPresenter Name="PART_ContentPresenter"
@@ -86,7 +132,8 @@
                              IsVisible="{TemplateBinding IsExpanded}"
                              Content="{TemplateBinding Content}"
                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                             Padding="0,0" />
+                             Padding="0,0"
+                             Transitions="" />
           </StackPanel>
         </ControlTemplate>
       </Setter>
@@ -133,6 +180,155 @@
       <Setter Property="Background" Value="Transparent" />
     </Style>
 
+    <!-- More specific overrides for our expander headers -->
+    <Style Selector="Expander ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:pressed">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:checked">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:checked:pointerover">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:checked:pressed">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <!-- Override ContentPresenter inside ToggleButton -->
+    <Style Selector="Expander ToggleButton ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Override Grid inside headers -->
+    <Style Selector="Expander Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Override ALL header elements - nuclear approach -->
+    <Style Selector="Expander Grid icons|Icon">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="Expander Grid icons|Icon.ExpanderArrow">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="Expander Grid icons|Icon.ExpanderIcon">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="Expander Grid TextBlock.ExpanderHeader">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <!-- Override ANY element inside the expander header grid -->
+    <Style Selector="Expander Grid icons|Icon">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander Grid TextBlock">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander Grid ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Force override for expanded state -->
+    <Style Selector="Expander:expanded Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander:expanded Grid icons|Icon">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander:expanded Grid TextBlock">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Override hover states on grid elements -->
+    <Style Selector="Expander:pointerover Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander:pointerover Grid icons|Icon">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander:pointerover Grid TextBlock">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Override pressed states on grid elements -->
+    <Style Selector="Expander:pressed Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander:pressed Grid icons|Icon">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander:pressed Grid TextBlock">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Nuclear option: Override ALL possible FluentAvalonia accent colors -->
+    <Style Selector="Expander ToggleButton /template/ ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton /template/ Border">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <!-- Force transparent for any nested elements -->
+    <Style Selector="Expander ToggleButton ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton Border">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Override FluentAvalonia accent system -->
+    <Style Selector="Expander ToggleButton:focus">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:focus-visible">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
     <!-- Arrow icon states -->
     <Style Selector="Expander:not(:expanded) icons|Icon.ExpanderArrow">
       <Setter Property="Value" Value="fa-solid fa-chevron-right" />
@@ -144,7 +340,7 @@
   </UserControl.Styles>
 
   <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-    <StackPanel Spacing="0" Margin="0">
+    <StackPanel Spacing="0" Margin="0" Transitions="">
 
       <!-- Job Basic Information -->
       <Border Classes="ProfileSection">
