@@ -2,6 +2,7 @@ using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using ReactiveUI;
 using S7Tools.ViewModels;
 
@@ -47,6 +48,20 @@ public partial class JobsMainContentView : UserControl, IDisposable
                     .DisposeWith(_disposables);
             })
             .DisposeWith(_disposables);
+    }
+
+    private void OnJobInfoToggleClick(object? sender, RoutedEventArgs e)
+    {
+        // Show the job info panel and hide the activity bar
+        ActivityBar.IsVisible = false;
+        JobInfoPanel.IsVisible = true;
+    }
+
+    private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
+    {
+        // Hide the job info panel and show the activity bar
+        JobInfoPanel.IsVisible = false;
+        ActivityBar.IsVisible = true;
     }
 
     public void Dispose()
