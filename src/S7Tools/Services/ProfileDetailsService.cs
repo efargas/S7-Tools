@@ -173,16 +173,15 @@ public class ProfileDetailsService : IProfileDetailsService
 
         try
         {
-            // If profileId is actually an int stored as Guid, extract it properly:
-            // Or better: change the method signature to accept the correct ID type
-            throw new NotImplementedException("Profile ID conversion needs proper implementation");
+            // Attempt to load by Guid via the provided manager
+            T? profile = await profileManager.GetByIdAsync(profileId.Value).ConfigureAwait(false);
             if (profile == null)
             {
                 return CreateEmptyViewModel($"Profile with ID {profileId} not found");
             }
 
             IProfileDetailsViewModel? result = CreateProfileDetailsViewModel(profile);
-            return result ?? CreateEmptyViewModel($"Error creating profile details");
+            return result ?? CreateEmptyViewModel("Error creating profile details");
         }
         catch (Exception ex)
         {
