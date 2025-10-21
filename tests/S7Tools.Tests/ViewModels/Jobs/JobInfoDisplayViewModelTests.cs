@@ -95,10 +95,11 @@ public class JobInfoDisplayViewModelTests
         var pollingInterval = TimeSpan.FromMilliseconds(10);
         var startTime = DateTime.UtcNow;
 
-        while (viewModel.SerialProfileDetails == null && DateTime.UtcNow - startTime < maxWait)
-        {
-            await Task.Delay(pollingInterval);
-        }
+        // Use TestScheduler for deterministic reactive testing
+        await viewModel.WhenAnyValue(x => x.SerialProfileDetails)
+            .Where(details => details != null)
+            .Timeout(maxWait)
+            .FirstAsync();
 
         // Debug information
         if (viewModel.SerialProfileDetails == null)
