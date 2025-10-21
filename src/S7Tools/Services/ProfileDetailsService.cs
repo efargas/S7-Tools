@@ -173,7 +173,9 @@ public class ProfileDetailsService : IProfileDetailsService
 
         try
         {
-            T? profile = await profileManager.GetByIdAsync(Convert.ToInt32(profileId.Value.GetHashCode()));
+            // If profileId is actually an int stored as Guid, extract it properly:
+            // Or better: change the method signature to accept the correct ID type
+            throw new NotImplementedException("Profile ID conversion needs proper implementation");
             if (profile == null)
             {
                 return CreateEmptyViewModel($"Profile with ID {profileId} not found");
