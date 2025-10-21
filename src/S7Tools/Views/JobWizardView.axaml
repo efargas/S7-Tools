@@ -18,6 +18,161 @@
     <converters:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
+  <UserControl.Styles>
+    <!-- Property table styling for better appearance -->
+    <Style Selector="Border.PropertyTable">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Margin" Value="0,4" />
+    </Style>
+
+    <!-- Property header styling -->
+    <Style Selector="Border.PropertyHeader">
+      <Setter Property="Background" Value="#2D2D30" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyHeaderText">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Property row styling with alternating background -->
+    <Style Selector="Border.PropertyRow">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="24" />
+    </Style>
+
+    <Style Selector="Border.PropertyRow:nth-child(even)">
+      <Setter Property="Background" Value="#2A2A2B" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyName">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyValue">
+      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Profile section styling -->
+    <Style Selector="Border.ProfileSection">
+      <Setter Property="Background" Value="#2D2D2D" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Margin" Value="0,8" />
+    </Style>
+
+    <!-- Expander styling -->
+    <Style Selector="Border.ProfileSection Expander Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander Grid icons|Icon">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander Grid TextBlock">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander ToggleButton ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Complete Expander template override -->
+    <Style Selector="Expander">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <DockPanel>
+              <ToggleButton x:Name="PART_toggle"
+                            DockPanel.Dock="Top"
+                            HorizontalAlignment="Stretch"
+                            Content="{TemplateBinding Header}"
+                            IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+              <Border x:Name="PART_content"
+                      IsVisible="{TemplateBinding IsExpanded}">
+                <ContentPresenter x:Name="PART_contentPresenter"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
+              </Border>
+            </DockPanel>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="TextBlock.ExpanderHeader">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="8,0,0,0" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="icons|Icon.ExpanderIcon">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="Margin" Value="8,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="icons|Icon.ExpanderArrow">
+      <Setter Property="Value" Value="fa-solid fa-chevron-right" />
+      <Setter Property="Margin" Value="12,0,0,0" />
+    </Style>
+
+    <!-- Expander animations -->
+    <Style Selector="Expander ToggleButton:checked icons|Icon.ExpanderArrow">
+      <Setter Property="Value" Value="fa-solid fa-chevron-down" />
+    </Style>
+
+    <!-- More specific overrides for our expander headers -->
+    <Style Selector="Expander ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:pointerover">
+      <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:pressed">
+      <Setter Property="Background" Value="#505050" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:checked">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:checked:pointerover">
+      <Setter Property="Background" Value="#404040" />
+    </Style>
+  </UserControl.Styles>
+
   <ScrollViewer>
     <StackPanel Margin="20" Spacing="12">
       <!-- Title + Step + Busy -->
@@ -62,21 +217,159 @@
           </Grid>
 
           <!-- Serial Profile Details -->
-          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Serial Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
-              <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSerial.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Baud Rate:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSerial.Configuration.BaudRate, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Flags:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSerial.Flags, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-              </Grid>
-            </StackPanel>
-          </Border>
+          <Border Classes="ProfileSection"
+                  IsVisible="{Binding SelectedSerial, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Expander IsExpanded="True">
+              <Expander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-plug" />
+                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SERIAL PORT CONFIGURATION" />
+                </Grid>
+              </Expander.Header>
 
-          <!-- Port Discovery Section -->
+              <StackPanel Spacing="4" Margin="8">
+                <!-- Profile Name -->
+                <DockPanel Margin="0,4">
+                  <TextBlock Classes="PropertyName" Text="Profile:" Width="120" />
+                  <TextBlock Classes="PropertyValue" Text="{Binding SelectedSerial.Name, FallbackValue='(none selected)'}" FontWeight="SemiBold" />
+                </DockPanel>
+
+                <!-- Basic Properties -->
+                <Border Classes="PropertyTable" Margin="0,8,0,0">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                    <StackPanel>
+                      <!-- Header -->
+                      <Border Classes="PropertyHeader">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Basic Setting" Classes="PropertyHeaderText" />
+                          <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                        </Grid>
+                      </Border>
+
+                      <!-- Basic Property Rows -->
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Description" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SelectedSerial.Description, FallbackValue='N/A'}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Version" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SerialVersion}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Created" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SerialCreatedAt}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+                    </StackPanel>
+                  </ScrollViewer>
+                </Border>
+
+                <!-- Configuration Properties -->
+                <Border Classes="PropertyTable" Margin="0,8,0,0">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                    <StackPanel>
+                      <!-- Header -->
+                      <Border Classes="PropertyHeader">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Configuration" Classes="PropertyHeaderText" />
+                          <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                        </Grid>
+                      </Border>
+
+                      <!-- Configuration Property Rows -->
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Baud Rate" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SerialBaudRate}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Character Size" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SerialCharacterSize}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Parity" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SerialParity}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Stop Bits" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SerialStopBits}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Enable Receiver" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SerialEnableReceiver}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+                    </StackPanel>
+                  </ScrollViewer>
+                </Border>
+              </StackPanel>
+            </Expander>
+          </Border>          <!-- Port Discovery Section -->
           <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
             <StackPanel Spacing="12">
               <!-- Row 1: Port Discovery Title + Scan Ports Button -->
@@ -178,20 +471,136 @@
           </Grid>
 
           <!-- Socat Profile Details -->
-          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Socat Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSocat.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="TCP Port:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSocat.Configuration.TcpPort, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="TCP Host:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSocat.Configuration.TcpHost, FallbackValue='All Interfaces'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Flags:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSocat.Flags, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-              </Grid>
-            </StackPanel>
+          <Border Classes="ProfileSection"
+                  IsVisible="{Binding SelectedSocat, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Expander IsExpanded="True">
+              <Expander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-network-wired" />
+                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SOCAT NETWORK BRIDGE" />
+                </Grid>
+              </Expander.Header>
+
+              <StackPanel Spacing="4" Margin="8">
+                <!-- Profile Name -->
+                <DockPanel Margin="0,4">
+                  <TextBlock Classes="PropertyName" Text="Profile:" Width="120" />
+                  <TextBlock Classes="PropertyValue" Text="{Binding SelectedSocat.Name, FallbackValue='(none selected)'}" FontWeight="SemiBold" />
+                </DockPanel>
+
+                <!-- Basic Properties -->
+                <Border Classes="PropertyTable" Margin="0,8,0,0">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                    <StackPanel>
+                      <!-- Header -->
+                      <Border Classes="PropertyHeader">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Basic Setting" Classes="PropertyHeaderText" />
+                          <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                        </Grid>
+                      </Border>
+
+                      <!-- Basic Property Rows -->
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Description" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SelectedSocat.Description, FallbackValue='N/A'}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Version" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SelectedSocat.Version, FallbackValue='N/A'}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Created" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SelectedSocat.CreatedAt, FallbackValue='N/A'}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+                    </StackPanel>
+                  </ScrollViewer>
+                </Border>
+
+                <!-- TCP Configuration -->
+                <Border Classes="PropertyTable" Margin="0,8,0,0">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                    <StackPanel>
+                      <!-- Header -->
+                      <Border Classes="PropertyHeader">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="TCP Configuration" Classes="PropertyHeaderText" />
+                          <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                        </Grid>
+                      </Border>
+
+                      <!-- TCP Property Rows -->
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="TCP Host" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SocatTcpHost}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="TCP Port" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SocatTcpPort}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Verbose Mode" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SocatVerbose}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+                    </StackPanel>
+                  </ScrollViewer>
+                </Border>
+              </StackPanel>
+            </Expander>
           </Border>
         </StackPanel>
       </Border>
@@ -215,20 +624,136 @@
           </Grid>
 
           <!-- Power Supply Profile Details -->
-          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Power Supply Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPower.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Host:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPowerHost, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Port:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPowerPort, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Device ID:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedPowerDeviceId, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-              </Grid>
-            </StackPanel>
+          <Border Classes="ProfileSection"
+                  IsVisible="{Binding SelectedPower, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Expander IsExpanded="True">
+              <Expander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-bolt" />
+                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="POWER SUPPLY CONTROL" />
+                </Grid>
+              </Expander.Header>
+
+              <StackPanel Spacing="4" Margin="8">
+                <!-- Profile Name -->
+                <DockPanel Margin="0,4">
+                  <TextBlock Classes="PropertyName" Text="Profile:" Width="120" />
+                  <TextBlock Classes="PropertyValue" Text="{Binding SelectedPower.Name, FallbackValue='(none selected)'}" FontWeight="SemiBold" />
+                </DockPanel>
+
+                <!-- Basic Properties -->
+                <Border Classes="PropertyTable" Margin="0,8,0,0">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                    <StackPanel>
+                      <!-- Header -->
+                      <Border Classes="PropertyHeader">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Basic Setting" Classes="PropertyHeaderText" />
+                          <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                        </Grid>
+                      </Border>
+
+                      <!-- Basic Property Rows -->
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Description" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SelectedPower.Description, FallbackValue='N/A'}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Version" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SelectedPower.Version, FallbackValue='N/A'}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Created" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding SelectedPower.CreatedAt, FallbackValue='N/A'}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+                    </StackPanel>
+                  </ScrollViewer>
+                </Border>
+
+                <!-- Modbus TCP Configuration -->
+                <Border Classes="PropertyTable" Margin="0,8,0,0">
+                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" MaxHeight="200">
+                    <StackPanel>
+                      <!-- Header -->
+                      <Border Classes="PropertyHeader">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Modbus TCP Configuration" Classes="PropertyHeaderText" />
+                          <TextBlock Grid.Column="1" Text="Value" Classes="PropertyHeaderText" />
+                        </Grid>
+                      </Border>
+
+                      <!-- Modbus Property Rows -->
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Host" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding PowerHost}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Port" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding PowerPort}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+
+                      <Border Classes="PropertyRow">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Grid.Column="0" Text="Device ID" Classes="PropertyName" />
+                          <TextBlock Grid.Column="1" Text="{Binding PowerDeviceId}" Classes="PropertyValue" />
+                        </Grid>
+                      </Border>
+                    </StackPanel>
+                  </ScrollViewer>
+                </Border>
+              </StackPanel>
+            </Expander>
           </Border>
         </StackPanel>
       </Border>
