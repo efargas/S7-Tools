@@ -272,29 +272,19 @@
     </Style>
 
     <!-- Override ALL header elements - nuclear approach -->
+    <!-- Consolidated icon styling inside expander header grid -->
     <Style Selector="Expander Grid icons|Icon">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="Foreground" Value="#CCCCCC" />
     </Style>
 
+    <!-- Keep specific variants if needed -->
     <Style Selector="Expander Grid icons|Icon.ExpanderArrow">
-      <Setter Property="Background" Value="Transparent" />
       <Setter Property="Foreground" Value="#CCCCCC" />
     </Style>
 
     <Style Selector="Expander Grid icons|Icon.ExpanderIcon">
-      <Setter Property="Background" Value="Transparent" />
       <Setter Property="Foreground" Value="#CCCCCC" />
-    </Style>
-
-    <Style Selector="Expander Grid TextBlock.ExpanderHeader">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
-    </Style>
-
-    <!-- Override ANY element inside the expander header grid -->
-    <Style Selector="Expander Grid icons|Icon">
-      <Setter Property="Background" Value="Transparent" />
     </Style>
 
     <Style Selector="Expander Grid TextBlock">
