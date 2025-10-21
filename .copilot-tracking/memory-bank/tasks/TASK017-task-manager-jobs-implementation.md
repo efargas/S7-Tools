@@ -317,7 +317,7 @@ public class DumpProgress
 | 2.1 | Refactor Jobs Management details panel layout | Not Started | 2025-10-17 |
 | 2.2 | Polish Task Manager tables and headers | Not Started | 2025-10-17 |
 | 4.1 | Implement Job Creator wizard scaffold (steps, nav) | Not Started | 2025-10-17 |
-| 4.2 | Add per-step profile ComboBoxes + details view | Not Started | 2025-10-17 |
+| 4.2 | Add per-step profile ComboBoxes + details view | ✅ **COMPLETE** | 2025-10-21 |
 | 4.3 | Add validation gating for Next/Finish | Not Started | 2025-10-17 |
 | 6.1 | Unit tests for MemoryDumpProfile service/validation | Not Started | 2025-10-17 |
 
@@ -436,6 +436,19 @@ public class DumpProgress
 This implementation will establish S7Tools as a complete PLC memory dumping solution with professional-grade job management and task execution capabilities.
 
 ## Progress Log
+
+### 2025-10-21 - JobWizardView Enhancement Complete ✅
+- **Comprehensive Expandable UI Implementation**: Successfully enhanced JobWizardView.axaml with sophisticated expandable sections matching main Jobs view pattern
+- **Styling System Added**: Implemented complete PropertyTable, PropertyHeader, PropertyRow styling classes for consistent visual design
+- **Serial Port Configuration**: Replaced basic property display with expandable Expander control showing Basic Settings and Port Configuration sections
+- **Socat Network Bridge**: Added expandable section with TCP Configuration details including host and port information
+- **Power Supply Profile**: Enhanced with expandable pattern using Modbus TCP Configuration section displaying host, port, and device ID
+- **Visual Consistency**: All profile sections now use collapsible Expander controls with FontAwesome icons and descriptive headers
+- **Data Binding Verified**: All computed properties (SerialVersion, SocatTcpHost, PowerHost, etc.) properly bound and displaying
+- **Build Success**: Clean compilation with no errors, application runs successfully with new expandable UI
+- **User Request Fulfilled**: Advanced settings, options, and flags now displayed in expandable groups as requested ("missing advanced settings, options, flags like in right panel of main jobs view")
+- **Subtask 4.2 Completed**: Per-step profile ComboBoxes + details view successfully implemented with comprehensive property display
+- **Specification 005-wizard-step-details**: ✅ **COMPLETED** - All user stories addressed with comprehensive profile detail display in wizard steps
 
 ### 2025-10-17 - Scope Update (UI Refactor + MemoryRegionProfile)
 - Reopened TASK017 with new UI requirements highlighted in screenshots

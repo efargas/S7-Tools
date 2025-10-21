@@ -6,7 +6,7 @@
 
 ## In Progress
 
-- [TASK017] Task Manager and Jobs Implementation - Reopened; scheduler/DI baseline done; next: UI wizard and details panel polish, MemoryRegionProfile (2025-10-17)
+- [TASK017] Task Manager and Jobs Implementation - JobWizardView expandable UI complete; next: validation gating and MemoryRegionProfile integration (2025-10-21)
 
 ## Pending
 
