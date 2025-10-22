@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
+using S7Tools.Resources;
 
 namespace S7Tools.Services
 {
@@ -100,7 +101,7 @@ namespace S7Tools.Services
                 {
                     if (_currentSettings == null)
                     {
-                        throw new InvalidOperationException("Settings not loaded. Call LoadSettingsAsync first.");
+                        throw new InvalidOperationException(UIStrings.Error_SettingsNotLoaded);
                     }
 
                     // Update user settings
@@ -131,7 +132,7 @@ namespace S7Tools.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save user settings");
-                throw new SettingsLoadException("Failed to save user settings", _pathService.AppSettingsPath, "Save", ex);
+                throw new SettingsLoadException(UIStrings.Error_SettingsSaveFailed, _pathService.AppSettingsPath, "Save", ex);
             }
         }
 
@@ -157,7 +158,7 @@ namespace S7Tools.Services
         {
             if (string.IsNullOrEmpty(key))
             {
-                throw new ArgumentException("Setting key cannot be null or empty", nameof(key));
+                throw new ArgumentException(UIStrings.Error_SettingKeyNullOrEmpty, nameof(key));
             }
 
             try
@@ -189,7 +190,7 @@ namespace S7Tools.Services
         {
             if (string.IsNullOrEmpty(key))
             {
-                throw new ArgumentException("Setting key cannot be null or empty", nameof(key));
+                throw new ArgumentException(UIStrings.Error_SettingKeyNullOrEmpty, nameof(key));
             }
 
             _logger.LogDebug("Setting user setting {Key} to {Value}", key, value);
@@ -201,7 +202,7 @@ namespace S7Tools.Services
                 {
                     if (_currentSettings == null)
                     {
-                        throw new InvalidOperationException("Settings not loaded. Call LoadSettingsAsync first.");
+                        throw new InvalidOperationException(UIStrings.Error_SettingsNotLoaded);
                     }
 
                     oldValue = _currentSettings.UserSettings.TryGetValue(key, out object? existing) ? existing : null;
@@ -252,7 +253,7 @@ namespace S7Tools.Services
                 {
                     if (_currentSettings == null)
                     {
-                        throw new InvalidOperationException("Settings not loaded. Call LoadSettingsAsync first.");
+                        throw new InvalidOperationException(UIStrings.Error_SettingsNotLoaded);
                     }
 
                     oldValue = _currentSettings.UserSettings.TryGetValue(key, out object? existing) ? existing : null;
@@ -302,7 +303,7 @@ namespace S7Tools.Services
                 {
                     if (_currentSettings == null)
                     {
-                        throw new InvalidOperationException("Settings not loaded. Call LoadSettingsAsync first.");
+                        throw new InvalidOperationException(UIStrings.Error_SettingsNotLoaded);
                     }
 
                     resetKeys = _currentSettings.UserSettings.Keys.ToList();
@@ -331,7 +332,7 @@ namespace S7Tools.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to reset all user settings");
-                throw new SettingsLoadException("Failed to reset all settings", _pathService.AppSettingsPath, "ResetAll", ex);
+                throw new SettingsLoadException(UIStrings.Error_SettingsResetAllFailed, _pathService.AppSettingsPath, "ResetAll", ex);
             }
         }
 
@@ -350,7 +351,7 @@ namespace S7Tools.Services
                 {
                     if (_currentSettings == null)
                     {
-                        throw new InvalidOperationException("Settings not loaded. Call LoadSettingsAsync first.");
+                        throw new InvalidOperationException(UIStrings.Error_SettingsNotLoaded);
                     }
 
                     // Copy all default settings to user settings
@@ -382,7 +383,7 @@ namespace S7Tools.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to restore user settings to defaults");
-                throw new SettingsLoadException("Failed to restore default settings", _pathService.AppSettingsPath, "RestoreDefaults", ex);
+                throw new SettingsLoadException(UIStrings.Error_SettingsRestoreDefaultsFailed, _pathService.AppSettingsPath, "RestoreDefaults", ex);
             }
         }
 
@@ -480,12 +481,12 @@ namespace S7Tools.Services
             catch (JsonException ex)
             {
                 _logger.LogError(ex, "Invalid JSON in user settings file {FilePath}, using defaults only", settingsFilePath);
-                throw new SettingsLoadException("Invalid JSON in settings file", settingsFilePath, "Parse", ex);
+                throw new SettingsLoadException(UIStrings.Error_SettingsInvalidJson, settingsFilePath, "Parse", ex);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load user settings from {FilePath}", settingsFilePath);
-                throw new SettingsLoadException("Failed to load user settings file", settingsFilePath, "FileAccess", ex);
+                throw new SettingsLoadException(UIStrings.Error_SettingsFileLoadFailed, settingsFilePath, "FileAccess", ex);
             }
         }
 
@@ -554,7 +555,7 @@ namespace S7Tools.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save user settings to {FilePath}", settingsFilePath);
-                throw new SettingsLoadException("Failed to save user settings file", settingsFilePath, "FileSave", ex);
+                throw new SettingsLoadException(UIStrings.Error_SettingsFileSaveFailed, settingsFilePath, "FileSave", ex);
             }
         }
 
