@@ -62,21 +62,16 @@ public class ObjectToPropertiesConverter : IValueConverter
         throw new NotSupportedException();
     }
 
+    private static readonly System.Text.RegularExpressions.Regex PascalCaseRegex = new("([a-z])([A-Z])", System.Text.RegularExpressions.RegexOptions.Compiled);
+    private static readonly System.Text.RegularExpressions.Regex AcronymRegex = new("([A-Z]+)([A-Z][a-z])", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     private static string FormatLabel(string propertyName)
     {
         // Insert spaces before capital letters (PascalCase to Title Case)
-        var result = System.Text.RegularExpressions.Regex.Replace(
-            propertyName,
-            "([a-z])([A-Z])",
-            "$1 $2"
-        );
+        var result = PascalCaseRegex.Replace(propertyName, "$1 $2");
 
         // Handle acronyms (e.g., "TCPPort" -> "TCP Port")
-        result = System.Text.RegularExpressions.Regex.Replace(
-            result,
-            "([A-Z]+)([A-Z][a-z])",
-            "$1 $2"
-        );
+        result = AcronymRegex.Replace(result, "$1 $2");
 
         return result;
     }
