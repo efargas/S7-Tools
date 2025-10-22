@@ -148,7 +148,7 @@ namespace S7Tools.Core.Models.Configuration
                 {
                     Name = ResourcePaths.AppSettingsFile,
                     RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.AppSettingsFolder, ResourcePaths.AppSettingsFile),
-                    DefaultContent = "{}",
+                    DefaultContent = GetDefaultAppSettingsContent(),
                     Purpose = "Application settings and preferences"
                 },
                 new FileInfo
@@ -189,6 +189,34 @@ namespace S7Tools.Core.Models.Configuration
             });
 
             return manifest;
+        }
+
+        /// <summary>
+        /// Generates default content for AppSettings.json file with proper structure
+        /// </summary>
+        /// <returns>JSON content with both default and user settings sections</returns>
+        private static string GetDefaultAppSettingsContent()
+        {
+            // Create a default ApplicationSettings instance to get ALL the default values
+            var defaultSettings = ApplicationSettings.CreateDefault();
+
+            // Create the proper file structure with both sections
+            var appSettingsFileContent = new
+            {
+                DefaultSettings = defaultSettings.DefaultSettings,
+                UserSettings = new Dictionary<string, object>(defaultSettings.DefaultSettings), // Copy defaults to user settings initially
+                SettingsFilePath = "Resources/Configuration/AppSettings.json",
+                LastModified = DateTime.UtcNow
+            };
+
+            // Serialize to JSON with proper formatting
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+
+            return System.Text.Json.JsonSerializer.Serialize(appSettingsFileContent, options);
         }
     }
 }

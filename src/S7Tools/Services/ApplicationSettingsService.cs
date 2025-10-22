@@ -335,6 +335,57 @@ namespace S7Tools.Services
             }
         }
 
+        /// <summary>
+        /// Restores all default values to user settings, preserving the default settings section
+        /// </summary>
+        public async Task RestoreDefaultsAsync()
+        {
+            _logger.LogInformation("Restoring all user settings to default values");
+
+            try
+            {
+                List<string> restoredKeys = new();
+
+                lock (_settingsLock)
+                {
+                    if (_currentSettings == null)
+                    {
+                        throw new InvalidOperationException("Settings not loaded. Call LoadSettingsAsync first.");
+                    }
+
+                    // Copy all default settings to user settings
+                    foreach (KeyValuePair<string, object> kvp in _currentSettings.DefaultSettings)
+                    {
+                        object? oldValue = _currentSettings.UserSettings.TryGetValue(kvp.Key, out object? existing) ? existing : null;
+                        _currentSettings.UserSettings[kvp.Key] = kvp.Value;
+                        restoredKeys.Add(kvp.Key);
+
+                        // Fire change event
+                        SettingsChanged?.Invoke(this, new S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs
+                        {
+                            Key = kvp.Key,
+                            OldValue = oldValue,
+                            NewValue = kvp.Value,
+                            IsUserSetting = true
+                        });
+                    }
+
+                    // Recompute effective settings
+                    _currentSettings.ComputeEffectiveSettings();
+                }
+
+                // Save to file
+                await SaveUserSettingsToFileAsync().ConfigureAwait(false);
+
+                _logger.LogInformation("All user settings restored to defaults successfully. Restored {KeyCount} settings", restoredKeys.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to restore user settings to defaults");
+                throw new SettingsLoadException("Failed to restore default settings", _pathService.AppSettingsPath, "RestoreDefaults", ex);
+            }
+        }
+
         #region Private Helper Methods
 
         /// <summary>
@@ -360,20 +411,68 @@ namespace S7Tools.Services
                     return;
                 }
 
-                Dictionary<string, JsonElement>? userSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonContent);
-                if (userSettings != null)
+                // Try to parse as new structured format first
+                try
                 {
-                    lock (_settingsLock)
+                    Dictionary<string, JsonElement>? structuredSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonContent);
+                    if (structuredSettings != null && structuredSettings.ContainsKey("userSettings"))
                     {
-                        if (_currentSettings != null)
-                        {
-                            // Convert JsonElement values to objects
-                            foreach (KeyValuePair<string, JsonElement> kvp in userSettings)
-                            {
-                                _currentSettings.UserSettings[kvp.Key] = kvp.Value;
-                            }
+                        // New format with structured sections
+                        JsonElement userSettingsElement = structuredSettings["userSettings"];
+                        Dictionary<string, JsonElement>? userSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(userSettingsElement.GetRawText());
 
-                            _logger.LogDebug("Loaded {UserSettingCount} user settings from file", userSettings.Count);
+                        if (userSettings != null)
+                        {
+                            lock (_settingsLock)
+                            {
+                                if (_currentSettings != null)
+                                {
+                                    // Load user settings section
+                                    foreach (KeyValuePair<string, JsonElement> kvp in userSettings)
+                                    {
+                                        _currentSettings.UserSettings[kvp.Key] = kvp.Value;
+                                    }
+
+                                    _logger.LogDebug("Loaded {UserSettingCount} user settings from structured file format", userSettings.Count);
+                                }
+                            }
+                        }
+                    }
+                    else if (structuredSettings != null)
+                    {
+                        // Legacy format - treat entire file as user settings
+                        lock (_settingsLock)
+                        {
+                            if (_currentSettings != null)
+                            {
+                                foreach (KeyValuePair<string, JsonElement> kvp in structuredSettings)
+                                {
+                                    _currentSettings.UserSettings[kvp.Key] = kvp.Value;
+                                }
+
+                                _logger.LogDebug("Loaded {UserSettingCount} user settings from legacy file format", structuredSettings.Count);
+                            }
+                        }
+                    }
+                }
+                catch (JsonException)
+                {
+                    // If structured parsing fails, fall back to treating entire content as user settings
+                    Dictionary<string, JsonElement>? userSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonContent);
+                    if (userSettings != null)
+                    {
+                        lock (_settingsLock)
+                        {
+                            if (_currentSettings != null)
+                            {
+                                // Convert JsonElement values to objects
+                                foreach (KeyValuePair<string, JsonElement> kvp in userSettings)
+                                {
+                                    _currentSettings.UserSettings[kvp.Key] = kvp.Value;
+                                }
+
+                                _logger.LogDebug("Loaded {UserSettingCount} user settings from file (fallback parsing)", userSettings.Count);
+                            }
                         }
                     }
                 }
@@ -400,6 +499,8 @@ namespace S7Tools.Services
             try
             {
                 Dictionary<string, object> userSettingsToSave;
+                Dictionary<string, object> defaultSettingsToSave;
+
                 lock (_settingsLock)
                 {
                     if (_currentSettings == null)
@@ -408,6 +509,7 @@ namespace S7Tools.Services
                     }
 
                     userSettingsToSave = new Dictionary<string, object>(_currentSettings.UserSettings);
+                    defaultSettingsToSave = new Dictionary<string, object>(_currentSettings.DefaultSettings);
                 }
 
                 // Ensure directory exists
@@ -417,6 +519,15 @@ namespace S7Tools.Services
                     await _pathService.EnsureDirectoryExistsAsync(directory).ConfigureAwait(false);
                 }
 
+                // Create the complete structured content
+                var appSettingsFileContent = new
+                {
+                    DefaultSettings = defaultSettingsToSave,
+                    UserSettings = userSettingsToSave,
+                    SettingsFilePath = settingsFilePath,
+                    LastModified = DateTime.UtcNow
+                };
+
                 // Serialize with proper formatting
                 var options = new JsonSerializerOptions
                 {
@@ -424,7 +535,7 @@ namespace S7Tools.Services
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 };
 
-                string jsonContent = JsonSerializer.Serialize(userSettingsToSave, options);
+                string jsonContent = JsonSerializer.Serialize(appSettingsFileContent, options);
 
                 // Atomic write: write to temp file first, then rename
                 string tempFilePath = settingsFilePath + ".tmp";
@@ -437,8 +548,8 @@ namespace S7Tools.Services
                 }
                 File.Move(tempFilePath, settingsFilePath);
 
-                _logger.LogDebug("User settings saved to {FilePath} with {SettingCount} entries",
-                    settingsFilePath, userSettingsToSave.Count);
+                _logger.LogDebug("Structured settings saved to {FilePath} with {UserSettingCount} user settings and {DefaultSettingCount} default settings",
+                    settingsFilePath, userSettingsToSave.Count, defaultSettingsToSave.Count);
             }
             catch (Exception ex)
             {

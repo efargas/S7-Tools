@@ -1,24 +1,28 @@
+using System;
 using System.Collections.Specialized;
+using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using S7Tools.Models;
-using S7Tools.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services;
 
 /// <summary>
 /// Simple background file writer that appends log entries from the in-memory data store to
-/// rolling files under the configured DefaultLogPath when file logging is enabled in settings.
+/// rolling files under the configured log path when file logging is enabled in settings.
 /// It's intentionally minimal: creates directories, rolls by timestamp, and keeps limited retention.
 /// </summary>
 public sealed class FileLogWriter : IDisposable
 {
     private readonly ILogDataStore _dataStore;
-    private readonly ISettingsService _settingsService;
+    private readonly IApplicationSettingsService _settingsService;
+    private readonly IPathService _pathService;
     private readonly ILogger<FileLogWriter> _logger;
     private readonly object _sync = new();
+    private readonly string _sessionLogFile; // Session-specific log file path
     private bool _disposed;
 
     /// <summary>
@@ -26,12 +30,17 @@ public sealed class FileLogWriter : IDisposable
     /// </summary>
     /// <param name="dataStore">The log data store to monitor for new entries.</param>
     /// <param name="settingsService">The settings service to retrieve logging configuration.</param>
+    /// <param name="pathService">The path service to resolve log file paths.</param>
     /// <param name="logger">The logger for diagnostic messages.</param>
-    public FileLogWriter(ILogDataStore dataStore, ISettingsService settingsService, ILogger<FileLogWriter> logger)
+    public FileLogWriter(ILogDataStore dataStore, IApplicationSettingsService settingsService, IPathService pathService, ILogger<FileLogWriter> logger)
     {
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        // Generate session-specific log file path (once per application run)
+        _sessionLogFile = _pathService.GetMainLogPath(0);
 
         // Subscribe to collection changed to flush new entries
         _dataStore.CollectionChanged += DataStore_CollectionChanged;
@@ -39,57 +48,61 @@ public sealed class FileLogWriter : IDisposable
         // Ensure folder exists at startup if enabled
         try
         {
-            ApplicationSettings settings = _settingsService.Settings;
-            if (settings.Logging.EnableFileLogging)
+            bool enableFileLogging = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
+            if (enableFileLogging)
             {
-                Directory.CreateDirectory(settings.Logging.DefaultLogPath);
+                Directory.CreateDirectory(_pathService.MainLogsDirectory);
+                _logger.LogInformation("File logging enabled - logs will be written to: {LogFile}", _sessionLogFile);
+            }
+            else
+            {
+                _logger.LogInformation("File logging disabled in settings");
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to ensure default log path exists at startup");
+            _logger.LogWarning(ex, "Failed to ensure log directory exists at startup: {LogFile}", _sessionLogFile);
         }
     }
 
     private void DataStore_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        try
+        lock (_sync)
         {
             if (_disposed)
             {
                 return;
             }
 
-            ApplicationSettings settings = _settingsService.Settings;
-            if (!settings.Logging.EnableFileLogging)
+            try
             {
-                return;
-            }
-
-            // Append new items if any
-            if (e.NewItems != null)
-            {
-                foreach (object? item in e.NewItems)
+                bool enableFileLogging = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
+                if (!enableFileLogging)
                 {
-                    if (item is LogModel log)
+                    return;
+                }
+
+                if (e.NewItems != null)
+                {
+                    foreach (LogModel logEntry in e.NewItems.OfType<LogModel>())
                     {
-                        AppendLogToFile(log, settings.Logging);
+                        WriteLogEntryToFile(logEntry);
                     }
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            // Avoid throwing from logging path
-            _logger.LogDebug(ex, "Error while writing logs to file");
+            catch (Exception ex)
+            {
+                // Log the error but don't throw - file logging is supplementary
+                _logger.LogError(ex, "Error writing log entry to file");
+            }
         }
     }
 
-    private void AppendLogToFile(LogModel log, Models.LoggingSettings settings)
+    private void WriteLogEntryToFile(LogModel log)
     {
         try
         {
-            string folder = settings.DefaultLogPath;
+            string folder = _pathService.MainLogsDirectory;
             if (string.IsNullOrEmpty(folder))
             {
                 return;
@@ -97,10 +110,8 @@ public sealed class FileLogWriter : IDisposable
 
             Directory.CreateDirectory(folder);
 
-            // Use timestamp-based file name pattern
-            string timestamp = DateTime.Now.ToString("yyyyMMdd");
-            string fileName = settings.LogFileNamePattern.Replace("{timestamp}", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
-            string filePath = Path.Combine(folder, fileName);
+            // Use the session-specific log file path (same file for entire session)
+            string filePath = _sessionLogFile;
 
             var line = new StringBuilder();
             line.AppendFormat("[{0:yyyy-MM-dd HH:mm:ss.fff}] [{1}] {2}", log.Timestamp, log.Level, log.Category);
@@ -120,7 +131,7 @@ public sealed class FileLogWriter : IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Failed to append log to file");
+            _logger.LogDebug(ex, "Failed to write log entry to file: {LogPath}", _sessionLogFile);
         }
     }
 

@@ -55,6 +55,11 @@ namespace S7Tools.Core.Interfaces.Services
         Task ResetAllSettingsAsync();
 
         /// <summary>
+        /// Restores all default values to user settings, preserving the default settings section
+        /// </summary>
+        Task RestoreDefaultsAsync();
+
+        /// <summary>
         /// Event fired when settings are reloaded
         /// </summary>
         event EventHandler<SettingsChangedEventArgs> SettingsChanged;

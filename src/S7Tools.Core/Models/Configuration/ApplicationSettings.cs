@@ -138,7 +138,7 @@ namespace S7Tools.Core.Models.Configuration
         }
 
         /// <summary>
-        /// Creates default application settings
+        /// Creates default application settings with proper resource paths
         /// </summary>
         /// <param name="settingsFilePath">Path to the settings file</param>
         /// <returns>ApplicationSettings with default values</returns>
@@ -149,20 +149,63 @@ namespace S7Tools.Core.Models.Configuration
                 SettingsFilePath = settingsFilePath
             };
 
-            // Add default settings
+            // Logging configuration
             settings.DefaultSettings.Add("logging.level", "Information");
             settings.DefaultSettings.Add("logging.enableFileLogging", true);
             settings.DefaultSettings.Add("logging.maxFileSize", 10485760); // 10MB
             settings.DefaultSettings.Add("logging.maxFiles", 5);
+            settings.DefaultSettings.Add("logging.logDirectory", "Resources/Logs/Main");
+            settings.DefaultSettings.Add("logging.exportDirectory", "Resources/Logs/Exported");
+
+            // UI settings
             settings.DefaultSettings.Add("ui.theme", "System");
             settings.DefaultSettings.Add("ui.startMinimized", false);
+            settings.DefaultSettings.Add("ui.autoRefreshInterval", 2000);
+
+            // Path management settings
             settings.DefaultSettings.Add("paths.autoCreateDirectories", true);
+            settings.DefaultSettings.Add("paths.resourcesDirectory", "Resources");
+            settings.DefaultSettings.Add("paths.profilesDirectory", "Resources/Profiles");
+            settings.DefaultSettings.Add("paths.logsDirectory", "Resources/Logs");
+            settings.DefaultSettings.Add("paths.jobsDirectory", "Resources/Jobs");
+            settings.DefaultSettings.Add("paths.tasksDirectory", "Resources/Tasks");
+            settings.DefaultSettings.Add("paths.payloadsDirectory", "Resources/Payloads");
+            settings.DefaultSettings.Add("paths.dumpsDirectory", "Resources/Dumps");
+
+            // Profile management settings
             settings.DefaultSettings.Add("profiles.autoSave", true);
             settings.DefaultSettings.Add("profiles.backupOnSave", true);
+            settings.DefaultSettings.Add("profiles.serialPath", "Resources/Profiles/Serial/SerialProfiles.json");
+            settings.DefaultSettings.Add("profiles.socatPath", "Resources/Profiles/Socat/SocatProfiles.json");
+            settings.DefaultSettings.Add("profiles.powerSupplyPath", "Resources/Profiles/PowerSupply/PowerSupplyProfiles.json");
+            settings.DefaultSettings.Add("profiles.memoryRegionsPath", "Resources/Profiles/MemoryRegions");
+
+            // Export settings
             settings.DefaultSettings.Add("export.defaultFormat", "JSON");
+            settings.DefaultSettings.Add("export.csvDirectory", "Resources/Logs/Exported/CSV");
+            settings.DefaultSettings.Add("export.txtDirectory", "Resources/Logs/Exported/TXT");
+            settings.DefaultSettings.Add("export.jsonDirectory", "Resources/Logs/Exported/JSON");
+
+            // PLC connection settings
             settings.DefaultSettings.Add("plc.connectionTimeout", 5000);
             settings.DefaultSettings.Add("plc.readTimeout", 2000);
             settings.DefaultSettings.Add("plc.retryAttempts", 3);
+
+            // Job and task settings
+            settings.DefaultSettings.Add("jobs.profilesPath", "Resources/Jobs/Jobs.json");
+            settings.DefaultSettings.Add("tasks.profilesPath", "Resources/Tasks/Tasks.json");
+            settings.DefaultSettings.Add("tasks.autoSaveInterval", 10000);
+
+            // Serial port settings
+            settings.DefaultSettings.Add("serial.defaultBaudRate", 9600);
+            settings.DefaultSettings.Add("serial.defaultDataBits", 8);
+            settings.DefaultSettings.Add("serial.defaultParity", "None");
+            settings.DefaultSettings.Add("serial.defaultStopBits", "One");
+
+            // Network settings
+            settings.DefaultSettings.Add("network.defaultSocatPort", 2023);
+            settings.DefaultSettings.Add("network.powerSupplyPort", 502);
+            settings.DefaultSettings.Add("network.connectionRetries", 3);
 
             settings.ComputeEffectiveSettings();
             return settings;

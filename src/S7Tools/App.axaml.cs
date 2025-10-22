@@ -8,6 +8,7 @@ using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Resources;
 using S7Tools.Models;
 using S7Tools.Resources;
@@ -70,29 +71,18 @@ public partial class App : Application
                 IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
                 ILogger<App> logger = _serviceProvider.GetRequiredService<ILogger<App>>();
 
-                // Initialize path services to ensure proper resource structure
-                _ = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await InitializePathServicesAsync(logger).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex, "Background path service initialization failed");
-                    }
-                });
-
-                // Load application settings at startup (creates defaults if missing) without blocking UI thread
+                // CRITICAL: Initialize path services SYNCHRONOUSLY to ensure proper resource structure
+                // This must happen before any other services try to access files/folders
                 try
                 {
-                    ISettingsService? settingsService = _serviceProvider.GetService<ISettingsService>();
-                    _ = settingsService?.LoadSettingsAsync();
-                    logger.LogInformation("Application settings loading scheduled at startup");
+                    logger.LogInformation("🔄 Starting synchronous path and settings initialization...");
+                    InitializePathAndSettingsSync(logger);
+                    logger.LogInformation("✅ Path and settings initialization completed successfully");
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Failed to schedule settings load at startup");
+                    logger.LogError(ex, "❌ CRITICAL: Path and settings initialization failed - application may not function correctly");
+                    // Continue anyway to allow user to see error in UI
                 }
 
                 logger.LogDebug("Registering dialog interaction handlers");
@@ -384,56 +374,89 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Initializes path services to ensure proper resource structure is available
+    /// Initializes path services and settings synchronously to ensure proper startup order
     /// </summary>
     /// <param name="logger">Logger instance for tracking initialization</param>
-    private async Task InitializePathServicesAsync(ILogger logger)
+    private void InitializePathAndSettingsSync(ILogger logger)
     {
+        logger.LogInformation("🔄 Initializing path services and application settings synchronously");
+
         try
         {
-            logger.LogInformation("Initializing path services and resource structure");
-
-            // Get path service and initialize paths
-            IPathService? pathService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IPathService>();
+            // STEP 1: Initialize path service and create folder structure
+            logger.LogDebug("Step 1: Initializing path service");
+            S7Tools.Core.Interfaces.Services.IPathService? pathService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IPathService>();
             if (pathService != null)
             {
-                await pathService.InitializeAsync().ConfigureAwait(false);
-                logger.LogInformation("Path service initialized successfully");
+                // Initialize paths synchronously (this creates folder structure)
+                Task<PathConfiguration> pathTask = pathService.InitializeAsync();
+                PathConfiguration pathConfig = pathTask.GetAwaiter().GetResult(); // Force synchronous execution
+                logger.LogInformation("✅ Path service initialized - Base directory: {BaseDirectory}", pathConfig.BaseDirectory);
+            }
+            else
+            {
+                logger.LogError("❌ IPathService not found in service provider");
+                return;
             }
 
-            // Get resource manager service and initialize resources
-            IResourceManagerService? resourceService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IResourceManagerService>();
+            // STEP 2: Initialize resource manager to create missing files
+            logger.LogDebug("Step 2: Initializing resource manager");
+            S7Tools.Core.Interfaces.Services.IResourceManagerService? resourceService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IResourceManagerService>();
             if (resourceService != null)
             {
-                ResourceInitializationResult result = await resourceService.InitializeResourcesAsync().ConfigureAwait(false);
+                Task<ResourceInitializationResult> resourceTask = resourceService.InitializeResourcesAsync();
+                ResourceInitializationResult result = resourceTask.GetAwaiter().GetResult(); // Force synchronous execution
                 if (result.Success)
                 {
-                    logger.LogInformation("Resource manager initialized successfully. Created {ResourceCount} resources",
-                        result.CreatedResources.Count);
+                    logger.LogInformation("✅ Resource manager initialized - Created {ResourceCount} resources", result.CreatedResources.Count);
                 }
                 else
                 {
-                    logger.LogWarning("Resource manager initialization completed with errors: {ErrorCount} errors",
-                        result.Errors.Count);
+                    logger.LogWarning("⚠️ Resource manager completed with {ErrorCount} errors", result.Errors.Count);
                     foreach (string error in result.Errors)
                     {
-                        logger.LogWarning("Resource initialization error: {Error}", error);
+                        logger.LogWarning("Resource error: {Error}", error);
                     }
                 }
             }
+            else
+            {
+                logger.LogError("❌ IResourceManagerService not found in service provider");
+            }
 
-            // Initialize application settings service
+            // STEP 3: Initialize application settings service and load configuration
+            logger.LogDebug("Step 3: Loading application settings");
             S7Tools.Core.Interfaces.Services.IApplicationSettingsService? settingsService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
             if (settingsService != null)
             {
-                S7Tools.Core.Models.Configuration.ApplicationSettings settings = await settingsService.LoadSettingsAsync().ConfigureAwait(false);
-                logger.LogInformation("Application settings loaded successfully with {EffectiveCount} effective settings and {UserCount} user overrides",
+                Task<Core.Models.Configuration.ApplicationSettings> settingsTask = settingsService.LoadSettingsAsync();
+                Core.Models.Configuration.ApplicationSettings settings = settingsTask.GetAwaiter().GetResult(); // Force synchronous execution
+                logger.LogInformation("✅ Application settings loaded - {EffectiveCount} effective settings, {UserCount} user overrides",
                     settings.EffectiveSettings.Count, settings.UserSettings.Count);
             }
+            else
+            {
+                logger.LogError("❌ IApplicationSettingsService not found in service provider");
+            }
+
+            // STEP 4: Initialize file logging service to start monitoring logs
+            logger.LogDebug("Step 4: Initializing file logging service");
+            Services.FileLogWriter? fileLogWriter = _serviceProvider.GetService<Services.FileLogWriter>();
+            if (fileLogWriter != null)
+            {
+                logger.LogInformation("✅ File logging service initialized and monitoring DataStore");
+            }
+            else
+            {
+                logger.LogWarning("⚠️ FileLogWriter not found - file logging will not be available");
+            }
+
+            logger.LogInformation("🎉 Synchronous initialization completed successfully");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to initialize path services - application will continue but some features may not work correctly");
+            logger.LogError(ex, "💥 Critical failure during synchronous initialization");
+            throw; // Re-throw to let caller handle
         }
     }
 

@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using S7Tools.Core.Commands;
 using S7Tools.Core.Factories;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Logging;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Resources;
@@ -210,15 +212,24 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Add JobManagerOptions configuration
-        services.Configure<S7Tools.Core.Models.Jobs.JobManagerOptions>(options =>
+        // Add Job Management Services using factory pattern to resolve path dynamically
+        services.TryAddSingleton<IJobManager>(serviceProvider =>
         {
-            // Persist job profiles in the committed resources folder
-            options.ProfilesPath = "src/resources/JobProfiles/profiles.json";
-        });
+            IPathService pathService = serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
+            ILogger<JobManager> logger = serviceProvider.GetRequiredService<ILogger<JobManager>>();
+            IResourceCoordinator resourceCoordinator = serviceProvider.GetRequiredService<IResourceCoordinator>();
+            ISerialPortProfileService serialProfileService = serviceProvider.GetRequiredService<ISerialPortProfileService>();
+            ISocatProfileService socatProfileService = serviceProvider.GetRequiredService<ISocatProfileService>();
+            IPowerSupplyProfileService powerSupplyProfileService = serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
 
-        // Add Job Management Services using options pattern
-        services.TryAddSingleton<IJobManager, JobManager>();
+            // Create options with dynamically resolved path
+            IOptions<JobManagerOptions> options = Microsoft.Extensions.Options.Options.Create(new S7Tools.Core.Models.Jobs.JobManagerOptions
+            {
+                ProfilesPath = pathService.JobsPath
+            });
+
+            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService);
+        });
 
         // Add Task Scheduling Services
         services.TryAddSingleton<ITaskScheduler, EnhancedTaskScheduler>();
