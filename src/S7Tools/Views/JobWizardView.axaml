@@ -381,8 +381,8 @@
               </Expander.Header>
               <ContentControl Content="{Binding SelectedPower}">
                 <ContentControl.DataTemplates>
-                  <DataTemplate>
-                    <views:PowerSupplyProfileDetailView DataContext="{Binding}" />
+                  <DataTemplate DataType="models:PowerSupplyProfile">
+                    <views:PowerSupplyProfileDetailView />
                   </DataTemplate>
                 </ContentControl.DataTemplates>
               </ContentControl>
