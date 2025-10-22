@@ -86,9 +86,8 @@ namespace S7Tools.Services
             }
 
             var defaultSettings = CreateDefaultAppSettings();
-            // Fire-and-forget the save operation to avoid blocking the constructor.
-            // This is a compromise for running in a sync constructor.
-            _ = SaveDefaultAppSettingsAsync(defaultSettings);
+            // Persist defaults synchronously to ensure consistent state during startup.
+            SaveDefaultAppSettings(defaultSettings);
             return defaultSettings;
         }
 
