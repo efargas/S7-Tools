@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 
 namespace S7Tools.Services;
 
@@ -148,7 +149,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             {
                 Console.WriteLine($"❌ ERROR: Profile name is empty!");
                 _logger.LogError("Profile name validation failed: name is empty");
-                throw new ValidationException("Name", "Profile name cannot be empty.");
+                throw new ValidationException("Name", UIStrings.Error_ProfileNameEmpty);
             }
 
             // Inline name uniqueness check while holding the semaphore to avoid nested WaitAsync calls
@@ -265,7 +266,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             if (string.IsNullOrWhiteSpace(profile.Name))
             {
                 _logger.LogError("Profile name validation failed: name is empty for ID {ProfileId}", profile.Id);
-                throw new ValidationException("Name", "Profile name cannot be empty.");
+                throw new ValidationException("Name", UIStrings.Error_ProfileNameEmpty);
             }
 
             // Inline name uniqueness check while holding the semaphore
@@ -591,7 +592,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             // Prevent infinite loops
             if (counter > 1000)
             {
-                throw new InvalidOperationException("Unable to generate unique name after 1000 attempts.");
+                throw new InvalidOperationException(UIStrings.Error_UniqueNameGenerationFailed);
             }
         }
 

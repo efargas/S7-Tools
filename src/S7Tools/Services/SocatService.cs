@@ -11,8 +11,6 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Models;
-using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
@@ -24,7 +22,7 @@ public class SocatService : ISocatService, IDisposable
 {
 #pragma warning disable CS0067 // Events may be declared for external subscriptions; not used in this assembly
     private readonly ILogger<SocatService> _logger;
-    private readonly ISettingsService _settingsService;
+    private readonly SocatSettings _settings;
     private readonly ISerialPortService _serialPortService;
     private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = new();
     private readonly Dictionary<int, Process> _activeProcesses = new(); // Keep actual Process objects alive
@@ -36,19 +34,17 @@ public class SocatService : ISocatService, IDisposable
     /// Initializes a new instance of the SocatService class.
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
-    /// <param name="settingsService">The settings service for accessing application settings.</param>
     /// <param name="serialPortService">The serial port service for device validation and configuration.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     public SocatService(
         ILogger<SocatService> logger,
-        ISettingsService settingsService,
         ISerialPortService serialPortService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _settings = SocatSettings.CreateDefault();
 
-        _logger.LogDebug("SocatService initialized");
+        _logger.LogDebug("SocatService initialized with default settings");
     }
 
     #region Events
@@ -217,7 +213,7 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
         }
 
-        SocatSettings settings = _settingsService.Settings.Socat;
+        SocatSettings settings = _settings;
 
         // Check concurrent instances limit
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -302,7 +298,7 @@ public class SocatService : ISocatService, IDisposable
         }
 
         _logger.LogInformation("📋 Getting settings...");
-        SocatSettings settings = _settingsService.Settings.Socat;
+        SocatSettings settings = _settings;
         _logger.LogInformation("📋 Settings obtained - MaxConcurrentInstances: {Max}", settings.MaxConcurrentInstances);
 
         // Check concurrent instances limit
@@ -436,7 +432,7 @@ public class SocatService : ISocatService, IDisposable
                 return false;
             }
 
-            SocatSettings settings = _settingsService.Settings.Socat;
+            SocatSettings settings = _settings;
             int timeoutMs = settings.ProcessShutdownTimeoutSeconds * 1000;
 
             try
@@ -779,7 +775,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Start new monitoring
-            SocatSettings settings = _settingsService.Settings.Socat;
+            SocatSettings settings = _settings;
             var monitorInterval = TimeSpan.FromSeconds(settings.StatusRefreshIntervalSeconds);
 
             var monitor = new Timer(async _ =>
@@ -1090,7 +1086,7 @@ public class SocatService : ISocatService, IDisposable
         SocatProfile? profile,
         CancellationToken cancellationToken)
     {
-        SocatSettings settings = _settingsService.Settings.Socat;
+        SocatSettings settings = _settings;
 
         try
         {

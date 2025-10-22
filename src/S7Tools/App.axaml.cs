@@ -93,25 +93,11 @@ public partial class App : Application
                 // Create and set main window
                 desktop.MainWindow = _serviceProvider.GetRequiredService<MainWindow>();
 
-                // Save settings on application exit (non-blocking)
-                desktop.Exit += async (s, e) =>
+                // Application exit handled - settings are saved automatically by ApplicationSettingsService
+                desktop.Exit += (s, e) =>
                 {
-                    try
-                    {
-                        ISettingsService? settingsService = _serviceProvider.GetService<ISettingsService>();
-                        if (settingsService != null)
-                        {
-                            // Use ConfigureAwait(false) to avoid deadlocks
-                            await settingsService.SaveSettingsAsync().ConfigureAwait(false);
-                        }
-                        ILogger<App>? exitLogger = _serviceProvider.GetService<ILogger<App>>();
-                        exitLogger?.LogInformation("Application settings saved on exit");
-                    }
-                    catch (Exception ex)
-                    {
-                        ILogger<App>? exitLogger = _serviceProvider.GetService<ILogger<App>>();
-                        exitLogger?.LogError(ex, "Failed to save application settings on exit");
-                    }
+                    ILogger<App>? exitLogger = _serviceProvider.GetService<ILogger<App>>();
+                    exitLogger?.LogInformation("Application exiting");
                 };
 
                 logger.LogInformation("Application initialization completed successfully");

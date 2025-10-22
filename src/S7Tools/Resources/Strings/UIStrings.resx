@@ -584,4 +584,177 @@
     <value>This is some text to test clipboard operations.</value>
     <comment>Sample text for testing clipboard operations</comment>
   </data>
+
+  <!-- Settings Service Error Messages -->
+  <data name="Error_SettingsNotLoaded" xml:space="preserve">
+    <value>Settings not loaded. Call LoadSettingsAsync first.</value>
+    <comment>Error message when settings are accessed before being loaded</comment>
+  </data>
+  <data name="Error_SettingsSaveFailed" xml:space="preserve">
+    <value>Failed to save user settings</value>
+    <comment>Error message when saving settings fails</comment>
+  </data>
+  <data name="Error_SettingUpdateFailed" xml:space="preserve">
+    <value>Failed to set setting: {0}</value>
+    <comment>Error message when updating a specific setting fails, {0} is the setting key</comment>
+  </data>
+  <data name="Error_SettingResetFailed" xml:space="preserve">
+    <value>Failed to reset setting: {0}</value>
+    <comment>Error message when resetting a specific setting fails, {0} is the setting key</comment>
+  </data>
+  <data name="Error_SettingsResetAllFailed" xml:space="preserve">
+    <value>Failed to reset all settings</value>
+    <comment>Error message when resetting all settings fails</comment>
+  </data>
+  <data name="Error_SettingsRestoreDefaultsFailed" xml:space="preserve">
+    <value>Failed to restore default settings</value>
+    <comment>Error message when restoring defaults fails</comment>
+  </data>
+  <data name="Error_SettingsInvalidJson" xml:space="preserve">
+    <value>Invalid JSON in settings file</value>
+    <comment>Error message when settings file contains invalid JSON</comment>
+  </data>
+  <data name="Error_SettingsFileLoadFailed" xml:space="preserve">
+    <value>Failed to load user settings file</value>
+    <comment>Error message when loading settings file fails</comment>
+  </data>
+  <data name="Error_SettingsFileSaveFailed" xml:space="preserve">
+    <value>Failed to save user settings file</value>
+    <comment>Error message when saving settings file fails</comment>
+  </data>
+  <data name="Error_SettingKeyNullOrEmpty" xml:space="preserve">
+    <value>Setting key cannot be null or empty</value>
+    <comment>Error message when setting key is null or empty</comment>
+  </data>
+
+  <!-- Profile Management Error Messages -->
+  <data name="Error_ProfileNameEmpty" xml:space="preserve">
+    <value>Profile name cannot be empty.</value>
+    <comment>Error message when profile name is empty</comment>
+  </data>
+  <data name="Error_UniqueNameGenerationFailed" xml:space="preserve">
+    <value>Unable to generate unique name after 1000 attempts.</value>
+    <comment>Error message when unable to generate a unique profile name</comment>
+  </data>
+
+  <!-- Common Status Messages -->
+  <data name="Status_ProfileLoaded" xml:space="preserve">
+    <value>Profile loaded</value>
+    <comment>Status message when a profile is loaded</comment>
+  </data>
+  <data name="Status_SavingProfile" xml:space="preserve">
+    <value>Saving profile...</value>
+    <comment>Status message when saving a profile</comment>
+  </data>
+  <data name="Status_ProfileSaved" xml:space="preserve">
+    <value>Profile saved successfully</value>
+    <comment>Status message when profile is saved successfully</comment>
+  </data>
+  <data name="Status_SaveFailed" xml:space="preserve">
+    <value>Save failed: {0}</value>
+    <comment>Status message when save fails, {0} is the error message</comment>
+  </data>
+  <data name="Status_InvalidProfileData" xml:space="preserve">
+    <value>Save failed: Invalid profile data - {0}</value>
+    <comment>Status message when save fails due to invalid data, {0} is the error message</comment>
+  </data>
+  <data name="Status_ChangesCancelled" xml:space="preserve">
+    <value>Changes cancelled</value>
+    <comment>Status message when changes are cancelled</comment>
+  </data>
+  <data name="Status_Error" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>Generic error status message, {0} is operation, {1} is error message</comment>
+  </data>
+
+  <!-- Socat Status Messages -->
+  <data name="Status_SocatProcessStarted" xml:space="preserve">
+    <value>socat process {0} started on port {1}</value>
+    <comment>Status message when socat process starts, {0} is process ID, {1} is TCP port</comment>
+  </data>
+  <data name="Status_SocatProcessStopped" xml:space="preserve">
+    <value>socat process {0} stopped</value>
+    <comment>Status message when socat process stops, {0} is process ID</comment>
+  </data>
+  <data name="Status_SocatProcessError" xml:space="preserve">
+    <value>socat process {0} error: {1}</value>
+    <comment>Status message when socat process encounters an error, {0} is process ID, {1} is error message</comment>
+  </data>
+  <data name="Status_SocatConnectionEstablished" xml:space="preserve">
+    <value>Connection established to process {0}</value>
+    <comment>Status message when connection is established, {0} is process ID</comment>
+  </data>
+  <data name="Status_SocatConnectionClosed" xml:space="preserve">
+    <value>Connection closed to process {0}</value>
+    <comment>Status message when connection is closed, {0} is process ID</comment>
+  </data>
+  <data name="Status_ScanningDevices" xml:space="preserve">
+    <value>Scanning for serial devices...</value>
+    <comment>Status message when scanning for devices</comment>
+  </data>
+  <data name="Status_DevicesFound" xml:space="preserve">
+    <value>Found {0} serial device(s)</value>
+    <comment>Status message when devices are found, {0} is device count</comment>
+  </data>
+  <data name="Status_ErrorScanningDevices" xml:space="preserve">
+    <value>Error scanning devices</value>
+    <comment>Status message when device scanning fails</comment>
+  </data>
+  <data name="Status_RefreshingProcesses" xml:space="preserve">
+    <value>Refreshing running processes...</value>
+    <comment>Status message when refreshing process list</comment>
+  </data>
+  <data name="Status_ProcessesFound" xml:space="preserve">
+    <value>Found {0} running process(es)</value>
+    <comment>Status message when processes are found, {0} is process count</comment>
+  </data>
+  <data name="Status_ErrorRefreshingProcesses" xml:space="preserve">
+    <value>Error refreshing processes: {0}</value>
+    <comment>Status message when process refresh fails, {0} is error message</comment>
+  </data>
+  <data name="Status_DeletingProfile" xml:space="preserve">
+    <value>Deleting profile...</value>
+    <comment>Status message when deleting a profile</comment>
+  </data>
+  <data name="Status_ProfileDeleted" xml:space="preserve">
+    <value>Profile '{0}' deleted successfully</value>
+    <comment>Status message when profile is deleted, {0} is profile name</comment>
+  </data>
+  <data name="Status_DeleteProfileFailed" xml:space="preserve">
+    <value>Failed to delete profile</value>
+    <comment>Status message when profile deletion fails</comment>
+  </data>
+  <data name="Status_ErrorDeletingProfile" xml:space="preserve">
+    <value>Error deleting profile</value>
+    <comment>Status message when profile deletion encounters an error</comment>
+  </data>
+  <data name="Status_DuplicatingProfile" xml:space="preserve">
+    <value>Duplicating profile...</value>
+    <comment>Status message when duplicating a profile</comment>
+  </data>
+  <data name="Status_ProfileDuplicated" xml:space="preserve">
+    <value>Profile duplicated as '{0}'</value>
+    <comment>Status message when profile is duplicated, {0} is new profile name</comment>
+  </data>
+  <data name="Status_ErrorDuplicatingProfile" xml:space="preserve">
+    <value>Error duplicating profile</value>
+    <comment>Status message when profile duplication fails</comment>
+  </data>
+  <data name="Status_StartingSocat" xml:space="preserve">
+    <value>Starting socat on port {0}...</value>
+    <comment>Status message when starting socat, {0} is TCP port</comment>
+  </data>
+  <data name="Status_SocatStarted" xml:space="preserve">
+    <value>socat started successfully (PID: {0})</value>
+    <comment>Status message when socat starts successfully, {0} is process ID</comment>
+  </data>
+  <data name="Status_ErrorStartingSocat" xml:space="preserve">
+    <value>Error starting socat: {0}</value>
+    <comment>Status message when starting socat fails, {0} is error message</comment>
+  </data>
+  <data name="Status_StoppingSocat" xml:space="preserve">
+    <value>Stopping socat process {0}...</value>
+    <comment>Status message when stopping socat, {0} is process ID</comment>
+  </data>
+
 </root>

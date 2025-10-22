@@ -437,6 +437,74 @@ public static class UIStrings
 
     #endregion
 
+    #region Settings Service Errors
+
+    /// <summary>
+    /// Gets the error message for settings not loaded.
+    /// </summary>
+    public static string Error_SettingsNotLoaded => GetStringSafe("Error_SettingsNotLoaded", "Settings not loaded. Call LoadSettingsAsync first.");
+
+    /// <summary>
+    /// Gets the error message for settings save failure.
+    /// </summary>
+    public static string Error_SettingsSaveFailed => GetStringSafe("Error_SettingsSaveFailed", "Failed to save user settings");
+
+    /// <summary>
+    /// Gets the error message format for setting update failure.
+    /// </summary>
+    public static string Error_SettingUpdateFailed => GetStringSafe("Error_SettingUpdateFailed", "Failed to set setting: {0}");
+
+    /// <summary>
+    /// Gets the error message format for setting reset failure.
+    /// </summary>
+    public static string Error_SettingResetFailed => GetStringSafe("Error_SettingResetFailed", "Failed to reset setting: {0}");
+
+    /// <summary>
+    /// Gets the error message for reset all settings failure.
+    /// </summary>
+    public static string Error_SettingsResetAllFailed => GetStringSafe("Error_SettingsResetAllFailed", "Failed to reset all settings");
+
+    /// <summary>
+    /// Gets the error message for restore defaults failure.
+    /// </summary>
+    public static string Error_SettingsRestoreDefaultsFailed => GetStringSafe("Error_SettingsRestoreDefaultsFailed", "Failed to restore default settings");
+
+    /// <summary>
+    /// Gets the error message for invalid JSON.
+    /// </summary>
+    public static string Error_SettingsInvalidJson => GetStringSafe("Error_SettingsInvalidJson", "Invalid JSON in settings file");
+
+    /// <summary>
+    /// Gets the error message for file load failure.
+    /// </summary>
+    public static string Error_SettingsFileLoadFailed => GetStringSafe("Error_SettingsFileLoadFailed", "Failed to load user settings file");
+
+    /// <summary>
+    /// Gets the error message for file save failure.
+    /// </summary>
+    public static string Error_SettingsFileSaveFailed => GetStringSafe("Error_SettingsFileSaveFailed", "Failed to save user settings file");
+
+    /// <summary>
+    /// Gets the error message for null or empty setting key.
+    /// </summary>
+    public static string Error_SettingKeyNullOrEmpty => GetStringSafe("Error_SettingKeyNullOrEmpty", "Setting key cannot be null or empty");
+
+    #endregion
+
+    #region Profile Management Errors
+
+    /// <summary>
+    /// Gets the error message for empty profile name.
+    /// </summary>
+    public static string Error_ProfileNameEmpty => GetStringSafe("Error_ProfileNameEmpty", "Profile name cannot be empty.");
+
+    /// <summary>
+    /// Gets the error message for unique name generation failure.
+    /// </summary>
+    public static string Error_UniqueNameGenerationFailed => GetStringSafe("Error_UniqueNameGenerationFailed", "Unable to generate unique name after 1000 attempts.");
+
+    #endregion
+
     /// <summary>
     /// Gets a formatted string with the specified arguments.
     /// </summary>
