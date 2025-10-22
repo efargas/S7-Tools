@@ -10,5 +10,5 @@ public class AboutViewModel : ViewModelBase
     /// <summary>
     /// Gets the greeting message for the About view.
     /// </summary>
-    public static string Greeting => "About S7Tools.";
+    public string Greeting => "About S7Tools.";
 }
