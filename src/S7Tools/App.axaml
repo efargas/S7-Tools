@@ -17,6 +17,7 @@
     <Application.Resources>
         <!-- Converters -->
         <converters:ModbusAddressingModeConverter x:Key="ModbusAddressingModeConverter" />
+        <converters:DateTimeToStringConverter x:Key="DateTimeToStringConverter" />
 
         <ControlTheme x:Key="{x:Type GridSplitter}" TargetType="GridSplitter">
             <Setter Property="Background" Value="Transparent"/>
