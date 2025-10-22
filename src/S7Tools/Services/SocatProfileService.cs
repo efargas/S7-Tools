@@ -23,8 +23,9 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
     /// Initializes a new instance of the SocatProfileService.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public SocatProfileService(ILogger<SocatProfileService> logger)
-        : base(GetDefaultProfilesPath(), logger)
+    /// <param name="pathService">The path service.</param>
+    public SocatProfileService(ILogger<SocatProfileService> logger, IPathService pathService)
+        : base(Path.Combine(pathService.SocatProfilesPath, "profiles.json"), logger)
     {
     }
 
@@ -42,7 +43,7 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
     protected override string ProfileTypeName => "Socat";
 
     /// <inheritdoc/>
-    protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
+    public override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
         // Create a default socat profile with typical TCP to serial bridge configuration
         var defaultProfile = new SocatProfile
@@ -91,20 +92,6 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
             _logger.LogError(ex, "Failed to save default socat profile");
             _profiles.Clear(); // Clear the in-memory profiles if save failed
         }
-    }
-
-    #endregion
-
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Gets the default path for socat profiles.
-    /// </summary>
-    private static string GetDefaultProfilesPath()
-    {
-        var appDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SocatProfiles");
-        Directory.CreateDirectory(appDataPath);
-        return Path.Combine(appDataPath, "profiles.json");
     }
 
     #endregion

@@ -30,6 +30,10 @@ sealed class Program
         ConfigureServices(services);
         ServiceProvider serviceProvider = services.BuildServiceProvider();
 
+        // Initialize PathService and create directories on startup
+        var pathService = serviceProvider.GetRequiredService<IPathService>();
+        await pathService.InitializeDirectoriesAsync();
+
         // Mitigate GLX/OpenGL renderer blacklist (e.g., SVGA3D) by forcing software rendering on Linux
         // This avoids Avalonia.OpenGL.OpenGlException during startup on some VMs/drivers
         try

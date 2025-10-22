@@ -36,6 +36,9 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        // Add Path Service
+        services.TryAddSingleton<IPathService, PathService>();
+
         // Add UI Thread Service
         services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
 
@@ -185,14 +188,7 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Add JobManagerOptions configuration
-        services.Configure<S7Tools.Core.Models.Jobs.JobManagerOptions>(options =>
-        {
-            // Persist job profiles in the committed resources folder
-            options.ProfilesPath = "src/resources/JobProfiles/profiles.json";
-        });
-
-        // Add Job Management Services using options pattern
+        // Add Job Management Services
         services.TryAddSingleton<IJobManager, JobManager>();
 
         // Add Task Scheduling Services
@@ -419,6 +415,8 @@ public static class ServiceCollectionExtensions
         // This parallel approach improves startup time by loading profiles concurrently
         var profileInitTasks = new List<Task>();
 
+        var pathService = serviceProvider.GetRequiredService<IPathService>();
+
         // Initialize Serial Port Profiles
         ISerialPortProfileService? serialProfileService = serviceProvider.GetService<ISerialPortProfileService>();
         if (serialProfileService != null)
@@ -426,6 +424,7 @@ public static class ServiceCollectionExtensions
             profileInitTasks.Add(InitializeProfileServiceAsync(
                 serialProfileService,
                 "Serial Port",
+                System.IO.Path.Combine(pathService.SerialProfilesPath, "profiles.json"),
                 serviceProvider.GetService<ILogger<ISerialPortProfileService>>(),
                 startupLogger));
         }
@@ -437,6 +436,7 @@ public static class ServiceCollectionExtensions
             profileInitTasks.Add(InitializeProfileServiceAsync(
                 socatProfileService,
                 "Socat",
+                System.IO.Path.Combine(pathService.SocatProfilesPath, "profiles.json"),
                 serviceProvider.GetService<ILogger<ISocatProfileService>>(),
                 startupLogger));
         }
@@ -448,6 +448,7 @@ public static class ServiceCollectionExtensions
             profileInitTasks.Add(InitializeProfileServiceAsync(
                 powerSupplyProfileService,
                 "Power Supply",
+                System.IO.Path.Combine(pathService.PowerSupplyProfilesPath, "profiles.json"),
                 serviceProvider.GetService<ILogger<IPowerSupplyProfileService>>(),
                 startupLogger));
         }
@@ -472,12 +473,14 @@ public static class ServiceCollectionExtensions
     /// <typeparam name="T">The profile type that implements IProfileBase.</typeparam>
     /// <param name="profileService">The profile service to initialize.</param>
     /// <param name="serviceName">The friendly name of the service for logging.</param>
+    /// <param name="profilesPath">The path to the profiles file.</param>
     /// <param name="serviceLogger">The logger specific to the service.</param>
     /// <param name="startupLogger">The startup logger for overall initialization tracking.</param>
     /// <returns>A task representing the asynchronous initialization operation.</returns>
     private static async Task InitializeProfileServiceAsync<T>(
         Core.Services.Interfaces.IProfileManager<T> profileService,
         string serviceName,
+        string profilesPath,
         ILogger? serviceLogger,
         ILogger? startupLogger) where T : class, Core.Services.Interfaces.IProfileBase
     {
@@ -486,6 +489,12 @@ public static class ServiceCollectionExtensions
         try
         {
             startupLogger?.LogDebug("Initializing {ServiceName} profile service...", serviceName);
+
+            if (!System.IO.File.Exists(profilesPath))
+            {
+                await profileService.CreateDefaultProfilesAsync();
+                startupLogger?.LogInformation("Created default profiles for {ServiceName}", serviceName);
+            }
 
             // Load profiles to ensure storage is initialized
             await profileService.GetAllAsync().ConfigureAwait(false);

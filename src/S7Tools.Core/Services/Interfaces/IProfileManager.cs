@@ -164,6 +164,13 @@ public interface IProfileManager<T> where T : class, IProfileBase
     /// </remarks>
     Task<T> EnsureDefaultExistsAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Creates default profiles when no profiles file exists.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    Task CreateDefaultProfilesAsync(CancellationToken cancellationToken = default);
+
     #endregion
 
     #region Validation Operations

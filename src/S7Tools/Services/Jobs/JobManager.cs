@@ -33,20 +33,20 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <summary>
     /// Initializes a new instance of the JobManager class using options pattern.
     /// </summary>
-    /// <param name="options">The options containing the profiles path.</param>
     /// <param name="logger">The logger instance for this manager.</param>
     /// <param name="resourceCoordinator">The resource coordinator for checking resource availability.</param>
     /// <param name="serialProfileService">The serial profile service for validation.</param>
     /// <param name="socatProfileService">The socat profile service for validation.</param>
     /// <param name="powerSupplyProfileService">The power supply profile service for validation.</param>
+    /// <param name="pathService">The path service.</param>
     public JobManager(
-        Microsoft.Extensions.Options.IOptions<S7Tools.Core.Models.Jobs.JobManagerOptions> options,
         ILogger<JobManager> logger,
         IResourceCoordinator resourceCoordinator,
         ISerialPortProfileService serialProfileService,
         ISocatProfileService socatProfileService,
-        IPowerSupplyProfileService powerSupplyProfileService)
-        : base(options.Value.ProfilesPath, logger)
+        IPowerSupplyProfileService powerSupplyProfileService,
+        IPathService pathService)
+        : base(Path.Combine(pathService.JobsProfilesPath, "profiles.json"), logger)
     {
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
         _serialProfileService = serialProfileService ?? throw new ArgumentNullException(nameof(serialProfileService));
@@ -69,7 +69,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     protected override string ProfileTypeName => "Job";
 
     /// <inheritdoc/>
-    protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
+    public override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Creating default job profiles");
 

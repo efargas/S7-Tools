@@ -23,8 +23,9 @@ public class SerialPortProfileService : StandardProfileManager<SerialPortProfile
     /// Initializes a new instance of the SerialPortProfileService.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public SerialPortProfileService(ILogger<SerialPortProfileService> logger)
-        : base(GetDefaultProfilesPath(), logger)
+    /// <param name="pathService">The path service.</param>
+    public SerialPortProfileService(ILogger<SerialPortProfileService> logger, IPathService pathService)
+        : base(Path.Combine(pathService.SerialProfilesPath, "profiles.json"), logger)
     {
     }
 
@@ -42,7 +43,7 @@ public class SerialPortProfileService : StandardProfileManager<SerialPortProfile
     protected override string ProfileTypeName => "SerialPort";
 
     /// <inheritdoc/>
-    protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
+    public override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
         // Create a default serial port profile with proper configuration
         var defaultProfile = new SerialPortProfile
@@ -91,20 +92,6 @@ public class SerialPortProfileService : StandardProfileManager<SerialPortProfile
             _logger.LogError(ex, "Failed to save default serial port profile");
             _profiles.Clear(); // Clear the in-memory profiles if save failed
         }
-    }
-
-    #endregion
-
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Gets the default path for serial port profiles.
-    /// </summary>
-    private static string GetDefaultProfilesPath()
-    {
-        var appDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SerialProfiles");
-        Directory.CreateDirectory(appDataPath);
-        return Path.Combine(appDataPath, "profiles.json");
     }
 
     #endregion

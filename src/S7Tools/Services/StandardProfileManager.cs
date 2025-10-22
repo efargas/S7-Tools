@@ -840,7 +840,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    protected abstract Task CreateDefaultProfilesAsync(CancellationToken cancellationToken);
+    public abstract Task CreateDefaultProfilesAsync(CancellationToken cancellationToken);
 
     #endregion
 

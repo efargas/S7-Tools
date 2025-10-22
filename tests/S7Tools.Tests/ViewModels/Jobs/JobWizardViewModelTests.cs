@@ -500,8 +500,6 @@ public sealed class JobWizardViewModelTests : IDisposable
             Parity = parity,
             StopBits = stopBits,
             EnableReceiver = enableReceiver,
-            Version = version,
-            CreatedAt = createdAt ?? DateTime.UtcNow
         };
 
         return new SerialPortProfile

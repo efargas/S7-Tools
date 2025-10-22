@@ -728,7 +728,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the version from the selected socat profile configuration.
     /// </summary>
-    public string SocatVersion => SelectedSocat?.Configuration?.Version ?? "N/A";
+    public string SocatVersion => SelectedSocat?.Version ?? "N/A";
 
     /// <summary>
     /// Gets the created at timestamp from the selected socat profile.

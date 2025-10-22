@@ -23,8 +23,9 @@ public class PowerSupplyProfileService : StandardProfileManager<PowerSupplyProfi
     /// Initializes a new instance of the PowerSupplyProfileService.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public PowerSupplyProfileService(ILogger<PowerSupplyProfileService> logger)
-        : base(GetDefaultProfilesPath(), logger)
+    /// <param name="pathService">The path service.</param>
+    public PowerSupplyProfileService(ILogger<PowerSupplyProfileService> logger, IPathService pathService)
+        : base(Path.Combine(pathService.PowerSupplyProfilesPath, "profiles.json"), logger)
     {
     }
 
@@ -42,7 +43,7 @@ public class PowerSupplyProfileService : StandardProfileManager<PowerSupplyProfi
     protected override string ProfileTypeName => "PowerSupply";
 
     /// <inheritdoc/>
-    protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
+    public override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
         // Create a default power supply profile
         var defaultProfile = new PowerSupplyProfile
@@ -90,20 +91,6 @@ public class PowerSupplyProfileService : StandardProfileManager<PowerSupplyProfi
             _logger.LogError(ex, "Failed to save default power supply profile");
             _profiles.Clear(); // Clear the in-memory profiles if save failed
         }
-    }
-
-    #endregion
-
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Gets the default path for power supply profiles.
-    /// </summary>
-    private static string GetDefaultProfilesPath()
-    {
-        string appDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "PowerSupplyProfiles");
-        Directory.CreateDirectory(appDataPath);
-        return Path.Combine(appDataPath, "profiles.json");
     }
 
     #endregion

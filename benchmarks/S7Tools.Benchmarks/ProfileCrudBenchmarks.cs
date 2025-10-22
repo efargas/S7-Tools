@@ -23,9 +23,14 @@ public class ProfileCrudBenchmarks
     [GlobalSetup]
     public void Setup()
     {
+        var tempPath = Path.Combine(Path.GetTempPath(), "S7ToolsBenchmarks");
+        Directory.CreateDirectory(tempPath);
+        var pathService = new Moq.Mock<IPathService>();
+        pathService.Setup(p => p.SerialProfilesPath).Returns(tempPath);
+
         // Create profile manager with null logger for benchmarking
         _profileManager = new SerialPortProfileService(
-            NullLogger<SerialPortProfileService>.Instance);
+            NullLogger<SerialPortProfileService>.Instance, pathService.Object);
 
         // Create a test profile
         _testProfile = new SerialPortProfile
