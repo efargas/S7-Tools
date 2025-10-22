@@ -76,7 +76,7 @@ namespace S7Tools.Services
             {
                 if (File.Exists(AppSettingsPath))
                 {
-                    var json = File.ReadAllText(AppSettingsPath);
+                    var json = File.ReadAllText(AppSettingsPath); // Keep sync for constructor simplicity
                     return JsonSerializer.Deserialize<AppSettings>(json) ?? CreateDefaultAppSettings();
                 }
             }
@@ -86,8 +86,26 @@ namespace S7Tools.Services
             }
 
             var defaultSettings = CreateDefaultAppSettings();
-            SaveDefaultAppSettings(defaultSettings);
+            // Fire-and-forget the save operation to avoid blocking the constructor.
+            // This is a compromise for running in a sync constructor.
+            _ = SaveDefaultAppSettingsAsync(defaultSettings);
             return defaultSettings;
+        }
+
+        private async Task SaveDefaultAppSettingsAsync(AppSettings appSettings)
+        {
+            try
+            {
+                var appSettingsDir = Path.GetDirectoryName(AppSettingsPath);
+                if (appSettingsDir != null) Directory.CreateDirectory(appSettingsDir);
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                var json = JsonSerializer.Serialize(appSettings, options);
+                await File.WriteAllTextAsync(AppSettingsPath, json);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save default AppSettings.json.");
+            }
         }
 
         private AppSettings CreateDefaultAppSettings()
