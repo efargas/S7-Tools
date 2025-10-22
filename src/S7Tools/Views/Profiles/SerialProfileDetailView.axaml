@@ -63,7 +63,7 @@
       <TextBlock Grid.Row="25" Grid.Column="0" Text="Version:" FontWeight="SemiBold" Margin="0,0,10,0"/>
       <TextBlock Grid.Row="25" Grid.Column="1" Text="{Binding Version}"/>
       <TextBlock Grid.Row="26" Grid.Column="0" Text="Created At:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="26" Grid.Column="1" Text="{Binding CreatedAt, StringFormat='yyyy-MM-dd HH:mm'}"/>
+      <TextBlock Grid.Row="26" Grid.Column="1" Text="{Binding CreatedAt, StringFormat='{0:yyyy-MM-dd HH:mm}'}"/>
     </Grid>
   </StackPanel>
 </UserControl>
