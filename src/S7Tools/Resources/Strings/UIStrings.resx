@@ -756,5 +756,117 @@
     <value>Stopping socat process {0}...</value>
     <comment>Status message when stopping socat, {0} is process ID</comment>
   </data>
+  <data name="Status_SocatStoppedSuccessfully" xml:space="preserve">
+    <value>socat process {0} stopped successfully</value>
+    <comment>Status message when socat process stops successfully, {0} is process ID</comment>
+  </data>
+  <data name="Status_SocatStopFailed" xml:space="preserve">
+    <value>Failed to stop socat process {0}</value>
+    <comment>Status message when stopping socat fails, {0} is process ID</comment>
+  </data>
+  <data name="Status_StoppingAllSocat" xml:space="preserve">
+    <value>Stopping all socat processes...</value>
+    <comment>Status message when stopping all socat processes</comment>
+  </data>
+  <data name="Status_AllSocatStopped" xml:space="preserve">
+    <value>Stopped {0} socat process(es)</value>
+    <comment>Status message when all socat processes stopped, {0} is process count</comment>
+  </data>
+  <data name="Status_ErrorStoppingAllSocat" xml:space="preserve">
+    <value>Error stopping all socat processes</value>
+    <comment>Status message when stopping all socat processes fails</comment>
+  </data>
+  <data name="Status_TestingConnection" xml:space="preserve">
+    <value>Testing connection to port {0}...</value>
+    <comment>Status message when testing connection, {0} is port number</comment>
+  </data>
+  <data name="Status_ConnectionSuccess" xml:space="preserve">
+    <value>Connection to port {0} successful</value>
+    <comment>Status message when connection succeeds, {0} is port number</comment>
+  </data>
+  <data name="Status_ConnectionFailed" xml:space="preserve">
+    <value>Connection to port {0} failed</value>
+    <comment>Status message when connection fails, {0} is port number</comment>
+  </data>
+  <data name="Status_ErrorTestingConnection" xml:space="preserve">
+    <value>Error testing connection</value>
+    <comment>Status message when connection test encounters an error</comment>
+  </data>
+  <data name="Status_FileDialogUnavailable" xml:space="preserve">
+    <value>File dialog service not available</value>
+    <comment>Status message when file dialog service is not available</comment>
+  </data>
+  <data name="Status_ExportingProfiles" xml:space="preserve">
+    <value>Exporting profiles...</value>
+    <comment>Status message when exporting profiles</comment>
+  </data>
+  <data name="Status_ProfilesExported" xml:space="preserve">
+    <value>Exported {0} profile(s) to {1}</value>
+    <comment>Status message when profiles exported, {0} is count, {1} is filename</comment>
+  </data>
+  <data name="Status_ErrorExportingProfiles" xml:space="preserve">
+    <value>Error exporting profiles</value>
+    <comment>Status message when profile export fails</comment>
+  </data>
+  <data name="Status_ImportingProfiles" xml:space="preserve">
+    <value>Importing profiles...</value>
+    <comment>Status message when importing profiles</comment>
+  </data>
+  <data name="Status_ProfilesImported" xml:space="preserve">
+    <value>Imported {0} profile(s) from {1}</value>
+    <comment>Status message when profiles imported, {0} is count, {1} is filename</comment>
+  </data>
+  <data name="Status_ErrorImportingProfiles" xml:space="preserve">
+    <value>Error importing profiles</value>
+    <comment>Status message when profile import fails</comment>
+  </data>
+
+  <!-- Validation Messages - PowerSupply -->
+  <data name="Validation_ProfileNameRequired" xml:space="preserve">
+    <value>Profile name is required</value>
+    <comment>Validation message when profile name is empty</comment>
+  </data>
+  <data name="Validation_ProfileNameTooLong" xml:space="preserve">
+    <value>Profile name is too long (max 255 characters)</value>
+    <comment>Validation message when profile name exceeds maximum length</comment>
+  </data>
+  <data name="Validation_ProfileDescriptionTooLong" xml:space="preserve">
+    <value>Profile description is too long (max 1000 characters)</value>
+    <comment>Validation message when profile description exceeds maximum length</comment>
+  </data>
+  <data name="Validation_ModbusTcpHostRequired" xml:space="preserve">
+    <value>ModbusTcp host/IP address is required</value>
+    <comment>Validation message when ModbusTcp host is empty</comment>
+  </data>
+  <data name="Validation_ModbusTcpPortRange" xml:space="preserve">
+    <value>ModbusTcp port must be between 1 and 65535</value>
+    <comment>Validation message when ModbusTcp port is out of range</comment>
+  </data>
+  <data name="Validation_ModbusTcpDeviceIdRange" xml:space="preserve">
+    <value>ModbusTcp device ID must be between 0 and 255</value>
+    <comment>Validation message when ModbusTcp device ID is out of range</comment>
+  </data>
+  <data name="Validation_ModbusTcpCoilRange" xml:space="preserve">
+    <value>ModbusTcp coil address must be between 0 and 65535</value>
+    <comment>Validation message when ModbusTcp coil address is out of range</comment>
+  </data>
+
+  <!-- Error Messages - Operations -->
+  <data name="Error_InvalidOperation" xml:space="preserve">
+    <value>Invalid operation while {0}</value>
+    <comment>Error message for invalid operations, {0} is the operation name</comment>
+  </data>
+  <data name="Error_InvalidData" xml:space="preserve">
+    <value>Invalid data while {0}</value>
+    <comment>Error message for invalid data, {0} is the operation name</comment>
+  </data>
+  <data name="Error_AccessDeniedOperation" xml:space="preserve">
+    <value>Access denied while {0}</value>
+    <comment>Error message for access denied, {0} is the operation name</comment>
+  </data>
+  <data name="Error_Generic" xml:space="preserve">
+    <value>Error {0}</value>
+    <comment>Generic error message, {0} is the operation name</comment>
+  </data>
 
 </root>
