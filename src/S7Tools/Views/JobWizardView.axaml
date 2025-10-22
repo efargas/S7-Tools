@@ -115,7 +115,6 @@
                             IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
               <Panel>
                 <Border x:Name="PART_content"
-                        IsVisible="{TemplateBinding IsExpanded}"
                         MaxHeight="0">
                   <Border.Transitions>
                     <Transitions>
