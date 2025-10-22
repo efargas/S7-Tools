@@ -9,61 +9,115 @@
              x:DataType="models:SerialPortProfile">
   <StackPanel Spacing="10">
     <TextBlock Text="Serial Profile Details" FontWeight="Bold" FontSize="16"/>
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-      <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}"/>
-      <TextBlock Grid.Row="1" Grid.Column="0" Text="Baud Rate:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Configuration.BaudRate}"/>
-      <TextBlock Grid.Row="2" Grid.Column="0" Text="Character Size:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Configuration.CharacterSize}"/>
-      <TextBlock Grid.Row="3" Grid.Column="0" Text="Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Configuration.Parity}"/>
-      <TextBlock Grid.Row="4" Grid.Column="0" Text="Stop Bits:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Configuration.StopBits}"/>
-      <TextBlock Grid.Row="5" Grid.Column="0" Text="Enable Receiver:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Configuration.EnableReceiver}"/>
-      <TextBlock Grid.Row="6" Grid.Column="0" Text="Disable H/W Flow Control:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Configuration.DisableHardwareFlowControl}"/>
-      <TextBlock Grid.Row="7" Grid.Column="0" Text="Parity Enabled:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Configuration.ParityEnabled}"/>
-      <TextBlock Grid.Row="8" Grid.Column="0" Text="Odd Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Configuration.OddParity}"/>
-      <TextBlock Grid.Row="9" Grid.Column="0" Text="Ignore Break:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding Configuration.IgnoreBreak}"/>
-      <TextBlock Grid.Row="10" Grid.Column="0" Text="Disable Break Interrupt:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Configuration.DisableBreakInterrupt}"/>
-      <TextBlock Grid.Row="11" Grid.Column="0" Text="Disable Map CR to NL:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="11" Grid.Column="1" Text="{Binding Configuration.DisableMapCRtoNL}"/>
-      <TextBlock Grid.Row="12" Grid.Column="0" Text="Disable Bell On Queue Full:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding Configuration.DisableBellOnQueueFull}"/>
-      <TextBlock Grid.Row="13" Grid.Column="0" Text="Disable XON/XOFF:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="13" Grid.Column="1" Text="{Binding Configuration.DisableXonXoffFlowControl}"/>
-      <TextBlock Grid.Row="14" Grid.Column="0" Text="Disable Output Processing:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding Configuration.DisableOutputProcessing}"/>
-      <TextBlock Grid.Row="15" Grid.Column="0" Text="Disable Map NL to CR-NL:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="15" Grid.Column="1" Text="{Binding Configuration.DisableMapNLtoCRNL}"/>
-      <TextBlock Grid.Row="16" Grid.Column="0" Text="Disable Canonical Mode:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="16" Grid.Column="1" Text="{Binding Configuration.DisableCanonicalMode}"/>
-      <TextBlock Grid.Row="17" Grid.Column="0" Text="Disable Signal Generation:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="17" Grid.Column="1" Text="{Binding Configuration.DisableSignalGeneration}"/>
-      <TextBlock Grid.Row="18" Grid.Column="0" Text="Disable Extended Processing:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="18" Grid.Column="1" Text="{Binding Configuration.DisableExtendedProcessing}"/>
-      <TextBlock Grid.Row="19" Grid.Column="0" Text="Disable Echo:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="19" Grid.Column="1" Text="{Binding Configuration.DisableEcho}"/>
-      <TextBlock Grid.Row="20" Grid.Column="0" Text="Disable Echo Erase:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="20" Grid.Column="1" Text="{Binding Configuration.DisableEchoErase}"/>
-      <TextBlock Grid.Row="21" Grid.Column="0" Text="Disable Echo Kill:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="21" Grid.Column="1" Text="{Binding Configuration.DisableEchoKill}"/>
-      <TextBlock Grid.Row="22" Grid.Column="0" Text="Disable Echo Control:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="22" Grid.Column="1" Text="{Binding Configuration.DisableEchoControl}"/>
-      <TextBlock Grid.Row="23" Grid.Column="0" Text="Disable Echo Kill Erase:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="23" Grid.Column="1" Text="{Binding Configuration.DisableEchoKillErase}"/>
-      <TextBlock Grid.Row="24" Grid.Column="0" Text="Raw Mode:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="24" Grid.Column="1" Text="{Binding Configuration.RawMode}"/>
-      <TextBlock Grid.Row="25" Grid.Column="0" Text="Version:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="25" Grid.Column="1" Text="{Binding Version}"/>
-      <TextBlock Grid.Row="26" Grid.Column="0" Text="Created At:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="26" Grid.Column="1" Text="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}"/>
-    </Grid>
+    <StackPanel Spacing="4">
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Name:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Name}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Baud Rate:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.BaudRate}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Character Size:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.CharacterSize}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.Parity}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Stop Bits:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.StopBits}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Enable Receiver:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.EnableReceiver}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable H/W Flow Control:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableHardwareFlowControl}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Parity Enabled:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.ParityEnabled}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Odd Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.OddParity}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Ignore Break:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.IgnoreBreak}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Break Interrupt:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableBreakInterrupt}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Map CR to NL:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableMapCRtoNL}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Bell On Queue Full:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableBellOnQueueFull}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable XON/XOFF:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableXonXoffFlowControl}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Output Processing:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableOutputProcessing}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Map NL to CR-NL:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableMapNLtoCRNL}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Canonical Mode:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableCanonicalMode}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Signal Generation:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableSignalGeneration}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Extended Processing:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableExtendedProcessing}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Echo:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableEcho}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Echo Erase:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableEchoErase}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Echo Kill:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableEchoKill}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Echo Control:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableEchoControl}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Disable Echo Kill Erase:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableEchoKillErase}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Raw Mode:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Configuration.RawMode}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Version:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding Version}"/>
+      </Grid>
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Grid.Column="0" Text="Created At:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Column="1" Text="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}"/>
+      </Grid>
+    </StackPanel>
   </StackPanel>
 </UserControl>
