@@ -57,6 +57,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
+    /// <param name="pathService">The path service for dynamic path resolution.</param>
     public PowerSupplySettingsViewModel(
         IUnifiedProfileDialogService unifiedDialogService,
         ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>> logger,
