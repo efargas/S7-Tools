@@ -2,14 +2,4 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:vm="clr-namespace:S7Tools.ViewModels.Profiles">
 
-  <!-- DataTemplate for PropertyDisplayItem -->
-  <DataTemplate x:Key="PropertyDisplayItemTemplate" DataType="vm:PropertyDisplayItem">
-    <Border Classes="PropertyItem">
-      <StackPanel>
-        <TextBlock Classes="PropertyLabel" Text="{Binding Label}" />
-        <TextBlock Classes="PropertyValue" Text="{Binding Value}" />
-      </StackPanel>
-    </Border>
-  </DataTemplate>
-
 </ResourceDictionary>
