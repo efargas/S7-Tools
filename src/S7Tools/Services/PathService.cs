@@ -113,8 +113,14 @@ namespace S7Tools.Services
 
         private string ResolvePath(string customPath, string defaultPath)
         {
-            if (!string.IsNullOrEmpty(customPath) && Path.IsPathRooted(customPath))
+            if (!string.IsNullOrEmpty(customPath))
             {
+                // If the path is not rooted, resolve it relative to the application's base directory.
+                // This allows users to specify relative paths in AppSettings.json.
+                if (!Path.IsPathRooted(customPath))
+                {
+                    return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, customPath));
+                }
                 return customPath;
             }
             return Path.Combine(_resourcesPath, defaultPath);
