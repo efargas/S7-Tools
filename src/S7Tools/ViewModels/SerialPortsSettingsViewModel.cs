@@ -37,11 +37,11 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<SerialPortsSettingsViewModel> _specificLogger;
-    private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
+    private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly IUnifiedProfileDialogService _unifiedDialogService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
-    private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
+    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -69,7 +69,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         IProfileEditDialogService profileEditDialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
-        S7Tools.Services.Interfaces.ISettingsService settingsService,
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
         IUnifiedProfileDialogService unifiedProfileDialogService,
         IPathService pathService,
@@ -101,7 +101,12 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         // Initialize ProfilesPath from settings and subscribe to changes
         RefreshFromSettings();
-        _settingsChangedHandler = (_, __) => RefreshFromSettings();
+        _settingsChangedHandler = (_, args) => {
+            if (args.Key == "profiles.serialPath")
+            {
+                RefreshFromSettings();
+            }
+        };
         _settingsService.SettingsChanged += _settingsChangedHandler;
 
         // Load initial data
@@ -600,10 +605,8 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         try
         {
-            // Persist through the injected settings service
-            Models.ApplicationSettings settings = _settingsService.Settings.Clone();
-            settings.SerialPorts.ProfilesPath = ProfilesPath;
-            await _settingsService.UpdateSettingsAsync(settings).ConfigureAwait(false);
+            // Use the new settings service with key-value structure
+            await _settingsService.SetSettingAsync("profiles.serialPath", Path.Combine(ProfilesPath, "SerialProfiles.json")).ConfigureAwait(false);
             StatusMessage = "Profiles path updated";
         }
         catch (Exception ex)
@@ -622,8 +625,9 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         try
         {
-            Models.ApplicationSettings settings = _settingsService.Settings;
-            ProfilesPath = settings.SerialPorts?.ProfilesPath ?? Path.GetDirectoryName(_pathService.SerialProfilesPath) ?? _pathService.ProfilesDirectory;
+            // Use the new settings service with key-value access
+            string serialProfilePath = _settingsService.GetSetting<string>("profiles.serialPath", _pathService.SerialProfilesPath);
+            ProfilesPath = Path.GetDirectoryName(serialProfilePath) ?? _pathService.ProfilesDirectory;
         }
         catch (Exception ex)
         {

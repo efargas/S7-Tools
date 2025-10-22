@@ -91,8 +91,13 @@
 - [X] T031 [US2] Add change detection and notifications to ApplicationSettingsService
 - [X] T032 [US2] Add settings persistence with atomic write operations to ApplicationSettingsService
 - [X] T033 [US2] Register ApplicationSettingsService in src/S7Tools/Extensions/ServiceCollectionExtensions.cs
-- [ ] T034 [US2] Update existing services to use new settings resolution instead of hardcoded paths
-- [ ] T035 [US2] Verify user settings override behavior with test scenarios
+- [X] T034 [US2] Update existing services to use new settings resolution instead of hardcoded paths
+- [X] T035 [US2] Verify user settings override behavior with test scenarios
+- [X] T052 [US2] Fix AppSettings.json creation to include both defaultSettings and userSettings sections
+- [X] T053 [US2] Implement file logging using new ApplicationSettingsService
+- [X] T054 [US2] Fix FileLogWriter to create single session file instead of multiple files
+- [X] T055 [US2] Update LoggingSettingsViewModel to use IApplicationSettingsService
+- [X] T056 [US2] Add RestoreDefaultsAsync method to ApplicationSettingsService
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - settings hierarchy functional
 
@@ -116,6 +121,62 @@
 - [ ] T043 [US3] Verify error scenarios with permission testing and invalid path testing
 
 **Checkpoint**: All user stories should now be independently functional with robust error handling
+
+---
+
+## Phase 7: ViewModel and View Bindings Verification (Priority: P1)
+
+**Goal**: Ensure all ViewModels and Views are correctly using the new IApplicationSettingsService interface instead of the legacy ISettingsService
+
+**Independent Test**: Verify that all settings-related UI components load from and save to the new ApplicationSettingsService correctly
+
+### ViewModels Migration and Verification
+
+- [X] T057 [BINDING] Update LoggingSettingsViewModel to use IApplicationSettingsService (completed)
+- [X] T058 [BINDING] Audit and update SerialPortsSettingsViewModel to use IApplicationSettingsService
+- [X] T059 [BINDING] Audit and update SocatSettingsViewModel to use IApplicationSettingsService
+- [X] T060 [BINDING] Audit and update PowerSupplySettingsViewModel to use IApplicationSettingsService
+- [ ] T061 [BINDING] Audit and update GeneralSettingsViewModel to use IApplicationSettingsService
+- [ ] T062 [BINDING] Audit and update AppearanceSettingsViewModel to use IApplicationSettingsService
+- [ ] T063 [BINDING] Audit and update AdvancedSettingsViewModel to use IApplicationSettingsService
+- [ ] T064 [BINDING] Audit and update SettingsManagementViewModel to use IApplicationSettingsService
+- [ ] T065 [BINDING] Audit and update MainWindowViewModel to use IApplicationSettingsService
+- [ ] T066 [BINDING] Update all ViewModel factory methods in SettingsViewModel.cs to inject IApplicationSettingsService
+
+### View Bindings Verification
+
+- [ ] T067 [BINDING] Verify LoggingSettingsView.axaml bindings work with new settings structure
+- [ ] T068 [BINDING] Verify SerialPortsSettingsView.axaml bindings work with new settings structure
+- [ ] T069 [BINDING] Verify SocatSettingsView.axaml bindings work with new settings structure
+- [ ] T070 [BINDING] Verify PowerSupplySettingsView.axaml bindings work with new settings structure
+- [ ] T071 [BINDING] Verify GeneralSettingsView.axaml bindings work with new settings structure
+- [ ] T072 [BINDING] Verify AppearanceSettingsView.axaml bindings work with new settings structure
+- [ ] T073 [BINDING] Verify AdvancedSettingsView.axaml bindings work with new settings structure
+
+### Settings Structure Migration
+
+- [ ] T074 [BINDING] Update all hardcoded settings keys to use new dot-notation format (e.g., "logging.level")
+- [ ] T075 [BINDING] Verify all path-related settings use dynamic path resolution instead of hardcoded paths
+- [ ] T076 [BINDING] Test "Restore Defaults" functionality in all settings views
+- [ ] T077 [BINDING] Test "Save Settings" functionality persists to userSettings section correctly
+- [ ] T078 [BINDING] Test settings loading on application startup populates UI correctly
+
+### Legacy Service Cleanup
+
+- [ ] T079 [CLEANUP] Identify remaining usage of legacy ISettingsService interface
+- [ ] T080 [CLEANUP] Remove or update any remaining ISettingsService dependencies
+- [ ] T081 [CLEANUP] Update service registration to remove legacy settings services
+- [ ] T082 [CLEANUP] Verify no compilation errors after legacy service removal
+
+### Integration Testing
+
+- [ ] T083 [INTEGRATION] Test complete settings flow: UI → ViewModel → Service → File persistence
+- [ ] T084 [INTEGRATION] Test settings hierarchy: defaults vs user overrides in UI
+- [ ] T085 [INTEGRATION] Test cross-view settings consistency (same setting shown in multiple views)
+- [ ] T086 [INTEGRATION] Test settings persistence across application restarts
+- [ ] T087 [INTEGRATION] Test error handling when settings file is corrupted or missing
+
+**Checkpoint**: All UI components use new ApplicationSettingsService consistently and correctly
 
 ---
 

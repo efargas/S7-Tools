@@ -35,10 +35,10 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<PowerSupplySettingsViewModel> _specificLogger;
-    private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
+    private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
-    private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
+    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -67,7 +67,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         IDialogService dialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
-        S7Tools.Services.Interfaces.ISettingsService settingsService,
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         IPathService pathService)
         : base(logger, unifiedDialogService, dialogService, uiThreadService)
     {
@@ -101,7 +101,12 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         // Initialize ProfilesPath from settings and subscribe to changes
         RefreshFromSettings();
-        _settingsChangedHandler = (_, __) => RefreshFromSettings();
+        _settingsChangedHandler = (_, args) => {
+            if (args.Key.StartsWith("powerSupply.") || args.Key.StartsWith("profiles.powerSupply"))
+            {
+                RefreshFromSettings();
+            }
+        };
         _settingsService.SettingsChanged += _settingsChangedHandler;
 
         // Setup property change subscriptions
@@ -427,8 +432,9 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         try
         {
-            Models.ApplicationSettings settings = _settingsService.Settings;
-            ProfilesPath = settings.PowerSupply.ProfilesPath;
+            // Use the new settings service with key-value access
+            string powerSupplyProfilePath = _settingsService.GetSetting<string>("profiles.powerSupplyPath", _pathService.PowerSupplyProfilesPath);
+            ProfilesPath = Path.GetDirectoryName(powerSupplyProfilePath) ?? _pathService.ProfilesDirectory;
         }
         catch (Exception ex)
         {
@@ -909,7 +915,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
             if (success)
             {
-                await Task.Delay(_settingsService.Settings.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
+                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
                 await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power turned ON ✓");
                 _specificLogger.LogInformation("Power turned ON successfully");
@@ -945,7 +951,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
             if (success)
             {
-                await Task.Delay(_settingsService.Settings.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
+                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
                 await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power turned OFF ✓");
                 _specificLogger.LogInformation("Power turned OFF successfully");
@@ -1015,7 +1021,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
-            int delayMs = _settingsService.Settings.PowerSupply.PowerStateChangeDelayMs;
+            int delayMs = _settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000);
 
             _specificLogger.LogInformation("Starting power cycle (delay={Delay}ms)", delayMs);
 
@@ -1094,9 +1100,8 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             {
                 ProfilesPath = folderPath;
 
-                Models.ApplicationSettings settings = _settingsService.Settings;
-                settings.PowerSupply.ProfilesPath = folderPath;
-                await _settingsService.SaveSettingsAsync().ConfigureAwait(false);
+                // Use the new settings service to update the profiles path
+                await _settingsService.SetSettingAsync("profiles.powerSupplyPath", Path.Combine(folderPath, "PowerSupplyProfiles.json")).ConfigureAwait(false);
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
@@ -1194,17 +1199,16 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Resetting profiles path to default");
 
-            string defaultPath = Path.Combine("resources", "PowerSupplyProfiles");
-            string absolutePath = _pathService.GetResourcePath(defaultPath);
-            ProfilesPath = absolutePath;
+            // Reset to default path using PathService
+            string defaultPath = _pathService.PowerSupplyProfilesPath;
+            ProfilesPath = Path.GetDirectoryName(defaultPath) ?? _pathService.ProfilesDirectory;
 
-            Models.ApplicationSettings settings = _settingsService.Settings;
-            settings.PowerSupply.ProfilesPath = defaultPath;
-            await _settingsService.SaveSettingsAsync().ConfigureAwait(false);
+            // Reset the setting to its default value
+            await _settingsService.ResetSettingAsync("profiles.powerSupplyPath").ConfigureAwait(false);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Profiles path reset to default: {defaultPath}";
+                StatusMessage = "Profiles path reset to default";
             });
             _specificLogger.LogInformation("Profiles path reset to default: {Path}", defaultPath);
         }

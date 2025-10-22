@@ -35,10 +35,10 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<SocatSettingsViewModel> _specificLogger;
-    private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
+    private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
-    private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
+    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -69,7 +69,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         IDialogService dialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
-        S7Tools.Services.Interfaces.ISettingsService settingsService,
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         IPathService pathService)
         : base(logger, unifiedDialogService, dialogService, uiThreadService)
     {
@@ -103,7 +103,12 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         // Initialize ProfilesPath from settings and subscribe to changes
         RefreshFromSettings();
-        _settingsChangedHandler = (_, __) => RefreshFromSettings();
+        _settingsChangedHandler = (_, args) => {
+            if (args.Key == "profiles.socatPath")
+            {
+                RefreshFromSettings();
+            }
+        };
         _settingsService.SettingsChanged += _settingsChangedHandler;
 
         // Subscribe to socat service events
@@ -497,17 +502,14 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     {
         try
         {
-            Models.ApplicationSettings settings = _settingsService.Settings;
-            string defaultPath = Path.Combine("resources", "SocatProfiles");
-            ProfilesPath = settings.Socat?.ProfilesPath != null ?
-                _pathService.GetResourcePath(settings.Socat.ProfilesPath) :
-                _pathService.GetResourcePath(defaultPath);
+            // Use the new settings service with key-value access
+            string socatProfilePath = _settingsService.GetSetting<string>("profiles.socatPath", _pathService.SocatProfilesPath);
+            ProfilesPath = Path.GetDirectoryName(socatProfilePath) ?? _pathService.ProfilesDirectory;
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error refreshing profiles path from settings");
-            string defaultPath = Path.Combine("resources", "SocatProfiles");
-            ProfilesPath = _pathService.GetResourcePath(defaultPath);
+            ProfilesPath = _pathService.ProfilesDirectory;
         }
     }
 
@@ -1078,16 +1080,12 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     {
         try
         {
-            string defaultPath = Path.Combine("resources", "SocatProfiles");
-            ProfilesPath = _pathService.GetResourcePath(defaultPath);
+            // Reset to default path using PathService
+            string defaultPath = _pathService.SocatProfilesPath;
+            ProfilesPath = Path.GetDirectoryName(defaultPath) ?? _pathService.ProfilesDirectory;
 
-            // Update settings
-            Models.ApplicationSettings settings = _settingsService.Settings;
-            if (settings.Socat != null)
-            {
-                settings.Socat.ProfilesPath = defaultPath;
-                await _settingsService.UpdateSettingsAsync(settings);
-            }
+            // Update settings with the new key-value structure
+            await _settingsService.ResetSettingAsync("profiles.socatPath");
 
             StatusMessage = "Profiles path reset to default";
             _specificLogger.LogInformation("Reset socat profiles path to default");
@@ -1106,10 +1104,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     {
         try
         {
-            // Persist through the injected settings service
-            Models.ApplicationSettings settings = _settingsService.Settings.Clone();
-            settings.Socat.ProfilesPath = ProfilesPath;
-            await _settingsService.UpdateSettingsAsync(settings).ConfigureAwait(false);
+            // Use the new settings service with key-value structure
+            await _settingsService.SetSettingAsync("profiles.socatPath", Path.Combine(ProfilesPath, "SocatProfiles.json")).ConfigureAwait(false);
             StatusMessage = "Profiles path updated";
         }
         catch (Exception ex)

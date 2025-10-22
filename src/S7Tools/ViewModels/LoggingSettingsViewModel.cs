@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Helpers;
-using S7Tools.Models;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -13,18 +14,18 @@ namespace S7Tools.ViewModels;
 /// </summary>
 public class LoggingSettingsViewModel : ViewModelBase
 {
-    private readonly ISettingsService _settingsService;
+    private readonly IApplicationSettingsService _settingsService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<LoggingSettingsViewModel> _logger;
 
     /// <summary>
     /// Initializes a new instance of the LoggingSettingsViewModel class.
     /// </summary>
-    /// <param name="settingsService">The settings service.</param>
+    /// <param name="settingsService">The application settings service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="logger">The logger.</param>
     public LoggingSettingsViewModel(
-        ISettingsService settingsService,
+        IApplicationSettingsService settingsService,
         IFileDialogService? fileDialogService,
         ILogger<LoggingSettingsViewModel> logger)
     {
@@ -147,20 +148,22 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     private void RefreshFromSettings()
     {
-        ApplicationSettings settings = _settingsService.Settings;
-        DefaultLogPath = settings.Logging.DefaultLogPath;
-        ExportPath = settings.Logging.ExportPath;
-        MinimumLogLevel = settings.Logging.MinimumLogLevel.ToString();
-        AutoScrollLogs = settings.Logging.AutoScroll;
-        EnableRollingLogs = settings.Logging.EnableFileLogging;
-        ShowTimestampInLogs = settings.Logging.ShowTimestamp;
-        ShowCategoryInLogs = settings.Logging.ShowCategory;
-        ShowLogLevelInLogs = settings.Logging.ShowLevel;
-        CurrentSettingsFilePath = _settingsService.GetDefaultSettingsPath();
+        // Load settings using the new structured approach
+        DefaultLogPath = _settingsService.GetSetting<string>("logging.logDirectory", "Resources/Logs/Main");
+        ExportPath = _settingsService.GetSetting<string>("logging.exportDirectory", "Resources/Logs/Exported");
+        MinimumLogLevel = _settingsService.GetSetting<string>("logging.level", "Information");
+        AutoScrollLogs = _settingsService.GetSetting<bool>("ui.autoScrollLogs", true);
+        EnableRollingLogs = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
+        ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
+        ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
+        ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
+
+        // For now, use a placeholder for settings file path - we need to add this to the settings service
+        CurrentSettingsFilePath = "Resources/AppSettings/AppSettings.json";
 
         try
         {
-            var fileInfo = new FileInfo(CurrentSettingsFilePath);
+            var fileInfo = new System.IO.FileInfo(CurrentSettingsFilePath);
             SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.Now;
         }
         catch
@@ -182,7 +185,7 @@ public class LoggingSettingsViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(result))
             {
                 DefaultLogPath = result;
-                await UpdateSettingsAsync();
+                _logger.LogInformation("Default log path updated to: {Path}", DefaultLogPath);
             }
         }
         catch (Exception ex)
@@ -205,7 +208,7 @@ public class LoggingSettingsViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(result))
             {
                 ExportPath = result;
-                await UpdateSettingsAsync();
+                _logger.LogInformation("Export path updated to: {Path}", ExportPath);
             }
         }
         catch (Exception ex)
@@ -220,14 +223,27 @@ public class LoggingSettingsViewModel : ViewModelBase
         try
         {
             SettingsStatusMessage = "Saving settings...";
-            await UpdateSettingsAsync();
-            await _settingsService.SaveSettingsAsync();
+
+            // Create dictionary of settings to save
+            var userSettings = new Dictionary<string, object>
+            {
+                ["logging.logDirectory"] = DefaultLogPath,
+                ["logging.exportDirectory"] = ExportPath,
+                ["logging.level"] = MinimumLogLevel,
+                ["ui.autoScrollLogs"] = AutoScrollLogs,
+                ["logging.enableFileLogging"] = EnableRollingLogs,
+                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
+                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
+                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
+            };
+
+            await _settingsService.SaveUserSettingsAsync(userSettings);
             SettingsStatusMessage = "Settings saved successfully";
-            _logger.LogInformation("Settings saved successfully");
+            _logger.LogInformation("Logging settings saved successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving settings");
+            _logger.LogError(ex, "Error saving logging settings");
             SettingsStatusMessage = "Error saving settings";
         }
     }
@@ -240,11 +256,11 @@ public class LoggingSettingsViewModel : ViewModelBase
             await _settingsService.LoadSettingsAsync();
             RefreshFromSettings();
             SettingsStatusMessage = "Settings loaded successfully";
-            _logger.LogInformation("Settings loaded successfully");
+            _logger.LogInformation("Logging settings loaded successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error loading settings");
+            _logger.LogError(ex, "Error loading logging settings");
             SettingsStatusMessage = "Error loading settings";
         }
     }
@@ -254,14 +270,14 @@ public class LoggingSettingsViewModel : ViewModelBase
         try
         {
             SettingsStatusMessage = "Resetting to defaults...";
-            await _settingsService.ResetToDefaultsAsync();
+            await _settingsService.RestoreDefaultsAsync();
             RefreshFromSettings();
-            SettingsStatusMessage = "Settings reset to defaults";
-            _logger.LogInformation("Settings reset to defaults");
+            SettingsStatusMessage = "Settings reset to defaults successfully";
+            _logger.LogInformation("Logging settings reset to defaults successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resetting settings");
+            _logger.LogError(ex, "Error resetting logging settings to defaults");
             SettingsStatusMessage = "Error resetting settings";
         }
     }
@@ -270,8 +286,15 @@ public class LoggingSettingsViewModel : ViewModelBase
     {
         try
         {
-            await _settingsService.OpenSettingsDirectoryAsync();
-            _logger.LogInformation("Opened settings directory");
+            string settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath) ?? "Resources/AppSettings";
+
+            if (!Directory.Exists(settingsDir))
+            {
+                Directory.CreateDirectory(settingsDir);
+            }
+
+            await PlatformHelper.OpenDirectoryInExplorerAsync(settingsDir);
+            _logger.LogInformation("Opened settings directory in explorer: {Path}", settingsDir);
         }
         catch (Exception ex)
         {
@@ -330,26 +353,6 @@ public class LoggingSettingsViewModel : ViewModelBase
             _logger.LogError(ex, "Error opening export path in explorer");
             SettingsStatusMessage = "Error opening export path";
         }
-    }
-
-    private async Task UpdateSettingsAsync()
-    {
-        ApplicationSettings settings = _settingsService.Settings.Clone();
-        settings.Logging.DefaultLogPath = DefaultLogPath;
-        settings.Logging.ExportPath = ExportPath;
-
-        if (Enum.TryParse<LogLevel>(MinimumLogLevel, out LogLevel logLevel))
-        {
-            settings.Logging.MinimumLogLevel = logLevel;
-        }
-
-        settings.Logging.AutoScroll = AutoScrollLogs;
-        settings.Logging.EnableFileLogging = EnableRollingLogs;
-        settings.Logging.ShowTimestamp = ShowTimestampInLogs;
-        settings.Logging.ShowCategory = ShowCategoryInLogs;
-        settings.Logging.ShowLevel = ShowLogLevelInLogs;
-
-        await _settingsService.UpdateSettingsAsync(settings);
     }
 
     #endregion

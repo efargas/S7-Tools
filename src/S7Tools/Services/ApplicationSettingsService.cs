@@ -1,8 +1,8 @@
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
-using System.Text.Json;
 
 namespace S7Tools.Services
 {

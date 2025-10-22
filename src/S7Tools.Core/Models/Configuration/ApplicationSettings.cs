@@ -207,6 +207,26 @@ namespace S7Tools.Core.Models.Configuration
             settings.DefaultSettings.Add("network.powerSupplyPort", 502);
             settings.DefaultSettings.Add("network.connectionRetries", 3);
 
+            // Power supply settings
+            settings.DefaultSettings.Add("powerSupply.maxProfiles", 100);
+            settings.DefaultSettings.Add("powerSupply.autoLoadDefaultProfile", true);
+            settings.DefaultSettings.Add("powerSupply.autoSaveProfiles", true);
+            settings.DefaultSettings.Add("powerSupply.defaultConnectionTimeoutMs", 5000);
+            settings.DefaultSettings.Add("powerSupply.enableConnectionPooling", true);
+            settings.DefaultSettings.Add("powerSupply.enableAutoReconnect", true);
+            settings.DefaultSettings.Add("powerSupply.reconnectDelayMs", 2000);
+            settings.DefaultSettings.Add("powerSupply.maxReconnectAttempts", 5);
+            settings.DefaultSettings.Add("powerSupply.confirmPowerOff", true);
+            settings.DefaultSettings.Add("powerSupply.confirmPowerOn", false);
+            settings.DefaultSettings.Add("powerSupply.powerStateChangeDelayMs", 1000);
+            settings.DefaultSettings.Add("powerSupply.autoReadStateAfterConnect", true);
+            settings.DefaultSettings.Add("powerSupply.statusRefreshIntervalMs", 5000);
+            settings.DefaultSettings.Add("powerSupply.showPowerStateNotifications", true);
+            settings.DefaultSettings.Add("powerSupply.showConnectionNotifications", true);
+            settings.DefaultSettings.Add("powerSupply.logModbusOperations", false);
+            settings.DefaultSettings.Add("powerSupply.logConnectionStateChanges", true);
+            settings.DefaultSettings.Add("powerSupply.logPowerStateChanges", true);
+
             settings.ComputeEffectiveSettings();
             return settings;
         }

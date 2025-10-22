@@ -1,9 +1,9 @@
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
-using System.Reflection;
 
 namespace S7Tools.Services
 {

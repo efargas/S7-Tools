@@ -55,7 +55,7 @@
 			"command": "dotnet",
 			"args": [
 				"format",
-				"src/S7Tools.sln"
+				"src/"
 			],
 			"group": "build",
 			"presentation": {
