@@ -10,41 +10,25 @@
   <StackPanel Spacing="10">
     <TextBlock Text="Serial Profile Details" FontWeight="Bold" FontSize="16"/>
     <StackPanel Spacing="4">
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Name:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Name}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Baud Rate:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.BaudRate}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Character Size:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.CharacterSize}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.Parity}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Stop Bits:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.StopBits}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Enable Receiver:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.EnableReceiver}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Disable H/W Flow Control:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.DisableHardwareFlowControl}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Parity Enabled:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.ParityEnabled}"/>
-      </Grid>
-      <Grid ColumnDefinitions="Auto,*">
-        <TextBlock Grid.Column="0" Text="Odd Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-        <TextBlock Grid.Column="1" Text="{Binding Configuration.OddParity}"/>
+      <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Baud Rate:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Configuration.BaudRate}"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Character Size:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Configuration.CharacterSize}"/>
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Configuration.Parity}"/>
+        <TextBlock Grid.Row="4" Grid.Column="0" Text="Stop Bits:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Configuration.StopBits}"/>
+        <TextBlock Grid.Row="5" Grid.Column="0" Text="Enable Receiver:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Configuration.EnableReceiver}"/>
+        <TextBlock Grid.Row="6" Grid.Column="0" Text="Disable H/W Flow Control:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Configuration.DisableHardwareFlowControl}"/>
+        <TextBlock Grid.Row="7" Grid.Column="0" Text="Parity Enabled:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Configuration.ParityEnabled}"/>
+        <TextBlock Grid.Row="8" Grid.Column="0" Text="Odd Parity:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+        <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Configuration.OddParity}"/>
       </Grid>
       <Grid ColumnDefinitions="Auto,*">
         <TextBlock Grid.Column="0" Text="Ignore Break:" FontWeight="SemiBold" Margin="0,0,10,0"/>
