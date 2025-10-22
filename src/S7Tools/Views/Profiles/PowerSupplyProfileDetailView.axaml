@@ -3,114 +3,34 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:S7Tools.ViewModels"
+             xmlns:vmProfiles="clr-namespace:S7Tools.ViewModels.Profiles"
              xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:converters="clr-namespace:S7Tools.Converters"
              xmlns:views="clr-namespace:S7Tools.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Profiles.PowerSupplyProfileDetailView"
              x:DataType="models:PowerSupplyProfile">
+  <UserControl.Resources>
+    <converters:ObjectToPropertiesConverter x:Key="ObjectToPropertiesConverter" />
+  </UserControl.Resources>
   <UserControl.Styles>
     <StyleInclude Source="/Styles/PropertyStyles.axaml" />
   </UserControl.Styles>
-  <ItemsControl>
+  <ItemsControl ItemsSource="{Binding Configuration, Converter={StaticResource ObjectToPropertiesConverter}}">
     <ItemsControl.ItemsPanel>
       <ItemsPanelTemplate>
         <WrapPanel Orientation="Horizontal" />
       </ItemsPanelTemplate>
     </ItemsControl.ItemsPanel>
-    <ItemsControl.Items>
-      <Border Classes="PropertyItem">
-        <StackPanel>
-          <TextBlock Classes="PropertyLabel" Text="Name" />
-          <TextBlock Classes="PropertyValue" Text="{Binding Name}" />
-        </StackPanel>
-      </Border>
-      <ContentControl Content="{Binding Configuration}">
-        <ContentControl.DataTemplates>
-          <DataTemplate DataType="models:ModbusTcpConfiguration">
-            <ItemsControl>
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <WrapPanel Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.Items>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Host" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding Host}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Port" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding Port}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Device ID" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DeviceId}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Addressing Mode" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding AddressingMode}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Connection Timeout (ms)" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding ConnectionTimeoutMs}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Read Timeout (ms)" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding ReadTimeoutMs}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Write Timeout (ms)" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding WriteTimeoutMs}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="On/Off Coil" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding OnOffCoil}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Enable Auto Reconnect" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding EnableAutoReconnect}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Max Retry Attempts" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding MaxRetryAttempts}" />
-                  </StackPanel>
-                </Border>
-              </ItemsControl.Items>
-            </ItemsControl>
-          </DataTemplate>
-        </ContentControl.DataTemplates>
-      </ContentControl>
-      <Border Classes="PropertyItem">
-        <StackPanel>
-          <TextBlock Classes="PropertyLabel" Text="Version" />
-          <TextBlock Classes="PropertyValue" Text="{Binding Version}" />
-        </StackPanel>
-      </Border>
-      <Border Classes="PropertyItem">
-        <StackPanel>
-          <TextBlock Classes="PropertyLabel" Text="Created At" />
-          <TextBlock Classes="PropertyValue" Text="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}" />
-        </StackPanel>
-      </Border>
-    </ItemsControl.Items>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate DataType="vmProfiles:PropertyDisplayItem">
+        <Border Classes="PropertyItem">
+          <StackPanel>
+            <TextBlock Classes="PropertyLabel" Text="{Binding Label}" />
+            <TextBlock Classes="PropertyValue" Text="{Binding Value}" />
+          </StackPanel>
+        </Border>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
   </ItemsControl>
 </UserControl>

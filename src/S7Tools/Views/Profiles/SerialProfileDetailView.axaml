@@ -3,198 +3,34 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:S7Tools.ViewModels"
+             xmlns:vmProfiles="clr-namespace:S7Tools.ViewModels.Profiles"
              xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:converters="clr-namespace:S7Tools.Converters"
              xmlns:views="clr-namespace:S7Tools.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Profiles.SerialProfileDetailView"
              x:DataType="models:SerialPortProfile">
+  <UserControl.Resources>
+    <converters:ObjectToPropertiesConverter x:Key="ObjectToPropertiesConverter" />
+  </UserControl.Resources>
   <UserControl.Styles>
     <StyleInclude Source="/Styles/PropertyStyles.axaml" />
   </UserControl.Styles>
-  <ItemsControl>
+  <ItemsControl ItemsSource="{Binding Configuration, Converter={StaticResource ObjectToPropertiesConverter}}">
     <ItemsControl.ItemsPanel>
       <ItemsPanelTemplate>
         <WrapPanel Orientation="Horizontal" />
       </ItemsPanelTemplate>
     </ItemsControl.ItemsPanel>
-    <ItemsControl.Items>
-      <Border Classes="PropertyItem">
-        <StackPanel>
-          <TextBlock Classes="PropertyLabel" Text="Name" />
-          <TextBlock Classes="PropertyValue" Text="{Binding Name}" />
-        </StackPanel>
-      </Border>
-      <ContentControl Content="{Binding Configuration}">
-        <ContentControl.DataTemplates>
-          <DataTemplate DataType="models:SerialPortConfiguration">
-            <ItemsControl>
-              <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                  <WrapPanel Orientation="Horizontal" />
-                </ItemsPanelTemplate>
-              </ItemsControl.ItemsPanel>
-              <ItemsControl.Items>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Baud Rate" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding BaudRate}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Character Size" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding CharacterSize}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Parity" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding Parity}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Stop Bits" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding StopBits}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Enable Receiver" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding EnableReceiver}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable H/W Flow Control" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableHardwareFlowControl}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Parity Enabled" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding ParityEnabled}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Odd Parity" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding OddParity}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Ignore Break" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding IgnoreBreak}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Break Interrupt" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableBreakInterrupt}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Map CR to NL" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableMapCRtoNL}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Bell On Queue Full" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableBellOnQueueFull}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable XON/XOFF" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableXonXoffFlowControl}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Output Processing" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableOutputProcessing}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Map NL to CR-NL" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableMapNLtoCRNL}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Canonical Mode" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableCanonicalMode}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Signal Generation" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableSignalGeneration}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Extended Processing" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableExtendedProcessing}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Echo" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableEcho}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Echo Erase" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableEchoErase}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Echo Kill" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableEchoKill}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Echo Control" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableEchoControl}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Disable Echo Kill Erase" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding DisableEchoKillErase}" />
-                  </StackPanel>
-                </Border>
-                <Border Classes="PropertyItem">
-                  <StackPanel>
-                    <TextBlock Classes="PropertyLabel" Text="Raw Mode" />
-                    <TextBlock Classes="PropertyValue" Text="{Binding RawMode}" />
-                  </StackPanel>
-                </Border>
-              </ItemsControl.Items>
-            </ItemsControl>
-          </DataTemplate>
-        </ContentControl.DataTemplates>
-      </ContentControl>
-      <Border Classes="PropertyItem">
-        <StackPanel>
-          <TextBlock Classes="PropertyLabel" Text="Version" />
-          <TextBlock Classes="PropertyValue" Text="{Binding Version}" />
-        </StackPanel>
-      </Border>
-      <Border Classes="PropertyItem">
-        <StackPanel>
-          <TextBlock Classes="PropertyLabel" Text="Created At" />
-          <TextBlock Classes="PropertyValue" Text="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}" />
-        </StackPanel>
-      </Border>
-    </ItemsControl.Items>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate DataType="vmProfiles:PropertyDisplayItem">
+        <Border Classes="PropertyItem">
+          <StackPanel>
+            <TextBlock Classes="PropertyLabel" Text="{Binding Label}" />
+            <TextBlock Classes="PropertyValue" Text="{Binding Value}" />
+          </StackPanel>
+        </Border>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
   </ItemsControl>
 </UserControl>
