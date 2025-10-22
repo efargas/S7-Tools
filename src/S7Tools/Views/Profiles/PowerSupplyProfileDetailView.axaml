@@ -4,47 +4,34 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:S7Tools.ViewModels"
              xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:views="clr-namespace:S7Tools.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Profiles.PowerSupplyProfileDetailView"
              x:DataType="models:PowerSupplyProfile">
   <StackPanel Spacing="10">
     <TextBlock Text="Power Supply Profile Details" FontWeight="Bold" FontSize="16"/>
-    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto">
-      <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}"/>
-      <ContentControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Configuration}">
+    <StackPanel Spacing="4">
+      <views:PropertyDisplayItem Label="Name:" Value="{Binding Name}"/>
+      <ContentControl Content="{Binding Configuration}">
         <ContentControl.DataTemplates>
           <DataTemplate DataType="models:ModbusTcpConfiguration">
-            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="Host:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Host}"/>
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="Port:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Port}"/>
-              <TextBlock Grid.Row="2" Grid.Column="0" Text="Device ID:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DeviceId}"/>
-              <TextBlock Grid.Row="3" Grid.Column="0" Text="Addressing Mode:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding AddressingMode}"/>
-              <TextBlock Grid.Row="4" Grid.Column="0" Text="Connection Timeout (ms):" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConnectionTimeoutMs}"/>
-              <TextBlock Grid.Row="5" Grid.Column="0" Text="Read Timeout (ms):" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ReadTimeoutMs}"/>
-              <TextBlock Grid.Row="6" Grid.Column="0" Text="Write Timeout (ms):" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding WriteTimeoutMs}"/>
-              <TextBlock Grid.Row="7" Grid.Column="0" Text="On/Off Coil:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding OnOffCoil}"/>
-              <TextBlock Grid.Row="8" Grid.Column="0" Text="Enable Auto Reconnect:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding EnableAutoReconnect}"/>
-              <TextBlock Grid.Row="9" Grid.Column="0" Text="Max Retry Attempts:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-              <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding MaxRetryAttempts}"/>
-            </Grid>
+            <StackPanel Spacing="4">
+              <views:PropertyDisplayItem Label="Host:" Value="{Binding Host}"/>
+              <views:PropertyDisplayItem Label="Port:" Value="{Binding Port}"/>
+              <views:PropertyDisplayItem Label="Device ID:" Value="{Binding DeviceId}"/>
+              <views:PropertyDisplayItem Label="Addressing Mode:" Value="{Binding AddressingMode}"/>
+              <views:PropertyDisplayItem Label="Connection Timeout (ms):" Value="{Binding ConnectionTimeoutMs}"/>
+              <views:PropertyDisplayItem Label="Read Timeout (ms):" Value="{Binding ReadTimeoutMs}"/>
+              <views:PropertyDisplayItem Label="Write Timeout (ms):" Value="{Binding WriteTimeoutMs}"/>
+              <views:PropertyDisplayItem Label="On/Off Coil:" Value="{Binding OnOffCoil}"/>
+              <views:PropertyDisplayItem Label="Enable Auto Reconnect:" Value="{Binding EnableAutoReconnect}"/>
+              <views:PropertyDisplayItem Label="Max Retry Attempts:" Value="{Binding MaxRetryAttempts}"/>
+            </StackPanel>
           </DataTemplate>
         </ContentControl.DataTemplates>
       </ContentControl>
-      <TextBlock Grid.Row="2" Grid.Column="0" Text="Version:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Version}"/>
-      <TextBlock Grid.Row="3" Grid.Column="0" Text="Created At:" FontWeight="SemiBold" Margin="0,0,10,0"/>
-      <TextBlock Grid.Row="3" Grid.Column="1"
-                         Text="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}"/>
-    </Grid>
+      <views:PropertyDisplayItem Label="Version:" Value="{Binding Version}"/>
+      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}"/>
+    </StackPanel>
   </StackPanel>
 </UserControl>
