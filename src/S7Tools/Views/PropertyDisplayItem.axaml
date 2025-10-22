@@ -10,7 +10,7 @@
                Text="{Binding #PropertyDisplay.Label}"
                FontWeight="SemiBold" 
                Margin="0,0,10,0"/>
-    <TextBlock Grid.Column="1" 
-               Text="{Binding #PropertyDisplay.Value}"/>
+    <ContentPresenter Grid.Column="1" 
+                      Content="{Binding #PropertyDisplay.Value}"/>
   </Grid>
 </UserControl>

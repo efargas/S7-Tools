@@ -8,13 +8,13 @@ public partial class PropertyDisplayItem : UserControl
     public static readonly StyledProperty<string> LabelProperty =
         AvaloniaProperty.Register<PropertyDisplayItem, string>(nameof(Label), string.Empty);
 
-    public static readonly StyledProperty<string?> ValueProperty =
-        AvaloniaProperty.Register<PropertyDisplayItem, string?>(nameof(Value));
+    public static readonly StyledProperty<object?> ValueProperty =
+        AvaloniaProperty.Register<PropertyDisplayItem, object?>(nameof(Value));
 
-    public string? Value
+    public string Label
     {
-        get => GetValue(ValueProperty);
-        set => SetValue(ValueProperty, value);
+        get => GetValue(LabelProperty);
+        set => SetValue(LabelProperty, value);
     }
 
     public object? Value

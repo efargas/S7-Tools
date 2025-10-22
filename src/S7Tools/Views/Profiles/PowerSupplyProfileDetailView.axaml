@@ -31,7 +31,7 @@
         </ContentControl.DataTemplates>
       </ContentControl>
       <views:PropertyDisplayItem Label="Version:" Value="{Binding Version}"/>
-      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}"/>
+      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}"/>
     </StackPanel>
   </StackPanel>
 </UserControl>
