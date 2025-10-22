@@ -476,7 +476,7 @@ public class ProfileDetailsService : IProfileDetailsService
         // Additional metadata if present
         if (config.Metadata != null && config.Metadata.Count > 0)
         {
-            foreach (var metadata in config.Metadata)
+            foreach (KeyValuePair<string, string> metadata in config.Metadata)
             {
                 properties.Add(new PropertyDisplayItem
                 {
@@ -623,7 +623,7 @@ public class ProfileDetailsService : IProfileDetailsService
         // Additional metadata if present
         if (config.Metadata != null && config.Metadata.Count > 0)
         {
-            foreach (var metadata in config.Metadata)
+            foreach (KeyValuePair<string, string> metadata in config.Metadata)
             {
                 properties.Add(new PropertyDisplayItem
                 {

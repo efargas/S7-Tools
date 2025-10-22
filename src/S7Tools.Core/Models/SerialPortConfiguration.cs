@@ -349,12 +349,12 @@ public class SerialPortConfiguration
     {
         var errors = new List<string>();
 
-        if (BaudRate < 50 || BaudRate > 4000000)
+        if (BaudRate is < 50 or > 4000000)
         {
             errors.Add("Baud rate must be between 50 and 4,000,000");
         }
 
-        if (CharacterSize < 5 || CharacterSize > 8)
+        if (CharacterSize is < 5 or > 8)
         {
             errors.Add("Character size must be between 5 and 8 bits");
         }

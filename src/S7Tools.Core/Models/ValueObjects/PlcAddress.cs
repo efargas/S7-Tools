@@ -93,13 +93,13 @@ public readonly record struct PlcAddress
         if (address.StartsWith("DB"))
         {
             // DB address: DB1.DBX0.0, DB1.DBB0, DB1.DBW0, DB1.DBD0
-            var parts = address.Split('.');
-            var dbNumber = int.Parse(parts[0][2..]);
-            var dataType = parts[1][..3];
-            var offset = int.Parse(parts[1][3..]);
-            var bitOffset = parts.Length > 2 ? (int?)int.Parse(parts[2]) : null;
+            string[] parts = address.Split('.');
+            int dbNumber = int.Parse(parts[0][2..]);
+            string dataType = parts[1][..3];
+            int offset = int.Parse(parts[1][3..]);
+            int? bitOffset = parts.Length > 2 ? (int?)int.Parse(parts[2]) : null;
 
-            var addressType = dataType switch
+            PlcAddressType addressType = dataType switch
             {
                 "DBX" => PlcAddressType.DataBlockBit,
                 "DBB" => PlcAddressType.DataBlockByte,
@@ -114,28 +114,28 @@ public readonly record struct PlcAddress
         if (address.StartsWith("M"))
         {
             // Memory address: M0.0
-            var parts = address[1..].Split('.');
+            string[] parts = address[1..].Split('.');
             return (PlcAddressType.Memory, null, int.Parse(parts[0]), int.Parse(parts[1]));
         }
 
         if (address.StartsWith("I"))
         {
             // Input address: I0.0
-            var parts = address[1..].Split('.');
+            string[] parts = address[1..].Split('.');
             return (PlcAddressType.Input, null, int.Parse(parts[0]), int.Parse(parts[1]));
         }
 
         if (address.StartsWith("Q"))
         {
             // Output address: Q0.0
-            var parts = address[1..].Split('.');
+            string[] parts = address[1..].Split('.');
             return (PlcAddressType.Output, null, int.Parse(parts[0]), int.Parse(parts[1]));
         }
 
         if (address.StartsWith("V"))
         {
             // Variable address: V0.0
-            var parts = address[1..].Split('.');
+            string[] parts = address[1..].Split('.');
             return (PlcAddressType.Variable, null, int.Parse(parts[0]), int.Parse(parts[1]));
         }
 

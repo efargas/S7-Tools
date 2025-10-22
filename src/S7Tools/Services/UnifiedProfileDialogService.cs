@@ -65,11 +65,11 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing create dialog for serial port profile with default name: {DefaultName}", request.DefaultName);
 
-            var result = await _profileEditDialogService.CreateSerialProfileAsync(request.DefaultName).ConfigureAwait(false);
+            Models.ProfileEditResult result = await _profileEditDialogService.CreateSerialProfileAsync(request.DefaultName).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is SerialPortProfileViewModel viewModel)
             {
-                var profile = viewModel.CreateProfile();
+                SerialPortProfile profile = viewModel.CreateProfile();
                 _logger.LogInformation("Serial port profile created successfully: {ProfileName}", profile.Name);
                 return ProfileDialogResult<SerialPortProfile>.Success(profile);
             }
@@ -97,11 +97,11 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing edit dialog for serial port profile ID: {ProfileId}", request.ProfileId);
 
-            var result = await _profileEditDialogService.EditSerialProfileAsync(request.ProfileId).ConfigureAwait(false);
+            Models.ProfileEditResult result = await _profileEditDialogService.EditSerialProfileAsync(request.ProfileId).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is SerialPortProfileViewModel viewModel)
             {
-                var profile = viewModel.CreateProfile();
+                SerialPortProfile profile = viewModel.CreateProfile();
                 _logger.LogInformation("Serial port profile edited successfully: {ProfileName}", profile.Name);
                 return ProfileDialogResult<SerialPortProfile>.Success(profile);
             }
@@ -129,7 +129,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing duplicate dialog for serial port profile ID: {SourceProfileId}", request.SourceProfileId);
 
-            var result = await _profileEditDialogService.DuplicateSerialProfileAsync(request.SourceProfileId).ConfigureAwait(false);
+            ProfileDuplicateResult result = await _profileEditDialogService.DuplicateSerialProfileAsync(request.SourceProfileId).ConfigureAwait(false);
 
             if (result.IsSuccess && !string.IsNullOrEmpty(result.NewName))
             {
@@ -164,11 +164,11 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing create dialog for socat profile with default name: {DefaultName}", request.DefaultName);
 
-            var result = await _profileEditDialogService.CreateSocatProfileAsync(request.DefaultName).ConfigureAwait(false);
+            Models.ProfileEditResult result = await _profileEditDialogService.CreateSocatProfileAsync(request.DefaultName).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is SocatProfileViewModel viewModel)
             {
-                var profile = viewModel.CreateProfile();
+                SocatProfile profile = viewModel.CreateProfile();
                 _logger.LogInformation("Socat profile created successfully: {ProfileName}", profile.Name);
                 return ProfileDialogResult<SocatProfile>.Success(profile);
             }
@@ -196,11 +196,11 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing edit dialog for socat profile ID: {ProfileId}", request.ProfileId);
 
-            var result = await _profileEditDialogService.EditSocatProfileAsync(request.ProfileId).ConfigureAwait(false);
+            Models.ProfileEditResult result = await _profileEditDialogService.EditSocatProfileAsync(request.ProfileId).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is SocatProfileViewModel viewModel)
             {
-                var profile = viewModel.CreateProfile();
+                SocatProfile profile = viewModel.CreateProfile();
                 _logger.LogInformation("Socat profile edited successfully: {ProfileName}", profile.Name);
                 return ProfileDialogResult<SocatProfile>.Success(profile);
             }
@@ -228,7 +228,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing duplicate dialog for socat profile ID: {SourceProfileId}", request.SourceProfileId);
 
-            var result = await _profileEditDialogService.DuplicateSocatProfileAsync(request.SourceProfileId).ConfigureAwait(false);
+            ProfileDuplicateResult result = await _profileEditDialogService.DuplicateSocatProfileAsync(request.SourceProfileId).ConfigureAwait(false);
 
             if (result.IsSuccess && !string.IsNullOrEmpty(result.NewName))
             {
@@ -264,11 +264,11 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
             _logger.LogDebug("Showing create dialog for power supply profile with default name: {DefaultName}", request.DefaultName);
             System.Diagnostics.Debug.WriteLine($"DEBUG: ShowPowerSupplyCreateDialogAsync called with name: {request.DefaultName}");
 
-            var result = await _profileEditDialogService.CreatePowerSupplyProfileAsync(request.DefaultName).ConfigureAwait(false);
+            Models.ProfileEditResult result = await _profileEditDialogService.CreatePowerSupplyProfileAsync(request.DefaultName).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is PowerSupplyProfileViewModel viewModel)
             {
-                var profile = viewModel.CreateProfile();
+                PowerSupplyProfile profile = viewModel.CreateProfile();
                 _logger.LogInformation("Power supply profile created successfully: {ProfileName}", profile.Name);
                 return ProfileDialogResult<PowerSupplyProfile>.Success(profile);
             }
@@ -296,11 +296,11 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing edit dialog for power supply profile ID: {ProfileId}", request.ProfileId);
 
-            var result = await _profileEditDialogService.EditPowerSupplyProfileAsync(request.ProfileId).ConfigureAwait(false);
+            Models.ProfileEditResult result = await _profileEditDialogService.EditPowerSupplyProfileAsync(request.ProfileId).ConfigureAwait(false);
 
             if (result.IsSuccess && result.ProfileViewModel is PowerSupplyProfileViewModel viewModel)
             {
-                var profile = viewModel.CreateProfile();
+                PowerSupplyProfile profile = viewModel.CreateProfile();
                 _logger.LogInformation("Power supply profile edited successfully: {ProfileName}", profile.Name);
                 return ProfileDialogResult<PowerSupplyProfile>.Success(profile);
             }
@@ -328,7 +328,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing duplicate dialog for power supply profile ID: {SourceProfileId}", request.SourceProfileId);
 
-            var result = await _profileEditDialogService.DuplicatePowerSupplyProfileAsync(request.SourceProfileId).ConfigureAwait(false);
+            ProfileDuplicateResult result = await _profileEditDialogService.DuplicatePowerSupplyProfileAsync(request.SourceProfileId).ConfigureAwait(false);
 
             if (result.IsSuccess && !string.IsNullOrEmpty(result.NewName))
             {
@@ -435,10 +435,10 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing delete confirmation dialog for {ProfileType} profile: {ProfileName}", profileType, profileName);
 
-            var title = $"Delete {profileType} Profile";
-            var message = $"Are you sure you want to delete the profile '{profileName}'?\n\nThis action cannot be undone.";
+            string title = $"Delete {profileType} Profile";
+            string message = $"Are you sure you want to delete the profile '{profileName}'?\n\nThis action cannot be undone.";
 
-            var result = await _dialogService.ShowConfirmationAsync(title, message).ConfigureAwait(false);
+            bool result = await _dialogService.ShowConfirmationAsync(title, message).ConfigureAwait(false);
 
             _logger.LogDebug("Delete confirmation result for {ProfileName}: {Result}", profileName, result);
             return result;
@@ -461,14 +461,14 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         {
             _logger.LogDebug("Showing name input dialog with title: {Title}", title);
 
-            var result = await _dialogService.ShowInputAsync(title, prompt, defaultValue).ConfigureAwait(false);
+            Models.InputResult result = await _dialogService.ShowInputAsync(title, prompt, defaultValue).ConfigureAwait(false);
 
             if (!result.IsCancelled && !string.IsNullOrEmpty(result.Value))
             {
                 // Apply validation if provided
                 if (validator != null)
                 {
-                    var validationResult = await validator(result.Value).ConfigureAwait(false);
+                    ProfileValidationResult validationResult = await validator(result.Value).ConfigureAwait(false);
                     if (!validationResult.IsValid)
                     {
                         _logger.LogDebug("Name input validation failed: {ErrorMessage}", validationResult.ErrorMessage);

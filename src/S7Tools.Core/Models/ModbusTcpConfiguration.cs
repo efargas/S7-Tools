@@ -123,7 +123,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     public override string GenerateConnectionString()
     {
         // Format: modbus-tcp://host:port/device/coil?mode=baseN
-        var modeStr = AddressingMode == ModbusAddressingMode.Base0 ? "base0" : "base1";
+        string modeStr = AddressingMode == ModbusAddressingMode.Base0 ? "base0" : "base1";
         return $"modbus-tcp://{Host}:{Port}/device/{DeviceId}/coil/{OnOffCoil}?mode={modeStr}";
     }
 

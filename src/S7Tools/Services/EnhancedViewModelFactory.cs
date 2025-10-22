@@ -82,7 +82,7 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
         parameters ??= new ViewModelCreationParameters();
 
         // Check for cached instance if requested
-        if (parameters.UseCachedInstance && _cachedInstances.TryGetValue(viewModelType, out var cachedInstance))
+        if (parameters.UseCachedInstance && _cachedInstances.TryGetValue(viewModelType, out ViewModelBase? cachedInstance))
         {
             Logger.LogDebug("Returning cached instance of {ViewModelType}", viewModelType.Name);
             return cachedInstance;
@@ -95,7 +95,7 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
             // Use the factory if registered, otherwise fall back to service provider
             if (CanCreate(viewModelType))
             {
-                var instance = base.Create(viewModelType, parameters);
+                ViewModelBase instance = base.Create(viewModelType, parameters);
 
                 // Cache the instance if requested
                 if (parameters.UseCachedInstance)
@@ -145,7 +145,7 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
         Logger.LogDebug("Clearing ViewModel cache with {Count} instances", _cachedInstances.Count);
 
         // Dispose cached instances if they implement IDisposable
-        foreach (var instance in _cachedInstances.Values)
+        foreach (ViewModelBase instance in _cachedInstances.Values)
         {
             if (instance is IDisposable disposable)
             {
@@ -176,7 +176,7 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
             return false;
         }
 
-        if (_cachedInstances.TryGetValue(viewModelType, out var instance))
+        if (_cachedInstances.TryGetValue(viewModelType, out ViewModelBase? instance))
         {
             if (instance is IDisposable disposable)
             {
@@ -208,10 +208,10 @@ public class EnhancedViewModelFactory : BaseKeyedFactory<Type, ViewModelBase, Vi
         RegisterFactory(typeof(MainWindowViewModel), parameters =>
         {
             // Example of custom creation logic
-            var instance = _serviceProvider.GetRequiredService<MainWindowViewModel>();
+            MainWindowViewModel instance = _serviceProvider.GetRequiredService<MainWindowViewModel>();
 
             // Apply any custom initialization based on parameters
-            if (parameters.Parameters.TryGetValue("InitialView", out var initialView))
+            if (parameters.Parameters.TryGetValue("InitialView", out object? initialView))
             {
                 // Custom initialization logic here
                 Logger.LogDebug("Initializing MainWindowViewModel with initial view: {InitialView}", initialView);

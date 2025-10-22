@@ -182,7 +182,7 @@ public class TaskExecution
 
         if (progressData != null)
         {
-            foreach (var kvp in progressData)
+            foreach (KeyValuePair<string, object> kvp in progressData)
             {
                 ProgressData[kvp.Key] = kvp.Value;
             }

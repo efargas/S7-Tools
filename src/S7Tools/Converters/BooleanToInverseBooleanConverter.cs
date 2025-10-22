@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
+using Avalonia.Media;
 
 namespace S7Tools.Converters;
 
@@ -22,11 +23,11 @@ public class BooleanToInverseBooleanConverter : IValueConverter
         // If parameter is provided and target expects a string/brush/color, use the parameter to choose a value.
         if (value is bool boolValue)
         {
-            var inverted = !boolValue;
+            bool inverted = !boolValue;
 
             if (parameter is string param && (targetType == typeof(string) || targetType == typeof(object)))
             {
-                var parts = param.Split('|', 2);
+                string[] parts = param.Split('|', 2);
                 if (parts.Length == 2)
                 {
                     return inverted ? parts[0] : parts[1];
@@ -36,9 +37,9 @@ public class BooleanToInverseBooleanConverter : IValueConverter
 
             if (parameter is string colorParam && (targetType == typeof(Avalonia.Media.IBrush) || targetType == typeof(Avalonia.Media.Brush)))
             {
-                var parts = colorParam.Split('|', 2);
-                var colorString = parts.Length == 2 ? (inverted ? parts[0] : parts[1]) : colorParam;
-                if (Avalonia.Media.Color.TryParse(colorString, out var color))
+                string[] parts = colorParam.Split('|', 2);
+                string colorString = parts.Length == 2 ? (inverted ? parts[0] : parts[1]) : colorParam;
+                if (Avalonia.Media.Color.TryParse(colorString, out Color color))
                 {
                     return new Avalonia.Media.SolidColorBrush(color);
                 }

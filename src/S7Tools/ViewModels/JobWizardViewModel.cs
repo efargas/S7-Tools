@@ -206,7 +206,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         get => _currentStep;
         set
         {
-            var oldValue = _currentStep;
+            WizardStep oldValue = _currentStep;
             this.RaiseAndSetIfChanged(ref _currentStep, value);
 
             // Notify step visibility changes when the step actually changes
@@ -410,7 +410,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         {
             try
             {
-                var endAddress = MemoryStart + MemoryLength;
+                uint endAddress = MemoryStart + MemoryLength;
                 return $"0x{endAddress:X}";
             }
             catch
@@ -1054,7 +1054,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 AvailablePorts.Clear();
-                foreach (var port in SerialScanner.DiscoveredPorts)
+                foreach (SerialPortInfo port in SerialScanner.DiscoveredPorts)
                 {
                     AvailablePorts.Add(port.PortName);
                 }

@@ -34,9 +34,9 @@ public class ValidationService : IValidationService
             return ValidationResult.Failure("Instance", "Instance cannot be null", "NULL_INSTANCE");
         }
 
-        var type = typeof(T);
+        Type type = typeof(T);
 
-        if (!_validators.TryGetValue(type, out var validatorObj))
+        if (!_validators.TryGetValue(type, out object? validatorObj))
         {
             _logger.LogWarning("No validator registered for type {Type}", type.Name);
             return ValidationResult.Success(); // No validator means no validation errors
@@ -51,7 +51,7 @@ public class ValidationService : IValidationService
         try
         {
             _logger.LogDebug("Validating instance of type {Type}", type.Name);
-            var result = validator.Validate(instance);
+            ValidationResult result = validator.Validate(instance);
 
             _logger.LogDebug("Validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}",
                 type.Name, result.IsValid, result.Errors.Count);
@@ -74,9 +74,9 @@ public class ValidationService : IValidationService
             return ValidationResult.Failure("Instance", "Instance cannot be null", "NULL_INSTANCE");
         }
 
-        var type = typeof(T);
+        Type type = typeof(T);
 
-        if (!_validators.TryGetValue(type, out var validatorObj))
+        if (!_validators.TryGetValue(type, out object? validatorObj))
         {
             _logger.LogWarning("No validator registered for type {Type}", type.Name);
             return ValidationResult.Success(); // No validator means no validation errors
@@ -91,7 +91,7 @@ public class ValidationService : IValidationService
         try
         {
             _logger.LogDebug("Validating instance of type {Type} asynchronously", type.Name);
-            var result = await validator.ValidateAsync(instance, cancellationToken).ConfigureAwait(false);
+            ValidationResult result = await validator.ValidateAsync(instance, cancellationToken).ConfigureAwait(false);
 
             _logger.LogDebug("Async validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}",
                 type.Name, result.IsValid, result.Errors.Count);
@@ -115,7 +115,7 @@ public class ValidationService : IValidationService
     {
         ArgumentNullException.ThrowIfNull(validator);
 
-        var type = typeof(T);
+        Type type = typeof(T);
         _validators.AddOrUpdate(type, validator, (_, _) => validator);
 
         _logger.LogDebug("Registered validator for type {Type}", type.Name);
@@ -124,8 +124,8 @@ public class ValidationService : IValidationService
     /// <inheritdoc/>
     public bool UnregisterValidator<T>()
     {
-        var type = typeof(T);
-        var removed = _validators.TryRemove(type, out _);
+        Type type = typeof(T);
+        bool removed = _validators.TryRemove(type, out _);
 
         if (removed)
         {
@@ -163,7 +163,7 @@ public class ValidationService : IValidationService
     /// </summary>
     public void ClearValidators()
     {
-        var count = _validators.Count;
+        int count = _validators.Count;
         _validators.Clear();
         _logger.LogInformation("Cleared {Count} validators", count);
     }

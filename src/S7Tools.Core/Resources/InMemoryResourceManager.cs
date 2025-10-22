@@ -32,17 +32,17 @@ public class InMemoryResourceManager : IResourceManager
     /// <inheritdoc/>
     public string GetString(string key, CultureInfo culture)
     {
-        var cultureKey = culture.Name;
-        if (_resources.TryGetValue(cultureKey, out var dict))
+        string cultureKey = culture.Name;
+        if (_resources.TryGetValue(cultureKey, out Dictionary<string, string>? dict))
         {
-            if (dict.TryGetValue(key, out var value))
+            if (dict.TryGetValue(key, out string? value))
             {
                 return value;
             }
         }
-        if (_resources.TryGetValue("", out var fallbackDict))
+        if (_resources.TryGetValue("", out Dictionary<string, string>? fallbackDict))
         {
-            if (fallbackDict.TryGetValue(key, out var fallback))
+            if (fallbackDict.TryGetValue(key, out string? fallback))
             {
                 return fallback;
             }
@@ -60,12 +60,12 @@ public class InMemoryResourceManager : IResourceManager
     /// <inheritdoc/>
     public bool HasResource(string key, CultureInfo culture)
     {
-        var cultureKey = culture.Name;
-        if (_resources.TryGetValue(cultureKey, out var dict) && dict.ContainsKey(key))
+        string cultureKey = culture.Name;
+        if (_resources.TryGetValue(cultureKey, out Dictionary<string, string>? dict) && dict.ContainsKey(key))
         {
             return true;
         }
-        if (_resources.TryGetValue("", out var fallback) && fallback.ContainsKey(key))
+        if (_resources.TryGetValue("", out Dictionary<string, string>? fallback) && fallback.ContainsKey(key))
         {
             return true;
         }
@@ -77,7 +77,7 @@ public class InMemoryResourceManager : IResourceManager
     /// </summary>
     public void AddOrUpdate(string key, string value, CultureInfo? culture = null)
     {
-        var cultureKey = (culture ?? CurrentCulture).Name;
+        string cultureKey = (culture ?? CurrentCulture).Name;
         if (!_resources.ContainsKey(cultureKey))
         {
             _resources[cultureKey] = new();
@@ -89,9 +89,9 @@ public class InMemoryResourceManager : IResourceManager
     public IEnumerable<string> GetAvailableKeys()
     {
         var keys = new HashSet<string>();
-        foreach (var dict in _resources.Values)
+        foreach (Dictionary<string, string> dict in _resources.Values)
         {
-            foreach (var key in dict.Keys)
+            foreach (string key in dict.Keys)
             {
                 keys.Add(key);
             }
@@ -103,7 +103,7 @@ public class InMemoryResourceManager : IResourceManager
     public IEnumerable<CultureInfo> GetSupportedCultures()
     {
         var cultures = new List<CultureInfo>();
-        foreach (var key in _resources.Keys)
+        foreach (string key in _resources.Keys)
         {
             if (!string.IsNullOrEmpty(key))
             {

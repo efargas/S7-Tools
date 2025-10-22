@@ -97,7 +97,7 @@ public class ProfileDetailsViewModel : ReactiveObject, IProfileDetailsViewModel
     protected virtual void UpdateBasicProperties(IProfileBase profile)
     {
         // Update existing basic properties
-        var nameProperty = BasicProperties.FirstOrDefault(p => p.Label == "Name");
+        PropertyDisplayItem? nameProperty = BasicProperties.FirstOrDefault(p => p.Label == "Name");
         if (nameProperty != null)
         {
             nameProperty.Value = profile.Name;
@@ -106,13 +106,13 @@ public class ProfileDetailsViewModel : ReactiveObject, IProfileDetailsViewModel
                 : PropertyValidationState.Valid;
         }
 
-        var idProperty = BasicProperties.FirstOrDefault(p => p.Label == "ID");
+        PropertyDisplayItem? idProperty = BasicProperties.FirstOrDefault(p => p.Label == "ID");
         if (idProperty != null)
         {
             idProperty.Value = profile.Id.ToString("D");
         }
 
-        var descriptionProperty = BasicProperties.FirstOrDefault(p => p.Label == "Description");
+        PropertyDisplayItem? descriptionProperty = BasicProperties.FirstOrDefault(p => p.Label == "Description");
         if (descriptionProperty != null)
         {
             descriptionProperty.Value = string.IsNullOrWhiteSpace(profile.Description)

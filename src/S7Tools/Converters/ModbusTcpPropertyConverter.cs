@@ -33,7 +33,7 @@ public class ModbusTcpPropertyConverter : IValueConverter
             return null;
         }
 
-        var propertyName = parameter as string ?? PropertyName;
+        string propertyName = parameter as string ?? PropertyName;
 
         return propertyName switch
         {

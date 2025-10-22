@@ -46,7 +46,7 @@ public static class PlatformHelper
                     };
 
                     bool opened = false;
-                    foreach (var (fileName, args) in candidates)
+                    foreach ((string? fileName, string? args) in candidates)
                     {
                         try
                         {

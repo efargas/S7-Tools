@@ -116,7 +116,7 @@ public class NullableDateTimeConverter : IValueConverter
                 DateTime dateTime => dateTime,
                 DateTimeOffset dateTimeOffset => dateTimeOffset.DateTime,
                 null => null,
-                string dateString when DateTime.TryParse(dateString, culture, DateTimeStyles.None, out var parsedDate) => parsedDate,
+                string dateString when DateTime.TryParse(dateString, culture, DateTimeStyles.None, out DateTime parsedDate) => parsedDate,
                 _ => null
             };
         }
@@ -144,7 +144,7 @@ public class NullableDateTimeConverter : IValueConverter
                 DateTime dateTime => dateTime,
                 DateTimeOffset dateTimeOffset => dateTimeOffset.DateTime,
                 null => null,
-                string dateString when DateTime.TryParse(dateString, culture, DateTimeStyles.None, out var parsedDate) => parsedDate,
+                string dateString when DateTime.TryParse(dateString, culture, DateTimeStyles.None, out DateTime parsedDate) => parsedDate,
                 _ => null
             };
         }

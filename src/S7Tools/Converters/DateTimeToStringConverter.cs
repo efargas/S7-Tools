@@ -24,7 +24,7 @@ public class DateTimeToStringConverter : IValueConverter
             return string.Empty;
         }
 
-        var format = parameter as string ?? "yyyy-MM-dd HH:mm";
+        string format = parameter as string ?? "yyyy-MM-dd HH:mm";
 
         try
         {

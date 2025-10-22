@@ -153,7 +153,7 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
 
         try
         {
-            var task = Dispatcher.UIThread.InvokeAsync(action);
+            DispatcherOperation task = Dispatcher.UIThread.InvokeAsync(action);
             task.Wait(timeout);
             return true;
         }
@@ -188,7 +188,7 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
 
         try
         {
-            var task = Dispatcher.UIThread.InvokeAsync(function);
+            DispatcherOperation<T> task = Dispatcher.UIThread.InvokeAsync(function);
             task.Wait(timeout);
             result = task.Result;
             return true;

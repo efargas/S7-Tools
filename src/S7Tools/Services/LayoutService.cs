@@ -234,13 +234,13 @@ public sealed class LayoutService : ILayoutService
     {
         try
         {
-            var configuration = GetCurrentConfiguration();
-            var json = JsonSerializer.Serialize(configuration, new JsonSerializerOptions
+            LayoutConfiguration configuration = GetCurrentConfiguration();
+            string json = JsonSerializer.Serialize(configuration, new JsonSerializerOptions
             {
                 WriteIndented = true
             });
 
-            var configPath = GetConfigFilePath();
+            string configPath = GetConfigFilePath();
             await File.WriteAllTextAsync(configPath, json).ConfigureAwait(false);
         }
         catch
@@ -254,14 +254,14 @@ public sealed class LayoutService : ILayoutService
     {
         try
         {
-            var configPath = GetConfigFilePath();
+            string configPath = GetConfigFilePath();
             if (!File.Exists(configPath))
             {
                 return;
             }
 
-            var json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
-            var configuration = JsonSerializer.Deserialize<LayoutConfiguration>(json);
+            string json = await File.ReadAllTextAsync(configPath).ConfigureAwait(false);
+            LayoutConfiguration? configuration = JsonSerializer.Deserialize<LayoutConfiguration>(json);
 
             if (configuration != null)
             {
@@ -319,7 +319,7 @@ public sealed class LayoutService : ILayoutService
             return;
         }
 
-        var oldValue = field;
+        T? oldValue = field;
         field = value;
 
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
@@ -332,8 +332,8 @@ public sealed class LayoutService : ILayoutService
 
     private static string GetConfigFilePath()
     {
-        var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        var appFolder = Path.Combine(appDataPath, "S7Tools");
+        string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        string appFolder = Path.Combine(appDataPath, "S7Tools");
 
         if (!Directory.Exists(appFolder))
         {
