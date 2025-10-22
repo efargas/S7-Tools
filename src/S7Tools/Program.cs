@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using S7Tools.Core.Models;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Models;
@@ -108,6 +109,24 @@ sealed class Program
                     {
                         logger?.LogError(ex, "[S7Tools] Failed to initialize power supply profile storage");
                         Console.WriteLine($"[S7Tools] Failed to initialize power supply profile storage: {ex}"); // Keep console for --diag flag
+                    }
+                }
+
+                // Initialize JobManager and ensure default job profiles exist
+                IJobManager? jobManager = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IJobManager>();
+
+                if (jobManager != null)
+                {
+                    try
+                    {
+                        IEnumerable<JobProfile> profiles = await jobManager.GetAllAsync().ConfigureAwait(false);
+                        logger?.LogInformation("[S7Tools] JobManager loaded {ProfileCount} profiles", profiles.Count());
+                        Console.WriteLine($"[S7Tools] JobManager loaded {profiles.Count()} profiles"); // Keep console for --diag flag
+                    }
+                    catch (Exception ex)
+                    {
+                        logger?.LogError(ex, "[S7Tools] Failed to initialize job manager storage");
+                        Console.WriteLine($"[S7Tools] Failed to initialize job manager storage: {ex}"); // Keep console for --diag flag
                     }
                 }
 

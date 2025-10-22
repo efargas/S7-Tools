@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,7 +72,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <inheritdoc/>
     protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Creating default job profiles");
+        _logger.LogInformation("Creating default job profiles for path: {Path}", _profilesPath);
 
         // Create the system default job profile
         JobProfile defaultProfile = CreateSystemDefault();
@@ -90,7 +91,29 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         fullTemplate.MemoryRegion = new MemoryRegionProfile(0x20000000, 0x10000); // 64KB
         _profiles.Add(fullTemplate);
 
-        _logger.LogInformation("Created {Count} default job profiles", _profiles.Count);
+        _logger.LogInformation("Created {Count} job profiles in memory", _profiles.Count);
+
+        // Ensure directory exists
+        string? directory = Path.GetDirectoryName(_profilesPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+            _logger.LogDebug("Ensured directory exists: {Directory}", directory);
+        }
+
+        // Save profiles to file
+        try
+        {
+            _logger.LogDebug("About to save profiles to: {Path}", _profilesPath);
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("Successfully created and saved {Count} default job profiles to: {Path}", _profiles.Count, _profilesPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save default job profiles to: {Path}", _profilesPath);
+            _profiles.Clear(); // Clear the in-memory profiles if save failed
+            throw;
+        }
     }
 
     #endregion

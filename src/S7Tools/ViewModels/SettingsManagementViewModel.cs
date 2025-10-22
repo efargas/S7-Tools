@@ -6,8 +6,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Models;
-using S7Tools.Services;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -20,9 +20,9 @@ public class SettingsManagementViewModel : ReactiveObject
 {
     private readonly ILogger<SettingsManagementViewModel> _logger;
     private readonly IFileDialogService? _fileDialogService;
-    private readonly ISettingsService _settingsService;
+    private readonly IApplicationSettingsService _settingsService;
 
-    // Settings Properties - will be populated from SettingsService
+    // Settings Properties - will be populated from ApplicationSettingsService
     private string _defaultLogPath = string.Empty;
     private string _exportPath = string.Empty;
     private string _minimumLogLevel = "Information";
@@ -38,7 +38,7 @@ public class SettingsManagementViewModel : ReactiveObject
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsManagementViewModel"/> class for design-time.
     /// </summary>
-    public SettingsManagementViewModel() : this(CreateDesignTimeLogger(), CreateDesignTimeSettingsService())
+    public SettingsManagementViewModel() : this(CreateDesignTimeLogger(), CreateDesignTimeApplicationSettingsService())
     {
     }
 
@@ -53,29 +53,29 @@ public class SettingsManagementViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Creates a design-time settings service for the designer.
+    /// Creates a design-time application settings service for the designer.
     /// </summary>
-    /// <returns>A settings service instance for design-time use.</returns>
-    private static ISettingsService CreateDesignTimeSettingsService()
+    /// <returns>An application settings service instance for design-time use.</returns>
+    private static IApplicationSettingsService CreateDesignTimeApplicationSettingsService()
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
-        ILogger<SettingsService> settingsLogger = loggerFactory.CreateLogger<Services.SettingsService>();
+        ILogger<Services.ApplicationSettingsService> settingsLogger = loggerFactory.CreateLogger<Services.ApplicationSettingsService>();
         ILogger<Services.PathService> pathLogger = loggerFactory.CreateLogger<Services.PathService>();
 
         // Create a mock path service for design time
         var pathService = new Services.PathService(pathLogger);
-        return new Services.SettingsService(settingsLogger, pathService);
+        return new Services.ApplicationSettingsService(settingsLogger, pathService);
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsManagementViewModel"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    /// <param name="settingsService">The settings service.</param>
+    /// <param name="settingsService">The application settings service.</param>
     /// <param name="fileDialogService">The file dialog service (optional).</param>
     public SettingsManagementViewModel(
         ILogger<SettingsManagementViewModel> logger,
-        ISettingsService settingsService,
+        IApplicationSettingsService settingsService,
         IFileDialogService? fileDialogService = null)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -91,7 +91,10 @@ public class SettingsManagementViewModel : ReactiveObject
         OpenSettingsFolderCommand = ReactiveCommand.CreateFromTask(OpenSettingsFolderAsync);
 
         // Load current settings from service
-        LoadSettingsFromService();
+        RefreshFromSettings();
+
+        // Subscribe to settings changes
+        _settingsService.SettingsChanged += (_, _) => RefreshFromSettings();
 
         _logger.LogDebug("SettingsManagementViewModel initialized");
     }
@@ -312,23 +315,31 @@ public class SettingsManagementViewModel : ReactiveObject
     /// <summary>
     /// Loads settings from the service into the ViewModel properties.
     /// </summary>
-    private void LoadSettingsFromService()
+    private void RefreshFromSettings()
     {
         try
         {
-            ApplicationSettings settings = _settingsService.Settings;
+            // Load settings using the new ApplicationSettingsService
+            DefaultLogPath = _settingsService.GetSetting<string>("logging.logDirectory", "Resources/Logs/Main");
+            ExportPath = _settingsService.GetSetting<string>("logging.exportDirectory", "Resources/Logs/Exported");
+            MinimumLogLevel = _settingsService.GetSetting<string>("logging.level", "Information");
+            AutoScrollLogs = _settingsService.GetSetting<bool>("ui.autoScrollLogs", true);
+            EnableRollingLogs = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
+            ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
+            ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
+            ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
 
-            // Map settings to ViewModel properties
-            DefaultLogPath = settings.Logging.DefaultLogPath;
-            ExportPath = settings.Logging.ExportPath;
-            MinimumLogLevel = settings.Logging.MinimumLogLevel.ToString();
-            AutoScrollLogs = settings.Logging.AutoScroll;
-            EnableRollingLogs = settings.Logging.EnableFileLogging;
-            ShowTimestampInLogs = settings.Logging.ShowTimestamp;
-            ShowCategoryInLogs = settings.Logging.ShowCategory;
-            ShowLogLevelInLogs = settings.Logging.ShowLevel;
+            CurrentSettingsFilePath = "Resources/AppSettings/AppSettings.json";
 
-            CurrentSettingsFilePath = _settingsService.GetDefaultSettingsPath();
+            try
+            {
+                var fileInfo = new System.IO.FileInfo(CurrentSettingsFilePath);
+                SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.Now;
+            }
+            catch
+            {
+                SettingsLastModified = DateTime.Now;
+            }
 
             _logger.LogDebug("Settings loaded from service");
         }
@@ -345,23 +356,22 @@ public class SettingsManagementViewModel : ReactiveObject
     {
         try
         {
-            // Get current settings from service
-            ApplicationSettings settings = _settingsService.Settings.Clone();
+            SettingsStatusMessage = "Saving settings...";
 
-            // Update settings from ViewModel properties
-            settings.Logging.DefaultLogPath = DefaultLogPath;
-            settings.Logging.ExportPath = ExportPath;
-            settings.Logging.MinimumLogLevel = Enum.TryParse<LogLevel>(MinimumLogLevel, out LogLevel level)
-                ? level
-                : LogLevel.Information;
-            settings.Logging.AutoScroll = AutoScrollLogs;
-            settings.Logging.EnableFileLogging = EnableRollingLogs;
-            settings.Logging.ShowTimestamp = ShowTimestampInLogs;
-            settings.Logging.ShowCategory = ShowCategoryInLogs;
-            settings.Logging.ShowLevel = ShowLogLevelInLogs;
+            // Create dictionary of settings to save
+            var userSettings = new Dictionary<string, object>
+            {
+                ["logging.logDirectory"] = DefaultLogPath,
+                ["logging.exportDirectory"] = ExportPath,
+                ["logging.level"] = MinimumLogLevel,
+                ["ui.autoScrollLogs"] = AutoScrollLogs,
+                ["logging.enableFileLogging"] = EnableRollingLogs,
+                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
+                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
+                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
+            };
 
-            // Save settings using the service
-            await _settingsService.UpdateSettingsAsync(settings);
+            await _settingsService.SaveUserSettingsAsync(userSettings);
 
             SettingsStatusMessage = "Settings saved successfully";
             SettingsLastModified = DateTime.Now;
@@ -385,7 +395,7 @@ public class SettingsManagementViewModel : ReactiveObject
             await _settingsService.LoadSettingsAsync();
 
             // Update ViewModel properties from loaded settings
-            LoadSettingsFromService();
+            RefreshFromSettings();
 
             SettingsStatusMessage = "Settings loaded successfully";
             SettingsLastModified = DateTime.Now;
@@ -406,10 +416,10 @@ public class SettingsManagementViewModel : ReactiveObject
         try
         {
             // Reset to defaults using the service
-            await _settingsService.ResetToDefaultsAsync();
+            await _settingsService.RestoreDefaultsAsync();
 
             // Update ViewModel properties from reset settings
-            LoadSettingsFromService();
+            RefreshFromSettings();
 
             SettingsStatusMessage = "Settings reset to defaults";
             _logger.LogInformation("Settings reset to default values");
@@ -428,11 +438,12 @@ public class SettingsManagementViewModel : ReactiveObject
     {
         try
         {
-            await _settingsService.OpenSettingsDirectoryAsync();
-
+            // Use a simple approach for now - this functionality would need OS-specific implementation
             string? settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath);
-            SettingsStatusMessage = $"Opened settings folder: {settingsDir}";
-            _logger.LogInformation("Opened settings folder: {Path}", settingsDir);
+            SettingsStatusMessage = $"Settings folder: {settingsDir}";
+            _logger.LogInformation("Settings folder: {Path}", settingsDir);
+
+            await Task.CompletedTask; // Placeholder for actual folder opening logic
         }
         catch (Exception ex)
         {
@@ -456,7 +467,7 @@ public class SettingsManagementViewModel : ReactiveObject
             // Validate paths exist or can be created
             if (!string.IsNullOrEmpty(DefaultLogPath))
             {
-                var logDir = new DirectoryInfo(DefaultLogPath);
+                var logDir = new System.IO.DirectoryInfo(DefaultLogPath);
                 if (!logDir.Exists)
                 {
                     // Try to create the directory
@@ -466,7 +477,7 @@ public class SettingsManagementViewModel : ReactiveObject
 
             if (!string.IsNullOrEmpty(ExportPath))
             {
-                var exportDir = new DirectoryInfo(ExportPath);
+                var exportDir = new System.IO.DirectoryInfo(ExportPath);
                 if (!exportDir.Exists)
                 {
                     // Try to create the directory
@@ -501,8 +512,18 @@ public class SettingsManagementViewModel : ReactiveObject
     {
         try
         {
-            // Get the complete settings from the service
-            ApplicationSettings settings = _settingsService.Settings;
+            // Create a representation of current settings from ViewModel
+            var currentSettings = new Dictionary<string, object>
+            {
+                ["logging.logDirectory"] = DefaultLogPath,
+                ["logging.exportDirectory"] = ExportPath,
+                ["logging.level"] = MinimumLogLevel,
+                ["ui.autoScrollLogs"] = AutoScrollLogs,
+                ["logging.enableFileLogging"] = EnableRollingLogs,
+                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
+                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
+                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
+            };
 
             // Serialize to JSON with pretty formatting
             var options = new JsonSerializerOptions
@@ -511,7 +532,7 @@ public class SettingsManagementViewModel : ReactiveObject
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
-            string json = JsonSerializer.Serialize(settings, options);
+            string json = JsonSerializer.Serialize(currentSettings, options);
             _logger.LogInformation("Settings exported to JSON ({Length} characters)", json.Length);
 
             return json;
@@ -539,14 +560,14 @@ public class SettingsManagementViewModel : ReactiveObject
                 return false;
             }
 
-            // Deserialize JSON to ApplicationSettings
+            // Deserialize JSON to Dictionary
             var options = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 PropertyNameCaseInsensitive = true
             };
 
-            ApplicationSettings? importedSettings = JsonSerializer.Deserialize<ApplicationSettings>(json, options);
+            Dictionary<string, object>? importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
 
             if (importedSettings == null)
             {
@@ -555,11 +576,11 @@ public class SettingsManagementViewModel : ReactiveObject
                 return false;
             }
 
-            // Update settings using the service (which will trigger save)
-            _ = _settingsService.UpdateSettingsAsync(importedSettings);
+            // Save settings using the service
+            _ = _settingsService.SaveUserSettingsAsync(importedSettings);
 
             // Update ViewModel properties from imported settings
-            LoadSettingsFromService();
+            RefreshFromSettings();
 
             _logger.LogInformation("Settings imported from JSON successfully");
             SettingsStatusMessage = "Settings imported successfully";

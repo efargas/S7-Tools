@@ -108,7 +108,7 @@ public class SettingsViewModel : ViewModelBase
         IProfileEditDialogService profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
         IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        ISettingsService settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
         IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         IUnifiedProfileDialogService unifiedProfileDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
         S7Tools.Core.Interfaces.Services.IPathService pathService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
@@ -128,7 +128,7 @@ public class SettingsViewModel : ViewModelBase
         IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
         IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         IFileDialogService fileDialogService = _serviceProvider.GetRequiredService<IFileDialogService>();
-        ISettingsService settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
         IPathService pathService = _serviceProvider.GetRequiredService<IPathService>();
 
         return new SocatSettingsViewModel(
@@ -153,7 +153,7 @@ public class SettingsViewModel : ViewModelBase
         IUnifiedProfileDialogService unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
         IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        ISettingsService settingsService = _serviceProvider.GetRequiredService<ISettingsService>();
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
         IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>> logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>>>();
         IPathService pathService = _serviceProvider.GetRequiredService<IPathService>();

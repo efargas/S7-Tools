@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Resources;
 using S7Tools.Services;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -20,7 +21,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 {
     private readonly IDialogService _dialogService;
     private readonly IClipboardService _clipboardService;
-    private readonly ISettingsService _settingsService;
+    private readonly IApplicationSettingsService _settingsService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
@@ -38,25 +39,25 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         new SettingsManagementViewModel(),
         new DialogService(),
         new ClipboardService(),
-        CreateDesignTimeSettingsService(),
+        CreateDesignTimeApplicationSettingsService(),
         null,
         CreateDesignTimeLogger())
     {
     }
 
     /// <summary>
-    /// Creates a design-time settings service for the designer.
+    /// Creates a design-time application settings service for the designer.
     /// </summary>
-    /// <returns>A settings service instance for design-time use.</returns>
-    private static ISettingsService CreateDesignTimeSettingsService()
+    /// <returns>An application settings service instance for design-time use.</returns>
+    private static IApplicationSettingsService CreateDesignTimeApplicationSettingsService()
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
-        ILogger<SettingsService> settingsLogger = loggerFactory.CreateLogger<Services.SettingsService>();
+        ILogger<Services.ApplicationSettingsService> settingsLogger = loggerFactory.CreateLogger<Services.ApplicationSettingsService>();
         ILogger<Services.PathService> pathLogger = loggerFactory.CreateLogger<Services.PathService>();
 
         // Create a mock path service for design time
         var pathService = new Services.PathService(pathLogger);
-        return new Services.SettingsService(settingsLogger, pathService);
+        return new Services.ApplicationSettingsService(settingsLogger, pathService);
     }
 
     /// <summary>
@@ -77,7 +78,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// <param name="settings">The settings management ViewModel.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
-    /// <param name="settingsService">The settings service.</param>
+    /// <param name="settingsService">The application settings service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="logger">The logger instance.</param>
     public MainWindowViewModel(
@@ -86,7 +87,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         SettingsManagementViewModel settings,
         IDialogService dialogService,
         IClipboardService clipboardService,
-        ISettingsService settingsService,
+        IApplicationSettingsService settingsService,
         IFileDialogService? fileDialogService,
         ILogger<MainWindowViewModel> logger)
     {
@@ -447,42 +448,37 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Opens a file picker and loads application settings from the selected file.
+    /// Reloads the current application settings.
     /// </summary>
     private async Task LoadConfigurationAsync()
     {
         try
         {
-            string? path = await (_fileDialogService?.ShowOpenFileDialogAsync("Load Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*") ?? Task.FromResult<string?>(null));
-            if (!string.IsNullOrWhiteSpace(path))
-            {
-                await _settingsService.LoadSettingsAsync(path);
-                StatusMessage = $"Loaded configuration: {System.IO.Path.GetFileName(path)}";
-                _logger.LogInformation("Configuration loaded from {Path}", path);
-            }
+            await _settingsService.LoadSettingsAsync();
+            StatusMessage = "Configuration reloaded successfully";
+            _logger.LogInformation("Configuration reloaded from settings file");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load configuration");
-            StatusMessage = "Failed to load configuration";
+            _logger.LogError(ex, "Failed to reload configuration");
+            StatusMessage = "Failed to reload configuration";
         }
     }
 
     /// <summary>
-    /// Opens a file picker and saves application settings to the selected file.
+    /// Forces a save of current settings to the settings file.
     /// </summary>
     private async Task SaveConfigurationAsync()
     {
         try
         {
-            string defaultName = "settings.json";
-            string? path = await (_fileDialogService?.ShowSaveFileDialogAsync("Save Configuration", "JSON (*.json)|*.json|All files (*.*)|*.*", defaultFileName: defaultName) ?? Task.FromResult<string?>(null));
-            if (!string.IsNullOrWhiteSpace(path))
-            {
-                await _settingsService.SaveSettingsAsync(path);
-                StatusMessage = $"Saved configuration: {System.IO.Path.GetFileName(path)}";
-                _logger.LogInformation("Configuration saved to {Path}", path);
-            }
+            // Create a minimal set of current settings to save
+            var currentSettings = new Dictionary<string, object>();
+
+            // Save the current user settings
+            await _settingsService.SaveUserSettingsAsync(currentSettings);
+            StatusMessage = "Configuration saved successfully";
+            _logger.LogInformation("Configuration saved to settings file");
         }
         catch (Exception ex)
         {

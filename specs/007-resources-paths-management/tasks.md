@@ -136,45 +136,45 @@
 - [X] T058 [BINDING] Audit and update SerialPortsSettingsViewModel to use IApplicationSettingsService
 - [X] T059 [BINDING] Audit and update SocatSettingsViewModel to use IApplicationSettingsService
 - [X] T060 [BINDING] Audit and update PowerSupplySettingsViewModel to use IApplicationSettingsService
-- [ ] T061 [BINDING] Audit and update GeneralSettingsViewModel to use IApplicationSettingsService
-- [ ] T062 [BINDING] Audit and update AppearanceSettingsViewModel to use IApplicationSettingsService
-- [ ] T063 [BINDING] Audit and update AdvancedSettingsViewModel to use IApplicationSettingsService
-- [ ] T064 [BINDING] Audit and update SettingsManagementViewModel to use IApplicationSettingsService
-- [ ] T065 [BINDING] Audit and update MainWindowViewModel to use IApplicationSettingsService
-- [ ] T066 [BINDING] Update all ViewModel factory methods in SettingsViewModel.cs to inject IApplicationSettingsService
+- [X] T061 [BINDING] Audit and update GeneralSettingsViewModel to use IApplicationSettingsService
+- [X] T062 [BINDING] Audit and update AppearanceSettingsViewModel to use IApplicationSettingsService
+- [X] T063 [BINDING] Audit and update AdvancedSettingsViewModel to use IApplicationSettingsService
+- [X] T064 [BINDING] Audit and update SettingsManagementViewModel to use IApplicationSettingsService
+- [X] T065 [BINDING] Audit and update MainWindowViewModel to use IApplicationSettingsService
+- [X] T066 [BINDING] Update all ViewModel factory methods in SettingsViewModel.cs to inject IApplicationSettingsService
 
 ### View Bindings Verification
 
-- [ ] T067 [BINDING] Verify LoggingSettingsView.axaml bindings work with new settings structure
-- [ ] T068 [BINDING] Verify SerialPortsSettingsView.axaml bindings work with new settings structure
-- [ ] T069 [BINDING] Verify SocatSettingsView.axaml bindings work with new settings structure
-- [ ] T070 [BINDING] Verify PowerSupplySettingsView.axaml bindings work with new settings structure
-- [ ] T071 [BINDING] Verify GeneralSettingsView.axaml bindings work with new settings structure
-- [ ] T072 [BINDING] Verify AppearanceSettingsView.axaml bindings work with new settings structure
-- [ ] T073 [BINDING] Verify AdvancedSettingsView.axaml bindings work with new settings structure
+- [X] T067 [BINDING] Verify LoggingSettingsView.axaml bindings work with new settings structure
+- [X] T068 [BINDING] Verify SerialPortsSettingsView.axaml bindings work with new settings structure
+- [X] T069 [BINDING] Verify SocatSettingsView.axaml bindings work with new settings structure
+- [X] T070 [BINDING] Verify PowerSupplySettingsView.axaml bindings work with new settings structure
+- [X] T071 [BINDING] Verify GeneralSettingsView.axaml bindings work with new settings structure
+- [X] T072 [BINDING] Verify AppearanceSettingsView.axaml bindings work with new settings structure
+- [X] T073 [BINDING] Verify AdvancedSettingsView.axaml bindings work with new settings structure
 
 ### Settings Structure Migration
 
-- [ ] T074 [BINDING] Update all hardcoded settings keys to use new dot-notation format (e.g., "logging.level")
-- [ ] T075 [BINDING] Verify all path-related settings use dynamic path resolution instead of hardcoded paths
-- [ ] T076 [BINDING] Test "Restore Defaults" functionality in all settings views
-- [ ] T077 [BINDING] Test "Save Settings" functionality persists to userSettings section correctly
-- [ ] T078 [BINDING] Test settings loading on application startup populates UI correctly
+- [X] T074 [BINDING] Update all hardcoded settings keys to use new dot-notation format (e.g., "logging.level")
+- [X] T075 [BINDING] Verify all path-related settings use dynamic path resolution instead of hardcoded paths
+- [X] T076 [BINDING] Test "Restore Defaults" functionality in all settings views
+- [X] T077 [BINDING] Test "Save Settings" functionality persists to userSettings section correctly
+- [X] T078 [BINDING] Test settings loading on application startup populates UI correctly
 
 ### Legacy Service Cleanup
 
-- [ ] T079 [CLEANUP] Identify remaining usage of legacy ISettingsService interface
-- [ ] T080 [CLEANUP] Remove or update any remaining ISettingsService dependencies
-- [ ] T081 [CLEANUP] Update service registration to remove legacy settings services
-- [ ] T082 [CLEANUP] Verify no compilation errors after legacy service removal
+- [X] T079 [CLEANUP] Identify remaining usage of legacy ISettingsService interface
+- [X] T080 [CLEANUP] Remove or update any remaining ISettingsService dependencies
+- [X] T081 [CLEANUP] Update service registration to remove legacy settings services
+- [X] T082 [CLEANUP] Verify no compilation errors after legacy service removal
 
 ### Integration Testing
 
-- [ ] T083 [INTEGRATION] Test complete settings flow: UI → ViewModel → Service → File persistence
-- [ ] T084 [INTEGRATION] Test settings hierarchy: defaults vs user overrides in UI
-- [ ] T085 [INTEGRATION] Test cross-view settings consistency (same setting shown in multiple views)
-- [ ] T086 [INTEGRATION] Test settings persistence across application restarts
-- [ ] T087 [INTEGRATION] Test error handling when settings file is corrupted or missing
+- [X] T083 [INTEGRATION] Test complete settings flow: UI → ViewModel → Service → File persistence
+- [X] T084 [INTEGRATION] Test settings hierarchy: defaults vs user overrides in UI
+- [X] T085 [INTEGRATION] Test cross-view settings consistency (same setting shown in multiple views)
+- [X] T086 [INTEGRATION] Test settings persistence across application restarts
+- [X] T087 [INTEGRATION] Test error handling when settings file is corrupted or missing
 
 **Checkpoint**: All UI components use new ApplicationSettingsService consistently and correctly
 

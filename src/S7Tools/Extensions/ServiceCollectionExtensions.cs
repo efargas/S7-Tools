@@ -280,7 +280,7 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<SettingsManagementViewModel>(),
             provider.GetRequiredService<IDialogService>(),
             provider.GetRequiredService<IClipboardService>(),
-            provider.GetRequiredService<ISettingsService>(),
+            provider.GetRequiredService<IApplicationSettingsService>(),
             provider.GetService<IFileDialogService>(),
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>()));
 
@@ -289,7 +289,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<BottomPanelViewModel>();
         services.TryAddSingleton<SettingsManagementViewModel>(provider => new SettingsManagementViewModel(
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SettingsManagementViewModel>>(),
-            provider.GetRequiredService<ISettingsService>(),
+            provider.GetRequiredService<IApplicationSettingsService>(),
             provider.GetService<IFileDialogService>()));
 
         // Add Feature ViewModels
@@ -488,6 +488,17 @@ public static class ServiceCollectionExtensions
                 powerSupplyProfileService,
                 "Power Supply",
                 serviceProvider.GetService<ILogger<IPowerSupplyProfileService>>(),
+                startupLogger));
+        }
+
+        // Initialize Job Manager
+        IJobManager? jobManager = serviceProvider.GetService<IJobManager>();
+        if (jobManager != null)
+        {
+            profileInitTasks.Add(InitializeProfileServiceAsync(
+                jobManager,
+                "Job Manager",
+                serviceProvider.GetService<ILogger<IJobManager>>(),
                 startupLogger));
         }
 
