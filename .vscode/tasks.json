@@ -2,7 +2,74 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "dotnet-meteor: Build",
+			"label": "tests: disable-compilation",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"sln",
+				"src/S7Tools.sln",
+				"remove",
+				"tests/S7Tools.Core.Tests/S7Tools.Core.Tests.csproj",
+				"tests/S7Tools.Infrastructure.Logging.Tests/S7Tools.Infrastructure.Logging.Tests.csproj",
+				"tests/S7Tools.Tests/S7Tools.Tests.csproj",
+				"benchmarks/S7Tools.Benchmarks/S7Tools.Benchmarks.csproj"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "tests: enable-compilation",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"sln",
+				"src/S7Tools.sln",
+				"add",
+				"tests/S7Tools.Core.Tests/S7Tools.Core.Tests.csproj",
+				"tests/S7Tools.Infrastructure.Logging.Tests/S7Tools.Infrastructure.Logging.Tests.csproj",
+				"tests/S7Tools.Tests/S7Tools.Tests.csproj",
+				"benchmarks/S7Tools.Benchmarks/S7Tools.Benchmarks.csproj"
+			],
+			"group": "test",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "dotnet-meteor: 4-format",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"format",
+				"src/S7Tools.sln"
+			],
+			"group": "build",
+			"presentation": {
+				"echo": true,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "dotnet-meteor: 2-Build",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
@@ -23,7 +90,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet-meteor: Run",
+			"label": "dotnet-meteor: 3-Run",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
@@ -45,14 +112,14 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet-meteor: Clean",
+			"label": "dotnet-meteor: 0-Clean",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
 				"clean",
 				"src/S7Tools.sln"
 			],
-			"group": "none",
+			"group": "build",
 			"presentation": {
 				"echo": true,
 				"reveal": "silent",
@@ -64,7 +131,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet-meteor: Restore",
+			"label": "dotnet-meteor: 1-Restore",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
@@ -83,7 +150,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet: build",
+			"label": "dotnet: 2-build",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
@@ -107,7 +174,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet: clean",
+			"label": "dotnet: 0-clean",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
@@ -126,7 +193,7 @@
 			"problemMatcher": "$msCompile"
 		},
 		{
-			"label": "dotnet: restore",
+			"label": "dotnet: 1-restore",
 			"type": "shell",
 			"command": "dotnet",
 			"args": [
@@ -151,7 +218,6 @@
 			"args": [
 				"format",
 				"src/S7Tools.sln"
-
 			],
 			"group": "build"
 		}

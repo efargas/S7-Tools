@@ -119,7 +119,8 @@ public class JobInfoDisplayViewModelTests
         // Verify the services were called
         _mockSerialService.Verify(s => s.GetByIdAsync(serialProfile.Id, It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         _mockProfileDetailsService.Verify(s => s.CreateProfileDetailsViewModel(It.IsAny<SerialPortProfile>()), Times.AtLeastOnce);
-    }    [Fact]
+    }
+    [Fact]
     public async Task SetSelectedJob_WithJobHavingMissingProfile_ShouldShowMissingProfileWarning()
     {
         // Arrange

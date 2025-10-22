@@ -73,7 +73,8 @@ public partial class JobsMainContentView : UserControl, IDisposable
         // Restore the last panel width (with constraints enforcement)
         double targetWidth = Math.Max(300, Math.Min(600, _lastPanelWidth));
         MainGrid.ColumnDefinitions[2].Width = new GridLength(targetWidth, GridUnitType.Pixel);
-    }    private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
+    }
+    private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
     {
         // Store the current panel width before closing (for restoration)
         GridLength currentWidth = MainGrid.ColumnDefinitions[2].Width;

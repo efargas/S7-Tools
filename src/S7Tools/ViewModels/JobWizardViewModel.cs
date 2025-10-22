@@ -1,15 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 using System.Threading;
-using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
@@ -106,10 +106,10 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         MemoryPresets.Add(new MemoryPreset("8KB Region", 0x20001000u, 0x2000u));
         MemoryPresets.Add(new MemoryPreset("16KB Region", 0x20002000u, 0x4000u));
 
-    // Create serial scanner child VM for UI embedding
-    SerialScanner = _vmFactory.Create<SerialPortScannerViewModel>();
+        // Create serial scanner child VM for UI embedding
+        SerialScanner = _vmFactory.Create<SerialPortScannerViewModel>();
 
-    // Commands
+        // Commands
         IObservable<bool> canBack = this.WhenAnyValue(x => x.CurrentStep)
             .Select(step => step != WizardStep.Serial);
 
@@ -166,7 +166,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         });
         FinishCommand = ReactiveCommand.CreateFromTask(ExecuteFinishAsync, canFinish);
 
-    // File/folder pickers
+        // File/folder pickers
         BrowsePayloadsPathCommand = ReactiveCommand.CreateFromTask(BrowsePayloadsPathAsync);
         BrowseOutputPathCommand = ReactiveCommand.CreateFromTask(BrowseOutputPathAsync);
 

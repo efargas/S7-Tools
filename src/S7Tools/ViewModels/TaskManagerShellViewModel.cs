@@ -23,11 +23,11 @@ public sealed class TaskManagerShellViewModel : ViewModelBase
     public TaskManagerShellViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-    _taskRunnerViewModel = _serviceProvider.GetRequiredService<TaskRunnerViewModel>();
-    _activeTasksViewModel = _serviceProvider.GetRequiredService<ActiveTasksViewModel>();
-    _scheduledTasksViewModel = _serviceProvider.GetRequiredService<ScheduledTasksViewModel>();
-    _historyTasksViewModel = _serviceProvider.GetRequiredService<HistoryTasksViewModel>();
-    _taskCreatorViewModel = _serviceProvider.GetRequiredService<TaskCreatorViewModel>();
+        _taskRunnerViewModel = _serviceProvider.GetRequiredService<TaskRunnerViewModel>();
+        _activeTasksViewModel = _serviceProvider.GetRequiredService<ActiveTasksViewModel>();
+        _scheduledTasksViewModel = _serviceProvider.GetRequiredService<ScheduledTasksViewModel>();
+        _historyTasksViewModel = _serviceProvider.GetRequiredService<HistoryTasksViewModel>();
+        _taskCreatorViewModel = _serviceProvider.GetRequiredService<TaskCreatorViewModel>();
 
         Categories = new ObservableCollection<string>(new[]
         {
