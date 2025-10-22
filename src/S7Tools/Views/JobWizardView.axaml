@@ -235,8 +235,8 @@
               </Expander.Header>
               <ContentControl Content="{Binding SelectedSerial}">
                 <ContentControl.DataTemplates>
-                  <DataTemplate>
-                    <views:SerialProfileDetailView DataContext="{Binding}" />
+                  <DataTemplate DataType="vm:SerialPortProfile">
+                    <views:SerialProfileDetailView />
                   </DataTemplate>
                 </ContentControl.DataTemplates>
               </ContentControl>
