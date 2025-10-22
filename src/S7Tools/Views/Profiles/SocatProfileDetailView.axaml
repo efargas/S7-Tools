@@ -8,33 +8,155 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Profiles.SocatProfileDetailView"
              x:DataType="models:SocatProfile">
-  <StackPanel Spacing="10">
-    <TextBlock Text="Socat Profile Details" FontWeight="Bold" FontSize="16"/>
-    <StackPanel Spacing="4">
-      <views:PropertyDisplayItem Label="Name:" Value="{Binding Name}"/>
+  <ItemsControl>
+    <ItemsControl.ItemsPanel>
+      <ItemsPanelTemplate>
+        <WrapPanel Orientation="Horizontal" />
+      </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+    <ItemsControl.Styles>
+      <Style Selector="ItemsControl > ContentPresenter">
+        <Setter Property="Width" Value="280" />
+        <Setter Property="Margin" Value="0,0,12,8" />
+      </Style>
+      <Style Selector="Border.PropertyItem">
+        <Setter Property="Background" Value="#2A2A2B" />
+        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,6" />
+      </Style>
+      <Style Selector="TextBlock.PropertyLabel">
+        <Setter Property="Foreground" Value="#9CDCFE" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+      </Style>
+      <Style Selector="TextBlock.PropertyValue">
+        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,2,0,0" />
+      </Style>
+    </ItemsControl.Styles>
+    <ItemsControl.Items>
+      <Border Classes="PropertyItem">
+        <StackPanel>
+          <TextBlock Classes="PropertyLabel" Text="Name" />
+          <TextBlock Classes="PropertyValue" Text="{Binding Name}" />
+        </StackPanel>
+      </Border>
       <ContentControl Content="{Binding Configuration}">
         <ContentControl.DataTemplates>
           <DataTemplate DataType="models:SocatConfiguration">
-            <StackPanel Spacing="4">
-              <views:PropertyDisplayItem Label="TCP Port:" Value="{Binding TcpPort}"/>
-              <views:PropertyDisplayItem Label="TCP Host:" Value="{Binding TcpHost}"/>
-              <views:PropertyDisplayItem Label="Enable Fork:" Value="{Binding EnableFork}"/>
-              <views:PropertyDisplayItem Label="Enable Reuse Addr:" Value="{Binding EnableReuseAddr}"/>
-              <views:PropertyDisplayItem Label="Verbose:" Value="{Binding Verbose}"/>
-              <views:PropertyDisplayItem Label="Hex Dump:" Value="{Binding HexDump}"/>
-              <views:PropertyDisplayItem Label="Block Size:" Value="{Binding BlockSize}"/>
-              <views:PropertyDisplayItem Label="Debug Level:" Value="{Binding DebugLevel}"/>
-              <views:PropertyDisplayItem Label="Serial Raw Mode:" Value="{Binding SerialRawMode}"/>
-              <views:PropertyDisplayItem Label="Serial Disable Echo:" Value="{Binding SerialDisableEcho}"/>
-              <views:PropertyDisplayItem Label="Auto Configure Serial:" Value="{Binding AutoConfigureSerial}"/>
-              <views:PropertyDisplayItem Label="Connection Timeout:" Value="{Binding ConnectionTimeout}"/>
-              <views:PropertyDisplayItem Label="Auto Restart:" Value="{Binding AutoRestart}"/>
-            </StackPanel>
+            <ItemsControl>
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.Styles>
+                <Style Selector="ItemsControl > ContentPresenter">
+                  <Setter Property="Width" Value="280" />
+                  <Setter Property="Margin" Value="0,0,12,8" />
+                </Style>
+              </ItemsControl.Styles>
+              <ItemsControl.Items>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="TCP Port" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding TcpPort}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="TCP Host" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding TcpHost}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Enable Fork" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding EnableFork}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Enable Reuse Addr" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding EnableReuseAddr}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Verbose" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding Verbose}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Hex Dump" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding HexDump}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Block Size" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding BlockSize}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Debug Level" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding DebugLevel}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Serial Raw Mode" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding SerialRawMode}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Serial Disable Echo" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding SerialDisableEcho}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Auto Configure Serial" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding AutoConfigureSerial}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Connection Timeout" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding ConnectionTimeout}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Auto Restart" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding AutoRestart}" />
+                  </StackPanel>
+                </Border>
+              </ItemsControl.Items>
+            </ItemsControl>
           </DataTemplate>
         </ContentControl.DataTemplates>
       </ContentControl>
-      <views:PropertyDisplayItem Label="Version:" Value="{Binding Version}"/>
-      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}"/>
-    </StackPanel>
-  </StackPanel>
+      <Border Classes="PropertyItem">
+        <StackPanel>
+          <TextBlock Classes="PropertyLabel" Text="Version" />
+          <TextBlock Classes="PropertyValue" Text="{Binding Version}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="PropertyItem">
+        <StackPanel>
+          <TextBlock Classes="PropertyLabel" Text="Created At" />
+          <TextBlock Classes="PropertyValue" Text="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}" />
+        </StackPanel>
+      </Border>
+    </ItemsControl.Items>
+  </ItemsControl>
 </UserControl>

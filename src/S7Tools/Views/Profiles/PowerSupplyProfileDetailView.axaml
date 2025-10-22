@@ -8,30 +8,137 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Profiles.PowerSupplyProfileDetailView"
              x:DataType="models:PowerSupplyProfile">
-  <StackPanel Spacing="10">
-    <TextBlock Text="Power Supply Profile Details" FontWeight="Bold" FontSize="16"/>
-    <StackPanel Spacing="4">
-      <views:PropertyDisplayItem Label="Name:" Value="{Binding Name}"/>
+  <ItemsControl>
+    <ItemsControl.ItemsPanel>
+      <ItemsPanelTemplate>
+        <WrapPanel Orientation="Horizontal" />
+      </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+    <ItemsControl.Styles>
+      <Style Selector="ItemsControl > ContentPresenter">
+        <Setter Property="Width" Value="280" />
+        <Setter Property="Margin" Value="0,0,12,8" />
+      </Style>
+      <Style Selector="Border.PropertyItem">
+        <Setter Property="Background" Value="#2A2A2B" />
+        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="3" />
+        <Setter Property="Padding" Value="8,6" />
+      </Style>
+      <Style Selector="TextBlock.PropertyLabel">
+        <Setter Property="Foreground" Value="#9CDCFE" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+      </Style>
+      <Style Selector="TextBlock.PropertyValue">
+        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,2,0,0" />
+      </Style>
+    </ItemsControl.Styles>
+    <ItemsControl.Items>
+      <Border Classes="PropertyItem">
+        <StackPanel>
+          <TextBlock Classes="PropertyLabel" Text="Name" />
+          <TextBlock Classes="PropertyValue" Text="{Binding Name}" />
+        </StackPanel>
+      </Border>
       <ContentControl Content="{Binding Configuration}">
         <ContentControl.DataTemplates>
           <DataTemplate DataType="models:ModbusTcpConfiguration">
-            <StackPanel Spacing="4">
-              <views:PropertyDisplayItem Label="Host:" Value="{Binding Host}"/>
-              <views:PropertyDisplayItem Label="Port:" Value="{Binding Port}"/>
-              <views:PropertyDisplayItem Label="Device ID:" Value="{Binding DeviceId}"/>
-              <views:PropertyDisplayItem Label="Addressing Mode:" Value="{Binding AddressingMode}"/>
-              <views:PropertyDisplayItem Label="Connection Timeout (ms):" Value="{Binding ConnectionTimeoutMs}"/>
-              <views:PropertyDisplayItem Label="Read Timeout (ms):" Value="{Binding ReadTimeoutMs}"/>
-              <views:PropertyDisplayItem Label="Write Timeout (ms):" Value="{Binding WriteTimeoutMs}"/>
-              <views:PropertyDisplayItem Label="On/Off Coil:" Value="{Binding OnOffCoil}"/>
-              <views:PropertyDisplayItem Label="Enable Auto Reconnect:" Value="{Binding EnableAutoReconnect}"/>
-              <views:PropertyDisplayItem Label="Max Retry Attempts:" Value="{Binding MaxRetryAttempts}"/>
-            </StackPanel>
+            <ItemsControl>
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.Styles>
+                <Style Selector="ItemsControl > ContentPresenter">
+                  <Setter Property="Width" Value="280" />
+                  <Setter Property="Margin" Value="0,0,12,8" />
+                </Style>
+              </ItemsControl.Styles>
+              <ItemsControl.Items>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Host" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding Host}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Port" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding Port}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Device ID" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding DeviceId}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Addressing Mode" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding AddressingMode}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Connection Timeout (ms)" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding ConnectionTimeoutMs}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Read Timeout (ms)" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding ReadTimeoutMs}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Write Timeout (ms)" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding WriteTimeoutMs}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="On/Off Coil" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding OnOffCoil}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Enable Auto Reconnect" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding EnableAutoReconnect}" />
+                  </StackPanel>
+                </Border>
+                <Border Classes="PropertyItem">
+                  <StackPanel>
+                    <TextBlock Classes="PropertyLabel" Text="Max Retry Attempts" />
+                    <TextBlock Classes="PropertyValue" Text="{Binding MaxRetryAttempts}" />
+                  </StackPanel>
+                </Border>
+              </ItemsControl.Items>
+            </ItemsControl>
           </DataTemplate>
         </ContentControl.DataTemplates>
       </ContentControl>
-      <views:PropertyDisplayItem Label="Version:" Value="{Binding Version}"/>
-      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}"/>
-    </StackPanel>
-  </StackPanel>
+      <Border Classes="PropertyItem">
+        <StackPanel>
+          <TextBlock Classes="PropertyLabel" Text="Version" />
+          <TextBlock Classes="PropertyValue" Text="{Binding Version}" />
+        </StackPanel>
+      </Border>
+      <Border Classes="PropertyItem">
+        <StackPanel>
+          <TextBlock Classes="PropertyLabel" Text="Created At" />
+          <TextBlock Classes="PropertyValue" Text="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}" />
+        </StackPanel>
+      </Border>
+    </ItemsControl.Items>
+  </ItemsControl>
 </UserControl>
