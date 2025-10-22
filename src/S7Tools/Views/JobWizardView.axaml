@@ -338,8 +338,8 @@
               </Expander.Header>
               <ContentControl Content="{Binding SelectedSocat}">
                 <ContentControl.DataTemplates>
-                  <DataTemplate>
-                    <views:SocatProfileDetailView DataContext="{Binding}" />
+                  <DataTemplate DataType="models:SocatProfile">
+                    <views:SocatProfileDetailView />
                   </DataTemplate>
                 </ContentControl.DataTemplates>
               </ContentControl>
