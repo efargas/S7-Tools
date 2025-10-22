@@ -11,8 +11,6 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Models;
-using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
@@ -23,7 +21,7 @@ namespace S7Tools.Services;
 public sealed class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
-    private readonly ISettingsService _settingsService;
+    private readonly SerialPortSettings _settings;
     private Timer? _monitoringTimer;
     private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -33,14 +31,13 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// Initializes a new instance of the SerialPortService class.
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
-    /// <param name="settingsService">The settings service for accessing application settings.</param>
-    /// <exception cref="ArgumentNullException">Thrown when logger or settingsService is null.</exception>
-    public SerialPortService(ILogger<SerialPortService> logger, ISettingsService settingsService)
+    /// <exception cref="ArgumentNullException">Thrown when logger is null.</exception>
+    public SerialPortService(ILogger<SerialPortService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _settings = SerialPortSettings.CreateDefault();
 
-        _logger.LogDebug("SerialPortService initialized");
+        _logger.LogDebug("SerialPortService initialized with default settings");
 
         // Initialize monitoring timer in stopped state to satisfy analyzers and manage lifecycle cleanly
         _monitoringTimer = new Timer(static async state =>
@@ -73,29 +70,28 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     {
         _logger.LogDebug("Starting serial port scan");
 
-        SerialPortSettings settings = _settingsService.Settings.SerialPorts;
         var ports = new List<SerialPortInfo>();
 
         try
         {
             // Scan USB ports
-            if (settings.IncludeUsbPorts)
+            if (_settings.IncludeUsbPorts)
             {
-                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", SerialPortType.Usb, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", SerialPortType.Usb, _settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(usbPorts);
             }
 
             // Scan ACM ports
-            if (settings.IncludeAcmPorts)
+            if (_settings.IncludeAcmPorts)
             {
-                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", SerialPortType.Acm, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", SerialPortType.Acm, _settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(acmPorts);
             }
 
             // Scan standard ports
-            if (settings.IncludeStandardPorts)
+            if (_settings.IncludeStandardPorts)
             {
-                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", SerialPortType.Standard, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", SerialPortType.Standard, _settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(standardPorts);
             }
 
@@ -127,7 +123,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             SerialPortType portType = GetPortType(portPath);
-            bool isAccessible = await IsPortAccessibleAsync(portPath, _settingsService.Settings.SerialPorts.PortTestTimeoutMs, cancellationToken).ConfigureAwait(false);
+            bool isAccessible = await IsPortAccessibleAsync(portPath, _settings.PortTestTimeoutMs, cancellationToken).ConfigureAwait(false);
 
             var portInfo = new SerialPortInfo
             {
@@ -195,7 +191,6 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             _isMonitoring = true;
-            SerialPortSettings settings = _settingsService.Settings.SerialPorts;
 
             // Initial scan to populate known ports
             IEnumerable<SerialPortInfo> currentPorts = await ScanAvailablePortsAsync(cancellationToken).ConfigureAwait(false);
@@ -205,9 +200,9 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             // Start monitoring timer
-            _monitoringTimer!.Change(TimeSpan.Zero, TimeSpan.FromSeconds(settings.ScanIntervalSeconds));
+            _monitoringTimer!.Change(TimeSpan.Zero, TimeSpan.FromSeconds(_settings.ScanIntervalSeconds));
 
-            _logger.LogInformation("Started port monitoring with {Interval}s interval", settings.ScanIntervalSeconds);
+            _logger.LogInformation("Started port monitoring with {Interval}s interval", _settings.ScanIntervalSeconds);
         }
         finally
         {
@@ -639,7 +634,6 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(string basePattern, SerialPortType portType, int maxPorts, CancellationToken cancellationToken)
     {
         var ports = new List<SerialPortInfo>();
-        SerialPortSettings settings = _settingsService.Settings.SerialPorts;
 
         for (int i = 0; i < maxPorts; i++)
         {

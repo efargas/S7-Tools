@@ -53,9 +53,6 @@ public static class ServiceCollectionExtensions
         // Add Theme Service
         services.TryAddSingleton<IThemeService, ThemeService>();
 
-        // Add Settings Service
-        services.TryAddSingleton<ISettingsService, SettingsService>();
-
         // Add Dialog Service
         services.TryAddTransient<IDialogService, DialogService>();
 
