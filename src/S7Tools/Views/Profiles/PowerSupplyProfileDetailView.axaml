@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:S7Tools.ViewModels"
+             xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="S7Tools.Views.Profiles.PowerSupplyProfileDetailView"
+             x:DataType="models:PowerSupplyProfile">
+  <StackPanel Spacing="10">
+    <TextBlock Text="Power Supply Profile Details" FontWeight="Bold" FontSize="16"/>
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}"/>
+      <ContentControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="{Binding Configuration}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="models:ModbusTcpConfiguration">
+            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Host:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Host}"/>
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Port:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Port}"/>
+              <TextBlock Grid.Row="2" Grid.Column="0" Text="Device ID:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DeviceId}"/>
+              <TextBlock Grid.Row="3" Grid.Column="0" Text="Addressing Mode:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding AddressingMode}"/>
+              <TextBlock Grid.Row="4" Grid.Column="0" Text="Connection Timeout (ms):" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConnectionTimeoutMs}"/>
+              <TextBlock Grid.Row="5" Grid.Column="0" Text="Read Timeout (ms):" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ReadTimeoutMs}"/>
+              <TextBlock Grid.Row="6" Grid.Column="0" Text="Write Timeout (ms):" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding WriteTimeoutMs}"/>
+              <TextBlock Grid.Row="7" Grid.Column="0" Text="On/Off Coil:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding OnOffCoil}"/>
+              <TextBlock Grid.Row="8" Grid.Column="0" Text="Enable Auto Reconnect:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding EnableAutoReconnect}"/>
+              <TextBlock Grid.Row="9" Grid.Column="0" Text="Max Retry Attempts:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+              <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding MaxRetryAttempts}"/>
+            </Grid>
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+      <TextBlock Grid.Row="11" Grid.Column="0" Text="Version:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="11" Grid.Column="1" Text="{Binding Version}"/>
+      <TextBlock Grid.Row="12" Grid.Column="0" Text="Created At:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding CreatedAt, StringFormat='yyyy-MM-dd HH:mm'}"/>
+    </Grid>
+  </StackPanel>
+</UserControl>
