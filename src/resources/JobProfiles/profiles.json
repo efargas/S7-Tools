@@ -1,0 +1,128 @@
+[
+  {
+    "Id": 1,
+    "Name": "S7Tools Default",
+    "Description": "Default job profile for S7Tools application with standard memory dump settings. This profile cannot be modified or deleted.",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-22T11:01:58.3901242Z",
+    "ModifiedAt": "2025-10-22T11:01:58.390133Z",
+    "Version": "1.0",
+    "IsDefault": true,
+    "IsReadOnly": true,
+    "IsTemplate": false,
+    "Metadata": {
+      "Type": "System",
+      "Purpose": "S7Tools Memory Dump Operation",
+      "Author": "S7Tools",
+      "Modifiable": "False"
+    },
+    "SerialProfileId": 1,
+    "SocatProfileId": 1,
+    "PowerSupplyProfileId": 1,
+    "MemoryRegion": {
+      "Start": 536870912,
+      "Length": 4096
+    },
+    "Payloads": {
+      "BasePath": "./bootloader-payloads"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 5000,
+    "PowerOffDelayMs": 2000,
+    "UseDefaultPath": true
+  },
+  {
+    "Id": 2,
+    "Name": "Basic Memory Dump",
+    "Description": "Simple 4KB memory dump template",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-22T11:01:58.3902647Z",
+    "ModifiedAt": "2025-10-22T11:01:58.3902648Z",
+    "Version": "1.0",
+    "IsDefault": false,
+    "IsReadOnly": false,
+    "IsTemplate": true,
+    "Metadata": {
+      "Type": "User",
+      "Author": "kali"
+    },
+    "SerialProfileId": 1,
+    "SocatProfileId": 1,
+    "PowerSupplyProfileId": 1,
+    "MemoryRegion": {
+      "Start": 536870912,
+      "Length": 4096
+    },
+    "Payloads": {
+      "BasePath": "./bootloader-payloads"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 5000,
+    "PowerOffDelayMs": 2000,
+    "UseDefaultPath": true
+  },
+  {
+    "Id": 3,
+    "Name": "Full Memory Dump",
+    "Description": "Complete memory dump template",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-22T11:01:58.3908027Z",
+    "ModifiedAt": "2025-10-22T11:01:58.3908028Z",
+    "Version": "1.0",
+    "IsDefault": false,
+    "IsReadOnly": false,
+    "IsTemplate": true,
+    "Metadata": {
+      "Type": "User",
+      "Author": "kali"
+    },
+    "SerialProfileId": 1,
+    "SocatProfileId": 1,
+    "PowerSupplyProfileId": 1,
+    "MemoryRegion": {
+      "Start": 536870912,
+      "Length": 65536
+    },
+    "Payloads": {
+      "BasePath": "./bootloader-payloads"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 5000,
+    "PowerOffDelayMs": 2000,
+    "UseDefaultPath": true
+  },
+  {
+    "Id": 4,
+    "Name": "New Job",
+    "Description": "",
+    "Options": "",
+    "Flags": "",
+    "CreatedAt": "2025-10-22T11:04:51.3999004Z",
+    "ModifiedAt": "2025-10-22T11:04:51.3999018Z",
+    "Version": "1.0",
+    "IsDefault": false,
+    "IsReadOnly": false,
+    "IsTemplate": false,
+    "Metadata": {
+      "Type": "User",
+      "Author": "kali"
+    },
+    "SerialProfileId": 1,
+    "SocatProfileId": 1,
+    "PowerSupplyProfileId": 1,
+    "MemoryRegion": {
+      "Start": 536870912,
+      "Length": 4096
+    },
+    "Payloads": {
+      "BasePath": "./bootloader-payloads"
+    },
+    "OutputPath": "./dumps",
+    "PowerOnTimeMs": 5000,
+    "PowerOffDelayMs": 2000,
+    "UseDefaultPath": true
+  }
+]
