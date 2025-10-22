@@ -113,16 +113,28 @@
                             HorizontalAlignment="Stretch"
                             Content="{TemplateBinding Header}"
                             IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
-              <Border x:Name="PART_content"
-                      IsVisible="{TemplateBinding IsExpanded}">
-                <ContentPresenter x:Name="PART_contentPresenter"
-                                  Content="{TemplateBinding Content}"
-                                  ContentTemplate="{TemplateBinding ContentTemplate}" />
-              </Border>
+              <Panel>
+                <Border x:Name="PART_content"
+                        IsVisible="{TemplateBinding IsExpanded}"
+                        MaxHeight="0">
+                  <Border.Transitions>
+                    <Transitions>
+                      <DoubleTransition Property="MaxHeight" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                    </Transitions>
+                  </Border.Transitions>
+                  <ContentPresenter x:Name="PART_contentPresenter"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}" />
+                </Border>
+              </Panel>
             </DockPanel>
           </Border>
         </ControlTemplate>
       </Setter>
+    </Style>
+
+    <Style Selector="Expander[IsExpanded=true] /template/ Border#PART_content">
+      <Setter Property="MaxHeight" Value="2000" />
     </Style>
 
     <Style Selector="TextBlock.ExpanderHeader">
