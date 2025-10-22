@@ -32,12 +32,12 @@ public class DateTimeToStringConverter : IValueConverter
             {
                 DateTime dateTime => dateTime.ToString(format, culture),
                 DateTimeOffset dateTimeOffset => dateTimeOffset.ToString(format, culture),
-                _ => value.ToString()
+                _ => value?.ToString() ?? string.Empty
             };
         }
-        catch (Exception)
+        catch (FormatException)
         {
-            // Return empty string for any conversion errors to prevent crashes
+            // Return empty string for formatting errors to prevent crashes
             return string.Empty;
         }
     }
