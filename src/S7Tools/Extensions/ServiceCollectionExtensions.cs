@@ -490,11 +490,9 @@ public static class ServiceCollectionExtensions
         {
             startupLogger?.LogDebug("Initializing {ServiceName} profile service...", serviceName);
 
-            if (!System.IO.File.Exists(profilesPath))
-            {
-                await profileService.CreateDefaultProfilesAsync();
-                startupLogger?.LogInformation("Created default profiles for {ServiceName}", serviceName);
-            }
+            // The check for file existence and creation of default profiles is now handled
+            // robustly within the profile manager's GetAllAsync/LoadProfilesAsync methods.
+            // Removing the redundant check here prevents duplicate profile creation.
 
             // Load profiles to ensure storage is initialized
             await profileService.GetAllAsync().ConfigureAwait(false);
