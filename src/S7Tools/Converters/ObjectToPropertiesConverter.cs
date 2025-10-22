@@ -48,9 +48,10 @@ public class ObjectToPropertiesConverter : IValueConverter
                     ValidationState = PropertyValidationState.Valid
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                // Skip properties that throw exceptions when accessed
+                // Skip properties that throw exceptions, but log it for debugging.
+                System.Diagnostics.Debug.WriteLine($"Error getting property '{prop.Name}': {ex.Message}");
             }
         }
 
