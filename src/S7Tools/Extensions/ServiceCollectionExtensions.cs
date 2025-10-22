@@ -115,9 +115,34 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
         services.TryAddSingleton<ISocatService, SocatService>();
 
-        // Power Supply Profile Service (Power Supply Control - Modbus TCP)
+        // Add Power Supply Profile Service (Power Supply Control - Modbus TCP)
         services.TryAddSingleton<IPowerSupplyProfileService, PowerSupplyProfileService>();
         services.TryAddSingleton<IPowerSupplyService, PowerSupplyService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds S7Tools path management services to the service collection.
+    /// These services handle dynamic path resolution, resource initialization, and settings management.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsPathManagement(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        // Add path resolution service for dynamic path management
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IPathService, PathService>();
+
+        // Add resource manager service for resource initialization and validation
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IResourceManagerService, ResourceManagerService>();
+
+        // Add application settings service for layered configuration management
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IApplicationSettingsService, ApplicationSettingsService>();
+
+        // Add path diagnostics service for troubleshooting and monitoring
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IPathDiagnosticsService, PathDiagnosticsService>();
 
         return services;
     }
@@ -305,6 +330,9 @@ public static class ServiceCollectionExtensions
 
         // Add foundation services
         services.AddS7ToolsFoundationServices();
+
+        // Add path management services
+        services.AddS7ToolsPathManagement();
 
         // Add advanced design pattern services
         services.AddS7ToolsAdvancedServices();

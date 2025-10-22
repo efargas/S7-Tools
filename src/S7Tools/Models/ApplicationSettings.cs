@@ -9,9 +9,6 @@ namespace S7Tools.Models;
 /// </summary>
 public class ApplicationSettings
 {
-    private static string ResourcesPath(string subfolder)
-        => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", subfolder);
-
     /// <summary>
     /// Gets or sets the logging settings.
     /// </summary>
@@ -62,33 +59,37 @@ public class ApplicationSettings
     /// </summary>
     public bool BottomPanelVisible { get; set; } = true;
 
-    // Resources folder paths (relative to application build directory)
+    // Resources folder paths - populated dynamically by PathService at runtime
 
     /// <summary>
-    /// Root resources directory inside the application build folder.
-    /// Example: bin/Debug/net8.0/resources
+    /// Root resources directory.
+    /// This will be populated by the PathService at runtime to use dynamic paths.
     /// </summary>
-    public string ResourcesRoot { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources");
+    public string ResourcesRoot { get; set; } = string.Empty;
 
     /// <summary>
     /// Default path for payload files.
+    /// This will be populated by the PathService at runtime to use dynamic paths.
     /// </summary>
-    public string PayloadsPath { get; set; } = ResourcesPath("payloads");
+    public string PayloadsPath { get; set; } = string.Empty;
 
     /// <summary>
     /// Default path for firmware files.
+    /// This will be populated by the PathService at runtime to use dynamic paths.
     /// </summary>
-    public string FirmwarePath { get; set; } = ResourcesPath("firmware");
+    public string FirmwarePath { get; set; } = string.Empty;
 
     /// <summary>
     /// Default path for extractions.
+    /// This will be populated by the PathService at runtime to use dynamic paths.
     /// </summary>
-    public string ExtractionsPath { get; set; } = ResourcesPath("extractions");
+    public string ExtractionsPath { get; set; } = string.Empty;
 
     /// <summary>
     /// Default path for memory dumps.
+    /// This will be populated by the PathService at runtime to use dynamic paths.
     /// </summary>
-    public string DumpsPath { get; set; } = ResourcesPath("dumps");
+    public string DumpsPath { get; set; } = string.Empty;
 
     /// <summary>
     /// Creates a copy of the current settings.

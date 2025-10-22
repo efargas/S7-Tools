@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
@@ -36,6 +37,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     private readonly ILogger<PowerSupplySettingsViewModel> _specificLogger;
     private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
+    private readonly IPathService _pathService;
     private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
@@ -64,7 +66,8 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         IDialogService dialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
-        S7Tools.Services.Interfaces.ISettingsService settingsService)
+        S7Tools.Services.Interfaces.ISettingsService settingsService,
+        IPathService pathService)
         : base(logger, unifiedDialogService, dialogService, uiThreadService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
@@ -75,6 +78,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _uiThreadService = uiThreadService;
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
         // Store specific logger (use constructor parameter, not create new factory)
         _specificLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<PowerSupplySettingsViewModel>();
@@ -1189,8 +1193,9 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Resetting profiles path to default");
 
-            string defaultPath = "resources/PowerSupplyProfiles";
-            ProfilesPath = defaultPath;
+            string defaultPath = Path.Combine("resources", "PowerSupplyProfiles");
+            string absolutePath = _pathService.GetResourcePath(defaultPath);
+            ProfilesPath = absolutePath;
 
             Models.ApplicationSettings settings = _settingsService.Settings;
             settings.PowerSupply.ProfilesPath = defaultPath;

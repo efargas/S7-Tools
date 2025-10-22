@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 
@@ -23,8 +24,9 @@ public class PowerSupplyProfileService : StandardProfileManager<PowerSupplyProfi
     /// Initializes a new instance of the PowerSupplyProfileService.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public PowerSupplyProfileService(ILogger<PowerSupplyProfileService> logger)
-        : base(GetDefaultProfilesPath(), logger)
+    /// <param name="pathService">The path service for resolving profile file paths.</param>
+    public PowerSupplyProfileService(ILogger<PowerSupplyProfileService> logger, IPathService pathService)
+        : base(pathService.PowerSupplyProfilesPath, logger)
     {
     }
 
@@ -90,20 +92,6 @@ public class PowerSupplyProfileService : StandardProfileManager<PowerSupplyProfi
             _logger.LogError(ex, "Failed to save default power supply profile");
             _profiles.Clear(); // Clear the in-memory profiles if save failed
         }
-    }
-
-    #endregion
-
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Gets the default path for power supply profiles.
-    /// </summary>
-    private static string GetDefaultProfilesPath()
-    {
-        string appDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "PowerSupplyProfiles");
-        Directory.CreateDirectory(appDataPath);
-        return Path.Combine(appDataPath, "profiles.json");
     }
 
     #endregion

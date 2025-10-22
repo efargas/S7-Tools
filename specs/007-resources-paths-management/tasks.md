@@ -62,15 +62,15 @@
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Implement PathService in src/S7Tools/Services/PathService.cs with executable-relative path resolution
-- [ ] T019 [US1] Add path validation and directory creation logic to PathService
-- [ ] T020 [US1] Add structured logging for all path operations in PathService
-- [ ] T021 [US1] Implement ResourceManagerService in src/S7Tools/Services/ResourceManagerService.cs for resource initialization
-- [ ] T022 [US1] Add manifest loading and resource creation logic to ResourceManagerService
-- [ ] T023 [US1] Add error recovery and validation to ResourceManagerService
-- [ ] T024 [US1] Register path management services in src/S7Tools/Extensions/ServiceCollectionExtensions.cs
-- [ ] T025 [US1] Add path service initialization during app startup in src/S7Tools/App.axaml.cs
-- [ ] T026 [US1] Verify dynamic folder structure creation on first run
+- [X] T018 [US1] Implement PathService in src/S7Tools/Services/PathService.cs with executable-relative path resolution
+- [X] T019 [US1] Add path validation and directory creation logic to PathService
+- [X] T020 [US1] Add structured logging for all path operations in PathService
+- [X] T021 [US1] Implement ResourceManagerService in src/S7Tools/Services/ResourceManagerService.cs for resource initialization
+- [X] T022 [US1] Add manifest loading and resource creation logic to ResourceManagerService
+- [X] T023 [US1] Add error recovery and validation to ResourceManagerService
+- [X] T024 [US1] Register path management services in src/S7Tools/Extensions/ServiceCollectionExtensions.cs
+- [X] T025 [US1] Add path service initialization during app startup in src/S7Tools/App.axaml.cs
+- [X] T026 [US1] Verify dynamic folder structure creation on first run
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - dynamic path resolution works
 
@@ -84,13 +84,13 @@
 
 ### Implementation for User Story 2
 
-- [ ] T027 [US2] Implement ApplicationSettingsService in src/S7Tools/Services/ApplicationSettingsService.cs with layered configuration
-- [ ] T028 [US2] Add default settings loading logic to ApplicationSettingsService
-- [ ] T029 [US2] Add user settings override logic to ApplicationSettingsService
-- [ ] T030 [US2] Add settings merging and effective settings computation to ApplicationSettingsService
-- [ ] T031 [US2] Add change detection and notifications to ApplicationSettingsService
-- [ ] T032 [US2] Add settings persistence with atomic write operations to ApplicationSettingsService
-- [ ] T033 [US2] Register ApplicationSettingsService in src/S7Tools/Extensions/ServiceCollectionExtensions.cs
+- [X] T027 [US2] Implement ApplicationSettingsService in src/S7Tools/Services/ApplicationSettingsService.cs with layered configuration
+- [X] T028 [US2] Add default settings loading logic to ApplicationSettingsService
+- [X] T029 [US2] Add user settings override logic to ApplicationSettingsService
+- [X] T030 [US2] Add settings merging and effective settings computation to ApplicationSettingsService
+- [X] T031 [US2] Add change detection and notifications to ApplicationSettingsService
+- [X] T032 [US2] Add settings persistence with atomic write operations to ApplicationSettingsService
+- [X] T033 [US2] Register ApplicationSettingsService in src/S7Tools/Extensions/ServiceCollectionExtensions.cs
 - [ ] T034 [US2] Update existing services to use new settings resolution instead of hardcoded paths
 - [ ] T035 [US2] Verify user settings override behavior with test scenarios
 
@@ -123,14 +123,14 @@
 
 **Purpose**: Improvements that affect multiple user stories and finalization
 
-- [ ] T044 [P] Update existing hardcoded paths throughout codebase to use new path services
-- [ ] T045 [P] Remove any remaining hardcoded string constants and replace with dynamic resolution
+- [X] T044 [P] Update existing hardcoded paths throughout codebase to use new path services
+- [X] T045 [P] Remove any remaining hardcoded string constants and replace with dynamic resolution
 - [ ] T046 [P] Add XML documentation to all public APIs for path management services
 - [ ] T047 [P] Performance optimization - cache resolved paths and minimize file system calls
 - [ ] T048 [P] Add cross-platform path handling validation for Windows/Linux/macOS
 - [ ] T049 [P] Update application initialization to ensure proper service order during startup
-- [ ] T050 Verify build process completes successfully with 30-second wait verification
-- [ ] T051 Run quickstart.md validation scenarios to ensure all requirements met
+- [X] T050 Verify build process completes successfully with 30-second wait verification
+- [X] T051 Run quickstart.md validation scenarios to ensure all requirements met
 
 ---
 

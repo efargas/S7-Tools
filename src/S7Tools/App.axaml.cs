@@ -7,6 +7,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Resources;
 using S7Tools.Models;
 using S7Tools.Resources;
@@ -68,6 +69,19 @@ public partial class App : Application
                 // Get required services
                 IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
                 ILogger<App> logger = _serviceProvider.GetRequiredService<ILogger<App>>();
+
+                // Initialize path services to ensure proper resource structure
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await InitializePathServicesAsync(logger).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Background path service initialization failed");
+                    }
+                });
 
                 // Load application settings at startup (creates defaults if missing) without blocking UI thread
                 try
@@ -367,6 +381,60 @@ public partial class App : Application
 
         // No awaited work in this method; return a completed task.
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Initializes path services to ensure proper resource structure is available
+    /// </summary>
+    /// <param name="logger">Logger instance for tracking initialization</param>
+    private async Task InitializePathServicesAsync(ILogger logger)
+    {
+        try
+        {
+            logger.LogInformation("Initializing path services and resource structure");
+
+            // Get path service and initialize paths
+            IPathService? pathService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IPathService>();
+            if (pathService != null)
+            {
+                await pathService.InitializeAsync().ConfigureAwait(false);
+                logger.LogInformation("Path service initialized successfully");
+            }
+
+            // Get resource manager service and initialize resources
+            IResourceManagerService? resourceService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IResourceManagerService>();
+            if (resourceService != null)
+            {
+                ResourceInitializationResult result = await resourceService.InitializeResourcesAsync().ConfigureAwait(false);
+                if (result.Success)
+                {
+                    logger.LogInformation("Resource manager initialized successfully. Created {ResourceCount} resources",
+                        result.CreatedResources.Count);
+                }
+                else
+                {
+                    logger.LogWarning("Resource manager initialization completed with errors: {ErrorCount} errors",
+                        result.Errors.Count);
+                    foreach (string error in result.Errors)
+                    {
+                        logger.LogWarning("Resource initialization error: {Error}", error);
+                    }
+                }
+            }
+
+            // Initialize application settings service
+            S7Tools.Core.Interfaces.Services.IApplicationSettingsService? settingsService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
+            if (settingsService != null)
+            {
+                S7Tools.Core.Models.Configuration.ApplicationSettings settings = await settingsService.LoadSettingsAsync().ConfigureAwait(false);
+                logger.LogInformation("Application settings loaded successfully with {EffectiveCount} effective settings and {UserCount} user overrides",
+                    settings.EffectiveSettings.Count, settings.UserSettings.Count);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to initialize path services - application will continue but some features may not work correctly");
+        }
     }
 
     /// <summary>

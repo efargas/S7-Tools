@@ -22,9 +22,9 @@ public class SettingsManagementViewModel : ReactiveObject
     private readonly IFileDialogService? _fileDialogService;
     private readonly ISettingsService _settingsService;
 
-    // Settings Properties
-    private string _defaultLogPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "S7Tools", "Logs");
-    private string _exportPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "S7Tools", "Exports");
+    // Settings Properties - will be populated from SettingsService
+    private string _defaultLogPath = string.Empty;
+    private string _exportPath = string.Empty;
     private string _minimumLogLevel = "Information";
     private bool _autoScrollLogs = true;
     private bool _enableRollingLogs = true;
@@ -32,7 +32,7 @@ public class SettingsManagementViewModel : ReactiveObject
     private bool _showCategoryInLogs = true;
     private bool _showLogLevelInLogs = true;
     private string _settingsStatusMessage = "Settings ready";
-    private string _currentSettingsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "S7Tools", "settings.json");
+    private string _currentSettingsFilePath = string.Empty;
     private DateTime _settingsLastModified = DateTime.Now;
 
     /// <summary>
@@ -59,8 +59,12 @@ public class SettingsManagementViewModel : ReactiveObject
     private static ISettingsService CreateDesignTimeSettingsService()
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
-        ILogger<SettingsService> logger = loggerFactory.CreateLogger<Services.SettingsService>();
-        return new Services.SettingsService(logger);
+        ILogger<SettingsService> settingsLogger = loggerFactory.CreateLogger<Services.SettingsService>();
+        ILogger<Services.PathService> pathLogger = loggerFactory.CreateLogger<Services.PathService>();
+
+        // Create a mock path service for design time
+        var pathService = new Services.PathService(pathLogger);
+        return new Services.SettingsService(settingsLogger, pathService);
     }
 
     /// <summary>

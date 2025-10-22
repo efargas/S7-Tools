@@ -51,8 +51,12 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private static ISettingsService CreateDesignTimeSettingsService()
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
-        ILogger<SettingsService> logger = loggerFactory.CreateLogger<Services.SettingsService>();
-        return new Services.SettingsService(logger);
+        ILogger<SettingsService> settingsLogger = loggerFactory.CreateLogger<Services.SettingsService>();
+        ILogger<Services.PathService> pathLogger = loggerFactory.CreateLogger<Services.PathService>();
+
+        // Create a mock path service for design time
+        var pathService = new Services.PathService(pathLogger);
+        return new Services.SettingsService(settingsLogger, pathService);
     }
 
     /// <summary>

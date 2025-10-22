@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
@@ -36,6 +37,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     private readonly ILogger<SocatSettingsViewModel> _specificLogger;
     private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
+    private readonly IPathService _pathService;
     private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
@@ -66,7 +68,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         IDialogService dialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
-        S7Tools.Services.Interfaces.ISettingsService settingsService)
+        S7Tools.Services.Interfaces.ISettingsService settingsService,
+        IPathService pathService)
         : base(logger, unifiedDialogService, dialogService, uiThreadService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
@@ -78,6 +81,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _uiThreadService = uiThreadService;
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
         // Create specific logger for this ViewModel
         ILoggerFactory loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { });
@@ -493,12 +497,16 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         try
         {
             Models.ApplicationSettings settings = _settingsService.Settings;
-            ProfilesPath = settings.Socat?.ProfilesPath ?? "resources/SocatProfiles";
+            string defaultPath = Path.Combine("resources", "SocatProfiles");
+            ProfilesPath = settings.Socat?.ProfilesPath != null ?
+                _pathService.GetResourcePath(settings.Socat.ProfilesPath) :
+                _pathService.GetResourcePath(defaultPath);
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error refreshing profiles path from settings");
-            ProfilesPath = "resources/SocatProfiles";
+            string defaultPath = Path.Combine("resources", "SocatProfiles");
+            ProfilesPath = _pathService.GetResourcePath(defaultPath);
         }
     }
 
@@ -1069,13 +1077,14 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     {
         try
         {
-            ProfilesPath = "resources/SocatProfiles";
+            string defaultPath = Path.Combine("resources", "SocatProfiles");
+            ProfilesPath = _pathService.GetResourcePath(defaultPath);
 
             // Update settings
             Models.ApplicationSettings settings = _settingsService.Settings;
             if (settings.Socat != null)
             {
-                settings.Socat.ProfilesPath = ProfilesPath;
+                settings.Socat.ProfilesPath = defaultPath;
                 await _settingsService.UpdateSettingsAsync(settings);
             }
 

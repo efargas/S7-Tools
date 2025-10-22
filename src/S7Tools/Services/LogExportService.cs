@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Services.Interfaces;
@@ -18,21 +19,23 @@ namespace S7Tools.Services;
 public class LogExportService : ILogExportService
 {
     private readonly ILogger<LogExportService> _logger;
+    private readonly IPathService _pathService;
     private readonly string _defaultExportPath;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LogExportService"/> class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public LogExportService(ILogger<LogExportService> logger)
+    /// <param name="pathService">The path service for resolving export paths.</param>
+    public LogExportService(ILogger<LogExportService> logger, IPathService pathService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
-        // Set default export path to bin/resources/exports
-        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-        _defaultExportPath = Path.Combine(baseDirectory, "resources", "exports");
+        // Use the dynamic path service for export path resolution
+        _defaultExportPath = _pathService.ExportedLogsDirectory;
 
-        _logger.LogDebug("LogExportService initialized with default path: {DefaultPath}", _defaultExportPath);
+        _logger.LogDebug("LogExportService initialized with dynamic export path: {DefaultPath}", _defaultExportPath);
     }
 
     /// <inheritdoc/>

@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
@@ -39,6 +40,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
     private readonly IUnifiedProfileDialogService _unifiedDialogService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
+    private readonly IPathService _pathService;
     private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
@@ -58,6 +60,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// <param name="settingsService">The settings service used to persist application settings.</param>
     /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="unifiedProfileDialogService">The unified profile dialog service.</param>
+    /// <param name="pathService">The path service for resolving profile paths.</param>
     /// <param name="logger">The logger.</param>
     public SerialPortsSettingsViewModel(
         ISerialPortProfileService profileService,
@@ -69,6 +72,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         S7Tools.Services.Interfaces.ISettingsService settingsService,
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
         IUnifiedProfileDialogService unifiedProfileDialogService,
+        IPathService pathService,
         ILogger<SerialPortsSettingsViewModel> logger)
         : base(logger, unifiedProfileDialogService, dialogService, uiThreadService)
     {
@@ -82,6 +86,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         _specificLogger = logger ?? throw new ArgumentNullException(nameof(logger));
         _unifiedDialogService = unifiedProfileDialogService ?? throw new ArgumentNullException(nameof(unifiedProfileDialogService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
         // Initialize serial port specific collections
         AvailablePorts = new ObservableCollection<string>();
@@ -579,10 +584,9 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         try
         {
-            // Reset to default path inside application resources
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string defaultPath = Path.Combine(baseDir, "resources", "SerialProfiles");
-            ProfilesPath = defaultPath;
+            // Reset to default path using PathService
+            string defaultPath = _pathService.SerialProfilesPath;
+            ProfilesPath = Path.GetDirectoryName(defaultPath) ?? _pathService.ProfilesDirectory;
             await UpdateProfilesPathInSettingsAsync();
         }
         catch (Exception ex)
@@ -619,7 +623,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         try
         {
             Models.ApplicationSettings settings = _settingsService.Settings;
-            ProfilesPath = settings.SerialPorts?.ProfilesPath ?? Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SerialProfiles");
+            ProfilesPath = settings.SerialPorts?.ProfilesPath ?? Path.GetDirectoryName(_pathService.SerialProfilesPath) ?? _pathService.ProfilesDirectory;
         }
         catch (Exception ex)
         {
