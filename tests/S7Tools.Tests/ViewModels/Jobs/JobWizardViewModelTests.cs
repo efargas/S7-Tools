@@ -509,6 +509,7 @@ public sealed class JobWizardViewModelTests : IDisposable
             Id = 1,
             Name = "Test Serial Profile",
             Configuration = config,
+            Version = version,
             CreatedAt = createdAt ?? DateTime.UtcNow
         };
     }

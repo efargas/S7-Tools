@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:S7Tools.ViewModels"
+             xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="S7Tools.Views.Profiles.SocatProfileDetailView"
+             x:DataType="models:SocatProfile">
+  <StackPanel Spacing="10">
+    <TextBlock Text="Socat Profile Details" FontWeight="Bold" FontSize="16"/>
+    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+      <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Name}"/>
+      <TextBlock Grid.Row="1" Grid.Column="0" Text="TCP Port:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Configuration.TcpPort}"/>
+      <TextBlock Grid.Row="2" Grid.Column="0" Text="TCP Host:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Configuration.TcpHost}"/>
+      <TextBlock Grid.Row="3" Grid.Column="0" Text="Enable Fork:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Configuration.EnableFork}"/>
+      <TextBlock Grid.Row="4" Grid.Column="0" Text="Enable Reuse Addr:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Configuration.EnableReuseAddr}"/>
+      <TextBlock Grid.Row="5" Grid.Column="0" Text="Verbose:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Configuration.Verbose}"/>
+      <TextBlock Grid.Row="6" Grid.Column="0" Text="Hex Dump:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Configuration.HexDump}"/>
+      <TextBlock Grid.Row="7" Grid.Column="0" Text="Block Size:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Configuration.BlockSize}"/>
+      <TextBlock Grid.Row="8" Grid.Column="0" Text="Debug Level:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding Configuration.DebugLevel}"/>
+      <TextBlock Grid.Row="9" Grid.Column="0" Text="Serial Raw Mode:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="9" Grid.Column="1" Text="{Binding Configuration.SerialRawMode}"/>
+      <TextBlock Grid.Row="10" Grid.Column="0" Text="Serial Disable Echo:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="10" Grid.Column="1" Text="{Binding Configuration.SerialDisableEcho}"/>
+      <TextBlock Grid.Row="11" Grid.Column="0" Text="Auto Configure Serial:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="11" Grid.Column="1" Text="{Binding Configuration.AutoConfigureSerial}"/>
+      <TextBlock Grid.Row="12" Grid.Column="0" Text="Connection Timeout:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="12" Grid.Column="1" Text="{Binding Configuration.ConnectionTimeout}"/>
+      <TextBlock Grid.Row="13" Grid.Column="0" Text="Auto Restart:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="13" Grid.Column="1" Text="{Binding Configuration.AutoRestart}"/>
+      <TextBlock Grid.Row="14" Grid.Column="0" Text="Version:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="14" Grid.Column="1" Text="{Binding Version}"/>
+      <TextBlock Grid.Row="15" Grid.Column="0" Text="Created At:" FontWeight="SemiBold" Margin="0,0,10,0"/>
+      <TextBlock Grid.Row="15" Grid.Column="1" Text="{Binding CreatedAt, StringFormat={}{0:yyyy-MM-dd HH:mm}}"/>
+    </Grid>
+  </StackPanel>
+</UserControl>
