@@ -1,0 +1,62 @@
+# Docker ignore patterns for S7Tools
+
+# Git metadata
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*
+CHANGELOG*
+docs/
+specs/
+
+# Build outputs
+bin/
+obj/
+build/
+out/
+dist/
+
+# Development files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Test results
+TestResults/
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Environment files
+.env*
+
+# Package managers
+node_modules/
+packages/
+*.nupkg
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Project specific
+bootloader-payloads/
+screenshots/
+tools/
+benchmarks/
+backup/

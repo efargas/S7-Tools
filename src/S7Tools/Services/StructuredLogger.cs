@@ -303,7 +303,7 @@ internal class OperationContext : IOperationContext
         }
 
         LogLevel logLevel = _error == null ? LogLevel.Information : LogLevel.Error;
-        var message = _error == null
+        string message = _error == null
             ? "Operation completed successfully: {OperationName} in {Duration}ms"
             : "Operation failed: {OperationName} in {Duration}ms - {Error}";
 

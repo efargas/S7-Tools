@@ -56,7 +56,7 @@ public class ErrorDisplayService : IErrorDisplayService
         _logger.LogWarning("Creating missing profile message for {ProfileType} {ProfileId} (last known name: {LastKnownName})",
             profileType, profileId, lastKnownName);
 
-        var baseMessage = $"Profile not found: {profileType}";
+        string baseMessage = $"Profile not found: {profileType}";
 
         if (!string.IsNullOrWhiteSpace(lastKnownName))
         {
@@ -72,14 +72,14 @@ public class ErrorDisplayService : IErrorDisplayService
     /// <inheritdoc />
     public string CreateCorruptedProfileMessage(string profileName, string profileType, IEnumerable<string> validationErrors)
     {
-        var errors = validationErrors?.ToList() ?? new List<string>();
+        List<string> errors = validationErrors?.ToList() ?? new List<string>();
 
         _logger.LogWarning("Creating corrupted profile message for {ProfileType} '{ProfileName}' with {ErrorCount} errors",
             profileType, profileName, errors.Count);
 
-        var baseMessage = $"Profile data corrupted: {profileType} '{profileName}'";
+        string baseMessage = $"Profile data corrupted: {profileType} '{profileName}'";
 
-        if (errors.Any())
+        if (errors.Count != 0)
         {
             baseMessage += $". Issues: {string.Join(", ", errors)}";
         }

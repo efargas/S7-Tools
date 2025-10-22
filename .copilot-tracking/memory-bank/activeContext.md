@@ -1,21 +1,43 @@
 # Active Context: S7Tools Development
 
-**Last Updated:** 2025-10-17
-**Current Phase:** TASK017 Implementation — Reopened Scope
-**Status:** In Progress — Scheduler/DI baseline complete; next: UI wizard + details panels and MemoryRegionProfile polish
+**Last Updated:** 2025-10-21
+**Current Phase:** TASK017 Implementation — JobWizardView Enhancement Complete
+**Status:** In Progress — Expandable UI complete; next: validation gating and MemoryRegionProfile integration
 
 ## Current Session Summary
 
-### 🔄 TASK017: Task Manager and Jobs Implementation (Reopened)
+### 🔄 TASK017: Task Manager and Jobs Implementation (Ongoing)
 
 **Objective:** Implement core S7Tools functionality for automated job management and PLC memory dumping
 
 **Current Status:**
 - ✅ Phases 1–4 previously completed
-- 🔄 New work added: Refactor red-marked UI areas in screenshots (Jobs details, Task Manager lists)
-- 🔄 New work added: Implement Job Creator wizard with per-step profile ComboBoxes and inline details panel
-- 🔄 New work added: Add MemoryDumpProfile to unified profiles and wire into Job/validation
-- ⏳ Phase 5/6 pending after refactor and profile integration
+- ✅ **NEW**: JobWizardView expandable UI enhancement complete (2025-10-21)
+- 🔄 Next: Add validation gating for Next/Finish buttons
+- 🔄 Next: MemoryRegionProfile model and service integration
+- ⏳ Remaining: Jobs details panel refactor, Task Manager polish
+
+### ✅ Latest Achievement (2025-10-21): JobWizardView Expandable UI Enhancement
+
+#### Comprehensive Profile Details Display
+- **Problem Solved**: User reported "only showing basic properties are missing advanced settings, options, flags like in right panel of main jobs view"
+- **Solution Implemented**: Enhanced JobWizardView.axaml with sophisticated expandable sections matching JobInfoDisplayView pattern
+
+#### Technical Implementation
+- **Styling System**: Added complete PropertyTable, PropertyHeader, PropertyRow styling classes from JobInfoDisplayView
+- **Expandable Sections**: All profile sections now use Expander controls with FontAwesome icons and descriptive headers
+- **Serial Port Configuration**: Expandable section with Basic Settings and Port Configuration subsections showing comprehensive serial parameters
+- **Socat Network Bridge**: Expandable section with TCP Configuration details including host, port, and connection information
+- **Power Supply Profile**: Expandable section with Basic Settings and Modbus TCP Configuration showing host, port, device ID
+- **Data Binding**: All computed properties (SerialVersion, SocatTcpHost, PowerHost, PowerPort, PowerDeviceId) properly bound and displaying
+- **Visual Consistency**: Professional styling with proper borders, spacing, color scheme, and scrollable content areas
+
+#### Quality Validation
+- **Build Success**: Clean compilation with no errors or warnings
+- **Application Testing**: Successfully ran application to verify new expandable UI functionality
+- **User Requirements**: Advanced settings, options, and flags now displayed in expandable groups as requested
+- **Pattern Compliance**: Follows established JobInfoDisplayView design pattern for consistency across the application
+- **Specification 005-wizard-step-details**: ✅ **COMPLETED** - Both user stories fully implemented and validated
 
 ### ✅ Major Accomplishments This Session
 
@@ -65,23 +87,28 @@
   - Implemented job dialog stubs with proper error handling and logging
   - Foundation ready for complete job dialog implementation
 
-### Immediate Focus (Reopened Scope)
+### Immediate Focus (Updated Priorities)
 
-1. Job Creator wizard experience (main content area, not dialog)
-  - Steps: Serial → Socat → Power Supply → Memory Region → Timing/Output → Review
-  - Each step uses a ComboBox to choose a profile and shows read-only details below
-  - Back/Next/Finish navigation with validation gating
-2. Jobs Management details panel refactor
-  - Group information into Basic Info, Profiles, Timing, Paths, Status
-  - Improve visual layout per red-highlighted areas in screenshots
-3. Task Manager lists polish
-  - Header/column alignment and counts per screenshots
-4. MemoryRegionProfile
-  - Ensure model + service (StandardProfileManager pattern)
-  - Keep Job.MemoryRegionProfileId and include in validators
-5. Wiring and configuration hygiene
-  - ProfilesPath now at `src/resources/JobProfiles/profiles.json`
-  - PLC client currently uses a stub (`PlcClientStub`) via DI factory until real client is provided
+1. **Validation Gating for Job Creator** (Subtask 4.3)
+   - Add Next/Finish button validation to prevent progression with invalid configurations
+   - Implement real-time validation feedback for each wizard step
+   - Ensure users cannot proceed without proper profile selections
+
+2. **MemoryRegionProfile Integration** (Subtasks 1.1-1.3)
+   - Create MemoryRegionProfile model implementing IProfileBase
+   - Add IMemoryRegionProfileService with StandardProfileManager pattern
+   - Update Job model to include MemoryRegionProfileId and validation
+
+3. **Jobs Management details panel refactor** (Subtask 2.1)
+   - Group information into Basic Info, Profiles, Timing, Paths, Status
+   - Improve visual layout per red-highlighted areas in screenshots
+
+4. **Task Manager lists polish** (Subtask 2.2)
+   - Header/column alignment and counts per screenshots
+
+5. **Configuration and wiring hygiene**
+   - ProfilesPath: `src/resources/JobProfiles/profiles.json`
+   - PLC client: `PlcClientStub` via DI factory until real client provided
 
 #### Integration Achievements
 - ✅ **Clean Architecture Maintained**: Proper dependency flow with Domain → Application → Infrastructure

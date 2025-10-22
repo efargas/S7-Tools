@@ -21,12 +21,12 @@ public class BooleanToColorConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         // Support being used for both Color and IBrush targets.
-        var boolValue = value is bool b && b;
-        var colorString = "Gray";
+        bool boolValue = value is bool b && b;
+        string colorString = "Gray";
 
         if (parameter is string paramString)
         {
-            var colors = paramString.Split('|', 2);
+            string[] colors = paramString.Split('|', 2);
             if (colors.Length == 2)
             {
                 colorString = boolValue ? colors[0] : colors[1];

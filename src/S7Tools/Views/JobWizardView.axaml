@@ -3,6 +3,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:views="clr-namespace:S7Tools.Views.Profiles"
              xmlns:converters="using:S7Tools.Converters"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
@@ -17,6 +19,172 @@
     <converters:IntLessOrEqualZeroToBoolConverter x:Key="IntLessOrEqualZeroToBoolConverter" />
     <converters:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
+
+  <UserControl.Styles>
+    <!-- Property table styling for better appearance -->
+    <Style Selector="Border.PropertyTable">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Margin" Value="0,4" />
+    </Style>
+
+    <!-- Property header styling -->
+    <Style Selector="Border.PropertyHeader">
+      <Setter Property="Background" Value="#2D2D30" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyHeaderText">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <!-- Property row styling with alternating background -->
+    <Style Selector="Border.PropertyRow">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="MinHeight" Value="24" />
+    </Style>
+
+    <Style Selector="Border.PropertyRow:nth-child(even)">
+      <Setter Property="Background" Value="#2A2A2B" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyName">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock.PropertyValue">
+      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Profile section styling -->
+    <Style Selector="Border.ProfileSection">
+      <Setter Property="Background" Value="#2D2D2D" />
+      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Margin" Value="0,8" />
+    </Style>
+
+    <!-- Expander styling -->
+    <Style Selector="Border.ProfileSection Expander Grid">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander Grid icons|Icon">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander Grid TextBlock">
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Border.ProfileSection Expander ToggleButton ContentPresenter">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- Complete Expander template override -->
+    <Style Selector="Expander">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="{TemplateBinding CornerRadius}">
+            <DockPanel>
+              <ToggleButton x:Name="PART_toggle"
+                            DockPanel.Dock="Top"
+                            HorizontalAlignment="Stretch"
+                            Content="{TemplateBinding Header}"
+                            IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}" />
+              <Panel>
+                <Border x:Name="PART_content"
+                        MaxHeight="0">
+                  <Border.Transitions>
+                    <Transitions>
+                      <DoubleTransition Property="MaxHeight" Duration="0:0:0.2" Easing="CubicEaseOut"/>
+                    </Transitions>
+                  </Border.Transitions>
+                  <ContentPresenter x:Name="PART_contentPresenter"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}" />
+                </Border>
+              </Panel>
+            </DockPanel>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+
+    <Style Selector="Expander[IsExpanded=true] /template/ Border#PART_content">
+      <Setter Property="MaxHeight" Value="2000" />
+    </Style>
+
+    <Style Selector="TextBlock.ExpanderHeader">
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="8,0,0,0" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="icons|Icon.ExpanderIcon">
+      <Setter Property="Width" Value="16" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="Margin" Value="8,0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+    </Style>
+
+    <Style Selector="icons|Icon.ExpanderArrow">
+      <Setter Property="Value" Value="fa-solid fa-chevron-right" />
+      <Setter Property="Margin" Value="12,0,0,0" />
+    </Style>
+
+    <!-- Expander animations -->
+    <Style Selector="Expander ToggleButton:checked icons|Icon.ExpanderArrow">
+      <Setter Property="Value" Value="fa-solid fa-chevron-down" />
+    </Style>
+
+    <!-- More specific overrides for our expander headers -->
+    <Style Selector="Expander ToggleButton">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:pointerover">
+      <Setter Property="Background" Value="#404040" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:pressed">
+      <Setter Property="Background" Value="#505050" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:checked">
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="Expander ToggleButton:checked:pointerover">
+      <Setter Property="Background" Value="#404040" />
+    </Style>
+  </UserControl.Styles>
 
   <ScrollViewer>
     <StackPanel Margin="20" Spacing="12">
@@ -62,20 +230,30 @@
           </Grid>
 
           <!-- Serial Profile Details -->
-          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Serial Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
-              <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSerial.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Baud Rate:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSerial.Configuration.BaudRate, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Flags:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSerial.Flags, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-              </Grid>
-            </StackPanel>
+          <Border Classes="ProfileSection"
+                  IsVisible="{Binding SelectedSerial, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Expander IsExpanded="True">
+              <Expander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-plug" />
+                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SERIAL PORT CONFIGURATION" />
+                </Grid>
+              </Expander.Header>
+              <ContentControl Content="{Binding SelectedSerial}">
+                <ContentControl.DataTemplates>
+                  <DataTemplate DataType="models:SerialPortProfile">
+                    <views:SerialProfileDetailView />
+                  </DataTemplate>
+                </ContentControl.DataTemplates>
+              </ContentControl>
+            </Expander>
           </Border>
-
           <!-- Port Discovery Section -->
           <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
             <StackPanel Spacing="12">
@@ -86,20 +264,10 @@
                   <ColumnDefinition Width="*" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0"
-                           Text="Port Discovery"
-                           FontSize="16"
-                           FontWeight="SemiBold"
-                           Foreground="#CCCCCC"
-                           VerticalAlignment="Center" />
-
-                <Button Grid.Column="2"
-                        Background="#0E639C"
-                        Foreground="White"
-                        BorderThickness="0"
-                        Padding="12,8"
-                        Command="{Binding ScanPortsCommand}"
+                <TextBlock Grid.Column="0" Text="Port Discovery" FontSize="16" FontWeight="SemiBold"
+                           Foreground="#CCCCCC" VerticalAlignment="Center" />
+                <Button Grid.Column="2" Background="#0E639C" Foreground="White" BorderThickness="0"
+                        Padding="12,8" Command="{Binding ScanPortsCommand}"
                         IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <icons:Icon Value="fa-solid fa-search" Width="16" Height="16" />
@@ -107,48 +275,38 @@
                   </StackPanel>
                 </Button>
               </Grid>
-
               <!-- Row 2: The wrap list with the scanned ports -->
               <Grid Background="Transparent">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                  <ListBox x:Name="PortsListBox"
-                           Height="160"
-                           ItemsSource="{Binding AvailablePorts}"
-                           SelectedItem="{Binding SelectedPort}"
-                           Background="#3C3C3C"
-                           Foreground="#CCCCCC"
-                           BorderBrush="#464647"
-                           ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                           ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                           Focusable="False">
+                  <ListBox x:Name="PortsListBox" Height="160" ItemsSource="{Binding AvailablePorts}"
+                           SelectedItem="{Binding SelectedPort}" Background="#3C3C3C" Foreground="#CCCCCC"
+                           BorderBrush="#464647" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                           ScrollViewer.VerticalScrollBarVisibility="Disabled" Focusable="False">
                     <!-- Use a WrapPanel so ports fill top->down then next column with proper spacing -->
                     <ListBox.ItemsPanel>
                       <ItemsPanelTemplate>
                         <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
                       </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
-
                     <ListBox.ItemTemplate>
                       <DataTemplate DataType="sys:String">
                         <!-- No rounded corners, tighter width, proper spacing -->
-                        <Border Background="#2D2D2D"
-                                CornerRadius="0"
-                                Padding="8,6"
-                                Margin="6,3"
-                                Width="130"
+                        <Border Background="#2D2D2D" CornerRadius="0" Padding="8,6" Margin="6,3" Width="130"
                                 Height="26">
                           <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#0E639C" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontSize="11" />
+                            <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#0E639C"
+                                        VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" FontSize="11" />
                           </StackPanel>
                         </Border>
                       </DataTemplate>
                     </ListBox.ItemTemplate>
                   </ListBox>
                 </ScrollViewer>
-
                 <!-- Overlay: semi-transparent backdrop with a centered ProgressRing when scanning -->
-                <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}"
+                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                   <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                     <fa:ProgressRing Width="64" Height="64" IsActive="{Binding IsScanning}" />
                   </Grid>
@@ -158,77 +316,89 @@
           </Border>
         </StackPanel>
       </Border>
-
       <!-- Step 2: Socat Profile Selection -->
       <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
               IsVisible="{Binding IsSocatStep}">
         <StackPanel Spacing="12">
           <TextBlock Text="Step 2: Socat Network Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
-
           <!-- Socat Profile Selection -->
           <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
             <TextBlock Grid.Column="0" Text="Socat Profile:" Foreground="#CCCCCC" VerticalAlignment="Center" />
             <ComboBox Grid.Column="1" ItemsSource="{Binding SocatProfiles}" SelectedItem="{Binding SelectedSocat}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
-                  <TextBlock Text="{Binding Name}"/>
+                  <TextBlock Text="{Binding Name}" />
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
           </Grid>
-
           <!-- Socat Profile Details -->
-          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Socat Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedSocat.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="TCP Port:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedSocat.Configuration.TcpPort, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="TCP Host:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedSocat.Configuration.TcpHost, FallbackValue='All Interfaces'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Flags:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSocat.Flags, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-              </Grid>
-            </StackPanel>
+          <Border Classes="ProfileSection"
+                  IsVisible="{Binding SelectedSocat, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Expander IsExpanded="True">
+              <Expander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-network-wired" />
+                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SOCAT NETWORK BRIDGE" />
+                </Grid>
+              </Expander.Header>
+              <ContentControl Content="{Binding SelectedSocat}">
+                <ContentControl.DataTemplates>
+                  <DataTemplate DataType="models:SocatProfile">
+                    <views:SocatProfileDetailView />
+                  </DataTemplate>
+                </ContentControl.DataTemplates>
+              </ContentControl>
+            </Expander>
           </Border>
         </StackPanel>
       </Border>
-
       <!-- Step 3: Power Supply Profile Selection -->
       <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
               IsVisible="{Binding IsPowerStep}">
         <StackPanel Spacing="12">
           <TextBlock Text="Step 3: Power Supply Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
-
           <!-- Power Supply Profile Selection -->
           <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
             <TextBlock Grid.Column="0" Text="Power Profile:" Foreground="#CCCCCC" VerticalAlignment="Center" />
             <ComboBox Grid.Column="1" ItemsSource="{Binding PowerProfiles}" SelectedItem="{Binding SelectedPower}">
               <ComboBox.ItemTemplate>
                 <DataTemplate>
-                  <TextBlock Text="{Binding Name}"/>
+                  <TextBlock Text="{Binding Name}" />
                 </DataTemplate>
               </ComboBox.ItemTemplate>
             </ComboBox>
           </Grid>
-
           <!-- Power Supply Profile Details -->
-          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Power Supply Profile Details" FontWeight="SemiBold" Foreground="#CCCCCC" />
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPower.Name, FallbackValue='(none selected)'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Host:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPowerHost, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Port:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPowerPort, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Device ID:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedPowerDeviceId, FallbackValue='N/A'}" Foreground="#CCCCCC" />
-              </Grid>
-            </StackPanel>
+          <Border Classes="ProfileSection"
+                  IsVisible="{Binding SelectedPower, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Expander IsExpanded="True">
+              <Expander.Header>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-bolt" />
+                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="POWER SUPPLY CONTROL" />
+                </Grid>
+              </Expander.Header>
+              <ContentControl Content="{Binding SelectedPower}">
+                <ContentControl.DataTemplates>
+                  <DataTemplate DataType="models:PowerSupplyProfile">
+                    <views:PowerSupplyProfileDetailView />
+                  </DataTemplate>
+                </ContentControl.DataTemplates>
+              </ContentControl>
+            </Expander>
           </Border>
         </StackPanel>
       </Border>

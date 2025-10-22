@@ -20,7 +20,7 @@ public class ValidationService : IValidationService
     /// <returns>A validation result indicating success or failure with error details.</returns>
     public ValidationResult Validate<T>(T instance)
     {
-        var validator = GetValidator<T>();
+        IValidator<T>? validator = GetValidator<T>();
         return validator?.Validate(instance!) ?? ValidationResult.Success();
     }
 
@@ -33,7 +33,7 @@ public class ValidationService : IValidationService
     /// <returns>A task that represents the asynchronous validation operation containing the validation result.</returns>
     public async Task<ValidationResult> ValidateAsync<T>(T instance, CancellationToken cancellationToken = default)
     {
-        var validator = GetValidator<T>();
+        IValidator<T>? validator = GetValidator<T>();
         return validator != null
             ? await validator.ValidateAsync(instance!, cancellationToken).ConfigureAwait(false)
             : ValidationResult.Success();

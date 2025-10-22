@@ -71,12 +71,13 @@ public partial class JobsMainContentView : UserControl, IDisposable
         MainGrid.ColumnDefinitions[1].Width = new GridLength(4, GridUnitType.Pixel); // Show splitter (4px)
 
         // Restore the last panel width (with constraints enforcement)
-        var targetWidth = Math.Max(300, Math.Min(600, _lastPanelWidth));
+        double targetWidth = Math.Max(300, Math.Min(600, _lastPanelWidth));
         MainGrid.ColumnDefinitions[2].Width = new GridLength(targetWidth, GridUnitType.Pixel);
-    }    private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
+    }
+    private void OnCloseJobInfoPanelClick(object? sender, RoutedEventArgs e)
     {
         // Store the current panel width before closing (for restoration)
-        var currentWidth = MainGrid.ColumnDefinitions[2].Width;
+        GridLength currentWidth = MainGrid.ColumnDefinitions[2].Width;
         if (currentWidth.IsAbsolute)
         {
             _lastPanelWidth = currentWidth.Value;

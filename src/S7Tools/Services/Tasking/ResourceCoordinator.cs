@@ -17,7 +17,7 @@ public sealed class ResourceCoordinator : IResourceCoordinator
     {
         ArgumentNullException.ThrowIfNull(keys);
 
-        var keysArray = keys.ToArray();
+        ResourceKey[] keysArray = keys.ToArray();
 
         lock (_syncRoot)
         {
@@ -28,7 +28,7 @@ public sealed class ResourceCoordinator : IResourceCoordinator
             }
 
             // Acquire all resources
-            foreach (var key in keysArray)
+            foreach (ResourceKey key in keysArray)
             {
                 _locks.Add(key);
             }
@@ -44,7 +44,7 @@ public sealed class ResourceCoordinator : IResourceCoordinator
 
         lock (_syncRoot)
         {
-            foreach (var key in keys)
+            foreach (ResourceKey key in keys)
             {
                 _locks.Remove(key);
             }

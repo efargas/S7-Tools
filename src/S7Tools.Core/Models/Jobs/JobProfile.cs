@@ -455,7 +455,7 @@ public class JobProfile : IProfileBase
             OutputPath
         );
 
-        var resources = GenerateResourceKeys();
+        IReadOnlyList<ResourceKey> resources = GenerateResourceKeys();
 
         return new Job(
             Guid.NewGuid(),

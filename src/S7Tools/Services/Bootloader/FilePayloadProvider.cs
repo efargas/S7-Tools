@@ -27,7 +27,7 @@ public sealed class FilePayloadProvider : IPayloadProvider
     {
         ArgumentNullException.ThrowIfNull(basePath);
 
-        var stagerPath = Path.Combine(basePath, StagerFileName);
+        string stagerPath = Path.Combine(basePath, StagerFileName);
 
         _logger.LogDebug("Loading stager payload from {Path}", stagerPath);
 
@@ -37,7 +37,7 @@ public sealed class FilePayloadProvider : IPayloadProvider
             throw new FileNotFoundException($"Stager payload not found: {stagerPath}", stagerPath);
         }
 
-        var data = await File.ReadAllBytesAsync(stagerPath, cancellationToken)
+        byte[] data = await File.ReadAllBytesAsync(stagerPath, cancellationToken)
             .ConfigureAwait(false);
 
         _logger.LogInformation("Loaded stager payload: {ByteCount} bytes from {Path}",
@@ -51,7 +51,7 @@ public sealed class FilePayloadProvider : IPayloadProvider
     {
         ArgumentNullException.ThrowIfNull(basePath);
 
-        var dumperPath = Path.Combine(basePath, MemoryDumperFileName);
+        string dumperPath = Path.Combine(basePath, MemoryDumperFileName);
 
         _logger.LogDebug("Loading memory dumper payload from {Path}", dumperPath);
 
@@ -61,7 +61,7 @@ public sealed class FilePayloadProvider : IPayloadProvider
             throw new FileNotFoundException($"Memory dumper payload not found: {dumperPath}", dumperPath);
         }
 
-        var data = await File.ReadAllBytesAsync(dumperPath, cancellationToken)
+        byte[] data = await File.ReadAllBytesAsync(dumperPath, cancellationToken)
             .ConfigureAwait(false);
 
         _logger.LogInformation("Loaded memory dumper payload: {ByteCount} bytes from {Path}",

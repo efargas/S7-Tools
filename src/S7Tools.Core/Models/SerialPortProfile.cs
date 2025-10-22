@@ -271,7 +271,7 @@ public class SerialPortProfile : IProfileBase
     /// <returns>A new SerialPortProfile instance with the specified name.</returns>
     public SerialPortProfile Duplicate(string newName)
     {
-        var duplicate = Clone();
+        SerialPortProfile duplicate = Clone();
         duplicate.Name = newName;
         duplicate.Description = $"Copy of {Name}";
         return duplicate;
@@ -312,7 +312,7 @@ public class SerialPortProfile : IProfileBase
         }
         else
         {
-            var configErrors = Configuration.Validate();
+            List<string> configErrors = Configuration.Validate();
             errors.AddRange(configErrors);
         }
 
@@ -351,7 +351,7 @@ public class SerialPortProfile : IProfileBase
     /// <returns>A string summarizing the profile's configuration.</returns>
     public string GetSummary()
     {
-        var summary = $"{Name}: {Configuration.BaudRate} baud, {Configuration.CharacterSize} bits";
+        string summary = $"{Name}: {Configuration.BaudRate} baud, {Configuration.CharacterSize} bits";
 
         if (IsDefault)
         {

@@ -36,12 +36,12 @@ public abstract class BaseCommandHandler<TCommand> : ICommandHandler<TCommand>
             return CommandResult.Failure(error);
         }
 
-        var commandType = command.GetType().Name;
+        string commandType = command.GetType().Name;
         Logger.LogDebug("Starting execution of command: {CommandType}", commandType);
 
         try
         {
-            var result = await ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
+            CommandResult result = await ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess)
             {
@@ -99,7 +99,7 @@ public abstract class BaseCommandHandler<TCommand> : ICommandHandler<TCommand>
         try
         {
             Logger.LogDebug("Starting operation: {OperationName}", operationName);
-            var result = await operation().ConfigureAwait(false);
+            CommandResult result = await operation().ConfigureAwait(false);
 
             if (result.IsSuccess)
             {
@@ -153,12 +153,12 @@ public abstract class BaseCommandHandler<TCommand, TResult> : ICommandHandler<TC
             return CommandResult<TResult>.Failure(error);
         }
 
-        var commandType = command.GetType().Name;
+        string commandType = command.GetType().Name;
         Logger.LogDebug("Starting execution of command: {CommandType}", commandType);
 
         try
         {
-            var result = await ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
+            CommandResult<TResult> result = await ExecuteAsync(command, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess)
             {
@@ -205,7 +205,7 @@ public abstract class BaseCommandHandler<TCommand, TResult> : ICommandHandler<TC
         try
         {
             Logger.LogDebug("Starting operation: {OperationName}", operationName);
-            var result = await operation().ConfigureAwait(false);
+            CommandResult<TResult> result = await operation().ConfigureAwait(false);
 
             if (result.IsSuccess)
             {

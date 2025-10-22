@@ -285,7 +285,7 @@ public class SocatSettings
     /// <returns>A SocatSettings instance with development-friendly values.</returns>
     public static SocatSettings CreateDevelopmentSettings()
     {
-        var settings = CreateDefault();
+        SocatSettings settings = CreateDefault();
         settings.AutoStartOnApply = true; // Auto-start for faster testing
         settings.ConfirmBeforeStart = false; // Skip confirmations for faster testing
         settings.ProcessStartupTimeoutSeconds = 5; // Shorter timeout for development
@@ -300,7 +300,7 @@ public class SocatSettings
     /// <returns>A SocatSettings instance with production-ready values.</returns>
     public static SocatSettings CreateProductionSettings()
     {
-        var settings = CreateDefault();
+        SocatSettings settings = CreateDefault();
         settings.AutoRestartOnFailure = true; // Enable auto-restart in production
         settings.MaxRestartAttempts = 5; // More restart attempts
         settings.RestartDelaySeconds = 10; // Longer delay between restarts

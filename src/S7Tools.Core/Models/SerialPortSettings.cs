@@ -249,7 +249,7 @@ public class SerialPortSettings
     /// <returns>A SerialPortSettings instance with development-friendly values.</returns>
     public static SerialPortSettings CreateDevelopmentSettings()
     {
-        var settings = CreateDefault();
+        SerialPortSettings settings = CreateDefault();
         settings.ScanIntervalSeconds = 2; // Faster scanning for development
         settings.PortTestTimeoutMs = 500; // Shorter timeout for faster testing
         settings.ShowPortChangeNotifications = true; // Enable notifications for debugging

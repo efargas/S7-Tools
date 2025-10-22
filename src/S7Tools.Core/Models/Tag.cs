@@ -81,14 +81,14 @@ public sealed record Tag(
         }
 
         // Create PLC address
-        var addressResult = PlcAddress.Create(address);
+        Result<PlcAddress> addressResult = PlcAddress.Create(address);
         if (addressResult.IsFailure)
         {
             return Result<Tag>.Failure($"Invalid address: {addressResult.Error}");
         }
 
         // Create tag value
-        var tagValueResult = dataType == PlcDataType.Unknown
+        Result<TagValue> tagValueResult = dataType == PlcDataType.Unknown
             ? TagValue.Create(value)
             : TagValue.Create(value, dataType);
 
@@ -118,8 +118,8 @@ public sealed record Tag(
     /// <returns>A new Tag instance with the updated value.</returns>
     public Tag WithValue(object? newValue, TagQuality quality = TagQuality.Good, DateTimeOffset? timestamp = null)
     {
-        var tagValueResult = TagValue.Create(newValue, DataType, quality);
-        var tagValue = tagValueResult.IsSuccess
+        Result<TagValue> tagValueResult = TagValue.Create(newValue, DataType, quality);
+        TagValue tagValue = tagValueResult.IsSuccess
             ? tagValueResult.Value
             : new TagValue(newValue, PlcDataType.Unknown, TagQuality.Bad, timestamp);
 

@@ -19,10 +19,10 @@ public class BooleanToStringConverter : IValueConverter
     /// <returns>A string based on the boolean value.</returns>
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        var boolValue = value is bool b && b;
+        bool boolValue = value is bool b && b;
         if (parameter is string paramString)
         {
-            var parts = paramString.Split('|', 2);
+            string[] parts = paramString.Split('|', 2);
             if (parts.Length == 2)
             {
                 return boolValue ? parts[0] : parts[1];

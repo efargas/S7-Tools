@@ -299,7 +299,7 @@ public class SocatProfile : IProfileBase
     /// <returns>A new SocatProfile instance with the specified name.</returns>
     public SocatProfile Duplicate(string newName)
     {
-        var duplicate = Clone();
+        SocatProfile duplicate = Clone();
         duplicate.Name = newName;
         duplicate.Description = $"Copy of {Name}";
         return duplicate;
@@ -340,7 +340,7 @@ public class SocatProfile : IProfileBase
         }
         else
         {
-            var configErrors = Configuration.Validate();
+            List<string> configErrors = Configuration.Validate();
             errors.AddRange(configErrors);
         }
 
@@ -379,7 +379,7 @@ public class SocatProfile : IProfileBase
     /// <returns>A string summarizing the profile's configuration.</returns>
     public string GetSummary()
     {
-        var summary = $"{Name}: TCP port {Configuration.TcpPort}, Block size {Configuration.BlockSize}";
+        string summary = $"{Name}: TCP port {Configuration.TcpPort}, Block size {Configuration.BlockSize}";
 
         if (Configuration.Verbose)
         {

@@ -21,7 +21,7 @@ public class GridLengthToDoubleConverter : IValueConverter
     {
         if (value is double height && parameter is string percentage)
         {
-            if (double.TryParse(percentage, NumberStyles.Any, CultureInfo.InvariantCulture, out var percent))
+            if (double.TryParse(percentage, NumberStyles.Any, CultureInfo.InvariantCulture, out double percent))
             {
                 return height * percent;
             }

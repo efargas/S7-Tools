@@ -109,18 +109,18 @@ public sealed class JobScheduler : IJobScheduler
             // Create progress reporter
             var progress = new Progress<(string stage, double percent)>(p =>
             {
-                var message = $"{p.stage}: {p.percent:P0}";
+                string message = $"{p.stage}: {p.percent:P0}";
                 JobStateChanged?.Invoke(job.Id, JobState.Running, message);
                 _logger.LogDebug("Job {JobId} progress: {Stage} - {Percent:P0}",
                     job.Id, p.stage, p.percent);
             });
 
             // Execute the dump operation
-            var dumpData = await _bootloader.DumpAsync(job.Profiles, progress, CancellationToken.None)
+            byte[] dumpData = await _bootloader.DumpAsync(job.Profiles, progress, CancellationToken.None)
                 .ConfigureAwait(false);
 
             // Save dump to file
-            var outputFile = Path.Combine(job.Profiles.OutputPath, $"dump-{job.Id}.bin");
+            string outputFile = Path.Combine(job.Profiles.OutputPath, $"dump-{job.Id}.bin");
             Directory.CreateDirectory(job.Profiles.OutputPath);
             await File.WriteAllBytesAsync(outputFile, dumpData, CancellationToken.None)
                 .ConfigureAwait(false);

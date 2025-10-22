@@ -50,7 +50,7 @@ public readonly record struct TagValue
     /// <returns>A Result containing the TagValue or an error.</returns>
     public static Result<TagValue> Create(object? value, TagQuality quality = TagQuality.Good)
     {
-        var dataType = DetectDataType(value);
+        PlcDataType dataType = DetectDataType(value);
         if (dataType == PlcDataType.Unknown)
         {
             return Result<TagValue>.Failure($"Unsupported data type for value: {value?.GetType().Name ?? "null"}");
@@ -68,7 +68,7 @@ public readonly record struct TagValue
     /// <returns>A Result containing the TagValue or an error.</returns>
     public static Result<TagValue> Create(object? value, PlcDataType dataType, TagQuality quality = TagQuality.Good)
     {
-        var validationResult = ValidateValueForType(value, dataType);
+        Result validationResult = ValidateValueForType(value, dataType);
         if (validationResult.IsFailure)
         {
             return Result<TagValue>.Failure(validationResult.Error);
@@ -99,7 +99,7 @@ public readonly record struct TagValue
             }
 
             // Handle common conversions
-            var converted = Convert.ChangeType(RawValue, typeof(T), CultureInfo.InvariantCulture);
+            object converted = Convert.ChangeType(RawValue, typeof(T), CultureInfo.InvariantCulture);
             return Result<T>.Success((T)converted);
         }
         catch (Exception ex)
@@ -184,14 +184,14 @@ public readonly record struct TagValue
             return Result.Success(); // Null is valid for all types
         }
 
-        var detectedType = DetectDataType(value);
+        PlcDataType detectedType = DetectDataType(value);
         if (detectedType == dataType || detectedType == PlcDataType.Unknown)
         {
             return Result.Success();
         }
 
         // Allow compatible conversions
-        var isCompatible = (dataType, detectedType) switch
+        bool isCompatible = (dataType, detectedType) switch
         {
             (PlcDataType.String, _) => true, // Any type can be converted to string
             (PlcDataType.Real, PlcDataType.Int or PlcDataType.DInt or PlcDataType.Byte) => true,

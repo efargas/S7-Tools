@@ -366,7 +366,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                     PortName = portName,
                     DisplayName = GetPortDisplayName(portName),
                     PortType = GetPortType(portName),
-                    IsAccessible = CheckAccessibility ? await _portService.IsPortAccessibleAsync(portName, 1000, cancellationToken) : true,
+                    IsAccessible = !CheckAccessibility || await _portService.IsPortAccessibleAsync(portName, 1000, cancellationToken),
                     LastChecked = DateTime.Now
                 };
 

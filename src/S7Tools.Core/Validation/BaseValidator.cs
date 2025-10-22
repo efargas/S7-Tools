@@ -51,11 +51,11 @@ public abstract class BaseValidator<T> : IValidator<T>
 
         Logger.LogDebug("Starting validation for {Type}", typeof(T).Name);
 
-        foreach (var rule in Rules)
+        foreach (ValidationRule<T> rule in Rules)
         {
             try
             {
-                var result = rule.Validate(instance);
+                ValidationResult result = rule.Validate(instance);
                 if (!result.IsValid)
                 {
                     errors.AddRange(result.Errors);
@@ -68,7 +68,7 @@ public abstract class BaseValidator<T> : IValidator<T>
             }
         }
 
-        var isValid = errors.Count == 0;
+        bool isValid = errors.Count == 0;
         Logger.LogDebug("Validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}",
             typeof(T).Name, isValid, errors.Count);
 
@@ -88,13 +88,13 @@ public abstract class BaseValidator<T> : IValidator<T>
 
         Logger.LogDebug("Starting async validation for {Type}", typeof(T).Name);
 
-        foreach (var rule in Rules)
+        foreach (ValidationRule<T> rule in Rules)
         {
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var result = await rule.ValidateAsync(instance, cancellationToken).ConfigureAwait(false);
+                ValidationResult result = await rule.ValidateAsync(instance, cancellationToken).ConfigureAwait(false);
                 if (!result.IsValid)
                 {
                     errors.AddRange(result.Errors);
@@ -112,7 +112,7 @@ public abstract class BaseValidator<T> : IValidator<T>
             }
         }
 
-        var isValid = errors.Count == 0;
+        bool isValid = errors.Count == 0;
         Logger.LogDebug("Async validation completed for {Type}. Valid: {IsValid}, Errors: {ErrorCount}",
             typeof(T).Name, isValid, errors.Count);
 
@@ -260,7 +260,7 @@ public class ValidationRule<T>
     {
         if (_syncPredicate != null)
         {
-            var isValid = _syncPredicate(instance);
+            bool isValid = _syncPredicate(instance);
             return isValid ? ValidationResult.Success() :
                 ValidationResult.Failure(PropertyName, ErrorMessage, ErrorCode);
         }
@@ -268,8 +268,8 @@ public class ValidationRule<T>
         if (_asyncPredicate != null)
         {
             // For sync validation, we'll run the async predicate synchronously
-            var task = _asyncPredicate(instance, CancellationToken.None);
-            var isValid = task.GetAwaiter().GetResult();
+            Task<bool> task = _asyncPredicate(instance, CancellationToken.None);
+            bool isValid = task.GetAwaiter().GetResult();
             return isValid ? ValidationResult.Success() :
                 ValidationResult.Failure(PropertyName, ErrorMessage, ErrorCode);
         }
@@ -287,14 +287,14 @@ public class ValidationRule<T>
     {
         if (_asyncPredicate != null)
         {
-            var isValid = await _asyncPredicate(instance, cancellationToken).ConfigureAwait(false);
+            bool isValid = await _asyncPredicate(instance, cancellationToken).ConfigureAwait(false);
             return isValid ? ValidationResult.Success() :
                 ValidationResult.Failure(PropertyName, ErrorMessage, ErrorCode);
         }
 
         if (_syncPredicate != null)
         {
-            var isValid = _syncPredicate(instance);
+            bool isValid = _syncPredicate(instance);
             return isValid ? ValidationResult.Success() :
                 ValidationResult.Failure(PropertyName, ErrorMessage, ErrorCode);
         }

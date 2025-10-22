@@ -66,7 +66,7 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
         _profiles.Add(defaultProfile);
 
         // Ensure directory exists
-        var directory = Path.GetDirectoryName(_profilesPath);
+        string? directory = Path.GetDirectoryName(_profilesPath);
         if (!string.IsNullOrEmpty(directory))
         {
             Directory.CreateDirectory(directory);
@@ -81,7 +81,7 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
                 WriteIndented = true
             };
 
-            var json = JsonSerializer.Serialize(_profiles, options);
+            string json = JsonSerializer.Serialize(_profiles, options);
             await File.WriteAllTextAsync(_profilesPath, json, cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Created default socat profile: {ProfileName}", defaultProfile.Name);
@@ -102,7 +102,7 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
     /// </summary>
     private static string GetDefaultProfilesPath()
     {
-        var appDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SocatProfiles");
+        string appDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SocatProfiles");
         Directory.CreateDirectory(appDataPath);
         return Path.Combine(appDataPath, "profiles.json");
     }

@@ -406,7 +406,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             _logger.LogDebug("Showing duplicate input dialog for job profile ID: {SourceProfileId}", request.SourceProfileId);
 
             // Use the input dialog service since the job-specific duplicate dialog is not implemented yet
-            var inputResult = await _dialogService.ShowInputAsync(
+            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 request.Title,
                 "Enter a name for the duplicated job profile:",
                 request.SuggestedName,
@@ -525,7 +525,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             {
                 try
                 {
-                    var wizard = _viewModelFactory.Create<JobWizardViewModel>();
+                    JobWizardViewModel wizard = _viewModelFactory.Create<JobWizardViewModel>();
                     _logger.LogDebug("Successfully created JobWizardViewModel via factory");
 
                     // Subscribe to wizard completion to auto-refresh
@@ -593,7 +593,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             {
                 try
                 {
-                    var wizard = _viewModelFactory.Create<JobWizardViewModel>();
+                    JobWizardViewModel wizard = _viewModelFactory.Create<JobWizardViewModel>();
 
                     // Pre-populate the wizard with selected job data
                     wizard.PreselectJobName = SelectedProfile.Name + " (Copy)";
@@ -943,7 +943,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                var jobToSelect = Profiles.FirstOrDefault(j => j.Id == jobId);
+                JobProfile? jobToSelect = Profiles.FirstOrDefault(j => j.Id == jobId);
                 if (jobToSelect != null)
                 {
                     SelectedProfile = jobToSelect;

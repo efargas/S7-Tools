@@ -1,0 +1,51 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:S7Tools.ViewModels"
+             xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:views="clr-namespace:S7Tools.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="S7Tools.Views.Profiles.SerialProfileDetailView"
+             x:DataType="models:SerialPortProfile">
+  <StackPanel Spacing="10">
+    <TextBlock Text="Serial Profile Details" FontWeight="Bold" FontSize="16"/>
+    <StackPanel Spacing="4">
+      <views:PropertyDisplayItem Label="Name:" Value="{Binding Name}"/>
+      <ContentControl Content="{Binding Configuration}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="models:SerialPortConfiguration">
+            <StackPanel Spacing="4">
+              <views:PropertyDisplayItem Label="Baud Rate:" Value="{Binding BaudRate}"/>
+              <views:PropertyDisplayItem Label="Character Size:" Value="{Binding CharacterSize}"/>
+              <views:PropertyDisplayItem Label="Parity:" Value="{Binding Parity}"/>
+              <views:PropertyDisplayItem Label="Stop Bits:" Value="{Binding StopBits}"/>
+              <views:PropertyDisplayItem Label="Enable Receiver:" Value="{Binding EnableReceiver}"/>
+              <views:PropertyDisplayItem Label="Disable H/W Flow Control:" Value="{Binding DisableHardwareFlowControl}"/>
+              <views:PropertyDisplayItem Label="Parity Enabled:" Value="{Binding ParityEnabled}"/>
+              <views:PropertyDisplayItem Label="Odd Parity:" Value="{Binding OddParity}"/>
+              <views:PropertyDisplayItem Label="Ignore Break:" Value="{Binding IgnoreBreak}"/>
+              <views:PropertyDisplayItem Label="Disable Break Interrupt:" Value="{Binding DisableBreakInterrupt}"/>
+              <views:PropertyDisplayItem Label="Disable Map CR to NL:" Value="{Binding DisableMapCRtoNL}"/>
+              <views:PropertyDisplayItem Label="Disable Bell On Queue Full:" Value="{Binding DisableBellOnQueueFull}"/>
+              <views:PropertyDisplayItem Label="Disable XON/XOFF:" Value="{Binding DisableXonXoffFlowControl}"/>
+              <views:PropertyDisplayItem Label="Disable Output Processing:" Value="{Binding DisableOutputProcessing}"/>
+              <views:PropertyDisplayItem Label="Disable Map NL to CR-NL:" Value="{Binding DisableMapNLtoCRNL}"/>
+              <views:PropertyDisplayItem Label="Disable Canonical Mode:" Value="{Binding DisableCanonicalMode}"/>
+              <views:PropertyDisplayItem Label="Disable Signal Generation:" Value="{Binding DisableSignalGeneration}"/>
+              <views:PropertyDisplayItem Label="Disable Extended Processing:" Value="{Binding DisableExtendedProcessing}"/>
+              <views:PropertyDisplayItem Label="Disable Echo:" Value="{Binding DisableEcho}"/>
+              <views:PropertyDisplayItem Label="Disable Echo Erase:" Value="{Binding DisableEchoErase}"/>
+              <views:PropertyDisplayItem Label="Disable Echo Kill:" Value="{Binding DisableEchoKill}"/>
+              <views:PropertyDisplayItem Label="Disable Echo Control:" Value="{Binding DisableEchoControl}"/>
+              <views:PropertyDisplayItem Label="Disable Echo Kill Erase:" Value="{Binding DisableEchoKillErase}"/>
+              <views:PropertyDisplayItem Label="Raw Mode:" Value="{Binding RawMode}"/>
+            </StackPanel>
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+      <views:PropertyDisplayItem Label="Version:" Value="{Binding Version}"/>
+      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

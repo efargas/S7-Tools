@@ -33,7 +33,7 @@ public class AvaloniaFileDialogService : IFileDialogService
     {
         try
         {
-            var window = _getMainWindow();
+            Window? window = _getMainWindow();
             if (window?.StorageProvider == null)
             {
                 _logger.LogWarning("Cannot show file dialog: Main window or storage provider is null");
@@ -58,11 +58,11 @@ public class AvaloniaFileDialogService : IFileDialogService
                 options.FileTypeFilter = ParseFileTypeFilters(filters);
             }
 
-            var result = await window.StorageProvider.OpenFilePickerAsync(options);
+            IReadOnlyList<IStorageFile> result = await window.StorageProvider.OpenFilePickerAsync(options);
 
             if (result.Count > 0)
             {
-                var selectedFile = result[0].Path.LocalPath;
+                string selectedFile = result[0].Path.LocalPath;
                 _logger.LogDebug("File selected: {FilePath}", selectedFile);
                 return selectedFile;
             }
@@ -82,7 +82,7 @@ public class AvaloniaFileDialogService : IFileDialogService
     {
         try
         {
-            var window = _getMainWindow();
+            Window? window = _getMainWindow();
             if (window?.StorageProvider == null)
             {
                 _logger.LogWarning("Cannot show file dialog: Main window or storage provider is null");
@@ -113,11 +113,11 @@ public class AvaloniaFileDialogService : IFileDialogService
                 options.FileTypeChoices = ParseFileTypeFilters(filters);
             }
 
-            var result = await window.StorageProvider.SaveFilePickerAsync(options);
+            IStorageFile? result = await window.StorageProvider.SaveFilePickerAsync(options);
 
             if (result != null)
             {
-                var selectedFile = result.Path.LocalPath;
+                string selectedFile = result.Path.LocalPath;
                 _logger.LogDebug("Save file selected: {FilePath}", selectedFile);
                 return selectedFile;
             }
@@ -137,7 +137,7 @@ public class AvaloniaFileDialogService : IFileDialogService
     {
         try
         {
-            var window = _getMainWindow();
+            Window? window = _getMainWindow();
             if (window?.StorageProvider == null)
             {
                 _logger.LogWarning("Cannot show folder dialog: Main window or storage provider is null");
@@ -156,11 +156,11 @@ public class AvaloniaFileDialogService : IFileDialogService
                 options.SuggestedStartLocation = await window.StorageProvider.TryGetFolderFromPathAsync(initialDirectory);
             }
 
-            var result = await window.StorageProvider.OpenFolderPickerAsync(options);
+            IReadOnlyList<IStorageFolder> result = await window.StorageProvider.OpenFolderPickerAsync(options);
 
             if (result.Count > 0)
             {
-                var selectedFolder = result[0].Path.LocalPath;
+                string selectedFolder = result[0].Path.LocalPath;
                 _logger.LogDebug("Folder selected: {FolderPath}", selectedFolder);
                 return selectedFolder;
             }
@@ -180,7 +180,7 @@ public class AvaloniaFileDialogService : IFileDialogService
     {
         try
         {
-            var window = _getMainWindow();
+            Window? window = _getMainWindow();
             if (window?.StorageProvider == null)
             {
                 _logger.LogWarning("Cannot show file dialog: Main window or storage provider is null");
@@ -205,11 +205,11 @@ public class AvaloniaFileDialogService : IFileDialogService
                 options.FileTypeFilter = ParseFileTypeFilters(filters);
             }
 
-            var result = await window.StorageProvider.OpenFilePickerAsync(options);
+            IReadOnlyList<IStorageFile> result = await window.StorageProvider.OpenFilePickerAsync(options);
 
             if (result.Count > 0)
             {
-                var selectedFiles = result.Select(f => f.Path.LocalPath).ToArray();
+                string[] selectedFiles = result.Select(f => f.Path.LocalPath).ToArray();
                 _logger.LogDebug("Multiple files selected: {FileCount} files", selectedFiles.Length);
                 return selectedFiles;
             }
@@ -233,18 +233,18 @@ public class AvaloniaFileDialogService : IFileDialogService
     {
         try
         {
-            var filterParts = filters.Split('|');
+            string[] filterParts = filters.Split('|');
             var fileTypes = new List<FilePickerFileType>();
 
             for (int i = 0; i < filterParts.Length; i += 2)
             {
                 if (i + 1 < filterParts.Length)
                 {
-                    var description = filterParts[i];
-                    var pattern = filterParts[i + 1];
+                    string description = filterParts[i];
+                    string pattern = filterParts[i + 1];
 
                     // Extract extensions from pattern (e.g., "*.txt" -> "txt")
-                    var extensions = pattern.Split(';')
+                    string[] extensions = pattern.Split(';')
                         .Select(p => p.Trim().TrimStart('*', '.'))
                         .Where(ext => !string.IsNullOrEmpty(ext) && ext != "*")
                         .ToArray();

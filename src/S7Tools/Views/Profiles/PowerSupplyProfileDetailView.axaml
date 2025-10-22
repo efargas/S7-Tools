@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:S7Tools.ViewModels"
+             xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:views="clr-namespace:S7Tools.Views"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="S7Tools.Views.Profiles.PowerSupplyProfileDetailView"
+             x:DataType="models:PowerSupplyProfile">
+  <StackPanel Spacing="10">
+    <TextBlock Text="Power Supply Profile Details" FontWeight="Bold" FontSize="16"/>
+    <StackPanel Spacing="4">
+      <views:PropertyDisplayItem Label="Name:" Value="{Binding Name}"/>
+      <ContentControl Content="{Binding Configuration}">
+        <ContentControl.DataTemplates>
+          <DataTemplate DataType="models:ModbusTcpConfiguration">
+            <StackPanel Spacing="4">
+              <views:PropertyDisplayItem Label="Host:" Value="{Binding Host}"/>
+              <views:PropertyDisplayItem Label="Port:" Value="{Binding Port}"/>
+              <views:PropertyDisplayItem Label="Device ID:" Value="{Binding DeviceId}"/>
+              <views:PropertyDisplayItem Label="Addressing Mode:" Value="{Binding AddressingMode}"/>
+              <views:PropertyDisplayItem Label="Connection Timeout (ms):" Value="{Binding ConnectionTimeoutMs}"/>
+              <views:PropertyDisplayItem Label="Read Timeout (ms):" Value="{Binding ReadTimeoutMs}"/>
+              <views:PropertyDisplayItem Label="Write Timeout (ms):" Value="{Binding WriteTimeoutMs}"/>
+              <views:PropertyDisplayItem Label="On/Off Coil:" Value="{Binding OnOffCoil}"/>
+              <views:PropertyDisplayItem Label="Enable Auto Reconnect:" Value="{Binding EnableAutoReconnect}"/>
+              <views:PropertyDisplayItem Label="Max Retry Attempts:" Value="{Binding MaxRetryAttempts}"/>
+            </StackPanel>
+          </DataTemplate>
+        </ContentControl.DataTemplates>
+      </ContentControl>
+      <views:PropertyDisplayItem Label="Version:" Value="{Binding Version}"/>
+      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}"/>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

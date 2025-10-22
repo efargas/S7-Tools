@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,31 +38,31 @@ public class CommandDispatcher : ICommandDispatcher
             return CommandResult.Failure(error);
         }
 
-        var commandType = typeof(TCommand);
-        var handlerType = typeof(ICommandHandler<>).MakeGenericType(commandType);
+        Type commandType = typeof(TCommand);
+        Type handlerType = typeof(ICommandHandler<>).MakeGenericType(commandType);
 
         _logger.LogDebug("Dispatching command: {CommandType}", commandType.Name);
 
         try
         {
-            var handler = _serviceProvider.GetService(handlerType);
+            object? handler = _serviceProvider.GetService(handlerType);
             if (handler == null)
             {
-                var error = $"No handler registered for command type: {commandType.Name}";
+                string error = $"No handler registered for command type: {commandType.Name}";
                 _logger.LogError("{Error}", error);
                 return CommandResult.Failure(error);
             }
 
-            var handleMethod = handlerType.GetMethod(nameof(ICommandHandler<TCommand>.HandleAsync));
+            MethodInfo? handleMethod = handlerType.GetMethod(nameof(ICommandHandler<TCommand>.HandleAsync));
             if (handleMethod == null)
             {
-                var error = $"HandleAsync method not found on handler for command type: {commandType.Name}";
+                string error = $"HandleAsync method not found on handler for command type: {commandType.Name}";
                 _logger.LogError("{Error}", error);
                 return CommandResult.Failure(error);
             }
 
             var task = (Task<CommandResult>)handleMethod.Invoke(handler, new object[] { command, cancellationToken })!;
-            var result = await task.ConfigureAwait(false);
+            CommandResult result = await task.ConfigureAwait(false);
 
             _logger.LogDebug("Command dispatched successfully: {CommandType}, Success: {IsSuccess}",
                 commandType.Name, result.IsSuccess);
@@ -86,33 +87,33 @@ public class CommandDispatcher : ICommandDispatcher
             return CommandResult<TResult>.Failure(error);
         }
 
-        var commandType = typeof(TCommand);
-        var resultType = typeof(TResult);
-        var handlerType = typeof(ICommandHandler<,>).MakeGenericType(commandType, resultType);
+        Type commandType = typeof(TCommand);
+        Type resultType = typeof(TResult);
+        Type handlerType = typeof(ICommandHandler<,>).MakeGenericType(commandType, resultType);
 
         _logger.LogDebug("Dispatching command with result: {CommandType} -> {ResultType}",
             commandType.Name, resultType.Name);
 
         try
         {
-            var handler = _serviceProvider.GetService(handlerType);
+            object? handler = _serviceProvider.GetService(handlerType);
             if (handler == null)
             {
-                var error = $"No handler registered for command type: {commandType.Name}";
+                string error = $"No handler registered for command type: {commandType.Name}";
                 _logger.LogError("{Error}", error);
                 return CommandResult<TResult>.Failure(error);
             }
 
-            var handleMethod = handlerType.GetMethod(nameof(ICommandHandler<TCommand, TResult>.HandleAsync));
+            MethodInfo? handleMethod = handlerType.GetMethod(nameof(ICommandHandler<TCommand, TResult>.HandleAsync));
             if (handleMethod == null)
             {
-                var error = $"HandleAsync method not found on handler for command type: {commandType.Name}";
+                string error = $"HandleAsync method not found on handler for command type: {commandType.Name}";
                 _logger.LogError("{Error}", error);
                 return CommandResult<TResult>.Failure(error);
             }
 
             var task = (Task<CommandResult<TResult>>)handleMethod.Invoke(handler, new object[] { command, cancellationToken })!;
-            var result = await task.ConfigureAwait(false);
+            CommandResult<TResult> result = await task.ConfigureAwait(false);
 
             _logger.LogDebug("Command with result dispatched successfully: {CommandType} -> {ResultType}, Success: {IsSuccess}",
                 commandType.Name, resultType.Name, result.IsSuccess);
