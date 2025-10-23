@@ -353,6 +353,128 @@ Correct StringFormat syntax for Avalonia (escape braces):
 
 ---
 
+## 4.5) Settings and Path Management Patterns (October 2025)
+
+### Settings Refresh Pattern
+
+Profile ViewModels refresh their ProfilesPath from settings service, with robust fallback handling:
+
+```csharp
+private void RefreshFromSettings()
+{
+    try
+    {
+        // Get file path setting (e.g., "Resources/Profiles/PowerSupply/PowerSupplyProfiles.json")
+        string profilePath = _settingsService.GetSetting<string>(
+            "profiles.powerSupplyPath", 
+            _pathService.PowerSupplyProfilesPath);
+        
+        // Extract directory from file path
+        string? directoryPath = Path.GetDirectoryName(profilePath);
+        
+        // Resolve path (handles relative/absolute)
+        string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
+        
+        // Validate and set, or use fallback
+        if (!string.IsNullOrEmpty(resolvedPath) && Directory.Exists(resolvedPath))
+        {
+            ProfilesPath = resolvedPath;
+        }
+        else
+        {
+            // Fallback to profile-specific directory
+            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) 
+                ?? _pathService.ProfilesDirectory;
+        }
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Failed to refresh profiles path from settings");
+        // On exception, use safe fallback
+        ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) 
+            ?? _pathService.ProfilesDirectory;
+        // Notify user via UI
+        _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
+        {
+            StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
+        });
+    }
+}
+```
+
+**Key Points**:
+1. Settings store **file paths**, code extracts **directories**
+2. `ResolvePath` handles both relative and absolute paths
+3. Three-tier fallback: resolved → profile-specific → profiles directory
+4. Exception handling prevents crashes with user-friendly feedback
+5. Subscribed to `SettingsChanged` event for dynamic updates
+
+### Settings Schema Convention
+
+**Naming Pattern**: `category.subcategory.setting` (dot notation)
+
+**Standard Categories**:
+- `logging.*` - Logging configuration (logDirectory, exportDirectory, level, enableFileLogging)
+- `ui.*` - UI preferences (autoScrollLogs, showTimestampInLogs, showCategoryInLogs, showLogLevelInLogs)
+- `profiles.*` - Profile paths (serialPath, socatPath, powerSupplyPath)
+- `powerSupply.*` - Power supply specific settings
+
+**Type Conventions**:
+- **Paths**: `string` (file or directory paths)
+- **Flags**: `bool` (UI toggles, feature flags)
+- **Levels**: `string` (enum-like values, e.g., log levels)
+- **Complex objects**: Avoid in settings (use separate configuration files)
+
+### Path Resolution Flow
+
+```mermaid
+graph TD
+    A[Get Setting] --> B{Path in Settings?}
+    B -->|Yes| C[Extract Directory]
+    B -->|No| D[Use Default Path]
+    C --> E[Resolve Path]
+    E --> F{Valid & Exists?}
+    F -->|Yes| G[Use Resolved Path]
+    F -->|No| H[Use Profile Directory]
+    D --> H
+    H --> I[Set ProfilesPath]
+    G --> I
+```
+
+### Event Handler Lifecycle Pattern
+
+Settings-dependent ViewModels subscribe to `SettingsChanged` and clean up in Dispose:
+
+```csharp
+// Constructor - Subscribe with filter
+_settingsChangedHandler = (_, args) =>
+{
+    if (args.Key.StartsWith("powerSupply.") || args.Key.StartsWith("profiles.powerSupply"))
+    {
+        RefreshFromSettings();
+    }
+};
+_settingsService.SettingsChanged += _settingsChangedHandler;
+
+// Dispose - Always unsubscribe
+protected override void Dispose(bool disposing)
+{
+    if (disposing)
+    {
+        if (_settingsChangedHandler != null)
+        {
+            _settingsService.SettingsChanged -= _settingsChangedHandler;
+        }
+        // ... other cleanup
+    }
+    base.Dispose(disposing);
+}
+```
+
+**Critical**: Always unsubscribe event handlers to prevent memory leaks.
+
+---
+
 ## 5) Services, DI, and Error Handling
 
 - Register all services in a central extension (e.g., `ServiceCollectionExtensions`).

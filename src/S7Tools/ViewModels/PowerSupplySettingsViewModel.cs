@@ -444,6 +444,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             // If resolution results in an invalid path, fall back to the PowerSupply profiles directory
             if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
             {
+                // Use the directory containing the PowerSupply profiles file as fallback
                 ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
             }
             else
@@ -458,6 +459,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             {
                 StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
             });
+            // On exception, use the directory containing the PowerSupply profiles file as fallback
             ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
         }
     }

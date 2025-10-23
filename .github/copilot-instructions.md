@@ -181,6 +181,40 @@ Always review Memory Bank files before starting work:
 
 Update Memory Bank after significant architectural changes or when requested with "update memory bank".
 
+## Settings and Configuration Patterns
+
+### Settings Refresh Pattern
+ViewModels that depend on settings implement `RefreshFromSettings()`:
+- Subscribe to `SettingsChanged` event with key filters
+- Extract directories from file path settings  
+- Use `IPathService.ResolvePath()` for relative/absolute path handling
+- Implement three-tier fallback: resolved → profile-specific → default
+- Always unsubscribe in `Dispose()` to prevent memory leaks
+
+### Settings Schema
+Use dot notation for settings keys:
+- `logging.*` - Logging configuration
+- `ui.*` - UI preferences (boolean flags)
+- `profiles.*` - Profile file paths (strings)
+- Types: `string` for paths, `bool` for flags, avoid complex objects
+
+## Code Review Best Practices (October 2025)
+
+### PR Review Response Protocol
+When external code reviews flag issues:
+1. **Verify First**: Check if issue actually exists in current code
+2. **Assess Impact**: Distinguish critical bugs from quality improvements
+3. **Prioritize Wisely**: Fix real issues, document false positives
+4. **Test Thoroughly**: Ensure fixes don't break existing functionality
+5. **Update Docs**: Document patterns and lessons learned
+
+### Recent Quality Improvements
+- ✅ All event handlers properly disposed (verified October 2025)
+- ✅ Path resolution logic clear and maintainable
+- ✅ Settings schema consistent and well-organized
+- ✅ Threading patterns correct (async tests, no blocking operations)
+- ✅ Zero compiler warnings maintained
+
 ## Anti-Patterns to Avoid
 
 - ❌ Registering services in `Program.cs` (use `ServiceCollectionExtensions.cs`)
@@ -189,5 +223,7 @@ Update Memory Bank after significant architectural changes or when requested wit
 - ❌ Blocking UI thread with I/O operations
 - ❌ Generic exceptions (use domain-specific exceptions)
 - ❌ String interpolation in log messages (use structured logging)
+- ❌ `Task.WaitAll()` in tests (use `await Task.WhenAll()`)
+- ❌ Forgetting to unsubscribe event handlers in Dispose
 
 This architecture enables rapid development while maintaining clean separation of concerns and excellent testability.
