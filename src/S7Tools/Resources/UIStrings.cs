@@ -222,6 +222,16 @@ public static class UIStrings
     /// </summary>
     public static string Dialog_ExitTitle => ResourceManager.GetString("Dialog_ExitTitle") ?? "Exit Application";
 
+    /// <summary>
+    /// Gets the title for selecting default log directory dialog.
+    /// </summary>
+    public static string Dialog_SelectDefaultLogDirectory => ResourceManager.GetString("Dialog_SelectDefaultLogDirectory") ?? "Select Default Log Directory";
+
+    /// <summary>
+    /// Gets the title for selecting export directory dialog.
+    /// </summary>
+    public static string Dialog_SelectExportDirectory => ResourceManager.GetString("Dialog_SelectExportDirectory") ?? "Select Export Directory";
+
     #endregion
 
     #region Status Messages

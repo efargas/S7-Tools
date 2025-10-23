@@ -93,7 +93,7 @@ public class JobInfoDisplayViewModelTests
         // Wait for reactive subscription to complete by polling the property
         var maxWait = TimeSpan.FromMilliseconds(1000); // Increased timeout
         var pollingInterval = TimeSpan.FromMilliseconds(10);
-        var startTime = DateTime.UtcNow;
+        DateTime startTime = DateTime.UtcNow;
 
         while (viewModel.SerialProfileDetails == null && DateTime.UtcNow - startTime < maxWait)
         {
@@ -166,7 +166,7 @@ public class JobInfoDisplayViewModelTests
         // Wait for reactive subscription to complete by polling the properties
         var maxWait = TimeSpan.FromMilliseconds(500);
         var pollingInterval = TimeSpan.FromMilliseconds(10);
-        var startTime = DateTime.UtcNow;
+        DateTime startTime = DateTime.UtcNow;
 
         while ((viewModel.SerialProfileDetails == null || viewModel.SocatProfileDetails == null) &&
                DateTime.UtcNow - startTime < maxWait)

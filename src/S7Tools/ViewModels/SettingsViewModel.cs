@@ -94,10 +94,11 @@ public class SettingsViewModel : ViewModelBase
     private LoggingSettingsViewModel CreateLoggingSettingsViewModel()
     {
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
+        S7Tools.Core.Interfaces.Services.IPathService pathService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
         IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         ILogger<LoggingSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
 
-        return new LoggingSettingsViewModel(settingsService, fileDialogService, logger);
+        return new LoggingSettingsViewModel(settingsService, pathService, fileDialogService, logger);
     }
 
     private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()

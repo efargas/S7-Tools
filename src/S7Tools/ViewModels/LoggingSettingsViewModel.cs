@@ -16,6 +16,7 @@ namespace S7Tools.ViewModels;
 public class LoggingSettingsViewModel : ViewModelBase
 {
     private readonly IApplicationSettingsService _settingsService;
+    private readonly IPathService _pathService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<LoggingSettingsViewModel> _logger;
 
@@ -23,14 +24,17 @@ public class LoggingSettingsViewModel : ViewModelBase
     /// Initializes a new instance of the LoggingSettingsViewModel class.
     /// </summary>
     /// <param name="settingsService">The application settings service.</param>
+    /// <param name="pathService">The path service for resolving paths.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="logger">The logger.</param>
     public LoggingSettingsViewModel(
         IApplicationSettingsService settingsService,
+        IPathService pathService,
         IFileDialogService? fileDialogService,
         ILogger<LoggingSettingsViewModel> logger)
     {
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
         _fileDialogService = fileDialogService;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -182,7 +186,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
         try
         {
-            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Default Log Directory", DefaultLogPath);
+            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync(UIStrings.Dialog_SelectDefaultLogDirectory, DefaultLogPath);
             if (!string.IsNullOrEmpty(result))
             {
                 DefaultLogPath = result;
@@ -205,7 +209,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
         try
         {
-            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Export Directory", ExportPath);
+            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync(UIStrings.Dialog_SelectExportDirectory, ExportPath);
             if (!string.IsNullOrEmpty(result))
             {
                 ExportPath = result;
@@ -289,13 +293,16 @@ public class LoggingSettingsViewModel : ViewModelBase
         {
             string settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath) ?? "Resources/AppSettings";
 
-            if (!Directory.Exists(settingsDir))
+            // Resolve the path through the path service instead of using it directly
+            string resolvedPath = _pathService.ResolvePath(settingsDir);
+
+            if (!Directory.Exists(resolvedPath))
             {
-                Directory.CreateDirectory(settingsDir);
+                Directory.CreateDirectory(resolvedPath);
             }
 
-            await PlatformHelper.OpenDirectoryInExplorerAsync(settingsDir);
-            _logger.LogInformation("Opened settings directory in explorer: {Path}", settingsDir);
+            await PlatformHelper.OpenDirectoryInExplorerAsync(resolvedPath);
+            _logger.LogInformation("Opened settings directory in explorer: {Path}", resolvedPath);
         }
         catch (Exception ex)
         {
@@ -314,14 +321,17 @@ public class LoggingSettingsViewModel : ViewModelBase
                 return;
             }
 
-            if (!Directory.Exists(DefaultLogPath))
+            // Resolve the path through the path service instead of using it directly
+            string resolvedPath = _pathService.ResolvePath(DefaultLogPath);
+
+            if (!Directory.Exists(resolvedPath))
             {
                 // Try to create the directory if it doesn't exist
-                Directory.CreateDirectory(DefaultLogPath);
+                Directory.CreateDirectory(resolvedPath);
             }
 
-            await PlatformHelper.OpenDirectoryInExplorerAsync(DefaultLogPath);
-            _logger.LogInformation("Opened default log path in explorer: {Path}", DefaultLogPath);
+            await PlatformHelper.OpenDirectoryInExplorerAsync(resolvedPath);
+            _logger.LogInformation("Opened default log path in explorer: {Path}", resolvedPath);
         }
         catch (Exception ex)
         {
@@ -340,14 +350,17 @@ public class LoggingSettingsViewModel : ViewModelBase
                 return;
             }
 
-            if (!Directory.Exists(ExportPath))
+            // Resolve the path through the path service instead of using it directly
+            string resolvedPath = _pathService.ResolvePath(ExportPath);
+
+            if (!Directory.Exists(resolvedPath))
             {
                 // Try to create the directory if it doesn't exist
-                Directory.CreateDirectory(ExportPath);
+                Directory.CreateDirectory(resolvedPath);
             }
 
-            await PlatformHelper.OpenDirectoryInExplorerAsync(ExportPath);
-            _logger.LogInformation("Opened export path in explorer: {Path}", ExportPath);
+            await PlatformHelper.OpenDirectoryInExplorerAsync(resolvedPath);
+            _logger.LogInformation("Opened export path in explorer: {Path}", resolvedPath);
         }
         catch (Exception ex)
         {
