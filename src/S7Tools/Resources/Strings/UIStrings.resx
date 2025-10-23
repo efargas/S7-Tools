@@ -925,4 +925,160 @@
     <comment>Generic error message, {0} is the operation name</comment>
   </data>
 
+  <!-- Jobs Management Messages -->
+  <data name="Status_NoJobSelectedToEdit" xml:space="preserve">
+    <value>No job selected to edit</value>
+    <comment>Status message when no job is selected for editing</comment>
+  </data>
+  <data name="Status_CreatingJobFromTemplate" xml:space="preserve">
+    <value>Creating job from template...</value>
+    <comment>Status message when creating a job from a template</comment>
+  </data>
+  <data name="Status_NoTemplatesAvailable" xml:space="preserve">
+    <value>No templates available</value>
+    <comment>Status message when no job templates are available</comment>
+  </data>
+  <data name="Status_CreatedJobFromTemplate" xml:space="preserve">
+    <value>Created job '{0}' from template '{1}'</value>
+    <comment>Status message when job is created from template, {0} is new job name, {1} is template name</comment>
+  </data>
+  <data name="Status_ErrorCreatingJobFromTemplate" xml:space="preserve">
+    <value>Error creating job from template: {0}</value>
+    <comment>Error message when creating job from template fails, {0} is error message</comment>
+  </data>
+  <data name="Status_SavingJobAsTemplate" xml:space="preserve">
+    <value>Saving job as template...</value>
+    <comment>Status message when saving a job as a template</comment>
+  </data>
+  <data name="Status_JobSavedAsTemplate" xml:space="preserve">
+    <value>Job '{0}' saved as template</value>
+    <comment>Status message when job is saved as template, {0} is job name</comment>
+  </data>
+  <data name="Status_FailedToSaveJobAsTemplate" xml:space="preserve">
+    <value>Failed to save job '{0}' as template</value>
+    <comment>Status message when saving job as template fails, {0} is job name</comment>
+  </data>
+  <data name="Status_ErrorSavingJobAsTemplate" xml:space="preserve">
+    <value>Error saving job as template: {0}</value>
+    <comment>Error message when saving job as template fails, {0} is error message</comment>
+  </data>
+  <data name="Status_ImportingJobs" xml:space="preserve">
+    <value>Importing jobs...</value>
+    <comment>Status message when importing jobs</comment>
+  </data>
+  <data name="Status_JobImportNotImplemented" xml:space="preserve">
+    <value>Job import functionality not yet implemented</value>
+    <comment>Status message for unimplemented job import feature</comment>
+  </data>
+  <data name="Status_ErrorImportingJobs" xml:space="preserve">
+    <value>Error importing jobs: {0}</value>
+    <comment>Error message when importing jobs fails, {0} is error message</comment>
+  </data>
+  <data name="Status_ExportingJob" xml:space="preserve">
+    <value>Exporting job...</value>
+    <comment>Status message when exporting a job</comment>
+  </data>
+  <data name="Status_ExportJobNotImplemented" xml:space="preserve">
+    <value>Export functionality for job '{0}' not yet implemented</value>
+    <comment>Status message for unimplemented job export feature, {0} is job name</comment>
+  </data>
+  <data name="Status_ErrorExportingJob" xml:space="preserve">
+    <value>Error exporting job: {0}</value>
+    <comment>Error message when exporting job fails, {0} is error message</comment>
+  </data>
+  <data name="Status_CreatingTaskFromJob" xml:space="preserve">
+    <value>Creating task from job...</value>
+    <comment>Status message when creating a task from a job</comment>
+  </data>
+  <data name="Status_TaskCreationFromJobNotImplemented" xml:space="preserve">
+    <value>Task creation from job '{0}' not yet implemented</value>
+    <comment>Status message for unimplemented task creation from job feature, {0} is job name</comment>
+  </data>
+  <data name="Status_ErrorCreatingTaskFromJob" xml:space="preserve">
+    <value>Error creating task from job: {0}</value>
+    <comment>Error message when creating task from job fails, {0} is error message</comment>
+  </data>
+  <data name="Status_ValidatingJob" xml:space="preserve">
+    <value>Validating job...</value>
+    <comment>Status message when validating a job</comment>
+  </data>
+  <data name="Status_JobIsValid" xml:space="preserve">
+    <value>Job '{0}' is valid</value>
+    <comment>Status message when job validation passes, {0} is job name</comment>
+  </data>
+  <data name="Status_JobHasValidationErrors" xml:space="preserve">
+    <value>Job '{0}' has validation errors: {1}</value>
+    <comment>Status message when job validation fails, {0} is job name, {1} is error summary</comment>
+  </data>
+  <data name="Status_ErrorValidatingJob" xml:space="preserve">
+    <value>Error validating job: {0}</value>
+    <comment>Error message when job validation fails, {0} is error message</comment>
+  </data>
+  <data name="Status_OpeningJobCreationWizard" xml:space="preserve">
+    <value>Opening job creation wizard...</value>
+    <comment>Status message when opening the job creation wizard</comment>
+  </data>
+  <data name="Status_ErrorOpeningWizard" xml:space="preserve">
+    <value>Error opening wizard</value>
+    <comment>Error message when opening wizard fails</comment>
+  </data>
+
+  <!-- Logging Settings Messages -->
+  <data name="Status_SavingSettings" xml:space="preserve">
+    <value>Saving settings...</value>
+    <comment>Status message when saving settings</comment>
+  </data>
+  <data name="Status_SettingsSavedSuccessfully" xml:space="preserve">
+    <value>Settings saved successfully</value>
+    <comment>Status message when settings are saved successfully</comment>
+  </data>
+  <data name="Status_ErrorSavingSettings" xml:space="preserve">
+    <value>Error saving settings</value>
+    <comment>Error message when saving settings fails</comment>
+  </data>
+  <data name="Status_LoadingSettings" xml:space="preserve">
+    <value>Loading settings...</value>
+    <comment>Status message when loading settings</comment>
+  </data>
+  <data name="Status_SettingsLoadedSuccessfully" xml:space="preserve">
+    <value>Settings loaded successfully</value>
+    <comment>Status message when settings are loaded successfully</comment>
+  </data>
+  <data name="Status_ErrorLoadingSettings" xml:space="preserve">
+    <value>Error loading settings</value>
+    <comment>Error message when loading settings fails</comment>
+  </data>
+  <data name="Status_ResettingToDefaults" xml:space="preserve">
+    <value>Resetting to defaults...</value>
+    <comment>Status message when resetting settings to defaults</comment>
+  </data>
+  <data name="Status_SettingsResetToDefaults" xml:space="preserve">
+    <value>Settings reset to defaults successfully</value>
+    <comment>Status message when settings are reset to defaults successfully</comment>
+  </data>
+  <data name="Status_ErrorResettingSettings" xml:space="preserve">
+    <value>Error resetting settings</value>
+    <comment>Error message when resetting settings fails</comment>
+  </data>
+  <data name="Status_ErrorOpeningSettingsDirectory" xml:space="preserve">
+    <value>Error opening settings directory</value>
+    <comment>Error message when opening settings directory fails</comment>
+  </data>
+  <data name="Status_DefaultLogPathNotSet" xml:space="preserve">
+    <value>Default log path is not set</value>
+    <comment>Status message when default log path is not configured</comment>
+  </data>
+  <data name="Status_ErrorOpeningDefaultLogPath" xml:space="preserve">
+    <value>Error opening default log path</value>
+    <comment>Error message when opening default log path fails</comment>
+  </data>
+  <data name="Status_ExportPathNotSet" xml:space="preserve">
+    <value>Export path is not set</value>
+    <comment>Status message when export path is not configured</comment>
+  </data>
+  <data name="Status_ErrorOpeningExportPath" xml:space="preserve">
+    <value>Error opening export path</value>
+    <comment>Error message when opening export path fails</comment>
+  </data>
+
 </root>

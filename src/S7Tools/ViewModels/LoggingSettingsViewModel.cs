@@ -5,6 +5,7 @@ using ReactiveUI;
 using S7Tools.Helpers;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -191,7 +192,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error browsing for default log path");
-            SettingsStatusMessage = "Error selecting directory";
+            SettingsStatusMessage = UIStrings.Status_ErrorSelectingDirectory;
         }
     }
 
@@ -214,7 +215,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error browsing for export path");
-            SettingsStatusMessage = "Error selecting directory";
+            SettingsStatusMessage = UIStrings.Status_ErrorSelectingDirectory;
         }
     }
 
@@ -222,7 +223,7 @@ public class LoggingSettingsViewModel : ViewModelBase
     {
         try
         {
-            SettingsStatusMessage = "Saving settings...";
+            SettingsStatusMessage = UIStrings.Status_SavingSettings;
 
             // Create dictionary of settings to save
             var userSettings = new Dictionary<string, object>
@@ -238,13 +239,13 @@ public class LoggingSettingsViewModel : ViewModelBase
             };
 
             await _settingsService.SaveUserSettingsAsync(userSettings);
-            SettingsStatusMessage = "Settings saved successfully";
+            SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
             _logger.LogInformation("Logging settings saved successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error saving logging settings");
-            SettingsStatusMessage = "Error saving settings";
+            SettingsStatusMessage = UIStrings.Status_ErrorSavingSettings;
         }
     }
 
@@ -252,16 +253,16 @@ public class LoggingSettingsViewModel : ViewModelBase
     {
         try
         {
-            SettingsStatusMessage = "Loading settings...";
+            SettingsStatusMessage = UIStrings.Status_LoadingSettings;
             await _settingsService.LoadSettingsAsync();
             RefreshFromSettings();
-            SettingsStatusMessage = "Settings loaded successfully";
+            SettingsStatusMessage = UIStrings.Status_SettingsLoadedSuccessfully;
             _logger.LogInformation("Logging settings loaded successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading logging settings");
-            SettingsStatusMessage = "Error loading settings";
+            SettingsStatusMessage = UIStrings.Status_ErrorLoadingSettings;
         }
     }
 
@@ -269,16 +270,16 @@ public class LoggingSettingsViewModel : ViewModelBase
     {
         try
         {
-            SettingsStatusMessage = "Resetting to defaults...";
+            SettingsStatusMessage = UIStrings.Status_ResettingToDefaults;
             await _settingsService.RestoreDefaultsAsync();
             RefreshFromSettings();
-            SettingsStatusMessage = "Settings reset to defaults successfully";
+            SettingsStatusMessage = UIStrings.Status_SettingsResetToDefaults;
             _logger.LogInformation("Logging settings reset to defaults successfully");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error resetting logging settings to defaults");
-            SettingsStatusMessage = "Error resetting settings";
+            SettingsStatusMessage = UIStrings.Status_ErrorResettingSettings;
         }
     }
 
@@ -299,7 +300,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error opening settings directory");
-            SettingsStatusMessage = "Error opening settings directory";
+            SettingsStatusMessage = UIStrings.Status_ErrorOpeningSettingsDirectory;
         }
     }
 
@@ -309,7 +310,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         {
             if (string.IsNullOrEmpty(DefaultLogPath))
             {
-                SettingsStatusMessage = "Default log path is not set";
+                SettingsStatusMessage = UIStrings.Status_DefaultLogPathNotSet;
                 return;
             }
 
@@ -325,7 +326,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error opening default log path in explorer");
-            SettingsStatusMessage = "Error opening default log path";
+            SettingsStatusMessage = UIStrings.Status_ErrorOpeningDefaultLogPath;
         }
     }
 
@@ -335,7 +336,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         {
             if (string.IsNullOrEmpty(ExportPath))
             {
-                SettingsStatusMessage = "Export path is not set";
+                SettingsStatusMessage = UIStrings.Status_ExportPathNotSet;
                 return;
             }
 
@@ -351,7 +352,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error opening export path in explorer");
-            SettingsStatusMessage = "Error opening export path";
+            SettingsStatusMessage = UIStrings.Status_ErrorOpeningExportPath;
         }
     }
 

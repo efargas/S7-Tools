@@ -873,6 +873,217 @@ public static class UIStrings
 
     #endregion
 
+    #region Jobs Management Messages
+
+    /// <summary>
+    /// Gets the status message when no job is selected for editing.
+    /// </summary>
+    public static string Status_NoJobSelectedToEdit => GetStringSafe("Status_NoJobSelectedToEdit", "No job selected to edit");
+
+    /// <summary>
+    /// Gets the status message when creating a job from a template.
+    /// </summary>
+    public static string Status_CreatingJobFromTemplate => GetStringSafe("Status_CreatingJobFromTemplate", "Creating job from template...");
+
+    /// <summary>
+    /// Gets the status message when no job templates are available.
+    /// </summary>
+    public static string Status_NoTemplatesAvailable => GetStringSafe("Status_NoTemplatesAvailable", "No templates available");
+
+    /// <summary>
+    /// Gets the status message format when job is created from template.
+    /// Expects parameters: new job name, template name
+    /// </summary>
+    public static string Status_CreatedJobFromTemplate => GetStringSafe("Status_CreatedJobFromTemplate", "Created job '{0}' from template '{1}'");
+
+    /// <summary>
+    /// Gets the error message format when creating job from template fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorCreatingJobFromTemplate => GetStringSafe("Status_ErrorCreatingJobFromTemplate", "Error creating job from template: {0}");
+
+    /// <summary>
+    /// Gets the status message when saving a job as a template.
+    /// </summary>
+    public static string Status_SavingJobAsTemplate => GetStringSafe("Status_SavingJobAsTemplate", "Saving job as template...");
+
+    /// <summary>
+    /// Gets the status message format when job is saved as template.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_JobSavedAsTemplate => GetStringSafe("Status_JobSavedAsTemplate", "Job '{0}' saved as template");
+
+    /// <summary>
+    /// Gets the status message format when saving job as template fails.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_FailedToSaveJobAsTemplate => GetStringSafe("Status_FailedToSaveJobAsTemplate", "Failed to save job '{0}' as template");
+
+    /// <summary>
+    /// Gets the error message format when saving job as template fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorSavingJobAsTemplate => GetStringSafe("Status_ErrorSavingJobAsTemplate", "Error saving job as template: {0}");
+
+    /// <summary>
+    /// Gets the status message when importing jobs.
+    /// </summary>
+    public static string Status_ImportingJobs => GetStringSafe("Status_ImportingJobs", "Importing jobs...");
+
+    /// <summary>
+    /// Gets the status message for unimplemented job import feature.
+    /// </summary>
+    public static string Status_JobImportNotImplemented => GetStringSafe("Status_JobImportNotImplemented", "Job import functionality not yet implemented");
+
+    /// <summary>
+    /// Gets the error message format when importing jobs fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorImportingJobs => GetStringSafe("Status_ErrorImportingJobs", "Error importing jobs: {0}");
+
+    /// <summary>
+    /// Gets the status message when exporting a job.
+    /// </summary>
+    public static string Status_ExportingJob => GetStringSafe("Status_ExportingJob", "Exporting job...");
+
+    /// <summary>
+    /// Gets the status message format for unimplemented job export feature.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_ExportJobNotImplemented => GetStringSafe("Status_ExportJobNotImplemented", "Export functionality for job '{0}' not yet implemented");
+
+    /// <summary>
+    /// Gets the error message format when exporting job fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorExportingJob => GetStringSafe("Status_ErrorExportingJob", "Error exporting job: {0}");
+
+    /// <summary>
+    /// Gets the status message when creating a task from a job.
+    /// </summary>
+    public static string Status_CreatingTaskFromJob => GetStringSafe("Status_CreatingTaskFromJob", "Creating task from job...");
+
+    /// <summary>
+    /// Gets the status message format for unimplemented task creation from job feature.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_TaskCreationFromJobNotImplemented => GetStringSafe("Status_TaskCreationFromJobNotImplemented", "Task creation from job '{0}' not yet implemented");
+
+    /// <summary>
+    /// Gets the error message format when creating task from job fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorCreatingTaskFromJob => GetStringSafe("Status_ErrorCreatingTaskFromJob", "Error creating task from job: {0}");
+
+    /// <summary>
+    /// Gets the status message when validating a job.
+    /// </summary>
+    public static string Status_ValidatingJob => GetStringSafe("Status_ValidatingJob", "Validating job...");
+
+    /// <summary>
+    /// Gets the status message format when job validation passes.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_JobIsValid => GetStringSafe("Status_JobIsValid", "Job '{0}' is valid");
+
+    /// <summary>
+    /// Gets the status message format when job validation fails.
+    /// Expects parameters: job name, error summary
+    /// </summary>
+    public static string Status_JobHasValidationErrors => GetStringSafe("Status_JobHasValidationErrors", "Job '{0}' has validation errors: {1}");
+
+    /// <summary>
+    /// Gets the error message format when job validation fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorValidatingJob => GetStringSafe("Status_ErrorValidatingJob", "Error validating job: {0}");
+
+    /// <summary>
+    /// Gets the status message when opening the job creation wizard.
+    /// </summary>
+    public static string Status_OpeningJobCreationWizard => GetStringSafe("Status_OpeningJobCreationWizard", "Opening job creation wizard...");
+
+    /// <summary>
+    /// Gets the error message when opening wizard fails.
+    /// </summary>
+    public static string Status_ErrorOpeningWizard => GetStringSafe("Status_ErrorOpeningWizard", "Error opening wizard");
+
+    #endregion
+
+    #region Logging Settings Messages
+
+    /// <summary>
+    /// Gets the status message when saving settings.
+    /// </summary>
+    public static string Status_SavingSettings => GetStringSafe("Status_SavingSettings", "Saving settings...");
+
+    /// <summary>
+    /// Gets the status message when settings are saved successfully.
+    /// </summary>
+    public static string Status_SettingsSavedSuccessfully => GetStringSafe("Status_SettingsSavedSuccessfully", "Settings saved successfully");
+
+    /// <summary>
+    /// Gets the error message when saving settings fails.
+    /// </summary>
+    public static string Status_ErrorSavingSettings => GetStringSafe("Status_ErrorSavingSettings", "Error saving settings");
+
+    /// <summary>
+    /// Gets the status message when loading settings.
+    /// </summary>
+    public static string Status_LoadingSettings => GetStringSafe("Status_LoadingSettings", "Loading settings...");
+
+    /// <summary>
+    /// Gets the status message when settings are loaded successfully.
+    /// </summary>
+    public static string Status_SettingsLoadedSuccessfully => GetStringSafe("Status_SettingsLoadedSuccessfully", "Settings loaded successfully");
+
+    /// <summary>
+    /// Gets the error message when loading settings fails.
+    /// </summary>
+    public static string Status_ErrorLoadingSettings => GetStringSafe("Status_ErrorLoadingSettings", "Error loading settings");
+
+    /// <summary>
+    /// Gets the status message when resetting settings to defaults.
+    /// </summary>
+    public static string Status_ResettingToDefaults => GetStringSafe("Status_ResettingToDefaults", "Resetting to defaults...");
+
+    /// <summary>
+    /// Gets the status message when settings are reset to defaults successfully.
+    /// </summary>
+    public static string Status_SettingsResetToDefaults => GetStringSafe("Status_SettingsResetToDefaults", "Settings reset to defaults successfully");
+
+    /// <summary>
+    /// Gets the error message when resetting settings fails.
+    /// </summary>
+    public static string Status_ErrorResettingSettings => GetStringSafe("Status_ErrorResettingSettings", "Error resetting settings");
+
+    /// <summary>
+    /// Gets the error message when opening settings directory fails.
+    /// </summary>
+    public static string Status_ErrorOpeningSettingsDirectory => GetStringSafe("Status_ErrorOpeningSettingsDirectory", "Error opening settings directory");
+
+    /// <summary>
+    /// Gets the status message when default log path is not configured.
+    /// </summary>
+    public static string Status_DefaultLogPathNotSet => GetStringSafe("Status_DefaultLogPathNotSet", "Default log path is not set");
+
+    /// <summary>
+    /// Gets the error message when opening default log path fails.
+    /// </summary>
+    public static string Status_ErrorOpeningDefaultLogPath => GetStringSafe("Status_ErrorOpeningDefaultLogPath", "Error opening default log path");
+
+    /// <summary>
+    /// Gets the status message when export path is not configured.
+    /// </summary>
+    public static string Status_ExportPathNotSet => GetStringSafe("Status_ExportPathNotSet", "Export path is not set");
+
+    /// <summary>
+    /// Gets the error message when opening export path fails.
+    /// </summary>
+    public static string Status_ErrorOpeningExportPath => GetStringSafe("Status_ErrorOpeningExportPath", "Error opening export path");
+
+    #endregion
+
     #region Error Messages - Operations
 
     /// <summary>

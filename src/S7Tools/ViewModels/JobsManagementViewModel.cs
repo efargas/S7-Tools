@@ -10,6 +10,7 @@ using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Jobs;
@@ -581,7 +582,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         {
             if (SelectedProfile == null)
             {
-                StatusMessage = "No job selected to edit";
+                StatusMessage = UIStrings.Status_NoJobSelectedToEdit;
                 return CreateMainJobsContentViewModel(); // Fallback to main view
             }
 
@@ -670,21 +671,21 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         try
         {
             IsLoading = true;
-            StatusMessage = "Creating job from template...";
+            StatusMessage = UIStrings.Status_CreatingJobFromTemplate;
 
             // TODO: Show template selection dialog
             // For now, use the first available template
             JobProfile? template = JobTemplates.FirstOrDefault();
             if (template == null)
             {
-                StatusMessage = "No templates available";
+                StatusMessage = UIStrings.Status_NoTemplatesAvailable;
                 return;
             }
 
             string newName = $"Job from {template.Name}";
             JobProfile newJob = await _jobManager.CreateFromTemplateAsync(template.Id, newName);
 
-            StatusMessage = $"Created job '{newJob.Name}' from template '{template.Name}'";
+            StatusMessage = string.Format(UIStrings.Status_CreatedJobFromTemplate, newJob.Name, template.Name);
             _logger.LogInformation("Created job {JobId} ({JobName}) from template {TemplateId} ({TemplateName})",
                 newJob.Id, newJob.Name, template.Id, template.Name);
 
@@ -694,7 +695,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error creating job from template: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_ErrorCreatingJobFromTemplate, ex.Message);
             _logger.LogError(ex, "Error creating job from template");
         }
         finally
@@ -713,7 +714,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         try
         {
             IsLoading = true;
-            StatusMessage = "Saving job as template...";
+            StatusMessage = UIStrings.Status_SavingJobAsTemplate;
 
             // TODO: Show template name input dialog
             string templateName = $"{SelectedProfile.Name} Template";
@@ -722,7 +723,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             if (success)
             {
-                StatusMessage = $"Job '{SelectedProfile.Name}' saved as template";
+                StatusMessage = string.Format(UIStrings.Status_JobSavedAsTemplate, SelectedProfile.Name);
                 _logger.LogInformation("Saved job {JobId} ({JobName}) as template",
                     SelectedProfile.Id, SelectedProfile.Name);
 
@@ -731,14 +732,14 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
             else
             {
-                StatusMessage = $"Failed to save job '{SelectedProfile.Name}' as template";
+                StatusMessage = string.Format(UIStrings.Status_FailedToSaveJobAsTemplate, SelectedProfile.Name);
                 _logger.LogWarning("Failed to save job {JobId} ({JobName}) as template",
                     SelectedProfile.Id, SelectedProfile.Name);
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error saving job as template: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_ErrorSavingJobAsTemplate, ex.Message);
             _logger.LogError(ex, "Error saving job {JobId} as template", SelectedProfile?.Id);
         }
         finally
@@ -752,17 +753,17 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         try
         {
             IsLoading = true;
-            StatusMessage = "Importing jobs...";
+            StatusMessage = UIStrings.Status_ImportingJobs;
 
             // TODO: Implement job import functionality
             // For now, just show a placeholder message
-            StatusMessage = "Job import functionality not yet implemented";
+            StatusMessage = UIStrings.Status_JobImportNotImplemented;
             _logger.LogInformation("Job import requested but not yet implemented");
             await Task.Yield();
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error importing jobs: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_ErrorImportingJobs, ex.Message);
             _logger.LogError(ex, "Error importing jobs");
         }
         finally
@@ -781,18 +782,18 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         try
         {
             IsLoading = true;
-            StatusMessage = "Exporting job...";
+            StatusMessage = UIStrings.Status_ExportingJob;
 
             // TODO: Implement job export functionality
             // For now, just show a placeholder message
-            StatusMessage = $"Export functionality for job '{SelectedProfile.Name}' not yet implemented";
+            StatusMessage = string.Format(UIStrings.Status_ExportJobNotImplemented, SelectedProfile.Name);
             _logger.LogInformation("Job export requested for {JobId} ({JobName}) but not yet implemented",
                 SelectedProfile.Id, SelectedProfile.Name);
             await Task.Yield();
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error exporting job: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_ErrorExportingJob, ex.Message);
             _logger.LogError(ex, "Error exporting job {JobId}", SelectedProfile?.Id);
         }
         finally
@@ -811,18 +812,18 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         try
         {
             IsLoading = true;
-            StatusMessage = "Creating task from job...";
+            StatusMessage = UIStrings.Status_CreatingTaskFromJob;
 
             // TODO: Integrate with TaskScheduler to create task
             // For now, just show a placeholder message
-            StatusMessage = $"Task creation from job '{SelectedProfile.Name}' not yet implemented";
+            StatusMessage = string.Format(UIStrings.Status_TaskCreationFromJobNotImplemented, SelectedProfile.Name);
             _logger.LogInformation("Task creation requested from job {JobId} ({JobName}) but not yet implemented",
                 SelectedProfile.Id, SelectedProfile.Name);
             await Task.Yield();
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error creating task from job: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_ErrorCreatingTaskFromJob, ex.Message);
             _logger.LogError(ex, "Error creating task from job {JobId}", SelectedProfile?.Id);
         }
         finally
@@ -841,28 +842,28 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         try
         {
             IsLoading = true;
-            StatusMessage = "Validating job...";
+            StatusMessage = UIStrings.Status_ValidatingJob;
 
             ValidationResult validationResult = await _jobManager.ValidateJobAsync(SelectedProfile);
             await Task.Yield();
 
             if (validationResult.IsValid)
             {
-                StatusMessage = $"Job '{SelectedProfile.Name}' is valid";
+                StatusMessage = string.Format(UIStrings.Status_JobIsValid, SelectedProfile.Name);
                 _logger.LogInformation("Job {JobId} ({JobName}) validation passed",
                     SelectedProfile.Id, SelectedProfile.Name);
             }
             else
             {
                 string errorSummary = string.Join(", ", validationResult.Errors.Take(3));
-                StatusMessage = $"Job '{SelectedProfile.Name}' has validation errors: {errorSummary}";
+                StatusMessage = string.Format(UIStrings.Status_JobHasValidationErrors, SelectedProfile.Name, errorSummary);
                 _logger.LogWarning("Job {JobId} ({JobName}) validation failed: {Errors}",
                     SelectedProfile.Id, SelectedProfile.Name, string.Join("; ", validationResult.Errors));
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error validating job: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_ErrorValidatingJob, ex.Message);
             _logger.LogError(ex, "Error validating job {JobId}", SelectedProfile?.Id);
         }
         finally
@@ -880,12 +881,12 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             // Navigate to the wizard by setting the sidebar selection
             SelectedSideMenuItem = "Create (Wizard)";
 
-            StatusMessage = "Opening job creation wizard...";
+            StatusMessage = UIStrings.Status_OpeningJobCreationWizard;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to navigate to create wizard");
-            StatusMessage = "Error opening wizard";
+            StatusMessage = UIStrings.Status_ErrorOpeningWizard;
         }
     }
 
