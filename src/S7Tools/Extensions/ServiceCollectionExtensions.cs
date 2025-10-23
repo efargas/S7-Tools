@@ -109,11 +109,11 @@ public static class ServiceCollectionExtensions
         // Serial Port Profile Service (Communication - Serial profiles)
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
         services.TryAddSingleton<ISerialPortService>(provider =>
-        {
-            ILogger<SerialPortService> logger = provider.GetRequiredService<ILogger<SerialPortService>>();
-            IApplicationSettingsService settingsService = provider.GetRequiredService<IApplicationSettingsService>();
-            return new SerialPortService(logger, settingsService);
-        });
+            new SerialPortService(
+                provider.GetRequiredService<ILogger<SerialPortService>>(),
+                provider.GetRequiredService<IApplicationSettingsService>()
+            )
+        );
 
         // Socat Profile Service (Servers Settings - socat configuration)
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
