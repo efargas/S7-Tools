@@ -791,7 +791,6 @@ public class SocatService : ISocatService, IDisposable
             int configuredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
             int statusRefreshIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
             if (statusRefreshIntervalSeconds != configuredInterval)
-            if (statusRefreshIntervalSeconds != configuredInterval)
             {
                 _logger.LogWarning("Adjusted 'socat.statusRefreshIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, statusRefreshIntervalSeconds);
             }
