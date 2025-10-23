@@ -3,38 +3,34 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:S7Tools.ViewModels"
+             xmlns:vmProfiles="clr-namespace:S7Tools.ViewModels.Profiles"
              xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:converters="clr-namespace:S7Tools.Converters"
              xmlns:views="clr-namespace:S7Tools.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Profiles.SocatProfileDetailView"
              x:DataType="models:SocatProfile">
-  <StackPanel Spacing="10">
-    <TextBlock Text="Socat Profile Details" FontWeight="Bold" FontSize="16"/>
-    <StackPanel Spacing="4">
-      <views:PropertyDisplayItem Label="Name:" Value="{Binding Name}"/>
-      <ContentControl Content="{Binding Configuration}">
-        <ContentControl.DataTemplates>
-          <DataTemplate DataType="models:SocatConfiguration">
-            <StackPanel Spacing="4">
-              <views:PropertyDisplayItem Label="TCP Port:" Value="{Binding TcpPort}"/>
-              <views:PropertyDisplayItem Label="TCP Host:" Value="{Binding TcpHost}"/>
-              <views:PropertyDisplayItem Label="Enable Fork:" Value="{Binding EnableFork}"/>
-              <views:PropertyDisplayItem Label="Enable Reuse Addr:" Value="{Binding EnableReuseAddr}"/>
-              <views:PropertyDisplayItem Label="Verbose:" Value="{Binding Verbose}"/>
-              <views:PropertyDisplayItem Label="Hex Dump:" Value="{Binding HexDump}"/>
-              <views:PropertyDisplayItem Label="Block Size:" Value="{Binding BlockSize}"/>
-              <views:PropertyDisplayItem Label="Debug Level:" Value="{Binding DebugLevel}"/>
-              <views:PropertyDisplayItem Label="Serial Raw Mode:" Value="{Binding SerialRawMode}"/>
-              <views:PropertyDisplayItem Label="Serial Disable Echo:" Value="{Binding SerialDisableEcho}"/>
-              <views:PropertyDisplayItem Label="Auto Configure Serial:" Value="{Binding AutoConfigureSerial}"/>
-              <views:PropertyDisplayItem Label="Connection Timeout:" Value="{Binding ConnectionTimeout}"/>
-              <views:PropertyDisplayItem Label="Auto Restart:" Value="{Binding AutoRestart}"/>
-            </StackPanel>
-          </DataTemplate>
-        </ContentControl.DataTemplates>
-      </ContentControl>
-      <views:PropertyDisplayItem Label="Version:" Value="{Binding Version}"/>
-      <views:PropertyDisplayItem Label="Created At:" Value="{Binding CreatedAt, Converter={StaticResource DateTimeToStringConverter}, ConverterParameter='yyyy-MM-dd HH:mm'}"/>
-    </StackPanel>
-  </StackPanel>
+  <UserControl.Resources>
+    <converters:ObjectToPropertiesConverter x:Key="ObjectToPropertiesConverter" />
+  </UserControl.Resources>
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/PropertyStyles.axaml" />
+  </UserControl.Styles>
+  <ItemsControl ItemsSource="{Binding Configuration, Converter={StaticResource ObjectToPropertiesConverter}}">
+    <ItemsControl.ItemsPanel>
+      <ItemsPanelTemplate>
+        <WrapPanel Orientation="Horizontal" />
+      </ItemsPanelTemplate>
+    </ItemsControl.ItemsPanel>
+    <ItemsControl.ItemTemplate>
+      <DataTemplate DataType="vmProfiles:PropertyDisplayItem">
+        <Border Classes="PropertyItem">
+          <StackPanel>
+            <TextBlock Classes="PropertyLabel" Text="{Binding Label}" />
+            <TextBlock Classes="PropertyValue" Text="{Binding Value}" />
+          </StackPanel>
+        </Border>
+      </DataTemplate>
+    </ItemsControl.ItemTemplate>
+  </ItemsControl>
 </UserControl>
