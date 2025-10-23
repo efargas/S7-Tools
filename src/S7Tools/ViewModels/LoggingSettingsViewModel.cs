@@ -109,7 +109,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _showLogLevelInLogs, value);
     }
 
-    private string _settingsStatusMessage = UIStrings.Status_Ready;
+    private string _settingsStatusMessage = UIStrings.Status_SettingsReady;
     public string SettingsStatusMessage
     {
         get => _settingsStatusMessage;
