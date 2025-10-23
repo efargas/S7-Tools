@@ -192,9 +192,16 @@ public class ObjectToPropertiesConverterTests
         Assert.Contains(secondCollection, p => p.Label.Contains("Value") && p.Value == "2");
 
         // Verify labels are consistent (proving cache is being used)
-        var firstLabels = firstCollection.Select(p => p.Label).OrderBy(l => l).ToList();
-        var secondLabels = secondCollection.Select(p => p.Label).OrderBy(l => l).ToList();
-        Assert.Equal(firstLabels, secondLabels);
+        var firstLabels = firstCollection.Select(p => p.Label).ToList();
+        var secondLabels = secondCollection.Select(p => p.Label).ToList();
+        Assert.Equal(firstLabels, secondLabels); // Ensures order and content are the same
+
+        // For a stronger cache proof, assert that the string instances are the same.
+        // This is a good indicator that they came from the same cached PropertyMetadata.
+        for (int i = 0; i < firstCollection.Count; i++)
+        {
+            Assert.Same(firstCollection[i].Label, secondCollection[i].Label);
+        }
     }
 
     [Fact(DisplayName = "Convert caches property order correctly")]
