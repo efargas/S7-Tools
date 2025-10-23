@@ -130,8 +130,13 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 return null;
             }
 
-            // Get port test timeout from settings
-            int portTestTimeoutMs = _settingsService.GetSetting("serial.portTestTimeoutMs", 1000);
+            // Get port test timeout from settings and clamp to a safe range
+            int configuredTimeoutMs = _settingsService.GetSetting("serial.portTestTimeoutMs", 1000);
+            int portTestTimeoutMs = Math.Clamp(configuredTimeoutMs, 100, 10_000);
+            if (portTestTimeoutMs != configuredTimeoutMs)
+            {
+                _logger.LogWarning("Adjusted 'serial.portTestTimeoutMs' from {Configured} to safe value {Effective}", configuredTimeoutMs, portTestTimeoutMs);
+            }
 
             SerialPortType portType = GetPortType(portPath);
             bool isAccessible = await IsPortAccessibleAsync(portPath, portTestTimeoutMs, cancellationToken).ConfigureAwait(false);
