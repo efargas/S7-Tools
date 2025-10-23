@@ -163,8 +163,8 @@ public class LoggingSettingsViewModel : ViewModelBase
         ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
         ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
 
-        // For now, use a placeholder for settings file path - we need to add this to the settings service
-        CurrentSettingsFilePath = "Resources/AppSettings/AppSettings.json";
+        // Use the AppSettingsPath from the path service
+        CurrentSettingsFilePath = _pathService.AppSettingsPath;
 
         try
         {

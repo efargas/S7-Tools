@@ -441,10 +441,10 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             // Resolve the path using the path service, which handles both absolute and relative paths
             string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
 
-            // If resolution results in an invalid path, fall back to the default profiles directory
+            // If resolution results in an invalid path, fall back to the PowerSupply profiles directory
             if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
             {
-                ProfilesPath = _pathService.ProfilesDirectory;
+                ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
             }
             else
             {
@@ -458,7 +458,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             {
                 StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
             });
-            ProfilesPath = _pathService.ProfilesDirectory;
+            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
         }
     }
 
