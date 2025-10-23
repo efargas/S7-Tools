@@ -1525,4 +1525,214 @@
     <comment>Status message when export path is updated successfully</comment>
   </data>
 
+  <!-- About and UI Labels -->
+  <data name="About_Greeting" xml:space="preserve">
+    <value>About S7Tools.</value>
+    <comment>Greeting message in About view</comment>
+  </data>
+
+  <!-- Bottom Panel Tab Labels -->
+  <data name="Panel_Problems" xml:space="preserve">
+    <value>PROBLEMS</value>
+    <comment>Problems panel tab label</comment>
+  </data>
+  <data name="Panel_Output" xml:space="preserve">
+    <value>OUTPUT</value>
+    <comment>Output console panel tab label</comment>
+  </data>
+  <data name="Panel_DebugConsole" xml:space="preserve">
+    <value>DEBUG CONSOLE</value>
+    <comment>Debug console panel tab label</comment>
+  </data>
+  <data name="Panel_LogViewer" xml:space="preserve">
+    <value>LOG VIEWER</value>
+    <comment>Log viewer panel tab label</comment>
+  </data>
+  <data name="Panel_NoProblemsDetected" xml:space="preserve">
+    <value>No problems detected.</value>
+    <comment>Message when no problems are detected</comment>
+  </data>
+  <data name="Panel_OutputConsoleReady" xml:space="preserve">
+    <value>Output console ready...</value>
+    <comment>Message when output console is ready</comment>
+  </data>
+  <data name="Panel_DebugConsoleReady" xml:space="preserve">
+    <value>Debug console ready...</value>
+    <comment>Message when debug console is ready</comment>
+  </data>
+  <data name="Panel_LogViewerInitializationFailed" xml:space="preserve">
+    <value>LogViewer initialization failed. Check logs for details.</value>
+    <comment>Error message when LogViewer fails to initialize</comment>
+  </data>
+
+  <!-- Navigation Sidebar Titles -->
+  <data name="Navigation_Explorer" xml:space="preserve">
+    <value>EXPLORER</value>
+    <comment>Explorer sidebar title</comment>
+  </data>
+  <data name="Navigation_Connections" xml:space="preserve">
+    <value>CONNECTIONS</value>
+    <comment>Connections sidebar title</comment>
+  </data>
+  <data name="Navigation_LogViewer" xml:space="preserve">
+    <value>LOG VIEWER</value>
+    <comment>Log Viewer sidebar title</comment>
+  </data>
+  <data name="Navigation_Settings" xml:space="preserve">
+    <value>SETTINGS</value>
+    <comment>Settings sidebar title</comment>
+  </data>
+  <data name="Navigation_TaskManager" xml:space="preserve">
+    <value>TASK MANAGER</value>
+    <comment>Task Manager sidebar title</comment>
+  </data>
+  <data name="Navigation_JobsManagement" xml:space="preserve">
+    <value>JOBS MANAGEMENT</value>
+    <comment>Jobs Management sidebar title</comment>
+  </data>
+  <data name="Navigation_Error" xml:space="preserve">
+    <value>ERROR</value>
+    <comment>Error sidebar title</comment>
+  </data>
+
+  <!-- Navigation Content Titles -->
+  <data name="Navigation_Welcome" xml:space="preserve">
+    <value>Welcome</value>
+    <comment>Welcome content title</comment>
+  </data>
+  <data name="Navigation_PlcConnections" xml:space="preserve">
+    <value>PLC Connections</value>
+    <comment>PLC Connections content title</comment>
+  </data>
+  <data name="Navigation_LogViewerTitle" xml:space="preserve">
+    <value>Log Viewer</value>
+    <comment>Log Viewer content title</comment>
+  </data>
+  <data name="Navigation_SettingsConfiguration" xml:space="preserve">
+    <value>Settings Configuration</value>
+    <comment>Settings Configuration content title</comment>
+  </data>
+  <data name="Navigation_TaskManagerTitle" xml:space="preserve">
+    <value>Task Manager</value>
+    <comment>Task Manager content title</comment>
+  </data>
+  <data name="Navigation_JobsManagementTitle" xml:space="preserve">
+    <value>Jobs Management</value>
+    <comment>Jobs Management content title</comment>
+  </data>
+  <data name="Navigation_ErrorTitle" xml:space="preserve">
+    <value>Error</value>
+    <comment>Error content title</comment>
+  </data>
+  <data name="Navigation_LogViewerComingSoon" xml:space="preserve">
+    <value>Log Viewer functionality coming soon...</value>
+    <comment>Placeholder message for Log Viewer</comment>
+  </data>
+  <data name="Navigation_NavigationFailed" xml:space="preserve">
+    <value>Navigation failed: {0}</value>
+    <comment>Navigation failure message with error parameter</comment>
+  </data>
+
+  <!-- Exception Messages - ArgumentException -->
+  <data name="Exception_ActivityBarItemMustHaveValidId" xml:space="preserve">
+    <value>Activity bar item must have a valid ID.</value>
+    <comment>Exception message when activity bar item has no ID</comment>
+  </data>
+  <data name="Exception_SettingKeyNullOrEmpty" xml:space="preserve">
+    <value>Setting key cannot be null or empty</value>
+    <comment>Exception message when setting key is null or empty</comment>
+  </data>
+  <data name="Exception_RelativePathNullOrEmpty" xml:space="preserve">
+    <value>Relative path cannot be null or empty</value>
+    <comment>Exception message when relative path is null or empty</comment>
+  </data>
+  <data name="Exception_DirectoryPathNullOrEmpty" xml:space="preserve">
+    <value>Directory path cannot be null or empty</value>
+    <comment>Exception message when directory path is null or empty</comment>
+  </data>
+  <data name="Exception_FormatNullOrEmpty" xml:space="preserve">
+    <value>Format cannot be null or empty</value>
+    <comment>Exception message when format is null or empty</comment>
+  </data>
+  <data name="Exception_PortPathNullOrEmpty" xml:space="preserve">
+    <value>Port path cannot be null or empty</value>
+    <comment>Exception message when port path is null or empty</comment>
+  </data>
+  <data name="Exception_CommandNullOrEmpty" xml:space="preserve">
+    <value>Command cannot be null or empty</value>
+    <comment>Exception message when command is null or empty</comment>
+  </data>
+  <data name="Exception_SerialDeviceNullOrEmpty" xml:space="preserve">
+    <value>Serial device cannot be null or empty</value>
+    <comment>Exception message when serial device is null or empty</comment>
+  </data>
+  <data name="Exception_ProcessIdMustBeGreaterThanZero" xml:space="preserve">
+    <value>Process ID must be greater than zero</value>
+    <comment>Exception message when process ID is invalid</comment>
+  </data>
+  <data name="Exception_TcpPortRange" xml:space="preserve">
+    <value>TCP port must be between 1 and 65535</value>
+    <comment>Exception message when TCP port is out of range</comment>
+  </data>
+  <data name="Exception_TcpHostNullOrEmpty" xml:space="preserve">
+    <value>TCP host cannot be null or empty</value>
+    <comment>Exception message when TCP host is null or empty</comment>
+  </data>
+
+  <!-- Exception Messages - InvalidOperationException -->
+  <data name="Exception_FailedToConnectToPowerSupply" xml:space="preserve">
+    <value>Failed to connect to power supply controller</value>
+    <comment>Exception message when power supply connection fails</comment>
+  </data>
+  <data name="Exception_NotConnectedToPowerSupply" xml:space="preserve">
+    <value>Not connected to power supply</value>
+    <comment>Exception message when operation requires connection to power supply</comment>
+  </data>
+  <data name="Exception_NoValidationPredicateConfigured" xml:space="preserve">
+    <value>No validation predicate configured</value>
+    <comment>Exception message when validation predicate is missing</comment>
+  </data>
+  <data name="Exception_ResourceManagerNotInitialized" xml:space="preserve">
+    <value>ResourceManager not initialized. Ensure App.Initialize() has been called.</value>
+    <comment>Exception message when ResourceManager is not initialized</comment>
+  </data>
+
+  <!-- Exception Messages - NotImplementedException -->
+  <data name="Exception_BooleanToColorConverterNoConvertBack" xml:space="preserve">
+    <value>BooleanToColorConverter does not support ConvertBack operation.</value>
+    <comment>Exception message when ConvertBack is not supported</comment>
+  </data>
+  <data name="Exception_BooleanToStringConverterNoConvertBack" xml:space="preserve">
+    <value>BooleanToStringConverter does not support ConvertBack operation.</value>
+    <comment>Exception message when ConvertBack is not supported</comment>
+  </data>
+  <data name="Exception_BooleanToVisibilityConverterNoConvertBack" xml:space="preserve">
+    <value>BooleanToVisibilityConverter does not support ConvertBack operation.</value>
+    <comment>Exception message when ConvertBack is not supported</comment>
+  </data>
+  <data name="Exception_GridLengthToDoubleConverterNoConvertBack" xml:space="preserve">
+    <value>GridLengthToDoubleConverter does not support ConvertBack operation.</value>
+    <comment>Exception message when ConvertBack is not supported</comment>
+  </data>
+
+  <!-- Exception Messages - NotSupportedException -->
+  <data name="Exception_DateTimeToStringConverterNoConvertBack" xml:space="preserve">
+    <value>DateTimeToStringConverter does not support ConvertBack.</value>
+    <comment>Exception message when ConvertBack is not supported</comment>
+  </data>
+  <data name="Exception_NoFileManagerFoundLinux" xml:space="preserve">
+    <value>No suitable file manager found to open directory on Linux.</value>
+    <comment>Exception message when no file manager is available on Linux</comment>
+  </data>
+
+  <!-- Validation Messages -->
+  <data name="Validation_InstanceCannotBeNull" xml:space="preserve">
+    <value>Instance cannot be null</value>
+    <comment>Validation error when instance is null</comment>
+  </data>
+  <data name="Validation_NullInstance" xml:space="preserve">
+    <value>NULL_INSTANCE</value>
+    <comment>Validation error code for null instance</comment>
+  </data>
+
 </root>

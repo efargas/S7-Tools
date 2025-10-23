@@ -3,6 +3,7 @@ using System.Reactive;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 
@@ -22,7 +23,7 @@ public class NavigationViewModel : ReactiveObject
     private object? _currentContent;
     private object? _detailContent;
     private object? _mainContent;
-    private string _sidebarTitle = "EXPLORER";
+    private string _sidebarTitle = UIStrings.Navigation_Explorer;
     private string _mainContentTitle = "";
     private bool _isSidebarVisible = true;
     private bool _showLogStats;
@@ -274,8 +275,8 @@ public class NavigationViewModel : ReactiveObject
             switch (itemId)
             {
                 case "explorer":
-                    SidebarTitle = "EXPLORER";
-                    MainContentTitle = "Welcome";
+                    SidebarTitle = UIStrings.Navigation_Explorer;
+                    MainContentTitle = UIStrings.Navigation_Welcome;
                     ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
                     MainContent = CreateLoggingTestViewModel();
@@ -285,8 +286,8 @@ public class NavigationViewModel : ReactiveObject
                     break;
 
                 case "connections":
-                    SidebarTitle = "CONNECTIONS";
-                    MainContentTitle = "PLC Connections";
+                    SidebarTitle = UIStrings.Navigation_Connections;
+                    MainContentTitle = UIStrings.Navigation_PlcConnections;
                     ShowMainContentHeader = true;
                     ConnectionsViewModel? connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
                     CurrentContent = connectionsViewModel;
@@ -297,20 +298,20 @@ public class NavigationViewModel : ReactiveObject
                     break;
 
                 case "logviewer":
-                    SidebarTitle = "LOG VIEWER";
-                    MainContentTitle = "Log Viewer";
+                    SidebarTitle = UIStrings.Navigation_LogViewer;
+                    MainContentTitle = UIStrings.Navigation_LogViewerTitle;
                     ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
-                    MainContent = "Log Viewer functionality coming soon...";
-                    DetailContent = "Log Viewer functionality coming soon...";
+                    MainContent = UIStrings.Navigation_LogViewerComingSoon;
+                    DetailContent = UIStrings.Navigation_LogViewerComingSoon;
                     ShowLogStats = true;
                     UpdateLogStats();
                     _logger.LogDebug("Navigated to Log Viewer");
                     break;
 
                 case "settings":
-                    SidebarTitle = "SETTINGS";
-                    MainContentTitle = "Settings Configuration";
+                    SidebarTitle = UIStrings.Navigation_Settings;
+                    MainContentTitle = UIStrings.Navigation_SettingsConfiguration;
                     ShowMainContentHeader = true;
                     SettingsViewModel? settingsViewModel = CreateViewModel<SettingsViewModel>();
                     CurrentContent = settingsViewModel; // Categories in sidebar
@@ -321,8 +322,8 @@ public class NavigationViewModel : ReactiveObject
                     break;
 
                 case "taskmanager":
-                    SidebarTitle = "TASK MANAGER";
-                    MainContentTitle = "Task Manager";
+                    SidebarTitle = UIStrings.Navigation_TaskManager;
+                    MainContentTitle = UIStrings.Navigation_TaskManagerTitle;
                     ShowMainContentHeader = true;
                     TaskManagerShellViewModel? taskManagerShell = CreateViewModel<TaskManagerShellViewModel>();
                     CurrentContent = taskManagerShell; // Sidebar categories
@@ -333,8 +334,8 @@ public class NavigationViewModel : ReactiveObject
                     break;
 
                 case "jobs":
-                    SidebarTitle = "JOBS MANAGEMENT";
-                    MainContentTitle = "Jobs Management";
+                    SidebarTitle = UIStrings.Navigation_JobsManagement;
+                    MainContentTitle = UIStrings.Navigation_JobsManagementTitle;
                     ShowMainContentHeader = true;
                     JobsManagementViewModel? jobsViewModel = CreateViewModel<JobsManagementViewModel>();
                     // Show Jobs-specific sidebar (menu) and main content
@@ -346,7 +347,7 @@ public class NavigationViewModel : ReactiveObject
                     break;
 
                 default:
-                    SidebarTitle = "EXPLORER";
+                    SidebarTitle = UIStrings.Navigation_Explorer;
                     MainContentTitle = "";
                     ShowMainContentHeader = false;
                     CurrentContent = null;
@@ -361,12 +362,12 @@ public class NavigationViewModel : ReactiveObject
         {
             _logger.LogError(ex, "Failed to navigate to activity bar item: {ItemId}", itemId);
             // Set fallback content
-            SidebarTitle = "ERROR";
-            MainContentTitle = "Error";
+            SidebarTitle = UIStrings.Navigation_Error;
+            MainContentTitle = UIStrings.Navigation_ErrorTitle;
             ShowMainContentHeader = true;
             CurrentContent = null;
-            MainContent = $"Navigation failed: {ex.Message}";
-            DetailContent = $"Navigation failed: {ex.Message}";
+            MainContent = string.Format(UIStrings.Navigation_NavigationFailed, ex.Message);
+            DetailContent = string.Format(UIStrings.Navigation_NavigationFailed, ex.Message);
             ShowLogStats = false;
         }
     }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
+using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.Views;
@@ -78,10 +79,10 @@ public class BottomPanelViewModel : ReactiveObject
         // Initialize bottom panel tabs
         Tabs = new ObservableCollection<PanelTabItem>
         {
-            new PanelTabItem("problems", "PROBLEMS", "No problems detected.", "fa-solid fa-exclamation-triangle"),
-            new PanelTabItem("output", "OUTPUT", "Output console ready...", "fa-solid fa-terminal"),
-            new PanelTabItem("debug", "DEBUG CONSOLE", "Debug console ready...", "fa-solid fa-bug"),
-            new PanelTabItem("logviewer", "LOG VIEWER", CreateLogViewerContent(), "fa-solid fa-file-text")
+            new PanelTabItem("problems", UIStrings.Panel_Problems, UIStrings.Panel_NoProblemsDetected, "fa-solid fa-exclamation-triangle"),
+            new PanelTabItem("output", UIStrings.Panel_Output, UIStrings.Panel_OutputConsoleReady, "fa-solid fa-terminal"),
+            new PanelTabItem("debug", UIStrings.Panel_DebugConsole, UIStrings.Panel_DebugConsoleReady, "fa-solid fa-bug"),
+            new PanelTabItem("logviewer", UIStrings.Panel_LogViewer, CreateLogViewerContent(), "fa-solid fa-file-text")
         };
 
         // Set the first tab as selected
@@ -265,7 +266,7 @@ public class BottomPanelViewModel : ReactiveObject
             // Return a simple placeholder if we can't create the proper view
             return new TextBlock
             {
-                Text = "LogViewer initialization failed. Check logs for details.",
+                Text = UIStrings.Panel_LogViewerInitializationFailed,
                 Foreground = Brushes.Red,
                 Margin = new Avalonia.Thickness(10),
                 TextWrapping = Avalonia.Media.TextWrapping.Wrap
