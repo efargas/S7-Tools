@@ -64,7 +64,7 @@ public class ResultTests
         var result = Result<int>.Failure("Error occurred");
 
         // Act & Assert
-        var act = () => result.GetValueOrThrow();
+        Func<int> act = () => result.GetValueOrThrow();
         act.Should().Throw<InvalidOperationException>()
            .WithMessage("Result is in a failure state: Error occurred");
     }

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
@@ -23,9 +24,9 @@ namespace S7Tools.Core.Tests.Settings
             var mockPathService = new MockPathService();
             services.AddSingleton<IPathService>(mockPathService);
 
-            var serviceProvider = services.BuildServiceProvider();
-            var logger = serviceProvider.GetRequiredService<ILogger<ApplicationSettingsService>>();
-            var pathService = serviceProvider.GetRequiredService<IPathService>();
+            ServiceProvider serviceProvider = services.BuildServiceProvider();
+            ILogger<ApplicationSettingsService> logger = serviceProvider.GetRequiredService<ILogger<ApplicationSettingsService>>();
+            IPathService pathService = serviceProvider.GetRequiredService<IPathService>();
 
             return new ApplicationSettingsService(logger, pathService);
         }
@@ -37,15 +38,15 @@ namespace S7Tools.Core.Tests.Settings
         public async Task LoadSettingsAsync_WithNoUserSettings_ReturnsDefaultSettings()
         {
             // Arrange
-            var service = CreateTestService();
+            ApplicationSettingsService service = CreateTestService();
 
             // Act
-            var settings = await service.LoadSettingsAsync();
+            ApplicationSettings settings = await service.LoadSettingsAsync();
 
             // Assert
             Assert.NotNull(settings);
             Assert.True(settings.DefaultSettings.Count > 0, "Default settings should be populated");
-            Assert.Equal(0, settings.UserSettings.Count); // No user settings file exists
+            Assert.Empty(settings.UserSettings); // No user settings file exists
             Assert.True(settings.EffectiveSettings.Count > 0, "Effective settings should contain defaults");
 
             // Verify specific default values
@@ -61,7 +62,7 @@ namespace S7Tools.Core.Tests.Settings
         public async Task SetSettingAsync_UserSettingOverridesDefault_CorrectHierarchy()
         {
             // Arrange
-            var service = CreateTestService();
+            ApplicationSettingsService service = CreateTestService();
             await service.LoadSettingsAsync();
 
             // Act - Set user setting to override default
@@ -73,10 +74,14 @@ namespace S7Tools.Core.Tests.Settings
             Assert.Equal("Dark", service.GetSetting<string>("ui.theme"));
 
             // Verify defaults still exist but are overridden
-            var settings = await service.LoadSettingsAsync();
+            ApplicationSettings settings = await service.LoadSettingsAsync();
             Assert.Equal("Information", settings.DefaultSettings["logging.level"]); // Default unchanged
-            Assert.Equal("Debug", settings.UserSettings["logging.level"]); // User override
-            Assert.Equal("Debug", settings.EffectiveSettings["logging.level"]); // Effective value
+            Assert.Equal("Debug", settings.GetSetting<string>("logging.level")); // Effective value is user override
+            Assert.Equal("Debug", service.GetSetting<string>("logging.level")); // Service returns effective value
+
+            // Verify user settings were saved
+            Assert.True(settings.UserSettings.ContainsKey("logging.level"));
+            Assert.True(settings.UserSettings.ContainsKey("ui.theme"));
         }
 
         /// <summary>
@@ -86,7 +91,7 @@ namespace S7Tools.Core.Tests.Settings
         public async Task ResetSettingAsync_UserSettingReset_RevertsToDefault()
         {
             // Arrange
-            var service = CreateTestService();
+            ApplicationSettingsService service = CreateTestService();
             await service.LoadSettingsAsync();
             await service.SetSettingAsync("logging.level", "Debug");
 
@@ -107,7 +112,7 @@ namespace S7Tools.Core.Tests.Settings
         public async Task SettingsChanged_EventFired_WhenSettingChanged()
         {
             // Arrange
-            var service = CreateTestService();
+            ApplicationSettingsService service = CreateTestService();
             await service.LoadSettingsAsync();
 
             S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs? eventArgs = null;
@@ -130,10 +135,24 @@ namespace S7Tools.Core.Tests.Settings
         {
             private readonly string _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
+            public string BaseDirectory => _tempDir;
+            public string ResourcesDirectory => Path.Combine(_tempDir, "Resources");
             public string AppSettingsPath => Path.Combine(_tempDir, "AppSettings", "AppSettings.json");
-            public string ResourcesBasePath => _tempDir;
+            public string ProfilesDirectory => Path.Combine(ResourcesDirectory, "Profiles");
+            public string SerialProfilesPath => Path.Combine(ProfilesDirectory, "Serial", "SerialProfiles.json");
+            public string SocatProfilesPath => Path.Combine(ProfilesDirectory, "Socat", "SocatProfiles.json");
+            public string PowerSupplyProfilesPath => Path.Combine(ProfilesDirectory, "PowerSupply", "PowerSupplyProfiles.json");
+            public string MemoryRegionsDirectory => Path.Combine(ResourcesDirectory, "MemoryRegions");
+            public string LogsDirectory => Path.Combine(ResourcesDirectory, "Logs");
+            public string MainLogsDirectory => Path.Combine(LogsDirectory, "Main");
+            public string ExportedLogsDirectory => Path.Combine(LogsDirectory, "Exported");
+            public string JobsPath => Path.Combine(ResourcesDirectory, "Jobs", "Jobs.json");
+            public string TasksPath => Path.Combine(ResourcesDirectory, "Tasks", "Tasks.json");
+            public string PayloadsDirectory => Path.Combine(ResourcesDirectory, "Payloads");
+            public string DumpsDirectory => Path.Combine(ResourcesDirectory, "Dumps");
 
-            public Task InitializeAsync() => Task.CompletedTask;
+            public Task<PathConfiguration> InitializeAsync() => Task.FromResult(new PathConfiguration { BaseDirectory = _tempDir });
+
             public Task<bool> EnsureDirectoryExistsAsync(string directoryPath)
             {
                 Directory.CreateDirectory(directoryPath);
@@ -141,6 +160,14 @@ namespace S7Tools.Core.Tests.Settings
             }
 
             public string ResolvePath(string relativePath) => Path.Combine(_tempDir, relativePath);
+
+            public Task<PathValidationResult> ValidatePathsAsync() => Task.FromResult(new PathValidationResult { IsValid = true });
+
+            public string GetMainLogPath(int rollingNumber = 0) => Path.Combine(MainLogsDirectory, $"main_{rollingNumber}.log");
+
+            public string GetExportedLogPath(string format) => Path.Combine(ExportedLogsDirectory, $"export.{format.ToLowerInvariant()}");
+
+            public string GetResourcePath(params string[] pathComponents) => Path.Combine(new[] { ResourcesDirectory }.Concat(pathComponents).ToArray());
         }
     }
 }

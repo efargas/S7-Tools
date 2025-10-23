@@ -37,7 +37,7 @@ public class JobInfoDisplayViewModelTests
     }
 
     [Fact]
-    public async Task Constructor_ShouldInitializeWithNullSelectedJob()
+    public void Constructor_ShouldInitializeWithNullSelectedJob()
     {
         // Arrange & Act
         JobInfoDisplayViewModel viewModel = CreateViewModel();
@@ -203,7 +203,7 @@ public class JobInfoDisplayViewModelTests
     }
 
     [Fact]
-    public async Task RefreshCommand_ShouldReloadCurrentJobDetails()
+    public void RefreshCommand_ShouldReloadCurrentJobDetails()
     {
         // Arrange
         JobInfoDisplayViewModel viewModel = CreateViewModel();

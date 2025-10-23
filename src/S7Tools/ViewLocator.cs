@@ -34,7 +34,7 @@ public class ViewLocator : IDataTemplate
         Type vmType = param.GetType();
 
         // Get cached view type or resolve and cache it
-        var type = ViewTypeCache.GetOrAdd(vmType, ResolveViewType);
+        Type? type = ViewTypeCache.GetOrAdd(vmType, ResolveViewType);
 
         if (type != null)
         {

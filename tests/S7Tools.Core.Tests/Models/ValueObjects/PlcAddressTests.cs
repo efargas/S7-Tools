@@ -55,7 +55,7 @@ public class PlcAddressTests
     public void Constructor_WithInvalidAddress_ShouldThrowArgumentException(string invalidAddress)
     {
         // Act & Assert
-        var act = () => new PlcAddress(invalidAddress);
+        Func<PlcAddress> act = () => new PlcAddress(invalidAddress);
         act.Should().Throw<ArgumentException>()
            .WithMessage($"Invalid PLC address format: {invalidAddress}*");
     }
@@ -64,7 +64,7 @@ public class PlcAddressTests
     public void Constructor_WithNullAddress_ShouldThrowArgumentException()
     {
         // Act & Assert
-        var act = () => new PlcAddress(null!);
+        Func<PlcAddress> act = () => new PlcAddress(null!);
         act.Should().Throw<ArgumentException>();
     }
 
@@ -90,7 +90,7 @@ public class PlcAddressTests
     public void Create_WithValidAddress_ShouldReturnSuccessResult(string address)
     {
         // Act
-        var result = PlcAddress.Create(address);
+        Result<PlcAddress> result = PlcAddress.Create(address);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -105,7 +105,7 @@ public class PlcAddressTests
     public void Create_WithInvalidAddress_ShouldReturnFailureResult(string invalidAddress)
     {
         // Act
-        var result = PlcAddress.Create(invalidAddress);
+        Result<PlcAddress> result = PlcAddress.Create(invalidAddress);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -247,7 +247,7 @@ public class PlcAddressTests
     public void Constructor_WithLargeValidValues_ShouldSucceed(string address)
     {
         // Act
-        var act = () => new PlcAddress(address);
+        Func<PlcAddress> act = () => new PlcAddress(address);
 
         // Assert
         act.Should().NotThrow();
@@ -264,7 +264,7 @@ public class PlcAddressTests
     public void Constructor_WithZeroValues_ShouldSucceed(string address)
     {
         // Act
-        var act = () => new PlcAddress(address);
+        Func<PlcAddress> act = () => new PlcAddress(address);
 
         // Assert
         act.Should().NotThrow();

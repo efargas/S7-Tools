@@ -47,7 +47,7 @@ public class InMemoryResourceManagerTests
         var manager = new InMemoryResourceManager();
         manager.AddOrUpdate("A", "1");
         manager.AddOrUpdate("B", "2");
-        var keys = manager.GetAvailableKeys();
+        IEnumerable<string> keys = manager.GetAvailableKeys();
         Assert.Contains("A", keys);
         Assert.Contains("B", keys);
     }
@@ -58,7 +58,7 @@ public class InMemoryResourceManagerTests
         var manager = new InMemoryResourceManager();
         manager.AddOrUpdate("A", "1", new CultureInfo("es-ES"));
         manager.AddOrUpdate("B", "2", new CultureInfo("en-US"));
-        var cultures = manager.GetSupportedCultures();
+        IEnumerable<CultureInfo> cultures = manager.GetSupportedCultures();
         Assert.Contains(cultures, c => c.Name == "es-ES");
         Assert.Contains(cultures, c => c.Name == "en-US");
     }

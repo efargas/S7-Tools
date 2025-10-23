@@ -660,6 +660,77 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         private set => this.RaiseAndSetIfChanged(ref _createdJobId, value);
     }
 
+    #region Serial Profile Detail Computed Properties
+
+    /// <summary>
+    /// Gets the baud rate of the selected serial profile as a string.
+    /// </summary>
+    public string SerialBaudRate => SelectedSerial?.Configuration?.BaudRate.ToString() ?? "N/A";
+
+    /// <summary>
+    /// Gets the character size of the selected serial profile as a string.
+    /// </summary>
+    public string SerialCharacterSize => SelectedSerial?.Configuration?.CharacterSize.ToString() ?? "N/A";
+
+    /// <summary>
+    /// Gets the parity of the selected serial profile as a string.
+    /// </summary>
+    public string SerialParity => SelectedSerial?.Configuration?.Parity.ToString() ?? "N/A";
+
+    /// <summary>
+    /// Gets the stop bits of the selected serial profile as a string.
+    /// </summary>
+    public string SerialStopBits => SelectedSerial?.Configuration?.StopBits.ToString() ?? "N/A";
+
+    /// <summary>
+    /// Gets whether the receiver is enabled in the selected serial profile.
+    /// </summary>
+    public string SerialEnableReceiver => SelectedSerial?.Configuration?.EnableReceiver == true ? "Yes" :
+                                         SelectedSerial?.Configuration?.EnableReceiver == false ? "No" : "N/A";
+
+    /// <summary>
+    /// Gets the version of the selected serial profile.
+    /// </summary>
+    public string SerialVersion => SelectedSerial?.Version ?? "N/A";
+
+    /// <summary>
+    /// Gets the creation date of the selected serial profile.
+    /// </summary>
+    public string SerialCreatedAt => SelectedSerial?.CreatedAt.ToString("yyyy-MM-dd HH:mm") ?? "N/A";
+
+    /// <summary>
+    /// Gets the TCP port of the selected socat profile.
+    /// </summary>
+    public string SocatTcpPort => SelectedSocat?.Configuration?.TcpPort.ToString() ?? "N/A";
+
+    /// <summary>
+    /// Gets the TCP host of the selected socat profile.
+    /// </summary>
+    public string SocatTcpHost => SelectedSocat?.Configuration?.TcpHost ?? "N/A";
+
+    /// <summary>
+    /// Gets whether verbose mode is enabled in the selected socat profile.
+    /// </summary>
+    public string SocatVerbose => SelectedSocat?.Configuration?.Verbose == true ? "Yes" :
+                                 SelectedSocat?.Configuration?.Verbose == false ? "No" : "N/A";
+
+    /// <summary>
+    /// Gets the host of the selected power supply profile.
+    /// </summary>
+    public string PowerHost => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Host : "N/A";
+
+    /// <summary>
+    /// Gets the port of the selected power supply profile.
+    /// </summary>
+    public string PowerPort => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Port.ToString() : "N/A";
+
+    /// <summary>
+    /// Gets the device ID of the selected power supply profile.
+    /// </summary>
+    public string PowerDeviceId => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.DeviceId.ToString() : "N/A";
+
+    #endregion
+
     public void Dispose()
     {
         Dispose(true);

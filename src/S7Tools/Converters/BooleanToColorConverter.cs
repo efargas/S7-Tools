@@ -38,7 +38,7 @@ public class BooleanToColorConverter : IValueConverter
         }
 
         // Try parse color name or hex to a Color
-        if (!Color.TryParse(colorString, out var parsedColor))
+        if (!Color.TryParse(colorString, out Color parsedColor))
         {
             parsedColor = Colors.Gray;
         }

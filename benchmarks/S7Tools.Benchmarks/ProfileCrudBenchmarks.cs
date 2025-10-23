@@ -1,6 +1,8 @@
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Logging.Abstractions;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
+using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services;
 
@@ -23,9 +25,13 @@ public class ProfileCrudBenchmarks
     [GlobalSetup]
     public void Setup()
     {
+        // Create mock path service for benchmarking
+        var mockPathService = new MockPathService();
+
         // Create profile manager with null logger for benchmarking
         _profileManager = new SerialPortProfileService(
-            NullLogger<SerialPortProfileService>.Instance);
+            NullLogger<SerialPortProfileService>.Instance,
+            mockPathService);
 
         // Create a test profile
         _testProfile = new SerialPortProfile
@@ -50,8 +56,8 @@ public class ProfileCrudBenchmarks
         // Clean up any created profiles
         try
         {
-            var profiles = await _profileManager.GetAllAsync();
-            foreach (var profile in profiles)
+            IEnumerable<SerialPortProfile> profiles = await _profileManager.GetAllAsync();
+            foreach (SerialPortProfile profile in profiles)
             {
                 await _profileManager.DeleteAsync(profile.Id);
             }
@@ -68,7 +74,7 @@ public class ProfileCrudBenchmarks
     [Benchmark]
     public async Task<SerialPortProfile> CreateProfile()
     {
-        var profile = await _profileManager.CreateAsync(_testProfile);
+        SerialPortProfile profile = await _profileManager.CreateAsync(_testProfile);
         _createdProfileId = profile.Id;
         return profile;
     }
@@ -97,7 +103,7 @@ public class ProfileCrudBenchmarks
     [Benchmark]
     public async Task<SerialPortProfile> UpdateProfile()
     {
-        var profile = await _profileManager.GetByIdAsync(_createdProfileId);
+        SerialPortProfile? profile = await _profileManager.GetByIdAsync(_createdProfileId);
         if (profile != null)
         {
             profile.Description = "Updated description";
@@ -113,5 +119,47 @@ public class ProfileCrudBenchmarks
     public async Task<SerialPortProfile> DuplicateProfile()
     {
         return await _profileManager.DuplicateAsync(_createdProfileId, "Duplicated Profile");
+    }
+
+    /// <summary>
+    /// Mock path service for benchmarking
+    /// </summary>
+    private class MockPathService : IPathService
+    {
+        private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "S7Tools_Benchmarks");
+
+        public string BaseDirectory => _tempDir;
+        public string ResourcesDirectory => Path.Combine(_tempDir, "Resources");
+        public string AppSettingsPath => Path.Combine(_tempDir, "AppSettings", "AppSettings.json");
+        public string ProfilesDirectory => Path.Combine(ResourcesDirectory, "Profiles");
+        public string SerialProfilesPath => Path.Combine(ProfilesDirectory, "Serial", "SerialProfiles.json");
+        public string SocatProfilesPath => Path.Combine(ProfilesDirectory, "Socat", "SocatProfiles.json");
+        public string PowerSupplyProfilesPath => Path.Combine(ProfilesDirectory, "PowerSupply", "PowerSupplyProfiles.json");
+        public string MemoryRegionsDirectory => Path.Combine(ResourcesDirectory, "MemoryRegions");
+        public string LogsDirectory => Path.Combine(ResourcesDirectory, "Logs");
+        public string MainLogsDirectory => Path.Combine(LogsDirectory, "Main");
+        public string ExportedLogsDirectory => Path.Combine(LogsDirectory, "Exported");
+        public string JobsPath => Path.Combine(ResourcesDirectory, "Jobs", "Jobs.json");
+        public string TasksPath => Path.Combine(ResourcesDirectory, "Tasks", "Tasks.json");
+        public string PayloadsDirectory => Path.Combine(ResourcesDirectory, "Payloads");
+        public string DumpsDirectory => Path.Combine(ResourcesDirectory, "Dumps");
+
+        public Task<PathConfiguration> InitializeAsync() => Task.FromResult(new PathConfiguration { BaseDirectory = _tempDir });
+
+        public Task<bool> EnsureDirectoryExistsAsync(string directoryPath)
+        {
+            Directory.CreateDirectory(directoryPath);
+            return Task.FromResult(true);
+        }
+
+        public string ResolvePath(string relativePath) => Path.Combine(_tempDir, relativePath);
+
+        public Task<PathValidationResult> ValidatePathsAsync() => Task.FromResult(new PathValidationResult { IsValid = true });
+
+        public string GetMainLogPath(int rollingNumber = 0) => Path.Combine(MainLogsDirectory, $"main_{rollingNumber}.log");
+
+        public string GetExportedLogPath(string format) => Path.Combine(ExportedLogsDirectory, $"export.{format.ToLowerInvariant()}");
+
+        public string GetResourcePath(params string[] pathComponents) => Path.Combine(new[] { ResourcesDirectory }.Concat(pathComponents).ToArray());
     }
 }

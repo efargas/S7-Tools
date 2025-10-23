@@ -1,5 +1,6 @@
 using S7Tools.Core.Models.Validators;
 using S7Tools.Core.Models.ValueObjects;
+using S7Tools.Core.Validation;
 using Xunit;
 
 namespace S7Tools.Core.Tests.Models.Validators;
@@ -23,10 +24,10 @@ public class PlcAddressValidatorTests
     [InlineData("DB1.DBX-1.0", false)] // offset negativo
     public void Validate_ValidAndInvalidAddresses_ReturnsExpectedResult(string address, bool expectedValid)
     {
-        var result = PlcAddress.Create(address);
+        Result<PlcAddress> result = PlcAddress.Create(address);
         if (result.IsSuccess)
         {
-            var validation = _validator.Validate(result.Value);
+            ValidationResult validation = _validator.Validate(result.Value);
             Assert.Equal(expectedValid, validation.IsValid);
         }
         else

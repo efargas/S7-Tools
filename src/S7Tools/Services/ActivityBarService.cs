@@ -229,7 +229,7 @@ public sealed class ActivityBarService : IActivityBarService
         // If hiding the selected item, select another visible item
         if (!isVisible && item == _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
+            ActivityBarItem? nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 
@@ -250,7 +250,7 @@ public sealed class ActivityBarService : IActivityBarService
         // If disabling the selected item, select another enabled item
         if (!isEnabled && item == _selectedItem)
         {
-            var nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
+            ActivityBarItem? nextItem = _items.FirstOrDefault(i => i != item && i.IsVisible && i.IsEnabled);
             SelectedItem = nextItem;
         }
 

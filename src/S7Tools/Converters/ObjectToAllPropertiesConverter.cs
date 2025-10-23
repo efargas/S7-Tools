@@ -14,17 +14,21 @@ namespace S7Tools.Converters;
 
 /// <summary>
 /// Converts an object to a collection of PropertyDisplayItem instances
-/// by reflecting over its public properties.
-/// Uses attributes to control display:
-/// - [Browsable(false)] to hide properties
-/// - [Display(Name = "...", Order = N)] to customize label and order
+/// by reflecting over ALL its public properties, ignoring [Browsable(false)] attributes.
+/// This is specifically designed for detailed views like the Job Wizard where users
+/// want to see all available configuration options, including advanced STTY flags.
+/// Uses [Display(Name = "...", Order = N)] to customize label and order.
 /// </summary>
-public class ObjectToPropertiesConverter : IValueConverter
+public class ObjectToAllPropertiesConverter : IValueConverter
 {
     private static readonly HashSet<string> ExcludedProperties = new()
     {
         "Type", // Usually an enum or type identifier
-        "Configuration" // Nested configuration object handled separately
+        "Configuration", // Nested configuration object handled separately
+        "Metadata", // Internal metadata dictionary
+        "CreatedAt", // Internal timestamp
+        "ModifiedAt", // Internal timestamp
+        "Version" // Internal version string
     };
 
     /// <summary>
@@ -83,13 +87,14 @@ public class ObjectToPropertiesConverter : IValueConverter
     /// <summary>
     /// Builds and caches property metadata for a given type using reflection.
     /// This method is called once per type and the results are cached.
+    /// Unlike ObjectToPropertiesConverter, this IGNORES [Browsable(false)] attributes.
     /// </summary>
     private static IReadOnlyList<PropertyMetadata> BuildPropertyMetadata(Type type)
     {
         var publicProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanRead && !ExcludedProperties.Contains(p.Name))
-            // Filter using [Browsable(false)] attribute
-            .Where(p => p.GetCustomAttribute<BrowsableAttribute>()?.Browsable != false)
+            // NOTE: We deliberately DO NOT filter by [Browsable(false)] here
+            // to show all properties including advanced STTY flags
             .Select(p => new PropertyMetadata
             {
                 PropertyInfo = p,

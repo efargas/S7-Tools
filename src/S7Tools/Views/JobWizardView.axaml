@@ -244,7 +244,7 @@
               <ContentControl Content="{Binding SelectedSerial}" Margin="8,0,8,8">
                 <ContentControl.DataTemplates>
                   <DataTemplate DataType="models:SerialPortProfile">
-                    <views:SerialProfileDetailView />
+                    <views:SerialProfileDetailedView />
                   </DataTemplate>
                 </ContentControl.DataTemplates>
               </ContentControl>
