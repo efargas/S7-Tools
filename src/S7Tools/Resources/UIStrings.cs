@@ -757,6 +757,76 @@ public static class UIStrings
     /// </summary>
     public static string Status_ErrorImportingProfiles => GetStringSafe("Status_ErrorImportingProfiles", "Error importing profiles");
 
+    /// <summary>
+    /// Gets the status message when exporting selected profile.
+    /// </summary>
+    public static string Status_ExportingSelectedProfile => GetStringSafe("Status_ExportingSelectedProfile", "Exporting selected profile...");
+
+    /// <summary>
+    /// Gets the status message when profile exported successfully.
+    /// </summary>
+    public static string Status_ProfileExportedSuccessfully => GetStringSafe("Status_ProfileExportedSuccessfully", "Profile exported successfully");
+
+    /// <summary>
+    /// Gets the status message when exporting profile fails.
+    /// </summary>
+    public static string Status_ErrorExportingProfile => GetStringSafe("Status_ErrorExportingProfile", "Error exporting profile");
+
+    /// <summary>
+    /// Gets the status message when showing profile details fails.
+    /// </summary>
+    public static string Status_ErrorShowingProfileDetails => GetStringSafe("Status_ErrorShowingProfileDetails", "Error showing profile details");
+
+    /// <summary>
+    /// Gets the status message when directory selection fails.
+    /// </summary>
+    public static string Status_ErrorSelectingDirectory => GetStringSafe("Status_ErrorSelectingDirectory", "Error selecting directory");
+
+    /// <summary>
+    /// Gets the status message when opening profiles folder.
+    /// </summary>
+    public static string Status_OpeningProfilesFolder => GetStringSafe("Status_OpeningProfilesFolder", "Opening profiles folder...");
+
+    /// <summary>
+    /// Gets the status message when profiles path is not available.
+    /// </summary>
+    public static string Status_ProfilesPathNotAvailable => GetStringSafe("Status_ProfilesPathNotAvailable", "Profiles path not available");
+
+    /// <summary>
+    /// Gets the status message when creating profiles folder.
+    /// </summary>
+    public static string Status_CreatingProfilesFolder => GetStringSafe("Status_CreatingProfilesFolder", "Creating profiles folder...");
+
+    /// <summary>
+    /// Gets the status message when profiles folder opened successfully.
+    /// </summary>
+    public static string Status_ProfilesFolderOpened => GetStringSafe("Status_ProfilesFolderOpened", "Profiles folder opened");
+
+    /// <summary>
+    /// Gets the status message when opening profiles folder fails.
+    /// </summary>
+    public static string Status_ErrorOpeningProfilesFolder => GetStringSafe("Status_ErrorOpeningProfilesFolder", "Error opening profiles folder");
+
+    /// <summary>
+    /// Gets the status message when profiles path reset to default.
+    /// </summary>
+    public static string Status_ProfilesPathReset => GetStringSafe("Status_ProfilesPathReset", "Profiles path reset to default");
+
+    /// <summary>
+    /// Gets the status message when resetting profiles path fails.
+    /// </summary>
+    public static string Status_ErrorResettingProfilesPath => GetStringSafe("Status_ErrorResettingProfilesPath", "Error resetting profiles path");
+
+    /// <summary>
+    /// Gets the status message when profiles path updated successfully.
+    /// </summary>
+    public static string Status_ProfilesPathUpdated => GetStringSafe("Status_ProfilesPathUpdated", "Profiles path updated");
+
+    /// <summary>
+    /// Gets the status message when settings update fails.
+    /// </summary>
+    public static string Status_FailedToUpdateSettings => GetStringSafe("Status_FailedToUpdateSettings", "Failed to update settings");
+
     #endregion
 
     #region Validation Messages - PowerSupply

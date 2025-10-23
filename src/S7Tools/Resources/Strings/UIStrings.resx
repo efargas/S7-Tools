@@ -820,6 +820,62 @@
     <value>Error importing profiles</value>
     <comment>Status message when profile import fails</comment>
   </data>
+  <data name="Status_ExportingSelectedProfile" xml:space="preserve">
+    <value>Exporting selected profile...</value>
+    <comment>Status message when exporting selected profile</comment>
+  </data>
+  <data name="Status_ProfileExportedSuccessfully" xml:space="preserve">
+    <value>Profile exported successfully</value>
+    <comment>Status message when profile exported successfully</comment>
+  </data>
+  <data name="Status_ErrorExportingProfile" xml:space="preserve">
+    <value>Error exporting profile</value>
+    <comment>Status message when exporting profile fails</comment>
+  </data>
+  <data name="Status_ErrorShowingProfileDetails" xml:space="preserve">
+    <value>Error showing profile details</value>
+    <comment>Status message when showing profile details fails</comment>
+  </data>
+  <data name="Status_ErrorSelectingDirectory" xml:space="preserve">
+    <value>Error selecting directory</value>
+    <comment>Status message when directory selection fails</comment>
+  </data>
+  <data name="Status_OpeningProfilesFolder" xml:space="preserve">
+    <value>Opening profiles folder...</value>
+    <comment>Status message when opening profiles folder</comment>
+  </data>
+  <data name="Status_ProfilesPathNotAvailable" xml:space="preserve">
+    <value>Profiles path not available</value>
+    <comment>Status message when profiles path is not available</comment>
+  </data>
+  <data name="Status_CreatingProfilesFolder" xml:space="preserve">
+    <value>Creating profiles folder...</value>
+    <comment>Status message when creating profiles folder</comment>
+  </data>
+  <data name="Status_ProfilesFolderOpened" xml:space="preserve">
+    <value>Profiles folder opened</value>
+    <comment>Status message when profiles folder opened successfully</comment>
+  </data>
+  <data name="Status_ErrorOpeningProfilesFolder" xml:space="preserve">
+    <value>Error opening profiles folder</value>
+    <comment>Status message when opening profiles folder fails</comment>
+  </data>
+  <data name="Status_ProfilesPathReset" xml:space="preserve">
+    <value>Profiles path reset to default</value>
+    <comment>Status message when profiles path reset to default</comment>
+  </data>
+  <data name="Status_ErrorResettingProfilesPath" xml:space="preserve">
+    <value>Error resetting profiles path</value>
+    <comment>Status message when resetting profiles path fails</comment>
+  </data>
+  <data name="Status_ProfilesPathUpdated" xml:space="preserve">
+    <value>Profiles path updated</value>
+    <comment>Status message when profiles path updated successfully</comment>
+  </data>
+  <data name="Status_FailedToUpdateSettings" xml:space="preserve">
+    <value>Failed to update settings</value>
+    <comment>Status message when settings update fails</comment>
+  </data>
 
   <!-- Validation Messages - PowerSupply -->
   <data name="Validation_ProfileNameRequired" xml:space="preserve">
