@@ -825,12 +825,6 @@ public class SocatService : ISocatService, IDisposable
                     Interlocked.Exchange(ref isRunning, 0);
                 }
             }, null, monitorInterval, monitorInterval);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
-                }
-            }, null, monitorInterval, monitorInterval);
 
             _processMonitors[processInfo.ProcessId] = monitor;
 
