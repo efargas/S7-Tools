@@ -47,6 +47,7 @@ public static class PlatformHelper
                     };
 
                     bool opened = false;
+                    Exception? lastError = null;
                     foreach ((string? fileName, string? args) in candidates)
                     {
                         try
@@ -64,8 +65,10 @@ public static class PlatformHelper
                                 return; // Exit immediately after successful open
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
+                            // Store last error to preserve context
+                            lastError = ex;
                             // Try next candidate
                             continue;
                         }
@@ -73,7 +76,7 @@ public static class PlatformHelper
 
                     if (!opened)
                     {
-                        throw new InvalidOperationException(UIStrings.Exception_NoFileManagerFoundLinux);
+                        throw new InvalidOperationException(UIStrings.Exception_NoFileManagerFoundLinux, lastError);
                     }
 
                     return; // Already opened, no need to execute code below
