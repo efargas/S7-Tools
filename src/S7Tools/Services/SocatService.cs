@@ -787,8 +787,13 @@ public class SocatService : ISocatService, IDisposable
                 _processMonitors.Remove(processInfo.ProcessId);
             }
 
-            // Get status refresh interval from settings
-            int statusRefreshIntervalSeconds = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+            // Get status refresh interval from settings and clamp to a safe range
+            int configuredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+            int statusRefreshIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+            if (statusRefreshIntervalSeconds != configuredInterval)
+            {
+                _logger.LogWarning("Adjusted 'socat.statusRefreshIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, statusRefreshIntervalSeconds);
+            }
             var monitorInterval = TimeSpan.FromSeconds(statusRefreshIntervalSeconds);
 
             var isRunning = 0;
