@@ -1220,18 +1220,17 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Resetting profiles path to default");
 
-            // Reset to default path using PathService
-            string defaultPath = _pathService.PowerSupplyProfilesPath;
-            ProfilesPath = Path.GetDirectoryName(defaultPath) ?? _pathService.ProfilesDirectory;
-
             // Reset the setting to its default value
             await _settingsService.ResetSettingAsync("profiles.powerSupplyPath").ConfigureAwait(false);
+
+            // Explicitly refresh to ensure UI consistency
+            RefreshFromSettings();
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 StatusMessage = UIStrings.Status_ProfilesPathReset;
             });
-            _specificLogger.LogInformation("Profiles path reset to default: {Path}", defaultPath);
+            _specificLogger.LogInformation("Profiles path reset to default");
         }
         catch (Exception ex)
         {

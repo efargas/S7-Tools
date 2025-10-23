@@ -55,11 +55,11 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 try
                 {
                     await service.MonitorPortChangesAsync().ConfigureAwait(false);
-                    
+
                     // Re-read the setting to get the latest value for dynamic updates
                     int configuredInterval = service._settingsService.GetSetting("serial.scanIntervalSeconds", 5);
                     int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
-                    
+
                     // Reschedule the next run with the potentially updated interval
                     service._monitoringTimer?.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
                 }

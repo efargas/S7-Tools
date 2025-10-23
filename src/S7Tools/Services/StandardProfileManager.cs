@@ -120,115 +120,80 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<T> CreateAsync(T profile, CancellationToken cancellationToken = default)
     {
-        Console.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
-        System.Diagnostics.Debug.WriteLine($"🚀🚀🚀 ENTERED StandardProfileManager.CreateAsync for profile: {profile?.Name ?? "NULL"}");
 
         ArgumentNullException.ThrowIfNull(profile);
 
-        Console.WriteLine($"📝 Step 1: Logging entry for profile: {profile.Name}");
         _logger.LogInformation("🚀 StandardProfileManager.CreateAsync ENTRY for profile: {ProfileName}", profile.Name);
         _logger.LogInformation("🔒 Waiting for semaphore in CreateAsync...");
 
-        Console.WriteLine($"📝 Step 2: About to wait for semaphore...");
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
 
-        Console.WriteLine($"📝 Step 3: Semaphore acquired for profile: {profile.Name}");
         _logger.LogInformation("✅ Semaphore acquired in CreateAsync for profile: {ProfileName}", profile.Name);
 
         try
         {
-            Console.WriteLine($"📝 Step 4: About to call EnsureLoadedAsync...");
             _logger.LogInformation("📂 Calling EnsureLoadedAsync...");
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-            Console.WriteLine($"📝 Step 5: EnsureLoadedAsync completed, profiles count: {_profiles.Count}");
             _logger.LogInformation("✅ EnsureLoadedAsync completed, profiles loaded: {Count}", _profiles.Count);
 
             // Validate business rules
-            Console.WriteLine($"📝 Step 6: Validating profile name: '{profile.Name}'");
             if (string.IsNullOrWhiteSpace(profile.Name))
             {
-                Console.WriteLine($"❌ ERROR: Profile name is empty!");
                 _logger.LogError("Profile name validation failed: name is empty");
                 throw new ValidationException("Name", UIStrings.Error_ProfileNameEmpty);
             }
 
             // Inline name uniqueness check while holding the semaphore to avoid nested WaitAsync calls
-            Console.WriteLine($"📝 Step 7: Checking name uniqueness for '{profile.Name}'...");
             _logger.LogInformation("🔍 Checking name uniqueness for '{ProfileName}'...", profile.Name);
             if (_profiles.Any(p => string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
             {
-                Console.WriteLine($"❌ ERROR: Profile name '{profile.Name}' already exists!");
                 _logger.LogError("Profile name uniqueness validation failed: profile with name '{ProfileName}' already exists. Existing profiles: {ExistingNames}",
                     profile.Name, string.Join(", ", _profiles.Select(p => p.Name)));
                 throw new DuplicateProfileNameException(profile.Name);
             }
-            Console.WriteLine($"📝 Step 8: Name '{profile.Name}' is unique ✓");
             _logger.LogDebug("✅ Name '{ProfileName}' is unique", profile.Name);
 
             // Clone the profile to avoid modifying the input
-            Console.WriteLine($"📝 Step 9: Cloning profile...");
             _logger.LogDebug("Cloning profile...");
             T newProfile = CloneProfile(profile);
-            Console.WriteLine($"📝 Step 10: Profile cloned successfully");
 
             // Assign new ID and timestamps
-            Console.WriteLine($"📝 Step 11: Getting next available ID...");
             _logger.LogDebug("Getting next available ID...");
             newProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
-            Console.WriteLine($"📝 Step 12: Assigned ID: {newProfile.Id}");
             _logger.LogDebug("Assigned ID: {ProfileId}", newProfile.Id);
 
-            Console.WriteLine($"📝 Step 13: Setting timestamps and version...");
             newProfile.CreatedAt = DateTime.UtcNow;
             newProfile.ModifiedAt = DateTime.UtcNow;
             newProfile.Version = "1.0";
-            Console.WriteLine($"📝 Step 14: Timestamps set ✓");
 
             // Handle default profile business rule
-            Console.WriteLine($"📝 Step 15: Checking if profile is default (IsDefault={newProfile.IsDefault})...");
             if (newProfile.IsDefault)
             {
-                Console.WriteLine($"📝 Step 16: Profile is default, clearing other default flags...");
                 _logger.LogDebug("Profile is marked as default, clearing other default flags...");
                 await ClearAllDefaultFlagsAsync(cancellationToken).ConfigureAwait(false);
-                Console.WriteLine($"📝 Step 17: Default flags cleared ✓");
-            }
-            else
-            {
-                Console.WriteLine($"📝 Step 16-17: Profile is not default, skipping flag clear");
             }
 
             // Add to collection
-            Console.WriteLine($"📝 Step 18: Adding profile to collection...");
             _logger.LogDebug("Adding profile to collection...");
             _profiles.Add(newProfile);
-            Console.WriteLine($"📝 Step 19: Sorting collection...");
             _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
-            Console.WriteLine($"📝 Step 20: Profile added, collection now has {_profiles.Count} profiles");
             _logger.LogDebug("Profile added, collection now has {Count} profiles", _profiles.Count);
 
             // Persist changes
-            Console.WriteLine($"📝 Step 21: Saving profiles to disk...");
             _logger.LogDebug("💾 Saving profiles to disk...");
             await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
-            Console.WriteLine($"📝 Step 22: Profiles saved successfully ✓");
             _logger.LogDebug("✅ Profiles saved successfully");
 
-            Console.WriteLine($"📝 Step 23: Profile creation complete!");
             _logger.LogInformation("✅ Created {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
-                ProfileTypeName, newProfile.Name, newProfile.Id);
+    ProfileTypeName, newProfile.Name, newProfile.Id);
 
-            Console.WriteLine($"📝 Step 24: Cloning profile for return...");
             T clonedProfile = CloneProfile(newProfile);
-            Console.WriteLine($"📝 Step 25: About to return cloned profile with ID: {clonedProfile.Id}");
             return clonedProfile;
         }
         finally
         {
-            Console.WriteLine($"📝 Step 26 (FINALLY): Releasing semaphore...");
             _logger.LogDebug("🔓 Releasing semaphore in CreateAsync");
             _semaphore.Release();
-            Console.WriteLine($"📝 Step 27 (FINALLY): Semaphore released ✓");
         }
     }
 

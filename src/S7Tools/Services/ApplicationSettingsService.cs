@@ -346,6 +346,7 @@ namespace S7Tools.Services
             try
             {
                 List<string> restoredKeys = new();
+                var eventsToFire = new List<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>();
 
                 lock (_settingsLock)
                 {
@@ -361,8 +362,8 @@ namespace S7Tools.Services
                         _currentSettings.UserSettings[kvp.Key] = kvp.Value;
                         restoredKeys.Add(kvp.Key);
 
-                        // Fire change event
-                        SettingsChanged?.Invoke(this, new S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs
+                        // Prepare change event data
+                        eventsToFire.Add(new S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs
                         {
                             Key = kvp.Key,
                             OldValue = oldValue,
@@ -373,6 +374,12 @@ namespace S7Tools.Services
 
                     // Recompute effective settings
                     _currentSettings.ComputeEffectiveSettings();
+                }
+
+                // Fire change events outside the lock
+                foreach (SettingsChangedEventArgs eventArgs in eventsToFire)
+                {
+                    SettingsChanged?.Invoke(this, eventArgs);
                 }
 
                 // Save to file
@@ -538,16 +545,13 @@ namespace S7Tools.Services
 
                 string jsonContent = JsonSerializer.Serialize(appSettingsFileContent, options);
 
-                // Atomic write: write to temp file first, then rename
+                // Atomic write: write to temp file first, then replace
                 string tempFilePath = settingsFilePath + ".tmp";
                 await File.WriteAllTextAsync(tempFilePath, jsonContent).ConfigureAwait(false);
 
-                // Replace original file atomically
-                if (File.Exists(settingsFilePath))
-                {
-                    File.Delete(settingsFilePath);
-                }
-                File.Move(tempFilePath, settingsFilePath);
+                // Replace original file atomically (with backup)
+                string? backupFilePath = File.Exists(settingsFilePath) ? settingsFilePath + ".bak" : null;
+                File.Replace(tempFilePath, settingsFilePath, backupFilePath);
 
                 _logger.LogDebug("Structured settings saved to {FilePath} with {UserSettingCount} user settings and {DefaultSettingCount} default settings",
                     settingsFilePath, userSettingsToSave.Count, defaultSettingsToSave.Count);

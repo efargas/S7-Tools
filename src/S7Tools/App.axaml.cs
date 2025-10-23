@@ -376,7 +376,58 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Initializes path services and settings synchronously to ensure proper startup order
+    /// Initializes path services and settings synchronously to ensure proper startup order.
+    ///
+    /// ARCHITECTURAL DECISION: Synchronous Initialization Pattern
+    /// =========================================================
+    ///
+    /// This method INTENTIONALLY blocks the UI thread during initialization. This is a deliberate
+    /// architectural decision based on strict service dependency requirements:
+    ///
+    /// Service Dependency Chain:
+    /// 1. IPathService - Creates all required directories (Resources/, Profiles/, Logs/, etc.)
+    /// 2. IResourceManagerService - Creates default resource files (requires directories from #1)
+    /// 3. IApplicationSettingsService - Loads settings from files (requires resources from #2)
+    /// 4. FileLogWriter - Monitors DataStore for file logging (requires paths from #1)
+    ///
+    /// Why Synchronous?
+    /// ----------------
+    /// - Profile managers, job services, and UI components depend on paths existing BEFORE they initialize
+    /// - Settings must be loaded BEFORE any service tries to read configuration
+    /// - Resource files must exist BEFORE any service tries to access them
+    /// - If we initialize asynchronously, race conditions occur where services fail because paths/files don't exist yet
+    ///
+    /// Why Not Task.Run()?
+    /// -------------------
+    /// - Task.Run() would still block initialization, just on a thread pool thread
+    /// - The UI window cannot be shown until these services are ready
+    /// - Moving to Task.Run() adds complexity without solving the fundamental requirement:
+    ///   "These services MUST be ready before the application can function"
+    ///
+    /// Performance Impact:
+    /// -------------------
+    /// - Typical initialization time: 50-200ms (file I/O + JSON deserialization)
+    /// - User sees no window during this time (acceptable for startup)
+    /// - Profile services initialize asynchronously in background after this completes
+    ///
+    /// Alternative Considered: Splash Screen
+    /// --------------------------------------
+    /// A splash screen with async initialization was considered, but rejected because:
+    /// - Adds complexity for minimal benefit (initialization is fast)
+    /// - Still requires blocking before showing main window
+    /// - Doesn't solve the fundamental dependency chain
+    ///
+    /// Future Optimization:
+    /// --------------------
+    /// If startup time becomes problematic (>500ms), consider:
+    /// - Lazy loading of non-critical resources
+    /// - Splash screen with progress indicator
+    /// - Parallel initialization of independent services (requires careful dependency analysis)
+    ///
+    /// Related Patterns:
+    /// -----------------
+    /// - See systemPatterns.md: "Internal Method Pattern" for proper async handling after initialization
+    /// - See SEMAPHORE_DEADLOCK_FIXES_COMPLETE.md for threading best practices
     /// </summary>
     /// <param name="logger">Logger instance for tracking initialization</param>
     private void InitializePathAndSettingsSync(ILogger logger)

@@ -83,8 +83,10 @@ namespace S7Tools.Core.Models.Configuration
                 // Try to convert
                 return (T)Convert.ChangeType(value, typeof(T)) ?? defaultValue;
             }
-            catch
+            catch (Exception ex)
             {
+                // Log the exception to make configuration errors visible
+                System.Diagnostics.Debug.WriteLine($"Failed to convert setting '{key}' to type {typeof(T).Name}. Falling back to default. Error: {ex.Message}");
                 return defaultValue;
             }
         }
