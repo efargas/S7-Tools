@@ -823,42 +823,6 @@ public class SocatService : ISocatService, IDisposable
             }, null, TimeSpan.Zero, monitorInterval);
 
             _processMonitors[processInfo.ProcessId] = monitor;
-            var isRunning = 0;
-
-            // Start periodic monitoring with overlap protection (immediate first run)
-            var monitor = new Timer(async _ =>
-            {
-                if (Interlocked.Exchange(ref isRunning, 1) == 1)
-                {
-                    // Skip overlapping executions
-                    return;
-                }
-
-                try
-                {
-                    await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
-                }
-                finally
-                {
-                    Interlocked.Exchange(ref isRunning, 0);
-                }
-            }, null, TimeSpan.Zero, monitorInterval);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
-                }
-                finally
-                {
-                    Interlocked.Exchange(ref isRunning, 0);
-                }
-            }, null, monitorInterval, monitorInterval);
-
-            _processMonitors[processInfo.ProcessId] = monitor;
 
             _logger.LogDebug("Started monitoring socat process {ProcessId}", processInfo.ProcessId);
         }
