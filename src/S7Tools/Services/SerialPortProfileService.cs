@@ -46,24 +46,12 @@ public class SerialPortProfileService : StandardProfileManager<SerialPortProfile
     /// <inheritdoc/>
     protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
-        // Create a default serial port profile with proper configuration
-        var defaultProfile = new SerialPortProfile
-        {
-            Name = "SerialDefault",
-            Description = "Default serial port profile created automatically",
-            Configuration = new SerialPortConfiguration
-            {
-                BaudRate = 9600,
-                CharacterSize = 8,
-                Parity = ParityMode.None,
-                StopBits = StopBits.One
-            },
-            IsDefault = true,
-            IsReadOnly = false,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            Id = 1
-        };
+        // Create a default serial port profile using the centralized factory method
+        // This ensures consistency between dialog defaults and saved profile defaults
+        SerialPortProfile defaultProfile = SerialPortProfile.CreateDefaultProfile();
+
+        // Override read-only to allow user modifications of the saved default profile
+        defaultProfile.IsReadOnly = false;
 
         _profiles.Add(defaultProfile);
 

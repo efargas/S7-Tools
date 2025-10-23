@@ -46,23 +46,12 @@ public class PowerSupplyProfileService : StandardProfileManager<PowerSupplyProfi
     /// <inheritdoc/>
     protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
-        // Create a default power supply profile
-        var defaultProfile = new PowerSupplyProfile
-        {
-            Name = "PowerSupplyDefault",
-            Description = "Default power supply profile created automatically",
-            Configuration = new ModbusTcpConfiguration
-            {
-                Host = "192.168.1.100",
-                Port = 502,
-                DeviceId = 1
-            },
-            IsDefault = true,
-            IsReadOnly = false,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            Id = 1
-        };
+        // Create a default power supply profile using the centralized factory method
+        // This ensures consistency between dialog defaults and saved profile defaults
+        PowerSupplyProfile defaultProfile = PowerSupplyProfile.CreateDefaultProfile();
+
+        // Override read-only to allow user modifications of the saved default profile
+        defaultProfile.IsReadOnly = false;
 
         _profiles.Add(defaultProfile);
 

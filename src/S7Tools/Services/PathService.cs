@@ -181,12 +181,17 @@ namespace S7Tools.Services
                 var createdDirectories = new List<string>();
                 foreach (string? directory in directoriesToCreate)
                 {
+                    bool existedBefore = Directory.Exists(directory);
                     if (await EnsureDirectoryExistsAsync(directory).ConfigureAwait(false))
                     {
-                        if (!Directory.Exists(directory))
+                        if (!existedBefore)
                         {
                             createdDirectories.Add(directory);
                         }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Directory could not be ensured: {DirectoryPath}", directory);
                     }
                 }
 

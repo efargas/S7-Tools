@@ -817,23 +817,36 @@ public class SocatService : ISocatService, IDisposable
                     int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
                     int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
 
-                    // Reschedule the next run with the potentially updated interval
-                    monitor?.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
+                    // Only reschedule if this timer is still the active one for the process
+                    if (_processMonitors.TryGetValue(processInfo.ProcessId, out Timer? activeTimer) && ReferenceEquals(activeTimer, monitor))
+                    {
+                        try
+                        {
+                            monitor.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Timer disposed during shutdown; ignore
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
 
-                    // Still reschedule even on error
-                    try
+                    // Still reschedule even on error if timer is still active
+                    if (_processMonitors.TryGetValue(processInfo.ProcessId, out Timer? activeTimer) && ReferenceEquals(activeTimer, monitor))
                     {
-                        int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
-                        int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
-                        monitor?.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
-                    }
-                    catch
-                    {
-                        // Ignore errors during rescheduling
+                        try
+                        {
+                            int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+                            int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
+                            monitor.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Timer disposed during error recovery; ignore
+                        }
                     }
                 }
                 finally

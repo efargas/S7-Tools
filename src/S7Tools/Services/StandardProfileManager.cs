@@ -743,6 +743,13 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
                 _logger.LogInformation("Loaded {Count} {ProfileType} profiles from: {Path}",
                     _profiles.Count, ProfileTypeName, _profilesPath);
+
+                // If file exists but contains no profiles, create defaults
+                if (_profiles.Count == 0)
+                {
+                    _logger.LogInformation("Profile file is empty, creating default profiles: {Path}", _profilesPath);
+                    await CreateDefaultProfilesAsync(cancellationToken).ConfigureAwait(false);
+                }
             }
         }
         catch (Exception ex)

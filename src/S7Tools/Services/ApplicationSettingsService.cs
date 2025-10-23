@@ -97,6 +97,8 @@ namespace S7Tools.Services
 
             try
             {
+                var eventsToFire = new List<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>();
+
                 lock (_settingsLock)
                 {
                     if (_currentSettings == null)
@@ -104,14 +106,14 @@ namespace S7Tools.Services
                         throw new InvalidOperationException(UIStrings.Error_SettingsNotLoaded);
                     }
 
-                    // Update user settings
+                    // Update user settings and collect events
                     foreach (KeyValuePair<string, object> kvp in userSettings)
                     {
                         object? oldValue = _currentSettings.UserSettings.TryGetValue(kvp.Key, out object? existing) ? existing : null;
                         _currentSettings.UserSettings[kvp.Key] = kvp.Value;
 
-                        // Fire change event
-                        SettingsChanged?.Invoke(this, new S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs
+                        // Prepare change event data
+                        eventsToFire.Add(new S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs
                         {
                             Key = kvp.Key,
                             OldValue = oldValue,
@@ -122,6 +124,12 @@ namespace S7Tools.Services
 
                     // Recompute effective settings
                     _currentSettings.ComputeEffectiveSettings();
+                }
+
+                // Fire change events outside the lock
+                foreach (var eventArgs in eventsToFire)
+                {
+                    SettingsChanged?.Invoke(this, eventArgs);
                 }
 
                 // Save to file
@@ -545,13 +553,40 @@ namespace S7Tools.Services
 
                 string jsonContent = JsonSerializer.Serialize(appSettingsFileContent, options);
 
-                // Atomic write: write to temp file first, then replace
+                // Atomic write with safe fallbacks
                 string tempFilePath = settingsFilePath + ".tmp";
-                await File.WriteAllTextAsync(tempFilePath, jsonContent).ConfigureAwait(false);
+                string backupFilePath = settingsFilePath + ".bak";
 
-                // Replace original file atomically (with backup)
-                string? backupFilePath = File.Exists(settingsFilePath) ? settingsFilePath + ".bak" : null;
-                File.Replace(tempFilePath, settingsFilePath, backupFilePath);
+                try
+                {
+                    await File.WriteAllTextAsync(tempFilePath, jsonContent).ConfigureAwait(false);
+
+                    if (File.Exists(settingsFilePath))
+                    {
+                        // File exists: use atomic Replace with backup
+                        File.Replace(tempFilePath, settingsFilePath, backupFilePath);
+                    }
+                    else
+                    {
+                        // First save: no existing target; use Move to place the file
+                        File.Move(tempFilePath, settingsFilePath);
+                    }
+                }
+                finally
+                {
+                    // Best-effort cleanup of temp file
+                    try
+                    {
+                        if (File.Exists(tempFilePath))
+                        {
+                            File.Delete(tempFilePath);
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore cleanup failures
+                    }
+                }
 
                 _logger.LogDebug("Structured settings saved to {FilePath} with {UserSettingCount} user settings and {DefaultSettingCount} default settings",
                     settingsFilePath, userSettingsToSave.Count, defaultSettingsToSave.Count);

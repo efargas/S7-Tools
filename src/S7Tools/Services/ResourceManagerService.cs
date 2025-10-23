@@ -492,16 +492,33 @@ namespace S7Tools.Services
         /// </summary>
         private static async Task<bool> CanWriteToDirectoryAsync(string directoryPath)
         {
+            string? testFile = null;
             try
             {
-                string testFile = Path.Combine(directoryPath, $"test_write_{Guid.NewGuid()}.tmp");
+                testFile = Path.Combine(directoryPath, $"test_write_{Guid.NewGuid()}.tmp");
                 await File.WriteAllTextAsync(testFile, "test").ConfigureAwait(false);
-                File.Delete(testFile);
                 return true;
             }
             catch
             {
                 return false;
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(testFile))
+                {
+                    try
+                    {
+                        if (File.Exists(testFile))
+                        {
+                            File.Delete(testFile);
+                        }
+                    }
+                    catch
+                    {
+                        // Best-effort cleanup; swallow exceptions
+                    }
+                }
             }
         }
 

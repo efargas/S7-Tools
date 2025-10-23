@@ -46,25 +46,13 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
     /// <inheritdoc/>
     protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
-        // Create a default socat profile with typical TCP to serial bridge configuration
-        var defaultProfile = new SocatProfile
-        {
-            Name = "SocatDefault",
-            Description = "Default socat profile for TCP to serial bridge created automatically",
-            Configuration = new SocatConfiguration
-            {
-                TcpPort = 2001,
-                EnableFork = true,
-                EnableReuseAddr = true,
-                SerialRawMode = true,
-                SerialDisableEcho = true
-            },
-            IsDefault = true,
-            IsReadOnly = false,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            Id = 1
-        };
+        // Create a default socat profile using the centralized factory method
+        // This ensures consistency between dialog defaults and saved profile defaults
+        SocatProfile defaultProfile = SocatProfile.CreateDefaultProfile();
+
+        // Override read-only to allow user modifications of the saved default profile
+        defaultProfile.IsReadOnly = false;
+
         _profiles.Add(defaultProfile);
 
         // Ensure directory exists
