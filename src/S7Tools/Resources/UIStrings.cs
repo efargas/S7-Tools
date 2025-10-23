@@ -15,7 +15,7 @@ public static class UIStrings
     /// </summary>
     public static IResourceManager ResourceManager
     {
-        get => _resourceManager ?? throw new InvalidOperationException(Exception_ResourceManagerNotInitialized);
+        get => _resourceManager ?? throw new InvalidOperationException("ResourceManager not initialized. Ensure App.Initialize() has been called.");
         set => _resourceManager = value ?? throw new ArgumentNullException(nameof(value));
     }
 
