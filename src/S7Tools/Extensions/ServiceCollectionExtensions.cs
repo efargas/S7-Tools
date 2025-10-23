@@ -108,11 +108,22 @@ public static class ServiceCollectionExtensions
 
         // Serial Port Profile Service (Communication - Serial profiles)
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
-        services.TryAddSingleton<ISerialPortService, SerialPortService>();
+        services.TryAddSingleton<ISerialPortService>(provider =>
+        {
+            ILogger<SerialPortService> logger = provider.GetRequiredService<ILogger<SerialPortService>>();
+            IApplicationSettingsService settingsService = provider.GetRequiredService<IApplicationSettingsService>();
+            return new SerialPortService(logger, settingsService);
+        });
 
         // Socat Profile Service (Servers Settings - socat configuration)
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
-        services.TryAddSingleton<ISocatService, SocatService>();
+        services.TryAddSingleton<ISocatService>(provider =>
+        {
+            ILogger<SocatService> logger = provider.GetRequiredService<ILogger<SocatService>>();
+            IApplicationSettingsService settingsService = provider.GetRequiredService<IApplicationSettingsService>();
+            ISerialPortService serialPortService = provider.GetRequiredService<ISerialPortService>();
+            return new SocatService(logger, settingsService, serialPortService);
+        });
 
         // Add Power Supply Profile Service (Power Supply Control - Modbus TCP)
         services.TryAddSingleton<IPowerSupplyProfileService, PowerSupplyProfileService>();

@@ -201,11 +201,24 @@ namespace S7Tools.Core.Models.Configuration
             settings.DefaultSettings.Add("serial.defaultDataBits", 8);
             settings.DefaultSettings.Add("serial.defaultParity", "None");
             settings.DefaultSettings.Add("serial.defaultStopBits", "One");
+            settings.DefaultSettings.Add("serial.includeUsbPorts", true);
+            settings.DefaultSettings.Add("serial.includeAcmPorts", true);
+            settings.DefaultSettings.Add("serial.includeStandardPorts", true);
+            settings.DefaultSettings.Add("serial.maxScanPorts", 32);
+            settings.DefaultSettings.Add("serial.scanIntervalSeconds", 5);
+            settings.DefaultSettings.Add("serial.portTestTimeoutMs", 1000);
 
             // Network settings
             settings.DefaultSettings.Add("network.defaultSocatPort", 2023);
             settings.DefaultSettings.Add("network.powerSupplyPort", 502);
             settings.DefaultSettings.Add("network.connectionRetries", 3);
+
+            // Socat settings
+            settings.DefaultSettings.Add("socat.maxConcurrentInstances", 5);
+            settings.DefaultSettings.Add("socat.autoConfigureSerialDevice", true);
+            settings.DefaultSettings.Add("socat.processShutdownTimeoutSeconds", 5);
+            settings.DefaultSettings.Add("socat.statusRefreshIntervalSeconds", 2);
+            settings.DefaultSettings.Add("socat.captureProcessOutput", true);
 
             // Power supply settings
             settings.DefaultSettings.Add("powerSupply.maxProfiles", 100);
