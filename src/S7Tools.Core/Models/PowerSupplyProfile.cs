@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using S7Tools.Core.Services.Interfaces;
@@ -18,12 +19,14 @@ public class PowerSupplyProfile : IProfileBase
     /// Gets or sets the unique identifier for this profile.
     /// </summary>
     /// <value>The profile ID. Auto-generated when creating new profiles.</value>
+    [Browsable(false)]
     public int Id { get; set; }
 
     /// <summary>
     /// Gets or sets the display name for this profile.
     /// </summary>
     /// <value>The profile name. Must be unique and not exceed 100 characters.</value>
+    [Display(Name = "Profile Name", Order = 1)]
     [Required(ErrorMessage = "Profile name is required")]
     [StringLength(100, ErrorMessage = "Profile name cannot exceed 100 characters")]
     public string Name { get; set; } = string.Empty;
@@ -32,6 +35,7 @@ public class PowerSupplyProfile : IProfileBase
     /// Gets or sets the description of this profile.
     /// </summary>
     /// <value>An optional description explaining the purpose or use case of this profile.</value>
+    [Display(Name = "Description", Order = 2)]
     [StringLength(500, ErrorMessage = "Profile description cannot exceed 500 characters")]
     public string Description { get; set; } = string.Empty;
 
@@ -43,6 +47,7 @@ public class PowerSupplyProfile : IProfileBase
     /// This property holds the polymorphic configuration (ModbusTcpConfiguration, ModbusRtuConfiguration, etc.).
     /// The actual type depends on the power supply device type.
     /// </remarks>
+    [Browsable(false)]
     [Required(ErrorMessage = "Profile configuration is required")]
     public PowerSupplyConfiguration Configuration { get; set; } = new ModbusTcpConfiguration();
 
@@ -51,6 +56,7 @@ public class PowerSupplyProfile : IProfileBase
     /// </summary>
     /// <value>True if this is the default profile used for new connections, false otherwise.</value>
     /// <remarks>Only one profile can be marked as default at a time.</remarks>
+    [Display(Name = "Default Profile", Order = 3)]
     public bool IsDefault { get; set; }
 
     /// <summary>
@@ -61,24 +67,28 @@ public class PowerSupplyProfile : IProfileBase
     /// Read-only profiles are typically system-defined profiles that ensure critical functionality.
     /// The default S7Tools power supply profile is read-only to prevent accidental modification.
     /// </remarks>
+    [Display(Name = "Read-Only", Order = 4)]
     public bool IsReadOnly { get; set; }
 
     /// <summary>
     /// Gets or sets the timestamp when this profile was created.
     /// </summary>
     /// <value>The creation timestamp in UTC.</value>
+    [Browsable(false)]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the timestamp when this profile was last modified.
     /// </summary>
     /// <value>The last modification timestamp in UTC.</value>
+    [Browsable(false)]
     public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the version of this profile format.
     /// </summary>
     /// <value>The profile format version. Default is "1.0".</value>
+    [Browsable(false)]
     [StringLength(10, ErrorMessage = "Version cannot exceed 10 characters")]
     public string Version { get; set; } = "1.0";
 
@@ -95,6 +105,7 @@ public class PowerSupplyProfile : IProfileBase
     /// - Protocol-specific flags
     /// Example: "--timeout=5000 --retries=3" or "--poll-interval=100"
     /// </remarks>
+    [Browsable(false)]
     public string Options { get; set; } = string.Empty;
 
     /// <summary>
@@ -110,6 +121,7 @@ public class PowerSupplyProfile : IProfileBase
     /// - enable-current-limiting=false
     /// Format: key=value pairs separated by semicolons
     /// </remarks>
+    [Browsable(false)]
     public string Flags { get; set; } = string.Empty;
 
     /// <summary>
@@ -124,6 +136,7 @@ public class PowerSupplyProfile : IProfileBase
     /// - Physical location
     /// - Custom application-specific data
     /// </remarks>
+    [Browsable(false)]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Dictionary<string, string>? Metadata { get; set; }
 
