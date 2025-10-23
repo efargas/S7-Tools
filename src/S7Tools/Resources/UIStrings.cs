@@ -1550,6 +1550,101 @@ public static class UIStrings
     /// </summary>
     public static string Status_ClearingFinishedTasks => GetStringSafe("Status_ClearingFinishedTasks", "Clearing finished tasks...");
 
+    /// <summary>
+    /// Gets the status message when profile is saved successfully.
+    /// </summary>
+    public static string Status_ProfileSavedSuccessfully => GetStringSafe("Status_ProfileSavedSuccessfully", "Profile saved successfully");
+
+    /// <summary>
+    /// Gets the error message when profile save fails.
+    /// </summary>
+    public static string Status_ErrorSavingProfile => GetStringSafe("Status_ErrorSavingProfile", "Error saving profile");
+
+    /// <summary>
+    /// Gets the generic validation error message.
+    /// </summary>
+    public static string Status_ValidationError => GetStringSafe("Status_ValidationError", "Validation error");
+
+    /// <summary>
+    /// Gets the status message when configuration is reset to defaults.
+    /// </summary>
+    public static string Status_ResetToDefaultConfiguration => GetStringSafe("Status_ResetToDefaultConfiguration", "Reset to default configuration");
+
+    /// <summary>
+    /// Gets the error message when loading a preset fails.
+    /// </summary>
+    public static string Status_ErrorLoadingPreset => GetStringSafe("Status_ErrorLoadingPreset", "Error loading preset");
+
+    /// <summary>
+    /// Gets the error message when copying to clipboard fails.
+    /// </summary>
+    public static string Status_ErrorCopyingToClipboard => GetStringSafe("Status_ErrorCopyingToClipboard", "Error copying to clipboard");
+
+    /// <summary>
+    /// Gets the status message when socat command is copied to clipboard.
+    /// </summary>
+    public static string Status_SocatCommandCopiedToClipboard => GetStringSafe("Status_SocatCommandCopiedToClipboard", "socat command copied to clipboard");
+
+    /// <summary>
+    /// Gets the status message when there is no valid socat command to copy.
+    /// </summary>
+    public static string Status_NoValidSocatCommandToCopy => GetStringSafe("Status_NoValidSocatCommandToCopy", "No valid socat command to copy");
+
+    /// <summary>
+    /// Gets the error message when TCP port testing fails.
+    /// </summary>
+    public static string Status_ErrorTestingTcpPort => GetStringSafe("Status_ErrorTestingTcpPort", "Error testing TCP port");
+
+    /// <summary>
+    /// Gets the status message when stty command is copied to clipboard.
+    /// </summary>
+    public static string Status_SttyCommandCopiedToClipboard => GetStringSafe("Status_SttyCommandCopiedToClipboard", "stty command copied to clipboard");
+
+    /// <summary>
+    /// Gets the status message when there is no valid stty command to copy.
+    /// </summary>
+    public static string Status_NoValidSttyCommandToCopy => GetStringSafe("Status_NoValidSttyCommandToCopy", "No valid stty command to copy");
+
+    /// <summary>
+    /// Gets the status message when testing port configuration.
+    /// </summary>
+    public static string Status_TestingPortConfiguration => GetStringSafe("Status_TestingPortConfiguration", "Testing port configuration...");
+
+    /// <summary>
+    /// Gets the status message when settings are ready.
+    /// </summary>
+    public static string Status_SettingsReady => GetStringSafe("Status_SettingsReady", "Settings ready");
+
+    /// <summary>
+    /// Gets the status message when settings are imported successfully.
+    /// </summary>
+    public static string Status_SettingsImportedSuccessfully => GetStringSafe("Status_SettingsImportedSuccessfully", "Settings imported successfully");
+
+    /// <summary>
+    /// Gets the error message when trying to import empty settings.
+    /// </summary>
+    public static string Status_CannotImportEmptySettings => GetStringSafe("Status_CannotImportEmptySettings", "Cannot import empty settings");
+
+    /// <summary>
+    /// Gets the error message when settings format is invalid.
+    /// </summary>
+    public static string Status_InvalidSettingsFormat => GetStringSafe("Status_InvalidSettingsFormat", "Invalid settings format");
+
+    /// <summary>
+    /// Gets the status message when folder selection is cancelled.
+    /// </summary>
+    public static string Status_FolderSelectionCancelled => GetStringSafe("Status_FolderSelectionCancelled", "Folder selection cancelled");
+
+    /// <summary>
+    /// Gets the status message when default log path is updated successfully.
+    /// </summary>
+    public static string Status_DefaultLogPathUpdatedSuccessfully => GetStringSafe("Status_DefaultLogPathUpdatedSuccessfully", "Default log path updated successfully");
+
+    /// <summary>
+    /// Gets the status message when export path is updated successfully.
+    /// </summary>
+    public static string Status_ExportPathUpdatedSuccessfully => GetStringSafe("Status_ExportPathUpdatedSuccessfully", "Export path updated successfully");
+
     #endregion
 
     #region Error Messages - Operations

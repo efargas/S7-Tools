@@ -1447,4 +1447,82 @@
     <comment>Status message when clearing finished tasks</comment>
   </data>
 
+  <!-- Additional Profile and Settings Messages -->
+  <data name="Status_ProfileSavedSuccessfully" xml:space="preserve">
+    <value>Profile saved successfully</value>
+    <comment>Status message when profile is saved successfully</comment>
+  </data>
+  <data name="Status_ErrorSavingProfile" xml:space="preserve">
+    <value>Error saving profile</value>
+    <comment>Error message when profile save fails</comment>
+  </data>
+  <data name="Status_ValidationError" xml:space="preserve">
+    <value>Validation error</value>
+    <comment>Generic validation error message</comment>
+  </data>
+  <data name="Status_ResetToDefaultConfiguration" xml:space="preserve">
+    <value>Reset to default configuration</value>
+    <comment>Status message when configuration is reset to defaults</comment>
+  </data>
+  <data name="Status_ErrorLoadingPreset" xml:space="preserve">
+    <value>Error loading preset</value>
+    <comment>Error message when loading a preset fails</comment>
+  </data>
+  <data name="Status_ErrorCopyingToClipboard" xml:space="preserve">
+    <value>Error copying to clipboard</value>
+    <comment>Error message when copying to clipboard fails</comment>
+  </data>
+  <data name="Status_SocatCommandCopiedToClipboard" xml:space="preserve">
+    <value>socat command copied to clipboard</value>
+    <comment>Status message when socat command is copied to clipboard</comment>
+  </data>
+  <data name="Status_NoValidSocatCommandToCopy" xml:space="preserve">
+    <value>No valid socat command to copy</value>
+    <comment>Status message when there is no valid socat command to copy</comment>
+  </data>
+  <data name="Status_ErrorTestingTcpPort" xml:space="preserve">
+    <value>Error testing TCP port</value>
+    <comment>Error message when TCP port testing fails</comment>
+  </data>
+  <data name="Status_SttyCommandCopiedToClipboard" xml:space="preserve">
+    <value>stty command copied to clipboard</value>
+    <comment>Status message when stty command is copied to clipboard</comment>
+  </data>
+  <data name="Status_NoValidSttyCommandToCopy" xml:space="preserve">
+    <value>No valid stty command to copy</value>
+    <comment>Status message when there is no valid stty command to copy</comment>
+  </data>
+  <data name="Status_TestingPortConfiguration" xml:space="preserve">
+    <value>Testing port configuration...</value>
+    <comment>Status message when testing port configuration</comment>
+  </data>
+  <data name="Status_SettingsReady" xml:space="preserve">
+    <value>Settings ready</value>
+    <comment>Status message when settings are ready</comment>
+  </data>
+  <data name="Status_SettingsImportedSuccessfully" xml:space="preserve">
+    <value>Settings imported successfully</value>
+    <comment>Status message when settings are imported successfully</comment>
+  </data>
+  <data name="Status_CannotImportEmptySettings" xml:space="preserve">
+    <value>Cannot import empty settings</value>
+    <comment>Error message when trying to import empty settings</comment>
+  </data>
+  <data name="Status_InvalidSettingsFormat" xml:space="preserve">
+    <value>Invalid settings format</value>
+    <comment>Error message when settings format is invalid</comment>
+  </data>
+  <data name="Status_FolderSelectionCancelled" xml:space="preserve">
+    <value>Folder selection cancelled</value>
+    <comment>Status message when folder selection is cancelled</comment>
+  </data>
+  <data name="Status_DefaultLogPathUpdatedSuccessfully" xml:space="preserve">
+    <value>Default log path updated successfully</value>
+    <comment>Status message when default log path is updated successfully</comment>
+  </data>
+  <data name="Status_ExportPathUpdatedSuccessfully" xml:space="preserve">
+    <value>Export path updated successfully</value>
+    <comment>Status message when export path is updated successfully</comment>
+  </data>
+
 </root>
