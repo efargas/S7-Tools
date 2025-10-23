@@ -786,8 +786,30 @@ public class SocatService : ISocatService, IDisposable
             int statusRefreshIntervalSeconds = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
             var monitorInterval = TimeSpan.FromSeconds(statusRefreshIntervalSeconds);
 
+            var isRunning = 0;
             var monitor = new Timer(async _ =>
             {
+                if (Interlocked.Exchange(ref isRunning, 1) == 1)
+                {
+                    // Skip overlapping executions
+                    return;
+                }
+                try
+                {
+                    try
+                    {
+                        await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
+                    }
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref isRunning, 0);
+                }
+            }, null, monitorInterval, monitorInterval);
                 try
                 {
                     await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
