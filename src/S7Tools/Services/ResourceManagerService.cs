@@ -532,7 +532,7 @@ namespace S7Tools.Services
                     return true; // Empty files are considered valid
                 }
 
-                System.Text.Json.JsonDocument.Parse(content);
+                using var _ = System.Text.Json.JsonDocument.Parse(content);
                 return true;
             }
             catch
