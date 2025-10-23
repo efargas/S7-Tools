@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 
 namespace S7Tools.ViewModels;
 
@@ -274,7 +275,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
 
         // Reset status
         HasChanges = false;
-        StatusMessage = "Profile loaded";
+        StatusMessage = UIStrings.Status_ProfileLoaded;
         _logger.LogDebug("Loaded power supply profile: {ProfileName}", profile.Name);
     }
 
@@ -380,25 +381,25 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     private void ValidateConfiguration()
     {
         bool isValid = true;
-        string statusMessage = "Ready";
+        string statusMessage = UIStrings.Status_Ready;
 
         // Validate profile name
         if (string.IsNullOrWhiteSpace(ProfileName))
         {
             isValid = false;
-            statusMessage = "Profile name is required";
+            statusMessage = UIStrings.Validation_ProfileNameRequired;
         }
         else if (ProfileName.Length > 255)
         {
             isValid = false;
-            statusMessage = "Profile name is too long (max 255 characters)";
+            statusMessage = UIStrings.Validation_ProfileNameTooLong;
         }
 
         // Validate description
         if (!string.IsNullOrEmpty(ProfileDescription) && ProfileDescription.Length > 1000)
         {
             isValid = false;
-            statusMessage = "Profile description is too long (max 1000 characters)";
+            statusMessage = UIStrings.Validation_ProfileDescriptionTooLong;
         }
 
         // Validate ModbusTcp configuration if applicable
@@ -407,22 +408,22 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             if (string.IsNullOrWhiteSpace(ModbusTcpHost))
             {
                 isValid = false;
-                statusMessage = "ModbusTcp host/IP address is required";
+                statusMessage = UIStrings.Validation_ModbusTcpHostRequired;
             }
             else if (ModbusTcpPort < 1 || ModbusTcpPort > 65535)
             {
                 isValid = false;
-                statusMessage = "ModbusTcp port must be between 1 and 65535";
+                statusMessage = UIStrings.Validation_ModbusTcpPortRange;
             }
             else if (ModbusTcpDeviceId < 0 || ModbusTcpDeviceId > 255)
             {
                 isValid = false;
-                statusMessage = "ModbusTcp device ID must be between 0 and 255";
+                statusMessage = UIStrings.Validation_ModbusTcpDeviceIdRange;
             }
             else if (ModbusTcpOnOffCoil < 0 || ModbusTcpOnOffCoil > 65535)
             {
                 isValid = false;
-                statusMessage = "ModbusTcp coil address must be between 0 and 65535";
+                statusMessage = UIStrings.Validation_ModbusTcpCoilRange;
             }
         }
 
@@ -442,7 +443,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
 
         try
         {
-            StatusMessage = "Saving profile...";
+            StatusMessage = UIStrings.Status_SavingProfile;
             System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
             PowerSupplyProfile profile = CreateProfile();
@@ -472,7 +473,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             }
 
             HasChanges = false;
-            StatusMessage = "Profile saved successfully";
+            StatusMessage = UIStrings.Status_ProfileSaved;
             _logger.LogInformation("Profile save operation completed: {ProfileName}", profile.Name);
             System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfileViewModel.SaveAsync completed successfully");
         }
@@ -480,14 +481,14 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
         {
             System.Diagnostics.Debug.WriteLine($"ERROR: Invalid operation in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
             _logger.LogError(ex, "Invalid operation while saving profile: {ProfileName}", ProfileName);
-            StatusMessage = $"Save failed: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_SaveFailed, ex.Message);
             throw;
         }
         catch (ArgumentException ex)
         {
             System.Diagnostics.Debug.WriteLine($"ERROR: Invalid argument in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
             _logger.LogError(ex, "Invalid profile data while saving: {ProfileName}", ProfileName);
-            StatusMessage = $"Save failed: Invalid profile data - {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_InvalidProfileData, ex.Message);
             throw;
         }
         catch (Exception ex)
@@ -495,7 +496,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             _logger.LogError(ex, "Unexpected error saving profile: {ProfileName}", ProfileName);
-            StatusMessage = $"Save failed: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_SaveFailed, ex.Message);
             throw;
         }
     }
@@ -520,7 +521,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             HasChanges = false;
         }
 
-        StatusMessage = "Changes cancelled";
+        StatusMessage = UIStrings.Status_ChangesCancelled;
         _logger.LogDebug("Profile editing cancelled");
     }
 
@@ -531,14 +532,14 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     {
         string errorMessage = ex switch
         {
-            InvalidOperationException => $"Invalid operation while {operation}",
-            ArgumentException => $"Invalid data while {operation}",
-            UnauthorizedAccessException => $"Access denied while {operation}",
-            _ => $"Error {operation}"
+            InvalidOperationException => string.Format(UIStrings.Error_InvalidOperation, operation),
+            ArgumentException => string.Format(UIStrings.Error_InvalidData, operation),
+            UnauthorizedAccessException => string.Format(UIStrings.Error_AccessDeniedOperation, operation),
+            _ => string.Format(UIStrings.Error_Generic, operation)
         };
 
         _logger.LogError(ex, "Error {Operation}: {Message}", operation, ex.Message);
-        StatusMessage = $"{errorMessage}: {ex.Message}";
+        StatusMessage = string.Format(UIStrings.Status_Error, errorMessage, ex.Message);
     }
 
     #endregion

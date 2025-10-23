@@ -505,6 +505,402 @@ public static class UIStrings
 
     #endregion
 
+    #region Common Status Messages
+
+    /// <summary>
+    /// Gets the status message when a profile is loaded.
+    /// </summary>
+    public static string Status_ProfileLoaded => GetStringSafe("Status_ProfileLoaded", "Profile loaded");
+
+    /// <summary>
+    /// Gets the status message when saving a profile.
+    /// </summary>
+    public static string Status_SavingProfile => GetStringSafe("Status_SavingProfile", "Saving profile...");
+
+    /// <summary>
+    /// Gets the status message when a profile is saved successfully.
+    /// </summary>
+    public static string Status_ProfileSaved => GetStringSafe("Status_ProfileSaved", "Profile saved successfully");
+
+    /// <summary>
+    /// Gets the status message format when save fails.
+    /// Expects parameter: error message (string)
+    /// </summary>
+    public static string Status_SaveFailed => GetStringSafe("Status_SaveFailed", "Save failed: {0}");
+
+    /// <summary>
+    /// Gets the status message format when save fails due to invalid profile data.
+    /// Expects parameter: error message (string)
+    /// </summary>
+    public static string Status_InvalidProfileData => GetStringSafe("Status_InvalidProfileData", "Save failed: Invalid profile data - {0}");
+
+    /// <summary>
+    /// Gets the status message when changes are cancelled.
+    /// </summary>
+    public static string Status_ChangesCancelled => GetStringSafe("Status_ChangesCancelled", "Changes cancelled");
+
+    /// <summary>
+    /// Gets the generic error status message format.
+    /// Expects parameters: operation (string), error message (string)
+    /// </summary>
+    public static string Status_Error => GetStringSafe("Status_Error", "{0}: {1}");
+
+    /// <summary>
+    /// Gets the status message format when socat process starts.
+    /// Expects parameters: process ID (int), TCP port (int)
+    /// </summary>
+    public static string Status_SocatProcessStarted => GetStringSafe("Status_SocatProcessStarted", "socat process {0} started on port {1}");
+
+    /// <summary>
+    /// Gets the status message format when socat process stops.
+    /// Expects parameter: process ID (int)
+    /// </summary>
+    public static string Status_SocatProcessStopped => GetStringSafe("Status_SocatProcessStopped", "socat process {0} stopped");
+
+    /// <summary>
+    /// Gets the status message format when socat process encounters an error.
+    /// Expects parameters: process ID (int), error message (string)
+    /// </summary>
+    public static string Status_SocatProcessError => GetStringSafe("Status_SocatProcessError", "socat process {0} error: {1}");
+
+    /// <summary>
+    /// Gets the status message format when connection is established.
+    /// Expects parameter: process ID (int)
+    /// </summary>
+    public static string Status_SocatConnectionEstablished => GetStringSafe("Status_SocatConnectionEstablished", "Connection established to process {0}");
+
+    /// <summary>
+    /// Gets the status message format when connection is closed.
+    /// Expects parameter: process ID (int)
+    /// </summary>
+    public static string Status_SocatConnectionClosed => GetStringSafe("Status_SocatConnectionClosed", "Connection closed to process {0}");
+
+    /// <summary>
+    /// Gets the status message when scanning for devices.
+    /// </summary>
+    public static string Status_ScanningDevices => GetStringSafe("Status_ScanningDevices", "Scanning for serial devices...");
+
+    /// <summary>
+    /// Gets the status message format when devices are found.
+    /// Expects parameter: device count (int)
+    /// </summary>
+    public static string Status_DevicesFound => GetStringSafe("Status_DevicesFound", "Found {0} serial device(s)");
+
+    /// <summary>
+    /// Gets the status message when device scanning fails.
+    /// </summary>
+    public static string Status_ErrorScanningDevices => GetStringSafe("Status_ErrorScanningDevices", "Error scanning devices");
+
+    /// <summary>
+    /// Gets the status message when refreshing processes.
+    /// </summary>
+    public static string Status_RefreshingProcesses => GetStringSafe("Status_RefreshingProcesses", "Refreshing running processes...");
+
+    /// <summary>
+    /// Gets the status message format when processes are found.
+    /// Expects parameter: process count (int)
+    /// </summary>
+    public static string Status_ProcessesFound => GetStringSafe("Status_ProcessesFound", "Found {0} running process(es)");
+
+    /// <summary>
+    /// Gets the status message format when process refresh fails.
+    /// Expects parameter: error message (string)
+    /// </summary>
+    public static string Status_ErrorRefreshingProcesses => GetStringSafe("Status_ErrorRefreshingProcesses", "Error refreshing processes: {0}");
+
+    /// <summary>
+    /// Gets the status message when deleting a profile.
+    /// </summary>
+    public static string Status_DeletingProfile => GetStringSafe("Status_DeletingProfile", "Deleting profile...");
+
+    /// <summary>
+    /// Gets the status message format when profile is deleted.
+    /// Expects parameter: profile name (string)
+    /// </summary>
+    public static string Status_ProfileDeleted => GetStringSafe("Status_ProfileDeleted", "Profile '{0}' deleted successfully");
+
+    /// <summary>
+    /// Gets the status message when profile deletion fails.
+    /// </summary>
+    public static string Status_DeleteProfileFailed => GetStringSafe("Status_DeleteProfileFailed", "Failed to delete profile");
+
+    /// <summary>
+    /// Gets the status message when profile deletion encounters an error.
+    /// </summary>
+    public static string Status_ErrorDeletingProfile => GetStringSafe("Status_ErrorDeletingProfile", "Error deleting profile");
+
+    /// <summary>
+    /// Gets the status message when duplicating a profile.
+    /// </summary>
+    public static string Status_DuplicatingProfile => GetStringSafe("Status_DuplicatingProfile", "Duplicating profile...");
+
+    /// <summary>
+    /// Gets the status message format when profile is duplicated.
+    /// Expects parameter: new profile name (string)
+    /// </summary>
+    public static string Status_ProfileDuplicated => GetStringSafe("Status_ProfileDuplicated", "Profile duplicated as '{0}'");
+
+    /// <summary>
+    /// Gets the status message when profile duplication fails.
+    /// </summary>
+    public static string Status_ErrorDuplicatingProfile => GetStringSafe("Status_ErrorDuplicatingProfile", "Error duplicating profile");
+
+    /// <summary>
+    /// Gets the status message format when starting socat.
+    /// Expects parameter: TCP port (int)
+    /// </summary>
+    public static string Status_StartingSocat => GetStringSafe("Status_StartingSocat", "Starting socat on port {0}...");
+
+    /// <summary>
+    /// Gets the status message format when socat starts successfully.
+    /// Expects parameter: process ID (int)
+    /// </summary>
+    public static string Status_SocatStarted => GetStringSafe("Status_SocatStarted", "socat started successfully (PID: {0})");
+
+    /// <summary>
+    /// Gets the status message format when starting socat fails.
+    /// Expects parameter: error message (string)
+    /// </summary>
+    public static string Status_ErrorStartingSocat => GetStringSafe("Status_ErrorStartingSocat", "Error starting socat: {0}");
+
+    /// <summary>
+    /// Gets the status message format when stopping socat.
+    /// Expects parameter: process ID (int)
+    /// </summary>
+    public static string Status_StoppingSocat => GetStringSafe("Status_StoppingSocat", "Stopping socat process {0}...");
+
+    /// <summary>
+    /// Gets the status message format when socat stops successfully.
+    /// Expects parameter: process ID (int)
+    /// </summary>
+    public static string Status_SocatStoppedSuccessfully => GetStringSafe("Status_SocatStoppedSuccessfully", "socat process {0} stopped successfully");
+
+    /// <summary>
+    /// Gets the status message format when stopping socat fails.
+    /// Expects parameter: process ID (int)
+    /// </summary>
+    public static string Status_SocatStopFailed => GetStringSafe("Status_SocatStopFailed", "Failed to stop socat process {0}");
+
+    /// <summary>
+    /// Gets the status message when stopping all socat processes.
+    /// </summary>
+    public static string Status_StoppingAllSocat => GetStringSafe("Status_StoppingAllSocat", "Stopping all socat processes...");
+
+    /// <summary>
+    /// Gets the status message format when all socat processes stopped.
+    /// Expects parameter: process count (int)
+    /// </summary>
+    public static string Status_AllSocatStopped => GetStringSafe("Status_AllSocatStopped", "Stopped {0} socat process(es)");
+
+    /// <summary>
+    /// Gets the status message when stopping all socat processes fails.
+    /// </summary>
+    public static string Status_ErrorStoppingAllSocat => GetStringSafe("Status_ErrorStoppingAllSocat", "Error stopping all socat processes");
+
+    /// <summary>
+    /// Gets the status message format when testing connection.
+    /// Expects parameter: port number (int)
+    /// </summary>
+    public static string Status_TestingConnection => GetStringSafe("Status_TestingConnection", "Testing connection to port {0}...");
+
+    /// <summary>
+    /// Gets the status message format when connection succeeds.
+    /// Expects parameter: port number (int)
+    /// </summary>
+    public static string Status_ConnectionSuccess => GetStringSafe("Status_ConnectionSuccess", "Connection to port {0} successful");
+
+    /// <summary>
+    /// Gets the status message format when connection fails.
+    /// Expects parameter: port number (int)
+    /// </summary>
+    public static string Status_ConnectionFailed => GetStringSafe("Status_ConnectionFailed", "Connection to port {0} failed");
+
+    /// <summary>
+    /// Gets the status message when connection test encounters an error.
+    /// </summary>
+    public static string Status_ErrorTestingConnection => GetStringSafe("Status_ErrorTestingConnection", "Error testing connection");
+
+    /// <summary>
+    /// Gets the status message when file dialog service is unavailable.
+    /// </summary>
+    public static string Status_FileDialogUnavailable => GetStringSafe("Status_FileDialogUnavailable", "File dialog service not available");
+
+    /// <summary>
+    /// Gets the status message when exporting profiles.
+    /// </summary>
+    public static string Status_ExportingProfiles => GetStringSafe("Status_ExportingProfiles", "Exporting profiles...");
+
+    /// <summary>
+    /// Gets the status message format when profiles are exported.
+    /// Expects parameters: count (int), filename (string)
+    /// </summary>
+    public static string Status_ProfilesExported => GetStringSafe("Status_ProfilesExported", "Exported {0} profile(s) to {1}");
+
+    /// <summary>
+    /// Gets the status message when profile export fails.
+    /// </summary>
+    public static string Status_ErrorExportingProfiles => GetStringSafe("Status_ErrorExportingProfiles", "Error exporting profiles");
+
+    /// <summary>
+    /// Gets the status message when importing profiles.
+    /// </summary>
+    public static string Status_ImportingProfiles => GetStringSafe("Status_ImportingProfiles", "Importing profiles...");
+
+    /// <summary>
+    /// Gets the status message format when profiles are imported.
+    /// Expects parameters: count (int), filename (string)
+    /// </summary>
+    public static string Status_ProfilesImported => GetStringSafe("Status_ProfilesImported", "Imported {0} profile(s) from {1}");
+
+    /// <summary>
+    /// Gets the status message when profile import fails.
+    /// </summary>
+    public static string Status_ErrorImportingProfiles => GetStringSafe("Status_ErrorImportingProfiles", "Error importing profiles");
+
+    /// <summary>
+    /// Gets the status message when exporting selected profile.
+    /// </summary>
+    public static string Status_ExportingSelectedProfile => GetStringSafe("Status_ExportingSelectedProfile", "Exporting selected profile...");
+
+    /// <summary>
+    /// Gets the status message when profile exported successfully.
+    /// </summary>
+    public static string Status_ProfileExportedSuccessfully => GetStringSafe("Status_ProfileExportedSuccessfully", "Profile exported successfully");
+
+    /// <summary>
+    /// Gets the status message when exporting profile fails.
+    /// </summary>
+    public static string Status_ErrorExportingProfile => GetStringSafe("Status_ErrorExportingProfile", "Error exporting profile");
+
+    /// <summary>
+    /// Gets the status message when showing profile details fails.
+    /// </summary>
+    public static string Status_ErrorShowingProfileDetails => GetStringSafe("Status_ErrorShowingProfileDetails", "Error showing profile details");
+
+    /// <summary>
+    /// Gets the status message when directory selection fails.
+    /// </summary>
+    public static string Status_ErrorSelectingDirectory => GetStringSafe("Status_ErrorSelectingDirectory", "Error selecting directory");
+
+    /// <summary>
+    /// Gets the status message when opening profiles folder.
+    /// </summary>
+    public static string Status_OpeningProfilesFolder => GetStringSafe("Status_OpeningProfilesFolder", "Opening profiles folder...");
+
+    /// <summary>
+    /// Gets the status message when profiles path is not available.
+    /// </summary>
+    public static string Status_ProfilesPathNotAvailable => GetStringSafe("Status_ProfilesPathNotAvailable", "Profiles path not available");
+
+    /// <summary>
+    /// Gets the status message when creating profiles folder.
+    /// </summary>
+    public static string Status_CreatingProfilesFolder => GetStringSafe("Status_CreatingProfilesFolder", "Creating profiles folder...");
+
+    /// <summary>
+    /// Gets the status message when profiles folder opened successfully.
+    /// </summary>
+    public static string Status_ProfilesFolderOpened => GetStringSafe("Status_ProfilesFolderOpened", "Profiles folder opened");
+
+    /// <summary>
+    /// Gets the status message when opening profiles folder fails.
+    /// </summary>
+    public static string Status_ErrorOpeningProfilesFolder => GetStringSafe("Status_ErrorOpeningProfilesFolder", "Error opening profiles folder");
+
+    /// <summary>
+    /// Gets the status message when profiles path reset to default.
+    /// </summary>
+    public static string Status_ProfilesPathReset => GetStringSafe("Status_ProfilesPathReset", "Profiles path reset to default");
+
+    /// <summary>
+    /// Gets the status message when resetting profiles path fails.
+    /// </summary>
+    public static string Status_ErrorResettingProfilesPath => GetStringSafe("Status_ErrorResettingProfilesPath", "Error resetting profiles path");
+
+    /// <summary>
+    /// Gets the status message when profiles path updated successfully.
+    /// </summary>
+    public static string Status_ProfilesPathUpdated => GetStringSafe("Status_ProfilesPathUpdated", "Profiles path updated");
+
+    /// <summary>
+    /// Gets the status message when settings update fails.
+    /// </summary>
+    public static string Status_FailedToUpdateSettings => GetStringSafe("Status_FailedToUpdateSettings", "Failed to update settings");
+
+    #endregion
+
+    #region Validation Messages - PowerSupply
+
+    /// <summary>
+    /// Gets the validation message when profile name is required.
+    /// </summary>
+    public static string Validation_ProfileNameRequired => GetStringSafe("Validation_ProfileNameRequired", "Profile name is required");
+
+    /// <summary>
+    /// Gets the validation message when profile name is too long.
+    /// </summary>
+    public static string Validation_ProfileNameTooLong => GetStringSafe("Validation_ProfileNameTooLong", "Profile name is too long (max 255 characters)");
+
+    /// <summary>
+    /// Gets the validation message when profile description is too long.
+    /// </summary>
+    public static string Validation_ProfileDescriptionTooLong => GetStringSafe("Validation_ProfileDescriptionTooLong", "Profile description is too long (max 1000 characters)");
+
+    /// <summary>
+    /// Gets the validation message when ModbusTcp host is required.
+    /// </summary>
+    public static string Validation_ModbusTcpHostRequired => GetStringSafe("Validation_ModbusTcpHostRequired", "ModbusTcp host/IP address is required");
+
+    /// <summary>
+    /// Gets the validation message when ModbusTcp port is out of range.
+    /// </summary>
+    public static string Validation_ModbusTcpPortRange => GetStringSafe("Validation_ModbusTcpPortRange", "ModbusTcp port must be between 1 and 65535");
+
+    /// <summary>
+    /// Gets the validation message when ModbusTcp device ID is out of range.
+    /// </summary>
+    public static string Validation_ModbusTcpDeviceIdRange => GetStringSafe("Validation_ModbusTcpDeviceIdRange", "ModbusTcp device ID must be between 0 and 255");
+
+    /// <summary>
+    /// Gets the validation message when ModbusTcp coil address is out of range.
+    /// </summary>
+    public static string Validation_ModbusTcpCoilRange => GetStringSafe("Validation_ModbusTcpCoilRange", "ModbusTcp coil address must be between 0 and 65535");
+
+    /// <summary>
+    /// Gets the ready status message.
+    /// </summary>
+    public static string Status_Ready => GetStringSafe("Status_Ready", "Ready");
+
+    #endregion
+
+    #region Error Messages - Operations
+
+    /// <summary>
+    /// Gets the error message format for invalid operations.
+    /// Expects parameter: operation name (string)
+    /// </summary>
+    public static string Error_InvalidOperation => GetStringSafe("Error_InvalidOperation", "Invalid operation while {0}");
+
+    /// <summary>
+    /// Gets the error message format for invalid data.
+    /// Expects parameter: operation name (string)
+    /// </summary>
+    public static string Error_InvalidData => GetStringSafe("Error_InvalidData", "Invalid data while {0}");
+
+    /// <summary>
+    /// Gets the error message format for access denied.
+    /// Expects parameter: operation name (string)
+    /// </summary>
+    public static string Error_AccessDeniedOperation => GetStringSafe("Error_AccessDeniedOperation", "Access denied while {0}");
+
+    /// <summary>
+    /// Gets the generic error message format.
+    /// Expects parameter: operation name (string)
+    /// </summary>
+    public static string Error_Generic => GetStringSafe("Error_Generic", "Error {0}");
+
+    #endregion
+
     /// <summary>
     /// Gets a formatted string with the specified arguments.
     /// </summary>
