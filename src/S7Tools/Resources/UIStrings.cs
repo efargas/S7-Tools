@@ -1821,9 +1821,10 @@ public static class UIStrings
 
     /// <summary>
     /// Gets the navigation failure message format.
-    /// Expects parameter: error message (string)
     /// </summary>
-    public static string Navigation_NavigationFailed => GetStringSafe("Navigation_NavigationFailed", "Navigation failed: {0}");
+    /// <param name="errorMessage">The error message to include.</param>
+    public static string Navigation_NavigationFailed(string errorMessage) =>
+        string.Format(GetStringSafe("Navigation_NavigationFailed", "Navigation failed: {0}"), errorMessage);
 
     #endregion
 
