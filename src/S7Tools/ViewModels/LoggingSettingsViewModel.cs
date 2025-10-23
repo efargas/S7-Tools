@@ -291,7 +291,7 @@ public class LoggingSettingsViewModel : ViewModelBase
     {
         try
         {
-            string settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath) ?? "Resources/AppSettings";
+            string settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath) ?? _pathService.AppSettingsPath;
 
             // Resolve the path through the path service instead of using it directly
             string resolvedPath = _pathService.ResolvePath(settingsDir);
