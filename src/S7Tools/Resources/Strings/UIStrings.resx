@@ -1337,4 +1337,46 @@
     <comment>Error message when copying port information fails</comment>
   </data>
 
+  <!-- Profile Management Base Messages -->
+  <data name="Status_LoadingProfiles" xml:space="preserve">
+    <value>Loading profiles...</value>
+    <comment>Status message when loading profiles</comment>
+  </data>
+  <data name="Status_CreatingProfile" xml:space="preserve">
+    <value>Creating profile...</value>
+    <comment>Status message when creating a new profile</comment>
+  </data>
+  <data name="Status_ProfileCreationCancelled" xml:space="preserve">
+    <value>Profile creation cancelled</value>
+    <comment>Status message when profile creation is cancelled</comment>
+  </data>
+  <data name="Status_NoProfileSelectedForEditing" xml:space="preserve">
+    <value>No profile selected for editing</value>
+    <comment>Status message when no profile is selected for editing</comment>
+  </data>
+  <data name="Status_EditingProfile" xml:space="preserve">
+    <value>Editing profile...</value>
+    <comment>Status message when editing a profile</comment>
+  </data>
+  <data name="Status_ProfileEditCancelled" xml:space="preserve">
+    <value>Profile edit cancelled</value>
+    <comment>Status message when profile editing is cancelled</comment>
+  </data>
+  <data name="Status_NoProfileSelectedForDuplication" xml:space="preserve">
+    <value>No profile selected for duplication</value>
+    <comment>Status message when no profile is selected for duplication</comment>
+  </data>
+  <data name="Status_ProfileDuplicationCancelled" xml:space="preserve">
+    <value>Profile duplication cancelled</value>
+    <comment>Status message when profile duplication is cancelled</comment>
+  </data>
+  <data name="Status_NoProfileSelectedForDeletion" xml:space="preserve">
+    <value>No profile selected for deletion</value>
+    <comment>Status message when no profile is selected for deletion</comment>
+  </data>
+  <data name="Status_RefreshingProfiles" xml:space="preserve">
+    <value>Refreshing profiles...</value>
+    <comment>Status message when refreshing profile list</comment>
+  </data>
+
 </root>

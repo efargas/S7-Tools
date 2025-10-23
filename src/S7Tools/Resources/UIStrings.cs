@@ -1420,6 +1420,56 @@ public static class UIStrings
     /// </summary>
     public static string Status_ErrorCopyingPortInformation => GetStringSafe("Status_ErrorCopyingPortInformation", "Error copying port information");
 
+    /// <summary>
+    /// Gets the status message when loading profiles.
+    /// </summary>
+    public static string Status_LoadingProfiles => GetStringSafe("Status_LoadingProfiles", "Loading profiles...");
+
+    /// <summary>
+    /// Gets the status message when creating a new profile.
+    /// </summary>
+    public static string Status_CreatingProfile => GetStringSafe("Status_CreatingProfile", "Creating profile...");
+
+    /// <summary>
+    /// Gets the status message when profile creation is cancelled.
+    /// </summary>
+    public static string Status_ProfileCreationCancelled => GetStringSafe("Status_ProfileCreationCancelled", "Profile creation cancelled");
+
+    /// <summary>
+    /// Gets the status message when no profile is selected for editing.
+    /// </summary>
+    public static string Status_NoProfileSelectedForEditing => GetStringSafe("Status_NoProfileSelectedForEditing", "No profile selected for editing");
+
+    /// <summary>
+    /// Gets the status message when editing a profile.
+    /// </summary>
+    public static string Status_EditingProfile => GetStringSafe("Status_EditingProfile", "Editing profile...");
+
+    /// <summary>
+    /// Gets the status message when profile editing is cancelled.
+    /// </summary>
+    public static string Status_ProfileEditCancelled => GetStringSafe("Status_ProfileEditCancelled", "Profile edit cancelled");
+
+    /// <summary>
+    /// Gets the status message when no profile is selected for duplication.
+    /// </summary>
+    public static string Status_NoProfileSelectedForDuplication => GetStringSafe("Status_NoProfileSelectedForDuplication", "No profile selected for duplication");
+
+    /// <summary>
+    /// Gets the status message when profile duplication is cancelled.
+    /// </summary>
+    public static string Status_ProfileDuplicationCancelled => GetStringSafe("Status_ProfileDuplicationCancelled", "Profile duplication cancelled");
+
+    /// <summary>
+    /// Gets the status message when no profile is selected for deletion.
+    /// </summary>
+    public static string Status_NoProfileSelectedForDeletion => GetStringSafe("Status_NoProfileSelectedForDeletion", "No profile selected for deletion");
+
+    /// <summary>
+    /// Gets the status message when refreshing profile list.
+    /// </summary>
+    public static string Status_RefreshingProfiles => GetStringSafe("Status_RefreshingProfiles", "Refreshing profiles...");
+
     #endregion
 
     #region Error Messages - Operations
