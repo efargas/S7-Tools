@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace S7Tools.Core.Models.Jobs;
 
 /// <summary>
@@ -6,5 +8,6 @@ namespace S7Tools.Core.Models.Jobs;
 /// </summary>
 /// <param name="BasePath">Base directory path containing payload files.</param>
 public sealed record PayloadSetProfile(
+    [property: Display(Name = "Payload Base Path", Order = 1)]
     string BasePath
 );

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 
@@ -23,8 +24,9 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
     /// Initializes a new instance of the SocatProfileService.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public SocatProfileService(ILogger<SocatProfileService> logger)
-        : base(GetDefaultProfilesPath(), logger)
+    /// <param name="pathService">The path service for resolving profile file paths.</param>
+    public SocatProfileService(ILogger<SocatProfileService> logger, IPathService pathService)
+        : base(pathService.SocatProfilesPath, logger)
     {
     }
 
@@ -44,25 +46,13 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
     /// <inheritdoc/>
     protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
-        // Create a default socat profile with typical TCP to serial bridge configuration
-        var defaultProfile = new SocatProfile
-        {
-            Name = "SocatDefault",
-            Description = "Default socat profile for TCP to serial bridge created automatically",
-            Configuration = new SocatConfiguration
-            {
-                TcpPort = 2001,
-                EnableFork = true,
-                EnableReuseAddr = true,
-                SerialRawMode = true,
-                SerialDisableEcho = true
-            },
-            IsDefault = true,
-            IsReadOnly = false,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
-            Id = 1
-        };
+        // Create a default socat profile using the centralized factory method
+        // This ensures consistency between dialog defaults and saved profile defaults
+        SocatProfile defaultProfile = SocatProfile.CreateDefaultProfile();
+
+        // Override read-only to allow user modifications of the saved default profile
+        defaultProfile.IsReadOnly = false;
+
         _profiles.Add(defaultProfile);
 
         // Ensure directory exists
@@ -91,20 +81,6 @@ public class SocatProfileService : StandardProfileManager<SocatProfile>, ISocatP
             _logger.LogError(ex, "Failed to save default socat profile");
             _profiles.Clear(); // Clear the in-memory profiles if save failed
         }
-    }
-
-    #endregion
-
-    #region Private Helper Methods
-
-    /// <summary>
-    /// Gets the default path for socat profiles.
-    /// </summary>
-    private static string GetDefaultProfilesPath()
-    {
-        string appDataPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "SocatProfiles");
-        Directory.CreateDirectory(appDataPath);
-        return Path.Combine(appDataPath, "profiles.json");
     }
 
     #endregion

@@ -232,27 +232,23 @@
           <!-- Serial Profile Details -->
           <Border Classes="ProfileSection"
                   IsVisible="{Binding SelectedSerial, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <Expander IsExpanded="True">
-              <Expander.Header>
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                  </Grid.ColumnDefinitions>
-                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
-                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-plug" />
-                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SERIAL PORT CONFIGURATION" />
-                </Grid>
-              </Expander.Header>
-              <ContentControl Content="{Binding SelectedSerial}">
+            <StackPanel Spacing="8">
+              <!-- Header -->
+              <Border Background="#2D2D30" BorderBrush="#464647" BorderThickness="0,0,0,1" Padding="8,6">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:Icon Value="fa-solid fa-plug" Width="16" Height="16" Foreground="#CCCCCC" VerticalAlignment="Center" />
+                  <TextBlock Text="SERIAL PORT CONFIGURATION" FontWeight="SemiBold" FontSize="12" Foreground="#CCCCCC" VerticalAlignment="Center" />
+                </StackPanel>
+              </Border>
+              <!-- Details -->
+              <ContentControl Content="{Binding SelectedSerial}" Margin="8,0,8,8">
                 <ContentControl.DataTemplates>
                   <DataTemplate DataType="models:SerialPortProfile">
-                    <views:SerialProfileDetailView />
+                    <views:SerialProfileDetailedView />
                   </DataTemplate>
                 </ContentControl.DataTemplates>
               </ContentControl>
-            </Expander>
+            </StackPanel>
           </Border>
           <!-- Port Discovery Section -->
           <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
@@ -335,27 +331,23 @@
           <!-- Socat Profile Details -->
           <Border Classes="ProfileSection"
                   IsVisible="{Binding SelectedSocat, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <Expander IsExpanded="True">
-              <Expander.Header>
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                  </Grid.ColumnDefinitions>
-                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
-                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-network-wired" />
-                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SOCAT NETWORK BRIDGE" />
-                </Grid>
-              </Expander.Header>
-              <ContentControl Content="{Binding SelectedSocat}">
+            <StackPanel Spacing="8">
+              <!-- Header -->
+              <Border Background="#2D2D30" BorderBrush="#464647" BorderThickness="0,0,0,1" Padding="8,6">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:Icon Value="fa-solid fa-network-wired" Width="16" Height="16" Foreground="#CCCCCC" VerticalAlignment="Center" />
+                  <TextBlock Text="SOCAT NETWORK BRIDGE" FontWeight="SemiBold" FontSize="12" Foreground="#CCCCCC" VerticalAlignment="Center" />
+                </StackPanel>
+              </Border>
+              <!-- Details -->
+              <ContentControl Content="{Binding SelectedSocat}" Margin="8,0,8,8">
                 <ContentControl.DataTemplates>
                   <DataTemplate DataType="models:SocatProfile">
                     <views:SocatProfileDetailView />
                   </DataTemplate>
                 </ContentControl.DataTemplates>
               </ContentControl>
-            </Expander>
+            </StackPanel>
           </Border>
         </StackPanel>
       </Border>
@@ -378,27 +370,23 @@
           <!-- Power Supply Profile Details -->
           <Border Classes="ProfileSection"
                   IsVisible="{Binding SelectedPower, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <Expander IsExpanded="True">
-              <Expander.Header>
-                <Grid>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                  </Grid.ColumnDefinitions>
-                  <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
-                  <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-bolt" />
-                  <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="POWER SUPPLY CONTROL" />
-                </Grid>
-              </Expander.Header>
-              <ContentControl Content="{Binding SelectedPower}">
+            <StackPanel Spacing="8">
+              <!-- Header -->
+              <Border Background="#2D2D30" BorderBrush="#464647" BorderThickness="0,0,0,1" Padding="8,6">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:Icon Value="fa-solid fa-bolt" Width="16" Height="16" Foreground="#CCCCCC" VerticalAlignment="Center" />
+                  <TextBlock Text="POWER SUPPLY CONTROL" FontWeight="SemiBold" FontSize="12" Foreground="#CCCCCC" VerticalAlignment="Center" />
+                </StackPanel>
+              </Border>
+              <!-- Details -->
+              <ContentControl Content="{Binding SelectedPower}" Margin="8,0,8,8">
                 <ContentControl.DataTemplates>
                   <DataTemplate DataType="models:PowerSupplyProfile">
                     <views:PowerSupplyProfileDetailView />
                   </DataTemplate>
                 </ContentControl.DataTemplates>
               </ContentControl>
-            </Expander>
+            </StackPanel>
           </Border>
         </StackPanel>
       </Border>

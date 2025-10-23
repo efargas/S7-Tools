@@ -1,8 +1,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using S7Tools.Core.Commands;
 using S7Tools.Core.Factories;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Logging;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Resources;
@@ -50,9 +52,6 @@ public static class ServiceCollectionExtensions
 
         // Add Theme Service
         services.TryAddSingleton<IThemeService, ThemeService>();
-
-        // Add Settings Service
-        services.TryAddSingleton<ISettingsService, SettingsService>();
 
         // Add Dialog Service
         services.TryAddTransient<IDialogService, DialogService>();
@@ -109,15 +108,51 @@ public static class ServiceCollectionExtensions
 
         // Serial Port Profile Service (Communication - Serial profiles)
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
-        services.TryAddSingleton<ISerialPortService, SerialPortService>();
+        services.TryAddSingleton<ISerialPortService>(provider =>
+            new SerialPortService(
+                provider.GetRequiredService<ILogger<SerialPortService>>(),
+                provider.GetRequiredService<IApplicationSettingsService>()
+            )
+        );
 
         // Socat Profile Service (Servers Settings - socat configuration)
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
-        services.TryAddSingleton<ISocatService, SocatService>();
+        services.TryAddSingleton<ISocatService>(provider =>
+            new SocatService(
+                provider.GetRequiredService<ILogger<SocatService>>(),
+                provider.GetRequiredService<IApplicationSettingsService>(),
+                provider.GetRequiredService<ISerialPortService>()
+            )
+        );
 
-        // Power Supply Profile Service (Power Supply Control - Modbus TCP)
+        // Add Power Supply Profile Service (Power Supply Control - Modbus TCP)
         services.TryAddSingleton<IPowerSupplyProfileService, PowerSupplyProfileService>();
         services.TryAddSingleton<IPowerSupplyService, PowerSupplyService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds S7Tools path management services to the service collection.
+    /// These services handle dynamic path resolution, resource initialization, and settings management.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddS7ToolsPathManagement(this IServiceCollection services)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        // Add path resolution service for dynamic path management
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IPathService, PathService>();
+
+        // Add resource manager service for resource initialization and validation
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IResourceManagerService, ResourceManagerService>();
+
+        // Add application settings service for layered configuration management
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IApplicationSettingsService, ApplicationSettingsService>();
+
+        // Add path diagnostics service for troubleshooting and monitoring
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Services.IPathDiagnosticsService, PathDiagnosticsService>();
 
         return services;
     }
@@ -185,15 +220,24 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Add JobManagerOptions configuration
-        services.Configure<S7Tools.Core.Models.Jobs.JobManagerOptions>(options =>
+        // Add Job Management Services using factory pattern to resolve path dynamically
+        services.TryAddSingleton<IJobManager>(serviceProvider =>
         {
-            // Persist job profiles in the committed resources folder
-            options.ProfilesPath = "src/resources/JobProfiles/profiles.json";
-        });
+            IPathService pathService = serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
+            ILogger<JobManager> logger = serviceProvider.GetRequiredService<ILogger<JobManager>>();
+            IResourceCoordinator resourceCoordinator = serviceProvider.GetRequiredService<IResourceCoordinator>();
+            ISerialPortProfileService serialProfileService = serviceProvider.GetRequiredService<ISerialPortProfileService>();
+            ISocatProfileService socatProfileService = serviceProvider.GetRequiredService<ISocatProfileService>();
+            IPowerSupplyProfileService powerSupplyProfileService = serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
 
-        // Add Job Management Services using options pattern
-        services.TryAddSingleton<IJobManager, JobManager>();
+            // Create options with dynamically resolved path
+            IOptions<JobManagerOptions> options = Microsoft.Extensions.Options.Options.Create(new S7Tools.Core.Models.Jobs.JobManagerOptions
+            {
+                ProfilesPath = pathService.JobsPath
+            });
+
+            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService);
+        });
 
         // Add Task Scheduling Services
         services.TryAddSingleton<ITaskScheduler, EnhancedTaskScheduler>();
@@ -244,7 +288,7 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<SettingsManagementViewModel>(),
             provider.GetRequiredService<IDialogService>(),
             provider.GetRequiredService<IClipboardService>(),
-            provider.GetRequiredService<ISettingsService>(),
+            provider.GetRequiredService<IApplicationSettingsService>(),
             provider.GetService<IFileDialogService>(),
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>()));
 
@@ -253,7 +297,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<BottomPanelViewModel>();
         services.TryAddSingleton<SettingsManagementViewModel>(provider => new SettingsManagementViewModel(
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SettingsManagementViewModel>>(),
-            provider.GetRequiredService<ISettingsService>(),
+            provider.GetRequiredService<IApplicationSettingsService>(),
             provider.GetService<IFileDialogService>()));
 
         // Add Feature ViewModels
@@ -305,6 +349,9 @@ public static class ServiceCollectionExtensions
 
         // Add foundation services
         services.AddS7ToolsFoundationServices();
+
+        // Add path management services
+        services.AddS7ToolsPathManagement();
 
         // Add advanced design pattern services
         services.AddS7ToolsAdvancedServices();
@@ -449,6 +496,17 @@ public static class ServiceCollectionExtensions
                 powerSupplyProfileService,
                 "Power Supply",
                 serviceProvider.GetService<ILogger<IPowerSupplyProfileService>>(),
+                startupLogger));
+        }
+
+        // Initialize Job Manager
+        IJobManager? jobManager = serviceProvider.GetService<IJobManager>();
+        if (jobManager != null)
+        {
+            profileInitTasks.Add(InitializeProfileServiceAsync(
+                jobManager,
+                "Job Manager",
+                serviceProvider.GetService<ILogger<IJobManager>>(),
                 startupLogger));
         }
 

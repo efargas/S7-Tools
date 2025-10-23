@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// Gets or sets the host address (IP address or hostname) of the Modbus TCP device.
     /// </summary>
     /// <value>The host address. Can be an IPv4 address (e.g., "192.168.1.100") or hostname (e.g., "power-supply.local").</value>
+    [Display(Name = "Host Address", Order = 1)]
     [Required(ErrorMessage = "Host address is required")]
     [StringLength(255, ErrorMessage = "Host address cannot exceed 255 characters")]
     public string Host { get; set; } = string.Empty;
@@ -29,6 +31,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// Gets or sets the TCP port number for Modbus communication.
     /// </summary>
     /// <value>The TCP port number. Default is 502 (standard Modbus TCP port).</value>
+    [Display(Name = "TCP Port", Order = 2)]
     [Range(1, 65535, ErrorMessage = "Port must be between 1 and 65535")]
     public int Port { get; set; } = 502;
 
@@ -46,6 +49,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// Value 255 is reserved and should not be used.
     /// Common values: 1 for single device, 1-247 for multi-drop configurations.
     /// </remarks>
+    [Display(Name = "Device ID", Order = 3)]
     [Range(0, 247, ErrorMessage = "Device ID must be between 0 and 247")]
     public byte DeviceId { get; set; } = 1;
 
@@ -59,6 +63,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// - Base-1 mode: Range 1-65536 (display address, internally converted to 0-based)
     /// Writing TRUE (0xFF00) turns power ON, FALSE (0x0000) turns power OFF.
     /// </remarks>
+    [Display(Name = "On/Off Coil Address", Order = 4)]
     public ushort OnOffCoil { get; set; }
 
     /// <summary>
@@ -69,6 +74,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// <para>Base-0: Coil addresses start at 0 (matches Modbus protocol).</para>
     /// <para>Base-1: Coil addresses start at 1 (user-friendly, converted to 0-based internally).</para>
     /// </remarks>
+    [Display(Name = "Addressing Mode", Order = 5)]
     public ModbusAddressingMode AddressingMode { get; set; } = ModbusAddressingMode.Base0;
 
     #endregion
@@ -79,6 +85,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// Gets or sets the connection timeout in milliseconds.
     /// </summary>
     /// <value>The connection timeout. Default is 5000ms (5 seconds).</value>
+    [Display(Name = "Connection Timeout (ms)", Order = 6)]
     [Range(100, 60000, ErrorMessage = "Connection timeout must be between 100ms and 60000ms")]
     public int ConnectionTimeoutMs { get; set; } = 5000;
 
@@ -86,6 +93,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// Gets or sets the read timeout in milliseconds.
     /// </summary>
     /// <value>The read timeout. Default is 3000ms (3 seconds).</value>
+    [Display(Name = "Read Timeout (ms)", Order = 7)]
     [Range(100, 30000, ErrorMessage = "Read timeout must be between 100ms and 30000ms")]
     public int ReadTimeoutMs { get; set; } = 3000;
 
@@ -93,6 +101,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// Gets or sets the write timeout in milliseconds.
     /// </summary>
     /// <value>The write timeout. Default is 3000ms (3 seconds).</value>
+    [Display(Name = "Write Timeout (ms)", Order = 8)]
     [Range(100, 30000, ErrorMessage = "Write timeout must be between 100ms and 30000ms")]
     public int WriteTimeoutMs { get; set; } = 3000;
 
@@ -100,12 +109,14 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     /// Gets or sets whether to enable automatic reconnection on connection loss.
     /// </summary>
     /// <value>True to enable auto-reconnect, false otherwise. Default is true.</value>
+    [Display(Name = "Enable Auto-Reconnect", Order = 9)]
     public bool EnableAutoReconnect { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the maximum number of retry attempts for operations.
     /// </summary>
     /// <value>The maximum retry attempts. Default is 3.</value>
+    [Display(Name = "Max Retry Attempts", Order = 10)]
     [Range(0, 10, ErrorMessage = "Retry attempts must be between 0 and 10")]
     public int MaxRetryAttempts { get; set; } = 3;
 

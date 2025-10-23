@@ -1,0 +1,37 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Property card layout styles for profile detail views -->
+  
+  <!-- ItemsControl content presenter styling for property cards -->
+  <Style Selector="ItemsControl > ContentPresenter">
+    <Setter Property="Width" Value="280" />
+    <Setter Property="Margin" Value="0,0,12,8" />
+  </Style>
+
+  <!-- Property card container styling -->
+  <Style Selector="Border.PropertyItem">
+    <Setter Property="Background" Value="#2A2A2B" />
+    <Setter Property="BorderBrush" Value="#464647" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="3" />
+    <Setter Property="Padding" Value="8,6" />
+  </Style>
+
+  <!-- Property label styling (blue, smaller, bold) -->
+  <Style Selector="TextBlock.PropertyLabel">
+    <Setter Property="Foreground" Value="#9CDCFE" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="TextWrapping" Value="NoWrap" />
+  </Style>
+
+  <!-- Property value styling (gray, larger, normal) -->
+  <Style Selector="TextBlock.PropertyValue">
+    <Setter Property="Foreground" Value="#CCCCCC" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+    <Setter Property="Margin" Value="0,2,0,0" />
+  </Style>
+
+</Styles>

@@ -11,9 +11,11 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
@@ -34,9 +36,10 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<PowerSupplySettingsViewModel> _specificLogger;
-    private readonly S7Tools.Services.Interfaces.ISettingsService _settingsService;
+    private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
-    private EventHandler<S7Tools.Models.ApplicationSettings>? _settingsChangedHandler;
+    private readonly IPathService _pathService;
+    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -55,6 +58,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
+    /// <param name="pathService">The path service for dynamic path resolution.</param>
     public PowerSupplySettingsViewModel(
         IUnifiedProfileDialogService unifiedDialogService,
         ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>> logger,
@@ -64,7 +68,8 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         IDialogService dialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
-        S7Tools.Services.Interfaces.ISettingsService settingsService)
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
+        IPathService pathService)
         : base(logger, unifiedDialogService, dialogService, uiThreadService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
@@ -75,6 +80,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _uiThreadService = uiThreadService;
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
         // Store specific logger (use constructor parameter, not create new factory)
         _specificLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<PowerSupplySettingsViewModel>();
@@ -96,7 +102,13 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         // Initialize ProfilesPath from settings and subscribe to changes
         RefreshFromSettings();
-        _settingsChangedHandler = (_, __) => RefreshFromSettings();
+        _settingsChangedHandler = (_, args) =>
+        {
+            if (args.Key.StartsWith("powerSupply.") || args.Key.StartsWith("profiles.powerSupply"))
+            {
+                RefreshFromSettings();
+            }
+        };
         _settingsService.SettingsChanged += _settingsChangedHandler;
 
         // Setup property change subscriptions
@@ -383,7 +395,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 if (profile != null)
                 {
                     _specificLogger.LogDebug("Selected profile changed: {ProfileName}", profile.Name);
-                    StatusMessage = $"Selected: {profile.Name}";
+                    StatusMessage = string.Format(UIStrings.Status_ProfileSelected, profile.Name);
                 }
             })
             .DisposeWith(_disposables);
@@ -422,16 +434,31 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         try
         {
-            Models.ApplicationSettings settings = _settingsService.Settings;
-            ProfilesPath = settings.PowerSupply.ProfilesPath;
+            // Use the new settings service with key-value access
+            string powerSupplyProfilePath = _settingsService.GetSetting<string>("profiles.powerSupplyPath", _pathService.PowerSupplyProfilesPath);
+            string? directoryPath = Path.GetDirectoryName(powerSupplyProfilePath);
+
+            // Resolve the path using the path service, which handles both absolute and relative paths
+            string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
+
+            // If resolution results in an invalid path, fall back to the PowerSupply profiles directory
+            if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
+            {
+                ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
+            }
+            else
+            {
+                ProfilesPath = resolvedPath;
+            }
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Failed to refresh settings from settings service");
             _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Warning: Failed to load settings";
+                StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
             });
+            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
         }
     }
 
@@ -471,7 +498,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                     SelectedProfile = Profiles.FirstOrDefault();
                 }).ConfigureAwait(false);
 
-                StatusMessage = $"Profile '{profileName}' deleted successfully";
+                StatusMessage = string.Format(UIStrings.Status_ProfileDeletedSuccessfully, profileName);
                 _specificLogger.LogInformation("Deleted power supply profile: {ProfileName}", profileName);
             }
         }
@@ -512,7 +539,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 // Refresh and select duplicated profile
                 await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
 
-                StatusMessage = $"Profile duplicated as '{newName}'";
+                StatusMessage = string.Format(UIStrings.Status_ProfileDuplicated, newName);
                 _specificLogger.LogInformation("Duplicated power supply profile: {ProfileName} -> {NewName}",
                     SelectedProfile.Name, newName);
             }
@@ -541,7 +568,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             await _profileService.SetDefaultAsync(SelectedProfile.Id).ConfigureAwait(false);
             _ = RefreshCommand.Execute();
 
-            StatusMessage = $"Profile '{SelectedProfile.Name}' set as default";
+            StatusMessage = string.Format(UIStrings.Status_ProfileSetAsDefault, SelectedProfile.Name);
             _specificLogger.LogInformation("Set default power supply profile: {ProfileName}", SelectedProfile.Name);
         }
         catch (Exception ex)
@@ -582,7 +609,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error refreshing profiles with selection preservation");
-            StatusMessage = "Error refreshing profiles";
+            StatusMessage = UIStrings.Status_ErrorRefreshingProfiles;
         }
         return Task.CompletedTask;
     }
@@ -596,7 +623,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Refreshing power supply profiles");
             _ = RefreshCommand.Execute();
-            StatusMessage = "Profiles refreshed";
+            StatusMessage = UIStrings.Status_ProfilesRefreshed;
         }
         catch (Exception ex)
         {
@@ -615,7 +642,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "File dialog service not available";
+                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
             });
             _specificLogger.LogWarning("Export profiles failed: File dialog service not available");
             return;
@@ -639,7 +666,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    StatusMessage = $"Exported {Profiles.Count} profiles to {Path.GetFileName(filePath)}";
+                    StatusMessage = string.Format(UIStrings.Status_ProfilesExportedToFile, Profiles.Count, Path.GetFileName(filePath));
                 });
                 _specificLogger.LogInformation("Exported {Count} power supply profiles to {FilePath}",
                     Profiles.Count, filePath);
@@ -650,7 +677,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Access denied while exporting profiles to {FilePath}", ex.Message);
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Export failed: Access denied to file location";
+                StatusMessage = UIStrings.Status_ExportFailedAccessDenied;
             });
         }
         catch (IOException ex)
@@ -658,7 +685,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "I/O error while exporting profiles");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Export failed: {ex.Message}";
+                StatusMessage = string.Format(UIStrings.Status_ExportFailed, ex.Message);
             });
         }
         catch (Exception ex)
@@ -666,7 +693,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Failed to export power supply profiles");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Export failed: {ex.Message}";
+                StatusMessage = string.Format(UIStrings.Status_ExportFailed, ex.Message);
             });
         }
     }
@@ -680,7 +707,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "File dialog service not available";
+                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
             });
             _specificLogger.LogWarning("Import profiles failed: File dialog service not available");
             return;
@@ -703,7 +730,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 {
                     await _uiThreadService.InvokeOnUIThreadAsync(() =>
                     {
-                        StatusMessage = "Import failed: No valid profiles found in file";
+                        StatusMessage = UIStrings.Status_ImportFailedNoValidProfiles;
                     });
                     _specificLogger.LogWarning("Import failed: No profiles found in {FilePath}", filePath);
                     return;
@@ -716,7 +743,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    StatusMessage = $"Imported {count} profiles from {Path.GetFileName(filePath)}";
+                    StatusMessage = string.Format(UIStrings.Status_ProfilesImportedFromFile, count, Path.GetFileName(filePath));
                 });
                 _specificLogger.LogInformation("Imported {Count} power supply profiles from {FilePath}",
                     count, filePath);
@@ -727,7 +754,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Import failed: File not found");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Import failed: File not found";
+                StatusMessage = UIStrings.Status_ImportFailedFileNotFound;
             });
         }
         catch (JsonException ex)
@@ -735,7 +762,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Import failed: Invalid JSON format");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Import failed: Invalid file format";
+                StatusMessage = UIStrings.Status_ImportFailedInvalidFormat;
             });
         }
         catch (UnauthorizedAccessException ex)
@@ -743,7 +770,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Import failed: Access denied");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Import failed: Access denied to file";
+                StatusMessage = UIStrings.Status_ImportFailedAccessDenied;
             });
         }
         catch (Exception ex)
@@ -751,7 +778,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Failed to import power supply profiles");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Import failed: {ex.Message}";
+                StatusMessage = string.Format(UIStrings.Status_ImportFailed, ex.Message);
             });
         }
     }
@@ -787,7 +814,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 UpdateConnectionStatus();
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    StatusMessage = $"Connected to {SelectedProfile!.Name}";
+                    StatusMessage = string.Format(UIStrings.Status_ConnectedToProfile, SelectedProfile!.Name);
                 });
                 _specificLogger.LogInformation("Connected to power supply successfully");
 
@@ -898,20 +925,20 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             _specificLogger.LogInformation("Turning power ON");
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Turning power ON...");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_TurningPowerOn);
 
             bool success = await _powerSupplyService.TurnOnAsync().ConfigureAwait(false);
 
             if (success)
             {
-                await Task.Delay(_settingsService.Settings.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
+                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
-                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power turned ON ✓");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerTurnedOn);
                 _specificLogger.LogInformation("Power turned ON successfully");
             }
             else
             {
-                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Failed to turn power ON");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_FailedToTurnPowerOn);
                 _specificLogger.LogWarning("Failed to turn power ON");
             }
         }
@@ -934,20 +961,20 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             _specificLogger.LogInformation("Turning power OFF");
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Turning power OFF...");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_TurningPowerOff);
 
             bool success = await _powerSupplyService.TurnOffAsync().ConfigureAwait(false);
 
             if (success)
             {
-                await Task.Delay(_settingsService.Settings.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
+                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
-                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power turned OFF ✓");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerTurnedOff);
                 _specificLogger.LogInformation("Power turned OFF successfully");
             }
             else
             {
-                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Failed to turn power OFF");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_FailedToTurnPowerOff);
                 _specificLogger.LogWarning("Failed to turn power OFF");
             }
         }
@@ -986,19 +1013,19 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         try
         {
             _specificLogger.LogDebug("Reading power state");
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Reading power state...");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_ReadingPowerState);
 
             bool powerOn = await _powerSupplyService.ReadPowerStateAsync().ConfigureAwait(false);
             UpdatePowerStatus(powerOn);
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                StatusMessage = $"Power state: {(powerOn ? "ON" : "OFF")}"
+                StatusMessage = string.Format(UIStrings.Status_PowerStateOnOff, powerOn ? UIStrings.Value_PowerOn : UIStrings.Value_PowerOff)
             );
             _specificLogger.LogInformation("Power state read: {State}", powerOn ? "ON" : "OFF");
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error reading power state");
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = $"Read state error: {ex.Message}");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = string.Format(UIStrings.Status_ReadStateError, ex.Message));
         }
     }
 
@@ -1010,36 +1037,36 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
-            int delayMs = _settingsService.Settings.PowerSupply.PowerStateChangeDelayMs;
+            int delayMs = _settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000);
 
             _specificLogger.LogInformation("Starting power cycle (delay={Delay}ms)", delayMs);
 
             // Step 1: Turn OFF
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle: Turning power OFF...");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerCycleTurningOff);
             bool offOk = await _powerSupplyService.TurnOffAsync().ConfigureAwait(false);
             if (!offOk)
             {
-                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle failed: could not turn OFF");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerCycleFailedCouldNotTurnOff);
                 _specificLogger.LogWarning("Power cycle failed at OFF step");
                 return;
             }
 
             // Step 2: Wait before ON
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = $"Power cycle: Waiting {delayMs} ms before turning ON...");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = string.Format(UIStrings.Status_PowerCycleWaitingBeforeTurningOn, delayMs));
             await Task.Delay(delayMs).ConfigureAwait(false);
 
             // Step 3: Turn ON
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle: Turning power ON...");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerCycleTurningOn);
             bool onOk = await _powerSupplyService.TurnOnAsync().ConfigureAwait(false);
             if (!onOk)
             {
-                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Power cycle failed: could not turn ON");
+                await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerCycleFailedCouldNotTurnOn);
                 _specificLogger.LogWarning("Power cycle failed at ON step");
                 return;
             }
 
             // Step 4: Wait to stabilize
-            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = $"Power cycle: Waiting {delayMs} ms to stabilize...");
+            await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = string.Format(UIStrings.Status_PowerCycleWaitingToStabilize, delayMs));
             await Task.Delay(delayMs).ConfigureAwait(false);
 
             // Step 5: Read state
@@ -1072,7 +1099,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "File dialog service not available";
+                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
             });
             _specificLogger.LogWarning("Browse profiles path failed: File dialog service not available");
             return;
@@ -1089,13 +1116,12 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             {
                 ProfilesPath = folderPath;
 
-                Models.ApplicationSettings settings = _settingsService.Settings;
-                settings.PowerSupply.ProfilesPath = folderPath;
-                await _settingsService.SaveSettingsAsync().ConfigureAwait(false);
+                // Use the new settings service to update the profiles path
+                await _settingsService.SetSettingAsync("profiles.powerSupplyPath", Path.Combine(folderPath, "PowerSupplyProfiles.json")).ConfigureAwait(false);
 
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    StatusMessage = $"Profiles path set to: {Path.GetFileName(folderPath)}";
+                    StatusMessage = string.Format(UIStrings.Status_ProfilesPathSetTo, Path.GetFileName(folderPath));
                 });
                 _specificLogger.LogInformation("Profiles path changed to: {Path}", folderPath);
             }
@@ -1105,7 +1131,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Access denied while setting profiles path");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Failed to set profiles path: Access denied";
+                StatusMessage = UIStrings.Status_FailedToSetProfilesPathAccessDenied;
             });
         }
         catch (Exception ex)
@@ -1113,7 +1139,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Error browsing profiles path");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Failed to set profiles path: {ex.Message}";
+                StatusMessage = string.Format(UIStrings.Status_FailedToSetProfilesPath, ex.Message);
             });
         }
     }
@@ -1127,14 +1153,14 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Opening profiles folder...";
+                StatusMessage = UIStrings.Status_OpeningProfilesFolder;
             });
 
             if (string.IsNullOrEmpty(ProfilesPath))
             {
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    StatusMessage = "Profiles path not configured";
+                    StatusMessage = UIStrings.Status_ProfilesPathNotConfigured;
                 });
                 _specificLogger.LogWarning("Cannot open profiles folder: Path is null or empty");
                 return;
@@ -1145,7 +1171,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             {
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    StatusMessage = "Creating profiles folder...";
+                    StatusMessage = UIStrings.Status_CreatingProfilesFolder;
                 });
                 Directory.CreateDirectory(ProfilesPath);
                 _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
@@ -1158,7 +1184,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Profiles folder opened";
+                StatusMessage = UIStrings.Status_ProfilesFolderOpened;
             });
             _specificLogger.LogInformation("Successfully opened profiles folder");
         }
@@ -1167,7 +1193,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Access denied while opening profiles folder");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Failed to open folder: Access denied";
+                StatusMessage = UIStrings.Status_FailedToOpenFolderAccessDenied;
             });
         }
         catch (Exception ex)
@@ -1175,7 +1201,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Error opening profiles folder: {Message}", ex.Message);
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Failed to open folder: {ex.Message}";
+                StatusMessage = string.Format(UIStrings.Status_FailedToOpenFolder, ex.Message);
             });
         }
     }
@@ -1189,25 +1215,24 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Resetting profiles path to default");
 
-            string defaultPath = "resources/PowerSupplyProfiles";
-            ProfilesPath = defaultPath;
+            // Reset the setting to its default value
+            await _settingsService.ResetSettingAsync("profiles.powerSupplyPath").ConfigureAwait(false);
 
-            Models.ApplicationSettings settings = _settingsService.Settings;
-            settings.PowerSupply.ProfilesPath = defaultPath;
-            await _settingsService.SaveSettingsAsync().ConfigureAwait(false);
+            // Explicitly refresh to ensure UI consistency
+            RefreshFromSettings();
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Profiles path reset to default: {defaultPath}";
+                StatusMessage = UIStrings.Status_ProfilesPathReset;
             });
-            _specificLogger.LogInformation("Profiles path reset to default: {Path}", defaultPath);
+            _specificLogger.LogInformation("Profiles path reset to default");
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error resetting profiles path to default");
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Failed to reset profiles path: {ex.Message}";
+                StatusMessage = string.Format(UIStrings.Status_FailedToResetProfilesPath, ex.Message);
             });
         }
     }
@@ -1224,20 +1249,20 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (SelectedProfile == null)
         {
-            StatusMessage = "No profile selected";
+            StatusMessage = UIStrings.Status_NoProfileSelected;
             return false;
         }
 
         if (SelectedProfile.Configuration == null)
         {
-            StatusMessage = "Selected profile has no configuration";
+            StatusMessage = UIStrings.Status_SelectedProfileHasNoConfiguration;
             return false;
         }
 
         List<string> validationErrors = SelectedProfile.Validate();
         if (validationErrors.Count > 0)
         {
-            StatusMessage = $"Profile validation failed: {string.Join(", ", validationErrors)}";
+            StatusMessage = string.Format(UIStrings.Status_ProfileValidationFailed, string.Join(", ", validationErrors));
             _specificLogger.LogWarning("Profile validation failed: {Errors}", string.Join(", ", validationErrors));
             return false;
         }
@@ -1255,13 +1280,13 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            StatusMessage = "Profile name cannot be empty";
+            StatusMessage = UIStrings.Status_ProfileNameCannotBeEmpty;
             return Task.FromResult(false);
         }
 
         if (name.Length > 100)
         {
-            StatusMessage = "Profile name cannot exceed 100 characters";
+            StatusMessage = UIStrings.Status_ProfileNameTooLong;
             return Task.FromResult(false);
         }
 
@@ -1272,7 +1297,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         if (existingProfile != null)
         {
-            StatusMessage = $"Profile name '{name}' is already in use";
+            StatusMessage = string.Format(UIStrings.Status_ProfileNameAlreadyInUse, name);
             return Task.FromResult(false);
         }
 
@@ -1287,7 +1312,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (!IsConnected)
         {
-            StatusMessage = "Not connected to power supply";
+            StatusMessage = UIStrings.Status_NotConnectedToPowerSupply;
             _specificLogger.LogWarning("Operation attempted while not connected");
             return false;
         }
@@ -1332,7 +1357,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         _specificLogger.LogError(ex, "Error {Operation}", operation);
         _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
         {
-            StatusMessage = $"Error {operation}: {ex.Message}";
+            StatusMessage = string.Format(UIStrings.Status_ErrorOperation, operation, ex.Message);
         });
     }
 

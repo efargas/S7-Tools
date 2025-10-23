@@ -427,7 +427,7 @@ public class ExceptionTests
         };
 
         // Assert
-        foreach (var exception in exceptions)
+        foreach (Exception exception in exceptions)
         {
             Assert.IsAssignableFrom<S7ToolsException>(exception);
         }
@@ -446,7 +446,7 @@ public class ExceptionTests
         };
 
         // Assert
-        foreach (var exception in exceptions)
+        foreach (Exception exception in exceptions)
         {
             Assert.IsAssignableFrom<ProfileException>(exception);
         }

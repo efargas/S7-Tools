@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -17,6 +18,7 @@ public class SerialPortConfiguration
     /// Gets or sets the baud rate for serial communication.
     /// </summary>
     /// <value>The baud rate in bits per second. Default is 38400.</value>
+    [Display(Name = "Baud Rate", Order = 1)]
     [Range(50, 4000000, ErrorMessage = "Baud rate must be between 50 and 4,000,000")]
     public int BaudRate { get; set; } = 38400;
 
@@ -24,6 +26,7 @@ public class SerialPortConfiguration
     /// Gets or sets the character size in bits.
     /// </summary>
     /// <value>The number of bits per character (5-8). Default is 8 (cs8).</value>
+    [Display(Name = "Character Size (bits)", Order = 2)]
     [Range(5, 8, ErrorMessage = "Character size must be between 5 and 8 bits")]
     public int CharacterSize { get; set; } = 8;
 
@@ -31,12 +34,14 @@ public class SerialPortConfiguration
     /// Gets or sets the parity checking mode.
     /// </summary>
     /// <value>The parity mode. Default is Even with parity enabled.</value>
+    [Display(Name = "Parity Mode", Order = 3)]
     public ParityMode Parity { get; set; } = ParityMode.Even;
 
     /// <summary>
     /// Gets or sets the number of stop bits.
     /// </summary>
     /// <value>The number of stop bits. Default is One.</value>
+    [Display(Name = "Stop Bits", Order = 4)]
     public StopBits StopBits { get; set; } = StopBits.One;
 
     #endregion
@@ -47,24 +52,28 @@ public class SerialPortConfiguration
     /// Gets or sets whether to enable receiver (CREAD flag).
     /// </summary>
     /// <value>True to enable receiver, false otherwise. Default is true.</value>
+    [Display(Name = "Enable Receiver", Order = 5)]
     public bool EnableReceiver { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to use hardware flow control (CRTSCTS flag).
     /// </summary>
     /// <value>True to disable hardware flow control (-crtscts), false to enable. Default is true (disabled).</value>
+    [Display(Name = "Disable Hardware Flow Control", Order = 6)]
     public bool DisableHardwareFlowControl { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether parity is enabled (PARENB flag).
     /// </summary>
     /// <value>True to enable parity checking, false otherwise. Default is true.</value>
+    [Browsable(false)] // Combined with Parity property
     public bool ParityEnabled { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to use odd parity (PARODD flag).
     /// </summary>
     /// <value>True for odd parity, false for even parity. Default is false (even parity, -parodd).</value>
+    [Browsable(false)] // Combined with Parity property
     public bool OddParity { get; set; }
 
     #endregion
@@ -75,30 +84,35 @@ public class SerialPortConfiguration
     /// Gets or sets whether to ignore break conditions (IGNBRK flag).
     /// </summary>
     /// <value>True to ignore break conditions, false otherwise. Default is true.</value>
+    [Browsable(false)]
     public bool IgnoreBreak { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to signal interrupt on break (BRKINT flag).
     /// </summary>
     /// <value>True to disable break interrupt (-brkint), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableBreakInterrupt { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to map CR to NL on input (ICRNL flag).
     /// </summary>
     /// <value>True to disable CR to NL mapping (-icrnl), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableMapCRtoNL { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to ring bell on input queue full (IMAXBEL flag).
     /// </summary>
     /// <value>True to disable bell on queue full (-imaxbel), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableBellOnQueueFull { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to enable XON/XOFF flow control (IXON flag).
     /// </summary>
     /// <value>True to disable XON/XOFF flow control (-ixon), false to enable. Default is true (disabled).</value>
+    [Display(Name = "Disable XON/XOFF Flow Control", Order = 7)]
     public bool DisableXonXoffFlowControl { get; set; } = true;
 
     #endregion
@@ -109,12 +123,14 @@ public class SerialPortConfiguration
     /// Gets or sets whether to enable output processing (OPOST flag).
     /// </summary>
     /// <value>True to disable output processing (-opost), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableOutputProcessing { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to map NL to CR-NL on output (ONLCR flag).
     /// </summary>
     /// <value>True to disable NL to CR-NL mapping (-onlcr), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableMapNLtoCRNL { get; set; } = true;
 
     #endregion
@@ -125,48 +141,56 @@ public class SerialPortConfiguration
     /// Gets or sets whether to enable canonical input processing (ICANON flag).
     /// </summary>
     /// <value>True to disable canonical mode (-icanon), false to enable. Default is true (disabled for raw mode).</value>
+    [Browsable(false)]
     public bool DisableCanonicalMode { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to enable signal generation (ISIG flag).
     /// </summary>
     /// <value>True to disable signal generation (-isig), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableSignalGeneration { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to enable extended input processing (IEXTEN flag).
     /// </summary>
     /// <value>True to disable extended processing (-iexten), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableExtendedProcessing { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to echo input characters (ECHO flag).
     /// </summary>
     /// <value>True to disable echo (-echo), false to enable. Default is true (disabled).</value>
+    [Display(Name = "Disable Echo", Order = 8)]
     public bool DisableEcho { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to echo erase characters (ECHOE flag).
     /// </summary>
     /// <value>True to disable echo erase (-echoe), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableEchoErase { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to echo kill characters (ECHOK flag).
     /// </summary>
     /// <value>True to disable echo kill (-echok), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableEchoKill { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to echo control characters (ECHOCTL flag).
     /// </summary>
     /// <value>True to disable echo control (-echoctl), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableEchoControl { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to echo kill with erase (ECHOKE flag).
     /// </summary>
     /// <value>True to disable echo kill erase (-echoke), false to enable. Default is true (disabled).</value>
+    [Browsable(false)]
     public bool DisableEchoKillErase { get; set; } = true;
 
     #endregion
@@ -181,6 +205,7 @@ public class SerialPortConfiguration
     /// Raw mode disables all input and output processing, making the terminal behave like a simple I/O channel.
     /// This is essential for binary data transmission and precise control over serial communication.
     /// </remarks>
+    [Display(Name = "Raw Mode", Order = 9)]
     public bool RawMode { get; set; } = true;
 
     #endregion
@@ -191,6 +216,7 @@ public class SerialPortConfiguration
     /// Gets or sets the version of this configuration format.
     /// </summary>
     /// <value>The configuration version. Default is "1.0".</value>
+    [Browsable(false)]
     [StringLength(10, ErrorMessage = "Version cannot exceed 10 characters")]
     public string Version { get; set; } = "1.0";
 
@@ -198,6 +224,7 @@ public class SerialPortConfiguration
     /// Gets or sets additional metadata for this configuration.
     /// </summary>
     /// <value>A dictionary of metadata key-value pairs.</value>
+    [Browsable(false)]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Dictionary<string, string>? Metadata { get; set; }
 
@@ -205,12 +232,14 @@ public class SerialPortConfiguration
     /// Gets or sets the timestamp when this configuration was created.
     /// </summary>
     /// <value>The creation timestamp in UTC.</value>
+    [Browsable(false)]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the timestamp when this configuration was last modified.
     /// </summary>
     /// <value>The last modification timestamp in UTC.</value>
+    [Browsable(false)]
     public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
 
     #endregion

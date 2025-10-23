@@ -9,10 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Models;
-using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
@@ -24,7 +23,7 @@ public class SocatService : ISocatService, IDisposable
 {
 #pragma warning disable CS0067 // Events may be declared for external subscriptions; not used in this assembly
     private readonly ILogger<SocatService> _logger;
-    private readonly ISettingsService _settingsService;
+    private readonly IApplicationSettingsService _settingsService;
     private readonly ISerialPortService _serialPortService;
     private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = new();
     private readonly Dictionary<int, Process> _activeProcesses = new(); // Keep actual Process objects alive
@@ -36,19 +35,19 @@ public class SocatService : ISocatService, IDisposable
     /// Initializes a new instance of the SocatService class.
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
-    /// <param name="settingsService">The settings service for accessing application settings.</param>
+    /// <param name="settingsService">The application settings service for runtime configuration.</param>
     /// <param name="serialPortService">The serial port service for device validation and configuration.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     public SocatService(
         ILogger<SocatService> logger,
-        ISettingsService settingsService,
+        IApplicationSettingsService settingsService,
         ISerialPortService serialPortService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
 
-        _logger.LogDebug("SocatService initialized");
+        _logger.LogDebug("SocatService initialized with runtime settings from IApplicationSettingsService");
     }
 
     #region Events
@@ -217,17 +216,19 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
         }
 
-        SocatSettings settings = _settingsService.Settings.Socat;
+        // Get settings from application settings service
+        int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
+        bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
 
         // Check concurrent instances limit
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_runningProcesses.Count >= settings.MaxConcurrentInstances)
+            if (_runningProcesses.Count >= maxConcurrentInstances)
             {
                 throw new ConfigurationException(
                     "MaxConcurrentInstances",
-                    $"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
+                    $"Maximum number of socat instances ({maxConcurrentInstances}) already running");
             }
 
             // Validate serial device exists before starting socat
@@ -249,7 +250,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Prepare serial device if configured
-            if (settings.AutoConfigureSerialDevice && configuration.AutoConfigureSerial)
+            if (autoConfigureSerialDevice && configuration.AutoConfigureSerial)
             {
                 _logger.LogDebug("Preparing serial device {Device} for socat", serialDevice);
                 bool prepared = await PrepareSerialDeviceAsync(serialDevice, configuration, cancellationToken).ConfigureAwait(false);
@@ -302,8 +303,10 @@ public class SocatService : ISocatService, IDisposable
         }
 
         _logger.LogInformation("📋 Getting settings...");
-        SocatSettings settings = _settingsService.Settings.Socat;
-        _logger.LogInformation("📋 Settings obtained - MaxConcurrentInstances: {Max}", settings.MaxConcurrentInstances);
+        // Get settings from application settings service
+        int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
+        bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
+        _logger.LogInformation("📋 Settings obtained - MaxConcurrentInstances: {Max}", maxConcurrentInstances);
 
         // Check concurrent instances limit
         _logger.LogInformation("🔒 Waiting for semaphore...");
@@ -312,13 +315,13 @@ public class SocatService : ISocatService, IDisposable
         try
         {
             _logger.LogInformation("📊 Checking concurrent instances: Current={Current}, Max={Max}",
-                _runningProcesses.Count, settings.MaxConcurrentInstances);
-            if (_runningProcesses.Count >= settings.MaxConcurrentInstances)
+                _runningProcesses.Count, maxConcurrentInstances);
+            if (_runningProcesses.Count >= maxConcurrentInstances)
             {
                 _logger.LogError("❌ Too many concurrent instances");
                 throw new ConfigurationException(
                     "MaxConcurrentInstances",
-                    $"Maximum number of socat instances ({settings.MaxConcurrentInstances}) already running");
+                    $"Maximum number of socat instances ({maxConcurrentInstances}) already running");
             }
 
             // Validate serial device exists before starting socat
@@ -345,7 +348,7 @@ public class SocatService : ISocatService, IDisposable
             _logger.LogInformation("✅ TCP port {Port} is available", profile.Configuration.TcpPort);
 
             // Prepare serial device if configured
-            if (settings.AutoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
+            if (autoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
             {
                 _logger.LogInformation("🔧 Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
                 bool prepared = await PrepareSerialDeviceAsync(serialDevice, profile.Configuration, cancellationToken).ConfigureAwait(false);
@@ -361,7 +364,7 @@ public class SocatService : ISocatService, IDisposable
             else
             {
                 _logger.LogInformation("⏭️ Skipping serial device preparation (AutoConfigure={Auto}, ProfileAuto={ProfileAuto})",
-                    settings.AutoConfigureSerialDevice, profile.Configuration.AutoConfigureSerial);
+                    autoConfigureSerialDevice, profile.Configuration.AutoConfigureSerial);
             }
 
             // Generate and validate command
@@ -436,8 +439,14 @@ public class SocatService : ISocatService, IDisposable
                 return false;
             }
 
-            SocatSettings settings = _settingsService.Settings.Socat;
-            int timeoutMs = settings.ProcessShutdownTimeoutSeconds * 1000;
+            // Get shutdown timeout from settings and clamp to a safe range
+            int configuredShutdownSeconds = _settingsService.GetSetting("socat.processShutdownTimeoutSeconds", 5);
+            int processShutdownTimeoutSeconds = Math.Clamp(configuredShutdownSeconds, 1, 120);
+            if (processShutdownTimeoutSeconds != configuredShutdownSeconds)
+            {
+                _logger.LogWarning("Adjusted 'socat.processShutdownTimeoutSeconds' from {Configured} to safe value {Effective}", configuredShutdownSeconds, processShutdownTimeoutSeconds);
+            }
+            int timeoutMs = processShutdownTimeoutSeconds * 1000;
 
             try
             {
@@ -778,21 +787,73 @@ public class SocatService : ISocatService, IDisposable
                 _processMonitors.Remove(processInfo.ProcessId);
             }
 
-            // Start new monitoring
-            SocatSettings settings = _settingsService.Settings.Socat;
-            var monitorInterval = TimeSpan.FromSeconds(settings.StatusRefreshIntervalSeconds);
-
-            var monitor = new Timer(async _ =>
+            // Get status refresh interval from settings and clamp to a safe range
+            int configuredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+            int statusRefreshIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+            if (statusRefreshIntervalSeconds != configuredInterval)
             {
+                _logger.LogWarning("Adjusted 'socat.statusRefreshIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, statusRefreshIntervalSeconds);
+            }
+
+            var monitorInterval = TimeSpan.FromSeconds(statusRefreshIntervalSeconds);
+            int isRunning = 0;
+
+            // Start self-rescheduling monitoring with overlap protection (immediate first run)
+            // Timer will reschedule itself after each execution to support dynamic interval updates
+            Timer? monitor = null;
+            monitor = new Timer(async _ =>
+            {
+                if (Interlocked.Exchange(ref isRunning, 1) == 1)
+                {
+                    // Skip overlapping executions
+                    return;
+                }
+
                 try
                 {
                     await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
+
+                    // Re-read the setting to get the latest value for dynamic updates
+                    int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+                    int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
+
+                    // Only reschedule if this timer is still the active one for the process
+                    if (_processMonitors.TryGetValue(processInfo.ProcessId, out Timer? activeTimer) && ReferenceEquals(activeTimer, monitor))
+                    {
+                        try
+                        {
+                            monitor.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Timer disposed during shutdown; ignore
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
+
+                    // Still reschedule even on error if timer is still active
+                    if (_processMonitors.TryGetValue(processInfo.ProcessId, out Timer? activeTimer) && ReferenceEquals(activeTimer, monitor))
+                    {
+                        try
+                        {
+                            int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+                            int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
+                            monitor.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Timer disposed during error recovery; ignore
+                        }
+                    }
                 }
-            }, null, monitorInterval, monitorInterval);
+                finally
+                {
+                    Interlocked.Exchange(ref isRunning, 0);
+                }
+            }, null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
 
             _processMonitors[processInfo.ProcessId] = monitor;
 
@@ -1090,7 +1151,8 @@ public class SocatService : ISocatService, IDisposable
         SocatProfile? profile,
         CancellationToken cancellationToken)
     {
-        SocatSettings settings = _settingsService.Settings.Socat;
+        // Get settings from application settings service
+        bool captureProcessOutput = _settingsService.GetSetting("socat.captureProcessOutput", true);
 
         try
         {
@@ -1118,8 +1180,8 @@ public class SocatService : ISocatService, IDisposable
                 FileName = fileName,
                 Arguments = arguments,
                 UseShellExecute = false,
-                RedirectStandardOutput = settings.CaptureProcessOutput,
-                RedirectStandardError = settings.CaptureProcessOutput,
+                RedirectStandardOutput = captureProcessOutput,
+                RedirectStandardError = captureProcessOutput,
                 CreateNoWindow = true
             };
 
@@ -1132,7 +1194,7 @@ public class SocatService : ISocatService, IDisposable
 
             StringBuilder? outputBuilder = null;
             StringBuilder? errorBuilder = null;
-            if (settings.CaptureProcessOutput)
+            if (captureProcessOutput)
             {
                 outputBuilder = new StringBuilder();
                 errorBuilder = new StringBuilder();
@@ -1190,7 +1252,7 @@ public class SocatService : ISocatService, IDisposable
 
             process.Start();
 
-            if (settings.CaptureProcessOutput)
+            if (captureProcessOutput)
             {
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
@@ -1201,7 +1263,7 @@ public class SocatService : ISocatService, IDisposable
             if (process.HasExited)
             {
                 int exitCode = process.ExitCode;
-                string? stderr = settings.CaptureProcessOutput ? errorBuilder?.ToString() : string.Empty;
+                string? stderr = captureProcessOutput ? errorBuilder?.ToString() : string.Empty;
                 throw new ConnectionException(
                     $"{configuration.TcpHost}:{configuration.TcpPort}",
                     "Socat",

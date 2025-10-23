@@ -10,18 +10,17 @@ namespace S7Tools.Models;
 /// </summary>
 public class LoggingSettings
 {
-    private static string ResourcesPath(string subfolder)
-        => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", subfolder);
+    /// <summary>
+    /// Gets or sets the default path for log files.
+    /// This will be populated by the PathService at runtime to use dynamic paths.
+    /// </summary>
+    public string DefaultLogPath { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the default path for log files (under application resources/logs).
+    /// Gets or sets the export path for log files.
+    /// This will be populated by the PathService at runtime to use dynamic paths.
     /// </summary>
-    public string DefaultLogPath { get; set; } = ResourcesPath("logs");
-
-    /// <summary>
-    /// Gets or sets the export path for log files (under application resources/exports).
-    /// </summary>
-    public string ExportPath { get; set; } = ResourcesPath("exports");
+    public string ExportPath { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the minimum log level to display.

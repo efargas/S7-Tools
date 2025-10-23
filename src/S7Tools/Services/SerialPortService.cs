@@ -9,10 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Models;
-using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
@@ -23,32 +22,75 @@ namespace S7Tools.Services;
 public sealed class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
-    private readonly ISettingsService _settingsService;
+    private readonly IApplicationSettingsService _settingsService;
     private Timer? _monitoringTimer;
     private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isMonitoring;
+    private int _monitoringCallbackRunning;
 
     /// <summary>
     /// Initializes a new instance of the SerialPortService class.
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
-    /// <param name="settingsService">The settings service for accessing application settings.</param>
+    /// <param name="settingsService">The application settings service for runtime configuration.</param>
     /// <exception cref="ArgumentNullException">Thrown when logger or settingsService is null.</exception>
-    public SerialPortService(ILogger<SerialPortService> logger, ISettingsService settingsService)
+    public SerialPortService(ILogger<SerialPortService> logger, IApplicationSettingsService settingsService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
 
-        _logger.LogDebug("SerialPortService initialized");
+        _logger.LogDebug("SerialPortService initialized with runtime settings from IApplicationSettingsService");
 
         // Initialize monitoring timer in stopped state to satisfy analyzers and manage lifecycle cleanly
+        // Using self-rescheduling timer to support dynamic interval updates
         _monitoringTimer = new Timer(static async state =>
         {
-            // Use weak reference to service to avoid capturing 'this' strongly if ever refactored
-            if (state is SerialPortService service)
+            if (state is not SerialPortService service)
             {
-                await service.MonitorPortChangesAsync().ConfigureAwait(false);
+                return;
+            }
+
+            // Capture the timer instance to prevent race conditions with Dispose
+            var timer = service._monitoringTimer;
+            if (timer == null)
+            {
+                return;
+            }
+
+            if (Interlocked.Exchange(ref service._monitoringCallbackRunning, 1) == 1)
+            {
+                return; // Skip overlapping execution
+            }
+
+            try
+            {
+                try
+                {
+                    await service.MonitorPortChangesAsync().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    service._logger.LogError(ex, "Unhandled exception in serial port monitoring callback");
+                }
+
+                // Re-read the setting to get the latest value for dynamic updates
+                int configuredInterval = service._settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+                int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+
+                // Reschedule the next run using the captured timer instance
+                try
+                {
+                    timer.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Timer disposed during shutdown; ignore
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref service._monitoringCallbackRunning, 0);
             }
         }, this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
@@ -73,29 +115,34 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     {
         _logger.LogDebug("Starting serial port scan");
 
-        SerialPortSettings settings = _settingsService.Settings.SerialPorts;
         var ports = new List<SerialPortInfo>();
 
         try
         {
+            // Get settings from application settings service
+            bool includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
+            bool includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
+            bool includeStandardPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
+            int maxScanPorts = _settingsService.GetSetting("serial.maxScanPorts", 32);
+
             // Scan USB ports
-            if (settings.IncludeUsbPorts)
+            if (includeUsbPorts)
             {
-                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", SerialPortType.Usb, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", SerialPortType.Usb, maxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(usbPorts);
             }
 
             // Scan ACM ports
-            if (settings.IncludeAcmPorts)
+            if (includeAcmPorts)
             {
-                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", SerialPortType.Acm, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", SerialPortType.Acm, maxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(acmPorts);
             }
 
             // Scan standard ports
-            if (settings.IncludeStandardPorts)
+            if (includeStandardPorts)
             {
-                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", SerialPortType.Standard, settings.MaxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", SerialPortType.Standard, maxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(standardPorts);
             }
 
@@ -126,8 +173,16 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 return null;
             }
 
+            // Get port test timeout from settings and clamp to a safe range
+            int configuredTimeoutMs = _settingsService.GetSetting("serial.portTestTimeoutMs", 1000);
+            int portTestTimeoutMs = Math.Clamp(configuredTimeoutMs, 100, 10_000);
+            if (portTestTimeoutMs != configuredTimeoutMs)
+            {
+                _logger.LogWarning("Adjusted 'serial.portTestTimeoutMs' from {Configured} to safe value {Effective}", configuredTimeoutMs, portTestTimeoutMs);
+            }
+
             SerialPortType portType = GetPortType(portPath);
-            bool isAccessible = await IsPortAccessibleAsync(portPath, _settingsService.Settings.SerialPorts.PortTestTimeoutMs, cancellationToken).ConfigureAwait(false);
+            bool isAccessible = await IsPortAccessibleAsync(portPath, portTestTimeoutMs, cancellationToken).ConfigureAwait(false);
 
             var portInfo = new SerialPortInfo
             {
@@ -195,7 +250,6 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             _isMonitoring = true;
-            SerialPortSettings settings = _settingsService.Settings.SerialPorts;
 
             // Initial scan to populate known ports
             IEnumerable<SerialPortInfo> currentPorts = await ScanAvailablePortsAsync(cancellationToken).ConfigureAwait(false);
@@ -204,10 +258,19 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 _lastKnownPorts[port.PortPath] = port;
             }
 
-            // Start monitoring timer
-            _monitoringTimer!.Change(TimeSpan.Zero, TimeSpan.FromSeconds(settings.ScanIntervalSeconds));
+            // Get scan interval from settings and clamp to a safe range
+            int configuredInterval = _settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+            int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+            if (scanIntervalSeconds != configuredInterval)
+            {
+                _logger.LogWarning("Adjusted 'serial.scanIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, scanIntervalSeconds);
+            }
 
-            _logger.LogInformation("Started port monitoring with {Interval}s interval", settings.ScanIntervalSeconds);
+            // Start self-rescheduling timer with initial delay
+            // The timer will reschedule itself after each execution to support dynamic interval updates
+            _monitoringTimer!.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
+
+            _logger.LogInformation("Started port monitoring with {Interval}s interval (dynamic updates enabled)", scanIntervalSeconds);
         }
         finally
         {
@@ -639,7 +702,6 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(string basePattern, SerialPortType portType, int maxPorts, CancellationToken cancellationToken)
     {
         var ports = new List<SerialPortInfo>();
-        SerialPortSettings settings = _settingsService.Settings.SerialPorts;
 
         for (int i = 0; i < maxPorts; i++)
         {

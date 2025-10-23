@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace S7Tools.Core.Models.Jobs;
 
 /// <summary>
@@ -10,9 +12,14 @@ namespace S7Tools.Core.Models.Jobs;
 /// <param name="DataBits">Number of data bits (typically 8).</param>
 /// <param name="StopBits">Stop bits setting (e.g., "One", "Two").</param>
 public sealed record SerialProfileRef(
+    [property: Display(Name = "Serial Device", Order = 1)]
     string Device,
+    [property: Display(Name = "Baud Rate", Order = 2)]
     int Baud,
+    [property: Display(Name = "Parity", Order = 3)]
     string Parity,
+    [property: Display(Name = "Data Bits", Order = 4)]
     int DataBits,
+    [property: Display(Name = "Stop Bits", Order = 5)]
     string StopBits
 );

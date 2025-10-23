@@ -12,22 +12,22 @@
     <ScrollViewer>
         <StackPanel Margin="20" Spacing="20">
             <!-- Header -->
-            <TextBlock Text="Logging Settings" 
-                       FontSize="24" 
-                       FontWeight="Bold" 
-                       Foreground="#CCCCCC" 
+            <TextBlock Text="Logging Settings"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="#CCCCCC"
                        Margin="0,0,0,10" />
 
             <!-- Logging Settings Section -->
-            <Border Background="#252526" 
-                    BorderBrush="#464647" 
-                    BorderThickness="1" 
-                    CornerRadius="4" 
+            <Border Background="#252526"
+                    BorderBrush="#464647"
+                    BorderThickness="1"
+                    CornerRadius="4"
                     Padding="16">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Logging Configuration" 
-                               FontSize="18" 
-                               FontWeight="SemiBold" 
+                    <TextBlock Text="Logging Configuration"
+                               FontSize="18"
+                               FontWeight="SemiBold"
                                Foreground="#CCCCCC" />
 
                     <!-- Default Log Path -->
@@ -44,35 +44,41 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Column="0" Grid.Row="0"
-                                   Text="Default Log Path:" 
-                                   Foreground="#CCCCCC" 
+                                   Text="Default Log Path:"
+                                   Foreground="#CCCCCC"
                                    VerticalAlignment="Center" />
-                        
+
                         <TextBox Grid.Column="1" Grid.Row="0"
                                  Text="{Binding DefaultLogPath}"
                                  Background="#3C3C3C"
                                  Foreground="#CCCCCC"
                                  BorderBrush="#464647"
                                  Margin="8,0" />
-                        
+
                         <Button Grid.Column="2" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Content="Browse..."
                                 Background="#0E639C"
                                 Foreground="White"
                                 BorderThickness="0"
-                                Padding="12,6"
-                                Margin="0,0,4,0"
+                                Margin="4,0"
                                 Command="{Binding BrowseDefaultLogPathCommand}" />
 
                         <Button Grid.Column="3" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Background="Transparent"
                                 Foreground="#CCCCCC"
                                 BorderBrush="#464647"
                                 BorderThickness="1"
-                                Padding="8,6"
+                                Margin="4,0"
                                 ToolTip.Tip="Open in Explorer"
                                 Command="{Binding OpenDefaultLogPathCommand}">
-                            <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                                <TextBlock Text="Open" />
+                            </StackPanel>
                         </Button>
 
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
@@ -96,35 +102,41 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Column="0" Grid.Row="0"
-                                   Text="Export Path:" 
-                                   Foreground="#CCCCCC" 
+                                   Text="Export Path:"
+                                   Foreground="#CCCCCC"
                                    VerticalAlignment="Center" />
-                        
+
                         <TextBox Grid.Column="1" Grid.Row="0"
                                  Text="{Binding ExportPath}"
                                  Background="#3C3C3C"
                                  Foreground="#CCCCCC"
                                  BorderBrush="#464647"
                                  Margin="8,0" />
-                        
+
                         <Button Grid.Column="2" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Content="Browse..."
                                 Background="#0E639C"
                                 Foreground="White"
                                 BorderThickness="0"
-                                Padding="12,6"
-                                Margin="0,0,4,0"
+                                Margin="4,0"
                                 Command="{Binding BrowseExportPathCommand}" />
 
                         <Button Grid.Column="3" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Background="Transparent"
                                 Foreground="#CCCCCC"
                                 BorderBrush="#464647"
                                 BorderThickness="1"
-                                Padding="8,6"
+                                Margin="4,0"
                                 ToolTip.Tip="Open in Explorer"
                                 Command="{Binding OpenExportPathCommand}">
-                            <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                                <TextBlock Text="Open" />
+                            </StackPanel>
                         </Button>
 
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
@@ -143,10 +155,10 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0"
-                                   Text="Minimum Log Level:" 
-                                   Foreground="#CCCCCC" 
+                                   Text="Minimum Log Level:"
+                                   Foreground="#CCCCCC"
                                    VerticalAlignment="Center" />
-                        
+
                         <ComboBox Grid.Column="1"
                                   SelectedItem="{Binding MinimumLogLevel}"
                                   Background="#3C3C3C"
@@ -177,10 +189,10 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0"
-                                   Text="Auto-scroll:" 
-                                   Foreground="#CCCCCC" 
+                                   Text="Auto-scroll:"
+                                   Foreground="#CCCCCC"
                                    VerticalAlignment="Center" />
-                        
+
                         <CheckBox Grid.Column="1"
                                   IsChecked="{Binding AutoScrollLogs}"
                                   Content="Automatically scroll to newest log entries"
@@ -196,10 +208,10 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0"
-                                   Text="Rolling Log Files:" 
-                                   Foreground="#CCCCCC" 
+                                   Text="Rolling Log Files:"
+                                   Foreground="#CCCCCC"
                                    VerticalAlignment="Center" />
-                        
+
                         <CheckBox Grid.Column="1"
                                   IsChecked="{Binding EnableRollingLogs}"
                                   Content="Create new log file each day (MainLog_YYYY-MM-DD_HH-mm-ss.log)"
@@ -210,15 +222,15 @@
             </Border>
 
             <!-- Display Settings Section -->
-            <Border Background="#252526" 
-                    BorderBrush="#464647" 
-                    BorderThickness="1" 
-                    CornerRadius="4" 
+            <Border Background="#252526"
+                    BorderBrush="#464647"
+                    BorderThickness="1"
+                    CornerRadius="4"
                     Padding="16">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Display Options" 
-                               FontSize="18" 
-                               FontWeight="SemiBold" 
+                    <TextBlock Text="Display Options"
+                               FontSize="18"
+                               FontWeight="SemiBold"
                                Foreground="#CCCCCC" />
 
                     <!-- Show Timestamp -->
@@ -239,15 +251,15 @@
             </Border>
 
             <!-- Actions Section -->
-            <Border Background="#252526" 
-                    BorderBrush="#464647" 
-                    BorderThickness="1" 
-                    CornerRadius="4" 
+            <Border Background="#252526"
+                    BorderBrush="#464647"
+                    BorderThickness="1"
+                    CornerRadius="4"
                     Padding="16">
                 <StackPanel Spacing="16">
-                    <TextBlock Text="Settings Management" 
-                               FontSize="18" 
-                               FontWeight="SemiBold" 
+                    <TextBlock Text="Settings Management"
+                               FontSize="18"
+                               FontWeight="SemiBold"
                                Foreground="#CCCCCC" />
 
                     <Grid>
@@ -325,15 +337,15 @@
             </Border>
 
             <!-- Current Settings Info -->
-            <Border Background="#252526" 
-                    BorderBrush="#464647" 
-                    BorderThickness="1" 
-                    CornerRadius="4" 
+            <Border Background="#252526"
+                    BorderBrush="#464647"
+                    BorderThickness="1"
+                    CornerRadius="4"
                     Padding="16">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Current Settings File" 
-                               FontSize="18" 
-                               FontWeight="SemiBold" 
+                    <TextBlock Text="Current Settings File"
+                               FontSize="18"
+                               FontWeight="SemiBold"
                                Foreground="#CCCCCC" />
 
                     <TextBlock Text="{Binding CurrentSettingsFilePath}"
