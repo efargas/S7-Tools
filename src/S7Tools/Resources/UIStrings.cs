@@ -873,6 +873,485 @@ public static class UIStrings
 
     #endregion
 
+    #region Jobs Management Messages
+
+    /// <summary>
+    /// Gets the status message when no job is selected for editing.
+    /// </summary>
+    public static string Status_NoJobSelectedToEdit => GetStringSafe("Status_NoJobSelectedToEdit", "No job selected to edit");
+
+    /// <summary>
+    /// Gets the status message when creating a job from a template.
+    /// </summary>
+    public static string Status_CreatingJobFromTemplate => GetStringSafe("Status_CreatingJobFromTemplate", "Creating job from template...");
+
+    /// <summary>
+    /// Gets the status message when no job templates are available.
+    /// </summary>
+    public static string Status_NoTemplatesAvailable => GetStringSafe("Status_NoTemplatesAvailable", "No templates available");
+
+    /// <summary>
+    /// Gets the status message format when job is created from template.
+    /// Expects parameters: new job name, template name
+    /// </summary>
+    public static string Status_CreatedJobFromTemplate => GetStringSafe("Status_CreatedJobFromTemplate", "Created job '{0}' from template '{1}'");
+
+    /// <summary>
+    /// Gets the error message format when creating job from template fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorCreatingJobFromTemplate => GetStringSafe("Status_ErrorCreatingJobFromTemplate", "Error creating job from template: {0}");
+
+    /// <summary>
+    /// Gets the status message when saving a job as a template.
+    /// </summary>
+    public static string Status_SavingJobAsTemplate => GetStringSafe("Status_SavingJobAsTemplate", "Saving job as template...");
+
+    /// <summary>
+    /// Gets the status message format when job is saved as template.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_JobSavedAsTemplate => GetStringSafe("Status_JobSavedAsTemplate", "Job '{0}' saved as template");
+
+    /// <summary>
+    /// Gets the status message format when saving job as template fails.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_FailedToSaveJobAsTemplate => GetStringSafe("Status_FailedToSaveJobAsTemplate", "Failed to save job '{0}' as template");
+
+    /// <summary>
+    /// Gets the error message format when saving job as template fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorSavingJobAsTemplate => GetStringSafe("Status_ErrorSavingJobAsTemplate", "Error saving job as template: {0}");
+
+    /// <summary>
+    /// Gets the status message when importing jobs.
+    /// </summary>
+    public static string Status_ImportingJobs => GetStringSafe("Status_ImportingJobs", "Importing jobs...");
+
+    /// <summary>
+    /// Gets the status message for unimplemented job import feature.
+    /// </summary>
+    public static string Status_JobImportNotImplemented => GetStringSafe("Status_JobImportNotImplemented", "Job import functionality not yet implemented");
+
+    /// <summary>
+    /// Gets the error message format when importing jobs fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorImportingJobs => GetStringSafe("Status_ErrorImportingJobs", "Error importing jobs: {0}");
+
+    /// <summary>
+    /// Gets the status message when exporting a job.
+    /// </summary>
+    public static string Status_ExportingJob => GetStringSafe("Status_ExportingJob", "Exporting job...");
+
+    /// <summary>
+    /// Gets the status message format for unimplemented job export feature.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_ExportJobNotImplemented => GetStringSafe("Status_ExportJobNotImplemented", "Export functionality for job '{0}' not yet implemented");
+
+    /// <summary>
+    /// Gets the error message format when exporting job fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorExportingJob => GetStringSafe("Status_ErrorExportingJob", "Error exporting job: {0}");
+
+    /// <summary>
+    /// Gets the status message when creating a task from a job.
+    /// </summary>
+    public static string Status_CreatingTaskFromJob => GetStringSafe("Status_CreatingTaskFromJob", "Creating task from job...");
+
+    /// <summary>
+    /// Gets the status message format for unimplemented task creation from job feature.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_TaskCreationFromJobNotImplemented => GetStringSafe("Status_TaskCreationFromJobNotImplemented", "Task creation from job '{0}' not yet implemented");
+
+    /// <summary>
+    /// Gets the error message format when creating task from job fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorCreatingTaskFromJob => GetStringSafe("Status_ErrorCreatingTaskFromJob", "Error creating task from job: {0}");
+
+    /// <summary>
+    /// Gets the status message when validating a job.
+    /// </summary>
+    public static string Status_ValidatingJob => GetStringSafe("Status_ValidatingJob", "Validating job...");
+
+    /// <summary>
+    /// Gets the status message format when job validation passes.
+    /// Expects parameter: job name
+    /// </summary>
+    public static string Status_JobIsValid => GetStringSafe("Status_JobIsValid", "Job '{0}' is valid");
+
+    /// <summary>
+    /// Gets the status message format when job validation fails.
+    /// Expects parameters: job name, error summary
+    /// </summary>
+    public static string Status_JobHasValidationErrors => GetStringSafe("Status_JobHasValidationErrors", "Job '{0}' has validation errors: {1}");
+
+    /// <summary>
+    /// Gets the error message format when job validation fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ErrorValidatingJob => GetStringSafe("Status_ErrorValidatingJob", "Error validating job: {0}");
+
+    /// <summary>
+    /// Gets the status message when opening the job creation wizard.
+    /// </summary>
+    public static string Status_OpeningJobCreationWizard => GetStringSafe("Status_OpeningJobCreationWizard", "Opening job creation wizard...");
+
+    /// <summary>
+    /// Gets the error message when opening wizard fails.
+    /// </summary>
+    public static string Status_ErrorOpeningWizard => GetStringSafe("Status_ErrorOpeningWizard", "Error opening wizard");
+
+    #endregion
+
+    #region PowerSupply Messages
+
+    /// <summary>
+    /// Gets the status message format when a profile is selected.
+    /// Expects parameter: profile name
+    /// </summary>
+    public static string Status_ProfileSelected => GetStringSafe("Status_ProfileSelected", "Selected: {0}");
+
+    /// <summary>
+    /// Gets the warning message when settings fail to load.
+    /// </summary>
+    public static string Status_WarningFailedToLoadSettings => GetStringSafe("Status_WarningFailedToLoadSettings", "Warning: Failed to load settings");
+
+    /// <summary>
+    /// Gets the status message format when profile is deleted.
+    /// Expects parameter: profile name
+    /// </summary>
+    public static string Status_ProfileDeletedSuccessfully => GetStringSafe("Status_ProfileDeletedSuccessfully", "Profile '{0}' deleted successfully");
+
+    /// <summary>
+    /// Gets the status message format when profile is set as default.
+    /// Expects parameter: profile name
+    /// </summary>
+    public static string Status_ProfileSetAsDefault => GetStringSafe("Status_ProfileSetAsDefault", "Profile '{0}' set as default");
+
+    /// <summary>
+    /// Gets the status message when refreshing profiles fails.
+    /// </summary>
+    public static string Status_ErrorRefreshingProfiles => GetStringSafe("Status_ErrorRefreshingProfiles", "Error refreshing profiles");
+
+    /// <summary>
+    /// Gets the status message when profiles are refreshed successfully.
+    /// </summary>
+    public static string Status_ProfilesRefreshed => GetStringSafe("Status_ProfilesRefreshed", "Profiles refreshed");
+
+    /// <summary>
+    /// Gets the status message when file dialog service is not available.
+    /// </summary>
+    public static string Status_FileDialogServiceNotAvailable => GetStringSafe("Status_FileDialogServiceNotAvailable", "File dialog service not available");
+
+    /// <summary>
+    /// Gets the status message format when profiles are exported.
+    /// Expects parameters: count, filename
+    /// </summary>
+    public static string Status_ProfilesExportedToFile => GetStringSafe("Status_ProfilesExportedToFile", "Exported {0} profiles to {1}");
+
+    /// <summary>
+    /// Gets the status message when export fails due to access denied.
+    /// </summary>
+    public static string Status_ExportFailedAccessDenied => GetStringSafe("Status_ExportFailedAccessDenied", "Export failed: Access denied to file location");
+
+    /// <summary>
+    /// Gets the status message format when export fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ExportFailed => GetStringSafe("Status_ExportFailed", "Export failed: {0}");
+
+    /// <summary>
+    /// Gets the status message when import fails due to no valid profiles.
+    /// </summary>
+    public static string Status_ImportFailedNoValidProfiles => GetStringSafe("Status_ImportFailedNoValidProfiles", "Import failed: No valid profiles found in file");
+
+    /// <summary>
+    /// Gets the status message format when profiles are imported.
+    /// Expects parameters: count, filename
+    /// </summary>
+    public static string Status_ProfilesImportedFromFile => GetStringSafe("Status_ProfilesImportedFromFile", "Imported {0} profiles from {1}");
+
+    /// <summary>
+    /// Gets the status message when import fails due to file not found.
+    /// </summary>
+    public static string Status_ImportFailedFileNotFound => GetStringSafe("Status_ImportFailedFileNotFound", "Import failed: File not found");
+
+    /// <summary>
+    /// Gets the status message when import fails due to invalid format.
+    /// </summary>
+    public static string Status_ImportFailedInvalidFormat => GetStringSafe("Status_ImportFailedInvalidFormat", "Import failed: Invalid file format");
+
+    /// <summary>
+    /// Gets the status message when import fails due to access denied.
+    /// </summary>
+    public static string Status_ImportFailedAccessDenied => GetStringSafe("Status_ImportFailedAccessDenied", "Import failed: Access denied to file");
+
+    /// <summary>
+    /// Gets the status message format when import fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ImportFailed => GetStringSafe("Status_ImportFailed", "Import failed: {0}");
+
+    /// <summary>
+    /// Gets the status message format when connected to a profile.
+    /// Expects parameter: profile name
+    /// </summary>
+    public static string Status_ConnectedToProfile => GetStringSafe("Status_ConnectedToProfile", "Connected to {0}");
+
+    /// <summary>
+    /// Gets the status message when turning power on.
+    /// </summary>
+    public static string Status_TurningPowerOn => GetStringSafe("Status_TurningPowerOn", "Turning power ON...");
+
+    /// <summary>
+    /// Gets the status message when power is turned on successfully.
+    /// </summary>
+    public static string Status_PowerTurnedOn => GetStringSafe("Status_PowerTurnedOn", "Power turned ON ✓");
+
+    /// <summary>
+    /// Gets the status message when turning power on fails.
+    /// </summary>
+    public static string Status_FailedToTurnPowerOn => GetStringSafe("Status_FailedToTurnPowerOn", "Failed to turn power ON");
+
+    /// <summary>
+    /// Gets the status message when turning power off.
+    /// </summary>
+    public static string Status_TurningPowerOff => GetStringSafe("Status_TurningPowerOff", "Turning power OFF...");
+
+    /// <summary>
+    /// Gets the status message when power is turned off successfully.
+    /// </summary>
+    public static string Status_PowerTurnedOff => GetStringSafe("Status_PowerTurnedOff", "Power turned OFF ✓");
+
+    /// <summary>
+    /// Gets the status message when turning power off fails.
+    /// </summary>
+    public static string Status_FailedToTurnPowerOff => GetStringSafe("Status_FailedToTurnPowerOff", "Failed to turn power OFF");
+
+    /// <summary>
+    /// Gets the status message when reading power state.
+    /// </summary>
+    public static string Status_ReadingPowerState => GetStringSafe("Status_ReadingPowerState", "Reading power state...");
+
+    /// <summary>
+    /// Gets the status message format showing power state.
+    /// Expects parameter: ON or OFF
+    /// </summary>
+    public static string Status_PowerStateOnOff => GetStringSafe("Status_PowerStateOnOff", "Power state: {0}");
+
+    /// <summary>
+    /// Gets the error message format when reading power state fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_ReadStateError => GetStringSafe("Status_ReadStateError", "Read state error: {0}");
+
+    /// <summary>
+    /// Gets the status message during power cycle turning off.
+    /// </summary>
+    public static string Status_PowerCycleTurningOff => GetStringSafe("Status_PowerCycleTurningOff", "Power cycle: Turning power OFF...");
+
+    /// <summary>
+    /// Gets the status message when power cycle fails to turn off.
+    /// </summary>
+    public static string Status_PowerCycleFailedCouldNotTurnOff => GetStringSafe("Status_PowerCycleFailedCouldNotTurnOff", "Power cycle failed: could not turn OFF");
+
+    /// <summary>
+    /// Gets the status message format during power cycle waiting.
+    /// Expects parameter: delay in milliseconds
+    /// </summary>
+    public static string Status_PowerCycleWaitingBeforeTurningOn => GetStringSafe("Status_PowerCycleWaitingBeforeTurningOn", "Power cycle: Waiting {0} ms before turning ON...");
+
+    /// <summary>
+    /// Gets the status message during power cycle turning on.
+    /// </summary>
+    public static string Status_PowerCycleTurningOn => GetStringSafe("Status_PowerCycleTurningOn", "Power cycle: Turning power ON...");
+
+    /// <summary>
+    /// Gets the status message when power cycle fails to turn on.
+    /// </summary>
+    public static string Status_PowerCycleFailedCouldNotTurnOn => GetStringSafe("Status_PowerCycleFailedCouldNotTurnOn", "Power cycle failed: could not turn ON");
+
+    /// <summary>
+    /// Gets the status message format during power cycle stabilization.
+    /// Expects parameter: delay in milliseconds
+    /// </summary>
+    public static string Status_PowerCycleWaitingToStabilize => GetStringSafe("Status_PowerCycleWaitingToStabilize", "Power cycle: Waiting {0} ms to stabilize...");
+
+    /// <summary>
+    /// Gets the status message format when profiles path is set.
+    /// Expects parameter: path
+    /// </summary>
+    public static string Status_ProfilesPathSetTo => GetStringSafe("Status_ProfilesPathSetTo", "Profiles path set to: {0}");
+
+    /// <summary>
+    /// Gets the status message when setting profiles path fails due to access denied.
+    /// </summary>
+    public static string Status_FailedToSetProfilesPathAccessDenied => GetStringSafe("Status_FailedToSetProfilesPathAccessDenied", "Failed to set profiles path: Access denied");
+
+    /// <summary>
+    /// Gets the status message format when setting profiles path fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_FailedToSetProfilesPath => GetStringSafe("Status_FailedToSetProfilesPath", "Failed to set profiles path: {0}");
+
+    /// <summary>
+    /// Gets the status message when profiles path is not configured.
+    /// </summary>
+    public static string Status_ProfilesPathNotConfigured => GetStringSafe("Status_ProfilesPathNotConfigured", "Profiles path not configured");
+
+    /// <summary>
+    /// Gets the status message when opening folder fails due to access denied.
+    /// </summary>
+    public static string Status_FailedToOpenFolderAccessDenied => GetStringSafe("Status_FailedToOpenFolderAccessDenied", "Failed to open folder: Access denied");
+
+    /// <summary>
+    /// Gets the status message format when opening folder fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_FailedToOpenFolder => GetStringSafe("Status_FailedToOpenFolder", "Failed to open folder: {0}");
+
+    /// <summary>
+    /// Gets the status message format when resetting profiles path fails.
+    /// Expects parameter: error message
+    /// </summary>
+    public static string Status_FailedToResetProfilesPath => GetStringSafe("Status_FailedToResetProfilesPath", "Failed to reset profiles path: {0}");
+
+    /// <summary>
+    /// Gets the status message when no profile is selected.
+    /// </summary>
+    public static string Status_NoProfileSelected => GetStringSafe("Status_NoProfileSelected", "No profile selected");
+
+    /// <summary>
+    /// Gets the status message when selected profile has no configuration.
+    /// </summary>
+    public static string Status_SelectedProfileHasNoConfiguration => GetStringSafe("Status_SelectedProfileHasNoConfiguration", "Selected profile has no configuration");
+
+    /// <summary>
+    /// Gets the status message format when profile validation fails.
+    /// Expects parameter: error summary
+    /// </summary>
+    public static string Status_ProfileValidationFailed => GetStringSafe("Status_ProfileValidationFailed", "Profile validation failed: {0}");
+
+    /// <summary>
+    /// Gets the status message when profile name is empty.
+    /// </summary>
+    public static string Status_ProfileNameCannotBeEmpty => GetStringSafe("Status_ProfileNameCannotBeEmpty", "Profile name cannot be empty");
+
+    /// <summary>
+    /// Gets the status message when profile name is too long.
+    /// </summary>
+    public static string Status_ProfileNameTooLong => GetStringSafe("Status_ProfileNameTooLong", "Profile name cannot exceed 100 characters");
+
+    /// <summary>
+    /// Gets the status message format when profile name is already in use.
+    /// Expects parameter: profile name
+    /// </summary>
+    public static string Status_ProfileNameAlreadyInUse => GetStringSafe("Status_ProfileNameAlreadyInUse", "Profile name '{0}' is already in use");
+
+    /// <summary>
+    /// Gets the status message when not connected to power supply.
+    /// </summary>
+    public static string Status_NotConnectedToPowerSupply => GetStringSafe("Status_NotConnectedToPowerSupply", "Not connected to power supply");
+
+    /// <summary>
+    /// Gets the generic error status message format.
+    /// Expects parameters: operation, error message
+    /// </summary>
+    public static string Status_ErrorOperation => GetStringSafe("Status_ErrorOperation", "Error {0}: {1}");
+
+    /// <summary>
+    /// Gets the power state value: ON.
+    /// </summary>
+    public static string Value_PowerOn => GetStringSafe("Value_PowerOn", "ON");
+
+    /// <summary>
+    /// Gets the power state value: OFF.
+    /// </summary>
+    public static string Value_PowerOff => GetStringSafe("Value_PowerOff", "OFF");
+
+    #endregion
+
+    #region Logging Settings Messages
+
+    /// <summary>
+    /// Gets the status message when saving settings.
+    /// </summary>
+    public static string Status_SavingSettings => GetStringSafe("Status_SavingSettings", "Saving settings...");
+
+    /// <summary>
+    /// Gets the status message when settings are saved successfully.
+    /// </summary>
+    public static string Status_SettingsSavedSuccessfully => GetStringSafe("Status_SettingsSavedSuccessfully", "Settings saved successfully");
+
+    /// <summary>
+    /// Gets the error message when saving settings fails.
+    /// </summary>
+    public static string Status_ErrorSavingSettings => GetStringSafe("Status_ErrorSavingSettings", "Error saving settings");
+
+    /// <summary>
+    /// Gets the status message when loading settings.
+    /// </summary>
+    public static string Status_LoadingSettings => GetStringSafe("Status_LoadingSettings", "Loading settings...");
+
+    /// <summary>
+    /// Gets the status message when settings are loaded successfully.
+    /// </summary>
+    public static string Status_SettingsLoadedSuccessfully => GetStringSafe("Status_SettingsLoadedSuccessfully", "Settings loaded successfully");
+
+    /// <summary>
+    /// Gets the error message when loading settings fails.
+    /// </summary>
+    public static string Status_ErrorLoadingSettings => GetStringSafe("Status_ErrorLoadingSettings", "Error loading settings");
+
+    /// <summary>
+    /// Gets the status message when resetting settings to defaults.
+    /// </summary>
+    public static string Status_ResettingToDefaults => GetStringSafe("Status_ResettingToDefaults", "Resetting to defaults...");
+
+    /// <summary>
+    /// Gets the status message when settings are reset to defaults successfully.
+    /// </summary>
+    public static string Status_SettingsResetToDefaults => GetStringSafe("Status_SettingsResetToDefaults", "Settings reset to defaults successfully");
+
+    /// <summary>
+    /// Gets the error message when resetting settings fails.
+    /// </summary>
+    public static string Status_ErrorResettingSettings => GetStringSafe("Status_ErrorResettingSettings", "Error resetting settings");
+
+    /// <summary>
+    /// Gets the error message when opening settings directory fails.
+    /// </summary>
+    public static string Status_ErrorOpeningSettingsDirectory => GetStringSafe("Status_ErrorOpeningSettingsDirectory", "Error opening settings directory");
+
+    /// <summary>
+    /// Gets the status message when default log path is not configured.
+    /// </summary>
+    public static string Status_DefaultLogPathNotSet => GetStringSafe("Status_DefaultLogPathNotSet", "Default log path is not set");
+
+    /// <summary>
+    /// Gets the error message when opening default log path fails.
+    /// </summary>
+    public static string Status_ErrorOpeningDefaultLogPath => GetStringSafe("Status_ErrorOpeningDefaultLogPath", "Error opening default log path");
+
+    /// <summary>
+    /// Gets the status message when export path is not configured.
+    /// </summary>
+    public static string Status_ExportPathNotSet => GetStringSafe("Status_ExportPathNotSet", "Export path is not set");
+
+    /// <summary>
+    /// Gets the error message when opening export path fails.
+    /// </summary>
+    public static string Status_ErrorOpeningExportPath => GetStringSafe("Status_ErrorOpeningExportPath", "Error opening export path");
+
+    #endregion
+
     #region Error Messages - Operations
 
     /// <summary>

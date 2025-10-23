@@ -15,6 +15,7 @@ using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
@@ -393,7 +394,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 if (profile != null)
                 {
                     _specificLogger.LogDebug("Selected profile changed: {ProfileName}", profile.Name);
-                    StatusMessage = $"Selected: {profile.Name}";
+                    StatusMessage = string.Format(UIStrings.Status_ProfileSelected, profile.Name);
                 }
             })
             .DisposeWith(_disposables);
@@ -441,7 +442,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             _specificLogger.LogError(ex, "Failed to refresh settings from settings service");
             _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = "Warning: Failed to load settings";
+                StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
             });
         }
     }
@@ -482,7 +483,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                     SelectedProfile = Profiles.FirstOrDefault();
                 }).ConfigureAwait(false);
 
-                StatusMessage = $"Profile '{profileName}' deleted successfully";
+                StatusMessage = string.Format(UIStrings.Status_ProfileDeletedSuccessfully, profileName);
                 _specificLogger.LogInformation("Deleted power supply profile: {ProfileName}", profileName);
             }
         }
@@ -523,7 +524,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 // Refresh and select duplicated profile
                 await RefreshProfilesPreserveSelectionAsync(duplicatedProfile.Id);
 
-                StatusMessage = $"Profile duplicated as '{newName}'";
+                StatusMessage = string.Format(UIStrings.Status_ProfileDuplicated, newName);
                 _specificLogger.LogInformation("Duplicated power supply profile: {ProfileName} -> {NewName}",
                     SelectedProfile.Name, newName);
             }
@@ -552,7 +553,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             await _profileService.SetDefaultAsync(SelectedProfile.Id).ConfigureAwait(false);
             _ = RefreshCommand.Execute();
 
-            StatusMessage = $"Profile '{SelectedProfile.Name}' set as default";
+            StatusMessage = string.Format(UIStrings.Status_ProfileSetAsDefault, SelectedProfile.Name);
             _specificLogger.LogInformation("Set default power supply profile: {ProfileName}", SelectedProfile.Name);
         }
         catch (Exception ex)
@@ -593,7 +594,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error refreshing profiles with selection preservation");
-            StatusMessage = "Error refreshing profiles";
+            StatusMessage = UIStrings.Status_ErrorRefreshingProfiles;
         }
         return Task.CompletedTask;
     }
@@ -607,7 +608,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Refreshing power supply profiles");
             _ = RefreshCommand.Execute();
-            StatusMessage = "Profiles refreshed";
+            StatusMessage = UIStrings.Status_ProfilesRefreshed;
         }
         catch (Exception ex)
         {
