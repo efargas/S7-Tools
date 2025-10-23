@@ -205,7 +205,7 @@ namespace S7Tools.Core.Models.Configuration
             {
                 DefaultSettings = defaultSettings.DefaultSettings,
                 UserSettings = new Dictionary<string, object>(defaultSettings.DefaultSettings), // Copy defaults to user settings initially
-                SettingsFilePath = "Resources/Configuration/AppSettings.json",
+                SettingsFilePath = "Resources/AppSettings/AppSettings.json",
                 LastModified = DateTime.UtcNow
             };
 
