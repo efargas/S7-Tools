@@ -791,7 +791,38 @@ public class SocatService : ISocatService, IDisposable
             int configuredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
             int statusRefreshIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
             if (statusRefreshIntervalSeconds != configuredInterval)
+            if (statusRefreshIntervalSeconds != configuredInterval)
             {
+                _logger.LogWarning("Adjusted 'socat.statusRefreshIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, statusRefreshIntervalSeconds);
+            }
+
+            var monitorInterval = TimeSpan.FromSeconds(statusRefreshIntervalSeconds);
+            var isRunning = 0;
+
+            // Start periodic monitoring with overlap protection (immediate first run)
+            var monitor = new Timer(async _ =>
+            {
+                if (Interlocked.Exchange(ref isRunning, 1) == 1)
+                {
+                    // Skip overlapping executions
+                    return;
+                }
+
+                try
+                {
+                    await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref isRunning, 0);
+                }
+            }, null, TimeSpan.Zero, monitorInterval);
+
+            _processMonitors[processInfo.ProcessId] = monitor;
             var isRunning = 0;
 
             // Start periodic monitoring with overlap protection (immediate first run)
