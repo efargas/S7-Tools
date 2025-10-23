@@ -4,6 +4,7 @@ using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
+using S7Tools.Resources;
 
 namespace S7Tools.Services
 {
@@ -223,7 +224,7 @@ namespace S7Tools.Services
         {
             if (string.IsNullOrEmpty(relativePath))
             {
-                throw new ArgumentException("Relative path cannot be null or empty", nameof(relativePath));
+                throw new ArgumentException(UIStrings.Exception_RelativePathNullOrEmpty, nameof(relativePath));
             }
 
             try
@@ -248,7 +249,7 @@ namespace S7Tools.Services
         {
             if (string.IsNullOrEmpty(directoryPath))
             {
-                throw new ArgumentException("Directory path cannot be null or empty", nameof(directoryPath));
+                throw new ArgumentException(UIStrings.Exception_DirectoryPathNullOrEmpty, nameof(directoryPath));
             }
 
             try
@@ -395,7 +396,7 @@ namespace S7Tools.Services
         {
             if (string.IsNullOrEmpty(format))
             {
-                throw new ArgumentException("Format cannot be null or empty", nameof(format));
+                throw new ArgumentException(UIStrings.Exception_FormatNullOrEmpty, nameof(format));
             }
 
             string timestamp = DateTime.Now.ToString(FileNaming.TimestampFormat);

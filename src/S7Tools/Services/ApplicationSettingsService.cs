@@ -246,7 +246,7 @@ namespace S7Tools.Services
         {
             if (string.IsNullOrEmpty(key))
             {
-                throw new ArgumentException("Setting key cannot be null or empty", nameof(key));
+                throw new ArgumentException(UIStrings.Exception_SettingKeyNullOrEmpty, nameof(key));
             }
 
             _logger.LogDebug("Resetting user setting {Key} to default", key);
