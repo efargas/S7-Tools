@@ -798,8 +798,10 @@ public class SocatService : ISocatService, IDisposable
             var monitorInterval = TimeSpan.FromSeconds(statusRefreshIntervalSeconds);
             var isRunning = 0;
 
-            // Start periodic monitoring with overlap protection (immediate first run)
-            var monitor = new Timer(async _ =>
+            // Start self-rescheduling monitoring with overlap protection (immediate first run)
+            // Timer will reschedule itself after each execution to support dynamic interval updates
+            Timer? monitor = null;
+            monitor = new Timer(async _ =>
             {
                 if (Interlocked.Exchange(ref isRunning, 1) == 1)
                 {
@@ -810,16 +812,35 @@ public class SocatService : ISocatService, IDisposable
                 try
                 {
                     await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
+                    
+                    // Re-read the setting to get the latest value for dynamic updates
+                    int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+                    int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
+                    
+                    // Reschedule the next run with the potentially updated interval
+                    monitor?.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
+                    
+                    // Still reschedule even on error
+                    try
+                    {
+                        int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+                        int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
+                        monitor?.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
+                    }
+                    catch
+                    {
+                        // Ignore errors during rescheduling
+                    }
                 }
                 finally
                 {
                     Interlocked.Exchange(ref isRunning, 0);
                 }
-            }, null, TimeSpan.Zero, monitorInterval);
+            }, null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
 
             _processMonitors[processInfo.ProcessId] = monitor;
 

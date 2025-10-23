@@ -27,6 +27,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isMonitoring;
+    private int _monitoringCallbackRunning;
 
     /// <summary>
     /// Initializes a new instance of the SerialPortService class.
@@ -42,6 +43,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         _logger.LogDebug("SerialPortService initialized with runtime settings from IApplicationSettingsService");
 
         // Initialize monitoring timer in stopped state to satisfy analyzers and manage lifecycle cleanly
+        // Using self-rescheduling timer to support dynamic interval updates
         _monitoringTimer = new Timer(static async state =>
         {
             if (state is SerialPortService service)
@@ -53,18 +55,18 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 try
                 {
                     await service.MonitorPortChangesAsync().ConfigureAwait(false);
+                    
+                    // Re-read the setting to get the latest value for dynamic updates
+                    int configuredInterval = service._settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+                    int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+                    
+                    // Reschedule the next run with the potentially updated interval
+                    service._monitoringTimer?.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
                 }
                 finally
                 {
                     Interlocked.Exchange(ref service._monitoringCallbackRunning, 0);
                 }
-            }
-        }, this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
-        {
-            // Use weak reference to service to avoid capturing 'this' strongly if ever refactored
-            if (state is SerialPortService service)
-            {
-                await service.MonitorPortChangesAsync().ConfigureAwait(false);
             }
         }, this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }
@@ -240,10 +242,11 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 _logger.LogWarning("Adjusted 'serial.scanIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, scanIntervalSeconds);
             }
 
-            // Start monitoring timer
-            _monitoringTimer!.Change(TimeSpan.Zero, TimeSpan.FromSeconds(scanIntervalSeconds));
+            // Start self-rescheduling timer with initial delay
+            // The timer will reschedule itself after each execution to support dynamic interval updates
+            _monitoringTimer!.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
 
-            _logger.LogInformation("Started port monitoring with {Interval}s interval", scanIntervalSeconds);
+            _logger.LogInformation("Started port monitoring with {Interval}s interval (dynamic updates enabled)", scanIntervalSeconds);
         }
         finally
         {
