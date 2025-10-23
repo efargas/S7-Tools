@@ -1495,6 +1495,61 @@ public static class UIStrings
     /// </summary>
     public static string Status_FailedToSaveConfiguration => GetStringSafe("Status_FailedToSaveConfiguration", "Failed to save configuration");
 
+    /// <summary>
+    /// Gets the status message when no job profiles are available.
+    /// </summary>
+    public static string Status_NoJobProfilesAvailable => GetStringSafe("Status_NoJobProfilesAvailable", "No job profiles available. Please create a job profile first.");
+
+    /// <summary>
+    /// Gets the status message when creating a new task.
+    /// </summary>
+    public static string Status_CreatingNewTask => GetStringSafe("Status_CreatingNewTask", "Creating new task...");
+
+    /// <summary>
+    /// Gets the status message when starting a task.
+    /// </summary>
+    public static string Status_StartingTask => GetStringSafe("Status_StartingTask", "Starting task...");
+
+    /// <summary>
+    /// Gets the status message when stopping a task.
+    /// </summary>
+    public static string Status_StoppingTask => GetStringSafe("Status_StoppingTask", "Stopping task...");
+
+    /// <summary>
+    /// Gets the status message when pausing a task.
+    /// </summary>
+    public static string Status_PausingTask => GetStringSafe("Status_PausingTask", "Pausing task...");
+
+    /// <summary>
+    /// Gets the status message when resuming a task.
+    /// </summary>
+    public static string Status_ResumingTask => GetStringSafe("Status_ResumingTask", "Resuming task...");
+
+    /// <summary>
+    /// Gets the status message when restarting a task.
+    /// </summary>
+    public static string Status_RestartingTask => GetStringSafe("Status_RestartingTask", "Restarting task...");
+
+    /// <summary>
+    /// Gets the status message when scheduling a task.
+    /// </summary>
+    public static string Status_SchedulingTask => GetStringSafe("Status_SchedulingTask", "Scheduling task...");
+
+    /// <summary>
+    /// Gets the status message when deleting a task.
+    /// </summary>
+    public static string Status_DeletingTask => GetStringSafe("Status_DeletingTask", "Deleting task...");
+
+    /// <summary>
+    /// Gets the status message when refreshing task list.
+    /// </summary>
+    public static string Status_RefreshingTasks => GetStringSafe("Status_RefreshingTasks", "Refreshing tasks...");
+
+    /// <summary>
+    /// Gets the status message when clearing finished tasks.
+    /// </summary>
+    public static string Status_ClearingFinishedTasks => GetStringSafe("Status_ClearingFinishedTasks", "Clearing finished tasks...");
+
     #endregion
 
     #region Error Messages - Operations

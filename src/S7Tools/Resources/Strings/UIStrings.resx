@@ -1401,4 +1401,50 @@
     <comment>Error message when configuration save fails</comment>
   </data>
 
+  <!-- Task Manager Messages -->
+  <data name="Status_NoJobProfilesAvailable" xml:space="preserve">
+    <value>No job profiles available. Please create a job profile first.</value>
+    <comment>Status message when no job profiles are available</comment>
+  </data>
+  <data name="Status_CreatingNewTask" xml:space="preserve">
+    <value>Creating new task...</value>
+    <comment>Status message when creating a new task</comment>
+  </data>
+  <data name="Status_StartingTask" xml:space="preserve">
+    <value>Starting task...</value>
+    <comment>Status message when starting a task</comment>
+  </data>
+  <data name="Status_StoppingTask" xml:space="preserve">
+    <value>Stopping task...</value>
+    <comment>Status message when stopping a task</comment>
+  </data>
+  <data name="Status_PausingTask" xml:space="preserve">
+    <value>Pausing task...</value>
+    <comment>Status message when pausing a task</comment>
+  </data>
+  <data name="Status_ResumingTask" xml:space="preserve">
+    <value>Resuming task...</value>
+    <comment>Status message when resuming a task</comment>
+  </data>
+  <data name="Status_RestartingTask" xml:space="preserve">
+    <value>Restarting task...</value>
+    <comment>Status message when restarting a task</comment>
+  </data>
+  <data name="Status_SchedulingTask" xml:space="preserve">
+    <value>Scheduling task...</value>
+    <comment>Status message when scheduling a task</comment>
+  </data>
+  <data name="Status_DeletingTask" xml:space="preserve">
+    <value>Deleting task...</value>
+    <comment>Status message when deleting a task</comment>
+  </data>
+  <data name="Status_RefreshingTasks" xml:space="preserve">
+    <value>Refreshing tasks...</value>
+    <comment>Status message when refreshing task list</comment>
+  </data>
+  <data name="Status_ClearingFinishedTasks" xml:space="preserve">
+    <value>Clearing finished tasks...</value>
+    <comment>Status message when clearing finished tasks</comment>
+  </data>
+
 </root>
