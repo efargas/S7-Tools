@@ -428,67 +428,43 @@ namespace S7Tools.Services
                 }
 
                 // Try to parse as new structured format first
-                try
+                Dictionary<string, JsonElement>? structuredSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonContent);
+                if (structuredSettings != null && structuredSettings.ContainsKey("userSettings"))
                 {
-                    Dictionary<string, JsonElement>? structuredSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonContent);
-                    if (structuredSettings != null && structuredSettings.ContainsKey("userSettings"))
-                    {
-                        // New format with structured sections
-                        JsonElement userSettingsElement = structuredSettings["userSettings"];
-                        Dictionary<string, JsonElement>? userSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(userSettingsElement.GetRawText());
+                    // New format with structured sections
+                    JsonElement userSettingsElement = structuredSettings["userSettings"];
+                    Dictionary<string, JsonElement>? userSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(userSettingsElement.GetRawText());
 
-                        if (userSettings != null)
-                        {
-                            lock (_settingsLock)
-                            {
-                                if (_currentSettings != null)
-                                {
-                                    // Load user settings section
-                                    foreach (KeyValuePair<string, JsonElement> kvp in userSettings)
-                                    {
-                                        _currentSettings.UserSettings[kvp.Key] = kvp.Value;
-                                    }
-
-                                    _logger.LogDebug("Loaded {UserSettingCount} user settings from structured file format", userSettings.Count);
-                                }
-                            }
-                        }
-                    }
-                    else if (structuredSettings != null)
-                    {
-                        // Legacy format - treat entire file as user settings
-                        lock (_settingsLock)
-                        {
-                            if (_currentSettings != null)
-                            {
-                                foreach (KeyValuePair<string, JsonElement> kvp in structuredSettings)
-                                {
-                                    _currentSettings.UserSettings[kvp.Key] = kvp.Value;
-                                }
-
-                                _logger.LogDebug("Loaded {UserSettingCount} user settings from legacy file format", structuredSettings.Count);
-                            }
-                        }
-                    }
-                }
-                catch (JsonException)
-                {
-                    // If structured parsing fails, fall back to treating entire content as user settings
-                    Dictionary<string, JsonElement>? userSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonContent);
                     if (userSettings != null)
                     {
                         lock (_settingsLock)
                         {
                             if (_currentSettings != null)
                             {
-                                // Convert JsonElement values to objects
+                                // Load user settings section
                                 foreach (KeyValuePair<string, JsonElement> kvp in userSettings)
                                 {
                                     _currentSettings.UserSettings[kvp.Key] = kvp.Value;
                                 }
 
-                                _logger.LogDebug("Loaded {UserSettingCount} user settings from file (fallback parsing)", userSettings.Count);
+                                _logger.LogDebug("Loaded {UserSettingCount} user settings from structured file format", userSettings.Count);
                             }
+                        }
+                    }
+                }
+                else if (structuredSettings != null)
+                {
+                    // Legacy format - treat entire file as user settings
+                    lock (_settingsLock)
+                    {
+                        if (_currentSettings != null)
+                        {
+                            foreach (KeyValuePair<string, JsonElement> kvp in structuredSettings)
+                            {
+                                _currentSettings.UserSettings[kvp.Key] = kvp.Value;
+                            }
+
+                            _logger.LogDebug("Loaded {UserSettingCount} user settings from legacy file format", structuredSettings.Count);
                         }
                     }
                 }

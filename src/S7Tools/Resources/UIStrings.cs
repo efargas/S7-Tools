@@ -849,7 +849,7 @@ public static class UIStrings
     /// <summary>
     /// Gets the validation message when profile name is too long.
     /// </summary>
-    public static string Validation_ProfileNameTooLong => GetStringSafe("Validation_ProfileNameTooLong", "Profile name is too long (max 255 characters)");
+    public static string Validation_ProfileNameTooLong => GetStringSafe("Validation_ProfileNameTooLong", "Profile name is too long (max 100 characters)");
 
     /// <summary>
     /// Gets the validation message when profile description is too long.

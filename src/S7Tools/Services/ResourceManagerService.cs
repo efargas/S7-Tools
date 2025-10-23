@@ -497,7 +497,6 @@ namespace S7Tools.Services
             {
                 testFile = Path.Combine(directoryPath, $"test_write_{Guid.NewGuid()}.tmp");
                 await File.WriteAllTextAsync(testFile, "test").ConfigureAwait(false);
-                return true;
             }
             catch
             {
@@ -505,14 +504,11 @@ namespace S7Tools.Services
             }
             finally
             {
-                if (!string.IsNullOrEmpty(testFile))
+                if (!string.IsNullOrEmpty(testFile) && File.Exists(testFile))
                 {
                     try
                     {
-                        if (File.Exists(testFile))
-                        {
-                            File.Delete(testFile);
-                        }
+                        File.Delete(testFile);
                     }
                     catch
                     {
@@ -520,6 +516,7 @@ namespace S7Tools.Services
                     }
                 }
             }
+            return true;
         }
 
         /// <summary>

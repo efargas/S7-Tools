@@ -80,7 +80,13 @@ namespace S7Tools.Core.Models.Configuration
                     return directValue;
                 }
 
-                // Try to convert
+                // Handle enums from string
+                if (typeof(T).IsEnum && value is string stringValue)
+                {
+                    return (T)Enum.Parse(typeof(T), stringValue, ignoreCase: true);
+                }
+
+                // Try to convert for other types
                 return (T)Convert.ChangeType(value, typeof(T)) ?? defaultValue;
             }
             catch (Exception ex)

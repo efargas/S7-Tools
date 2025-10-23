@@ -46,41 +46,51 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         // Using self-rescheduling timer to support dynamic interval updates
         _monitoringTimer = new Timer(static async state =>
         {
-            if (state is SerialPortService service)
+            if (state is not SerialPortService service)
             {
-                if (Interlocked.Exchange(ref service._monitoringCallbackRunning, 1) == 1)
-                {
-                    return; // Skip overlapping execution
-                }
+                return;
+            }
+
+            // Capture the timer instance to prevent race conditions with Dispose
+            var timer = service._monitoringTimer;
+            if (timer == null)
+            {
+                return;
+            }
+
+            if (Interlocked.Exchange(ref service._monitoringCallbackRunning, 1) == 1)
+            {
+                return; // Skip overlapping execution
+            }
+
+            try
+            {
                 try
                 {
-                    try
-                    {
-                        await service.MonitorPortChangesAsync().ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        service._logger.LogError(ex, "Unhandled exception in serial port monitoring callback");
-                    }
-
-                    // Re-read the setting to get the latest value for dynamic updates
-                    int configuredInterval = service._settingsService.GetSetting("serial.scanIntervalSeconds", 5);
-                    int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
-
-                    // Reschedule the next run with the potentially updated interval
-                    try
-                    {
-                        service._monitoringTimer?.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // Timer disposed during shutdown; ignore
-                    }
+                    await service.MonitorPortChangesAsync().ConfigureAwait(false);
                 }
-                finally
+                catch (Exception ex)
                 {
-                    Interlocked.Exchange(ref service._monitoringCallbackRunning, 0);
+                    service._logger.LogError(ex, "Unhandled exception in serial port monitoring callback");
                 }
+
+                // Re-read the setting to get the latest value for dynamic updates
+                int configuredInterval = service._settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+                int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+
+                // Reschedule the next run using the captured timer instance
+                try
+                {
+                    timer.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Timer disposed during shutdown; ignore
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref service._monitoringCallbackRunning, 0);
             }
         }, this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
     }

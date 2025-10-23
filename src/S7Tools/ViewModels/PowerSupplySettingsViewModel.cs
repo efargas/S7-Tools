@@ -438,22 +438,17 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             string powerSupplyProfilePath = _settingsService.GetSetting<string>("profiles.powerSupplyPath", _pathService.PowerSupplyProfilesPath);
             string? directoryPath = Path.GetDirectoryName(powerSupplyProfilePath);
 
-            // Ensure the path is absolute by resolving relative paths against the application base directory
-            if (!string.IsNullOrEmpty(directoryPath))
+            // Resolve the path using the path service, which handles both absolute and relative paths
+            string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
+
+            // If resolution results in an invalid path, fall back to the default profiles directory
+            if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
             {
-                if (Path.IsPathRooted(directoryPath))
-                {
-                    ProfilesPath = directoryPath;
-                }
-                else
-                {
-                    // Resolve relative path against application base directory
-                    ProfilesPath = _pathService.ResolvePath(directoryPath);
-                }
+                ProfilesPath = _pathService.ProfilesDirectory;
             }
             else
             {
-                ProfilesPath = _pathService.ProfilesDirectory;
+                ProfilesPath = resolvedPath;
             }
         }
         catch (Exception ex)
