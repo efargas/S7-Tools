@@ -439,8 +439,13 @@ public class SocatService : ISocatService, IDisposable
                 return false;
             }
 
-            // Get shutdown timeout from settings
-            int processShutdownTimeoutSeconds = _settingsService.GetSetting("socat.processShutdownTimeoutSeconds", 5);
+            // Get shutdown timeout from settings and clamp to a safe range
+            int configuredShutdownSeconds = _settingsService.GetSetting("socat.processShutdownTimeoutSeconds", 5);
+            int processShutdownTimeoutSeconds = Math.Clamp(configuredShutdownSeconds, 1, 120);
+            if (processShutdownTimeoutSeconds != configuredShutdownSeconds)
+            {
+                _logger.LogWarning("Adjusted 'socat.processShutdownTimeoutSeconds' from {Configured} to safe value {Effective}", configuredShutdownSeconds, processShutdownTimeoutSeconds);
+            }
             int timeoutMs = processShutdownTimeoutSeconds * 1000;
 
             try
