@@ -341,7 +341,7 @@ public class ResourceCoordinatorTests
     #region Thread Safety Tests
 
     [Fact]
-    public void TryAcquire_ConcurrentAccess_ShouldBeThreadSafe()
+    public async Task TryAcquire_ConcurrentAccess_ShouldBeThreadSafe()
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
@@ -363,7 +363,7 @@ public class ResourceCoordinatorTests
             }));
         }
 
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks).ConfigureAwait(false);
 
         // Assert
         // This is a probabilistic test - in a truly thread-safe implementation,
