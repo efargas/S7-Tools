@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -31,7 +32,7 @@ public class SettingsManagementViewModel : ReactiveObject
     private bool _showTimestampInLogs = true;
     private bool _showCategoryInLogs = true;
     private bool _showLogLevelInLogs = true;
-    private string _settingsStatusMessage = "Settings ready";
+    private string _settingsStatusMessage = UIStrings.Status_SettingsReady;
     private string _currentSettingsFilePath = string.Empty;
     private DateTime _settingsLastModified = DateTime.Now;
 
@@ -254,17 +255,17 @@ public class SettingsManagementViewModel : ReactiveObject
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     DefaultLogPath = selectedPath;
-                    SettingsStatusMessage = "Default log path updated successfully";
+                    SettingsStatusMessage = UIStrings.Status_DefaultLogPathUpdatedSuccessfully;
                     _logger.LogInformation("Default log path updated to: {Path}", selectedPath);
                 }
                 else
                 {
-                    SettingsStatusMessage = "Folder selection cancelled";
+                    SettingsStatusMessage = UIStrings.Status_FolderSelectionCancelled;
                 }
             }
             else
             {
-                SettingsStatusMessage = "File dialog service not available";
+                SettingsStatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
                 _logger.LogWarning("File dialog service not available for default log path selection");
             }
         }
@@ -291,17 +292,17 @@ public class SettingsManagementViewModel : ReactiveObject
                 if (!string.IsNullOrEmpty(selectedPath))
                 {
                     ExportPath = selectedPath;
-                    SettingsStatusMessage = "Export path updated successfully";
+                    SettingsStatusMessage = UIStrings.Status_ExportPathUpdatedSuccessfully;
                     _logger.LogInformation("Export path updated to: {Path}", selectedPath);
                 }
                 else
                 {
-                    SettingsStatusMessage = "Folder selection cancelled";
+                    SettingsStatusMessage = UIStrings.Status_FolderSelectionCancelled;
                 }
             }
             else
             {
-                SettingsStatusMessage = "File dialog service not available";
+                SettingsStatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
                 _logger.LogWarning("File dialog service not available for export path selection");
             }
         }
@@ -356,7 +357,7 @@ public class SettingsManagementViewModel : ReactiveObject
     {
         try
         {
-            SettingsStatusMessage = "Saving settings...";
+            SettingsStatusMessage = UIStrings.Status_SavingSettings;
 
             // Create dictionary of settings to save
             var userSettings = new Dictionary<string, object>
@@ -373,7 +374,7 @@ public class SettingsManagementViewModel : ReactiveObject
 
             await _settingsService.SaveUserSettingsAsync(userSettings);
 
-            SettingsStatusMessage = "Settings saved successfully";
+            SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
             SettingsLastModified = DateTime.Now;
             _logger.LogInformation("Settings saved to {Path}", CurrentSettingsFilePath);
         }
@@ -397,7 +398,7 @@ public class SettingsManagementViewModel : ReactiveObject
             // Update ViewModel properties from loaded settings
             RefreshFromSettings();
 
-            SettingsStatusMessage = "Settings loaded successfully";
+            SettingsStatusMessage = UIStrings.Status_SettingsLoadedSuccessfully;
             SettingsLastModified = DateTime.Now;
             _logger.LogInformation("Settings loaded from {Path}", CurrentSettingsFilePath);
         }
@@ -421,7 +422,7 @@ public class SettingsManagementViewModel : ReactiveObject
             // Update ViewModel properties from reset settings
             RefreshFromSettings();
 
-            SettingsStatusMessage = "Settings reset to defaults";
+            SettingsStatusMessage = UIStrings.Status_SettingsResetToDefaults;
             _logger.LogInformation("Settings reset to default values");
         }
         catch (Exception ex)
@@ -556,7 +557,7 @@ public class SettingsManagementViewModel : ReactiveObject
             if (string.IsNullOrEmpty(json))
             {
                 _logger.LogWarning("Cannot import settings from empty JSON");
-                SettingsStatusMessage = "Cannot import empty settings";
+                SettingsStatusMessage = UIStrings.Status_CannotImportEmptySettings;
                 return false;
             }
 
@@ -572,7 +573,7 @@ public class SettingsManagementViewModel : ReactiveObject
             if (importedSettings == null)
             {
                 _logger.LogWarning("Failed to deserialize settings from JSON");
-                SettingsStatusMessage = "Invalid settings format";
+                SettingsStatusMessage = UIStrings.Status_InvalidSettingsFormat;
                 return false;
             }
 
@@ -583,7 +584,7 @@ public class SettingsManagementViewModel : ReactiveObject
             RefreshFromSettings();
 
             _logger.LogInformation("Settings imported from JSON successfully");
-            SettingsStatusMessage = "Settings imported successfully";
+            SettingsStatusMessage = UIStrings.Status_SettingsImportedSuccessfully;
             SettingsLastModified = DateTime.Now;
 
             return true;
