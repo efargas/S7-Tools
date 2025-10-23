@@ -46,7 +46,9 @@ public class ObjectToPropertiesConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value == null)
+        {
             return new ObservableCollection<PropertyDisplayItem>();
+        }
 
         var properties = new ObservableCollection<PropertyDisplayItem>();
         var type = value.GetType();
@@ -139,16 +141,24 @@ public class ObjectToPropertiesConverter : IValueConverter
     private static string FormatValue(object? value)
     {
         if (value == null)
+        {
             return "N/A";
+        }
 
         if (value is bool boolValue)
+        {
             return boolValue ? "True" : "False";
+        }
 
         if (value is DateTime dateTime)
+        {
             return dateTime.ToString("yyyy-MM-dd HH:mm");
+        }
 
         if (value is DateTimeOffset dateTimeOffset)
+        {
             return dateTimeOffset.ToString("yyyy-MM-dd HH:mm");
+        }
 
         return value.ToString() ?? "N/A";
     }
