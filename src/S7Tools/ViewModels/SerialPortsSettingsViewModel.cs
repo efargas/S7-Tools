@@ -14,6 +14,7 @@ using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
@@ -395,7 +396,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         try
         {
             IsScanning = true;
-            StatusMessage = "Scanning for ports...";
+            StatusMessage = UIStrings.Status_ScanningForPorts;
 
             IEnumerable<Core.Services.Interfaces.SerialPortInfo> portInfos = await _portService.ScanAvailablePortsAsync();
 
@@ -419,7 +420,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error scanning for ports");
-            StatusMessage = "Error scanning for ports";
+            StatusMessage = UIStrings.Status_ErrorScanningForPorts;
         }
         finally
         {
@@ -446,7 +447,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         try
         {
-            StatusMessage = "Testing port configuration...";
+            StatusMessage = UIStrings.Status_TestingPortConfiguration;
 
             // Apply configuration to test the port
             bool success = await _portService.ApplyConfigurationAsync(SelectedPort, SelectedProfile.Configuration);
@@ -463,7 +464,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error testing port");
-            StatusMessage = "Error testing port";
+            StatusMessage = UIStrings.Status_ErrorTestingPort;
         }
     }
 
@@ -474,7 +475,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         if (_fileDialogService == null)
         {
-            StatusMessage = "File dialog service not available";
+            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
             return;
         }
 
@@ -492,7 +493,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             }
 
             IsLoading = true;
-            StatusMessage = "Exporting profiles...";
+            StatusMessage = UIStrings.Status_ExportingProfiles;
 
             IEnumerable<SerialPortProfile> profiles = await _profileService.ExportAsync();
             string jsonData = System.Text.Json.JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
@@ -504,7 +505,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error exporting profiles");
-            StatusMessage = "Error exporting profiles";
+            StatusMessage = UIStrings.Status_ErrorExportingProfiles;
         }
         finally
         {
@@ -516,7 +517,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         if (_fileDialogService == null)
         {
-            StatusMessage = "File dialog service not available";
+            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
             return;
         }
 
@@ -532,7 +533,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error browsing for profiles path");
-            StatusMessage = "Error selecting directory";
+            StatusMessage = UIStrings.Status_ErrorSelectingDirectory;
         }
     }
 
@@ -545,12 +546,12 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         try
         {
-            StatusMessage = "Opening profiles folder...";
+            StatusMessage = UIStrings.Status_OpeningProfilesFolder;
             System.Diagnostics.Debug.WriteLine($"DEBUG: Opening profiles folder: {ProfilesPath}");
 
             if (string.IsNullOrEmpty(ProfilesPath))
             {
-                StatusMessage = "Profiles path not available";
+                StatusMessage = UIStrings.Status_ProfilesPathNotConfigured;
                 _specificLogger.LogError("Profiles path is null or empty");
                 System.Diagnostics.Debug.WriteLine($"ERROR: Profiles path is null or empty");
                 return;
@@ -559,7 +560,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             // Ensure the directory exists before trying to open it
             if (!Directory.Exists(ProfilesPath))
             {
-                StatusMessage = "Creating profiles folder...";
+                StatusMessage = UIStrings.Status_CreatingProfilesFolder;
                 Directory.CreateDirectory(ProfilesPath);
                 _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
                 System.Diagnostics.Debug.WriteLine($"DEBUG: Created profiles directory: {ProfilesPath}");
@@ -570,14 +571,14 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
             await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
 
-            StatusMessage = "Profiles folder opened";
+            StatusMessage = UIStrings.Status_ProfilesFolderOpened;
             _specificLogger.LogInformation("Successfully opened profiles folder");
             System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortsSettingsViewModel.OpenProfilesPathAsync completed successfully");
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error opening profiles folder");
-            StatusMessage = "Error opening profiles folder";
+            StatusMessage = UIStrings.Status_ErrorOpeningProfilesFolder;
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception in SerialPortsSettingsViewModel.OpenProfilesPathAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
         }
@@ -597,7 +598,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error resetting profiles path");
-            StatusMessage = "Error resetting profiles path";
+            StatusMessage = UIStrings.Status_ErrorResettingProfilesPath;
         }
     }
 
@@ -607,12 +608,12 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         {
             // Use the new settings service with key-value structure
             await _settingsService.SetSettingAsync("profiles.serialPath", Path.Combine(ProfilesPath, "SerialProfiles.json")).ConfigureAwait(false);
-            StatusMessage = "Profiles path updated";
+            StatusMessage = UIStrings.Status_ProfilesPathUpdated;
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Failed to update settings with new profiles path");
-            StatusMessage = "Failed to update settings";
+            StatusMessage = UIStrings.Status_FailedToUpdateSettings;
         }
     }
 
@@ -642,7 +643,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         if (_fileDialogService == null)
         {
-            StatusMessage = "File dialog service not available";
+            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
             return;
         }
 
@@ -658,7 +659,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             }
 
             IsLoading = true;
-            StatusMessage = "Importing profiles...";
+            StatusMessage = UIStrings.Status_ImportingProfiles;
 
             string jsonData = await File.ReadAllTextAsync(fileName);
             List<SerialPortProfile> profiles = JsonSerializer.Deserialize<List<SerialPortProfile>>(jsonData) ?? new List<SerialPortProfile>();
@@ -673,7 +674,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error importing profiles");
-            StatusMessage = "Error importing profiles";
+            StatusMessage = UIStrings.Status_ErrorImportingProfiles;
         }
         finally
         {
@@ -705,7 +706,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             }
 
             IsLoading = true;
-            StatusMessage = "Exporting profile...";
+            StatusMessage = UIStrings.Status_ExportingSelectedProfile;
 
             string jsonData;
 
@@ -736,7 +737,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error exporting profile");
-            StatusMessage = "Error exporting profile";
+            StatusMessage = UIStrings.Status_ErrorExportingProfile;
         }
         finally
         {
@@ -775,7 +776,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error showing profile details");
-            StatusMessage = "Error showing profile details";
+            StatusMessage = UIStrings.Status_ErrorShowingProfileDetails;
         }
     }
 
