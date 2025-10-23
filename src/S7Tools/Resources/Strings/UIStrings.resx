@@ -1379,4 +1379,26 @@
     <comment>Status message when refreshing profile list</comment>
   </data>
 
+  <!-- Main Window Messages -->
+  <data name="Status_FailedToExportLogs" xml:space="preserve">
+    <value>Failed to export logs</value>
+    <comment>Error message when log export fails</comment>
+  </data>
+  <data name="Status_ConfigurationReloadedSuccessfully" xml:space="preserve">
+    <value>Configuration reloaded successfully</value>
+    <comment>Status message when configuration is reloaded successfully</comment>
+  </data>
+  <data name="Status_FailedToReloadConfiguration" xml:space="preserve">
+    <value>Failed to reload configuration</value>
+    <comment>Error message when configuration reload fails</comment>
+  </data>
+  <data name="Status_ConfigurationSavedSuccessfully" xml:space="preserve">
+    <value>Configuration saved successfully</value>
+    <comment>Status message when configuration is saved successfully</comment>
+  </data>
+  <data name="Status_FailedToSaveConfiguration" xml:space="preserve">
+    <value>Failed to save configuration</value>
+    <comment>Error message when configuration save fails</comment>
+  </data>
+
 </root>

@@ -1470,6 +1470,31 @@ public static class UIStrings
     /// </summary>
     public static string Status_RefreshingProfiles => GetStringSafe("Status_RefreshingProfiles", "Refreshing profiles...");
 
+    /// <summary>
+    /// Gets the error message when log export fails.
+    /// </summary>
+    public static string Status_FailedToExportLogs => GetStringSafe("Status_FailedToExportLogs", "Failed to export logs");
+
+    /// <summary>
+    /// Gets the status message when configuration is reloaded successfully.
+    /// </summary>
+    public static string Status_ConfigurationReloadedSuccessfully => GetStringSafe("Status_ConfigurationReloadedSuccessfully", "Configuration reloaded successfully");
+
+    /// <summary>
+    /// Gets the error message when configuration reload fails.
+    /// </summary>
+    public static string Status_FailedToReloadConfiguration => GetStringSafe("Status_FailedToReloadConfiguration", "Failed to reload configuration");
+
+    /// <summary>
+    /// Gets the status message when configuration is saved successfully.
+    /// </summary>
+    public static string Status_ConfigurationSavedSuccessfully => GetStringSafe("Status_ConfigurationSavedSuccessfully", "Configuration saved successfully");
+
+    /// <summary>
+    /// Gets the error message when configuration save fails.
+    /// </summary>
+    public static string Status_FailedToSaveConfiguration => GetStringSafe("Status_FailedToSaveConfiguration", "Failed to save configuration");
+
     #endregion
 
     #region Error Messages - Operations

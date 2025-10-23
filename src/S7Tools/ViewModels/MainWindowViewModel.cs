@@ -443,7 +443,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to export logs to clipboard");
-            StatusMessage = "Failed to export logs";
+            StatusMessage = UIStrings.Status_FailedToExportLogs;
         }
     }
 
@@ -455,13 +455,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         try
         {
             await _settingsService.LoadSettingsAsync();
-            StatusMessage = "Configuration reloaded successfully";
+            StatusMessage = UIStrings.Status_ConfigurationReloadedSuccessfully;
             _logger.LogInformation("Configuration reloaded from settings file");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to reload configuration");
-            StatusMessage = "Failed to reload configuration";
+            StatusMessage = UIStrings.Status_FailedToReloadConfiguration;
         }
     }
 
@@ -477,13 +477,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
             // Save the current user settings
             await _settingsService.SaveUserSettingsAsync(currentSettings);
-            StatusMessage = "Configuration saved successfully";
+            StatusMessage = UIStrings.Status_ConfigurationSavedSuccessfully;
             _logger.LogInformation("Configuration saved to settings file");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to save configuration");
-            StatusMessage = "Failed to save configuration";
+            StatusMessage = UIStrings.Status_FailedToSaveConfiguration;
         }
     }
 
