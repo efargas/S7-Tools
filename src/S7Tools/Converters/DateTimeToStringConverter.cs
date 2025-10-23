@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
+using S7Tools.Resources;
 
 namespace S7Tools.Converters;
 
@@ -47,6 +48,6 @@ public class DateTimeToStringConverter : IValueConverter
     /// </summary>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotSupportedException("DateTimeToStringConverter does not support ConvertBack.");
+        throw new NotSupportedException(UIStrings.Exception_DateTimeToStringConverterNoConvertBack);
     }
 }

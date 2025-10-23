@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using S7Tools.Resources;
 
 namespace S7Tools.Converters;
 
@@ -65,6 +66,6 @@ public class BooleanToColorConverter : IValueConverter
     /// <exception cref="NotImplementedException">This converter does not support ConvertBack.</exception>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException("BooleanToColorConverter does not support ConvertBack operation.");
+        throw new NotImplementedException(UIStrings.Exception_BooleanToColorConverterNoConvertBack);
     }
 }

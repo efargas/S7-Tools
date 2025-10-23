@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using S7Tools.Resources;
 
 namespace S7Tools.Helpers;
 
@@ -72,7 +73,7 @@ public static class PlatformHelper
 
                     if (!opened)
                     {
-                        throw new InvalidOperationException("No suitable file manager found to open directory on Linux.");
+                        throw new InvalidOperationException(UIStrings.Exception_NoFileManagerFoundLinux);
                     }
 
                     return; // Already opened, no need to execute code below
