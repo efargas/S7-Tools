@@ -210,8 +210,13 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 _lastKnownPorts[port.PortPath] = port;
             }
 
-            // Get scan interval from settings
-            int scanIntervalSeconds = _settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+            // Get scan interval from settings and clamp to a safe range
+            int configuredInterval = _settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+            int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+            if (scanIntervalSeconds != configuredInterval)
+            {
+                _logger.LogWarning("Adjusted 'serial.scanIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, scanIntervalSeconds);
+            }
 
             // Start monitoring timer
             _monitoringTimer!.Change(TimeSpan.Zero, TimeSpan.FromSeconds(scanIntervalSeconds));
