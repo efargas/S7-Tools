@@ -1350,6 +1350,301 @@ public static class UIStrings
     /// </summary>
     public static string Status_ErrorOpeningExportPath => GetStringSafe("Status_ErrorOpeningExportPath", "Error opening export path");
 
+    /// <summary>
+    /// Gets the status message when scanning for serial ports.
+    /// </summary>
+    public static string Status_ScanningForPorts => GetStringSafe("Status_ScanningForPorts", "Scanning for ports...");
+
+    /// <summary>
+    /// Gets the status message when port scan is cancelled.
+    /// </summary>
+    public static string Status_ScanCancelled => GetStringSafe("Status_ScanCancelled", "Scan cancelled");
+
+    /// <summary>
+    /// Gets the error message when port scanning fails.
+    /// </summary>
+    public static string Status_ErrorScanningForPorts => GetStringSafe("Status_ErrorScanningForPorts", "Error scanning for ports");
+
+    /// <summary>
+    /// Gets the status message when stopping port scan.
+    /// </summary>
+    public static string Status_StoppingScan => GetStringSafe("Status_StoppingScan", "Stopping scan...");
+
+    /// <summary>
+    /// Gets the status message when refreshing port information.
+    /// </summary>
+    public static string Status_RefreshingPortInformation => GetStringSafe("Status_RefreshingPortInformation", "Refreshing port information...");
+
+    /// <summary>
+    /// Gets the error message when refreshing port information fails.
+    /// </summary>
+    public static string Status_ErrorRefreshingPortInformation => GetStringSafe("Status_ErrorRefreshingPortInformation", "Error refreshing port information");
+
+    /// <summary>
+    /// Gets the status message when testing a port.
+    /// </summary>
+    public static string Status_TestingPort => GetStringSafe("Status_TestingPort", "Testing port...");
+
+    /// <summary>
+    /// Gets the error message when port testing fails.
+    /// </summary>
+    public static string Status_ErrorTestingPort => GetStringSafe("Status_ErrorTestingPort", "Error testing port");
+
+    /// <summary>
+    /// Gets the status message when scan history is cleared.
+    /// </summary>
+    public static string Status_ScanHistoryCleared => GetStringSafe("Status_ScanHistoryCleared", "Scan history cleared");
+
+    /// <summary>
+    /// Gets the status message when exporting scan results.
+    /// </summary>
+    public static string Status_ExportingScanResults => GetStringSafe("Status_ExportingScanResults", "Exporting scan results...");
+
+    /// <summary>
+    /// Gets the status message when scan results are exported successfully.
+    /// </summary>
+    public static string Status_ScanResultsExported => GetStringSafe("Status_ScanResultsExported", "Scan results exported");
+
+    /// <summary>
+    /// Gets the error message when exporting scan results fails.
+    /// </summary>
+    public static string Status_ErrorExportingScanResults => GetStringSafe("Status_ErrorExportingScanResults", "Error exporting scan results");
+
+    /// <summary>
+    /// Gets the status message when port information is copied to clipboard.
+    /// </summary>
+    public static string Status_PortInformationCopied => GetStringSafe("Status_PortInformationCopied", "Port information copied to clipboard");
+
+    /// <summary>
+    /// Gets the error message when copying port information fails.
+    /// </summary>
+    public static string Status_ErrorCopyingPortInformation => GetStringSafe("Status_ErrorCopyingPortInformation", "Error copying port information");
+
+    /// <summary>
+    /// Gets the status message when loading profiles.
+    /// </summary>
+    public static string Status_LoadingProfiles => GetStringSafe("Status_LoadingProfiles", "Loading profiles...");
+
+    /// <summary>
+    /// Gets the status message when creating a new profile.
+    /// </summary>
+    public static string Status_CreatingProfile => GetStringSafe("Status_CreatingProfile", "Creating profile...");
+
+    /// <summary>
+    /// Gets the status message when profile creation is cancelled.
+    /// </summary>
+    public static string Status_ProfileCreationCancelled => GetStringSafe("Status_ProfileCreationCancelled", "Profile creation cancelled");
+
+    /// <summary>
+    /// Gets the status message when no profile is selected for editing.
+    /// </summary>
+    public static string Status_NoProfileSelectedForEditing => GetStringSafe("Status_NoProfileSelectedForEditing", "No profile selected for editing");
+
+    /// <summary>
+    /// Gets the status message when editing a profile.
+    /// </summary>
+    public static string Status_EditingProfile => GetStringSafe("Status_EditingProfile", "Editing profile...");
+
+    /// <summary>
+    /// Gets the status message when profile editing is cancelled.
+    /// </summary>
+    public static string Status_ProfileEditCancelled => GetStringSafe("Status_ProfileEditCancelled", "Profile edit cancelled");
+
+    /// <summary>
+    /// Gets the status message when no profile is selected for duplication.
+    /// </summary>
+    public static string Status_NoProfileSelectedForDuplication => GetStringSafe("Status_NoProfileSelectedForDuplication", "No profile selected for duplication");
+
+    /// <summary>
+    /// Gets the status message when profile duplication is cancelled.
+    /// </summary>
+    public static string Status_ProfileDuplicationCancelled => GetStringSafe("Status_ProfileDuplicationCancelled", "Profile duplication cancelled");
+
+    /// <summary>
+    /// Gets the status message when no profile is selected for deletion.
+    /// </summary>
+    public static string Status_NoProfileSelectedForDeletion => GetStringSafe("Status_NoProfileSelectedForDeletion", "No profile selected for deletion");
+
+    /// <summary>
+    /// Gets the status message when refreshing profile list.
+    /// </summary>
+    public static string Status_RefreshingProfiles => GetStringSafe("Status_RefreshingProfiles", "Refreshing profiles...");
+
+    /// <summary>
+    /// Gets the error message when log export fails.
+    /// </summary>
+    public static string Status_FailedToExportLogs => GetStringSafe("Status_FailedToExportLogs", "Failed to export logs");
+
+    /// <summary>
+    /// Gets the status message when configuration is reloaded successfully.
+    /// </summary>
+    public static string Status_ConfigurationReloadedSuccessfully => GetStringSafe("Status_ConfigurationReloadedSuccessfully", "Configuration reloaded successfully");
+
+    /// <summary>
+    /// Gets the error message when configuration reload fails.
+    /// </summary>
+    public static string Status_FailedToReloadConfiguration => GetStringSafe("Status_FailedToReloadConfiguration", "Failed to reload configuration");
+
+    /// <summary>
+    /// Gets the status message when configuration is saved successfully.
+    /// </summary>
+    public static string Status_ConfigurationSavedSuccessfully => GetStringSafe("Status_ConfigurationSavedSuccessfully", "Configuration saved successfully");
+
+    /// <summary>
+    /// Gets the error message when configuration save fails.
+    /// </summary>
+    public static string Status_FailedToSaveConfiguration => GetStringSafe("Status_FailedToSaveConfiguration", "Failed to save configuration");
+
+    /// <summary>
+    /// Gets the status message when no job profiles are available.
+    /// </summary>
+    public static string Status_NoJobProfilesAvailable => GetStringSafe("Status_NoJobProfilesAvailable", "No job profiles available. Please create a job profile first.");
+
+    /// <summary>
+    /// Gets the status message when creating a new task.
+    /// </summary>
+    public static string Status_CreatingNewTask => GetStringSafe("Status_CreatingNewTask", "Creating new task...");
+
+    /// <summary>
+    /// Gets the status message when starting a task.
+    /// </summary>
+    public static string Status_StartingTask => GetStringSafe("Status_StartingTask", "Starting task...");
+
+    /// <summary>
+    /// Gets the status message when stopping a task.
+    /// </summary>
+    public static string Status_StoppingTask => GetStringSafe("Status_StoppingTask", "Stopping task...");
+
+    /// <summary>
+    /// Gets the status message when pausing a task.
+    /// </summary>
+    public static string Status_PausingTask => GetStringSafe("Status_PausingTask", "Pausing task...");
+
+    /// <summary>
+    /// Gets the status message when resuming a task.
+    /// </summary>
+    public static string Status_ResumingTask => GetStringSafe("Status_ResumingTask", "Resuming task...");
+
+    /// <summary>
+    /// Gets the status message when restarting a task.
+    /// </summary>
+    public static string Status_RestartingTask => GetStringSafe("Status_RestartingTask", "Restarting task...");
+
+    /// <summary>
+    /// Gets the status message when scheduling a task.
+    /// </summary>
+    public static string Status_SchedulingTask => GetStringSafe("Status_SchedulingTask", "Scheduling task...");
+
+    /// <summary>
+    /// Gets the status message when deleting a task.
+    /// </summary>
+    public static string Status_DeletingTask => GetStringSafe("Status_DeletingTask", "Deleting task...");
+
+    /// <summary>
+    /// Gets the status message when refreshing task list.
+    /// </summary>
+    public static string Status_RefreshingTasks => GetStringSafe("Status_RefreshingTasks", "Refreshing tasks...");
+
+    /// <summary>
+    /// Gets the status message when clearing finished tasks.
+    /// </summary>
+    public static string Status_ClearingFinishedTasks => GetStringSafe("Status_ClearingFinishedTasks", "Clearing finished tasks...");
+
+    /// <summary>
+    /// Gets the status message when profile is saved successfully.
+    /// </summary>
+    public static string Status_ProfileSavedSuccessfully => GetStringSafe("Status_ProfileSavedSuccessfully", "Profile saved successfully");
+
+    /// <summary>
+    /// Gets the error message when profile save fails.
+    /// </summary>
+    public static string Status_ErrorSavingProfile => GetStringSafe("Status_ErrorSavingProfile", "Error saving profile");
+
+    /// <summary>
+    /// Gets the generic validation error message.
+    /// </summary>
+    public static string Status_ValidationError => GetStringSafe("Status_ValidationError", "Validation error");
+
+    /// <summary>
+    /// Gets the status message when configuration is reset to defaults.
+    /// </summary>
+    public static string Status_ResetToDefaultConfiguration => GetStringSafe("Status_ResetToDefaultConfiguration", "Reset to default configuration");
+
+    /// <summary>
+    /// Gets the error message when loading a preset fails.
+    /// </summary>
+    public static string Status_ErrorLoadingPreset => GetStringSafe("Status_ErrorLoadingPreset", "Error loading preset");
+
+    /// <summary>
+    /// Gets the error message when copying to clipboard fails.
+    /// </summary>
+    public static string Status_ErrorCopyingToClipboard => GetStringSafe("Status_ErrorCopyingToClipboard", "Error copying to clipboard");
+
+    /// <summary>
+    /// Gets the status message when socat command is copied to clipboard.
+    /// </summary>
+    public static string Status_SocatCommandCopiedToClipboard => GetStringSafe("Status_SocatCommandCopiedToClipboard", "socat command copied to clipboard");
+
+    /// <summary>
+    /// Gets the status message when there is no valid socat command to copy.
+    /// </summary>
+    public static string Status_NoValidSocatCommandToCopy => GetStringSafe("Status_NoValidSocatCommandToCopy", "No valid socat command to copy");
+
+    /// <summary>
+    /// Gets the error message when TCP port testing fails.
+    /// </summary>
+    public static string Status_ErrorTestingTcpPort => GetStringSafe("Status_ErrorTestingTcpPort", "Error testing TCP port");
+
+    /// <summary>
+    /// Gets the status message when stty command is copied to clipboard.
+    /// </summary>
+    public static string Status_SttyCommandCopiedToClipboard => GetStringSafe("Status_SttyCommandCopiedToClipboard", "stty command copied to clipboard");
+
+    /// <summary>
+    /// Gets the status message when there is no valid stty command to copy.
+    /// </summary>
+    public static string Status_NoValidSttyCommandToCopy => GetStringSafe("Status_NoValidSttyCommandToCopy", "No valid stty command to copy");
+
+    /// <summary>
+    /// Gets the status message when testing port configuration.
+    /// </summary>
+    public static string Status_TestingPortConfiguration => GetStringSafe("Status_TestingPortConfiguration", "Testing port configuration...");
+
+    /// <summary>
+    /// Gets the status message when settings are ready.
+    /// </summary>
+    public static string Status_SettingsReady => GetStringSafe("Status_SettingsReady", "Settings ready");
+
+    /// <summary>
+    /// Gets the status message when settings are imported successfully.
+    /// </summary>
+    public static string Status_SettingsImportedSuccessfully => GetStringSafe("Status_SettingsImportedSuccessfully", "Settings imported successfully");
+
+    /// <summary>
+    /// Gets the error message when trying to import empty settings.
+    /// </summary>
+    public static string Status_CannotImportEmptySettings => GetStringSafe("Status_CannotImportEmptySettings", "Cannot import empty settings");
+
+    /// <summary>
+    /// Gets the error message when settings format is invalid.
+    /// </summary>
+    public static string Status_InvalidSettingsFormat => GetStringSafe("Status_InvalidSettingsFormat", "Invalid settings format");
+
+    /// <summary>
+    /// Gets the status message when folder selection is cancelled.
+    /// </summary>
+    public static string Status_FolderSelectionCancelled => GetStringSafe("Status_FolderSelectionCancelled", "Folder selection cancelled");
+
+    /// <summary>
+    /// Gets the status message when default log path is updated successfully.
+    /// </summary>
+    public static string Status_DefaultLogPathUpdatedSuccessfully => GetStringSafe("Status_DefaultLogPathUpdatedSuccessfully", "Default log path updated successfully");
+
+    /// <summary>
+    /// Gets the status message when export path is updated successfully.
+    /// </summary>
+    public static string Status_ExportPathUpdatedSuccessfully => GetStringSafe("Status_ExportPathUpdatedSuccessfully", "Export path updated successfully");
+
     #endregion
 
     #region Error Messages - Operations

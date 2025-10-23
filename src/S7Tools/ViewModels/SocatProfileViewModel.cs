@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -668,7 +669,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
             _logger.LogError(ex, "Error validating configuration");
             ValidationErrors.Add("Error validating configuration");
             IsValid = false;
-            StatusMessage = "Validation error";
+            StatusMessage = UIStrings.Status_ValidationError;
         }
     }
 
@@ -683,7 +684,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         System.Diagnostics.Debug.WriteLine($"DEBUG: SocatProfileViewModel.SaveAsync called");
         try
         {
-            StatusMessage = "Saving profile...";
+            StatusMessage = UIStrings.Status_SavingProfile;
             System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
             SocatProfile profile = CreateProfile();
@@ -718,7 +719,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
 
             Console.WriteLine($"ViewModel: Setting HasChanges = false...");
             HasChanges = false;
-            StatusMessage = "Profile saved successfully";
+            StatusMessage = UIStrings.Status_ProfileSavedSuccessfully;
             _logger.LogInformation("Profile saved: {ProfileName}", profile.Name);
             Console.WriteLine($"✅ ViewModel: SocatProfileViewModel.SaveAsync completed successfully!");
             System.Diagnostics.Debug.WriteLine($"DEBUG: SocatProfileViewModel.SaveAsync completed successfully");
@@ -728,7 +729,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception in SocatProfileViewModel.SaveAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             _logger.LogError(ex, "Error saving profile");
-            StatusMessage = "Error saving profile";
+            StatusMessage = UIStrings.Status_ErrorSavingProfile;
             throw; // Re-throw to allow caller to handle the exception
         }
     }
@@ -748,7 +749,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         }
 
         HasChanges = false;
-        StatusMessage = "Changes cancelled";
+        StatusMessage = UIStrings.Status_ChangesCancelled;
         _logger.LogInformation("Profile editing cancelled");
     }
 
@@ -760,7 +761,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         var defaultConfig = SocatConfiguration.CreateDefault();
         ApplyConfiguration(defaultConfig);
 
-        StatusMessage = "Reset to default configuration";
+        StatusMessage = UIStrings.Status_ResetToDefaultConfiguration;
         _logger.LogInformation("Configuration reset to defaults");
     }
 
@@ -789,7 +790,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading preset: {PresetName}", presetName);
-            StatusMessage = "Error loading preset";
+            StatusMessage = UIStrings.Status_ErrorLoadingPreset;
         }
     }
 
@@ -823,18 +824,18 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         {
             if (string.IsNullOrEmpty(SocatCommand) || SocatCommand == "Error generating command")
             {
-                StatusMessage = "No valid socat command to copy";
+                StatusMessage = UIStrings.Status_NoValidSocatCommandToCopy;
                 return;
             }
 
             await _clipboardService.SetTextAsync(SocatCommand);
-            StatusMessage = "socat command copied to clipboard";
+            StatusMessage = UIStrings.Status_SocatCommandCopiedToClipboard;
             _logger.LogInformation("socat command copied to clipboard: {Command}", SocatCommand);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error copying socat command to clipboard");
-            StatusMessage = "Error copying to clipboard";
+            StatusMessage = UIStrings.Status_ErrorCopyingToClipboard;
         }
     }
 
@@ -868,7 +869,7 @@ public class SocatProfileViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error testing TCP port: {Port}", TcpPort);
-            StatusMessage = "Error testing TCP port";
+            StatusMessage = UIStrings.Status_ErrorTestingTcpPort;
         }
     }
 

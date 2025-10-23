@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 
 namespace S7Tools.ViewModels;
 
@@ -339,7 +340,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         try
         {
             IsScanning = true;
-            StatusMessage = "Scanning for ports...";
+            StatusMessage = UIStrings.Status_ScanningForPorts;
             DateTime startTime = DateTime.Now;
 
             _scanCancellationTokenSource = new CancellationTokenSource();
@@ -435,13 +436,13 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Scan cancelled";
+            StatusMessage = UIStrings.Status_ScanCancelled;
             _logger.LogInformation("Port scan cancelled");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error scanning for ports");
-            StatusMessage = "Error scanning for ports";
+            StatusMessage = UIStrings.Status_ErrorScanningForPorts;
         }
         finally
         {
@@ -457,7 +458,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     private void StopScan()
     {
         _scanCancellationTokenSource?.Cancel();
-        StatusMessage = "Stopping scan...";
+        StatusMessage = UIStrings.Status_StoppingScan;
         _logger.LogInformation("Port scan stop requested");
     }
 
@@ -473,7 +474,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            StatusMessage = "Refreshing port information...";
+            StatusMessage = UIStrings.Status_RefreshingPortInformation;
 
             string portName = SelectedPort.PortName;
             bool isAccessible = await _portService.IsPortAccessibleAsync(portName).ConfigureAwait(false);
@@ -511,7 +512,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error refreshing port information");
-            StatusMessage = "Error refreshing port information";
+            StatusMessage = UIStrings.Status_ErrorRefreshingPortInformation;
         }
     }
 
@@ -527,7 +528,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            StatusMessage = "Testing port...";
+            StatusMessage = UIStrings.Status_TestingPort;
 
             var defaultConfig = SerialPortConfiguration.CreateDefault();
             bool success = await _portService.ApplyConfigurationAsync(SelectedPort.PortName, defaultConfig);
@@ -544,7 +545,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error testing port");
-            StatusMessage = "Error testing port";
+            StatusMessage = UIStrings.Status_ErrorTestingPort;
         }
     }
 
@@ -554,7 +555,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     private void ClearHistory()
     {
         ScanHistory.Clear();
-        StatusMessage = "Scan history cleared";
+        StatusMessage = UIStrings.Status_ScanHistoryCleared;
         _logger.LogInformation("Scan history cleared");
     }
 
@@ -565,18 +566,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            StatusMessage = "Exporting scan results...";
+            StatusMessage = UIStrings.Status_ExportingScanResults;
 
             // TODO: Implement file dialog and export functionality
             await Task.CompletedTask;
 
-            StatusMessage = "Scan results exported";
+            StatusMessage = UIStrings.Status_ScanResultsExported;
             _logger.LogInformation("Scan results exported");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error exporting scan results");
-            StatusMessage = "Error exporting scan results";
+            StatusMessage = UIStrings.Status_ErrorExportingScanResults;
         }
     }
 
@@ -595,13 +596,13 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             // TODO: Implement clipboard functionality
             await Task.CompletedTask;
 
-            StatusMessage = "Port information copied to clipboard";
+            StatusMessage = UIStrings.Status_PortInformationCopied;
             _logger.LogInformation("Port information copied to clipboard for: {PortName}", SelectedPort.PortName);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error copying port information");
-            StatusMessage = "Error copying port information";
+            StatusMessage = UIStrings.Status_ErrorCopyingPortInformation;
         }
     }
 

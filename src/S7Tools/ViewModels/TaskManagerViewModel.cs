@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -607,7 +608,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Starting task...";
+            StatusMessage = UIStrings.Status_StartingTask;
 
             bool success = await _taskScheduler.EnqueueTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
 
@@ -652,7 +653,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Stopping task...";
+            StatusMessage = UIStrings.Status_StoppingTask;
 
             bool success = await _taskScheduler.CancelTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
 
@@ -692,7 +693,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             DateTime scheduledTime = DateTime.Now.AddMinutes(5);
 
             IsLoading = true;
-            StatusMessage = "Scheduling task...";
+            StatusMessage = UIStrings.Status_SchedulingTask;
 
             bool success = await _taskScheduler.ScheduleTaskAsync(SelectedTask.TaskId, scheduledTime).ConfigureAwait(false);
 
@@ -729,7 +730,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Restarting task...";
+            StatusMessage = UIStrings.Status_RestartingTask;
 
             TaskExecution? restartedTask = await _taskScheduler.RestartTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
 
@@ -769,7 +770,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Pausing task...";
+            StatusMessage = UIStrings.Status_PausingTask;
 
             bool success = await _taskScheduler.PauseTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
 
@@ -805,7 +806,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Resuming task...";
+            StatusMessage = UIStrings.Status_ResumingTask;
 
             bool success = await _taskScheduler.ResumeTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
 
@@ -850,7 +851,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Deleting task...";
+            StatusMessage = UIStrings.Status_DeletingTask;
 
             // Use cleanup method to remove old finished tasks
             // Since there's no direct delete method, we'll just mark it and let cleanup handle it
@@ -874,7 +875,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Refreshing tasks...";
+            StatusMessage = UIStrings.Status_RefreshingTasks;
 
             await LoadTasksAsync().ConfigureAwait(false);
 
@@ -906,7 +907,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Clearing finished tasks...";
+            StatusMessage = UIStrings.Status_ClearingFinishedTasks;
 
             // Use cleanup method to remove old tasks
             int clearedCount = await _taskScheduler.CleanupOldTasksAsync(TimeSpan.Zero).ConfigureAwait(false);
@@ -934,7 +935,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            StatusMessage = "Creating new task...";
+            StatusMessage = UIStrings.Status_CreatingNewTask;
 
             // TODO: Show job selection dialog
             // For now, create from the first available job as a placeholder
@@ -943,7 +944,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
             if (firstJob == null)
             {
-                StatusMessage = "No job profiles available. Please create a job profile first.";
+                StatusMessage = UIStrings.Status_NoJobProfilesAvailable;
                 return;
             }
 

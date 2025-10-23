@@ -1279,4 +1279,250 @@
     <comment>Error message when opening export path fails</comment>
   </data>
 
+  <!-- Serial Port Scanner Messages -->
+  <data name="Status_ScanningForPorts" xml:space="preserve">
+    <value>Scanning for ports...</value>
+    <comment>Status message when scanning for serial ports</comment>
+  </data>
+  <data name="Status_ScanCancelled" xml:space="preserve">
+    <value>Scan cancelled</value>
+    <comment>Status message when port scan is cancelled</comment>
+  </data>
+  <data name="Status_ErrorScanningForPorts" xml:space="preserve">
+    <value>Error scanning for ports</value>
+    <comment>Error message when port scanning fails</comment>
+  </data>
+  <data name="Status_StoppingScan" xml:space="preserve">
+    <value>Stopping scan...</value>
+    <comment>Status message when stopping port scan</comment>
+  </data>
+  <data name="Status_RefreshingPortInformation" xml:space="preserve">
+    <value>Refreshing port information...</value>
+    <comment>Status message when refreshing port information</comment>
+  </data>
+  <data name="Status_ErrorRefreshingPortInformation" xml:space="preserve">
+    <value>Error refreshing port information</value>
+    <comment>Error message when refreshing port information fails</comment>
+  </data>
+  <data name="Status_TestingPort" xml:space="preserve">
+    <value>Testing port...</value>
+    <comment>Status message when testing a port</comment>
+  </data>
+  <data name="Status_ErrorTestingPort" xml:space="preserve">
+    <value>Error testing port</value>
+    <comment>Error message when port testing fails</comment>
+  </data>
+  <data name="Status_ScanHistoryCleared" xml:space="preserve">
+    <value>Scan history cleared</value>
+    <comment>Status message when scan history is cleared</comment>
+  </data>
+  <data name="Status_ExportingScanResults" xml:space="preserve">
+    <value>Exporting scan results...</value>
+    <comment>Status message when exporting scan results</comment>
+  </data>
+  <data name="Status_ScanResultsExported" xml:space="preserve">
+    <value>Scan results exported</value>
+    <comment>Status message when scan results are exported successfully</comment>
+  </data>
+  <data name="Status_ErrorExportingScanResults" xml:space="preserve">
+    <value>Error exporting scan results</value>
+    <comment>Error message when exporting scan results fails</comment>
+  </data>
+  <data name="Status_PortInformationCopied" xml:space="preserve">
+    <value>Port information copied to clipboard</value>
+    <comment>Status message when port information is copied to clipboard</comment>
+  </data>
+  <data name="Status_ErrorCopyingPortInformation" xml:space="preserve">
+    <value>Error copying port information</value>
+    <comment>Error message when copying port information fails</comment>
+  </data>
+
+  <!-- Profile Management Base Messages -->
+  <data name="Status_LoadingProfiles" xml:space="preserve">
+    <value>Loading profiles...</value>
+    <comment>Status message when loading profiles</comment>
+  </data>
+  <data name="Status_CreatingProfile" xml:space="preserve">
+    <value>Creating profile...</value>
+    <comment>Status message when creating a new profile</comment>
+  </data>
+  <data name="Status_ProfileCreationCancelled" xml:space="preserve">
+    <value>Profile creation cancelled</value>
+    <comment>Status message when profile creation is cancelled</comment>
+  </data>
+  <data name="Status_NoProfileSelectedForEditing" xml:space="preserve">
+    <value>No profile selected for editing</value>
+    <comment>Status message when no profile is selected for editing</comment>
+  </data>
+  <data name="Status_EditingProfile" xml:space="preserve">
+    <value>Editing profile...</value>
+    <comment>Status message when editing a profile</comment>
+  </data>
+  <data name="Status_ProfileEditCancelled" xml:space="preserve">
+    <value>Profile edit cancelled</value>
+    <comment>Status message when profile editing is cancelled</comment>
+  </data>
+  <data name="Status_NoProfileSelectedForDuplication" xml:space="preserve">
+    <value>No profile selected for duplication</value>
+    <comment>Status message when no profile is selected for duplication</comment>
+  </data>
+  <data name="Status_ProfileDuplicationCancelled" xml:space="preserve">
+    <value>Profile duplication cancelled</value>
+    <comment>Status message when profile duplication is cancelled</comment>
+  </data>
+  <data name="Status_NoProfileSelectedForDeletion" xml:space="preserve">
+    <value>No profile selected for deletion</value>
+    <comment>Status message when no profile is selected for deletion</comment>
+  </data>
+  <data name="Status_RefreshingProfiles" xml:space="preserve">
+    <value>Refreshing profiles...</value>
+    <comment>Status message when refreshing profile list</comment>
+  </data>
+
+  <!-- Main Window Messages -->
+  <data name="Status_FailedToExportLogs" xml:space="preserve">
+    <value>Failed to export logs</value>
+    <comment>Error message when log export fails</comment>
+  </data>
+  <data name="Status_ConfigurationReloadedSuccessfully" xml:space="preserve">
+    <value>Configuration reloaded successfully</value>
+    <comment>Status message when configuration is reloaded successfully</comment>
+  </data>
+  <data name="Status_FailedToReloadConfiguration" xml:space="preserve">
+    <value>Failed to reload configuration</value>
+    <comment>Error message when configuration reload fails</comment>
+  </data>
+  <data name="Status_ConfigurationSavedSuccessfully" xml:space="preserve">
+    <value>Configuration saved successfully</value>
+    <comment>Status message when configuration is saved successfully</comment>
+  </data>
+  <data name="Status_FailedToSaveConfiguration" xml:space="preserve">
+    <value>Failed to save configuration</value>
+    <comment>Error message when configuration save fails</comment>
+  </data>
+
+  <!-- Task Manager Messages -->
+  <data name="Status_NoJobProfilesAvailable" xml:space="preserve">
+    <value>No job profiles available. Please create a job profile first.</value>
+    <comment>Status message when no job profiles are available</comment>
+  </data>
+  <data name="Status_CreatingNewTask" xml:space="preserve">
+    <value>Creating new task...</value>
+    <comment>Status message when creating a new task</comment>
+  </data>
+  <data name="Status_StartingTask" xml:space="preserve">
+    <value>Starting task...</value>
+    <comment>Status message when starting a task</comment>
+  </data>
+  <data name="Status_StoppingTask" xml:space="preserve">
+    <value>Stopping task...</value>
+    <comment>Status message when stopping a task</comment>
+  </data>
+  <data name="Status_PausingTask" xml:space="preserve">
+    <value>Pausing task...</value>
+    <comment>Status message when pausing a task</comment>
+  </data>
+  <data name="Status_ResumingTask" xml:space="preserve">
+    <value>Resuming task...</value>
+    <comment>Status message when resuming a task</comment>
+  </data>
+  <data name="Status_RestartingTask" xml:space="preserve">
+    <value>Restarting task...</value>
+    <comment>Status message when restarting a task</comment>
+  </data>
+  <data name="Status_SchedulingTask" xml:space="preserve">
+    <value>Scheduling task...</value>
+    <comment>Status message when scheduling a task</comment>
+  </data>
+  <data name="Status_DeletingTask" xml:space="preserve">
+    <value>Deleting task...</value>
+    <comment>Status message when deleting a task</comment>
+  </data>
+  <data name="Status_RefreshingTasks" xml:space="preserve">
+    <value>Refreshing tasks...</value>
+    <comment>Status message when refreshing task list</comment>
+  </data>
+  <data name="Status_ClearingFinishedTasks" xml:space="preserve">
+    <value>Clearing finished tasks...</value>
+    <comment>Status message when clearing finished tasks</comment>
+  </data>
+
+  <!-- Additional Profile and Settings Messages -->
+  <data name="Status_ProfileSavedSuccessfully" xml:space="preserve">
+    <value>Profile saved successfully</value>
+    <comment>Status message when profile is saved successfully</comment>
+  </data>
+  <data name="Status_ErrorSavingProfile" xml:space="preserve">
+    <value>Error saving profile</value>
+    <comment>Error message when profile save fails</comment>
+  </data>
+  <data name="Status_ValidationError" xml:space="preserve">
+    <value>Validation error</value>
+    <comment>Generic validation error message</comment>
+  </data>
+  <data name="Status_ResetToDefaultConfiguration" xml:space="preserve">
+    <value>Reset to default configuration</value>
+    <comment>Status message when configuration is reset to defaults</comment>
+  </data>
+  <data name="Status_ErrorLoadingPreset" xml:space="preserve">
+    <value>Error loading preset</value>
+    <comment>Error message when loading a preset fails</comment>
+  </data>
+  <data name="Status_ErrorCopyingToClipboard" xml:space="preserve">
+    <value>Error copying to clipboard</value>
+    <comment>Error message when copying to clipboard fails</comment>
+  </data>
+  <data name="Status_SocatCommandCopiedToClipboard" xml:space="preserve">
+    <value>socat command copied to clipboard</value>
+    <comment>Status message when socat command is copied to clipboard</comment>
+  </data>
+  <data name="Status_NoValidSocatCommandToCopy" xml:space="preserve">
+    <value>No valid socat command to copy</value>
+    <comment>Status message when there is no valid socat command to copy</comment>
+  </data>
+  <data name="Status_ErrorTestingTcpPort" xml:space="preserve">
+    <value>Error testing TCP port</value>
+    <comment>Error message when TCP port testing fails</comment>
+  </data>
+  <data name="Status_SttyCommandCopiedToClipboard" xml:space="preserve">
+    <value>stty command copied to clipboard</value>
+    <comment>Status message when stty command is copied to clipboard</comment>
+  </data>
+  <data name="Status_NoValidSttyCommandToCopy" xml:space="preserve">
+    <value>No valid stty command to copy</value>
+    <comment>Status message when there is no valid stty command to copy</comment>
+  </data>
+  <data name="Status_TestingPortConfiguration" xml:space="preserve">
+    <value>Testing port configuration...</value>
+    <comment>Status message when testing port configuration</comment>
+  </data>
+  <data name="Status_SettingsReady" xml:space="preserve">
+    <value>Settings ready</value>
+    <comment>Status message when settings are ready</comment>
+  </data>
+  <data name="Status_SettingsImportedSuccessfully" xml:space="preserve">
+    <value>Settings imported successfully</value>
+    <comment>Status message when settings are imported successfully</comment>
+  </data>
+  <data name="Status_CannotImportEmptySettings" xml:space="preserve">
+    <value>Cannot import empty settings</value>
+    <comment>Error message when trying to import empty settings</comment>
+  </data>
+  <data name="Status_InvalidSettingsFormat" xml:space="preserve">
+    <value>Invalid settings format</value>
+    <comment>Error message when settings format is invalid</comment>
+  </data>
+  <data name="Status_FolderSelectionCancelled" xml:space="preserve">
+    <value>Folder selection cancelled</value>
+    <comment>Status message when folder selection is cancelled</comment>
+  </data>
+  <data name="Status_DefaultLogPathUpdatedSuccessfully" xml:space="preserve">
+    <value>Default log path updated successfully</value>
+    <comment>Status message when default log path is updated successfully</comment>
+  </data>
+  <data name="Status_ExportPathUpdatedSuccessfully" xml:space="preserve">
+    <value>Export path updated successfully</value>
+    <comment>Status message when export path is updated successfully</comment>
+  </data>
+
 </root>

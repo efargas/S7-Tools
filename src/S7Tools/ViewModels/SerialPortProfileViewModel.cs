@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;
@@ -820,7 +821,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
             _logger.LogError(ex, "Error validating configuration");
             ValidationErrors.Add("Error validating configuration");
             IsValid = false;
-            StatusMessage = "Validation error";
+            StatusMessage = UIStrings.Status_ValidationError;
         }
     }
 
@@ -835,7 +836,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
         System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortProfileViewModel.SaveAsync called");
         try
         {
-            StatusMessage = "Saving profile...";
+            StatusMessage = UIStrings.Status_SavingProfile;
             System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
             SerialPortProfile profile = CreateProfile();
@@ -864,7 +865,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
             }
 
             HasChanges = false;
-            StatusMessage = "Profile saved successfully";
+            StatusMessage = UIStrings.Status_ProfileSavedSuccessfully;
             _logger.LogInformation("Profile saved: {ProfileName}", profile.Name);
             System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortProfileViewModel.SaveAsync completed successfully");
         }
@@ -873,7 +874,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception in SerialPortProfileViewModel.SaveAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             _logger.LogError(ex, "Error saving profile");
-            StatusMessage = "Error saving profile";
+            StatusMessage = UIStrings.Status_ErrorSavingProfile;
             throw; // Re-throw to allow caller to handle the exception
         }
     }
@@ -893,7 +894,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
         }
 
         HasChanges = false;
-        StatusMessage = "Changes cancelled";
+        StatusMessage = UIStrings.Status_ChangesCancelled;
         _logger.LogInformation("Profile editing cancelled");
     }
 
@@ -929,7 +930,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
         DisableEchoKillErase = defaultConfig.DisableEchoKillErase;
         RawMode = defaultConfig.RawMode;
 
-        StatusMessage = "Reset to default configuration";
+        StatusMessage = UIStrings.Status_ResetToDefaultConfiguration;
         _logger.LogInformation("Configuration reset to defaults");
     }
 
@@ -959,7 +960,7 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error loading preset: {PresetName}", presetName);
-            StatusMessage = "Error loading preset";
+            StatusMessage = UIStrings.Status_ErrorLoadingPreset;
         }
     }
 
@@ -1033,18 +1034,18 @@ public class SerialPortProfileViewModel : ViewModelBase, IDisposable
         {
             if (string.IsNullOrEmpty(SttyCommand) || SttyCommand == "Error generating command")
             {
-                StatusMessage = "No valid stty command to copy";
+                StatusMessage = UIStrings.Status_NoValidSttyCommandToCopy;
                 return;
             }
 
             await _clipboardService.SetTextAsync(SttyCommand);
-            StatusMessage = "stty command copied to clipboard";
+            StatusMessage = UIStrings.Status_SttyCommandCopiedToClipboard;
             _logger.LogInformation("stty command copied to clipboard: {Command}", SttyCommand);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error copying stty command to clipboard");
-            StatusMessage = "Error copying to clipboard";
+            StatusMessage = UIStrings.Status_ErrorCopyingToClipboard;
         }
     }
 

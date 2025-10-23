@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Base;
@@ -336,7 +337,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         try
         {
             IsLoading = true;
-            StatusMessage = "Loading profiles...";
+            StatusMessage = UIStrings.Status_LoadingProfiles;
 
             await LoadProfilesAsync().ConfigureAwait(false);
 
@@ -505,7 +506,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         try
         {
             IsLoading = true;
-            StatusMessage = "Creating profile...";
+            StatusMessage = UIStrings.Status_CreatingProfile;
             _logger.LogDebug("Starting create profile operation for {ProfileType}", GetProfileTypeName());
             System.Diagnostics.Debug.WriteLine($"DEBUG: ExecuteCreateAsync called for {GetProfileTypeName()}");
 
@@ -537,7 +538,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             }
             else
             {
-                StatusMessage = "Profile creation cancelled";
+                StatusMessage = UIStrings.Status_ProfileCreationCancelled;
             }
         }
         catch (Exception ex)
@@ -558,14 +559,14 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     {
         if (SelectedProfile == null)
         {
-            StatusMessage = "No profile selected for editing";
+            StatusMessage = UIStrings.Status_NoProfileSelectedForEditing;
             return;
         }
 
         try
         {
             IsLoading = true;
-            StatusMessage = "Editing profile...";
+            StatusMessage = UIStrings.Status_EditingProfile;
             _logger.LogDebug("Starting edit profile operation for {ProfileName}", SelectedProfile.Name);
 
             // Create edit request with current profile
@@ -597,7 +598,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             }
             else
             {
-                StatusMessage = "Profile edit cancelled";
+                StatusMessage = UIStrings.Status_ProfileEditCancelled;
             }
         }
         catch (Exception ex)
@@ -618,14 +619,14 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     {
         if (SelectedProfile == null)
         {
-            StatusMessage = "No profile selected for duplication";
+            StatusMessage = UIStrings.Status_NoProfileSelectedForDuplication;
             return;
         }
 
         try
         {
             IsLoading = true;
-            StatusMessage = "Duplicating profile...";
+            StatusMessage = UIStrings.Status_DuplicatingProfile;
             _logger.LogDebug("Starting duplicate profile operation for {ProfileName}", SelectedProfile.Name);
 
             // Create duplicate request with suggested name
@@ -671,7 +672,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             }
             else
             {
-                StatusMessage = "Profile duplication cancelled";
+                StatusMessage = UIStrings.Status_ProfileDuplicationCancelled;
             }
         }
         catch (Exception ex)
@@ -692,7 +693,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     {
         if (SelectedProfile == null)
         {
-            StatusMessage = "No profile selected for deletion";
+            StatusMessage = UIStrings.Status_NoProfileSelectedForDeletion;
             return;
         }
 
@@ -713,7 +714,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         try
         {
             IsLoading = true;
-            StatusMessage = "Deleting profile...";
+            StatusMessage = UIStrings.Status_DeletingProfile;
             _logger.LogDebug("Starting delete profile operation for {ProfileName}", profileName);
 
             bool success = await GetProfileManager().DeleteAsync(profileId).ConfigureAwait(false);
@@ -785,7 +786,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         try
         {
             IsLoading = true;
-            StatusMessage = "Refreshing profiles...";
+            StatusMessage = UIStrings.Status_RefreshingProfiles;
             _logger.LogDebug("Refreshing {ProfileType} profiles", GetProfileTypeName());
 
             // Preserve current selection
