@@ -1023,6 +1023,204 @@
     <comment>Error message when opening wizard fails</comment>
   </data>
 
+  <!-- PowerSupply Messages -->
+  <data name="Status_ProfileSelected" xml:space="preserve">
+    <value>Selected: {0}</value>
+    <comment>Status message when a profile is selected, {0} is profile name</comment>
+  </data>
+  <data name="Status_WarningFailedToLoadSettings" xml:space="preserve">
+    <value>Warning: Failed to load settings</value>
+    <comment>Warning message when settings fail to load</comment>
+  </data>
+  <data name="Status_ProfileDeletedSuccessfully" xml:space="preserve">
+    <value>Profile '{0}' deleted successfully</value>
+    <comment>Status message when profile is deleted, {0} is profile name</comment>
+  </data>
+  <data name="Status_ProfileSetAsDefault" xml:space="preserve">
+    <value>Profile '{0}' set as default</value>
+    <comment>Status message when profile is set as default, {0} is profile name</comment>
+  </data>
+  <data name="Status_ErrorRefreshingProfiles" xml:space="preserve">
+    <value>Error refreshing profiles</value>
+    <comment>Status message when refreshing profiles fails</comment>
+  </data>
+  <data name="Status_ProfilesRefreshed" xml:space="preserve">
+    <value>Profiles refreshed</value>
+    <comment>Status message when profiles are refreshed successfully</comment>
+  </data>
+  <data name="Status_FileDialogServiceNotAvailable" xml:space="preserve">
+    <value>File dialog service not available</value>
+    <comment>Status message when file dialog service is not available</comment>
+  </data>
+  <data name="Status_ProfilesExportedToFile" xml:space="preserve">
+    <value>Exported {0} profiles to {1}</value>
+    <comment>Status message when profiles are exported, {0} is count, {1} is filename</comment>
+  </data>
+  <data name="Status_ExportFailedAccessDenied" xml:space="preserve">
+    <value>Export failed: Access denied to file location</value>
+    <comment>Status message when export fails due to access denied</comment>
+  </data>
+  <data name="Status_ExportFailed" xml:space="preserve">
+    <value>Export failed: {0}</value>
+    <comment>Status message when export fails, {0} is error message</comment>
+  </data>
+  <data name="Status_ImportFailedNoValidProfiles" xml:space="preserve">
+    <value>Import failed: No valid profiles found in file</value>
+    <comment>Status message when import fails due to no valid profiles</comment>
+  </data>
+  <data name="Status_ProfilesImportedFromFile" xml:space="preserve">
+    <value>Imported {0} profiles from {1}</value>
+    <comment>Status message when profiles are imported, {0} is count, {1} is filename</comment>
+  </data>
+  <data name="Status_ImportFailedFileNotFound" xml:space="preserve">
+    <value>Import failed: File not found</value>
+    <comment>Status message when import fails due to file not found</comment>
+  </data>
+  <data name="Status_ImportFailedInvalidFormat" xml:space="preserve">
+    <value>Import failed: Invalid file format</value>
+    <comment>Status message when import fails due to invalid format</comment>
+  </data>
+  <data name="Status_ImportFailedAccessDenied" xml:space="preserve">
+    <value>Import failed: Access denied to file</value>
+    <comment>Status message when import fails due to access denied</comment>
+  </data>
+  <data name="Status_ImportFailed" xml:space="preserve">
+    <value>Import failed: {0}</value>
+    <comment>Status message when import fails, {0} is error message</comment>
+  </data>
+  <data name="Status_ConnectedToProfile" xml:space="preserve">
+    <value>Connected to {0}</value>
+    <comment>Status message when connected to a profile, {0} is profile name</comment>
+  </data>
+  <data name="Status_TurningPowerOn" xml:space="preserve">
+    <value>Turning power ON...</value>
+    <comment>Status message when turning power on</comment>
+  </data>
+  <data name="Status_PowerTurnedOn" xml:space="preserve">
+    <value>Power turned ON ✓</value>
+    <comment>Status message when power is turned on successfully</comment>
+  </data>
+  <data name="Status_FailedToTurnPowerOn" xml:space="preserve">
+    <value>Failed to turn power ON</value>
+    <comment>Status message when turning power on fails</comment>
+  </data>
+  <data name="Status_TurningPowerOff" xml:space="preserve">
+    <value>Turning power OFF...</value>
+    <comment>Status message when turning power off</comment>
+  </data>
+  <data name="Status_PowerTurnedOff" xml:space="preserve">
+    <value>Power turned OFF ✓</value>
+    <comment>Status message when power is turned off successfully</comment>
+  </data>
+  <data name="Status_FailedToTurnPowerOff" xml:space="preserve">
+    <value>Failed to turn power OFF</value>
+    <comment>Status message when turning power off fails</comment>
+  </data>
+  <data name="Status_ReadingPowerState" xml:space="preserve">
+    <value>Reading power state...</value>
+    <comment>Status message when reading power state</comment>
+  </data>
+  <data name="Status_PowerStateOnOff" xml:space="preserve">
+    <value>Power state: {0}</value>
+    <comment>Status message showing power state, {0} is ON or OFF</comment>
+  </data>
+  <data name="Status_ReadStateError" xml:space="preserve">
+    <value>Read state error: {0}</value>
+    <comment>Error message when reading power state fails, {0} is error message</comment>
+  </data>
+  <data name="Status_PowerCycleTurningOff" xml:space="preserve">
+    <value>Power cycle: Turning power OFF...</value>
+    <comment>Status message during power cycle turning off</comment>
+  </data>
+  <data name="Status_PowerCycleFailedCouldNotTurnOff" xml:space="preserve">
+    <value>Power cycle failed: could not turn OFF</value>
+    <comment>Status message when power cycle fails to turn off</comment>
+  </data>
+  <data name="Status_PowerCycleWaitingBeforeTurningOn" xml:space="preserve">
+    <value>Power cycle: Waiting {0} ms before turning ON...</value>
+    <comment>Status message during power cycle waiting, {0} is delay in milliseconds</comment>
+  </data>
+  <data name="Status_PowerCycleTurningOn" xml:space="preserve">
+    <value>Power cycle: Turning power ON...</value>
+    <comment>Status message during power cycle turning on</comment>
+  </data>
+  <data name="Status_PowerCycleFailedCouldNotTurnOn" xml:space="preserve">
+    <value>Power cycle failed: could not turn ON</value>
+    <comment>Status message when power cycle fails to turn on</comment>
+  </data>
+  <data name="Status_PowerCycleWaitingToStabilize" xml:space="preserve">
+    <value>Power cycle: Waiting {0} ms to stabilize...</value>
+    <comment>Status message during power cycle stabilization, {0} is delay in milliseconds</comment>
+  </data>
+  <data name="Status_ProfilesPathSetTo" xml:space="preserve">
+    <value>Profiles path set to: {0}</value>
+    <comment>Status message when profiles path is set, {0} is path</comment>
+  </data>
+  <data name="Status_FailedToSetProfilesPathAccessDenied" xml:space="preserve">
+    <value>Failed to set profiles path: Access denied</value>
+    <comment>Status message when setting profiles path fails due to access denied</comment>
+  </data>
+  <data name="Status_FailedToSetProfilesPath" xml:space="preserve">
+    <value>Failed to set profiles path: {0}</value>
+    <comment>Status message when setting profiles path fails, {0} is error message</comment>
+  </data>
+  <data name="Status_ProfilesPathNotConfigured" xml:space="preserve">
+    <value>Profiles path not configured</value>
+    <comment>Status message when profiles path is not configured</comment>
+  </data>
+  <data name="Status_FailedToOpenFolderAccessDenied" xml:space="preserve">
+    <value>Failed to open folder: Access denied</value>
+    <comment>Status message when opening folder fails due to access denied</comment>
+  </data>
+  <data name="Status_FailedToOpenFolder" xml:space="preserve">
+    <value>Failed to open folder: {0}</value>
+    <comment>Status message when opening folder fails, {0} is error message</comment>
+  </data>
+  <data name="Status_FailedToResetProfilesPath" xml:space="preserve">
+    <value>Failed to reset profiles path: {0}</value>
+    <comment>Status message when resetting profiles path fails, {0} is error message</comment>
+  </data>
+  <data name="Status_NoProfileSelected" xml:space="preserve">
+    <value>No profile selected</value>
+    <comment>Status message when no profile is selected</comment>
+  </data>
+  <data name="Status_SelectedProfileHasNoConfiguration" xml:space="preserve">
+    <value>Selected profile has no configuration</value>
+    <comment>Status message when selected profile has no configuration</comment>
+  </data>
+  <data name="Status_ProfileValidationFailed" xml:space="preserve">
+    <value>Profile validation failed: {0}</value>
+    <comment>Status message when profile validation fails, {0} is error summary</comment>
+  </data>
+  <data name="Status_ProfileNameCannotBeEmpty" xml:space="preserve">
+    <value>Profile name cannot be empty</value>
+    <comment>Status message when profile name is empty</comment>
+  </data>
+  <data name="Status_ProfileNameTooLong" xml:space="preserve">
+    <value>Profile name cannot exceed 100 characters</value>
+    <comment>Status message when profile name is too long</comment>
+  </data>
+  <data name="Status_ProfileNameAlreadyInUse" xml:space="preserve">
+    <value>Profile name '{0}' is already in use</value>
+    <comment>Status message when profile name is already in use, {0} is profile name</comment>
+  </data>
+  <data name="Status_NotConnectedToPowerSupply" xml:space="preserve">
+    <value>Not connected to power supply</value>
+    <comment>Status message when not connected to power supply</comment>
+  </data>
+  <data name="Status_ErrorOperation" xml:space="preserve">
+    <value>Error {0}: {1}</value>
+    <comment>Generic error status message, {0} is operation, {1} is error message</comment>
+  </data>
+  <data name="Value_PowerOn" xml:space="preserve">
+    <value>ON</value>
+    <comment>Power state value: ON</comment>
+  </data>
+  <data name="Value_PowerOff" xml:space="preserve">
+    <value>OFF</value>
+    <comment>Power state value: OFF</comment>
+  </data>
+
   <!-- Logging Settings Messages -->
   <data name="Status_SavingSettings" xml:space="preserve">
     <value>Saving settings...</value>
