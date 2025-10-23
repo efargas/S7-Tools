@@ -172,7 +172,6 @@ public class ObjectToPropertiesConverterTests
 
     private class TestObjectWithBrowsable
     {
-        [Display(Name = "Visible Property")]
         public string VisibleProperty { get; set; } = string.Empty;
 
         [Browsable(false)]
