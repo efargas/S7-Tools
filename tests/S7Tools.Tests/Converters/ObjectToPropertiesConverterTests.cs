@@ -154,12 +154,83 @@ public class ObjectToPropertiesConverterTests
         Assert.Equal("False", disabledItem.Value);
     }
 
-    [Fact(DisplayName = "ConvertBack throws NotSupportedException")]
-    public void ConvertBack_ThrowsNotSupportedException()
+    [Fact(DisplayName = "ConvertBack returns AvaloniaProperty.UnsetValue")]
+    public void ConvertBack_ReturnsUnsetValue()
     {
-        // Arrange & Act & Assert
-        Assert.Throws<NotSupportedException>(() =>
-            _converter.ConvertBack(null, typeof(object), null, CultureInfo.InvariantCulture));
+        // Arrange & Act
+        var result = _converter.ConvertBack(null, typeof(object), null, CultureInfo.InvariantCulture);
+
+        // Assert
+        Assert.Equal(Avalonia.AvaloniaProperty.UnsetValue, result);
+    }
+
+    [Fact(DisplayName = "Convert with same type twice uses cached reflection results")]
+    public void Convert_WithSameTypeTwice_UsesCachedResults()
+    {
+        // Arrange
+        var firstObject = new SimpleTestObject { Name = "First", Value = 1 };
+        var secondObject = new SimpleTestObject { Name = "Second", Value = 2 };
+
+        // Act - Convert first object (will populate cache)
+        var firstResult = _converter.Convert(firstObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        var firstCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(firstResult);
+
+        // Act - Convert second object (should use cache)
+        var secondResult = _converter.Convert(secondObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        var secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
+
+        // Assert - Both conversions produce correct results with same structure
+        Assert.Equal(2, firstCollection.Count);
+        Assert.Equal(2, secondCollection.Count);
+
+        // Verify first object values
+        Assert.Contains(firstCollection, p => p.Label.Contains("Name") && p.Value == "First");
+        Assert.Contains(firstCollection, p => p.Label.Contains("Value") && p.Value == "1");
+
+        // Verify second object values
+        Assert.Contains(secondCollection, p => p.Label.Contains("Name") && p.Value == "Second");
+        Assert.Contains(secondCollection, p => p.Label.Contains("Value") && p.Value == "2");
+
+        // Verify labels are consistent (proving cache is being used)
+        var firstLabels = firstCollection.Select(p => p.Label).ToList();
+        var secondLabels = secondCollection.Select(p => p.Label).ToList();
+        Assert.Equal(firstLabels, secondLabels); // Ensures order and content are the same
+
+        // For a stronger cache proof, assert that the string instances are the same.
+        // This is a good indicator that they came from the same cached PropertyMetadata.
+        for (int i = 0; i < firstCollection.Count; i++)
+        {
+            Assert.Same(firstCollection[i].Label, secondCollection[i].Label);
+        }
+    }
+
+    [Fact(DisplayName = "Convert caches property order correctly")]
+    public void Convert_CachesPropertyOrderCorrectly()
+    {
+        // Arrange
+        var firstObject = new TestObjectWithOrder { Third = "C1", First = "A1", Second = "B1" };
+        var secondObject = new TestObjectWithOrder { Third = "C2", First = "A2", Second = "B2" };
+
+        // Act
+        var firstResult = _converter.Convert(firstObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        var firstCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(firstResult);
+
+        var secondResult = _converter.Convert(secondObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        var secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
+
+        // Assert - Order is consistent across both conversions
+        Assert.Equal(3, firstCollection.Count);
+        Assert.Equal(3, secondCollection.Count);
+
+        // First conversion order
+        Assert.Equal("First Property", firstCollection[0].Label);
+        Assert.Equal("Second Property", firstCollection[1].Label);
+        Assert.Equal("Third Property", firstCollection[2].Label);
+
+        // Second conversion order (should match first due to cache)
+        Assert.Equal("First Property", secondCollection[0].Label);
+        Assert.Equal("Second Property", secondCollection[1].Label);
+        Assert.Equal("Third Property", secondCollection[2].Label);
     }
 
     #region Test Classes
