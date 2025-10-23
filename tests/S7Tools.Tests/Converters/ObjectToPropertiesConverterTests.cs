@@ -171,7 +171,7 @@ public class ObjectToPropertiesConverterTests
         var firstObject = new SimpleTestObject { Name = "First", Value = 1 };
         var secondObject = new SimpleTestObject { Name = "Second", Value = 2 };
 
-        // Act - Convert first object (will populate cache)
+        // Act - Convert first object (will populate cache using ConditionalWeakTable)
         var firstResult = _converter.Convert(firstObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
         var firstCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(firstResult);
 
@@ -191,13 +191,15 @@ public class ObjectToPropertiesConverterTests
         Assert.Contains(secondCollection, p => p.Label.Contains("Name") && p.Value == "Second");
         Assert.Contains(secondCollection, p => p.Label.Contains("Value") && p.Value == "2");
 
-        // Verify labels are consistent (proving cache is being used)
+        // Verify labels are consistent (proving cache is being used with ConditionalWeakTable)
         var firstLabels = firstCollection.Select(p => p.Label).ToList();
         var secondLabels = secondCollection.Select(p => p.Label).ToList();
         Assert.Equal(firstLabels, secondLabels); // Ensures order and content are the same
 
         // For a stronger cache proof, assert that the string instances are the same.
         // This is a good indicator that they came from the same cached PropertyMetadata.
+        // ConditionalWeakTable allows types to be GC'd if assemblies are unloaded,
+        // but during normal operation, it maintains the cache for active types.
         for (int i = 0; i < firstCollection.Count; i++)
         {
             Assert.Same(firstCollection[i].Label, secondCollection[i].Label);

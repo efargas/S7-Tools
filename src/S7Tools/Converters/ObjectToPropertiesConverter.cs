@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -7,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Avalonia.Data.Converters;
 using S7Tools.ViewModels.Profiles;
 
@@ -29,9 +29,9 @@ public class ObjectToPropertiesConverter : IValueConverter
 
     /// <summary>
     /// Cache for property metadata per type to avoid repeated reflection.
-    /// Key: Type, Value: List of PropertyMetadata containing reflection results
+    /// Uses ConditionalWeakTable to allow types to be garbage collected if assemblies are unloaded.
     /// </summary>
-    private static readonly ConcurrentDictionary<Type, IReadOnlyList<PropertyMetadata>> PropertyCache = new();
+    private static readonly ConditionalWeakTable<Type, IReadOnlyList<PropertyMetadata>> PropertyCache = new();
 
     /// <summary>
     /// Cached metadata for a property including its PropertyInfo, display name, and order.
@@ -54,7 +54,7 @@ public class ObjectToPropertiesConverter : IValueConverter
         Type type = value.GetType();
 
         // Get cached property metadata or compute and cache it
-        IReadOnlyList<PropertyMetadata> propertyMetadata = PropertyCache.GetOrAdd(type, BuildPropertyMetadata);
+        IReadOnlyList<PropertyMetadata> propertyMetadata = PropertyCache.GetValue(type, BuildPropertyMetadata);
 
         foreach (PropertyMetadata metadata in propertyMetadata)
         {
