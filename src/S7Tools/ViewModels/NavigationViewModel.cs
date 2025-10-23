@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Reactive;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -366,8 +367,8 @@ public class NavigationViewModel : ReactiveObject
             MainContentTitle = UIStrings.Navigation_ErrorTitle;
             ShowMainContentHeader = true;
             CurrentContent = null;
-            MainContent = string.Format(UIStrings.Navigation_NavigationFailed, ex.Message);
-            DetailContent = string.Format(UIStrings.Navigation_NavigationFailed, ex.Message);
+            MainContent = UIStrings.Navigation_NavigationFailed(ex.Message);
+            DetailContent = UIStrings.Navigation_NavigationFailed(ex.Message);
             ShowLogStats = false;
         }
     }
