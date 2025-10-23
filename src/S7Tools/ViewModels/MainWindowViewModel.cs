@@ -5,9 +5,9 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Resources;
 using S7Tools.Services;
-using S7Tools.Core.Interfaces.Services;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels;

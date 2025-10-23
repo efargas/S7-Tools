@@ -104,7 +104,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
 
         // Initialize ProfilesPath from settings and subscribe to changes
         RefreshFromSettings();
-        _settingsChangedHandler = (_, args) => {
+        _settingsChangedHandler = (_, args) =>
+        {
             if (args.Key == "profiles.socatPath")
             {
                 RefreshFromSettings();

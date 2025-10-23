@@ -76,7 +76,9 @@
 				"build",
 				"src/S7Tools.sln",
 				"--configuration",
-				"Debug"
+				"Debug",
+				"-v",
+				"detailed"
 			],
 			"group": "build",
 			"presentation": {
@@ -98,7 +100,9 @@
 				"--project",
 				"src/S7Tools/S7Tools.csproj",
 				"--configuration",
-				"Debug"
+				"Debug",
+				"-v",
+				"detailed"
 			],
 			"group": "build",
 			"presentation": {
@@ -157,7 +161,9 @@
 				"build",
 				"src/S7Tools.sln",
 				"--configuration",
-				"Debug"
+				"Debug",
+				"-v",
+				"detailed"
 			],
 			"group": {
 				"kind": "build",

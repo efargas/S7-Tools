@@ -2,9 +2,9 @@ using System.Reactive;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Helpers;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
+using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 

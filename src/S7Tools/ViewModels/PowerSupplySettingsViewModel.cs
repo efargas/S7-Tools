@@ -102,7 +102,8 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         // Initialize ProfilesPath from settings and subscribe to changes
         RefreshFromSettings();
-        _settingsChangedHandler = (_, args) => {
+        _settingsChangedHandler = (_, args) =>
+        {
             if (args.Key.StartsWith("powerSupply.") || args.Key.StartsWith("profiles.powerSupply"))
             {
                 RefreshFromSettings();

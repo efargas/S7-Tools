@@ -102,7 +102,8 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
 
         // Initialize ProfilesPath from settings and subscribe to changes
         RefreshFromSettings();
-        _settingsChangedHandler = (_, args) => {
+        _settingsChangedHandler = (_, args) =>
+        {
             if (args.Key == "profiles.serialPath")
             {
                 RefreshFromSettings();

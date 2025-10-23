@@ -47,6 +47,19 @@ public class ViewLocator : IDataTemplate
     }
 
     /// <summary>
+    /// Gets the expected view name for a given ViewModel type based on naming conventions.
+    /// </summary>
+    /// <param name="vmType">The ViewModel type.</param>
+    /// <returns>The expected view name.</returns>
+    private static string GetExpectedViewName(Type vmType)
+    {
+        string vmFullName = vmType.FullName ?? vmType.Name;
+        return vmFullName
+            .Replace(".ViewModels.", ".Views.", StringComparison.Ordinal)
+            .Replace("ViewModel", "View", StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Resolves the View type for a given ViewModel type using naming conventions.
     /// This method is called once per ViewModel type and the result is cached.
     /// </summary>
