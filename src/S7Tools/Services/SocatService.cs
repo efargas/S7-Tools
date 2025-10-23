@@ -787,6 +787,18 @@ public class SocatService : ISocatService, IDisposable
             var monitorInterval = TimeSpan.FromSeconds(statusRefreshIntervalSeconds);
 
             var isRunning = 0;
+
+            // Perform an initial status update before scheduling periodic checks
+            try
+            {
+                await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
+            }
+
+            // Start periodic monitoring with overlap protection
             var monitor = new Timer(async _ =>
             {
                 if (Interlocked.Exchange(ref isRunning, 1) == 1)
@@ -794,25 +806,20 @@ public class SocatService : ISocatService, IDisposable
                     // Skip overlapping executions
                     return;
                 }
+
                 try
                 {
-                    try
-                    {
-                        await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
-                    }
+                    await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error monitoring socat process {ProcessId}", processInfo.ProcessId);
                 }
                 finally
                 {
                     Interlocked.Exchange(ref isRunning, 0);
                 }
             }, null, monitorInterval, monitorInterval);
-                try
-                {
-                    await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
