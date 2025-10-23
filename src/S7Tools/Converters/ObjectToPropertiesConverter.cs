@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +14,9 @@ namespace S7Tools.Converters;
 /// <summary>
 /// Converts an object to a collection of PropertyDisplayItem instances
 /// by reflecting over its public properties.
+/// Uses attributes to control display:
+/// - [Browsable(false)] to hide properties
+/// - [Display(Name = "...", Order = N)] to customize label and order
 /// </summary>
 public class ObjectToPropertiesConverter : IValueConverter
 {
@@ -32,7 +37,11 @@ public class ObjectToPropertiesConverter : IValueConverter
         // Get all public properties
         var publicProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanRead && !ExcludedProperties.Contains(p.Name))
-            .OrderBy(p => p.Name);
+            // Filter using [Browsable(false)] attribute
+            .Where(p => p.GetCustomAttribute<BrowsableAttribute>()?.Browsable != false)
+            // Order using [Display(Order = ...)] attribute, then by name
+            .OrderBy(p => p.GetCustomAttribute<DisplayAttribute>()?.GetOrder() ?? int.MaxValue)
+            .ThenBy(p => p.Name);
 
         foreach (var prop in publicProperties)
         {
@@ -40,10 +49,11 @@ public class ObjectToPropertiesConverter : IValueConverter
             {
                 var propValue = prop.GetValue(value);
                 var displayValue = FormatValue(propValue);
+                var label = GetDisplayLabel(prop);
 
                 properties.Add(new PropertyDisplayItem
                 {
-                    Label = FormatLabel(prop.Name),
+                    Label = label,
                     Value = displayValue,
                     ValidationState = PropertyValidationState.Valid
                 });
@@ -61,6 +71,21 @@ public class ObjectToPropertiesConverter : IValueConverter
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         throw new NotSupportedException();
+    }
+
+    /// <summary>
+    /// Gets the display label for a property.
+    /// Uses [Display(Name = "...")] attribute if present, otherwise formats the property name.
+    /// </summary>
+    private static string GetDisplayLabel(PropertyInfo property)
+    {
+        var displayAttribute = property.GetCustomAttribute<DisplayAttribute>();
+        if (displayAttribute?.Name != null)
+        {
+            return displayAttribute.Name;
+        }
+
+        return FormatLabel(property.Name);
     }
 
     private static readonly System.Text.RegularExpressions.Regex PascalCaseRegex = new("([a-z])([A-Z])", System.Text.RegularExpressions.RegexOptions.Compiled);
