@@ -85,7 +85,7 @@ public sealed class ActivityBarService : IActivityBarService
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        if (string.IsNullOrEmpty(item.Id))
+        if (string.IsNullOrWhiteSpace(item.Id))
         {
             throw new ArgumentException(UIStrings.Exception_ActivityBarItemMustHaveValidId, nameof(item));
         }
