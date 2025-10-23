@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
+using S7Tools.Resources;
 
 namespace S7Tools.Converters;
 
@@ -41,6 +42,6 @@ public class GridLengthToDoubleConverter : IValueConverter
     /// <exception cref="NotImplementedException">This converter does not support ConvertBack.</exception>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException("GridLengthToDoubleConverter does not support ConvertBack operation.");
+        throw new NotImplementedException(UIStrings.Exception_GridLengthToDoubleConverterNoConvertBack);
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -94,7 +95,7 @@ public sealed class BootloaderService : IBootloaderService
             bool connected = await _power.ConnectAsync(powerConfig, cancellationToken).ConfigureAwait(false);
             if (!connected)
             {
-                throw new InvalidOperationException("Failed to connect to power supply controller");
+                throw new InvalidOperationException(UIStrings.Exception_FailedToConnectToPowerSupply);
             }
 
             try

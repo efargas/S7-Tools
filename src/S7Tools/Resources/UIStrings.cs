@@ -15,7 +15,7 @@ public static class UIStrings
     /// </summary>
     public static IResourceManager ResourceManager
     {
-        get => _resourceManager ?? throw new InvalidOperationException("ResourceManager not initialized. Ensure App.Initialize() has been called.");
+        get => _resourceManager ?? throw new InvalidOperationException(Exception_ResourceManagerNotInitialized);
         set => _resourceManager = value ?? throw new ArgumentNullException(nameof(value));
     }
 
@@ -1682,6 +1682,272 @@ public static class UIStrings
     /// Expects parameter: operation name (string)
     /// </summary>
     public static string Error_Generic => GetStringSafe("Error_Generic", "Error {0}");
+
+    #endregion
+
+    #region About and UI Labels
+
+    /// <summary>
+    /// Gets the greeting message for the About view.
+    /// </summary>
+    public static string About_Greeting => GetStringSafe("About_Greeting", "About S7Tools.");
+
+    #endregion
+
+    #region Bottom Panel Tab Labels
+
+    /// <summary>
+    /// Gets the Problems panel tab label.
+    /// </summary>
+    public static string Panel_Problems => GetStringSafe("Panel_Problems", "PROBLEMS");
+
+    /// <summary>
+    /// Gets the Output panel tab label.
+    /// </summary>
+    public static string Panel_Output => GetStringSafe("Panel_Output", "OUTPUT");
+
+    /// <summary>
+    /// Gets the Debug Console panel tab label.
+    /// </summary>
+    public static string Panel_DebugConsole => GetStringSafe("Panel_DebugConsole", "DEBUG CONSOLE");
+
+    /// <summary>
+    /// Gets the Log Viewer panel tab label.
+    /// </summary>
+    public static string Panel_LogViewer => GetStringSafe("Panel_LogViewer", "LOG VIEWER");
+
+    /// <summary>
+    /// Gets the message when no problems are detected.
+    /// </summary>
+    public static string Panel_NoProblemsDetected => GetStringSafe("Panel_NoProblemsDetected", "No problems detected.");
+
+    /// <summary>
+    /// Gets the message when output console is ready.
+    /// </summary>
+    public static string Panel_OutputConsoleReady => GetStringSafe("Panel_OutputConsoleReady", "Output console ready...");
+
+    /// <summary>
+    /// Gets the message when debug console is ready.
+    /// </summary>
+    public static string Panel_DebugConsoleReady => GetStringSafe("Panel_DebugConsoleReady", "Debug console ready...");
+
+    /// <summary>
+    /// Gets the error message when LogViewer fails to initialize.
+    /// </summary>
+    public static string Panel_LogViewerInitializationFailed => GetStringSafe("Panel_LogViewerInitializationFailed", "LogViewer initialization failed. Check logs for details.");
+
+    #endregion
+
+    #region Navigation Sidebar Titles
+
+    /// <summary>
+    /// Gets the Explorer sidebar title.
+    /// </summary>
+    public static string Navigation_Explorer => GetStringSafe("Navigation_Explorer", "EXPLORER");
+
+    /// <summary>
+    /// Gets the Connections sidebar title.
+    /// </summary>
+    public static string Navigation_Connections => GetStringSafe("Navigation_Connections", "CONNECTIONS");
+
+    /// <summary>
+    /// Gets the Log Viewer sidebar title.
+    /// </summary>
+    public static string Navigation_LogViewer => GetStringSafe("Navigation_LogViewer", "LOG VIEWER");
+
+    /// <summary>
+    /// Gets the Settings sidebar title.
+    /// </summary>
+    public static string Navigation_Settings => GetStringSafe("Navigation_Settings", "SETTINGS");
+
+    /// <summary>
+    /// Gets the Task Manager sidebar title.
+    /// </summary>
+    public static string Navigation_TaskManager => GetStringSafe("Navigation_TaskManager", "TASK MANAGER");
+
+    /// <summary>
+    /// Gets the Jobs Management sidebar title.
+    /// </summary>
+    public static string Navigation_JobsManagement => GetStringSafe("Navigation_JobsManagement", "JOBS MANAGEMENT");
+
+    /// <summary>
+    /// Gets the Error sidebar title.
+    /// </summary>
+    public static string Navigation_Error => GetStringSafe("Navigation_Error", "ERROR");
+
+    #endregion
+
+    #region Navigation Content Titles
+
+    /// <summary>
+    /// Gets the Welcome content title.
+    /// </summary>
+    public static string Navigation_Welcome => GetStringSafe("Navigation_Welcome", "Welcome");
+
+    /// <summary>
+    /// Gets the PLC Connections content title.
+    /// </summary>
+    public static string Navigation_PlcConnections => GetStringSafe("Navigation_PlcConnections", "PLC Connections");
+
+    /// <summary>
+    /// Gets the Log Viewer content title.
+    /// </summary>
+    public static string Navigation_LogViewerTitle => GetStringSafe("Navigation_LogViewerTitle", "Log Viewer");
+
+    /// <summary>
+    /// Gets the Settings Configuration content title.
+    /// </summary>
+    public static string Navigation_SettingsConfiguration => GetStringSafe("Navigation_SettingsConfiguration", "Settings Configuration");
+
+    /// <summary>
+    /// Gets the Task Manager content title.
+    /// </summary>
+    public static string Navigation_TaskManagerTitle => GetStringSafe("Navigation_TaskManagerTitle", "Task Manager");
+
+    /// <summary>
+    /// Gets the Jobs Management content title.
+    /// </summary>
+    public static string Navigation_JobsManagementTitle => GetStringSafe("Navigation_JobsManagementTitle", "Jobs Management");
+
+    /// <summary>
+    /// Gets the Error content title.
+    /// </summary>
+    public static string Navigation_ErrorTitle => GetStringSafe("Navigation_ErrorTitle", "Error");
+
+    /// <summary>
+    /// Gets the placeholder message for Log Viewer.
+    /// </summary>
+    public static string Navigation_LogViewerComingSoon => GetStringSafe("Navigation_LogViewerComingSoon", "Log Viewer functionality coming soon...");
+
+    /// <summary>
+    /// Gets the navigation failure message format.
+    /// </summary>
+    /// <param name="errorMessage">The error message to include.</param>
+    public static string Navigation_NavigationFailed(string errorMessage) =>
+        string.Format(GetStringSafe("Navigation_NavigationFailed", "Navigation failed: {0}"), errorMessage);
+
+    #endregion
+
+    #region Exception Messages
+
+    /// <summary>
+    /// Gets the exception message when activity bar item has no ID.
+    /// </summary>
+    public static string Exception_ActivityBarItemMustHaveValidId => GetStringSafe("Exception_ActivityBarItemMustHaveValidId", "Activity bar item must have a valid ID.");
+
+    /// <summary>
+    /// Gets the exception message when setting key is null or empty.
+    /// </summary>
+    public static string Exception_SettingKeyNullOrEmpty => GetStringSafe("Exception_SettingKeyNullOrEmpty", "Setting key cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when relative path is null or empty.
+    /// </summary>
+    public static string Exception_RelativePathNullOrEmpty => GetStringSafe("Exception_RelativePathNullOrEmpty", "Relative path cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when directory path is null or empty.
+    /// </summary>
+    public static string Exception_DirectoryPathNullOrEmpty => GetStringSafe("Exception_DirectoryPathNullOrEmpty", "Directory path cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when format is null or empty.
+    /// </summary>
+    public static string Exception_FormatNullOrEmpty => GetStringSafe("Exception_FormatNullOrEmpty", "Format cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when port path is null or empty.
+    /// </summary>
+    public static string Exception_PortPathNullOrEmpty => GetStringSafe("Exception_PortPathNullOrEmpty", "Port path cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when command is null or empty.
+    /// </summary>
+    public static string Exception_CommandNullOrEmpty => GetStringSafe("Exception_CommandNullOrEmpty", "Command cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when serial device is null or empty.
+    /// </summary>
+    public static string Exception_SerialDeviceNullOrEmpty => GetStringSafe("Exception_SerialDeviceNullOrEmpty", "Serial device cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when process ID is invalid.
+    /// </summary>
+    public static string Exception_ProcessIdMustBeGreaterThanZero => GetStringSafe("Exception_ProcessIdMustBeGreaterThanZero", "Process ID must be greater than zero");
+
+    /// <summary>
+    /// Gets the exception message when TCP port is out of range.
+    /// </summary>
+    public static string Exception_TcpPortRange => GetStringSafe("Exception_TcpPortRange", "TCP port must be between 1 and 65535");
+
+    /// <summary>
+    /// Gets the exception message when TCP host is null or empty.
+    /// </summary>
+    public static string Exception_TcpHostNullOrEmpty => GetStringSafe("Exception_TcpHostNullOrEmpty", "TCP host cannot be null or empty");
+
+    /// <summary>
+    /// Gets the exception message when power supply connection fails.
+    /// </summary>
+    public static string Exception_FailedToConnectToPowerSupply => GetStringSafe("Exception_FailedToConnectToPowerSupply", "Failed to connect to power supply controller");
+
+    /// <summary>
+    /// Gets the exception message when operation requires connection to power supply.
+    /// </summary>
+    public static string Exception_NotConnectedToPowerSupply => GetStringSafe("Exception_NotConnectedToPowerSupply", "Not connected to power supply");
+
+    /// <summary>
+    /// Gets the exception message when validation predicate is missing.
+    /// </summary>
+    public static string Exception_NoValidationPredicateConfigured => GetStringSafe("Exception_NoValidationPredicateConfigured", "No validation predicate configured");
+
+    /// <summary>
+    /// Gets the exception message when ResourceManager is not initialized.
+    /// </summary>
+    public static string Exception_ResourceManagerNotInitialized => GetStringSafe("Exception_ResourceManagerNotInitialized", "ResourceManager not initialized. Ensure App.Initialize() has been called.");
+
+    /// <summary>
+    /// Gets the exception message for BooleanToColorConverter ConvertBack.
+    /// </summary>
+    public static string Exception_BooleanToColorConverterNoConvertBack => GetStringSafe("Exception_BooleanToColorConverterNoConvertBack", "BooleanToColorConverter does not support ConvertBack operation.");
+
+    /// <summary>
+    /// Gets the exception message for BooleanToStringConverter ConvertBack.
+    /// </summary>
+    public static string Exception_BooleanToStringConverterNoConvertBack => GetStringSafe("Exception_BooleanToStringConverterNoConvertBack", "BooleanToStringConverter does not support ConvertBack operation.");
+
+    /// <summary>
+    /// Gets the exception message for BooleanToVisibilityConverter ConvertBack.
+    /// </summary>
+    public static string Exception_BooleanToVisibilityConverterNoConvertBack => GetStringSafe("Exception_BooleanToVisibilityConverterNoConvertBack", "BooleanToVisibilityConverter does not support ConvertBack operation.");
+
+    /// <summary>
+    /// Gets the exception message for GridLengthToDoubleConverter ConvertBack.
+    /// </summary>
+    public static string Exception_GridLengthToDoubleConverterNoConvertBack => GetStringSafe("Exception_GridLengthToDoubleConverterNoConvertBack", "GridLengthToDoubleConverter does not support ConvertBack operation.");
+
+    /// <summary>
+    /// Gets the exception message for DateTimeToStringConverter ConvertBack.
+    /// </summary>
+    public static string Exception_DateTimeToStringConverterNoConvertBack => GetStringSafe("Exception_DateTimeToStringConverterNoConvertBack", "DateTimeToStringConverter does not support ConvertBack.");
+
+    /// <summary>
+    /// Gets the exception message when no file manager is available on Linux.
+    /// </summary>
+    public static string Exception_NoFileManagerFoundLinux => GetStringSafe("Exception_NoFileManagerFoundLinux", "No suitable file manager found to open directory on Linux.");
+
+    #endregion
+
+    #region Validation Messages
+
+    /// <summary>
+    /// Gets the validation error when instance is null.
+    /// </summary>
+    public static string Validation_InstanceCannotBeNull => GetStringSafe("Validation_InstanceCannotBeNull", "Instance cannot be null");
+
+    /// <summary>
+    /// Gets the validation error code for null instance.
+    /// </summary>
+    public static string Validation_NullInstance => GetStringSafe("Validation_NullInstance", "NULL_INSTANCE");
 
     #endregion
 

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
@@ -84,9 +85,9 @@ public sealed class ActivityBarService : IActivityBarService
     {
         ArgumentNullException.ThrowIfNull(item);
 
-        if (string.IsNullOrEmpty(item.Id))
+        if (string.IsNullOrWhiteSpace(item.Id))
         {
-            throw new ArgumentException("Activity bar item must have a valid ID.", nameof(item));
+            throw new ArgumentException(UIStrings.Exception_ActivityBarItemMustHaveValidId, nameof(item));
         }
 
         if (_items.Any(i => i.Id == item.Id))

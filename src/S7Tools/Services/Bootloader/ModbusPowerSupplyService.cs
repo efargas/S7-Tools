@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -64,7 +65,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     {
         if (!_isConnected)
         {
-            throw new InvalidOperationException("Not connected to power supply");
+            throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
         }
 
         _logger.LogInformation("Turning power ON");
@@ -76,7 +77,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     {
         if (!_isConnected)
         {
-            throw new InvalidOperationException("Not connected to power supply");
+            throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
         }
 
         _logger.LogInformation("Turning power OFF");
@@ -88,7 +89,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     {
         if (!_isConnected)
         {
-            throw new InvalidOperationException("Not connected to power supply");
+            throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
         }
 
         _logger.LogDebug("Reading power state");
@@ -100,7 +101,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     {
         if (!_isConnected)
         {
-            throw new InvalidOperationException("Not connected to power supply");
+            throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
         }
 
         _logger.LogInformation("Starting power cycle with {Delay}ms delay", delayMs);
