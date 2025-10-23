@@ -30,16 +30,17 @@ public class GridLengthToDoubleConverter : IValueConverter
     }
 
     /// <summary>
-    /// Not implemented - this converter does not support two-way binding.
+    /// Converts back from a scaled double to the original value.
+    /// This converter does not support two-way binding.
     /// </summary>
     /// <param name="value">The value to convert back.</param>
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">An optional parameter.</param>
     /// <param name="culture">The culture information.</param>
-    /// <returns>Not implemented.</returns>
-    /// <exception cref="NotImplementedException">This method is not implemented.</exception>
+    /// <returns>This method is not supported.</returns>
+    /// <exception cref="NotImplementedException">This converter does not support ConvertBack.</exception>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        throw new NotImplementedException("GridLengthToDoubleConverter does not support ConvertBack operation.");
     }
 }

@@ -305,6 +305,11 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// </summary>
     /// <param name="type">The power supply type.</param>
     /// <returns>A configuration object for the specified type.</returns>
+    /// <exception cref="NotImplementedException">
+    /// Thrown when attempting to create a configuration for SerialRs232, SerialRs485, or EthernetIp types,
+    /// which are planned for future implementation.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when an unknown power supply type is provided.</exception>
     private PowerSupplyConfiguration CreateConfigurationForType(PowerSupplyType type)
     {
         return type switch
@@ -317,9 +322,12 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
                 OnOffCoil = (ushort)ModbusTcpOnOffCoil,
                 AddressingMode = ModbusTcpAddressingMode
             },
-            PowerSupplyType.SerialRs232 => throw new NotImplementedException("Serial RS232 configuration not yet implemented"),
-            PowerSupplyType.SerialRs485 => throw new NotImplementedException("Serial RS485 configuration not yet implemented"),
-            PowerSupplyType.EthernetIp => throw new NotImplementedException("Ethernet IP configuration not yet implemented"),
+            PowerSupplyType.SerialRs232 => throw new NotImplementedException(
+                "Serial RS232 power supply configuration is planned for a future release. Currently, only Modbus TCP is supported."),
+            PowerSupplyType.SerialRs485 => throw new NotImplementedException(
+                "Serial RS485 power supply configuration is planned for a future release. Currently, only Modbus TCP is supported."),
+            PowerSupplyType.EthernetIp => throw new NotImplementedException(
+                "Ethernet/IP power supply configuration is planned for a future release. Currently, only Modbus TCP is supported."),
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown power supply type")
         };
     }
