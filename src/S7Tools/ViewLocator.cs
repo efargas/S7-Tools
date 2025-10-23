@@ -41,12 +41,8 @@ public class ViewLocator : IDataTemplate
             return (Control)Activator.CreateInstance(type)!;
         }
 
-        // Build error message using the cached name or compute it
-        string vmFullName = vmType.FullName ?? string.Empty;
-        string viewName = vmFullName
-            .Replace(".ViewModels.", ".Views.", StringComparison.Ordinal)
-            .Replace("ViewModel", "View", StringComparison.Ordinal);
-
+        // Build error message using the computed name
+        string viewName = GetExpectedViewName(vmType);
         return new TextBlock { Text = "Not Found: " + viewName };
     }
 
