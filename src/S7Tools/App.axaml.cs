@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Resources;
+using S7Tools.Extensions;
 using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
@@ -78,6 +79,21 @@ public partial class App : Application
                     logger.LogInformation("🔄 Starting synchronous path and settings initialization...");
                     InitializePathAndSettingsSync(logger);
                     logger.LogInformation("✅ Path and settings initialization completed successfully");
+
+                    // Now that foundational services are ready, initialize profile services asynchronously in parallel
+                    logger.LogInformation("🚀 Starting async profile services initialization in background...");
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
+                            logger.LogInformation("✅ Profile services initialization completed successfully");
+                        }
+                        catch (Exception profileEx)
+                        {
+                            logger.LogError(profileEx, "❌ Profile services initialization failed");
+                        }
+                    });
                 }
                 catch (Exception ex)
                 {

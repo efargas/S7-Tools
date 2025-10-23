@@ -506,7 +506,25 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             // Use the new settings service with key-value access
             string socatProfilePath = _settingsService.GetSetting<string>("profiles.socatPath", _pathService.SocatProfilesPath);
-            ProfilesPath = Path.GetDirectoryName(socatProfilePath) ?? _pathService.ProfilesDirectory;
+            string? directoryPath = Path.GetDirectoryName(socatProfilePath);
+
+            // Ensure the path is absolute by resolving relative paths against the application base directory
+            if (!string.IsNullOrEmpty(directoryPath))
+            {
+                if (Path.IsPathRooted(directoryPath))
+                {
+                    ProfilesPath = directoryPath;
+                }
+                else
+                {
+                    // Resolve relative path against application base directory
+                    ProfilesPath = _pathService.ResolvePath(directoryPath);
+                }
+            }
+            else
+            {
+                ProfilesPath = _pathService.ProfilesDirectory;
+            }
         }
         catch (Exception ex)
         {

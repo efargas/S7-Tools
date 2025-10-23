@@ -56,20 +56,23 @@
                                  Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Content="Browse..."
                                 Background="#0E639C"
                                 Foreground="White"
                                 BorderThickness="0"
-                                Padding="12,6"
-                                Margin="0,0,4,0"
+                                Margin="4,0"
                                 Command="{Binding BrowseDefaultLogPathCommand}" />
 
-                        <Button Grid.Column="2"
+                        <Button Grid.Column="3" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Background="Transparent"
                                 Foreground="#CCCCCC"
                                 BorderBrush="#464647"
                                 BorderThickness="1"
-                                Padding="8,6"
+                                Margin="4,0"
                                 ToolTip.Tip="Open in Explorer"
                                 Command="{Binding OpenDefaultLogPathCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="4">
@@ -111,20 +114,23 @@
                                  Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Content="Browse..."
                                 Background="#0E639C"
                                 Foreground="White"
                                 BorderThickness="0"
-                                Padding="12,6"
-                                Margin="0,0,4,0"
+                                Margin="4,0"
                                 Command="{Binding BrowseExportPathCommand}" />
 
-                        <Button Grid.Column="2"
+                        <Button Grid.Column="3" Grid.Row="0"
+                                Width="110"
+                                Height="34"
                                 Background="Transparent"
                                 Foreground="#CCCCCC"
                                 BorderBrush="#464647"
                                 BorderThickness="1"
-                                Padding="8,6"
+                                Margin="4,0"
                                 ToolTip.Tip="Open in Explorer"
                                 Command="{Binding OpenExportPathCommand}">
                             <StackPanel Orientation="Horizontal" Spacing="4">

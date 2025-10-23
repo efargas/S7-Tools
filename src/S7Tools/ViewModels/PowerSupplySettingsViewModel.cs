@@ -436,7 +436,25 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         {
             // Use the new settings service with key-value access
             string powerSupplyProfilePath = _settingsService.GetSetting<string>("profiles.powerSupplyPath", _pathService.PowerSupplyProfilesPath);
-            ProfilesPath = Path.GetDirectoryName(powerSupplyProfilePath) ?? _pathService.ProfilesDirectory;
+            string? directoryPath = Path.GetDirectoryName(powerSupplyProfilePath);
+
+            // Ensure the path is absolute by resolving relative paths against the application base directory
+            if (!string.IsNullOrEmpty(directoryPath))
+            {
+                if (Path.IsPathRooted(directoryPath))
+                {
+                    ProfilesPath = directoryPath;
+                }
+                else
+                {
+                    // Resolve relative path against application base directory
+                    ProfilesPath = _pathService.ResolvePath(directoryPath);
+                }
+            }
+            else
+            {
+                ProfilesPath = _pathService.ProfilesDirectory;
+            }
         }
         catch (Exception ex)
         {
@@ -445,6 +463,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             {
                 StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
             });
+            ProfilesPath = _pathService.ProfilesDirectory;
         }
     }
 

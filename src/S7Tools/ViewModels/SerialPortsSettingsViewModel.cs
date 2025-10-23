@@ -629,11 +629,30 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         {
             // Use the new settings service with key-value access
             string serialProfilePath = _settingsService.GetSetting<string>("profiles.serialPath", _pathService.SerialProfilesPath);
-            ProfilesPath = Path.GetDirectoryName(serialProfilePath) ?? _pathService.ProfilesDirectory;
+            string? directoryPath = Path.GetDirectoryName(serialProfilePath);
+
+            // Ensure the path is absolute by resolving relative paths against the application base directory
+            if (!string.IsNullOrEmpty(directoryPath))
+            {
+                if (Path.IsPathRooted(directoryPath))
+                {
+                    ProfilesPath = directoryPath;
+                }
+                else
+                {
+                    // Resolve relative path against application base directory
+                    ProfilesPath = _pathService.ResolvePath(directoryPath);
+                }
+            }
+            else
+            {
+                ProfilesPath = _pathService.ProfilesDirectory;
+            }
         }
         catch (Exception ex)
         {
             _specificLogger.LogWarning(ex, "Failed to refresh profiles path from settings");
+            ProfilesPath = _pathService.ProfilesDirectory;
         }
     }
 
