@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration;
 using S7Tools.ViewModels;
 using Xunit;
 
@@ -29,7 +30,7 @@ public class SettingsManagementViewModelTests
         _mockSettingsService.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<int>()))
             .Returns((string key, int defaultValue) => defaultValue);
         _mockSettingsService.Setup(s => s.LoadSettingsAsync())
-            .ReturnsAsync(S7Tools.Core.Models.Configuration.ApplicationSettings.CreateDefault());
+            .ReturnsAsync(ApplicationSettings.CreateDefault());
     }
 
     [Fact]
