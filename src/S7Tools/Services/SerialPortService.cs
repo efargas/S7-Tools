@@ -44,6 +44,23 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         // Initialize monitoring timer in stopped state to satisfy analyzers and manage lifecycle cleanly
         _monitoringTimer = new Timer(static async state =>
         {
+            if (state is SerialPortService service)
+            {
+                if (Interlocked.Exchange(ref service._monitoringCallbackRunning, 1) == 1)
+                {
+                    return; // Skip overlapping execution
+                }
+                try
+                {
+                    await service.MonitorPortChangesAsync().ConfigureAwait(false);
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref service._monitoringCallbackRunning, 0);
+                }
+            }
+        }, this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        {
             // Use weak reference to service to avoid capturing 'this' strongly if ever refactored
             if (state is SerialPortService service)
             {
