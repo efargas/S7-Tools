@@ -50,10 +50,17 @@ public class LogExportService : ILogExportService
             // Ensure export folder exists
             await EnsureExportFolderExistsAsync().ConfigureAwait(false);
 
-            // Generate file path if not provided
+            // Generate file path if not provided, using format-specific subdirectory
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                filePath = Path.Combine(_defaultExportPath, GenerateDefaultFileName(format));
+                string formatString = format switch
+                {
+                    ExportFormat.Text => "txt",
+                    ExportFormat.Json => "json",
+                    ExportFormat.Csv => "csv",
+                    _ => "txt"
+                };
+                filePath = _pathService.GetExportedLogPath(formatString);
             }
 
             // Ensure the directory for the file path exists
