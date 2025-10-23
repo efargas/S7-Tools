@@ -1279,4 +1279,62 @@
     <comment>Error message when opening export path fails</comment>
   </data>
 
+  <!-- Serial Port Scanner Messages -->
+  <data name="Status_ScanningForPorts" xml:space="preserve">
+    <value>Scanning for ports...</value>
+    <comment>Status message when scanning for serial ports</comment>
+  </data>
+  <data name="Status_ScanCancelled" xml:space="preserve">
+    <value>Scan cancelled</value>
+    <comment>Status message when port scan is cancelled</comment>
+  </data>
+  <data name="Status_ErrorScanningForPorts" xml:space="preserve">
+    <value>Error scanning for ports</value>
+    <comment>Error message when port scanning fails</comment>
+  </data>
+  <data name="Status_StoppingScan" xml:space="preserve">
+    <value>Stopping scan...</value>
+    <comment>Status message when stopping port scan</comment>
+  </data>
+  <data name="Status_RefreshingPortInformation" xml:space="preserve">
+    <value>Refreshing port information...</value>
+    <comment>Status message when refreshing port information</comment>
+  </data>
+  <data name="Status_ErrorRefreshingPortInformation" xml:space="preserve">
+    <value>Error refreshing port information</value>
+    <comment>Error message when refreshing port information fails</comment>
+  </data>
+  <data name="Status_TestingPort" xml:space="preserve">
+    <value>Testing port...</value>
+    <comment>Status message when testing a port</comment>
+  </data>
+  <data name="Status_ErrorTestingPort" xml:space="preserve">
+    <value>Error testing port</value>
+    <comment>Error message when port testing fails</comment>
+  </data>
+  <data name="Status_ScanHistoryCleared" xml:space="preserve">
+    <value>Scan history cleared</value>
+    <comment>Status message when scan history is cleared</comment>
+  </data>
+  <data name="Status_ExportingScanResults" xml:space="preserve">
+    <value>Exporting scan results...</value>
+    <comment>Status message when exporting scan results</comment>
+  </data>
+  <data name="Status_ScanResultsExported" xml:space="preserve">
+    <value>Scan results exported</value>
+    <comment>Status message when scan results are exported successfully</comment>
+  </data>
+  <data name="Status_ErrorExportingScanResults" xml:space="preserve">
+    <value>Error exporting scan results</value>
+    <comment>Error message when exporting scan results fails</comment>
+  </data>
+  <data name="Status_PortInformationCopied" xml:space="preserve">
+    <value>Port information copied to clipboard</value>
+    <comment>Status message when port information is copied to clipboard</comment>
+  </data>
+  <data name="Status_ErrorCopyingPortInformation" xml:space="preserve">
+    <value>Error copying port information</value>
+    <comment>Error message when copying port information fails</comment>
+  </data>
+
 </root>

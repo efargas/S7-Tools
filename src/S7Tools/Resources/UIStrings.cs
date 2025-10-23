@@ -1350,6 +1350,76 @@ public static class UIStrings
     /// </summary>
     public static string Status_ErrorOpeningExportPath => GetStringSafe("Status_ErrorOpeningExportPath", "Error opening export path");
 
+    /// <summary>
+    /// Gets the status message when scanning for serial ports.
+    /// </summary>
+    public static string Status_ScanningForPorts => GetStringSafe("Status_ScanningForPorts", "Scanning for ports...");
+
+    /// <summary>
+    /// Gets the status message when port scan is cancelled.
+    /// </summary>
+    public static string Status_ScanCancelled => GetStringSafe("Status_ScanCancelled", "Scan cancelled");
+
+    /// <summary>
+    /// Gets the error message when port scanning fails.
+    /// </summary>
+    public static string Status_ErrorScanningForPorts => GetStringSafe("Status_ErrorScanningForPorts", "Error scanning for ports");
+
+    /// <summary>
+    /// Gets the status message when stopping port scan.
+    /// </summary>
+    public static string Status_StoppingScan => GetStringSafe("Status_StoppingScan", "Stopping scan...");
+
+    /// <summary>
+    /// Gets the status message when refreshing port information.
+    /// </summary>
+    public static string Status_RefreshingPortInformation => GetStringSafe("Status_RefreshingPortInformation", "Refreshing port information...");
+
+    /// <summary>
+    /// Gets the error message when refreshing port information fails.
+    /// </summary>
+    public static string Status_ErrorRefreshingPortInformation => GetStringSafe("Status_ErrorRefreshingPortInformation", "Error refreshing port information");
+
+    /// <summary>
+    /// Gets the status message when testing a port.
+    /// </summary>
+    public static string Status_TestingPort => GetStringSafe("Status_TestingPort", "Testing port...");
+
+    /// <summary>
+    /// Gets the error message when port testing fails.
+    /// </summary>
+    public static string Status_ErrorTestingPort => GetStringSafe("Status_ErrorTestingPort", "Error testing port");
+
+    /// <summary>
+    /// Gets the status message when scan history is cleared.
+    /// </summary>
+    public static string Status_ScanHistoryCleared => GetStringSafe("Status_ScanHistoryCleared", "Scan history cleared");
+
+    /// <summary>
+    /// Gets the status message when exporting scan results.
+    /// </summary>
+    public static string Status_ExportingScanResults => GetStringSafe("Status_ExportingScanResults", "Exporting scan results...");
+
+    /// <summary>
+    /// Gets the status message when scan results are exported successfully.
+    /// </summary>
+    public static string Status_ScanResultsExported => GetStringSafe("Status_ScanResultsExported", "Scan results exported");
+
+    /// <summary>
+    /// Gets the error message when exporting scan results fails.
+    /// </summary>
+    public static string Status_ErrorExportingScanResults => GetStringSafe("Status_ErrorExportingScanResults", "Error exporting scan results");
+
+    /// <summary>
+    /// Gets the status message when port information is copied to clipboard.
+    /// </summary>
+    public static string Status_PortInformationCopied => GetStringSafe("Status_PortInformationCopied", "Port information copied to clipboard");
+
+    /// <summary>
+    /// Gets the error message when copying port information fails.
+    /// </summary>
+    public static string Status_ErrorCopyingPortInformation => GetStringSafe("Status_ErrorCopyingPortInformation", "Error copying port information");
+
     #endregion
 
     #region Error Messages - Operations
