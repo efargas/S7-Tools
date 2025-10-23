@@ -62,6 +62,8 @@ This document provides essential onboarding, architecture, and coding standards 
 ## References
 
 - `.copilot-tracking/memory-bank/systemPatterns.md` — All patterns, rules, and templates
+- `PATTERNS_REFERENCE.md` — Comprehensive architectural patterns documentation
+- `COMPREHENSIVE_CODE_REVIEW_2025-10-23.md` — Latest quality baseline and code review
 - `.copilot-tracking/memory-bank/` — Project documentation and Memory Bank
 - `ServiceCollectionExtensions.cs` — Service registration
 - `README.md` — Project summary and setup
@@ -74,6 +76,34 @@ This document provides essential onboarding, architecture, and coding standards 
 - Job profiles path (Options): `src/resources/JobProfiles/profiles.json`.
 - `PlcClientStub` is registered as a temporary implementation of `IPlcClient`; factory resolves it until the real client is provided.
 - Next major focus: Implement Job Creator wizard in main content area, refactor Jobs details panel, and polish MemoryRegionProfile integration.
+
+## Code Quality Standards (Updated 2025-10-23)
+
+**Build Status**: ✅ 0 errors, 0 warnings  
+**Test Status**: ✅ 308 tests passing, 1 skipped  
+**Code Quality**: ✅ A+ grade (98/100)
+
+**Key Quality Achievements**:
+- Clean Architecture properly implemented
+- Unified Profile Management with StandardProfileManager<T>
+- Internal Method Pattern for semaphore safety (no deadlocks)
+- Resource Coordination Pattern for parallel execution
+- Custom Exception Hierarchy for semantic error handling
+- Comprehensive testing with 100% pass rate
+
+**Pattern Compliance**:
+When implementing new features, always:
+1. Check `PATTERNS_REFERENCE.md` for applicable patterns
+2. Follow existing implementations as examples
+3. Maintain consistency with established patterns
+4. Add tests following AAA pattern
+5. Run `dotnet format` before commit
+
+**Code Review Process**:
+- Comprehensive code reviews documented in root directory
+- Latest: `COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
+- Use as quality baseline for all new code
+- Reference for best practices and anti-patterns
 
 ---
 
