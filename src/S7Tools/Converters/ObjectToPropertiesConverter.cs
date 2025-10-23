@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -26,6 +27,22 @@ public class ObjectToPropertiesConverter : IValueConverter
         "Configuration" // Nested configuration object handled separately
     };
 
+    /// <summary>
+    /// Cache for property metadata per type to avoid repeated reflection.
+    /// Key: Type, Value: List of PropertyMetadata containing reflection results
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, IReadOnlyList<PropertyMetadata>> PropertyCache = new();
+
+    /// <summary>
+    /// Cached metadata for a property including its PropertyInfo, display name, and order.
+    /// </summary>
+    private sealed class PropertyMetadata
+    {
+        public PropertyInfo PropertyInfo { get; init; } = null!;
+        public string DisplayLabel { get; init; } = string.Empty;
+        public int Order { get; init; }
+    }
+
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value == null)
@@ -34,26 +51,19 @@ public class ObjectToPropertiesConverter : IValueConverter
         var properties = new ObservableCollection<PropertyDisplayItem>();
         var type = value.GetType();
 
-        // Get all public properties
-        var publicProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanRead && !ExcludedProperties.Contains(p.Name))
-            // Filter using [Browsable(false)] attribute
-            .Where(p => p.GetCustomAttribute<BrowsableAttribute>()?.Browsable != false)
-            // Order using [Display(Order = ...)] attribute, then by name
-            .OrderBy(p => p.GetCustomAttribute<DisplayAttribute>()?.GetOrder() ?? int.MaxValue)
-            .ThenBy(p => p.Name);
+        // Get cached property metadata or compute and cache it
+        var propertyMetadata = PropertyCache.GetOrAdd(type, BuildPropertyMetadata);
 
-        foreach (var prop in publicProperties)
+        foreach (var metadata in propertyMetadata)
         {
             try
             {
-                var propValue = prop.GetValue(value);
+                var propValue = metadata.PropertyInfo.GetValue(value);
                 var displayValue = FormatValue(propValue);
-                var label = GetDisplayLabel(prop);
 
                 properties.Add(new PropertyDisplayItem
                 {
-                    Label = label,
+                    Label = metadata.DisplayLabel,
                     Value = displayValue,
                     ValidationState = PropertyValidationState.Valid
                 });
@@ -61,16 +71,40 @@ public class ObjectToPropertiesConverter : IValueConverter
             catch (Exception ex)
             {
                 // Skip properties that throw exceptions, but log it for debugging.
-                System.Diagnostics.Debug.WriteLine($"Error getting property '{prop.Name}': {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error getting property '{metadata.PropertyInfo.Name}': {ex.Message}");
             }
         }
 
         return properties;
     }
 
+    /// <summary>
+    /// Builds and caches property metadata for a given type using reflection.
+    /// This method is called once per type and the results are cached.
+    /// </summary>
+    private static IReadOnlyList<PropertyMetadata> BuildPropertyMetadata(Type type)
+    {
+        var publicProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanRead && !ExcludedProperties.Contains(p.Name))
+            // Filter using [Browsable(false)] attribute
+            .Where(p => p.GetCustomAttribute<BrowsableAttribute>()?.Browsable != false)
+            .Select(p => new PropertyMetadata
+            {
+                PropertyInfo = p,
+                DisplayLabel = GetDisplayLabel(p),
+                Order = p.GetCustomAttribute<DisplayAttribute>()?.GetOrder() ?? int.MaxValue
+            })
+            // Order using cached order value, then by property name
+            .OrderBy(m => m.Order)
+            .ThenBy(m => m.PropertyInfo.Name)
+            .ToList();
+
+        return publicProperties;
+    }
+
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotSupportedException();
+        return Avalonia.AvaloniaProperty.UnsetValue;
     }
 
     /// <summary>
