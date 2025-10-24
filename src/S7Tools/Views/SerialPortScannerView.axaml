@@ -22,7 +22,7 @@
         <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E" VerticalAlignment="Center"/>
       </StackPanel>
   
-      <Border Grid.Column="1"/>
+      <!-- Remove the empty Border entirely; the star-sized ColumnDefinition already provides spacing -->
   
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
         <!-- Port Type Filters -->
