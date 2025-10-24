@@ -1,9 +1,10 @@
 # S7Tools Project Folder Structure Blueprint
 
-**Generated**: 2025-10-15
-**Project Type**: .NET 8.0 Avalonia Desktop Application
-**Architecture**: Clean Architecture with MVVM Pattern
-**Last Updated**: 2025-10-15
+**Generated**: 2025-10-15  
+**Project Type**: .NET 8.0 Avalonia Desktop Application  
+**Architecture**: Clean Architecture with MVVM Pattern  
+**Version**: 1.3  
+**Last Updated**: 2025-10-24
 
 ---
 
@@ -1262,11 +1263,327 @@ public class {Feature}ServiceTests
 
 ---
 
-## 12. Maintaining This Blueprint
+## 12. UI Integration Workflow
+
+### Architecture Pattern
+
+S7Tools implements a VSCode-style UI with three main interaction layers:
+
+```mermaid
+graph LR
+    A[Activity Bar] -->|Click| B[Navigation Handler]
+    B --> C[Sidebar View]
+    B --> D[Main Content View]
+    C -->|Category Selection| E[Content Switching]
+    E --> D
+    D -->|Optional| F[Right Panel]
+```
+
+### Component Structure
+
+```
+Activity Bar (48px)
+  ├─ Icon-based navigation
+  ├─ VSCode-style selection
+  └─ Keyboard shortcuts (Ctrl+Shift+X)
+
+Side Panel (240-300px, collapsible)
+  ├─ Category navigation
+  ├─ Filters and search
+  └─ Context-specific actions
+
+Main Content (Flexible)
+  ├─ Primary feature UI
+  ├─ Dynamic content switching
+  └─ Managed by ViewLocator
+
+Right Panel (Optional)
+  ├─ Detail views
+  ├─ Properties
+  └─ Contextual information
+```
+
+### ViewLocator Pattern
+
+The ViewLocator automatically maps ViewModels to Views using naming conventions:
+
+```mermaid
+graph TB
+    A[ViewModel Instance] --> B{ViewLocator}
+    B --> C[Extract Type Name]
+    C --> D[Transform Name]
+    D --> E[S7Tools.ViewModels.MyFeatureViewModel]
+    E --> F[Replace Namespace:<br/>ViewModels → Views]
+    F --> G[Replace Suffix:<br/>ViewModel → View]
+    G --> H[S7Tools.Views.MyFeatureView]
+    H --> I{Type Found?}
+    I -->|Yes| J[Create Instance]
+    I -->|No| K[Show Error]
+    J --> L[Bind DataContext]
+    L --> M[Return View]
+```
+
+**Key Rules**:
+1. ViewModel namespace: `S7Tools.ViewModels`
+2. View namespace: `S7Tools.Views`
+3. ViewModel suffix: `ViewModel`
+4. View suffix: `View`
+5. Result cached in `ConcurrentDictionary`
+
+### Integration Files
+
+#### Required Files per Feature
+
+```
+src/S7Tools/
+  ├─ ViewModels/
+  │   └─ MyFeatureViewModel.cs          # Main ViewModel
+  │
+  ├─ Views/
+  │   ├─ MyFeatureSidebarView.axaml     # Sidebar UI
+  │   ├─ MyFeatureSidebarView.axaml.cs  # Code-behind
+  │   ├─ MyFeatureMainView.axaml        # Main content UI
+  │   └─ MyFeatureMainView.axaml.cs     # Code-behind
+  │
+  └─ Services/
+      └─ ActivityBarService.cs           # Register activity bar item
+```
+
+#### Navigation Integration
+
+```csharp
+// In NavigationViewModel.cs
+case "myfeature":
+    SidebarTitle = "My Feature";
+    MainContentTitle = "My Feature Management";
+    MyFeatureViewModel? vm = CreateViewModel<MyFeatureViewModel>();
+    CurrentContent = vm;  // Sidebar
+    MainContent = vm;     // Main content
+    break;
+```
+
+### Data Flow Pattern
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant ActivityBar
+    participant NavigationVM
+    participant FeatureVM
+    participant ViewLocator
+    participant View
+    
+    User->>ActivityBar: Click Icon
+    ActivityBar->>NavigationVM: SelectItem("myfeature")
+    NavigationVM->>FeatureVM: Create ViewModel
+    NavigationVM->>NavigationVM: Set CurrentContent
+    NavigationVM->>NavigationVM: Set MainContent
+    NavigationVM->>ViewLocator: Resolve Sidebar View
+    ViewLocator->>View: Create MyFeatureSidebarView
+    View-->>User: Render Sidebar
+    NavigationVM->>ViewLocator: Resolve Main View
+    ViewLocator->>View: Create MyFeatureMainView
+    View-->>User: Render Main Content
+    User->>View: Select Sidebar Category
+    View->>FeatureVM: Update SelectedCategory
+    FeatureVM->>FeatureVM: Update ContentViewModel
+    ViewLocator->>View: Create Detail View
+    View-->>User: Render Updated Content
+```
+
+### Templates and Scaffolding
+
+**Location**: `docs/templates/ui-integration/`
+
+Available templates:
+- `FeatureViewModel.template.cs` - Complete ViewModel scaffold
+- `FeatureSidebarView.template.axaml` - Sidebar XAML template
+- `FeatureMainView.template.axaml` - Main content XAML template
+- `INTEGRATION_CHECKLIST.md` - Step-by-step implementation guide
+- `README.md` - Template usage guide
+
+**Usage**:
+```bash
+# Copy templates
+cp docs/templates/ui-integration/FeatureViewModel.template.cs \
+   src/S7Tools/ViewModels/MyFeatureViewModel.cs
+
+# Replace [FEATURE_NAME] placeholder with your feature name
+sed -i 's/\[FEATURE_NAME\]/MyFeature/g' src/S7Tools/ViewModels/MyFeatureViewModel.cs
+```
+
+### Documentation
+
+**Primary**: `docs/UI_INTEGRATION_WORKFLOW.md`
+- Complete workflow documentation
+- ViewLocator pattern explanation
+- Implementation guide with examples
+- Troubleshooting common issues
+
+**Reference**:
+- `docs/templates/ui-integration/README.md` - Template usage
+- `docs/templates/ui-integration/INTEGRATION_CHECKLIST.md` - Implementation steps
+- `src/S7Tools/ViewLocator.cs` - ViewLocator implementation
+- `src/S7Tools/ViewModels/NavigationViewModel.cs` - Navigation logic
+
+---
+
+## 13. Version Control and Blueprint Maintenance
+
+### Version Control Strategy
+
+#### Blueprint Versioning
+
+This blueprint is version-controlled alongside the codebase:
+
+```mermaid
+graph TB
+    A[Code Change] --> B{Affects Structure?}
+    B -->|Yes| C[Update Blueprint]
+    B -->|No| D[No Update Needed]
+    C --> E[Update Last Updated Date]
+    E --> F[Commit with Blueprint]
+    F --> G[Git History]
+    G --> H[Traceability]
+```
+
+**Version Format**: Date-based (YYYY-MM-DD)
+- **Current Version**: 2025-10-24
+- **Previous Version**: 2025-10-15
+- **Version History**: Tracked in git commits
+
+#### Git Integration
+
+**File Location**: `docs/Project_Folders_Structure_Blueprint.md`
+
+**Commit Message Format**:
+```
+docs: [blueprint] <description>
+
+Examples:
+- docs: [blueprint] Add UI integration workflow section
+- docs: [blueprint] Update folder structure for Reports feature
+- docs: [blueprint] Add version control guidelines
+```
+
+**Review Changes**:
+```bash
+# View blueprint history
+git log --follow docs/Project_Folders_Structure_Blueprint.md
+
+# Compare versions
+git diff HEAD~1 docs/Project_Folders_Structure_Blueprint.md
+
+# View specific version
+git show <commit-hash>:docs/Project_Folders_Structure_Blueprint.md
+```
+
+### When to Update Blueprint
+
+#### Always Update When:
+
+1. **New Projects Added**
+   - New `.csproj` files in solution
+   - New test projects
+   - Infrastructure projects
+
+2. **Structural Changes**
+   - New top-level folders
+   - Reorganization of existing folders
+   - New feature folders following patterns
+
+3. **Pattern Changes**
+   - New architectural patterns introduced
+   - File organization rules modified
+   - Naming conventions updated
+
+4. **UI Integration Changes**
+   - New UI workflow patterns
+   - ViewLocator changes
+   - Navigation pattern updates
+
+5. **Build/Deploy Changes**
+   - New build targets
+   - Deployment process modifications
+   - CI/CD pipeline updates
+
+#### Consider Updating When:
+
+1. **Minor Additions**
+   - New services in existing folders
+   - New views/viewmodels following patterns
+   - Additional utility classes
+
+2. **Clarifications**
+   - Ambiguous sections need clarity
+   - Examples need updates
+   - Documentation improvements
+
+### Update Process
+
+#### Step-by-Step Update
+
+```mermaid
+graph TB
+    A[Identify Change] --> B[Review Current Blueprint]
+    B --> C{Major Change?}
+    C -->|Yes| D[Update Relevant Sections]
+    C -->|No| E[Update Minimally]
+    D --> F[Update Last Updated Date]
+    E --> F
+    F --> G[Update Version History Table]
+    G --> H[Review for Accuracy]
+    H --> I[Commit with Descriptive Message]
+    I --> J[Notify Team if Major]
+```
+
+1. **Open Blueprint**: `docs/Project_Folders_Structure_Blueprint.md`
+2. **Update Date**: Change "Last Updated" at top
+3. **Modify Sections**: Update affected sections
+4. **Update Version Table**: Add entry to version history
+5. **Review**: Ensure consistency
+6. **Commit**: Use standard commit message format
+7. **Notify**: Inform team of significant changes
+
+#### Version History Table
+
+| Version | Date | Changes | Commit |
+|---------|------|---------|--------|
+| 1.3 | 2025-10-24 | Added UI Integration Workflow section with ViewLocator pattern, Mermaid diagrams, templates, and version control guidelines | [current] |
+| 1.2 | 2025-10-15 | Updated folder structure, added patterns section | 53a70c4 |
+| 1.1 | 2025-10-10 | Initial comprehensive structure | - |
+| 1.0 | 2025-10-01 | Initial blueprint creation | - |
+
+### Automation Opportunities
+
+#### Auto-Detection Scripts
+
+Consider creating scripts to detect structure changes:
+
+```bash
+# Detect new projects
+scripts/detect-structure-changes.sh --check-projects
+
+# Find orphaned files
+scripts/detect-structure-changes.sh --check-orphans
+
+# Validate naming conventions
+scripts/detect-structure-changes.sh --validate-names
+```
+
+#### CI/CD Integration
+
+Add blueprint validation to CI pipeline:
+
+```yaml
+# .github/workflows/validate-structure.yml
+- name: Validate Blueprint Currency
+  run: |
+    # Check if blueprint date matches recent structure changes
+    scripts/validate-blueprint-date.sh
+```
 
 ### Update Triggers
-
-This blueprint should be updated when:
 1. New projects are added to the solution
 2. New folders are added at the top level or significant feature folders
 3. Organizational principles change
@@ -1293,6 +1610,19 @@ This blueprint works in conjunction with:
 
 ---
 
-**Last Updated**: 2025-10-15
-**Maintainer**: AI Development Agent
-**Review Frequency**: After significant structural changes or at least quarterly
+## Related Documentation
+
+- **UI Integration Workflow**: `UI_INTEGRATION_WORKFLOW.md` - Complete UI integration guide
+- **UI Templates**: `templates/ui-integration/` - Scaffolded code templates
+- **Architecture Patterns**: `.copilot-tracking/memory-bank/systemPatterns.md`
+- **Agent Guidelines**: `AGENTS.md` - Agent onboarding
+- **Code Reviews**: `reviews/LATEST_REVIEW.md` - Quality baseline
+- **Coding Instructions**: `.github/copilot-instructions.md`
+
+---
+
+**Version**: 1.3  
+**Last Updated**: 2025-10-24  
+**Maintainer**: AI Development Agent  
+**Review Frequency**: After significant structural changes or at least quarterly  
+**Change Log**: See Version History Table in Section 13
