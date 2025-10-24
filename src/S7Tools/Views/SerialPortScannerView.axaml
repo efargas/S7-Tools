@@ -26,15 +26,14 @@
   
       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
         <!-- Port Type Filters -->
-        <CheckBox Content="UsbPorts" IsChecked="{Binding IncludeUsbPorts}" Foreground="#CCCCCC"
+        <CheckBox Content="UsbPorts"
+                  IsChecked="{Binding IncludeUsbPorts}"
+                  Foreground="#CCCCCC"
                   IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}" />
         <CheckBox Content="StandardPorts"
                   IsChecked="{Binding IncludeStandardPorts}"
                   IsEnabled="{Binding CanToggleStandardPorts}"
                   Foreground="#CCCCCC" />
-                  IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}" />
-        <CheckBox Content="StandardPorts" IsChecked="{Binding IncludeStandardPorts}" Foreground="#CCCCCC"
-                  IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}" />
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
         <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
         <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
