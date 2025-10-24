@@ -29,11 +29,13 @@
         <CheckBox Content="UsbPorts"
                   IsChecked="{Binding IncludeUsbPorts}"
                   Foreground="#CCCCCC"
+                  VerticalAlignment="Center"
                   IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}" />
         <CheckBox Content="StandardPorts"
                   IsChecked="{Binding IncludeStandardPorts}"
                   IsEnabled="{Binding CanToggleStandardPorts}"
-                  Foreground="#CCCCCC" />
+                  Foreground="#CCCCCC"
+                  VerticalAlignment="Center" />
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
         <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
         <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
