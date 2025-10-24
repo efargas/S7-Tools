@@ -1244,6 +1244,6 @@ This reference provides patterns for:
 5. Update this document if new patterns emerge
 
 **References**:
-- `COMPREHENSIVE_CODE_REVIEW_2025-10-23.md` - Detailed code review
+- `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md` - Detailed code review
 - `.copilot-tracking/memory-bank/systemPatterns.md` - Architecture guide
 - `.github/copilot-instructions.md` - Development instructions

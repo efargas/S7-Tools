@@ -149,7 +149,7 @@ throw new ConnectionException(
 
 - `.copilot-tracking/memory-bank/instructions.md` - Updated with custom exception patterns
 - `src/S7Tools.Core/Exceptions/` - Domain exception definitions
-- `COMPREHENSIVE_CODE_REVIEW_2025-10-16.md` - Original code review that identified the need
+- `reviews/archive/COMPREHENSIVE_CODE_REVIEW_2025-10-16.md` - Original code review that identified the need
 
 ---
 

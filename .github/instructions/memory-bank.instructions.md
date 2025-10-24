@@ -76,6 +76,18 @@ Create additional files/folders within memory-bank/ when they help organize:
 - Testing strategies
 - Deployment procedures
 
+### Code Review and Fix Documentation Structure
+All code reviews, fixes, and implementation reports are organized in the `reviews/` folder:
+- `reviews/` - Contains the latest comprehensive code review
+- `reviews/archive/` - Contains older reviews, fixes, and implementation reports
+
+**Current latest review**: `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
+
+When referencing code reviews in documentation:
+- Always use the full path from project root: `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
+- For archived reviews: `reviews/archive/COMPREHENSIVE_CODE_REVIEW_2025-10-16.md`
+- Update all references when new reviews are added
+
 ## Core Workflows
 
 ### Plan Mode

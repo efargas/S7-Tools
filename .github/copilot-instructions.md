@@ -159,7 +159,7 @@ dotnet format  # Required before commit
 - **DI Registration**: `src/S7Tools/Extensions/ServiceCollectionExtensions.cs`
 - **Architecture Patterns**: `.copilot-tracking/memory-bank/systemPatterns.md`
 - **Pattern Reference**: `PATTERNS_REFERENCE.md` (comprehensive pattern documentation)
-- **Code Review Reports**: `COMPREHENSIVE_CODE_REVIEW_2025-10-23.md` (latest review)
+- **Code Review Reports**: `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md` (latest review)
 - **Project Documentation**: `.copilot-tracking/memory-bank/`
 - **Profile Templates**: All profiles in `src/S7Tools.Core/Models/`
 - **Custom Exceptions**: `src/S7Tools.Core/Exceptions/`
