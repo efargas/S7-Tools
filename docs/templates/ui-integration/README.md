@@ -1,0 +1,251 @@
+# UI Integration Templates
+
+This folder contains scaffolded templates for implementing new features following the S7Tools UI integration pattern.
+
+## Available Templates
+
+### 1. FeatureViewModel.template.cs
+**Purpose**: Complete ViewModel with sidebar and main content integration
+
+**Features**:
+- Sidebar category management
+- Main content switching based on sidebar selection
+- ReactiveUI commands and properties
+- Logging integration
+- IDisposable implementation
+- Design-time constructor
+
+**Usage**: Replace `[FEATURE_NAME]` with your feature name (e.g., `Reports`, `Analytics`)
+
+### 2. FeatureSidebarView.template.axaml
+**Purpose**: XAML template for the sidebar panel
+
+**Features**:
+- Category list with VSCode-style selection
+- Hover and selected states
+- Optional search and action buttons (commented out)
+- Proper data binding with compiled bindings
+
+**Usage**: Replace `[FEATURE_NAME]` with your feature name
+
+### 3. FeatureMainView.template.axaml
+**Purpose**: XAML template for the main content area
+
+**Features**:
+- Automatic ViewLocator-based content switching
+- Alternative manual DataTemplate approach (commented out)
+- Proper ViewModel binding
+
+**Usage**: Replace `[FEATURE_NAME]` with your feature name
+
+### 4. INTEGRATION_CHECKLIST.md
+**Purpose**: Step-by-step implementation guide
+
+**Usage**: Follow the checklist when adding a new feature to ensure all integration points are covered
+
+## Quick Start
+
+### Step 1: Copy Templates
+
+```bash
+# From repository root
+cp docs/templates/ui-integration/FeatureViewModel.template.cs \
+   src/S7Tools/ViewModels/MyFeatureViewModel.cs
+
+cp docs/templates/ui-integration/FeatureSidebarView.template.axaml \
+   src/S7Tools/Views/MyFeatureSidebarView.axaml
+
+cp docs/templates/ui-integration/FeatureMainView.template.axaml \
+   src/S7Tools/Views/MyFeatureMainView.axaml
+```
+
+### Step 2: Replace Placeholders
+
+In all files, replace:
+- `[FEATURE_NAME]` → Your feature name (e.g., `Reports`, `Analytics`)
+
+### Step 3: Add Code-Behind
+
+Create code-behind files for views:
+
+**MyFeatureSidebarView.axaml.cs**:
+```csharp
+using Avalonia.Controls;
+
+namespace S7Tools.Views;
+
+public partial class MyFeatureSidebarView : UserControl
+{
+    public MyFeatureSidebarView()
+    {
+        InitializeComponent();
+    }
+}
+```
+
+**MyFeatureMainView.axaml.cs**:
+```csharp
+using Avalonia.Controls;
+
+namespace S7Tools.Views;
+
+public partial class MyFeatureMainView : UserControl
+{
+    public MyFeatureMainView()
+    {
+        InitializeComponent();
+    }
+}
+```
+
+### Step 4: Register Activity Bar Item
+
+**File**: `src/S7Tools/Services/ActivityBarService.cs`
+
+```csharp
+new ActivityBarItem("myfeature", "My Feature", "My Feature Description", "fa-solid fa-icon")
+{
+    Order = 6
+}
+```
+
+### Step 5: Add Navigation Case
+
+**File**: `src/S7Tools/ViewModels/NavigationViewModel.cs`
+
+```csharp
+case "myfeature":
+    SidebarTitle = "My Feature";
+    MainContentTitle = "My Feature Management";
+    ShowMainContentHeader = true;
+    
+    MyFeatureViewModel? viewModel = CreateViewModel<MyFeatureViewModel>();
+    CurrentContent = viewModel;
+    MainContent = viewModel;
+    DetailContent = viewModel;
+    ShowLogStats = false;
+    break;
+```
+
+### Step 6: Register ViewModel in DI (if needed)
+
+**File**: `src/S7Tools/Extensions/ServiceCollectionExtensions.cs`
+
+```csharp
+services.TryAddTransient<MyFeatureViewModel>();
+```
+
+## Template Placeholders
+
+All templates use the following placeholder that you must replace:
+
+| Placeholder | Description | Example |
+|-------------|-------------|---------|
+| `[FEATURE_NAME]` | Your feature name in PascalCase | `Reports`, `Analytics`, `Dashboard` |
+
+## Integration Patterns
+
+### Pattern 1: Single ViewModel (Recommended)
+
+Use one ViewModel for both sidebar and main content:
+
+```
+MyFeatureViewModel
+  ├─ Categories (for sidebar)
+  ├─ SelectedCategory (drives content switching)
+  └─ SelectedContentViewModel (for main content)
+```
+
+**Pros**:
+- Single source of truth
+- Simpler state management
+- Easier data sharing
+
+### Pattern 2: Separate ViewModels
+
+Use different ViewModels for sidebar and main content:
+
+```
+MyFeatureSidebarViewModel (for sidebar)
+MyFeatureMainViewModel (for main content)
+```
+
+**Pros**:
+- Better separation of concerns
+- More modular
+
+**Cons**:
+- More complex state synchronization
+- Additional coordination logic
+
+## ViewLocator Naming Convention
+
+The ViewLocator uses these rules to map ViewModels to Views:
+
+| ViewModel Name | View Name |
+|----------------|-----------|
+| `MyFeatureViewModel` | `MyFeatureView` |
+| `MyFeatureSidebarViewModel` | `MyFeatureSidebarView` |
+| `MyFeatureDetailsViewModel` | `MyFeatureDetailsView` |
+
+**Important**: 
+- Namespace must be `S7Tools.ViewModels` → `S7Tools.Views`
+- Suffix must be `ViewModel` → `View`
+
+## Data Template Override
+
+If you need a different view for the sidebar than the main content, add a DataTemplate in `MainWindow.axaml`:
+
+```xaml
+<ContentControl Content="{Binding Navigation.CurrentContent}">
+  <ContentControl.DataTemplates>
+    <DataTemplate DataType="vm:MyFeatureViewModel">
+      <views:MyFeatureSidebarView />
+    </DataTemplate>
+  </ContentControl.DataTemplates>
+</ContentControl>
+```
+
+## Common Pitfalls
+
+### 1. ViewLocator Can't Find View
+
+**Problem**: Error shows "Not Found: S7Tools.Views.MyFeatureView"
+
+**Solution**:
+- Verify ViewModel namespace is `S7Tools.ViewModels`
+- Verify View namespace is `S7Tools.Views`
+- Check class names follow the naming convention
+- Ensure View files are properly compiled (check `.csproj`)
+
+### 2. Sidebar Doesn't Update
+
+**Problem**: Sidebar selection doesn't change main content
+
+**Solution**:
+- Use `RaiseAndSetIfChanged` in ViewModel properties
+- Ensure `TwoWay` binding on `SelectedCategory`
+- Verify `UpdateMainContent()` is called when selection changes
+
+### 3. Content Shows Empty
+
+**Problem**: Main content area is blank
+
+**Solution**:
+- Check `SelectedContentViewModel` is not null
+- Verify ViewLocator can resolve the child ViewModel's View
+- Ensure `ContentControl.Content` binding is correct
+
+## Resources
+
+- **Full Documentation**: `../../UI_INTEGRATION_WORKFLOW.md`
+- **Architecture**: `../../Project_Architecture_Blueprint.md`
+- **Implementation Checklist**: `./INTEGRATION_CHECKLIST.md`
+- **ViewLocator Code**: `../../../src/S7Tools/ViewLocator.cs`
+
+## Support
+
+For questions or issues:
+1. Review the full UI Integration Workflow documentation
+2. Check existing features for reference (Jobs, Settings, TaskManager)
+3. Consult the Integration Checklist for missed steps
