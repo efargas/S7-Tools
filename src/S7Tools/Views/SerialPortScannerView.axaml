@@ -26,7 +26,7 @@
         <!-- Port Type Filters -->
         <CheckBox Content="UsbPorts" IsChecked="{Binding IncludeUsbPorts}" Foreground="#CCCCCC" />
         <CheckBox Content="AcmPorts" IsChecked="{Binding IncludeAcmPorts}" Foreground="#CCCCCC" />
-        <CheckBox Content="StandardPorts" IsChecked="{Binding IncludeSerialPorts}" Foreground="#CCCCCC" />
+        <CheckBox Content="StandardPorts" IsChecked="{Binding IncludeStandardPorts}" Foreground="#CCCCCC" />
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
         <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
         <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
