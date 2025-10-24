@@ -6,7 +6,7 @@
 
 ## Original Request
 
-Based on the comprehensive code review analysis in `CODE_REVIEW.md`, create a structured plan to systematically address all critical issues, architectural concerns, and quality improvements identified in the S7Tools codebase.
+Based on the comprehensive code review analysis in `reviews/archive/CODE_REVIEW.md`, create a structured plan to systematically address all critical issues, architectural concerns, and quality improvements identified in the S7Tools codebase.
 
 ## Thought Process
 
