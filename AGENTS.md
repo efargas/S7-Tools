@@ -63,7 +63,7 @@ This document provides essential onboarding, architecture, and coding standards 
 
 - `.copilot-tracking/memory-bank/systemPatterns.md` — All patterns, rules, and templates
 - `PATTERNS_REFERENCE.md` — Comprehensive architectural patterns documentation
-- `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md` — Latest quality baseline and code review
+- `reviews/LATEST_REVIEW.md` — Latest quality baseline and code review
 - `.copilot-tracking/memory-bank/` — Project documentation and Memory Bank
 - `ServiceCollectionExtensions.cs` — Service registration
 - `README.md` — Project summary and setup
@@ -101,7 +101,7 @@ When implementing new features, always:
 
 **Code Review Process**:
 - Comprehensive code reviews documented in `reviews/` directory
-- Latest: `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
+- Latest: `reviews/LATEST_REVIEW.md` (stable link)
 - Archived reviews in `reviews/archive/`
 - Use as quality baseline for all new code
 - Reference for best practices and anti-patterns

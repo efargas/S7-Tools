@@ -78,15 +78,17 @@ Create additional files/folders within memory-bank/ when they help organize:
 
 ### Code Review and Fix Documentation Structure
 All code reviews, fixes, and implementation reports are organized in the `reviews/` folder:
-- `reviews/` - Contains the latest comprehensive code review
+- `reviews/LATEST_REVIEW.md` - Stable link that always points to the most recent review
+- `reviews/` - Contains the latest comprehensive code review with date in filename
 - `reviews/archive/` - Contains older reviews, fixes, and implementation reports
 
-**Current latest review**: `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
+**Current latest review**: `reviews/LATEST_REVIEW.md` → `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
 
 When referencing code reviews in documentation:
-- Always use the full path from project root: `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
+- Always use the stable link: `reviews/LATEST_REVIEW.md` (recommended)
+- For specific dated reviews: `reviews/COMPREHENSIVE_CODE_REVIEW_2025-10-23.md`
 - For archived reviews: `reviews/archive/COMPREHENSIVE_CODE_REVIEW_2025-10-16.md`
-- Update all references when new reviews are added
+- When adding a new review, update `LATEST_REVIEW.md` to point to it (no need to update other files)
 
 ## Core Workflows
 
