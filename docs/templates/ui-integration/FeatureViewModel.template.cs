@@ -232,15 +232,24 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
     /// </summary>
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed)
         {
             return;
         }
 
-        _disposables.Dispose();
-        _disposed = true;
+        if (disposing)
+        {
+            _disposables.Dispose();
+            _logger.LogDebug("[FEATURE_NAME]ViewModel disposed");
+        }
 
-        _logger.LogDebug("[FEATURE_NAME]ViewModel disposed");
+        _disposed = true;
     }
 
     #endregion
