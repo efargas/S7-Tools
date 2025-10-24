@@ -59,8 +59,12 @@
           <DataTemplate>
             <Border Background="#2D2D2D" CornerRadius="0" Padding="8,6" Margin="6,3" Width="130" Height="26">
               <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC" VerticalAlignment="Center" 
-                           TextTrimming="CharacterEllipsis" FontSize="11" />
+                <TextBlock Text="{Binding DisplayName}"
+                           Foreground="#CCCCCC"
+                           VerticalAlignment="Center"
+                           FontSize="11"
+                           TextTrimming="CharacterEllipsis"
+                           MaxWidth="90" />
                 <Border Background="#0E639C" CornerRadius="2" Padding="4,2" IsVisible="{Binding IsAccessible}">
                   <TextBlock Text="OK" FontSize="9" Foreground="#FFFFFF"/>
                 </Border>
