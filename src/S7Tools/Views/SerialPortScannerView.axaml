@@ -15,14 +15,16 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      
-      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+  
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
         <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" />
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
         <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E" VerticalAlignment="Center"/>
       </StackPanel>
-      
-      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+  
+      <Border Grid.Column="1"/>
+  
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
         <!-- Port Type Filters -->
         <CheckBox Content="UsbPorts" IsChecked="{Binding IncludeUsbPorts}" Foreground="#CCCCCC"
                   IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}" />
