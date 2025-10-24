@@ -9,36 +9,52 @@
              x:DataType="vm:SerialPortScannerViewModel">
 
   <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
-    <StackPanel Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" />
-  <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
-  <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
-      <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC"/>
-      <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E"/>
-    </StackPanel>
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+        <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+        <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E" VerticalAlignment="Center"/>
+      </StackPanel>
+      
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+        <!-- Port Type Filters -->
+        <CheckBox Content="UsbPorts" IsChecked="{Binding IncludeUsbPorts}" Foreground="#CCCCCC" />
+        <CheckBox Content="AcmPorts" IsChecked="{Binding IncludeAcmPorts}" Foreground="#CCCCCC" />
+        <CheckBox Content="StandardPorts" IsChecked="{Binding IncludeSerialPorts}" Foreground="#CCCCCC" />
+        <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+        <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
+        <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
+      </StackPanel>
+    </Grid>
 
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-  <ListBox Height="140"
+      <ListBox Height="140"
                ItemsSource="{Binding DiscoveredPorts}"
                SelectedItem="{Binding SelectedPort}"
-  IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"
+               IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"
                Background="#3C3C3C" Foreground="#CCCCCC"
                BorderBrush="#464647"
                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                ScrollViewer.VerticalScrollBarVisibility="Disabled">
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
-            <WrapPanel Orientation="Vertical" ItemWidth="220" ItemHeight="36" />
+            <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
           </ItemsPanelTemplate>
         </ListBox.ItemsPanel>
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <Border Classes="InfoCard">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="{Binding DisplayName}" Foreground="#FFFFFF" />
-                <TextBlock Text="{Binding PortName}" Foreground="#9E9E9E"/>
-                <Border Classes="InfoBadge" IsVisible="{Binding IsAccessible}">
-                  <TextBlock Text="OK" FontSize="10" Foreground="#FFFFFF"/>
+            <Border Background="#2D2D2D" CornerRadius="0" Padding="8,6" Margin="6,3" Width="130" Height="26">
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC" VerticalAlignment="Center" 
+                           TextTrimming="CharacterEllipsis" FontSize="11" />
+                <Border Background="#0E639C" CornerRadius="2" Padding="4,2" IsVisible="{Binding IsAccessible}">
+                  <TextBlock Text="OK" FontSize="9" Foreground="#FFFFFF"/>
                 </Border>
               </StackPanel>
             </Border>
