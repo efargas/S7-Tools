@@ -51,8 +51,9 @@
                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                         ScrollViewer.VerticalScrollBarVisibility="Auto">
                  <ListBox.ItemsPanel>
-            <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
-          </ItemsPanelTemplate>
+                   <ItemsPanelTemplate>
+                     <WrapPanel Orientation="Vertical" />
+                   </ItemsPanelTemplate>
         </ListBox.ItemsPanel>
         <ListBox.ItemTemplate>
           <DataTemplate>
