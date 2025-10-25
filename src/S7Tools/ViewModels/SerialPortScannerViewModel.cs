@@ -53,18 +53,20 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         InitializeCommands();
 
         // Set up reactive property updates for CanToggle properties
-        this.WhenAnyValue(
-            x => x.IsScanning,
-            x => x.IncludeUsbPorts,
-            x => x.IncludeAcmPorts,
-            x => x.IncludeSerialPorts)
-            .Subscribe(_ => 
-            {
-                this.RaisePropertyChanged(nameof(CanToggleUsbPorts));
-                this.RaisePropertyChanged(nameof(CanToggleAcmPorts));
-                this.RaisePropertyChanged(nameof(CanToggleSerialPorts));
-            })
-            .DisposeWith(_disposables);
+        _canToggleUsbPorts = this.WhenAnyValue(
+                x => x.IsScanning, x => x.IncludeAcmPorts, x => x.IncludeSerialPorts,
+                (isScanning, includeAcm, includeSerial) => !isScanning && (includeAcm || includeSerial))
+            .ToProperty(this, x => x.CanToggleUsbPorts);
+
+        _canToggleAcmPorts = this.WhenAnyValue(
+                x => x.IsScanning, x => x.IncludeUsbPorts, x => x.IncludeSerialPorts,
+                (isScanning, includeUsb, includeSerial) => !isScanning && (includeUsb || includeSerial))
+            .ToProperty(this, x => x.CanToggleAcmPorts);
+
+        _canToggleSerialPorts = this.WhenAnyValue(
+                x => x.IsScanning, x => x.IncludeUsbPorts, x => x.IncludeAcmPorts,
+                (isScanning, includeUsb, includeAcm) => !isScanning && (includeUsb || includeAcm))
+            .ToProperty(this, x => x.CanToggleSerialPorts);
 
         // Set up automatic scanning timer (disabled by default)
         _scanTimer = new Timer(OnTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
