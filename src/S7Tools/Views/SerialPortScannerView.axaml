@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels"
              xmlns:converters="using:S7Tools.Converters"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d"
              x:Class="S7Tools.Views.SerialPortScannerView"
              x:DataType="vm:SerialPortScannerViewModel">
@@ -15,27 +16,27 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-  
-      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+      
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
         <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" />
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
         <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E" VerticalAlignment="Center"/>
       </StackPanel>
-  
-      <!-- Remove the empty Border entirely; the star-sized ColumnDefinition already provides spacing -->
-  
-      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
+      
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
         <!-- Port Type Filters -->
-        <CheckBox Content="UsbPorts"
-                  IsChecked="{Binding IncludeUsbPorts}"
+        <CheckBox Content="UsbPorts" 
+                  IsChecked="{Binding IncludeUsbPorts}" 
+                  Foreground="#CCCCCC" 
+                  IsEnabled="{Binding CanToggleUsbPorts}" />
+        <CheckBox Content="AcmPorts" 
+                  IsChecked="{Binding IncludeAcmPorts}" 
                   Foreground="#CCCCCC"
-                  VerticalAlignment="Center"
-                  IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}" />
-        <CheckBox Content="StandardPorts"
-                  IsChecked="{Binding IncludeStandardPorts}"
-                  IsEnabled="{Binding CanToggleStandardPorts}"
+                  IsEnabled="{Binding CanToggleAcmPorts}" />
+        <CheckBox Content="StandardPorts" 
+                  IsChecked="{Binding IncludeSerialPorts}" 
                   Foreground="#CCCCCC"
-                  VerticalAlignment="Center" />
+                  IsEnabled="{Binding CanToggleSerialPorts}" />
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
         <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
         <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
@@ -50,23 +51,19 @@
                Background="#3C3C3C" Foreground="#CCCCCC"
                BorderBrush="#464647"
                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                        <ItemsPanelTemplate>
-                          <WrapPanel Orientation="Vertical" ItemWidth="130" ItemHeight="26" />
-                        </ItemsPanelTemplate>
-                     <WrapPanel Orientation="Vertical" />
-                   </ItemsPanelTemplate>
+               ScrollViewer.VerticalScrollBarVisibility="Disabled">
+        <ListBox.ItemsPanel>
+          <ItemsPanelTemplate>
+            <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
+          </ItemsPanelTemplate>
         </ListBox.ItemsPanel>
         <ListBox.ItemTemplate>
           <DataTemplate>
             <Border Background="#2D2D2D" CornerRadius="0" Padding="8,6" Margin="6,3" Width="130" Height="26">
               <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <TextBlock Text="{Binding DisplayName}"
-                           Foreground="#CCCCCC"
-                           VerticalAlignment="Center"
-                           FontSize="11"
-                           TextTrimming="CharacterEllipsis"
-                           MaxWidth="90" />
+                <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#0E639C" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding DisplayName}" Foreground="#CCCCCC" VerticalAlignment="Center" 
+                           TextTrimming="CharacterEllipsis" FontSize="11" />
                 <Border Background="#0E639C" CornerRadius="2" Padding="4,2" IsVisible="{Binding IsAccessible}">
                   <TextBlock Text="OK" FontSize="9" Foreground="#FFFFFF"/>
                 </Border>

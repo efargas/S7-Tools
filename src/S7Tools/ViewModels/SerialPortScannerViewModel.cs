@@ -27,6 +27,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     private readonly CompositeDisposable _disposables = new();
     private readonly Timer _scanTimer;
     private CancellationTokenSource? _scanCancellationTokenSource;
+    private readonly List<SerialPortInfo> _allDiscoveredPorts = new();
 
     #endregion
 
@@ -50,6 +51,20 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
         // Initialize commands
         InitializeCommands();
+
+        // Set up reactive property updates for CanToggle properties
+        this.WhenAnyValue(
+            x => x.IsScanning,
+            x => x.IncludeUsbPorts,
+            x => x.IncludeAcmPorts,
+            x => x.IncludeSerialPorts)
+            .Subscribe(_ => 
+            {
+                this.RaisePropertyChanged(nameof(CanToggleUsbPorts));
+                this.RaisePropertyChanged(nameof(CanToggleAcmPorts));
+                this.RaisePropertyChanged(nameof(CanToggleSerialPorts));
+            })
+            .DisposeWith(_disposables);
 
         // Set up automatic scanning timer (disabled by default)
         _scanTimer = new Timer(OnTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
@@ -189,7 +204,14 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     public bool IncludeUsbPorts
     {
         get => _includeUsbPorts;
-        set => this.RaiseAndSetIfChanged(ref _includeUsbPorts, value);
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _includeUsbPorts, value))
+            {
+                // Re-apply filters to current discovered ports
+                ApplyFiltersToDiscoveredPorts();
+            }
+        }
     }
 
     private bool _includeAcmPorts = true;
@@ -199,7 +221,14 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     public bool IncludeAcmPorts
     {
         get => _includeAcmPorts;
-        set => this.RaiseAndSetIfChanged(ref _includeAcmPorts, value);
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _includeAcmPorts, value))
+            {
+                // Re-apply filters to current discovered ports
+                ApplyFiltersToDiscoveredPorts();
+            }
+        }
     }
 
     private bool _includeSerialPorts = true;
@@ -209,8 +238,30 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     public bool IncludeSerialPorts
     {
         get => _includeSerialPorts;
-        set => this.RaiseAndSetIfChanged(ref _includeSerialPorts, value);
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _includeSerialPorts, value))
+            {
+                // Re-apply filters to current discovered ports
+                ApplyFiltersToDiscoveredPorts();
+            }
+        }
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the USB ports checkbox can be toggled (requires at least one other filter active).
+    /// </summary>
+    public bool CanToggleUsbPorts => IsScanning == false && (IncludeAcmPorts || IncludeSerialPorts);
+
+    /// <summary>
+    /// Gets a value indicating whether the ACM ports checkbox can be toggled (requires at least one other filter active).
+    /// </summary>
+    public bool CanToggleAcmPorts => IsScanning == false && (IncludeUsbPorts || IncludeSerialPorts);
+
+    /// <summary>
+    /// Gets a value indicating whether the serial ports checkbox can be toggled (requires at least one other filter active).
+    /// </summary>
+    public bool CanToggleSerialPorts => IsScanning == false && (IncludeUsbPorts || IncludeAcmPorts);
 
     private bool _checkAccessibility = true;
     /// <summary>
@@ -399,12 +450,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                 portInfos.Add(portInfo);
             }
 
-            // Update UI
+            // Store all ports (before UI filtering) and update UI
+            _allDiscoveredPorts.Clear();
+            _allDiscoveredPorts.AddRange(portInfos.OrderBy(p => p.PortName));
+            
             DiscoveredPorts.Clear();
-            foreach (SerialPortInfo? portInfo in portInfos.OrderBy(p => p.PortName))
+            foreach (SerialPortInfo? portInfo in _allDiscoveredPorts)
             {
                 DiscoveredPorts.Add(portInfo);
             }
+
+            // Apply UI filters
+            ApplyFiltersToDiscoveredPorts();
 
             // Update statistics
             DateTime endTime = DateTime.Now;
@@ -710,6 +767,40 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     {
         _logger.LogError(exception, "Error {Operation}", operation);
         StatusMessage = $"Error {operation}";
+    }
+
+    /// <summary>
+    /// Applies the current filter settings to the discovered ports list.
+    /// </summary>
+    private void ApplyFiltersToDiscoveredPorts()
+    {
+        if (_allDiscoveredPorts.Count == 0)
+        {
+            return;
+        }
+
+        // Filter the ports based on current settings
+        var filteredPorts = _allDiscoveredPorts.Where(port =>
+        {
+            if (port.PortType.Contains("USB") && !IncludeUsbPorts) return false;
+            if (port.PortType.Contains("Modem") && !IncludeAcmPorts) return false;
+            if (port.PortType.Contains("Serial") && !IncludeSerialPorts) return false;
+            return true;
+        }).ToList();
+
+        // Update the observable collection
+        DiscoveredPorts.Clear();
+        foreach (var port in filteredPorts)
+        {
+            DiscoveredPorts.Add(port);
+        }
+
+        // Update statistics
+        TotalPortsFound = DiscoveredPorts.Count;
+        AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
+        
+        _logger.LogInformation("Applied filters: USB={IncludeUsb}, ACM={IncludeAcm}, Serial={IncludeSerial}, Result={Count} ports",
+            IncludeUsbPorts, IncludeAcmPorts, IncludeSerialPorts, TotalPortsFound);
     }
 
     #endregion
