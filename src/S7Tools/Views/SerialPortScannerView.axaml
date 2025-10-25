@@ -4,42 +4,83 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels"
              xmlns:converters="using:S7Tools.Converters"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d"
              x:Class="S7Tools.Views.SerialPortScannerView"
              x:DataType="vm:SerialPortScannerViewModel">
+  
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/PropertyStyles.axaml" />
+  </UserControl.Styles>
 
   <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="*">
-    <StackPanel Orientation="Horizontal" Spacing="8">
-      <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" />
-  <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
-  <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
-      <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC"/>
-      <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E"/>
-    </StackPanel>
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+        <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" />
+        <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E" VerticalAlignment="Center"/>
+      </StackPanel>
+      
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+        <!-- Port Type Filters -->
+        <CheckBox Content="UsbPorts" 
+                  IsChecked="{Binding IncludeUsbPorts}" 
+                  Foreground="#CCCCCC" 
+                  IsEnabled="{Binding CanToggleUsbPorts}" />
+        <CheckBox Content="AcmPorts" 
+                  IsChecked="{Binding IncludeAcmPorts}" 
+                  Foreground="#CCCCCC"
+                  IsEnabled="{Binding CanToggleAcmPorts}" />
+        <CheckBox Content="StandardPorts" 
+                  IsChecked="{Binding IncludeSerialPorts}" 
+                  Foreground="#CCCCCC"
+                  IsEnabled="{Binding CanToggleSerialPorts}" />
+        <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
+        <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
+        <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
+      </StackPanel>
+    </Grid>
 
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-  <ListBox Height="140"
+      <ListBox Height="140"
                ItemsSource="{Binding DiscoveredPorts}"
                SelectedItem="{Binding SelectedPort}"
-  IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"
-               Background="#3C3C3C" Foreground="#CCCCCC"
-               BorderBrush="#464647"
+               IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"
+               Background="Transparent" Foreground="#CCCCCC"
+               BorderBrush="Transparent"
                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                ScrollViewer.VerticalScrollBarVisibility="Disabled">
         <ListBox.ItemsPanel>
           <ItemsPanelTemplate>
-            <WrapPanel Orientation="Vertical" ItemWidth="220" ItemHeight="36" />
+            <WrapPanel Orientation="Horizontal" />
           </ItemsPanelTemplate>
         </ListBox.ItemsPanel>
+        <ListBox.ItemContainerTheme>
+          <ControlTheme TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,12,8" />
+          </ControlTheme>
+        </ListBox.ItemContainerTheme>
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <Border Classes="InfoCard">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="{Binding DisplayName}" Foreground="#FFFFFF" />
-                <TextBlock Text="{Binding PortName}" Foreground="#9E9E9E"/>
-                <Border Classes="InfoBadge" IsVisible="{Binding IsAccessible}">
-                  <TextBlock Text="OK" FontSize="10" Foreground="#FFFFFF"/>
-                </Border>
+            <Border Classes="PropertyItem" Width="140">
+              <StackPanel Spacing="4">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#9CDCFE" VerticalAlignment="Center" />
+                  <TextBlock Classes="PropertyLabel" Text="{Binding PortTypeDisplay}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <TextBlock Classes="PropertyValue" Text="{Binding PortName}" TextTrimming="CharacterEllipsis" />
+                  <Border Background="#0E639C" CornerRadius="2" Padding="4,2" IsVisible="{Binding IsAccessible}">
+                    <TextBlock Text="OK" FontSize="9" Foreground="#FFFFFF"/>
+                  </Border>
+                </StackPanel>
               </StackPanel>
             </Border>
           </DataTemplate>

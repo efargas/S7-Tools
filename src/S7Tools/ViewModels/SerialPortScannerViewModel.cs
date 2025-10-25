@@ -27,6 +27,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     private readonly CompositeDisposable _disposables = new();
     private readonly Timer _scanTimer;
     private CancellationTokenSource? _scanCancellationTokenSource;
+    private readonly List<SerialPortInfo> _allDiscoveredPorts = new();
 
     #endregion
 
@@ -50,6 +51,22 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
         // Initialize commands
         InitializeCommands();
+
+        // Set up reactive property updates for CanToggle properties
+        _canToggleUsbPorts = this.WhenAnyValue(
+                x => x.IsScanning, x => x.IncludeAcmPorts, x => x.IncludeSerialPorts,
+                (isScanning, includeAcm, includeSerial) => !isScanning && (includeAcm || includeSerial))
+            .ToProperty(this, x => x.CanToggleUsbPorts);
+
+        _canToggleAcmPorts = this.WhenAnyValue(
+                x => x.IsScanning, x => x.IncludeUsbPorts, x => x.IncludeSerialPorts,
+                (isScanning, includeUsb, includeSerial) => !isScanning && (includeUsb || includeSerial))
+            .ToProperty(this, x => x.CanToggleAcmPorts);
+
+        _canToggleSerialPorts = this.WhenAnyValue(
+                x => x.IsScanning, x => x.IncludeUsbPorts, x => x.IncludeAcmPorts,
+                (isScanning, includeUsb, includeAcm) => !isScanning && (includeUsb || includeAcm))
+            .ToProperty(this, x => x.CanToggleSerialPorts);
 
         // Set up automatic scanning timer (disabled by default)
         _scanTimer = new Timer(OnTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
@@ -189,7 +206,14 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     public bool IncludeUsbPorts
     {
         get => _includeUsbPorts;
-        set => this.RaiseAndSetIfChanged(ref _includeUsbPorts, value);
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _includeUsbPorts, value))
+            {
+                // Re-apply filters to current discovered ports
+                ApplyFiltersToDiscoveredPorts();
+            }
+        }
     }
 
     private bool _includeAcmPorts = true;
@@ -199,7 +223,14 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     public bool IncludeAcmPorts
     {
         get => _includeAcmPorts;
-        set => this.RaiseAndSetIfChanged(ref _includeAcmPorts, value);
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _includeAcmPorts, value))
+            {
+                // Re-apply filters to current discovered ports
+                ApplyFiltersToDiscoveredPorts();
+            }
+        }
     }
 
     private bool _includeSerialPorts = true;
@@ -209,8 +240,30 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     public bool IncludeSerialPorts
     {
         get => _includeSerialPorts;
-        set => this.RaiseAndSetIfChanged(ref _includeSerialPorts, value);
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _includeSerialPorts, value))
+            {
+                // Re-apply filters to current discovered ports
+                ApplyFiltersToDiscoveredPorts();
+            }
+        }
     }
+
+    /// <summary>
+    /// Gets a value indicating whether the USB ports checkbox can be toggled (requires at least one other filter active).
+    /// </summary>
+    public bool CanToggleUsbPorts => IsScanning == false && (IncludeAcmPorts || IncludeSerialPorts);
+
+    /// <summary>
+    /// Gets a value indicating whether the ACM ports checkbox can be toggled (requires at least one other filter active).
+    /// </summary>
+    public bool CanToggleAcmPorts => IsScanning == false && (IncludeUsbPorts || IncludeSerialPorts);
+
+    /// <summary>
+    /// Gets a value indicating whether the serial ports checkbox can be toggled (requires at least one other filter active).
+    /// </summary>
+    public bool CanToggleSerialPorts => IsScanning == false && (IncludeUsbPorts || IncludeAcmPorts);
 
     private bool _checkAccessibility = true;
     /// <summary>
@@ -362,11 +415,13 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                     break;
                 }
 
+                var portType = GetPortType(portName);
                 var portInfo = new SerialPortInfo
                 {
                     PortName = portName,
                     DisplayName = GetPortDisplayName(portName),
-                    PortType = GetPortType(portName),
+                    PortType = portType,
+                    PortTypeDisplay = GetPortTypeDisplay(portType),
                     IsAccessible = !CheckAccessibility || await _portService.IsPortAccessibleAsync(portName, 1000, cancellationToken),
                     LastChecked = DateTime.Now
                 };
@@ -399,12 +454,12 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                 portInfos.Add(portInfo);
             }
 
-            // Update UI
-            DiscoveredPorts.Clear();
-            foreach (SerialPortInfo? portInfo in portInfos.OrderBy(p => p.PortName))
-            {
-                DiscoveredPorts.Add(portInfo);
-            }
+            // Store all ports (before UI filtering)
+            _allDiscoveredPorts.Clear();
+            _allDiscoveredPorts.AddRange(portInfos.OrderBy(p => p.PortName));
+
+            // Apply UI filters and update the collection on the UI thread
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(ApplyFiltersToDiscoveredPorts);
 
             // Update statistics
             DateTime endTime = DateTime.Now;
@@ -657,17 +712,33 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Gets the port type for a port name.
+    /// Gets the port type enum for a port name.
     /// </summary>
     /// <param name="portName">The port name.</param>
-    /// <returns>The port type.</returns>
-    private static string GetPortType(string portName)
+    /// <returns>The port type enum.</returns>
+    private static PortTypeEnum GetPortType(string portName)
     {
         return portName switch
         {
-            var name when name.Contains("ttyUSB") => "USB Serial",
-            var name when name.Contains("ttyACM") => "USB Modem",
-            var name when name.Contains("ttyS") => "Serial Port",
+            var name when name.Contains("ttyUSB") => PortTypeEnum.Usb,
+            var name when name.Contains("ttyACM") => PortTypeEnum.Acm,
+            var name when name.Contains("ttyS") => PortTypeEnum.Standard,
+            _ => PortTypeEnum.Unknown
+        };
+    }
+
+    /// <summary>
+    /// Gets the port type display string for a port type enum.
+    /// </summary>
+    /// <param name="portType">The port type enum.</param>
+    /// <returns>The port type display string.</returns>
+    private static string GetPortTypeDisplay(PortTypeEnum portType)
+    {
+        return portType switch
+        {
+            PortTypeEnum.Usb => "USB Serial",
+            PortTypeEnum.Acm => "USB Modem",
+            PortTypeEnum.Standard => "Serial Port",
             _ => "Unknown"
         };
     }
@@ -712,6 +783,35 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         StatusMessage = $"Error {operation}";
     }
 
+    /// <summary>
+    /// Applies the current filter settings to the discovered ports list.
+    /// </summary>
+    private void ApplyFiltersToDiscoveredPorts()
+    {
+        if (_allDiscoveredPorts.Count == 0)
+        {
+            return;
+        }
+
+        // Filter the ports based on current settings using enum comparison
+        var filteredPorts = _allDiscoveredPorts.Where(port =>
+            (port.PortType == PortTypeEnum.Usb && IncludeUsbPorts) ||
+            (port.PortType == PortTypeEnum.Acm && IncludeAcmPorts) ||
+            (port.PortType == PortTypeEnum.Standard && IncludeSerialPorts) ||
+            (port.PortType == PortTypeEnum.Unknown)
+        // Update the observable collection
+        UpdateObservableCollection(DiscoveredPorts, filteredPorts);
+            DiscoveredPorts.Add(port);
+        }
+
+        // Update statistics
+        TotalPortsFound = DiscoveredPorts.Count;
+        AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
+        
+        _logger.LogInformation("Applied filters: USB={IncludeUsb}, ACM={IncludeAcm}, Serial={IncludeSerial}, Result={Count} ports",
+            IncludeUsbPorts, IncludeAcmPorts, IncludeSerialPorts, TotalPortsFound);
+    }
+
     #endregion
 
     #region IDisposable
@@ -735,6 +835,32 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 /// <summary>
 /// Represents information about a discovered serial port.
 /// </summary>
+/// <summary>
+/// Defines the type of serial port.
+/// </summary>
+public enum PortTypeEnum
+{
+    /// <summary>
+    /// USB serial port (ttyUSB*).
+    /// </summary>
+    Usb,
+    
+    /// <summary>
+    /// USB modem/ACM port (ttyACM*).
+    /// </summary>
+    Acm,
+    
+    /// <summary>
+    /// Standard serial port (ttyS*).
+    /// </summary>
+    Standard,
+    
+    /// <summary>
+    /// Unknown port type.
+    /// </summary>
+    Unknown
+}
+
 public class SerialPortInfo : ReactiveObject
 {
     private string _portName = string.Empty;
@@ -757,14 +883,24 @@ public class SerialPortInfo : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _displayName, value);
     }
 
-    private string _portType = string.Empty;
+    private PortTypeEnum _portType = PortTypeEnum.Unknown;
     /// <summary>
-    /// Gets or sets the port type.
+    /// Gets or sets the port type enum.
     /// </summary>
-    public string PortType
+    public PortTypeEnum PortType
     {
         get => _portType;
         set => this.RaiseAndSetIfChanged(ref _portType, value);
+    }
+
+    private string _portTypeDisplay = string.Empty;
+    /// <summary>
+    /// Gets or sets the port type display string (for UI binding).
+    /// </summary>
+    public string PortTypeDisplay
+    {
+        get => _portTypeDisplay;
+        set => this.RaiseAndSetIfChanged(ref _portTypeDisplay, value);
     }
 
     private bool _isAccessible;
