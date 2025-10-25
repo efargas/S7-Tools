@@ -799,12 +799,8 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             (port.PortType == PortTypeEnum.Acm && IncludeAcmPorts) ||
             (port.PortType == PortTypeEnum.Standard && IncludeSerialPorts) ||
             (port.PortType == PortTypeEnum.Unknown)
-        ).ToList();
-
         // Update the observable collection
-        DiscoveredPorts.Clear();
-        foreach (var port in filteredPorts)
-        {
+        UpdateObservableCollection(DiscoveredPorts, filteredPorts);
             DiscoveredPorts.Add(port);
         }
 
