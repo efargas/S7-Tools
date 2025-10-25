@@ -413,11 +413,13 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                     break;
                 }
 
+                var portType = GetPortType(portName);
                 var portInfo = new SerialPortInfo
                 {
                     PortName = portName,
                     DisplayName = GetPortDisplayName(portName),
-                    PortType = GetPortType(portName),
+                    PortType = portType,
+                    PortTypeDisplay = GetPortTypeDisplay(portType),
                     IsAccessible = !CheckAccessibility || await _portService.IsPortAccessibleAsync(portName, 1000, cancellationToken),
                     LastChecked = DateTime.Now
                 };
@@ -450,17 +452,11 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
                 portInfos.Add(portInfo);
             }
 
-            // Store all ports (before UI filtering) and update UI
+            // Store all ports (before UI filtering)
             _allDiscoveredPorts.Clear();
             _allDiscoveredPorts.AddRange(portInfos.OrderBy(p => p.PortName));
-            
-            DiscoveredPorts.Clear();
-            foreach (SerialPortInfo? portInfo in _allDiscoveredPorts)
-            {
-                DiscoveredPorts.Add(portInfo);
-            }
 
-            // Apply UI filters
+            // Apply UI filters and update the collection
             ApplyFiltersToDiscoveredPorts();
 
             // Update statistics
@@ -714,17 +710,33 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Gets the port type for a port name.
+    /// Gets the port type enum for a port name.
     /// </summary>
     /// <param name="portName">The port name.</param>
-    /// <returns>The port type.</returns>
-    private static string GetPortType(string portName)
+    /// <returns>The port type enum.</returns>
+    private static PortTypeEnum GetPortType(string portName)
     {
         return portName switch
         {
-            var name when name.Contains("ttyUSB") => "USB Serial",
-            var name when name.Contains("ttyACM") => "USB Modem",
-            var name when name.Contains("ttyS") => "Serial Port",
+            var name when name.Contains("ttyUSB") => PortTypeEnum.Usb,
+            var name when name.Contains("ttyACM") => PortTypeEnum.Acm,
+            var name when name.Contains("ttyS") => PortTypeEnum.Standard,
+            _ => PortTypeEnum.Unknown
+        };
+    }
+
+    /// <summary>
+    /// Gets the port type display string for a port type enum.
+    /// </summary>
+    /// <param name="portType">The port type enum.</param>
+    /// <returns>The port type display string.</returns>
+    private static string GetPortTypeDisplay(PortTypeEnum portType)
+    {
+        return portType switch
+        {
+            PortTypeEnum.Usb => "USB Serial",
+            PortTypeEnum.Acm => "USB Modem",
+            PortTypeEnum.Standard => "Serial Port",
             _ => "Unknown"
         };
     }
@@ -779,14 +791,13 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        // Filter the ports based on current settings
+        // Filter the ports based on current settings using enum comparison
         var filteredPorts = _allDiscoveredPorts.Where(port =>
-        {
-            if (port.PortType.Contains("USB") && !IncludeUsbPorts) return false;
-            if (port.PortType.Contains("Modem") && !IncludeAcmPorts) return false;
-            if (port.PortType.Contains("Serial") && !IncludeSerialPorts) return false;
-            return true;
-        }).ToList();
+            (port.PortType == PortTypeEnum.Usb && IncludeUsbPorts) ||
+            (port.PortType == PortTypeEnum.Acm && IncludeAcmPorts) ||
+            (port.PortType == PortTypeEnum.Standard && IncludeSerialPorts) ||
+            (port.PortType == PortTypeEnum.Unknown)
+        ).ToList();
 
         // Update the observable collection
         DiscoveredPorts.Clear();
@@ -826,6 +837,32 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 /// <summary>
 /// Represents information about a discovered serial port.
 /// </summary>
+/// <summary>
+/// Defines the type of serial port.
+/// </summary>
+public enum PortTypeEnum
+{
+    /// <summary>
+    /// USB serial port (ttyUSB*).
+    /// </summary>
+    Usb,
+    
+    /// <summary>
+    /// USB modem/ACM port (ttyACM*).
+    /// </summary>
+    Acm,
+    
+    /// <summary>
+    /// Standard serial port (ttyS*).
+    /// </summary>
+    Standard,
+    
+    /// <summary>
+    /// Unknown port type.
+    /// </summary>
+    Unknown
+}
+
 public class SerialPortInfo : ReactiveObject
 {
     private string _portName = string.Empty;
@@ -848,14 +885,24 @@ public class SerialPortInfo : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _displayName, value);
     }
 
-    private string _portType = string.Empty;
+    private PortTypeEnum _portType = PortTypeEnum.Unknown;
     /// <summary>
-    /// Gets or sets the port type.
+    /// Gets or sets the port type enum.
     /// </summary>
-    public string PortType
+    public PortTypeEnum PortType
     {
         get => _portType;
         set => this.RaiseAndSetIfChanged(ref _portType, value);
+    }
+
+    private string _portTypeDisplay = string.Empty;
+    /// <summary>
+    /// Gets or sets the port type display string (for UI binding).
+    /// </summary>
+    public string PortTypeDisplay
+    {
+        get => _portTypeDisplay;
+        set => this.RaiseAndSetIfChanged(ref _portTypeDisplay, value);
     }
 
     private bool _isAccessible;

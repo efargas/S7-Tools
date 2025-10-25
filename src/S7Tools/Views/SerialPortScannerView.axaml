@@ -73,7 +73,7 @@
               <StackPanel Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#9CDCFE" VerticalAlignment="Center" />
-                  <TextBlock Classes="PropertyLabel" Text="{Binding PortType}" />
+                  <TextBlock Classes="PropertyLabel" Text="{Binding PortTypeDisplay}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <TextBlock Classes="PropertyValue" Text="{Binding PortName}" TextTrimming="CharacterEllipsis" />
