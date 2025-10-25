@@ -456,8 +456,8 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             _allDiscoveredPorts.Clear();
             _allDiscoveredPorts.AddRange(portInfos.OrderBy(p => p.PortName));
 
-            // Apply UI filters and update the collection
-            ApplyFiltersToDiscoveredPorts();
+            // Apply UI filters and update the collection on the UI thread
+            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(ApplyFiltersToDiscoveredPorts);
 
             // Update statistics
             DateTime endTime = DateTime.Now;
