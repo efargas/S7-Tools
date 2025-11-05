@@ -47,6 +47,14 @@
       <Setter Property="Margin" Value="4,0" />
     </Style>
 
+    <!-- Bullet icon styling for list items -->
+    <Style Selector="icons|Icon.BulletIcon">
+      <Setter Property="Width" Value="12" />
+      <Setter Property="Height" Value="12" />
+      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Value" Value="fa-solid fa-circle" />
+    </Style>
+
     <!-- Arrow icon states -->
     <Style Selector="Expander:not(:expanded) icons|Icon.ExpanderArrow">
       <Setter Property="Value" Value="fa-solid fa-chevron-right" />
@@ -119,7 +127,7 @@
             <ListBox.ItemTemplate>
               <DataTemplate>
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <icons:Icon Width="12" Height="12" Foreground="#CCCCCC" Value="fa-solid fa-circle" />
+                  <icons:Icon Classes="BulletIcon" />
                   <TextBlock Text="{Binding}" Foreground="#CCCCCC" FontSize="13"/>
                 </StackPanel>
               </DataTemplate>
