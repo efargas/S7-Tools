@@ -19,21 +19,22 @@ public class ViewModelBase : ReactiveObject
     /// <param name="newItems">The new list of items.</param>
     protected static void UpdateObservableCollection<T>(ObservableCollection<T> collection, IEnumerable<T> newItems)
     {
-        var newList = newItems.ToList();
-        
+        var newItemsSet = new HashSet<T>(newItems);
+
         // Remove items that are no longer present
         for (int i = collection.Count - 1; i >= 0; i--)
         {
-            if (!newList.Contains(collection[i]))
+            if (!newItemsSet.Contains(collection[i]))
             {
                 collection.RemoveAt(i);
             }
         }
-        
+
+        var currentItemsSet = new HashSet<T>(collection);
         // Add new items that aren't already in the collection
-        foreach (var item in newList)
+        foreach (var item in newItemsSet)
         {
-            if (!collection.Contains(item))
+            if (!currentItemsSet.Contains(item))
             {
                 collection.Add(item);
             }
