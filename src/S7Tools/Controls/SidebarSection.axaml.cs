@@ -84,8 +84,24 @@ public partial class SidebarSection : UserControl
         set => SetValue(IsExpandedProperty, value);
     }
 
+    /// <summary>
+    /// Defines the ItemTemplate property.
+    /// </summary>
+    public static readonly StyledProperty<IDataTemplate?> ItemTemplateProperty =
+        AvaloniaProperty.Register<SidebarSection, IDataTemplate?>(nameof(ItemTemplate));
+
+    /// <summary>
+    /// Gets or sets the data template used to display each item.
+    /// </summary>
+    public IDataTemplate? ItemTemplate
+    {
+        get => GetValue(ItemTemplateProperty);
+        set => SetValue(ItemTemplateProperty, value);
+    }
+
     public SidebarSection()
     {
         InitializeComponent();
+        DataContext = this;
     }
 }
