@@ -56,7 +56,7 @@
   </Style>
 
   <!-- Category item styling -->
-  <Style Selector="Border.CategoryItem">
+  <Style Selector=".CategoryItem">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="Padding" Value="8,6" />
     <Setter Property="Margin" Value="0,2" />
@@ -64,11 +64,11 @@
     <Setter Property="Cursor" Value="Hand" />
   </Style>
 
-  <Style Selector="Border.CategoryItem:pointerover">
+  <Style Selector=".CategoryItem:pointerover">
     <Setter Property="Background" Value="#2A2D2E" />
   </Style>
 
-  <Style Selector="Border.CategoryItem.selected">
+  <Style Selector=".CategoryItem.selected">
     <Setter Property="Background" Value="#37373D" />
   </Style>
 
