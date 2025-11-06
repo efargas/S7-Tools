@@ -257,29 +257,9 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
     {
         string message = $"Test {logLevel} log message at {DateTime.Now:HH:mm:ss}";
 
-        switch (logLevel)
-        {
-            case LogLevel.Trace:
-                _logger.LogTrace(message);
-                break;
-            case LogLevel.Debug:
-                _logger.LogDebug(message);
-                break;
-            case LogLevel.Information:
-                _logger.LogInformation(message);
-                break;
-            case LogLevel.Warning:
-                _logger.LogWarning(message);
-                break;
-            case LogLevel.Error:
-                _logger.LogError(message);
-                break;
-            case LogLevel.Critical:
-                _logger.LogCritical(message);
-                break;
-        }
 
-        StatusMessage = $"{logLevel} log message sent";
+        _logger.Log(logLevel, message);
+
         LastButtonPressed = logLevel.ToString();
     }
 
