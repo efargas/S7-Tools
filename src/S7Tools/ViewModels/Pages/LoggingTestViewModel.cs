@@ -42,8 +42,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
     /// <returns>A logger instance for design-time use.</returns>
     private static ILogger<LoggingTestViewModel> CreateDesignTimeLogger()
     {
-        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
-        return loggerFactory.CreateLogger<LoggingTestViewModel>();
+        return Microsoft.Extensions.Logging.Abstractions.NullLogger<LoggingTestViewModel>.Instance;
     }
 
     /// <summary>
