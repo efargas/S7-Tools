@@ -30,20 +30,12 @@
       </Expander.Header>
       <ListBox ItemsSource="{Binding $parent[controls:SidebarSection].ItemsSource}"
                SelectedItem="{Binding $parent[controls:SidebarSection].SelectedItem, Mode=TwoWay}"
+               ItemTemplate="{Binding $parent[controls:SidebarSection].ItemTemplate}"
                Classes="SidebarList"
                Background="Transparent"
                BorderThickness="0"
                Margin="8,0,8,8"
-               SelectionMode="Single">
-        <ListBox.ItemTemplate>
-          <DataTemplate DataType="sys:String">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <icons:Icon Classes="BulletIcon" />
-              <TextBlock Text="{Binding}" Foreground="#CCCCCC" FontSize="13"/>
-            </StackPanel>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-      </ListBox>
+               SelectionMode="Single" />
     </Expander>
   </Border>
 
