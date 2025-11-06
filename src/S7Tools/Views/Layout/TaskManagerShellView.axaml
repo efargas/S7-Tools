@@ -2,7 +2,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:S7Tools.ViewModels.Tasks"
+             xmlns:vm="using:S7Tools.ViewModels.Layout"
+             xmlns:vmTasks="using:S7Tools.ViewModels.Tasks"
              xmlns:views="using:S7Tools.Views.Tasks"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
              x:Class="S7Tools.Views.Layout.TaskManagerShellView"
@@ -12,19 +13,19 @@
   <!-- Main Content Only - categories handled by sidebar; view resolved via ViewLocator -->
   <ContentControl Content="{Binding SelectedCategoryViewModel}">
     <ContentControl.DataTemplates>
-      <DataTemplate DataType="vm:TaskRunnerViewModel">
+      <DataTemplate DataType="vmTasks:TaskRunnerViewModel">
         <views:TaskRunnerView />
       </DataTemplate>
-      <DataTemplate DataType="vm:ActiveTasksViewModel">
+      <DataTemplate DataType="vmTasks:ActiveTasksViewModel">
         <views:ActiveTasksView />
       </DataTemplate>
-      <DataTemplate DataType="vm:ScheduledTasksViewModel">
+      <DataTemplate DataType="vmTasks:ScheduledTasksViewModel">
         <views:ScheduledTasksView />
       </DataTemplate>
-      <DataTemplate DataType="vm:HistoryTasksViewModel">
+      <DataTemplate DataType="vmTasks:HistoryTasksViewModel">
         <views:HistoryTasksView />
       </DataTemplate>
-      <DataTemplate DataType="vm:TaskCreatorViewModel">
+      <DataTemplate DataType="vmTasks:TaskCreatorViewModel">
         <views:TaskCreatorView />
       </DataTemplate>
     </ContentControl.DataTemplates>

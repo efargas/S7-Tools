@@ -3,8 +3,9 @@ using System.Reactive;
 using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Tasks;
 
-namespace S7Tools.ViewModels.Tasks;
+namespace S7Tools.ViewModels.Layout;
 
 /// <summary>
 /// Shell ViewModel for Task Manager that mirrors the Settings pattern:
