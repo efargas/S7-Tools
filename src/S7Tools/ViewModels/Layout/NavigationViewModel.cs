@@ -47,7 +47,7 @@ public class NavigationViewModel : ReactiveObject
         new ActivityBarService(),
         new DesignTimeFactory(),
         NullLogger<NavigationViewModel>.Instance,
-        new LogDataStore(new LogDataStoreOptions()))
+        new DesignTimeFactory().CreateLogDataStore())
     {
     }
 
