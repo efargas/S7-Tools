@@ -52,22 +52,6 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         // Initialize commands
         InitializeCommands();
 
-        // Set up reactive property updates for CanToggle properties
-        _canToggleUsbPorts = this.WhenAnyValue(
-                x => x.IsScanning, x => x.IncludeAcmPorts, x => x.IncludeSerialPorts,
-                (isScanning, includeAcm, includeSerial) => !isScanning && (includeAcm || includeSerial))
-            .ToProperty(this, x => x.CanToggleUsbPorts);
-
-        _canToggleAcmPorts = this.WhenAnyValue(
-                x => x.IsScanning, x => x.IncludeUsbPorts, x => x.IncludeSerialPorts,
-                (isScanning, includeUsb, includeSerial) => !isScanning && (includeUsb || includeSerial))
-            .ToProperty(this, x => x.CanToggleAcmPorts);
-
-        _canToggleSerialPorts = this.WhenAnyValue(
-                x => x.IsScanning, x => x.IncludeUsbPorts, x => x.IncludeAcmPorts,
-                (isScanning, includeUsb, includeAcm) => !isScanning && (includeUsb || includeAcm))
-            .ToProperty(this, x => x.CanToggleSerialPorts);
-
         // Set up automatic scanning timer (disabled by default)
         _scanTimer = new Timer(OnTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
 
@@ -798,11 +782,10 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             (port.PortType == PortTypeEnum.Usb && IncludeUsbPorts) ||
             (port.PortType == PortTypeEnum.Acm && IncludeAcmPorts) ||
             (port.PortType == PortTypeEnum.Standard && IncludeSerialPorts) ||
-            (port.PortType == PortTypeEnum.Unknown)
+            (port.PortType == PortTypeEnum.Unknown)).ToList();
+
         // Update the observable collection
         UpdateObservableCollection(DiscoveredPorts, filteredPorts);
-            DiscoveredPorts.Add(port);
-        }
 
         // Update statistics
         TotalPortsFound = DiscoveredPorts.Count;
