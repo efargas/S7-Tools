@@ -47,7 +47,7 @@ public class NavigationViewModel : ReactiveObject
         new ActivityBarService(),
         new DesignTimeFactory(),
         NullLogger<NavigationViewModel>.Instance,
-        new DesignTimeFactory().CreateLogDataStore())
+        null)
     {
     }
 
@@ -403,15 +403,11 @@ public class NavigationViewModel : ReactiveObject
 
     /// <summary>
     /// Creates a ViewModel for logging test functionality.
-    /// This returns a reference to the parent MainWindowViewModel for now.
-    /// In a proper implementation, this would be a separate LoggingTestViewModel.
     /// </summary>
     /// <returns>A ViewModel representing the logging test functionality.</returns>
-    private object CreateLoggingTestViewModel()
+    private object? CreateLoggingTestViewModel()
     {
-        // TODO: Create a proper LoggingTestViewModel
-        // For now, we'll need to get this from the parent or create a placeholder
-        return "Logging test functionality - needs dedicated ViewModel";
+        return CreateViewModel<LoggingTestViewModel>();
     }
 
     /// <summary>

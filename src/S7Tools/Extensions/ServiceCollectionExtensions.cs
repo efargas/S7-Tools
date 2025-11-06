@@ -309,6 +309,7 @@ public static class ServiceCollectionExtensions
 
         // Add Feature ViewModels
         services.TryAddTransient<LogViewerViewModel>();
+        services.TryAddTransient<LoggingTestViewModel>();
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
         services.TryAddSingleton<SettingsViewModel>(provider => new SettingsViewModel(provider));
