@@ -55,5 +55,19 @@
         <sty:FluentAvaloniaTheme />
         <StyleInclude Source="/Styles/Styles.axaml" />
         <StyleInclude Source="/Styles/InfoStyles.axaml" />
+
+        <!-- Override FluentAvalonia's ToggleButton:checked accent color in Expanders -->
+        <!-- This must come AFTER FluentAvaloniaTheme to have higher precedence -->
+        <Style Selector="Expander ToggleButton:checked /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style Selector="Expander ToggleButton:checked:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style Selector="Expander ToggleButton:checked:pressed /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
     </Application.Styles>
 </Application>

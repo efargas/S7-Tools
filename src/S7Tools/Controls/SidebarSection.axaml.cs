@@ -1,6 +1,7 @@
 using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 
 namespace S7Tools.Controls;
 
@@ -102,6 +103,6 @@ public partial class SidebarSection : UserControl
     public SidebarSection()
     {
         InitializeComponent();
-        DataContext = this;
+        // DataContext = this; // Removed to allow parent DataContext inheritance
     }
 }

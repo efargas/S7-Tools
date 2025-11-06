@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              x:Class="S7Tools.Views.SerialPortScannerView"
              x:DataType="vm:SerialPortScannerViewModel">
-  
+
   <UserControl.Styles>
     <StyleInclude Source="/Styles/PropertyStyles.axaml" />
   </UserControl.Styles>
@@ -20,29 +20,31 @@
         <ColumnDefinition Width="*" />
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
-      
+
       <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
         <TextBlock Text="Serial Devices" FontWeight="SemiBold" Foreground="#FFFFFF" VerticalAlignment="Center" />
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
         <TextBlock Text="{Binding StatusMessage}" Foreground="#9E9E9E" VerticalAlignment="Center"/>
       </StackPanel>
-      
-      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
-        <!-- Port Type Filters -->
-        <CheckBox Content="UsbPorts" 
-                  IsChecked="{Binding IncludeUsbPorts}" 
-                  Foreground="#CCCCCC" 
-                  IsEnabled="{Binding CanToggleUsbPorts}" />
-        <CheckBox Content="AcmPorts" 
-                  IsChecked="{Binding IncludeAcmPorts}" 
-                  Foreground="#CCCCCC"
-                  IsEnabled="{Binding CanToggleAcmPorts}" />
-        <CheckBox Content="StandardPorts" 
-                  IsChecked="{Binding IncludeSerialPorts}" 
-                  Foreground="#CCCCCC"
-                  IsEnabled="{Binding CanToggleSerialPorts}" />
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <!-- Port Type Filters styled as in mockup -->
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <CheckBox IsChecked="{Binding IncludeUsbPorts}" IsEnabled="{Binding CanToggleUsbPorts}"/>
+            <TextBlock Text="UsbPorts" Foreground="#CCCCCC" FontSize="13" VerticalAlignment="Center"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <CheckBox IsChecked="{Binding IncludeAcmPorts}" IsEnabled="{Binding CanToggleAcmPorts}"/>
+            <TextBlock Text="AcmPorts" Foreground="#CCCCCC" FontSize="13" VerticalAlignment="Center"/>
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <CheckBox IsChecked="{Binding IncludeSerialPorts}" IsEnabled="{Binding CanToggleSerialPorts}"/>
+            <TextBlock Text="StandardPorts" Foreground="#CCCCCC" FontSize="13" VerticalAlignment="Center"/>
+          </StackPanel>
+        </StackPanel>
         <TextBlock Text="|" Margin="8,0" Foreground="#CCCCCC" VerticalAlignment="Center"/>
-        <Button Content="Scan" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
+        <Button Content="Scan Ports" Command="{Binding ScanPortsCommand}" IsEnabled="{Binding IsScanning, Converter={x:Static converters:BooleanConverters.Not}}"/>
         <Button Content="Stop" Command="{Binding StopScanCommand}" IsEnabled="{Binding IsScanning}"/>
       </StackPanel>
     </Grid>
@@ -64,19 +66,19 @@
         <ListBox.ItemContainerTheme>
           <ControlTheme TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}">
             <Setter Property="Padding" Value="0" />
-            <Setter Property="Margin" Value="0,0,12,8" />
+            <Setter Property="Margin" Value="0,0,12,12" />
           </ControlTheme>
         </ListBox.ItemContainerTheme>
         <ListBox.ItemTemplate>
           <DataTemplate>
-            <Border Classes="PropertyItem" Width="140">
+            <Border Classes="PortCard">
               <StackPanel Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#9CDCFE" VerticalAlignment="Center" />
-                  <TextBlock Classes="PropertyLabel" Text="{Binding PortTypeDisplay}" />
+                  <TextBlock FontWeight="SemiBold" FontSize="11" Foreground="#9CDCFE" Text="{Binding PortTypeDisplay}" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                  <TextBlock Classes="PropertyValue" Text="{Binding PortName}" TextTrimming="CharacterEllipsis" />
+                  <TextBlock FontSize="12" Foreground="#CCCCCC" Text="{Binding PortName}" TextTrimming="CharacterEllipsis" />
                   <Border Background="#0E639C" CornerRadius="2" Padding="4,2" IsVisible="{Binding IsAccessible}">
                     <TextBlock Text="OK" FontSize="9" Foreground="#FFFFFF"/>
                   </Border>

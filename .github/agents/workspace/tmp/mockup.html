@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S7Tools Interface - New Sidebar & Port Discovery Styling</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #1e1e1e;
+            color: #cccccc;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            gap: 0;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #252526;
+            border: 1px solid #464647;
+            min-height: 600px;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 240px;
+            background: #252526;
+            border-right: 1px solid #464647;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            border-bottom: 1px solid #464647;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: transparent;
+            cursor: pointer;
+            height: 32px;
+            user-select: none;
+        }
+
+        .sidebar-header:hover {
+            background: #2a2d2e;
+        }
+
+        .chevron-icon {
+            width: 14px;
+            height: 14px;
+            color: #cccccc;
+            transition: transform 0.2s;
+        }
+
+        .sidebar-section.expanded .chevron-icon {
+            transform: rotate(90deg);
+        }
+
+        .category-icon {
+            width: 14px;
+            height: 14px;
+            color: #cccccc;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: normal;
+            color: #cccccc;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-items {
+            display: none;
+            padding: 0 8px 8px 8px;
+        }
+
+        .sidebar-section.expanded .sidebar-items {
+            display: block;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            margin: 2px 0;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #cccccc;
+        }
+
+        .sidebar-item:hover {
+            background: #2a2d2e;
+        }
+
+        .sidebar-item.selected {
+            background: #37373d;
+        }
+
+        .bullet-icon {
+            width: 12px;
+            height: 12px;
+            color: #cccccc;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #ffffff;
+        }
+
+        /* Port Discovery Styles */
+        .port-discovery {
+            background: #252526;
+        }
+
+        .port-discovery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #2d2d30;
+            border-bottom: 1px solid #464647;
+            margin-bottom: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-label {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .status-text {
+            color: #9e9e9e;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .filter-checkbox input {
+            cursor: pointer;
+        }
+
+        .filter-checkbox label {
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .button {
+            padding: 6px 16px;
+            border: 1px solid #464647;
+            background: #3c3c3c;
+            color: #cccccc;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .button:hover {
+            background: #4e4e4e;
+        }
+
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Port Cards */
+        .port-cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 12px;
+            padding: 16px;
+            min-height: 50px;
+        }
+
+        .port-card {
+            width: 140px;
+            background: #2a2a2b;
+            border: 1px solid #464647;
+            border-radius: 3px;
+            padding: 8px 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .port-type-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .port-icon {
+            width: 12px;
+            height: 12px;
+            color: #9cdcfe;
+        }
+
+        .port-type {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9cdcfe;
+        }
+
+        .port-name-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .port-name {
+            font-size: 12px;
+            color: #cccccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ok-badge {
+            background: #0e639c;
+            color: #ffffff;
+            font-size: 9px;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
+        /* Statistics Footer */
+        .port-statistics {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid #464647;
+            font-size: 13px;
+        }
+
+        .stat-label {
+            color: #9e9e9e;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #cccccc;
+        }
+
+        /* Tabs for demonstration */
+        .demo-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #464647;
+        }
+
+        .demo-tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #9e9e9e;
+        }
+
+        .demo-tab:hover {
+            color: #cccccc;
+        }
+
+        .demo-tab.active {
+            border-bottom-color: #007acc;
+            color: #ffffff;
+        }
+
+        .demo-content {
+            display: none;
+        }
+
+        .demo-content.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        .info-box {
+            background: #1e1e1e;
+            border: 1px solid #464647;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+
+        .info-box h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #9cdcfe;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            padding: 4px 0;
+            font-size: 13px;
+        }
+
+        .info-box li::before {
+            content: "✓ ";
+            color: #4ec9b0;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Task Management Section -->
+            <div class="sidebar-section expanded">
+                <div class="sidebar-header" onclick="toggleSection(this)">
+                    <i class="fas fa-chevron-right chevron-icon"></i>
+                    <i class="fas fa-tasks category-icon"></i>
+                    <span class="section-title">TASK MANAGEMENT</span>
+                </div>
+                <div class="sidebar-items">
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Task Runner</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Task Creator</span>
+                    </div>
+                    <div class="sidebar-item selected">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Active Tasks</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Scheduled</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>History</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Job Management Section -->
+            <div class="sidebar-section expanded">
+                <div class="sidebar-header" onclick="toggleSection(this)">
+                    <i class="fas fa-chevron-right chevron-icon"></i>
+                    <i class="fas fa-briefcase category-icon"></i>
+                    <span class="section-title">JOB MANAGEMENT</span>
+                </div>
+                <div class="sidebar-items">
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Job Profiles</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Create Job</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Job History</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="sidebar-section expanded">
+                <div class="sidebar-header" onclick="toggleSection(this)">
+                    <i class="fas fa-chevron-right chevron-icon"></i>
+                    <i class="fas fa-cog category-icon"></i>
+                    <span class="section-title">SETTINGS</span>
+                </div>
+                <div class="sidebar-items">
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>General</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Appearance</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Serial Ports</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Socat</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Power Supply</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Logging</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-circle bullet-icon"></i>
+                        <span>Advanced</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="demo-tabs">
+                <div class="demo-tab active" onclick="showTab('sidebar')">Sidebar Styling</div>
+                <div class="demo-tab" onclick="showTab('ports')">Port Discovery</div>
+            </div>
+
+            <!-- Sidebar Demo Content -->
+            <div id="sidebar-content" class="demo-content active">
+                <h2>New Sidebar Styling</h2>
+                <p style="margin-bottom: 16px;">The sidebar now features expandable sections with VS Code dark theme colors:</p>
+
+                <div class="info-box">
+                    <h3>Key Features:</h3>
+                    <ul>
+                        <li>Expandable/collapsible sections with animated chevron arrows</li>
+                        <li>Category icons for visual hierarchy (tasks, briefcase, cog)</li>
+                        <li>UPPERCASE section titles for clear organization</li>
+                        <li>Bullet icons for list items</li>
+                        <li>Hover states (#2A2D2E) and selection highlighting (#37373D)</li>
+                        <li>VS Code color scheme throughout</li>
+                    </ul>
+                </div>
+
+                <div class="info-box">
+                    <h3>Technical Implementation:</h3>
+                    <ul>
+                        <li>Reusable SidebarSection control component</li>
+                        <li>Centralized styles in SidebarStyles.axaml</li>
+                        <li>~200 lines of XAML code eliminated</li>
+                        <li>70% average code reduction per view</li>
+                        <li>Type-safe properties with IntelliSense support</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Port Discovery Content -->
+            <div id="ports-content" class="demo-content">
+                <h2>Serial Port Discovery</h2>
+                <div class="info-box">
+                    <div class="port-discovery">
+                    <div class="port-discovery-header">
+                        <div class="header-left">
+                            <span class="page-label">Serial Devices</span>
+                            <span class="status-text">|</span>
+                            <span class="status-text">Scanning for ports...</span>
+                        </div>
+                        <div class="header-right">
+                            <div class="filter-checkbox">
+                                <input type="checkbox" id="usb" checked>
+                                <label for="usb">UsbPorts</label>
+                            </div>
+                            <div class="filter-checkbox">
+                                <input type="checkbox" id="acm" checked>
+                                <label for="acm">AcmPorts</label>
+                            </div>
+                            <div class="filter-checkbox">
+                                <input type="checkbox" id="standard" checked>
+                                <label for="standard">StandardPorts</label>
+                            </div>
+                            <span class="status-text">|</span>
+                            <button class="button">Scan</button>
+                            <button class="button" disabled>Stop</button>
+                        </div>
+                    </div>
+
+                    <div class="port-cards-container">
+                        <!-- Port Card 1 -->
+                        <div class="port-card">
+                            <div class="port-type-row">
+                                <i class="fas fa-plug port-icon"></i>
+                                <span class="port-type">USB</span>
+                            </div>
+                            <div class="port-name-row">
+                                <span class="port-name">COM3</span>
+                                <span class="ok-badge">OK</span>
+                            </div>
+                        </div>
+
+                        <!-- Port Card 2 -->
+                        <div class="port-card">
+                            <div class="port-type-row">
+                                <i class="fas fa-plug port-icon"></i>
+                                <span class="port-type">USB</span>
+                            </div>
+                            <div class="port-name-row">
+                                <span class="port-name">COM4</span>
+                                <span class="ok-badge">OK</span>
+                            </div>
+                        </div>
+
+                        <!-- Port Card 3 -->
+                        <div class="port-card">
+                            <div class="port-type-row">
+                                <i class="fas fa-plug port-icon"></i>
+                                <span class="port-type">ACM</span>
+                            </div>
+                            <div class="port-name-row">
+                                <span class="port-name">/dev/ttyACM0</span>
+                                <span class="ok-badge">OK</span>
+                            </div>
+                        </div>
+
+                        <!-- Port Card 4 -->
+                        <div class="port-card">
+                            <div class="port-type-row">
+                                <i class="fas fa-plug port-icon"></i>
+                                <span class="port-type">Standard</span>
+                            </div>
+                            <div class="port-name-row">
+                                <span class="port-name">COM1</span>
+                                <span class="ok-badge">OK</span>
+                            </div>
+                        </div>
+
+                        <!-- Port Card 5 -->
+                        <div class="port-card">
+                            <div class="port-type-row">
+                                <i class="fas fa-plug port-icon"></i>
+                                <span class="port-type">USB</span>
+                            </div>
+                            <div class="port-name-row">
+                                <span class="port-name">COM5</span>
+                                <span class="ok-badge">OK</span>
+                            </div>
+                        </div>
+
+                        <!-- Port Card 6 -->
+                        <div class="port-card">
+                            <div class="port-type-row">
+                                <i class="fas fa-plug port-icon"></i>
+                                <span class="port-type">ACM</span>
+                            </div>
+                            <div class="port-name-row">
+                                <span class="port-name">/dev/ttyACM1</span>
+                                <span class="ok-badge">OK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="port-statistics">
+                        <span class="stat-label">Found:</span>
+                        <span class="stat-value">6</span>
+                        <span class="stat-label">,</span>
+                        <span class="stat-label">Accessible:</span>
+                        <span class="stat-value">6</span>
+                    </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <h3>Port Discovery Features:</h3>
+                    <ul>
+                        <li>Three filter checkboxes (UsbPorts, AcmPorts, StandardPorts)</li>
+                        <li>WrapPanel layout - cards flow horizontally and wrap</li>
+                        <li>Card-style display (140px width, #2A2A2B background)</li>
+                        <li>Port type icons (blue plug, 12x12px)</li>
+                        <li>Accessibility badges (blue "OK" pill)</li>
+                        <li>Real-time statistics (found/accessible counts)</li>
+                        <li>Optimized UpdateObservableCollection() for smooth filtering</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(header) {
+            const section = header.parentElement;
+            section.classList.toggle('expanded');
+        }
+
+        function showTab(tabName) {
+            // Hide all content
+            document.querySelectorAll('.demo-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.demo-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected content
+            if (tabName === 'sidebar') {
+                document.getElementById('sidebar-content').classList.add('active');
+                document.querySelector('.demo-tab:nth-child(1)').classList.add('active');
+            } else if (tabName === 'ports') {
+                document.getElementById('ports-content').classList.add('active');
+                document.querySelector('.demo-tab:nth-child(2)').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>

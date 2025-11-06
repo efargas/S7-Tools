@@ -3,13 +3,52 @@
         xmlns:icons="using:Projektanker.Icons.Avalonia">
 
   <!-- Shared sidebar navigation styles for expandable sections -->
-  
-  <!-- Expander styling to match Jobs details view -->
+
+  <!-- Complete Expander template override - exact copy from JobInfoDisplayView -->
   <Style Selector="Expander">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="MinHeight" Value="0" />
     <Setter Property="Transitions" Value="" />
+    <Setter Property="Template">
+      <ControlTemplate>
+        <StackPanel Transitions="">
+          <!-- Header -->
+          <ToggleButton Name="PART_Toggle"
+                       IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"
+                       HorizontalAlignment="Stretch"
+                       HorizontalContentAlignment="Stretch"
+                       VerticalContentAlignment="Center"
+                       MinHeight="0"
+                       Padding="2,2"
+                       Background="Transparent"
+                       BorderThickness="0"
+                       Content="{TemplateBinding Header}"
+                       ContentTemplate="{TemplateBinding HeaderTemplate}"
+                       Transitions="">
+            <ToggleButton.Template>
+              <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter"
+                                 Background="Transparent"
+                                 Content="{TemplateBinding Content}"
+                                 ContentTemplate="{TemplateBinding ContentTemplate}"
+                                 Padding="{TemplateBinding Padding}"
+                                 HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                 VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+              </ControlTemplate>
+            </ToggleButton.Template>
+          </ToggleButton>
+
+          <!-- Content -->
+          <ContentPresenter Name="PART_ContentPresenter"
+                           IsVisible="{TemplateBinding IsExpanded}"
+                           Content="{TemplateBinding Content}"
+                           ContentTemplate="{TemplateBinding ContentTemplate}"
+                           Padding="0,0"
+                           Transitions="" />
+        </StackPanel>
+      </ControlTemplate>
+    </Setter>
   </Style>
 
   <!-- Border styling for sections -->
@@ -77,16 +116,23 @@
     <Setter Property="FontSize" Value="13" />
   </Style>
 
-  <!-- ListBoxItem styling for sidebar navigation -->
+  <!-- ListBox styling for sidebar navigation -->
+  <Style Selector="ListBox.SidebarList">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+
   <Style Selector="ListBox.SidebarList > ListBoxItem">
     <Setter Property="Padding" Value="8,6"/>
     <Setter Property="Margin" Value="0,2"/>
     <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="#CCCCCC"/>
     <Setter Property="CornerRadius" Value="4"/>
   </Style>
 
   <Style Selector="ListBox.SidebarList > ListBoxItem:selected">
     <Setter Property="Background" Value="#37373D"/>
+    <Setter Property="Foreground" Value="#CCCCCC"/>
   </Style>
 
   <Style Selector="ListBox.SidebarList > ListBoxItem:pointerover">

@@ -790,7 +790,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         // Update statistics
         TotalPortsFound = DiscoveredPorts.Count;
         AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
-        
+
         _logger.LogInformation("Applied filters: USB={IncludeUsb}, ACM={IncludeAcm}, Serial={IncludeSerial}, Result={Count} ports",
             IncludeUsbPorts, IncludeAcmPorts, IncludeSerialPorts, TotalPortsFound);
     }
@@ -827,17 +827,17 @@ public enum PortTypeEnum
     /// USB serial port (ttyUSB*).
     /// </summary>
     Usb,
-    
+
     /// <summary>
     /// USB modem/ACM port (ttyACM*).
     /// </summary>
     Acm,
-    
+
     /// <summary>
     /// Standard serial port (ttyS*).
     /// </summary>
     Standard,
-    
+
     /// <summary>
     /// Unknown port type.
     /// </summary>

@@ -21,6 +21,8 @@
   </UserControl.Resources>
 
   <UserControl.Styles>
+    <StyleInclude Source="/Styles/PropertyStyles.axaml" />
+
     <!-- Property table styling for better appearance -->
     <Style Selector="Border.PropertyTable">
       <Setter Property="Background" Value="Transparent" />
@@ -278,22 +280,23 @@
                            SelectedItem="{Binding SelectedPort}" Background="#3C3C3C" Foreground="#CCCCCC"
                            BorderBrush="#464647" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                            ScrollViewer.VerticalScrollBarVisibility="Disabled" Focusable="False">
-                    <!-- Use a WrapPanel so ports fill top->down then next column with proper spacing -->
+                    <!-- Use a WrapPanel with horizontal orientation for card-style layout -->
                     <ListBox.ItemsPanel>
                       <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Vertical" ItemWidth="140" ItemHeight="32" />
+                        <WrapPanel Orientation="Horizontal" />
                       </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
                       <DataTemplate DataType="sys:String">
-                        <!-- No rounded corners, tighter width, proper spacing -->
-                        <Border Background="#2D2D2D" CornerRadius="0" Padding="8,6" Margin="6,3" Width="130"
-                                Height="26">
-                          <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#0E639C"
-                                        VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding}" Foreground="#CCCCCC" VerticalAlignment="Center"
-                                       TextTrimming="CharacterEllipsis" FontSize="11" />
+                        <!-- Card-style port item using PortCard styling from PropertyStyles -->
+                        <Border Classes="PortCard">
+                          <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                              <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#9CDCFE"
+                                          VerticalAlignment="Center" />
+                              <TextBlock Text="{Binding}" Foreground="#CCCCCC" FontSize="12"
+                                         TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
                           </StackPanel>
                         </Border>
                       </DataTemplate>
