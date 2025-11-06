@@ -8,6 +8,7 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels;
 
@@ -54,6 +55,12 @@ public class SettingsViewModel : ViewModelBase
         get => _selectedCategory;
         set
         {
+            // Guard against null or empty category
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return;
+            }
+
             this.RaiseAndSetIfChanged(ref _selectedCategory, value);
             SelectedCategoryViewModel = GetCategoryViewModel(_selectedCategory);
         }
@@ -70,25 +77,45 @@ public class SettingsViewModel : ViewModelBase
 
     private ViewModelBase GetCategoryViewModel(string category)
     {
+        // Guard against null or empty category
+        if (string.IsNullOrWhiteSpace(category))
+        {
+            category = "Logging"; // Default to Logging category
+        }
+
         if (_categoryViewModels.TryGetValue(category, out ViewModelBase? existingViewModel))
         {
             return existingViewModel;
         }
 
-        ViewModelBase viewModel = category switch
+        try
         {
-            "Logging" => CreateLoggingSettingsViewModel(),
-            "General" => new GeneralSettingsViewModel(),
-            "Appearance" => new AppearanceSettingsViewModel(),
-            "Advanced" => new AdvancedSettingsViewModel(),
-            "Serial Ports" => CreateSerialPortsSettingsViewModel(),
-            "Servers" => CreateSocatSettingsViewModel(),
-            "Power Supply" => CreatePowerSupplySettingsViewModel(),
-            _ => new GeneralSettingsViewModel()
-        };
+            ViewModelBase viewModel = category switch
+            {
+                "Logging" => CreateLoggingSettingsViewModel(),
+                "General" => new GeneralSettingsViewModel(),
+                "Appearance" => new AppearanceSettingsViewModel(),
+                "Advanced" => new AdvancedSettingsViewModel(),
+                "Serial Ports" => CreateSerialPortsSettingsViewModel(),
+                "Servers" => CreateSocatSettingsViewModel(),
+                "Power Supply" => CreatePowerSupplySettingsViewModel(),
+                _ => new GeneralSettingsViewModel()
+            };
 
-        _categoryViewModels[category] = viewModel;
-        return viewModel;
+            _categoryViewModels[category] = viewModel;
+            return viewModel;
+        }
+        catch (Exception ex)
+        {
+            // Log the full exception with stack trace to identify the root cause
+            var logger = _serviceProvider.GetRequiredService<ILogger<SettingsViewModel>>();
+            logger.LogError(ex, "CRITICAL: Failed to create ViewModel for category '{Category}'. Exception: {Message}", category, ex.Message);
+
+            // Return a placeholder ViewModel to prevent application crash
+            var placeholder = new GeneralSettingsViewModel();
+            _categoryViewModels[category] = placeholder;
+            return placeholder;
+        }
     }
 
     private LoggingSettingsViewModel CreateLoggingSettingsViewModel()
@@ -113,9 +140,10 @@ public class SettingsViewModel : ViewModelBase
         IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         IUnifiedProfileDialogService unifiedProfileDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
         S7Tools.Core.Interfaces.Services.IPathService pathService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
+        SerialPortDiscoveryViewModel portScanner = _serviceProvider.GetRequiredService<SerialPortDiscoveryViewModel>();
         ILogger<SerialPortsSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
-        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, pathService, logger);
+        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, pathService, portScanner, logger);
     }
 
     private SocatSettingsViewModel CreateSocatSettingsViewModel()
@@ -131,6 +159,7 @@ public class SettingsViewModel : ViewModelBase
         IFileDialogService fileDialogService = _serviceProvider.GetRequiredService<IFileDialogService>();
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
         IPathService pathService = _serviceProvider.GetRequiredService<IPathService>();
+        SerialPortDiscoveryViewModel portScanner = _serviceProvider.GetRequiredService<SerialPortDiscoveryViewModel>();
 
         return new SocatSettingsViewModel(
             unifiedDialogService,
@@ -143,7 +172,8 @@ public class SettingsViewModel : ViewModelBase
             clipboardService,
             fileDialogService,
             settingsService,
-            pathService);
+            pathService,
+            portScanner);
     }
 
     private PowerSupplySettingsViewModel CreatePowerSupplySettingsViewModel()

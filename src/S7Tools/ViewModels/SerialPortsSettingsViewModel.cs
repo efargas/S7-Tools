@@ -17,6 +17,7 @@ using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels;
 
@@ -42,6 +43,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     private readonly IUnifiedProfileDialogService _unifiedDialogService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
+    private readonly SerialPortDiscoveryViewModel _portScanner;
     private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
@@ -62,6 +64,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="unifiedProfileDialogService">The unified profile dialog service.</param>
     /// <param name="pathService">The path service for resolving profile paths.</param>
+    /// <param name="portScanner">The port scanner view model for port discovery control.</param>
     /// <param name="logger">The logger.</param>
     public SerialPortsSettingsViewModel(
         ISerialPortProfileService profileService,
@@ -74,6 +77,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
         IUnifiedProfileDialogService unifiedProfileDialogService,
         IPathService pathService,
+        SerialPortDiscoveryViewModel portScanner,
         ILogger<SerialPortsSettingsViewModel> logger)
         : base(logger, unifiedProfileDialogService, dialogService, uiThreadService)
     {
@@ -88,6 +92,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         _unifiedDialogService = unifiedProfileDialogService ?? throw new ArgumentNullException(nameof(unifiedProfileDialogService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
+        _portScanner = portScanner ?? throw new ArgumentNullException(nameof(portScanner));
 
         // Initialize serial port specific collections
         AvailablePorts = new ObservableCollection<string>();
@@ -162,6 +167,12 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// Gets the collection of available serial ports.
     /// </summary>
     public ObservableCollection<string> AvailablePorts { get; }
+
+    /// <summary>
+    /// Gets the port scanner view model for the port discovery control.
+    /// This provides port scanning and filtering capabilities through a reusable control.
+    /// </summary>
+    public SerialPortDiscoveryViewModel PortScanner => _portScanner;
 
     private string _selectedProfileSttyString = string.Empty;
     /// <summary>

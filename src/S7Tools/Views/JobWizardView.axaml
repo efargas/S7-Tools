@@ -9,6 +9,7 @@
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:controls="using:S7Tools.Views.Controls"
              mc:Ignorable="d"
              x:Class="S7Tools.Views.JobWizardView"
              x:DataType="vm:JobWizardViewModel"
@@ -253,65 +254,9 @@
             </StackPanel>
           </Border>
           <!-- Port Discovery Section -->
-          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12">
-            <StackPanel Spacing="12">
-              <!-- Row 1: Port Discovery Title + Scan Ports Button -->
-              <Grid>
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Port Discovery" FontSize="16" FontWeight="SemiBold"
-                           Foreground="#CCCCCC" VerticalAlignment="Center" />
-                <Button Grid.Column="2" Background="#0E639C" Foreground="White" BorderThickness="0"
-                        Padding="12,8" Command="{Binding ScanPortsCommand}"
-                        IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
-                  <StackPanel Orientation="Horizontal" Spacing="8">
-                    <icons:Icon Value="fa-solid fa-search" Width="16" Height="16" />
-                    <TextBlock Text="Scan Ports" />
-                  </StackPanel>
-                </Button>
-              </Grid>
-              <!-- Row 2: The wrap list with the scanned ports -->
-              <Grid Background="Transparent">
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                  <ListBox x:Name="PortsListBox" Height="160" ItemsSource="{Binding AvailablePorts}"
-                           SelectedItem="{Binding SelectedPort}" Background="#3C3C3C" Foreground="#CCCCCC"
-                           BorderBrush="#464647" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                           ScrollViewer.VerticalScrollBarVisibility="Disabled" Focusable="False">
-                    <!-- Use a WrapPanel with horizontal orientation for card-style layout -->
-                    <ListBox.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
-                      </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
-                    <ListBox.ItemTemplate>
-                      <DataTemplate DataType="sys:String">
-                        <!-- Card-style port item using PortCard styling from PropertyStyles -->
-                        <Border Classes="PortCard">
-                          <StackPanel Spacing="4">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                              <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#9CDCFE"
-                                          VerticalAlignment="Center" />
-                              <TextBlock Text="{Binding}" Foreground="#CCCCCC" FontSize="12"
-                                         TextTrimming="CharacterEllipsis" />
-                            </StackPanel>
-                          </StackPanel>
-                        </Border>
-                      </DataTemplate>
-                    </ListBox.ItemTemplate>
-                  </ListBox>
-                </ScrollViewer>
-                <!-- Overlay: semi-transparent backdrop with a centered ProgressRing when scanning -->
-                <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}"
-                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                  <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <fa:ProgressRing Width="64" Height="64" IsActive="{Binding IsScanning}" />
-                  </Grid>
-                </Border>
-              </Grid>
-            </StackPanel>
+          <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="12"
+                  DataContext="{Binding PortScanner}">
+            <controls:SerialPortDiscoveryControl Height="210" />
           </Border>
         </StackPanel>
       </Border>
@@ -483,10 +428,10 @@
                 <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedPower.Name, FallbackValue='Not selected'}" Foreground="#FFFFFF" />
 
                 <TextBlock Grid.Row="5" Grid.Column="0" Text="Memory Region:" Foreground="#CCCCCC" FontWeight="SemiBold" />
-                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding MemoryStart, StringFormat='{}{0} - {1} bytes', FallbackValue='Not configured'}" Foreground="#FFFFFF" />
+                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding MemoryRegionSummary, FallbackValue='Not configured'}" Foreground="#FFFFFF" />
 
                 <TextBlock Grid.Row="6" Grid.Column="0" Text="Power Timing:" Foreground="#CCCCCC" FontWeight="SemiBold" />
-                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding PowerOnTimeMs, StringFormat='{}On: {0}ms, Off: {1}ms', FallbackValue='Not configured'}" Foreground="#FFFFFF" />
+                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding PowerTimingSummary, FallbackValue='Not configured'}" Foreground="#FFFFFF" />
 
                 <TextBlock Grid.Row="7" Grid.Column="0" Text="Payloads:" Foreground="#CCCCCC" FontWeight="SemiBold" />
                 <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding PayloadsBasePath, FallbackValue='Not specified'}" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" />

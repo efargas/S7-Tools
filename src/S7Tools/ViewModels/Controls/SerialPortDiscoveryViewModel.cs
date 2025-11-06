@@ -11,19 +11,21 @@ using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Resources;
+using S7Tools.Services.Interfaces;
 
-namespace S7Tools.ViewModels;
+namespace S7Tools.ViewModels.Controls;
 
 /// <summary>
-/// ViewModel for real-time serial port discovery and monitoring, providing comprehensive
-/// port scanning capabilities with status monitoring and configuration testing.
+/// ViewModel for the SerialPortDiscoveryControl, providing real-time serial port discovery
+/// and monitoring with comprehensive port scanning capabilities, status monitoring, and configuration testing.
 /// </summary>
-public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
+public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
 {
     #region Fields
 
     private readonly ISerialPortService _portService;
-    private readonly ILogger<SerialPortScannerViewModel> _logger;
+    private readonly IUIThreadService _uiThreadService;
+    private readonly ILogger<SerialPortDiscoveryViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
     private readonly Timer _scanTimer;
     private CancellationTokenSource? _scanCancellationTokenSource;
@@ -34,15 +36,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     #region Constructor
 
     /// <summary>
-    /// Initializes a new instance of the SerialPortScannerViewModel class.
+    /// Initializes a new instance of the SerialPortDiscoveryViewModel class.
     /// </summary>
     /// <param name="portService">The serial port service.</param>
+    /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="logger">The logger.</param>
-    public SerialPortScannerViewModel(
+    public SerialPortDiscoveryViewModel(
         ISerialPortService portService,
-        ILogger<SerialPortScannerViewModel> logger)
+        IUIThreadService uiThreadService,
+        ILogger<SerialPortDiscoveryViewModel> logger)
     {
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
+        _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize collections
@@ -58,7 +63,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         // Perform initial scan
         _ = Task.Run(ScanPortsAsync);
 
-        _logger.LogInformation("SerialPortScannerViewModel initialized");
+        _logger.LogInformation("SerialPortDiscoveryViewModel initialized");
     }
 
     #endregion
@@ -92,7 +97,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     public bool IsScanning
     {
         get => _isScanning;
-        set => this.RaiseAndSetIfChanged(ref _isScanning, value);
+        set
+        {
+            if (this.RaiseAndSetIfChanged(ref _isScanning, value))
+            {
+                // Notify CanToggle properties when scanning state changes
+                this.RaisePropertyChanged(nameof(CanToggleUsbPorts));
+                this.RaisePropertyChanged(nameof(CanToggleAcmPorts));
+                this.RaisePropertyChanged(nameof(CanToggleSerialPorts));
+
+                _logger.LogDebug("IsScanning changed to {Value}, CanToggle properties notified", value);
+            }
+        }
     }
 
     private bool _autoScanEnabled;
@@ -192,8 +208,22 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         get => _includeUsbPorts;
         set
         {
+            // If trying to uncheck and it's the last filter, default to UsbPorts=true
+            if (!value && !IncludeAcmPorts && !IncludeSerialPorts)
+            {
+                _logger.LogDebug("Cannot uncheck all filters - defaulting to UsbPorts");
+                // Force UsbPorts to true (prevent uncheck)
+                if (_includeUsbPorts != true)
+                {
+                    _includeUsbPorts = true;
+                    this.RaisePropertyChanged(nameof(IncludeUsbPorts));
+                }
+                return;
+            }
+
             if (this.RaiseAndSetIfChanged(ref _includeUsbPorts, value))
             {
+                _logger.LogDebug("IncludeUsbPorts changed to {Value}", value);
                 // Re-apply filters to current discovered ports
                 ApplyFiltersToDiscoveredPorts();
             }
@@ -209,8 +239,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         get => _includeAcmPorts;
         set
         {
+            // If trying to uncheck and it's the last filter, default to UsbPorts=true
+            if (!value && !IncludeUsbPorts && !IncludeSerialPorts)
+            {
+                _logger.LogDebug("Cannot uncheck all filters - defaulting to UsbPorts");
+                // Set UsbPorts to true
+                IncludeUsbPorts = true;
+                return;
+            }
+
             if (this.RaiseAndSetIfChanged(ref _includeAcmPorts, value))
             {
+                _logger.LogDebug("IncludeAcmPorts changed to {Value}", value);
                 // Re-apply filters to current discovered ports
                 ApplyFiltersToDiscoveredPorts();
             }
@@ -226,8 +266,18 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         get => _includeSerialPorts;
         set
         {
+            // If trying to uncheck and it's the last filter, default to UsbPorts=true
+            if (!value && !IncludeUsbPorts && !IncludeAcmPorts)
+            {
+                _logger.LogDebug("Cannot uncheck all filters - defaulting to UsbPorts");
+                // Set UsbPorts to true
+                IncludeUsbPorts = true;
+                return;
+            }
+
             if (this.RaiseAndSetIfChanged(ref _includeSerialPorts, value))
             {
+                _logger.LogDebug("IncludeSerialPorts changed to {Value}", value);
                 // Re-apply filters to current discovered ports
                 ApplyFiltersToDiscoveredPorts();
             }
@@ -235,19 +285,22 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Gets a value indicating whether the USB ports checkbox can be toggled (requires at least one other filter active).
+    /// Gets a value indicating whether the USB ports checkbox can be toggled.
+    /// Can toggle when: not scanning AND (other filters are active OR this one is unchecked).
     /// </summary>
-    public bool CanToggleUsbPorts => IsScanning == false && (IncludeAcmPorts || IncludeSerialPorts);
+    public bool CanToggleUsbPorts => !IsScanning;
 
     /// <summary>
-    /// Gets a value indicating whether the ACM ports checkbox can be toggled (requires at least one other filter active).
+    /// Gets a value indicating whether the ACM ports checkbox can be toggled.
+    /// Can toggle when: not scanning AND (other filters are active OR this one is unchecked).
     /// </summary>
-    public bool CanToggleAcmPorts => IsScanning == false && (IncludeUsbPorts || IncludeSerialPorts);
+    public bool CanToggleAcmPorts => !IsScanning;
 
     /// <summary>
-    /// Gets a value indicating whether the serial ports checkbox can be toggled (requires at least one other filter active).
+    /// Gets a value indicating whether the serial ports checkbox can be toggled.
+    /// Can toggle when: not scanning AND (other filters are active OR this one is unchecked).
     /// </summary>
-    public bool CanToggleSerialPorts => IsScanning == false && (IncludeUsbPorts || IncludeAcmPorts);
+    public bool CanToggleSerialPorts => !IsScanning;
 
     private bool _checkAccessibility = true;
     /// <summary>
@@ -376,8 +429,11 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            IsScanning = true;
-            StatusMessage = UIStrings.Status_ScanningForPorts;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                IsScanning = true;
+                StatusMessage = UIStrings.Status_ScanningForPorts;
+            });
             DateTime startTime = DateTime.Now;
 
             _scanCancellationTokenSource = new CancellationTokenSource();
@@ -386,13 +442,12 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             // Get available ports
             IEnumerable<Core.Services.Interfaces.SerialPortInfo> availablePorts = await _portService.ScanAvailablePortsAsync(cancellationToken);
 
-            // Extract port paths and filter
+            // Extract port paths - store ALL ports, filtering will be done by ApplyFiltersToDiscoveredPorts
             IEnumerable<string> portPaths = availablePorts.Select(p => p.PortPath);
-            IEnumerable<string> filteredPorts = FilterPorts(portPaths);
 
-            // Create port info objects
+            // Create port info objects for ALL discovered ports
             var portInfos = new List<SerialPortInfo>();
-            foreach (string portName in filteredPorts)
+            foreach (string portName in portPaths)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -442,50 +497,73 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             _allDiscoveredPorts.Clear();
             _allDiscoveredPorts.AddRange(portInfos.OrderBy(p => p.PortName));
 
-            // Apply UI filters and update the collection on the UI thread
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(ApplyFiltersToDiscoveredPorts);
-
-            // Update statistics
-            DateTime endTime = DateTime.Now;
-            LastScanTime = endTime;
-            LastScanDuration = endTime - startTime;
-            TotalPortsFound = DiscoveredPorts.Count;
-            AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
-
-            // Add to scan history
-            var scanResult = new ScanResult
+            // Apply UI filters and update all UI-bound properties on the UI thread
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                ScanTime = LastScanTime,
-                Duration = LastScanDuration,
-                PortsFound = TotalPortsFound,
-                AccessiblePorts = AccessiblePortsCount,
-                FilterUsed = !string.IsNullOrEmpty(ScanFilter) ? ScanFilter : "None"
-            };
+                // Apply filters to update DiscoveredPorts collection
+                ApplyFiltersToDiscoveredPorts();
 
-            ScanHistory.Insert(0, scanResult);
+                // Update statistics
+                DateTime endTime = DateTime.Now;
+                LastScanTime = endTime;
+                LastScanDuration = endTime - startTime;
+                TotalPortsFound = DiscoveredPorts.Count;
+                AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
 
-            // Keep only last 50 scan results
-            while (ScanHistory.Count > 50)
-            {
-                ScanHistory.RemoveAt(ScanHistory.Count - 1);
-            }
+                // Add to scan history
+                var scanResult = new ScanResult
+                {
+                    ScanTime = LastScanTime,
+                    Duration = LastScanDuration,
+                    PortsFound = TotalPortsFound,
+                    AccessiblePorts = AccessiblePortsCount,
+                    FilterUsed = !string.IsNullOrEmpty(ScanFilter) ? ScanFilter : "None"
+                };
 
-            StatusMessage = $"Found {TotalPortsFound} port(s) ({AccessiblePortsCount} accessible) in {LastScanDuration.TotalMilliseconds:F0}ms";
+                ScanHistory.Insert(0, scanResult);
+
+                // Keep only last 50 scan results
+                while (ScanHistory.Count > 50)
+                {
+                    ScanHistory.RemoveAt(ScanHistory.Count - 1);
+                }
+
+                StatusMessage = $"Found {TotalPortsFound} port(s) ({AccessiblePortsCount} accessible) in {LastScanDuration.TotalMilliseconds:F0}ms";
+
+                // Force complete UI refresh after scan
+                this.RaisePropertyChanged(nameof(DiscoveredPorts));
+                this.RaisePropertyChanged(nameof(TotalPortsFound));
+                this.RaisePropertyChanged(nameof(AccessiblePortsCount));
+            });
+
             _logger.LogInformation("Port scan completed: {TotalPorts} total, {AccessiblePorts} accessible", TotalPortsFound, AccessiblePortsCount);
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = UIStrings.Status_ScanCancelled;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ScanCancelled;
+            });
             _logger.LogInformation("Port scan cancelled");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error scanning for ports");
-            StatusMessage = UIStrings.Status_ErrorScanningForPorts;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ErrorScanningForPorts;
+            });
         }
         finally
         {
-            IsScanning = false;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                IsScanning = false;
+                // Force re-evaluation of all CanToggle properties
+                this.RaisePropertyChanged(nameof(CanToggleUsbPorts));
+                this.RaisePropertyChanged(nameof(CanToggleAcmPorts));
+                this.RaisePropertyChanged(nameof(CanToggleSerialPorts));
+            });
             _scanCancellationTokenSource?.Dispose();
             _scanCancellationTokenSource = null;
         }
@@ -720,9 +798,9 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
     {
         return portType switch
         {
-            PortTypeEnum.Usb => "USB Serial",
-            PortTypeEnum.Acm => "USB Modem",
-            PortTypeEnum.Standard => "Serial Port",
+            PortTypeEnum.Usb => "USB",
+            PortTypeEnum.Acm => "ACM",
+            PortTypeEnum.Standard => "Standard",
             _ => "Unknown"
         };
     }
@@ -784,15 +862,26 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             (port.PortType == PortTypeEnum.Standard && IncludeSerialPorts) ||
             (port.PortType == PortTypeEnum.Unknown)).ToList();
 
-        // Update the observable collection
-        UpdateObservableCollection(DiscoveredPorts, filteredPorts);
+        // Update the observable collection on UI thread
+        _uiThreadService.InvokeOnUIThread(() =>
+        {
+            UpdateObservableCollection(DiscoveredPorts, filteredPorts);
 
-        // Update statistics
-        TotalPortsFound = DiscoveredPorts.Count;
-        AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
+            // Update statistics
+            TotalPortsFound = DiscoveredPorts.Count;
+            AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
+
+            // Force UI refresh of all filter-related properties
+            this.RaisePropertyChanged(nameof(IncludeUsbPorts));
+            this.RaisePropertyChanged(nameof(IncludeAcmPorts));
+            this.RaisePropertyChanged(nameof(IncludeSerialPorts));
+            this.RaisePropertyChanged(nameof(CanToggleUsbPorts));
+            this.RaisePropertyChanged(nameof(CanToggleAcmPorts));
+            this.RaisePropertyChanged(nameof(CanToggleSerialPorts));
+        });
 
         _logger.LogInformation("Applied filters: USB={IncludeUsb}, ACM={IncludeAcm}, Serial={IncludeSerial}, Result={Count} ports",
-            IncludeUsbPorts, IncludeAcmPorts, IncludeSerialPorts, TotalPortsFound);
+            IncludeUsbPorts, IncludeAcmPorts, IncludeSerialPorts, filteredPorts.Count);
     }
 
     #endregion
@@ -808,7 +897,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
         _scanCancellationTokenSource?.Cancel();
         _scanCancellationTokenSource?.Dispose();
         _disposables?.Dispose();
-        _logger.LogInformation("SerialPortScannerViewModel disposed");
+        _logger.LogInformation("SerialPortDiscoveryViewModel disposed");
         GC.SuppressFinalize(this);
     }
 

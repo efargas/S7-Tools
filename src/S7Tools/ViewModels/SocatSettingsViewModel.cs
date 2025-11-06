@@ -17,6 +17,7 @@ using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels;
 
@@ -39,6 +40,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
+    private readonly SerialPortDiscoveryViewModel _portScanner;
     private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
     private readonly CompositeDisposable _disposables = new();
 
@@ -60,6 +62,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
     /// <param name="pathService">The path service for dynamic path resolution.</param>
+    /// <param name="portScanner">The port scanner view model for port discovery functionality.</param>
     public SocatSettingsViewModel(
         IUnifiedProfileDialogService unifiedDialogService,
         ILogger<ProfileManagementViewModelBase<SocatProfile>> logger,
@@ -71,7 +74,8 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
-        IPathService pathService)
+        IPathService pathService,
+        SerialPortDiscoveryViewModel portScanner)
         : base(logger, unifiedDialogService, dialogService, uiThreadService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
@@ -84,6 +88,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _uiThreadService = uiThreadService;
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
+        _portScanner = portScanner ?? throw new ArgumentNullException(nameof(portScanner));
 
         // Create specific logger for this ViewModel
         ILoggerFactory loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { });
@@ -119,6 +124,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         // Load initial data
         _ = Task.Run(async () =>
         {
+            await base.InitializeAsync();
             await RefreshCommand.Execute();
             await ScanSerialDevicesAsync();
             await RefreshRunningProcessesAsync();
@@ -184,6 +190,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     #endregion
 
     #region Properties
+
+    /// <summary>
+    /// Gets the port scanner view model for port discovery functionality.
+    /// </summary>
+    public SerialPortDiscoveryViewModel PortScanner => _portScanner;
 
     /// <summary>
     /// Gets the collection of available serial devices.

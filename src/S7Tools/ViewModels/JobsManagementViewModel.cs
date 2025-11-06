@@ -185,6 +185,12 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         this.WhenAnyValue(x => x.Profiles)
             .Subscribe(_ => UpdateJobCollections())
             .DisposeWith(_localDisposables);
+
+        // Load initial data
+        _ = Task.Run(async () =>
+        {
+            await base.InitializeAsync();
+        });
     }
 
     #region Job-Specific Properties

@@ -82,20 +82,9 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         { _profiles.CollectionChanged += _profilesChangedHandler; }
         catch { /* ignore if handler already attached */ }
 
-        // Initialize profile data
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await LoadProfilesAsync().ConfigureAwait(false);
-                _logger.LogInformation("Profile management initialized for {ProfileType} with {Count} profiles",
-                    GetProfileTypeName(), Profiles.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to initialize profiles for {ProfileType}", GetProfileTypeName());
-            }
-        });
+        // NOTE: Initialization is deferred to InitializeAsync() which must be called
+        // after derived class construction completes. This ensures all derived class
+        // fields (like _profileService) are initialized before LoadProfilesAsync() is called.
     }
 
     #region Properties

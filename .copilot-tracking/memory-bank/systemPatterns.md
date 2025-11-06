@@ -247,6 +247,65 @@ All profile ViewModels inherit from a `ProfileManagementViewModelBase<TProfile>`
 
 See: `PROFILE_MANAGEMENT_FIXES_SUMMARY.md` for recent fixes (e.g., Edit dialog now loads existing data into VM via LoadProfile()).
 
+### 4.3a Reusable Control Pattern: SerialPortDiscoveryControl
+
+**Pattern**: Extract duplicate UI sections into reusable UserControls to eliminate code duplication and ensure consistency.
+
+**Implementation** (Spec 006):
+- Created `SerialPortDiscoveryControl` (Views/Controls/) - reusable port discovery UI
+- Control binds to `SerialPortScannerViewModel` via DataContext
+- Parent ViewModels inject `SerialPortScannerViewModel` (Transient lifetime for state isolation)
+- Eliminated ~305 lines of duplicated XAML across three views
+
+**Usage**:
+```xml
+<!-- Add namespace -->
+xmlns:controls="using:S7Tools.Views.Controls"
+
+<!-- Use control with DataContext binding -->
+<controls:SerialPortDiscoveryControl
+    DataContext="{Binding PortScanner}"
+    Height="200" />
+```
+
+**ViewModel Pattern**:
+```csharp
+// Parent ViewModel (Singleton or Transient)
+public class MySettingsViewModel : ReactiveObject
+{
+    private readonly SerialPortScannerViewModel _portScanner;
+
+    public MySettingsViewModel(SerialPortScannerViewModel portScanner)
+    {
+        _portScanner = portScanner;
+    }
+
+    public SerialPortScannerViewModel PortScanner => _portScanner;
+}
+```
+
+**DI Registration** (ServiceCollectionExtensions.cs):
+```csharp
+// Child ViewModel must be Transient for state isolation
+services.TryAddTransient<SerialPortScannerViewModel>();
+
+// Parent ViewModels can be Singleton or Transient as needed
+services.TryAddSingleton<SerialPortsSettingsViewModel>();
+services.TryAddSingleton<SocatSettingsViewModel>();
+services.TryAddTransient<JobWizardViewModel>();
+```
+
+**Anti-Pattern to Avoid**:
+- ❌ Don't register child ViewModels as Singleton if they maintain state
+- ❌ Don't duplicate control XAML - create reusable control instead
+- ❌ Don't duplicate ViewModel logic - inject and delegate to child ViewModel
+
+**Benefits**:
+- Single source of truth for UI behavior
+- State isolation between parent instances
+- Consistent styling and behavior
+- Easier maintenance and testing
+
 ### 4.4 Task Manager and Jobs UI Patterns (TASK017 Phase 4)
 
 #### TaskManagerViewModel Pattern
@@ -366,15 +425,15 @@ private void RefreshFromSettings()
     {
         // Get file path setting (e.g., "Resources/Profiles/PowerSupply/PowerSupplyProfiles.json")
         string profilePath = _settingsService.GetSetting<string>(
-            "profiles.powerSupplyPath", 
+            "profiles.powerSupplyPath",
             _pathService.PowerSupplyProfilesPath);
-        
+
         // Extract directory from file path
         string? directoryPath = Path.GetDirectoryName(profilePath);
-        
+
         // Resolve path (handles relative/absolute)
         string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
-        
+
         // Validate and set, or use fallback
         if (!string.IsNullOrEmpty(resolvedPath) && Directory.Exists(resolvedPath))
         {
@@ -383,7 +442,7 @@ private void RefreshFromSettings()
         else
         {
             // Fallback to profile-specific directory
-            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) 
+            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath)
                 ?? _pathService.ProfilesDirectory;
         }
     }
@@ -391,7 +450,7 @@ private void RefreshFromSettings()
     {
         _logger.LogError(ex, "Failed to refresh profiles path from settings");
         // On exception, use safe fallback
-        ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) 
+        ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath)
             ?? _pathService.ProfilesDirectory;
         // Notify user via UI
         _ = _uiThreadService.InvokeOnUIThreadAsync(() =>

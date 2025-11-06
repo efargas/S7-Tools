@@ -7,6 +7,7 @@
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:controls="using:S7Tools.Views.Controls"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.SerialPortsSettingsView"
              x:DataType="vm:SerialPortsSettingsViewModel"
@@ -262,137 +263,82 @@
               BorderBrush="#464647"
               BorderThickness="1"
               CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="16">
-          <!-- Row 1: Port Discovery Title + Scan Ports Button -->
+              Padding="16"
+              DataContext="{Binding PortScanner}">
+        <controls:SerialPortDiscoveryControl Height="210" />
+      </Border>
+
+      <!-- Port Test Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16"
+              DataContext="{Binding PortScanner}">
+        <StackPanel Spacing="12">
+          <TextBlock Text="Port Testing"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
           <Grid>
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="150" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0"
-                       Text="Port Discovery"
-                       FontSize="18"
-                       FontWeight="SemiBold"
+                       Text="Selected Port:"
                        Foreground="#CCCCCC"
                        VerticalAlignment="Center" />
 
+            <TextBlock Grid.Column="1"
+                       Text="{Binding SelectedPort.PortName, FallbackValue='No port selected'}"
+                       Foreground="#9CDCFE"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Margin="8,0" />
+
             <Button Grid.Column="2"
+                    Width="140"
+                    Height="34"
+                    Command="{Binding TestSelectedPortCommand}"
                     Background="#0E639C"
-                    Foreground="White"
-                    BorderThickness="0"
-                    Padding="12,8"
-                    Command="{Binding ScanPortsCommand}"
-                    IsEnabled="{Binding IsScanning, Converter={StaticResource InvBool}}">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <icons:Icon Value="fa-solid fa-search" Width="16" Height="16" />
-                <TextBlock Text="Scan Ports" />
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
+                <TextBlock Text="Test Port" />
               </StackPanel>
             </Button>
           </Grid>
 
-          <!-- Row 2: The wrap list with the scanned ports -->
-          <Grid Background="Transparent">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-              <ListBox x:Name="PortsListBox"
-                       Height="160"
-                       ItemsSource="{Binding AvailablePorts}"
-                       SelectedItem="{Binding SelectedPort}"
-                       Background="#3C3C3C"
-                       Foreground="#CCCCCC"
-                       BorderBrush="#464647"
-                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                       ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                       Focusable="False">
-                    <!-- Use a WrapPanel with horizontal orientation for card-style layout -->
-                    <ListBox.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <WrapPanel Orientation="Horizontal" />
-                      </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>                <ListBox.ItemTemplate>
-                  <DataTemplate DataType="sys:String">
-                    <!-- Card-style port item using PortCard styling from PropertyStyles -->
-                    <Border Classes="PortCard">
-                      <StackPanel Spacing="4">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                          <icons:Icon Value="fa-solid fa-plug" Width="12" Height="12" Foreground="#9CDCFE" VerticalAlignment="Center" />
-                          <TextBlock Text="{Binding}" Foreground="#CCCCCC" FontSize="12" TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
-                      </StackPanel>
-                    </Border>
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>
-            </ScrollViewer>
-
-            <!-- Overlay: semi-transparent backdrop with a centered ProgressRing when scanning -->
-            <Border Background="#000000" Opacity="0.45" IsVisible="{Binding IsScanning}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-              <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
-                <fa:ProgressRing Width="64" Height="64" IsActive="{Binding IsScanning}" />
-              </Grid>
-            </Border>
-          </Grid>
-
-          <!-- Row 3: Found ports text and Selected port text -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0"
-                       Text="{Binding StatusMessage}"
-                       Foreground="#858585"
-                       FontSize="12"
-                       VerticalAlignment="Center" />
-
-            <TextBlock Grid.Column="1"
-                       Text="{Binding SelectedPort, StringFormat='Selected: {0}', FallbackValue='Selected: None'}"
-                       Foreground="#858585"
-                       FontSize="12"
-                       VerticalAlignment="Center" />
-
-            <TextBlock Grid.Column="2"
-                       Text=""
-                       Foreground="#858585"
-                       FontSize="12" />
-          </Grid>
-
-          <!-- Row 4: Test Port Button + STTY Command inline -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0" Orientation="Vertical" Spacing="4" Margin="0,0,16,0">
-              <TextBlock Text="Test Port:" Foreground="#CCCCCC" FontWeight="SemiBold" />
-              <Button Background="#0E639C"
-                      Foreground="White"
-                      BorderThickness="0"
-                      Padding="12,8"
-                      Command="{Binding TestPortCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
-                  <TextBlock Text="Test Port" />
-                </StackPanel>
-              </Button>
+          <Border Background="#1E1E1E"
+                  BorderBrush="#464647"
+                  BorderThickness="1"
+                  CornerRadius="3"
+                  Padding="12"
+                  MinHeight="80">
+            <StackPanel Spacing="6">
+              <TextBlock Text="Test Result:"
+                         Foreground="#9CDCFE"
+                         FontSize="12"
+                         FontWeight="SemiBold" />
+              <TextBlock Text="{Binding SelectedPort.LastTestResult, FallbackValue='No test performed yet'}"
+                         Foreground="#CCCCCC"
+                         FontSize="12"
+                         TextWrapping="Wrap" />
+              <TextBlock Text="{Binding SelectedPort.LastTested, StringFormat='Last tested: {0:yyyy-MM-dd HH:mm:ss}', FallbackValue=''}"
+                         Foreground="#858585"
+                         FontSize="11"
+                         Margin="0,4,0,0" />
             </StackPanel>
+          </Border>
 
-            <StackPanel Grid.Column="1" Spacing="4">
-              <TextBlock Text="Profile STTY Command:" Foreground="#CCCCCC" FontWeight="SemiBold" />
-              <TextBox Text="{Binding SelectedProfileSttyString}"
-                       IsReadOnly="True"
-                       Background="#1E1E1E"
-                       Foreground="#CCCCCC"
-                       BorderBrush="#464647"
-                       Height="56"
-                       TextWrapping="Wrap" />
-            </StackPanel>
-          </Grid>
+          <TextBlock Text="Select a port from the discovery list above and click 'Test Port' to verify accessibility and perform basic communication tests"
+                     FontSize="11"
+                     Foreground="#858585"
+                     TextWrapping="Wrap" />
         </StackPanel>
       </Border>
 

@@ -47,6 +47,7 @@ This document provides essential onboarding, architecture, and coding standards 
 - **Service Registration**: Use `ServiceCollectionExtensions.cs` only
 - **Logging**: Use structured logging, never string interpolation in log messages
 - **Validation**: Use centralized validation patterns (see `systemPatterns.md`)
+- **Reusable Controls**: Extract duplicate UI sections into UserControls (e.g., `SerialPortDiscoveryControl`)
 
 ---
 
@@ -79,8 +80,8 @@ This document provides essential onboarding, architecture, and coding standards 
 
 ## Code Quality Standards (Updated 2025-10-23)
 
-**Build Status**: ✅ 0 errors, 0 warnings  
-**Test Status**: ✅ 308 tests passing, 1 skipped  
+**Build Status**: ✅ 0 errors, 0 warnings
+**Test Status**: ✅ 308 tests passing, 1 skipped
 **Code Quality**: ✅ A+ grade (98/100)
 
 **Key Quality Achievements**:

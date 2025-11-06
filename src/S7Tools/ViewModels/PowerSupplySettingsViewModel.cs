@@ -114,7 +114,11 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         // Setup property change subscriptions
         SetupPropertySubscriptions();
 
-        // DON'T call LoadProfilesAsync() - base class handles profile loading automatically
+        // Load initial data
+        _ = Task.Run(async () =>
+        {
+            await base.InitializeAsync();
+        });
 
         // Reflect existing connection state if service is already connected
         UpdateConnectionStatus();

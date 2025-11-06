@@ -16,6 +16,7 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels;
 
@@ -106,8 +107,8 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         MemoryPresets.Add(new MemoryPreset("8KB Region", 0x20001000u, 0x2000u));
         MemoryPresets.Add(new MemoryPreset("16KB Region", 0x20002000u, 0x4000u));
 
-        // Create serial scanner child VM for UI embedding
-        SerialScanner = _vmFactory.Create<SerialPortScannerViewModel>();
+        // Create port scanner child VM for UI embedding
+        PortScanner = _vmFactory.Create<SerialPortDiscoveryViewModel>();
 
         // Commands
         IObservable<bool> canBack = this.WhenAnyValue(x => x.CurrentStep)
@@ -188,8 +189,8 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public ObservableCollection<SocatProfile> SocatProfiles { get; }
     public ObservableCollection<PowerSupplyProfile> PowerProfiles { get; }
     public ObservableCollection<string> AvailablePorts { get; }
-    // Serial device scanner VM for UI embedding
-    public SerialPortScannerViewModel SerialScanner { get; }
+    // Port scanner VM for UI embedding
+    public SerialPortDiscoveryViewModel PortScanner { get; }
 
     public ReactiveCommand<Unit, Unit> BackCommand { get; }
     public ReactiveCommand<Unit, Unit> NextCommand { get; }
@@ -317,6 +318,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         {
             this.RaiseAndSetIfChanged(ref _memoryStart, value);
             this.RaisePropertyChanged(nameof(MemoryEndAddress));
+            this.RaisePropertyChanged(nameof(MemoryRegionSummary));
         }
     }
 
@@ -327,6 +329,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         {
             this.RaiseAndSetIfChanged(ref _memoryLength, value);
             this.RaisePropertyChanged(nameof(MemoryEndAddress));
+            this.RaisePropertyChanged(nameof(MemoryRegionSummary));
         }
     }
 
@@ -345,6 +348,42 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             catch
             {
                 return "Not calculated";
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a formatted summary of the memory region (Start - Length bytes).
+    /// </summary>
+    public string MemoryRegionSummary
+    {
+        get
+        {
+            try
+            {
+                return $"0x{MemoryStart:X} - {MemoryLength} bytes";
+            }
+            catch
+            {
+                return "Not configured";
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets a formatted summary of the power timing (On: Xms, Off: Yms).
+    /// </summary>
+    public string PowerTimingSummary
+    {
+        get
+        {
+            try
+            {
+                return $"On: {PowerOnTimeMs}ms, Off: {PowerOffDelayMs}ms";
+            }
+            catch
+            {
+                return "Not configured";
             }
         }
     }
@@ -411,13 +450,21 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public int PowerOnTimeMs
     {
         get => _powerOnTimeMs;
-        set => this.RaiseAndSetIfChanged(ref _powerOnTimeMs, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _powerOnTimeMs, value);
+            this.RaisePropertyChanged(nameof(PowerTimingSummary));
+        }
     }
 
     public int PowerOffDelayMs
     {
         get => _powerOffDelayMs;
-        set => this.RaiseAndSetIfChanged(ref _powerOffDelayMs, value);
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _powerOffDelayMs, value);
+            this.RaisePropertyChanged(nameof(PowerTimingSummary));
+        }
     }
 
     public string PayloadsBasePath
@@ -621,12 +668,12 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             Status = "Scanning for ports...";
 
             // Execute the scanner's scan command and wait for completion
-            await SerialScanner.ScanPortsCommand.Execute();
+            await PortScanner.ScanPortsCommand.Execute();
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 AvailablePorts.Clear();
-                foreach (SerialPortInfo port in SerialScanner.DiscoveredPorts)
+                foreach (Controls.SerialPortInfo port in PortScanner.DiscoveredPorts)
                 {
                     AvailablePorts.Add(port.PortName);
                 }
@@ -744,7 +791,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             _disposables.Dispose();
             _scanCancellationTokenSource?.Cancel();
             _scanCancellationTokenSource?.Dispose();
-            SerialScanner?.Dispose();
+            PortScanner?.Dispose();
             // no resources
         }
     }

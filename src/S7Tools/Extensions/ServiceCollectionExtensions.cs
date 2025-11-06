@@ -311,7 +311,9 @@ public static class ServiceCollectionExtensions
         // Add Profile Management ViewModels as Singletons to persist state across navigation
         services.TryAddSingleton<SerialPortsSettingsViewModel>();
         services.TryAddTransient<SerialPortProfileViewModel>();
-        services.TryAddTransient<SerialPortScannerViewModel>();
+
+        // Add reusable Control ViewModels
+        services.TryAddTransient<ViewModels.Controls.SerialPortDiscoveryViewModel>();
 
         // Add Socat ViewModels (Servers Settings - socat configuration)
         services.TryAddSingleton<SocatSettingsViewModel>();
