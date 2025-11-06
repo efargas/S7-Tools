@@ -785,11 +785,7 @@ public sealed class SerialPortScannerViewModel : ViewModelBase, IDisposable
             (port.PortType == PortTypeEnum.Unknown)).ToList();
 
         // Update the observable collection
-        DiscoveredPorts.Clear();
-        foreach (var port in filteredPorts)
-        {
-            DiscoveredPorts.Add(port);
-        }
+        UpdateObservableCollection(DiscoveredPorts, filteredPorts);
 
         // Update statistics
         TotalPortsFound = DiscoveredPorts.Count;

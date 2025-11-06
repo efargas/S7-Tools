@@ -11,56 +11,7 @@
              Background="#252526">
 
   <UserControl.Styles>
-    <!-- Expander styling to match Jobs details view -->
-    <Style Selector="Expander">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="MinHeight" Value="0" />
-      <Setter Property="Transitions" Value="" />
-    </Style>
-
-    <!-- Border styling for sections -->
-    <Style Selector="Border.CategorySection">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#464647" />
-      <Setter Property="BorderThickness" Value="0,0,0,1" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="Margin" Value="0" />
-    </Style>
-
-    <!-- Header text styling -->
-    <Style Selector="TextBlock.CategoryHeader">
-      <Setter Property="FontWeight" Value="Normal" />
-      <Setter Property="FontSize" Value="12" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-    </Style>
-
-    <!-- Icon styling -->
-    <Style Selector="icons|Icon.CategoryIcon">
-      <Setter Property="Width" Value="14" />
-      <Setter Property="Height" Value="14" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
-      <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="Margin" Value="4,0" />
-    </Style>
-
-    <!-- Bullet icon styling for list items -->
-    <Style Selector="icons|Icon.BulletIcon">
-      <Setter Property="Width" Value="12" />
-      <Setter Property="Height" Value="12" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
-      <Setter Property="Value" Value="fa-solid fa-circle" />
-    </Style>
-
-    <!-- Arrow icon states -->
-    <Style Selector="Expander:not(:expanded) icons|Icon.ExpanderArrow">
-      <Setter Property="Value" Value="fa-solid fa-chevron-right" />
-    </Style>
-
-    <Style Selector="Expander:expanded icons|Icon.ExpanderArrow">
-      <Setter Property="Value" Value="fa-solid fa-chevron-down" />
-    </Style>
+    <StyleInclude Source="/Styles/SidebarStyles.axaml" />
   </UserControl.Styles>
 
   <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
