@@ -3,11 +3,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels.Pages"
-             xmlns:vmLayout="using:S7Tools.ViewModels.Layout"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Pages.LoggingTestView"
-             x:DataType="vmLayout:MainWindowViewModel"
+             x:DataType="vm:LoggingTestViewModel"
              Background="#1E1E1E">
 
     <ScrollViewer>
