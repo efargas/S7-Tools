@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Factories;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
+using S7Tools.ViewModels.Profiles;
+using S7Tools.ViewModels.Layout;
 
 namespace S7Tools.Services;
 

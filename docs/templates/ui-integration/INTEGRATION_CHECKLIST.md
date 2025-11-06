@@ -6,6 +6,7 @@ Use this checklist when adding a new feature to S7Tools following the UI integra
 
 - [ ] **Read Documentation**: Review `docs/UI_INTEGRATION_WORKFLOW.md`
 - [ ] **Choose Feature Name**: Decide on PascalCase name (e.g., `Reports`, `Analytics`)
+- [ ] **Choose Category**: Select appropriate category (Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks)
 - [ ] **Choose Icon**: Select Font Awesome icon from [fontawesome.com](https://fontawesome.com)
 - [ ] **Define Categories**: List sidebar categories/sections for your feature
 
@@ -13,8 +14,10 @@ Use this checklist when adding a new feature to S7Tools following the UI integra
 
 ### Main ViewModel
 
-- [ ] Copy `FeatureViewModel.template.cs` to `src/S7Tools/ViewModels/[Feature]ViewModel.cs`
+- [ ] Copy `FeatureViewModel.template.cs` to `src/S7Tools/ViewModels/{Category}/[Feature]ViewModel.cs`
 - [ ] Replace `[FEATURE_NAME]` placeholder
+- [ ] Replace `[CATEGORY]` placeholder with chosen category
+- [ ] Update namespace to `S7Tools.ViewModels.{Category}`
 - [ ] Update categories in `InitializeCategories()`
 - [ ] Implement content switching logic in `UpdateMainContent()`
 - [ ] Add feature-specific properties and commands
@@ -26,21 +29,25 @@ Use this checklist when adding a new feature to S7Tools following the UI integra
 - [ ] Create details ViewModel: `[Feature]DetailsViewModel.cs`
 - [ ] Create settings ViewModel: `[Feature]SettingsViewModel.cs`
 
-**Location**: `src/S7Tools/ViewModels/[Feature]/`
+**Location**: `src/S7Tools/ViewModels/{Category}/`
 
 ## Step 2: Create Views
 
 ### Sidebar View
 
-- [ ] Copy `FeatureSidebarView.template.axaml` to `src/S7Tools/Views/[Feature]SidebarView.axaml`
+- [ ] Copy `FeatureSidebarView.template.axaml` to `src/S7Tools/Views/{Category}/[Feature]SidebarView.axaml`
 - [ ] Replace `[FEATURE_NAME]` placeholder
+- [ ] Replace `[CATEGORY]` placeholder in xmlns and x:Class
+- [ ] Update namespace to `S7Tools.Views.{Category}`
 - [ ] Create code-behind file: `[Feature]SidebarView.axaml.cs`
 - [ ] Customize sidebar UI (search, filters, actions)
 
 ### Main View
 
-- [ ] Copy `FeatureMainView.template.axaml` to `src/S7Tools/Views/[Feature]MainView.axaml`
+- [ ] Copy `FeatureMainView.template.axaml` to `src/S7Tools/Views/{Category}/[Feature]MainView.axaml`
 - [ ] Replace `[FEATURE_NAME]` placeholder
+- [ ] Replace `[CATEGORY]` placeholder in xmlns and x:Class
+- [ ] Update namespace to `S7Tools.Views.{Category}`
 - [ ] Create code-behind file: `[Feature]MainView.axaml.cs`
 - [ ] Choose ViewLocator or DataTemplate approach
 
@@ -50,14 +57,14 @@ Use this checklist when adding a new feature to S7Tools following the UI integra
 - [ ] Create details view: `[Feature]DetailsView.axaml`
 - [ ] Create settings view: `[Feature]SettingsView.axaml`
 
-**Location**: `src/S7Tools/Views/[Feature]/`
+**Location**: `src/S7Tools/Views/{Category}/`
 
 ### Code-Behind Template
 
 ```csharp
 using Avalonia.Controls;
 
-namespace S7Tools.Views;
+namespace S7Tools.Views.{Category};  // Update {Category} as needed
 
 public partial class [Feature]SidebarView : UserControl
 {
@@ -95,7 +102,7 @@ case "myfeature":
     SidebarTitle = "My Feature";
     MainContentTitle = "My Feature Management";
     ShowMainContentHeader = true;
-    
+
     MyFeatureViewModel? viewModel = CreateViewModel<MyFeatureViewModel>();
     CurrentContent = viewModel;
     MainContent = viewModel;
@@ -147,8 +154,8 @@ Only if you need different views for sidebar vs main content:
 - [ ] Add new KeyBinding
 
 ```xaml
-<KeyBinding Gesture="Ctrl+Shift+M" 
-            Command="{Binding Navigation.NavigateToActivityBarItemCommand}" 
+<KeyBinding Gesture="Ctrl+Shift+M"
+            Command="{Binding Navigation.NavigateToActivityBarItemCommand}"
             CommandParameter="myfeature" />
 ```
 

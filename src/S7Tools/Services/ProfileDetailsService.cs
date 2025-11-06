@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.ViewModels.Profiles;
+using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.Services;
 

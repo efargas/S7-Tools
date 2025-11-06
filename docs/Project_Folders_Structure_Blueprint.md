@@ -1,9 +1,9 @@
 # S7Tools Project Folder Structure Blueprint
 
-**Generated**: 2025-10-15  
-**Project Type**: .NET 8.0 Avalonia Desktop Application  
-**Architecture**: Clean Architecture with MVVM Pattern  
-**Version**: 1.3  
+**Generated**: 2025-10-15
+**Project Type**: .NET 8.0 Avalonia Desktop Application
+**Architecture**: Clean Architecture with MVVM Pattern
+**Version**: 1.3
 **Last Updated**: 2025-10-24
 
 ---
@@ -207,89 +207,125 @@ S7Tools/
 │   │   ├── Styles/                       # Application-wide styles
 │   │   │   └── Styles.axaml              # XAML styles
 │   │   │
-│   │   ├── ViewModels/                   # Presentation logic (MVVM)
-│   │   │   ├── Base/                     # Base ViewModel classes
-│   │   │   ├── AboutViewModel.cs
-│   │   │   ├── AdvancedSettingsViewModel.cs
-│   │   │   ├── AppearanceSettingsViewModel.cs
-│   │   │   ├── BottomPanelViewModel.cs
-│   │   │   ├── CommandDemoViewModel.cs
-│   │   │   ├── ConfirmationDialogViewModel.cs
-│   │   │   ├── ConnectionsViewModel.cs
-│   │   │   ├── GeneralSettingsViewModel.cs
-│   │   │   ├── HomeViewModel.cs
-│   │   │   ├── InputDialogViewModel.cs
-│   │   │   ├── LoggingSettingsViewModel.cs
-│   │   │   ├── LogViewerViewModel.cs
-│   │   │   ├── MainWindowViewModel.cs    # Root ViewModel
-│   │   │   ├── NavigationItemViewModel.cs
-│   │   │   ├── NavigationViewModel.cs
-│   │   │   ├── PlcInputViewModel.cs
-│   │   │   ├── PowerSupplyProfileViewModel.cs
-│   │   │   ├── PowerSupplySettingsViewModel.cs
-│   │   │   ├── ResourceDemoViewModel.cs
-│   │   │   ├── SerialPortProfileViewModel.cs
-│   │   │   ├── SerialPortScannerViewModel.cs
-│   │   │   ├── SerialPortsSettingsViewModel.cs
-│   │   │   ├── SettingsManagementViewModel.cs
-│   │   │   ├── SettingsViewModel.cs
-│   │   │   ├── SocatProfileViewModel.cs
-│   │   │   ├── SocatSettingsViewModel.cs
-│   │   │   ├── TabViewModel.cs
-│   │   │   └── ViewModelBase.cs          # Base class for all ViewModels
+│   │   ├── ViewModels/                   # Presentation logic (MVVM - Categorized)
+│   │   │   ├── Base/                     # Base ViewModels
+│   │   │   │   ├── TabViewModel.cs
+│   │   │   │   └── ViewModelBase.cs      # Base class for all ViewModels
+│   │   │   ├── Controls/                 # Control ViewModels
+│   │   │   │   ├── PropertyDisplayItem.cs
+│   │   │   │   └── SidebarSection.cs
+│   │   │   ├── Dialogs/                  # Dialog ViewModels
+│   │   │   │   ├── ConfirmationDialogViewModel.cs
+│   │   │   │   └── InputDialogViewModel.cs
+│   │   │   ├── Jobs/                     # Job management ViewModels
+│   │   │   │   ├── JobsManagementViewModel.cs
+│   │   │   │   ├── JobWizardViewModel.cs
+│   │   │   │   └── JobWizardPlaceholderViewModel.cs
+│   │   │   ├── Layout/                   # Layout & navigation ViewModels
+│   │   │   │   ├── BottomPanelViewModel.cs
+│   │   │   │   ├── MainWindowViewModel.cs # Root ViewModel
+│   │   │   │   ├── NavigationItemViewModel.cs
+│   │   │   │   ├── NavigationViewModel.cs
+│   │   │   │   ├── SettingsManagementViewModel.cs
+│   │   │   │   └── TaskManagerShellViewModel.cs
+│   │   │   ├── Pages/                    # Page ViewModels
+│   │   │   │   ├── AboutViewModel.cs
+│   │   │   │   ├── ConnectionsViewModel.cs
+│   │   │   │   ├── HomeViewModel.cs
+│   │   │   │   ├── LogViewerViewModel.cs
+│   │   │   │   └── PlcInputViewModel.cs
+│   │   │   ├── Profiles/                 # Profile management ViewModels
+│   │   │   │   ├── PowerSupplyProfileViewModel.cs
+│   │   │   │   ├── SerialPortProfileViewModel.cs
+│   │   │   │   └── SocatProfileViewModel.cs
+│   │   │   ├── Settings/                 # Settings ViewModels
+│   │   │   │   ├── AdvancedSettingsViewModel.cs
+│   │   │   │   ├── AppearanceSettingsViewModel.cs
+│   │   │   │   ├── GeneralSettingsViewModel.cs
+│   │   │   │   ├── LoggingSettingsViewModel.cs
+│   │   │   │   ├── PowerSupplySettingsViewModel.cs
+│   │   │   │   ├── SerialPortScannerViewModel.cs
+│   │   │   │   ├── SerialPortsSettingsViewModel.cs
+│   │   │   │   ├── SettingsViewModel.cs
+│   │   │   │   └── SocatSettingsViewModel.cs
+│   │   │   └── Tasks/                    # Task management ViewModels
+│   │   │       ├── TaskManagerViewModel.cs
+│   │   │       ├── TaskQueueViewModel.cs
+│   │   │       └── TaskViewModel.cs
 │   │   │
-│   │   ├── Views/                        # UI components (XAML + code-behind)
-│   │   │   ├── AboutView.axaml
-│   │   │   ├── AboutView.axaml.cs
-│   │   │   ├── AdvancedSettingsView.axaml
-│   │   │   ├── AdvancedSettingsView.axaml.cs
-│   │   │   ├── AppearanceSettingsView.axaml
-│   │   │   ├── AppearanceSettingsView.axaml.cs
-│   │   │   ├── CloseApplicationBehavior.cs
-│   │   │   ├── CommandDemoView.axaml
-│   │   │   ├── CommandDemoView.axaml.cs
-│   │   │   ├── ConfirmationDialog.axaml
-│   │   │   ├── ConfirmationDialog.axaml.cs
-│   │   │   ├── ConnectionsView.axaml
-│   │   │   ├── ConnectionsView.axaml.cs
-│   │   │   ├── GeneralSettingsView.axaml
-│   │   │   ├── GeneralSettingsView.axaml.cs
-│   │   │   ├── HomeView.axaml
-│   │   │   ├── HomeView.axaml.cs
-│   │   │   ├── InputDialog.axaml
-│   │   │   ├── InputDialog.axaml.cs
-│   │   │   ├── LoggingSettingsView.axaml
-│   │   │   ├── LoggingSettingsView.axaml.cs
-│   │   │   ├── LoggingTestView.axaml
-│   │   │   ├── LoggingTestView.axaml.cs
-│   │   │   ├── LogViewerView.axaml
-│   │   │   ├── LogViewerView.axaml.cs
-│   │   │   ├── MainWindow.axaml          # Main application window
-│   │   │   ├── MainWindow.axaml.cs
-│   │   │   ├── PlcInputView.axaml
-│   │   │   ├── PlcInputView.axaml.cs
-│   │   │   ├── PowerSupplyProfileEditContent.axaml
-│   │   │   ├── PowerSupplyProfileEditContent.axaml.cs
-│   │   │   ├── PowerSupplySettingsView.axaml
-│   │   │   ├── PowerSupplySettingsView.axaml.cs
-│   │   │   ├── ProfileEditDialog.axaml
-│   │   │   ├── ProfileEditDialog.axaml.cs
-│   │   │   ├── ResourceDemoView.axaml
-│   │   │   ├── ResourceDemoView.axaml.cs
-│   │   │   ├── SerialPortsSettingsView.axaml
-│   │   │   ├── SerialPortsSettingsView.axaml.cs
-│   │   │   ├── SerialProfileEditContent.axaml
-│   │   │   ├── SerialProfileEditContent.axaml.cs
-│   │   │   ├── SettingsCategoriesView.axaml
-│   │   │   ├── SettingsCategoriesView.axaml.cs
-│   │   │   ├── SettingsConfigView.axaml
-│   │   │   ├── SettingsConfigView.axaml.cs
-│   │   │   ├── SettingsView.axaml
-│   │   │   ├── SettingsView.axaml.cs
-│   │   │   ├── SocatProfileEditContent.axaml
-│   │   │   ├── SocatProfileEditContent.axaml.cs
-│   │   │   ├── SocatSettingsView.axaml
-│   │   │   └── SocatSettingsView.axaml.cs
+│   │   ├── Views/                        # UI components (XAML + code-behind - Categorized)
+│   │   │   ├── Base/                     # Base views
+│   │   │   │   ├── MainWindow.axaml      # Main application window
+│   │   │   │   └── MainWindow.axaml.cs
+│   │   │   ├── Controls/                 # Reusable UI controls
+│   │   │   │   ├── CloseApplicationBehavior.cs
+│   │   │   │   ├── PropertyDisplayItem.axaml
+│   │   │   │   ├── PropertyDisplayItem.axaml.cs
+│   │   │   │   ├── SerialPortDiscoveryControl.axaml
+│   │   │   │   ├── SerialPortDiscoveryControl.axaml.cs
+│   │   │   │   ├── SidebarSection.axaml
+│   │   │   │   └── SidebarSection.axaml.cs
+│   │   │   ├── Dialogs/                  # Dialog views
+│   │   │   │   ├── ConfirmationDialog.axaml
+│   │   │   │   ├── ConfirmationDialog.axaml.cs
+│   │   │   │   ├── InputDialog.axaml
+│   │   │   │   └── InputDialog.axaml.cs
+│   │   │   ├── Jobs/                     # Job management views
+│   │   │   │   ├── JobsMainView.axaml
+│   │   │   │   ├── JobsMainView.axaml.cs
+│   │   │   │   ├── JobsSidebarView.axaml
+│   │   │   │   ├── JobsSidebarView.axaml.cs
+│   │   │   │   ├── JobWizardView.axaml
+│   │   │   │   └── JobWizardView.axaml.cs
+│   │   │   ├── Layout/                   # Layout views
+│   │   │   │   ├── LoggingTestView.axaml
+│   │   │   │   ├── LoggingTestView.axaml.cs
+│   │   │   │   ├── TaskManagerShellView.axaml
+│   │   │   │   └── TaskManagerShellView.axaml.cs
+│   │   │   ├── Pages/                    # Page views
+│   │   │   │   ├── AboutView.axaml
+│   │   │   │   ├── AboutView.axaml.cs
+│   │   │   │   ├── ConnectionsView.axaml
+│   │   │   │   ├── ConnectionsView.axaml.cs
+│   │   │   │   ├── HomeView.axaml
+│   │   │   │   ├── HomeView.axaml.cs
+│   │   │   │   ├── LogViewerView.axaml
+│   │   │   │   ├── LogViewerView.axaml.cs
+│   │   │   │   ├── PlcInputView.axaml
+│   │   │   │   └── PlcInputView.axaml.cs
+│   │   │   ├── Profiles/                 # Profile edit views
+│   │   │   │   ├── PowerSupplyProfileEditContentView.axaml
+│   │   │   │   ├── PowerSupplyProfileEditContentView.axaml.cs
+│   │   │   │   ├── SerialPortProfileEditContentView.axaml
+│   │   │   │   ├── SerialPortProfileEditContentView.axaml.cs
+│   │   │   │   ├── SocatProfileEditContentView.axaml
+│   │   │   │   └── SocatProfileEditContentView.axaml.cs
+│   │   │   ├── Settings/                 # Settings views
+│   │   │   │   ├── AdvancedSettingsView.axaml
+│   │   │   │   ├── AdvancedSettingsView.axaml.cs
+│   │   │   │   ├── AppearanceSettingsView.axaml
+│   │   │   │   ├── AppearanceSettingsView.axaml.cs
+│   │   │   │   ├── GeneralSettingsView.axaml
+│   │   │   │   ├── GeneralSettingsView.axaml.cs
+│   │   │   │   ├── LoggingSettingsView.axaml
+│   │   │   │   ├── LoggingSettingsView.axaml.cs
+│   │   │   │   ├── PowerSupplySettingsView.axaml
+│   │   │   │   ├── PowerSupplySettingsView.axaml.cs
+│   │   │   │   ├── SerialPortsSettingsView.axaml
+│   │   │   │   ├── SerialPortsSettingsView.axaml.cs
+│   │   │   │   ├── SettingsCategoriesView.axaml
+│   │   │   │   ├── SettingsCategoriesView.axaml.cs
+│   │   │   │   ├── SettingsView.axaml
+│   │   │   │   ├── SettingsView.axaml.cs
+│   │   │   │   ├── SocatSettingsView.axaml
+│   │   │   │   └── SocatSettingsView.axaml.cs
+│   │   │   └── Tasks/                    # Task management views
+│   │   │       ├── TaskManagerSidebarView.axaml
+│   │   │       ├── TaskManagerSidebarView.axaml.cs
+│   │   │       ├── TaskManagerView.axaml
+│   │   │       ├── TaskManagerView.axaml.cs
+│   │   │       ├── TaskQueueView.axaml
+│   │   │       └── TaskQueueView.axaml.cs
 │   │   │
 │   │   ├── App.axaml                     # Application definition (XAML)
 │   │   ├── App.axaml.cs                  # Application startup logic
@@ -608,7 +644,7 @@ S7Tools/
 
 | Test Type | Location | Purpose |
 |-----------|----------|---------|
-| ViewModel tests | `S7Tools.Tests/ViewModels/` | ViewModel unit tests |
+| ViewModel tests | `S7Tools.Tests/ViewModels/{Category}/` | ViewModel unit tests (categorized) |
 | Service tests | `S7Tools.Tests/Services/` | Service unit tests |
 | Converter tests | `S7Tools.Tests/Converters/` | Converter tests |
 | Core model tests | `S7Tools.Core.Tests/Models/` | Domain model tests |
@@ -666,8 +702,8 @@ S7Tools/
 **Namespace Structure**:
 ```csharp
 S7Tools                              // Main application
-S7Tools.ViewModels                   // ViewModels
-S7Tools.Views                        // Views
+S7Tools.ViewModels.{Category}        // ViewModels (categorized)
+S7Tools.Views.{Category}             // Views (categorized)
 S7Tools.Services                     // Services
 S7Tools.Services.Interfaces          // Service interfaces
 S7Tools.Core                         // Core domain
@@ -1113,12 +1149,12 @@ services.TryAddSingleton<I{Feature}Service, {Feature}Service>();
 
 #### Step 5: Create ViewModel
 
-**File**: `src/S7Tools/ViewModels/{Feature}ViewModel.cs`
+**File**: `src/S7Tools/ViewModels/{Category}/{Feature}ViewModel.cs`
 ```csharp
 using ReactiveUI;
 using S7Tools.Core.Services.Interfaces;
 
-namespace S7Tools.ViewModels;
+namespace S7Tools.ViewModels.{Category};
 
 /// <summary>
 /// ViewModel for {Feature} view.
@@ -1138,12 +1174,12 @@ public class {Feature}ViewModel : ViewModelBase
 
 #### Step 6: Create View
 
-**File**: `src/S7Tools/Views/{Feature}View.axaml`
+**File**: `src/S7Tools/Views/{Category}/{Feature}View.axaml`
 ```xml
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:S7Tools.ViewModels"
-             x:Class="S7Tools.Views.{Feature}View"
+             xmlns:vm="using:S7Tools.ViewModels.{Category}"
+             x:Class="S7Tools.Views.{Category}.{Feature}View"
              x:DataType="vm:{Feature}ViewModel">
     <Design.DataContext>
         <vm:{Feature}ViewModel/>
@@ -1153,11 +1189,11 @@ public class {Feature}ViewModel : ViewModelBase
 </UserControl>
 ```
 
-**File**: `src/S7Tools/Views/{Feature}View.axaml.cs`
+**File**: `src/S7Tools/Views/{Category}/{Feature}View.axaml.cs`
 ```csharp
 using Avalonia.Controls;
 
-namespace S7Tools.Views;
+namespace S7Tools.Views.{Category};
 
 /// <summary>
 /// View for {Feature}.
@@ -1305,17 +1341,17 @@ Right Panel (Optional)
 
 ### ViewLocator Pattern
 
-The ViewLocator automatically maps ViewModels to Views using naming conventions:
+The ViewLocator automatically maps ViewModels to Views using naming conventions, including support for categorized namespaces:
 
 ```mermaid
 graph TB
     A[ViewModel Instance] --> B{ViewLocator}
     B --> C[Extract Type Name]
     C --> D[Transform Name]
-    D --> E[S7Tools.ViewModels.MyFeatureViewModel]
-    E --> F[Replace Namespace:<br/>ViewModels → Views]
+    D --> E[S7Tools.ViewModels.Pages.MyFeatureViewModel]
+    E --> F[Replace Namespace:<br/>ViewModels.{Category} → Views.{Category}]
     F --> G[Replace Suffix:<br/>ViewModel → View]
-    G --> H[S7Tools.Views.MyFeatureView]
+    G --> H[S7Tools.Views.Pages.MyFeatureView]
     H --> I{Type Found?}
     I -->|Yes| J[Create Instance]
     I -->|No| K[Show Error]
@@ -1324,11 +1360,17 @@ graph TB
 ```
 
 **Key Rules**:
-1. ViewModel namespace: `S7Tools.ViewModels`
-2. View namespace: `S7Tools.Views`
+1. ViewModel namespace: `S7Tools.ViewModels.{Category}` (e.g., `S7Tools.ViewModels.Pages`)
+2. View namespace: `S7Tools.Views.{Category}` (e.g., `S7Tools.Views.Pages`)
 3. ViewModel suffix: `ViewModel`
 4. View suffix: `View`
-5. Result cached in `ConcurrentDictionary`
+5. Categories mirrored between ViewModels and Views
+6. Result cached in `ConcurrentDictionary`
+
+**Example Transformations**:
+- `S7Tools.ViewModels.Pages.HomeViewModel` → `S7Tools.Views.Pages.HomeView`
+- `S7Tools.ViewModels.Dialogs.ConfirmationDialogViewModel` → `S7Tools.Views.Dialogs.ConfirmationDialog`
+- `S7Tools.ViewModels.Settings.GeneralSettingsViewModel` → `S7Tools.Views.Settings.GeneralSettingsView`
 
 ### Integration Files
 
@@ -1336,11 +1378,11 @@ graph TB
 
 ```
 src/S7Tools/
-  ├─ ViewModels/
-  │   └─ MyFeatureViewModel.cs          # Main ViewModel
+  ├─ ViewModels/{Category}/
+  │   └─ MyFeatureViewModel.cs          # Main ViewModel (in appropriate category)
   │
-  ├─ Views/
-  │   ├─ MyFeatureSidebarView.axaml     # Sidebar UI
+  ├─ Views/{Category}/
+  │   ├─ MyFeatureSidebarView.axaml     # Sidebar UI (in appropriate category)
   │   ├─ MyFeatureSidebarView.axaml.cs  # Code-behind
   │   ├─ MyFeatureMainView.axaml        # Main content UI
   │   └─ MyFeatureMainView.axaml.cs     # Code-behind
@@ -1372,7 +1414,7 @@ sequenceDiagram
     participant FeatureVM
     participant ViewLocator
     participant View
-    
+
     User->>ActivityBar: Click Icon
     ActivityBar->>NavigationVM: SelectItem("myfeature")
     NavigationVM->>FeatureVM: Create ViewModel
@@ -1621,8 +1663,8 @@ This blueprint works in conjunction with:
 
 ---
 
-**Version**: 1.3  
-**Last Updated**: 2025-10-24  
-**Maintainer**: AI Development Agent  
-**Review Frequency**: After significant structural changes or at least quarterly  
+**Version**: 1.3
+**Last Updated**: 2025-10-24
+**Maintainer**: AI Development Agent
+**Review Frequency**: After significant structural changes or at least quarterly
 **Change Log**: See Version History Table in Section 13

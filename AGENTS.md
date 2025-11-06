@@ -29,11 +29,36 @@ This document provides essential onboarding, architecture, and coding standards 
 
 ## Folder & File Structure
 
-- `src/S7Tools/` — Main UI, ViewModels, Services
+- `src/S7Tools/` — Main UI project
+  - `ViewModels/` — Categorized ViewModels (Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks)
+  - `Views/` — Categorized Views (mirrors ViewModels structure)
+  - `Services/` — Application services
+  - `Extensions/` — DI registration (ServiceCollectionExtensions.cs)
 - `src/S7Tools.Core/` — Domain models, interfaces (no external deps)
+  - `Models/Jobs/` — Job-related domain models (JobProfile, JobManagerOptions, etc.)
+  - `Services/Interfaces/` — Service contracts
+  - `Exceptions/` — Custom exception hierarchy
 - `src/S7Tools.Infrastructure.Logging/` — Logging infrastructure
 - `tests/` — Unit and integration tests
 - `.copilot-tracking/memory-bank/` — Project documentation, patterns, and Memory Bank
+
+---
+
+## Namespace Conventions
+
+- **ViewModels**: `S7Tools.ViewModels.{Category}` where Category is one of:
+  - Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
+- **Views**: `S7Tools.Views.{Category}` (mirrors ViewModels categories)
+- **Core Domain**: `S7Tools.Core.Models.{Domain}` (e.g., Jobs, Configuration)
+- **Services**: `S7Tools.Services.{Domain}` (e.g., Jobs, Bootloader)
+
+### ViewLocator Pattern
+The ViewLocator automatically resolves Views from ViewModels:
+```csharp
+// ViewModel namespace: S7Tools.ViewModels.Pages.HomeViewModel
+// View namespace:      S7Tools.Views.Pages.HomeView
+```
+This works seamlessly with the categorized folder structure.
 
 ---
 

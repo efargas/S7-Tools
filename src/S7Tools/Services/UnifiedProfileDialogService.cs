@@ -5,6 +5,7 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
+using S7Tools.ViewModels.Profiles;
 
 namespace S7Tools.Services;
 

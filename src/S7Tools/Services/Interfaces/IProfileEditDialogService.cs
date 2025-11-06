@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using ReactiveUI;
 using S7Tools.Models;
 using S7Tools.ViewModels;
+using S7Tools.ViewModels.Profiles;
 
 namespace S7Tools.Services.Interfaces;
 

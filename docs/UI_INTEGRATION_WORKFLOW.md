@@ -1,6 +1,6 @@
 # UI Integration Workflow
 
-**Last Updated**: 2025-10-24  
+**Last Updated**: 2025-10-24
 **Version**: 1.0
 
 This document explains the S7Tools UI integration pattern: how components connect from the Activity Bar through Side Panels to Main Content Views.
@@ -111,10 +111,10 @@ private void NavigateToActivityBarItemContent(string itemId)
         case "myfeature":
             SidebarTitle = "My Feature";
             MainContentTitle = "My Feature Management";
-            
+
             // Create ViewModel
             MyFeatureViewModel? viewModel = CreateViewModel<MyFeatureViewModel>();
-            
+
             // Set for sidebar and main content
             CurrentContent = viewModel;  // Sidebar
             MainContent = viewModel;      // Main area
@@ -127,17 +127,18 @@ private void NavigateToActivityBarItemContent(string itemId)
 
 **Location**: `ViewLocator.cs`
 
-The ViewLocator automatically maps ViewModels to Views:
+The ViewLocator automatically maps ViewModels to Views with category support:
 
 ```
-MyFeatureViewModel → MyFeatureView
-MyFeatureSidebarViewModel → MyFeatureSidebarView
+MyFeatureViewModel (in Pages category) → MyFeatureView (in Pages category)
+MyFeatureSidebarViewModel (in Layout category) → MyFeatureSidebarView (in Layout category)
 ```
 
 **Naming Convention**:
 - Remove "ViewModel" suffix
 - Replace with "View" suffix
-- Match namespace: `ViewModels` → `Views`
+- Match namespace: `ViewModels.{Category}` → `Views.{Category}`
+- Category preserved during transformation
 
 ### 4. Data Template Binding
 
@@ -165,9 +166,10 @@ MyFeatureSidebarViewModel → MyFeatureSidebarView
 ### How It Works
 
 1. **Type Resolution**: ViewLocator receives a ViewModel instance
-2. **Name Transformation**: 
-   - Full type name: `S7Tools.ViewModels.MyFeatureViewModel`
-   - Replace namespace: `S7Tools.Views.MyFeatureView`
+2. **Name Transformation**:
+   - Full type name: `S7Tools.ViewModels.Pages.MyFeatureViewModel`
+   - Replace namespace: `S7Tools.Views.Pages.MyFeatureView`
+   - Category (`Pages`) is preserved in the transformation
    - Replace suffix: `ViewModel` → `View`
 3. **Type Loading**: Uses reflection to find the View type
 4. **Instance Creation**: Creates View instance via `Activator.CreateInstance`
@@ -184,12 +186,12 @@ public Control? Build(object? param)
 {
     Type vmType = param.GetType();
     Type? type = ViewTypeCache.GetOrAdd(vmType, ResolveViewType);
-    
+
     if (type != null)
     {
         return (Control)Activator.CreateInstance(type)!;
     }
-    
+
     return new TextBlock { Text = "Not Found: " + viewName };
 }
 ```
@@ -228,7 +230,7 @@ public class MyFeatureViewModel : ViewModelBase
     // Sidebar categories
     public ObservableCollection<string> Categories { get; } = new();
     private string? _selectedCategory;
-    
+
     public string? SelectedCategory
     {
         get => _selectedCategory;
@@ -238,7 +240,7 @@ public class MyFeatureViewModel : ViewModelBase
             UpdateMainContent();
         }
     }
-    
+
     // Main content ViewModel
     private object? _selectedContentViewModel;
     public object? SelectedContentViewModel
@@ -246,7 +248,7 @@ public class MyFeatureViewModel : ViewModelBase
         get => _selectedContentViewModel;
         set => this.RaiseAndSetIfChanged(ref _selectedContentViewModel, value);
     }
-    
+
     private void UpdateMainContent()
     {
         // Switch main content based on sidebar selection
@@ -265,20 +267,15 @@ public class MyFeatureViewModel : ViewModelBase
 **Sidebar View**: `Views/MyFeatureSidebarView.axaml`
 
 ```xaml
+#### Step 3: Create Views
+
+**Sidebar View**: `Views/{Category}/MyFeatureSidebarView.axaml`
+
+```xml
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:vm="using:S7Tools.ViewModels"
-             x:DataType="vm:MyFeatureViewModel"
-             Background="#252526">
-  
-  <ListBox ItemsSource="{Binding Categories}"
-           SelectedItem="{Binding SelectedCategory, Mode=TwoWay}">
-    <ListBox.ItemTemplate>
-      <DataTemplate>
-        <TextBlock Text="{Binding}" Foreground="#CCCCCC"/>
-      </DataTemplate>
-    </ListBox.ItemTemplate>
-  </ListBox>
-</UserControl>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:S7Tools.ViewModels.{Category}"
+             x:Class="S7Tools.Views.{Category}.MyFeatureSidebarView"
 ```
 
 **Main Content View**: `Views/MyFeatureMainView.axaml`
@@ -287,7 +284,7 @@ public class MyFeatureViewModel : ViewModelBase
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:vm="using:S7Tools.ViewModels"
              x:DataType="vm:MyFeatureViewModel">
-  
+
   <!-- Content switches based on sidebar selection -->
   <ContentControl Content="{Binding SelectedContentViewModel}" />
 </UserControl>
@@ -295,7 +292,7 @@ public class MyFeatureViewModel : ViewModelBase
 
 #### Step 4: Register Navigation
 
-**File**: `ViewModels/NavigationViewModel.cs`
+**File**: `ViewModels/Layout/NavigationViewModel.cs`
 
 ```csharp
 private void NavigateToActivityBarItemContent(string itemId)
@@ -303,12 +300,12 @@ private void NavigateToActivityBarItemContent(string itemId)
     switch (itemId)
     {
         // ... existing cases ...
-        
+
         case "myfeature":
             SidebarTitle = "My Feature";
             MainContentTitle = "My Feature Management";
             ShowMainContentHeader = true;
-            
+
             MyFeatureViewModel? featureViewModel = CreateViewModel<MyFeatureViewModel>();
             CurrentContent = featureViewModel;  // Sidebar
             MainContent = featureViewModel;      // Main content
@@ -322,7 +319,7 @@ private void NavigateToActivityBarItemContent(string itemId)
 
 #### Step 5: Add Data Template (Optional)
 
-**File**: `Views/MainWindow.axaml`
+**File**: `Views/Base/MainWindow.axaml`
 
 If you need a specific sidebar template different from the main view:
 
@@ -350,7 +347,7 @@ public class MyFeatureViewModel : ViewModelBase
         get => _rightPanelContent;
         set => this.RaiseAndSetIfChanged(ref _rightPanelContent, value);
     }
-    
+
     public void ShowDetails(MyItem item)
     {
         RightPanelContent = new MyItemDetailsViewModel(item);
@@ -401,9 +398,10 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 
 **Error**: `Not Found: S7Tools.Views.MyFeatureView`
 
-**Solution**: 
-- Check ViewModel namespace matches `S7Tools.ViewModels`
-- Check View namespace matches `S7Tools.Views`
+**Solution**:
+- Check ViewModel namespace matches `S7Tools.ViewModels.{Category}` (e.g., `S7Tools.ViewModels.Pages`)
+- Check View namespace matches `S7Tools.Views.{Category}` (e.g., `S7Tools.Views.Pages`)
+- Verify category folders exist and match between ViewModels and Views
 - Verify View class name: `MyFeatureViewModel` → `MyFeatureView`
 
 ### Sidebar Not Updating

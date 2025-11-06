@@ -1,0 +1,526 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Jobs"
+             xmlns:conv="using:S7Tools.Converters"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:fa="using:FluentAvalonia.UI.Controls"
+             xmlns:jobsViews="using:S7Tools.Views.Jobs"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.Jobs.JobsMainContentView"
+             x:DataType="vm:JobsMainContentViewModel"
+             Background="#1E1E1E">
+
+  <UserControl.Resources>
+    <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
+  </UserControl.Resources>
+
+  <!-- Main Grid with collapsible right panel -->
+  <Grid x:Name="MainGrid">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="0" />
+      <ColumnDefinition Width="48" MinWidth="48" MaxWidth="600" />
+    </Grid.ColumnDefinitions>
+
+    <!-- Left Panel: Jobs Management -->
+    <ScrollViewer Grid.Column="0"
+                  HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Jobs Management"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="#CCCCCC"
+                 Margin="0,0,0,10" />
+
+      <!-- Profile Management Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Job Profile Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Toolbar above the DataGrid -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+            <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                <TextBlock Text="Create" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="#0E639C" Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
+                <TextBlock Text="Edit" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="110" Height="34" Command="{Binding DuplicateCommand}" Background="#0E639C" Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                <TextBlock Text="Duplicate" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}" Background="#0E639C" Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
+                <TextBlock Text="Set Default" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438" Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                <TextBlock Text="Delete" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="110" Height="34" Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                <TextBlock Text="Refresh" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <!-- Job Profiles DataGrid -->
+          <DataGrid ItemsSource="{Binding Profiles}"
+                    SelectedItem="{Binding SelectedProfile}"
+                    Background="#3C3C3C"
+                    Foreground="#CCCCCC"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    IsReadOnly="True"
+                    Height="250"
+                    Margin="0,0,0,8">
+            <!-- Header style using Avalonia style selector -->
+            <DataGrid.Styles>
+              <Style Selector="DataGridColumnHeader">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Padding" Value="8,4,32,4" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                  <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                      <DockPanel>
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          DockPanel.Dock="Left"
+                                          VerticalAlignment="Center" />
+                      </DockPanel>
+                    </Border>
+                  </ControlTemplate>
+                </Setter>
+              </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+              <!-- ID Column -->
+              <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <!-- Name column -->
+              <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <!-- Description column -->
+              <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <!-- Created timestamp -->
+              <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Created" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <!-- Modified timestamp -->
+              <DataGridTextColumn Binding="{Binding ModifiedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Modified" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <!-- Default status -->
+              <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60">
+                <DataGridCheckBoxColumn.Header>
+                  <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridCheckBoxColumn.Header>
+              </DataGridCheckBoxColumn>
+
+              <!-- Read-only status -->
+              <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70">
+                <DataGridCheckBoxColumn.Header>
+                  <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridCheckBoxColumn.Header>
+              </DataGridCheckBoxColumn>
+
+              <!-- Template status -->
+              <DataGridCheckBoxColumn Binding="{Binding IsTemplate}" Width="90" MinWidth="70">
+                <DataGridCheckBoxColumn.Header>
+                  <TextBlock Text="Template" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridCheckBoxColumn.Header>
+              </DataGridCheckBoxColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <!-- Profile Statistics -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding Profiles.Count, StringFormat='Total Jobs: {0}'}"
+                       Foreground="#858585"
+                       FontSize="12" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding StatusMessage}"
+                       Foreground="#858585"
+                       FontSize="12" />
+
+            <TextBlock Grid.Column="2"
+                       Text="{Binding JobTemplates.Count, StringFormat='Templates: {0}'}"
+                       Foreground="#858585"
+                       FontSize="12" />
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Job-Specific Operations Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <!-- Row 1: Job Operations Title + Action Buttons -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="Job Operations"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,8"
+                      Command="{Binding CreateFromTemplateCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:Icon Value="fa-solid fa-magic" Width="16" Height="16" />
+                  <TextBlock Text="From Template" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,8"
+                      Command="{Binding SaveAsTemplateCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:Icon Value="fa-solid fa-save" Width="16" Height="16" />
+                  <TextBlock Text="Save as Template" />
+                </StackPanel>
+              </Button>
+
+              <Button Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Padding="12,8"
+                      Command="{Binding ValidateJobCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:Icon Value="fa-solid fa-check-circle" Width="16" Height="16" />
+                  <TextBlock Text="Validate" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
+
+          <!-- Row 2: Job Details for Selected Job -->
+          <StackPanel Spacing="8" IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="Selected Job Details"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC" />
+
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedProfile.Name, FallbackValue='(No job selected)'}" Foreground="#FFFFFF" />
+
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedProfile.Description, FallbackValue='No description available'}" Foreground="#FFFFFF" TextWrapping="Wrap" />
+
+              <TextBlock Grid.Row="2" Grid.Column="0" Text="Type:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="User Job" Foreground="#FFFFFF" IsVisible="{Binding SelectedProfile.IsTemplate, Converter={StaticResource InvBool}, FallbackValue=false}" />
+                <TextBlock Text="Template" Foreground="#FFFFFF" IsVisible="{Binding SelectedProfile.IsTemplate, FallbackValue=false}" />
+                <TextBlock Text="(Read-Only)" Foreground="#858585" IsVisible="{Binding SelectedProfile.IsReadOnly, FallbackValue=false}" />
+              </StackPanel>
+
+              <TextBlock Grid.Row="3" Grid.Column="0" Text="Last Modified:" Foreground="#CCCCCC" FontWeight="SemiBold" />
+              <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedProfile.ModifiedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Never'}" Foreground="#FFFFFF" />
+            </Grid>
+          </StackPanel>
+
+          <!-- Row 3: No Selection Message -->
+          <TextBlock Text="Select a job profile to view details and perform operations"
+                     IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNull}}"
+                     Foreground="#858585" FontStyle="Italic"
+                     HorizontalAlignment="Center"
+                     Margin="0,20" />
+        </StackPanel>
+      </Border>
+
+      <!-- Import/Export Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Import / Export"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <!-- Import/Export Buttons -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+            <Button Width="150" Height="38"
+                    Command="{Binding ExportJobCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
+                <TextBlock Text="Export Selected" />
+              </StackPanel>
+            </Button>
+
+            <Button Width="150" Height="38"
+                    Command="{Binding ImportJobCommand}"
+                    Background="#0E639C"
+                    Foreground="White">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <icons:Icon Value="fa-solid fa-file-import" Width="14" Height="14" />
+                <TextBlock Text="Import Jobs" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <TextBlock Text="Export job profiles to share configurations or import jobs from backup files (JSON format)"
+                     FontSize="11"
+                     Foreground="#858585"
+                     Margin="0,4,0,0" />
+        </StackPanel>
+      </Border>
+
+      <!-- Status Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Status Information"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="#CCCCCC" />
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="4">
+              <TextBlock Text="Job Management:"
+                         Foreground="#CCCCCC"
+                         FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Profiles.Count, StringFormat='• {0} job profiles loaded'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+              <TextBlock Text="{Binding JobTemplates.Count, StringFormat='• {0} templates available'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="4">
+              <TextBlock Text="Current Status:"
+                         Foreground="#CCCCCC"
+                         FontWeight="SemiBold" />
+              <TextBlock Text="{Binding StatusMessage, StringFormat='• {0}'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+              <TextBlock Text="{Binding SelectedProfile.Name, StringFormat='• Selected: {0}', FallbackValue='• No job selected'}"
+                         Foreground="#858585"
+                         FontSize="12" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Loading Indicator -->
+          <StackPanel Orientation="Horizontal"
+                      Spacing="8"
+                      IsVisible="{Binding IsLoading}">
+            <icons:Icon Value="fa-solid fa-spinner"
+                        Width="16"
+                        Height="16"
+                        Foreground="#0E639C"
+                        Classes="spin" />
+            <TextBlock Text="Loading..."
+                       Foreground="#858585"
+                       FontSize="12" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+    </ScrollViewer>
+
+    <!-- Right Panel Activity Bar (when collapsed) -->
+    <Border Grid.Column="2"
+            x:Name="ActivityBar"
+            Background="#2D2D30"
+            BorderBrush="#464647"
+            BorderThickness="1,0,0,0"
+            Width="48"
+            IsVisible="True">
+      <StackPanel Spacing="8" Margin="8">
+        <!-- Job Info Toggle Button -->
+        <Button x:Name="JobInfoToggle"
+                Width="32"
+                Height="32"
+                Background="Transparent"
+                BorderThickness="0"
+                Click="OnJobInfoToggleClick"
+                ToolTip.Tip="Job Information">
+          <icons:Icon Value="fa-solid fa-info-circle"
+                      Width="16"
+                      Height="16"
+                      Foreground="#CCCCCC" />
+        </Button>
+
+        <!-- Other activity buttons can go here -->
+        <Button Width="32"
+                Height="32"
+                Background="Transparent"
+                BorderThickness="0"
+                ToolTip.Tip="Job History">
+          <icons:Icon Value="fa-solid fa-history"
+                      Width="16"
+                      Height="16"
+                      Foreground="#666666" />
+        </Button>
+
+        <Button Width="32"
+                Height="32"
+                Background="Transparent"
+                BorderThickness="0"
+                ToolTip.Tip="Job Templates">
+          <icons:Icon Value="fa-solid fa-file-alt"
+                      Width="16"
+                      Height="16"
+                      Foreground="#666666" />
+        </Button>
+      </StackPanel>
+    </Border>
+
+    <!-- GridSplitter for resizing -->
+    <GridSplitter Grid.Column="1"
+                  x:Name="JobInfoSplitter"
+                  Background="#464647"
+                  Width="4"
+                  IsVisible="False"
+                  VerticalAlignment="Stretch"
+                  ResizeDirection="Columns"
+                  Cursor="SizeWestEast" />
+
+    <!-- Job Information Panel -->
+    <Border Grid.Column="2"
+            x:Name="JobInfoPanel"
+            Background="#252526"
+            BorderBrush="#464647"
+            BorderThickness="1,0,0,0"
+            IsVisible="False">
+      <Grid RowDefinitions="Auto,*">
+        <!-- Panel Header with Close Button -->
+        <Border Grid.Row="0"
+                Background="#2D2D30"
+                BorderBrush="#464647"
+                BorderThickness="0,0,0,1"
+                Padding="12,8">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <icons:Icon Grid.Column="0"
+                        Value="fa-solid fa-info-circle"
+                        Width="16"
+                        Height="16"
+                        Foreground="#CCCCCC"
+                        VerticalAlignment="Center"
+                        Margin="0,0,8,0" />
+
+            <TextBlock Grid.Column="1"
+                       Text="Job Information"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC"
+                       VerticalAlignment="Center" />
+
+            <Button Grid.Column="2"
+                    x:Name="CloseJobInfoPanel"
+                    Width="24"
+                    Height="24"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Click="OnCloseJobInfoPanelClick"
+                    ToolTip.Tip="Close Panel">
+              <icons:Icon Value="fa-solid fa-times"
+                          Width="12"
+                          Height="12"
+                          Foreground="#CCCCCC" />
+            </Button>
+          </Grid>
+        </Border>
+
+        <!-- Job Info Display Content -->
+        <jobsViews:JobInfoDisplayView Grid.Row="1" x:Name="JobInfoDisplay" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

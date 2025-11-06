@@ -98,7 +98,37 @@ Never implement high-risk, broad refactors (e.g., file-scoped namespaces, Result
 
 - Pattern: Clean Architecture with MVVM (Avalonia + ReactiveUI) and Microsoft.Extensions.* stack
 - Projects:
-  - S7Tools (UI, ViewModels, Application services)
+  - **S7Tools** (UI, ViewModels, Application services)
+    - `ViewModels/` — Organized by category: Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
+    - `Views/` — Organized by category (mirrors ViewModels structure)
+    - `Services/` — Application-level services
+    - `Extensions/` — DI registration (ServiceCollectionExtensions.cs)
+  - **S7Tools.Core** (Domain, Interfaces, no external dependencies)
+    - `Models/` — Domain models organized by domain (Jobs, Configuration, etc.)
+    - `Services/Interfaces/` — Service contracts
+    - `Exceptions/` — Custom exception hierarchy
+  - **S7Tools.Infrastructure.Logging** (Logging provider, in-memory DataStore)
+- **Dependency Flow**: Application → Domain ← Infrastructure (all dependencies point inward)
+- **Service Registration**: Centralized in `ServiceCollectionExtensions.cs` (NEVER in Program.cs)
+
+### Namespace Conventions (Updated 2025-11-06)
+
+- **ViewModels**: `S7Tools.ViewModels.{Category}` where Category is:
+  - Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
+- **Views**: `S7Tools.Views.{Category}` (mirrors ViewModels categories)
+- **Core Models**: `S7Tools.Core.Models.{Domain}` (e.g., Jobs, Configuration)
+- **Services**: `S7Tools.Services.{Domain}` or `S7Tools.Core.Services.Interfaces`
+
+### ViewLocator Pattern
+
+The ViewLocator automatically resolves Views from ViewModels using namespace replacement:
+```csharp
+// Example resolution:
+// Input:  S7Tools.ViewModels.Pages.HomeViewModel
+// Output: S7Tools.Views.Pages.HomeView
+```
+
+This pattern works seamlessly with the categorized folder structure, eliminating the need for manual View registration.
   - S7Tools.Core (Domain models and interfaces; no external deps)
   - S7Tools.Infrastructure.Logging (Logging infrastructure only depends on Core + MEL)
   - S7Tools.Diagnostics (Developer tooling)

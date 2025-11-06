@@ -13,18 +13,34 @@ This document provides visual representations of the S7Tools architecture, patte
 │                         PRESENTATION LAYER                                 │
 │                            (S7Tools)                                       │
 │  ┌─────────────────────────────────────────────────────────────────────┐ │
-│  │                        VIEWS (Avalonia XAML)                         │ │
-│  │  • MainWindow.axaml          • SerialPortsSettingsView.axaml        │ │
-│  │  • LogViewerView.axaml       • SocatSettingsView.axaml              │ │
-│  │  • HomeView.axaml            • PowerSupplySettingsView.axaml        │ │
+│  │                        VIEWS (Avalonia XAML - Categorized)           │ │
+│  │  Base (MainWindow)                                                   │ │
+│  │  Controls (PropertyDisplayItem, SidebarSection,                      │ │
+│  │            SerialPortDiscoveryControl, CloseApplicationBehavior)     │ │
+│  │  Dialogs (ConfirmationDialog, InputDialog)                           │ │
+│  │  Jobs (JobsMain, JobsSidebar, JobWizard)                             │ │
+│  │  Layout (TaskManagerShell, LoggingTest)                              │ │
+│  │  Pages (Home, Connections, LogViewer, About, PlcInput)               │ │
+│  │  Profiles (SerialPortProfileEditContent, SocatProfileEditContent,    │ │
+│  │            PowerSupplyProfileEditContent)                            │ │
+│  │  Settings (Settings, SettingsCategories, General, Appearance,        │ │
+│  │            Logging, Advanced, SerialPorts, Socat, PowerSupply)       │ │
+│  │  Tasks (TaskManager, TaskManagerSidebar, TaskQueue)                  │ │
 │  └─────────────────────────────────────────────────────────────────────┘ │
 │                                     ↕                                      │
 │  ┌─────────────────────────────────────────────────────────────────────┐ │
-│  │                    VIEWMODELS (ReactiveUI)                           │ │
-│  │  • MainWindowViewModel       • SerialPortsSettingsViewModel         │ │
-│  │  • NavigationViewModel       • SocatSettingsViewModel               │ │
-│  │  • LogViewerViewModel        • PowerSupplySettingsViewModel         │ │
-│  │  • BottomPanelViewModel      • Profile Dialog ViewModels            │ │
+│  │                    VIEWMODELS (ReactiveUI - Categorized)             │ │
+│  │  Base (ViewModelBase, TabViewModel)                                  │ │
+│  │  Controls (PropertyDisplayItem, SidebarSection)                      │ │
+│  │  Dialogs (ConfirmationDialog, InputDialog)                           │ │
+│  │  Jobs (JobsManagement, JobWizard, JobWizardPlaceholder)              │ │
+│  │  Layout (MainWindow, Navigation, NavigationItem, BottomPanel,        │ │
+│  │          SettingsManagement, TaskManagerShell)                       │ │
+│  │  Pages (Home, Connections, LogViewer, About, PlcInput)               │ │
+│  │  Profiles (SerialPort, Socat, PowerSupply profiles)                  │ │
+│  │  Settings (Settings, General, Appearance, Logging, Advanced,         │ │
+│  │            SerialPorts, Socat, PowerSupply, SerialPortScanner)       │ │
+│  │  Tasks (TaskManager, TaskQueue, Task)                                │ │
 │  └─────────────────────────────────────────────────────────────────────┘ │
 │                                     ↕                                      │
 │  ┌─────────────────────────────────────────────────────────────────────┐ │
@@ -460,16 +476,16 @@ services.AddS7ToolsLogging(options =>
 public class SomeService
 {
     private readonly ILogger<SomeService> _logger;
-    
+
     public SomeService(ILogger<SomeService> logger)
     {
         _logger = logger;
     }
-    
+
     public async Task DoWorkAsync()
     {
         _logger.LogInformation("🔧 Starting work");
-        
+
         try
         {
             var result = await PerformAsync();

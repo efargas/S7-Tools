@@ -21,6 +21,13 @@ using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
 using S7Tools.Services.Tasking;
 using S7Tools.ViewModels;
+using S7Tools.ViewModels.Dialogs;
+using S7Tools.ViewModels.Jobs;
+using S7Tools.ViewModels.Layout;
+using S7Tools.ViewModels.Pages;
+using S7Tools.ViewModels.Profiles;
+using S7Tools.ViewModels.Settings;
+using S7Tools.ViewModels.Tasks;
 
 namespace S7Tools.Extensions;
 

@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using Avalonia.Data.Converters;
 using S7Tools.ViewModels.Profiles;
 
+using S7Tools.ViewModels.Controls;
 namespace S7Tools.Converters;
 
 /// <summary>

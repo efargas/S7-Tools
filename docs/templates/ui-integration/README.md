@@ -49,20 +49,24 @@ This folder contains scaffolded templates for implementing new features followin
 
 ```bash
 # From repository root
+# Choose appropriate category: Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
+CATEGORY="Pages"  # Example: for a page feature
+
 cp docs/templates/ui-integration/FeatureViewModel.template.cs \
-   src/S7Tools/ViewModels/MyFeatureViewModel.cs
+   src/S7Tools/ViewModels/${CATEGORY}/MyFeatureViewModel.cs
 
 cp docs/templates/ui-integration/FeatureSidebarView.template.axaml \
-   src/S7Tools/Views/MyFeatureSidebarView.axaml
+   src/S7Tools/Views/${CATEGORY}/MyFeatureSidebarView.axaml
 
 cp docs/templates/ui-integration/FeatureMainView.template.axaml \
-   src/S7Tools/Views/MyFeatureMainView.axaml
+   src/S7Tools/Views/${CATEGORY}/MyFeatureMainView.axaml
 ```
 
 ### Step 2: Replace Placeholders
 
 In all files, replace:
 - `[FEATURE_NAME]` → Your feature name (e.g., `Reports`, `Analytics`)
+- `[CATEGORY]` → Your category name (e.g., `Pages`, `Settings`)
 
 ### Step 3: Add Code-Behind
 
@@ -72,7 +76,7 @@ Create code-behind files for views:
 ```csharp
 using Avalonia.Controls;
 
-namespace S7Tools.Views;
+namespace S7Tools.Views.Pages;  // Update category as needed
 
 public partial class MyFeatureSidebarView : UserControl
 {
@@ -87,7 +91,7 @@ public partial class MyFeatureSidebarView : UserControl
 ```csharp
 using Avalonia.Controls;
 
-namespace S7Tools.Views;
+namespace S7Tools.Views.Pages;  // Update category as needed
 
 public partial class MyFeatureMainView : UserControl
 {
@@ -118,7 +122,7 @@ case "myfeature":
     SidebarTitle = "My Feature";
     MainContentTitle = "My Feature Management";
     ShowMainContentHeader = true;
-    
+
     MyFeatureViewModel? viewModel = CreateViewModel<MyFeatureViewModel>();
     CurrentContent = viewModel;
     MainContent = viewModel;
@@ -188,7 +192,7 @@ The ViewLocator uses these rules to map ViewModels to Views:
 | `MyFeatureSidebarViewModel` | `MyFeatureSidebarView` |
 | `MyFeatureDetailsViewModel` | `MyFeatureDetailsView` |
 
-**Important**: 
+**Important**:
 - Namespace must be `S7Tools.ViewModels` → `S7Tools.Views`
 - Suffix must be `ViewModel` → `View`
 
@@ -210,13 +214,13 @@ If you need a different view for the sidebar than the main content, add a DataTe
 
 ### 1. ViewLocator Can't Find View
 
-**Problem**: Error shows "Not Found: S7Tools.Views.MyFeatureView"
+**Problem**: Error shows "Not Found: S7Tools.Views.{Category}.MyFeatureView"
 
 **Solution**:
-- Verify ViewModel namespace is `S7Tools.ViewModels`
-- Verify View namespace is `S7Tools.Views`
-- Check class names follow the naming convention
-- Ensure View files are properly compiled (check `.csproj`)
+- Verify ViewModel namespace is `S7Tools.ViewModels.{Category}`
+- Verify View namespace is `S7Tools.Views.{Category}`
+- Verify category folders exist and match
+- Check file naming: `MyFeatureViewModel` → `MyFeatureView`
 
 ### 2. Sidebar Doesn't Update
 

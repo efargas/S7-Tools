@@ -10,7 +10,9 @@ using S7Tools.Core.Services.Interfaces;
 using S7Tools.Models;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
+using S7Tools.ViewModels.Profiles;
 using S7Tools.Views;
+using S7Tools.Views.Dialogs;
 
 namespace S7Tools.Services;
 
@@ -95,7 +97,7 @@ public class ProfileEditDialogService : IProfileEditDialogService
                     System.Diagnostics.Debug.WriteLine($"DEBUG: Creating ProfileEditDialog for {interaction.Input.ProfileType}");
 
                     // Create and setup profile edit dialog
-                    var dialog = new Views.ProfileEditDialog();
+                    var dialog = new Views.Dialogs.ProfileEditDialog();
                     dialog.SetupDialog(interaction.Input);
 
                     System.Diagnostics.Debug.WriteLine($"DEBUG: Dialog created and setup completed");

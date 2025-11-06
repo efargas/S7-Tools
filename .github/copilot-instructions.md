@@ -157,12 +157,28 @@ dotnet format  # Required before commit
 ## Key Files and Locations
 
 - **DI Registration**: `src/S7Tools/Extensions/ServiceCollectionExtensions.cs`
+- **ViewModels**: Organized by category in `src/S7Tools/ViewModels/`
+  - Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
+- **Views**: Organized by category in `src/S7Tools/Views/` (mirrors ViewModels structure)
+- **Domain Models**: `src/S7Tools.Core/Models/` (including `Jobs/JobManagerOptions.cs`)
 - **Architecture Patterns**: `.copilot-tracking/memory-bank/systemPatterns.md`
 - **Pattern Reference**: `PATTERNS_REFERENCE.md` (comprehensive pattern documentation)
 - **Code Review Reports**: `reviews/LATEST_REVIEW.md` (latest review)
 - **Project Documentation**: `.copilot-tracking/memory-bank/`
-- **Profile Templates**: All profiles in `src/S7Tools.Core/Models/`
 - **Custom Exceptions**: `src/S7Tools.Core/Exceptions/`
+
+## Namespace Conventions
+
+- **ViewModels**: `S7Tools.ViewModels.{Category}` (e.g., `S7Tools.ViewModels.Pages`, `S7Tools.ViewModels.Jobs`)
+- **Views**: `S7Tools.Views.{Category}` (e.g., `S7Tools.Views.Pages`, `S7Tools.Views.Jobs`)
+- **Core Models**: `S7Tools.Core.Models.{Domain}` (e.g., `S7Tools.Core.Models.Jobs`)
+- **Services**: `S7Tools.Services.{Domain}` (e.g., `S7Tools.Services.Jobs`)
+
+## ViewLocator Pattern
+
+The ViewLocator automatically resolves Views from ViewModels using namespace replacement:
+- `S7Tools.ViewModels.{Category}.{Name}ViewModel` → `S7Tools.Views.{Category}.{Name}View`
+- Works seamlessly with categorized folder structure
 
 ## Testing Requirements
 
@@ -186,7 +202,7 @@ Update Memory Bank after significant architectural changes or when requested wit
 ### Settings Refresh Pattern
 ViewModels that depend on settings implement `RefreshFromSettings()`:
 - Subscribe to `SettingsChanged` event with key filters
-- Extract directories from file path settings  
+- Extract directories from file path settings
 - Use `IPathService.ResolvePath()` for relative/absolute path handling
 - Implement three-tier fallback: resolved → profile-specific → default
 - Always unsubscribe in `Dispose()` to prevent memory leaks

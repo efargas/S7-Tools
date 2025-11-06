@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:S7Tools.ViewModels"
              xmlns:vmProfiles="clr-namespace:S7Tools.ViewModels.Profiles"
+             xmlns:vmControls="clr-namespace:S7Tools.ViewModels.Controls"
              xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
              xmlns:converters="clr-namespace:S7Tools.Converters"
              xmlns:views="clr-namespace:S7Tools.Views"
@@ -25,7 +26,7 @@
       </ItemsPanelTemplate>
     </ItemsControl.ItemsPanel>
     <ItemsControl.ItemTemplate>
-      <DataTemplate DataType="vmProfiles:PropertyDisplayItem">
+      <DataTemplate DataType="vmControls:PropertyDisplayItem">
         <Border Classes="PropertyItem">
           <StackPanel>
             <TextBlock Classes="PropertyLabel" Text="{Binding Label}" />

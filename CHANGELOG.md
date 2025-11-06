@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+### Changed
+
+- **ViewModels/Views Folder Reorganization** (2025-11-06): Implemented categorized folder structure for better code organization
+  - **ViewModels** now organized into 9 categories: Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
+  - **Views** now organized into 9 categories mirroring ViewModels structure
+  - **Namespaces updated** to `S7Tools.ViewModels.{Category}` and `S7Tools.Views.{Category}`
+  - **ViewLocator pattern** seamlessly supports categorized namespaces
+  - **XAML xmlns** declarations updated to category-specific namespaces
+  - All ~110 files moved using `git mv` to preserve history
+  - Benefits: Improved code discoverability, clearer feature boundaries, scalable architecture
+  - See `.copilot-tracking/memory-bank/REORGANIZATION_2025-11-06.md` for complete details
+
 ## [Constitution-1.0.0] - 2025-10-20
 
 ### Added

@@ -51,10 +51,34 @@ dotnet run --project src/S7Tools/S7Tools.csproj -- --diag
 
 ```
 src/
-	S7Tools/                      # UI (Avalonia app, Views/ViewModels/Services)
-		Extensions/ServiceCollectionExtensions.cs  # Central DI composition
+	S7Tools/                      # UI (Avalonia app)
+		ViewModels/               # Categorized ViewModels
+			Base/                 # Base classes (ViewModelBase)
+			Controls/             # Control-related ViewModels (PropertyDisplayItem)
+			Dialogs/              # Dialog ViewModels (Confirmation, Input)
+			Jobs/                 # Job management ViewModels
+			Layout/               # Layout ViewModels (MainWindow, Navigation, BottomPanel)
+			Pages/                # Page ViewModels (Home, Connections, LogViewer, About, PlcInput)
+			Profiles/             # Profile ViewModels (Serial, Socat, PowerSupply)
+			Settings/             # Settings ViewModels
+			Tasks/                # Task management ViewModels
+		Views/                    # Categorized Views (mirrors ViewModels structure)
+			Controls/             # Reusable controls (SidebarSection)
+			Dialogs/              # Dialog windows
+			Jobs/                 # Job-related views
+			Layout/               # Layout views (MainWindow, TaskManagerShell)
+			Pages/                # Page views
+			Profiles/             # Profile edit content views
+			Settings/             # Settings views
+			Tasks/                # Task views
+		Services/                 # Application services
+		Extensions/               # DI registration (ServiceCollectionExtensions.cs)
 	S7Tools.Core/                 # Domain interfaces, commands, validation, logging abstractions
-	S7Tools.Infrastructure.Logging/  # Custom logging provider and in‑memory datastore
+		Models/                   # Domain models
+			Jobs/                 # Job-related models (JobProfile, JobManagerOptions, etc.)
+		Services/Interfaces/      # Service contracts
+		Exceptions/               # Custom exception hierarchy
+	S7Tools.Infrastructure.Logging/  # Custom logging provider and in-memory datastore
 tests/                          # xUnit test projects per layer
 docs/                           # Architecture and additional documentation
 ```

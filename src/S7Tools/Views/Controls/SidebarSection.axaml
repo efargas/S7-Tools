@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:controls="using:S7Tools.Views.Controls"
+             mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="400"
+             x:Class="S7Tools.Views.Controls.SidebarSection"
+             x:DataType="controls:SidebarSection">
+
+  <UserControl.Styles>
+    <StyleInclude Source="/Styles/SidebarStyles.axaml" />
+  </UserControl.Styles>
+
+  <Border Classes="CategorySection">
+    <Expander IsExpanded="{Binding $parent[controls:SidebarSection].IsExpanded}">
+      <Expander.Header>
+        <Grid Background="Transparent" Height="32" Margin="4,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <icons:Icon Grid.Column="0" Classes="CategoryIcon ExpanderArrow" />
+          <icons:Icon Grid.Column="1" Classes="CategoryIcon" Value="{Binding $parent[controls:SidebarSection].Icon}" />
+          <TextBlock Grid.Column="2" Classes="CategoryHeader" Text="{Binding $parent[controls:SidebarSection].Title}" />
+        </Grid>
+      </Expander.Header>
+      <ListBox ItemsSource="{Binding $parent[controls:SidebarSection].ItemsSource}"
+               SelectedItem="{Binding $parent[controls:SidebarSection].SelectedItem, Mode=TwoWay}"
+               ItemTemplate="{Binding $parent[controls:SidebarSection].ItemTemplate}"
+               Classes="SidebarList"
+               Background="Transparent"
+               BorderThickness="0"
+               Margin="8,0,8,8"
+               SelectionMode="Single" />
+    </Expander>
+  </Border>
+
+</UserControl>
