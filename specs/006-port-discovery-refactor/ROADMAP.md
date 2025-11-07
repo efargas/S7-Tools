@@ -23,7 +23,7 @@ This document outlines the step-by-step implementation plan for refactoring the 
 ```xml
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:vm="using:S7Tools.ViewModels.Settings"
              xmlns:converters="using:S7Tools.Converters"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"

@@ -1,6 +1,6 @@
 # S7Tools Architectural Patterns Reference
-**Version**: 1.0  
-**Last Updated**: 2025-10-23  
+**Version**: 1.0
+**Last Updated**: 2025-10-23
 **Purpose**: Comprehensive reference for all architectural patterns used in S7Tools
 
 ---
@@ -29,14 +29,36 @@
 Domain (S7Tools.Core)
    ↑
 Application (S7Tools)
+   ├── ViewModels/     (Categorized: Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks)
+   ├── Views/          (Categorized: mirrors ViewModels structure)
+   ├── Services/       (Application services)
+   └── Extensions/     (DI configuration)
    ↑
 Infrastructure (S7Tools.Infrastructure.*)
 ```
+
+**Namespace Conventions** (Updated 2025-11-06):
+- ViewModels: `S7Tools.ViewModels.{Category}` (e.g., `S7Tools.ViewModels.Pages`)
+- Views: `S7Tools.Views.{Category}` (e.g., `S7Tools.Views.Pages`)
+- Core Models: `S7Tools.Core.Models.{Domain}` (e.g., `S7Tools.Core.Models.Jobs`)
+- Services: `S7Tools.Services.{Domain}` or `S7Tools.Core.Services.Interfaces`
+
+**Categories**:
+- **Base**: Base classes (ViewModelBase, ReactiveObject extensions)
+- **Controls**: Reusable control ViewModels (PropertyDisplayItem)
+- **Dialogs**: Dialog ViewModels (ConfirmationDialog, InputDialog)
+- **Jobs**: Job management ViewModels
+- **Layout**: Layout/shell ViewModels (MainWindow, Navigation, BottomPanel)
+- **Pages**: Page ViewModels (Home, Connections, LogViewer, About, PlcInput)
+- **Profiles**: Profile management ViewModels (Serial, Socat, PowerSupply)
+- **Settings**: Settings ViewModels
+- **Tasks**: Task management ViewModels
 
 **Rules**:
 - Domain has NO external dependencies
 - All dependencies point inward toward domain
 - Interfaces defined in domain, implemented in outer layers
+- ViewModels and Views organized by functional category, not layer
 
 **Example**:
 ```csharp
@@ -58,11 +80,45 @@ namespace S7Tools.Services
         // Implementation
     }
 }
+
+// ViewModels (Categorized)
+namespace S7Tools.ViewModels.Pages
+{
+    public class HomeViewModel : ViewModelBase
+    {
+        // Page ViewModel implementation
+    }
+}
+
+// Views (Categorized - mirrors ViewModels)
+namespace S7Tools.Views.Pages
+{
+    public partial class HomeView : UserControl
+    {
+        // View implementation
+    }
+}
+```
+
+**ViewLocator Pattern**:
+The ViewLocator automatically resolves Views from ViewModels:
+```csharp
+// Input:  S7Tools.ViewModels.Pages.HomeViewModel
+// Output: S7Tools.Views.Pages.HomeView
+
+// Works by replacing ".ViewModels." with ".Views." and "ViewModel" with "View"
 ```
 
 **References**:
 - `src/S7Tools.Core/` - Domain layer
+  - `Models/Jobs/` - Job domain models (JobProfile, JobManagerOptions, etc.)
+  - `Services/Interfaces/` - Service contracts
+  - `Exceptions/` - Custom exception hierarchy
 - `src/S7Tools/` - Application layer
+  - `ViewModels/` - Categorized by function (Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks)
+  - `Views/` - Categorized (mirrors ViewModels structure)
+  - `Services/` - Application services
+  - `Extensions/ServiceCollectionExtensions.cs` - DI registration
 - `src/S7Tools.Infrastructure.*/` - Infrastructure layer
 
 ---
@@ -92,10 +148,10 @@ public static class ServiceCollectionExtensions
 public class SomeViewModel
 {
     private readonly ISerialPortService _serialPortService;
-    
+
     public SomeViewModel(ISerialPortService serialPortService)
     {
-        _serialPortService = serialPortService 
+        _serialPortService = serialPortService
             ?? throw new ArgumentNullException(nameof(serialPortService));
     }
 }
@@ -120,14 +176,14 @@ public class SomeViewModel
 
 **Template Method Pattern Implementation**:
 ```csharp
-public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposable 
+public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposable
     where T : class, IProfileBase, new()
 {
     // Template methods - subclasses must implement
     protected abstract T CreateDefaultProfile();
-    protected abstract Task<ValidationResult> ValidateProfileAsync(T profile, 
+    protected abstract Task<ValidationResult> ValidateProfileAsync(T profile,
         CancellationToken ct);
-    
+
     // Standard implementation for all profiles
     public async Task<T> CreateAsync(T profile, CancellationToken ct = default)
     {
@@ -138,18 +194,18 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             var validationResult = await ValidateProfileAsync(profile, ct);
             if (!validationResult.IsValid)
                 throw new ValidationException("Profile", validationResult.Errors);
-            
+
             // Assign ID
             profile.Id = GetNextAvailableId();
-            
+
             // Set timestamps
             profile.CreatedAt = DateTime.UtcNow;
             profile.ModifiedAt = DateTime.UtcNow;
-            
+
             // Save
             _profiles.Add(profile);
             await SaveToFileAsync(ct).ConfigureAwait(false);
-            
+
             return profile;
         }
         finally
@@ -162,7 +218,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
 **Concrete Implementation Example**:
 ```csharp
-public class SerialPortProfileService : StandardProfileManager<SerialPortProfile>, 
+public class SerialPortProfileService : StandardProfileManager<SerialPortProfile>,
     ISerialPortProfileService
 {
     protected override SerialPortProfile CreateDefaultProfile()
@@ -175,20 +231,20 @@ public class SerialPortProfileService : StandardProfileManager<SerialPortProfile
             // ... other defaults
         };
     }
-    
+
     protected override async Task<ValidationResult> ValidateProfileAsync(
         SerialPortProfile profile, CancellationToken ct)
     {
         var errors = new List<ValidationError>();
-        
+
         if (string.IsNullOrWhiteSpace(profile.Device))
             errors.Add(new ValidationError("Device", "Device path is required"));
-        
+
         if (profile.BaudRate <= 0)
             errors.Add(new ValidationError("BaudRate", "Baud rate must be positive"));
-        
-        return errors.Count == 0 
-            ? ValidationResult.Success() 
+
+        return errors.Count == 0
+            ? ValidationResult.Success()
             : ValidationResult.Failure(errors.ToArray());
     }
 }
@@ -312,7 +368,7 @@ await _uiThreadService.InvokeAsync(() =>
 
 **Description**: Prevent resource conflicts during parallel task execution
 
-**Purpose**: 
+**Purpose**:
 - Prevent multiple tasks from using same serial port
 - Prevent multiple tasks from using same TCP port
 - Prevent multiple tasks from accessing same power supply
@@ -324,11 +380,11 @@ public class ResourceCoordinator : IResourceCoordinator
 {
     private readonly Dictionary<ResourceKey, ResourceState> _resources = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    
+
     public bool TryAcquire(IEnumerable<ResourceKey> keys)
     {
         var keyList = keys.ToList();
-        
+
         _semaphore.Wait();
         try
         {
@@ -338,13 +394,13 @@ public class ResourceCoordinator : IResourceCoordinator
                 if (_resources.TryGetValue(key, out var state) && state.IsLocked)
                     return false; // Any locked resource fails entire acquisition
             }
-            
+
             // All available - acquire ALL atomically
             foreach (var key in keyList)
             {
                 _resources[key] = new ResourceState { IsLocked = true, /*...*/ };
             }
-            
+
             return true;
         }
         finally
@@ -352,7 +408,7 @@ public class ResourceCoordinator : IResourceCoordinator
             _semaphore.Release();
         }
     }
-    
+
     public void Release(IEnumerable<ResourceKey> keys)
     {
         _semaphore.Wait();
@@ -498,7 +554,7 @@ public SomeViewModel()
         x => x.IsValid,
         x => x.HasChanges,
         (valid, changes) => valid && changes);
-    
+
     SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync, canExecute);
 }
 ```
@@ -519,7 +575,7 @@ public SomeViewModel()
 public SomeViewModel()
 {
     SaveCommand = ReactiveCommand.CreateFromTask(SaveAsync);
-    
+
     // Subscribe to command errors
     SaveCommand.ThrownExceptions
         .Subscribe(ex =>
@@ -546,35 +602,35 @@ public class SomeViewModel : ReactiveObject, IDisposable
 {
     private readonly CompositeDisposable _disposables = new();
     private bool _disposed;
-    
+
     public SomeViewModel()
     {
         // Add subscriptions to composite disposable
         this.WhenAnyValue(x => x.SearchText)
             .Subscribe(OnSearchTextChanged)
             .DisposeWith(_disposables);
-        
+
         SaveCommand.ThrownExceptions
             .Subscribe(HandleError)
             .DisposeWith(_disposables);
     }
-    
+
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
-    
+
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed) return;
-        
+
         if (disposing)
         {
             _disposables.Dispose();
             // Dispose other managed resources
         }
-        
+
         _disposed = true;
     }
 }
@@ -615,11 +671,11 @@ public interface IEnhancedBootloaderService : IBootloaderService
         TaskExecution taskExecution,
         JobProfileSet profiles,
         CancellationToken cancellationToken = default);
-    
+
     Task<ValidationResult> ValidateResourcesAsync(
         JobProfileSet profiles,
         CancellationToken cancellationToken = default);
-    
+
     void ConfigureRetryPolicy(RetryConfiguration configuration);
 }
 ```
@@ -633,7 +689,7 @@ public class EnhancedBootloaderService : IEnhancedBootloaderService
     private readonly IValidationService _validationService;
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
     private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
-    
+
     public async Task<byte[]> DumpWithTaskTrackingAsync(
         TaskExecution taskExecution,
         JobProfileSet profiles,
@@ -644,7 +700,7 @@ public class EnhancedBootloaderService : IEnhancedBootloaderService
         {
             // Update TaskExecution state
             taskExecution.UpdateState(TaskState.Running, "Initializing...");
-            
+
             // Create progress reporter that updates TaskExecution
             var progressReporter = new Progress<(string stage, double percent)>(
                 progress =>
@@ -653,7 +709,7 @@ public class EnhancedBootloaderService : IEnhancedBootloaderService
                     var operation = GetUserFriendlyOperationName(stage);
                     taskExecution.UpdateProgress(percent * 100.0, operation);
                 });
-            
+
             // Execute with retry logic
             return await ExecuteWithRetryAsync(
                 () => _baseBootloaderService.DumpAsync(
@@ -667,7 +723,7 @@ public class EnhancedBootloaderService : IEnhancedBootloaderService
             _operationSemaphore.Release();
         }
     }
-    
+
     // Delegate base interface to wrapped service
     public Task<byte[]> DumpAsync(
         JobProfileSet profiles,
@@ -706,14 +762,14 @@ public class RetryConfiguration
     public TimeSpan MaxRetryDelay { get; set; } = TimeSpan.FromSeconds(30);
     public double BackoffMultiplier { get; set; } = 2.0;
     public bool UseExponentialBackoff { get; set; } = true;
-    
+
     public static RetryConfiguration Conservative => new()
     {
         MaxAllRetries = 5,
         InitialRetryDelay = TimeSpan.FromSeconds(2),
         BackoffMultiplier = 2.5
     };
-    
+
     public static RetryConfiguration Aggressive => new()
     {
         MaxAllRetries = 1,
@@ -733,7 +789,7 @@ private async Task<T> ExecuteWithRetryAsync<T>(
 {
     var maxRetries = GetMaxRetriesForOperation(retryableOperation);
     var currentDelay = _retryConfiguration.InitialRetryDelay;
-    
+
     for (int attempt = 0; attempt <= maxRetries; attempt++)
     {
         try
@@ -743,10 +799,10 @@ private async Task<T> ExecuteWithRetryAsync<T>(
                 taskExecution.UpdateProgress(
                     taskExecution.ProgressPercentage,
                     $"Retrying operation (attempt {attempt + 1}/{maxRetries + 1})");
-                
+
                 await Task.Delay(currentDelay, cancellationToken);
             }
-            
+
             return await operation();
         }
         catch (OperationCanceledException)
@@ -755,10 +811,10 @@ private async Task<T> ExecuteWithRetryAsync<T>(
         }
         catch (Exception ex) when (attempt < maxRetries)
         {
-            _logger.LogWarning(ex, 
+            _logger.LogWarning(ex,
                 "Operation failed (attempt {Attempt}/{MaxAttempts}). Retrying...",
                 attempt + 1, maxRetries + 1);
-            
+
             // Calculate next delay with exponential backoff
             if (_retryConfiguration.UseExponentialBackoff)
             {
@@ -769,7 +825,7 @@ private async Task<T> ExecuteWithRetryAsync<T>(
             }
         }
     }
-    
+
     throw new BootloaderOperationException(
         $"Operation failed after {maxRetries + 1} attempts");
 }
@@ -804,11 +860,11 @@ public class TaskExecution
     public DateTime? StartedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
     public Dictionary<string, object> ProgressData { get; } = new();
-    
+
     public void UpdateState(TaskState newState, string? message = null)
     {
         State = newState;
-        
+
         // Automatic timestamp management
         switch (newState)
         {
@@ -824,24 +880,24 @@ public class TaskExecution
                 CompletedAt = DateTime.UtcNow;
                 break;
         }
-        
+
         if (!string.IsNullOrEmpty(message))
             CurrentOperation = message;
     }
-    
-    public void UpdateProgress(double percentage, string operation, 
+
+    public void UpdateProgress(double percentage, string operation,
         Dictionary<string, object>? progressData = null)
     {
         ProgressPercentage = Math.Clamp(percentage, 0.0, 100.0);
         CurrentOperation = operation;
-        
+
         if (progressData != null)
         {
             foreach (var kvp in progressData)
                 ProgressData[kvp.Key] = kvp.Value;
         }
     }
-    
+
     public TimeSpan? GetDuration()
     {
         if (StartedAt == null) return null;
@@ -888,11 +944,11 @@ public class EnhancedTaskScheduler : ITaskScheduler
         { TaskPriority.Normal, new Queue<TaskExecution>() },
         { TaskPriority.Low, new Queue<TaskExecution>() }
     };
-    
+
     private readonly List<TaskExecution> _runningTasks = new();
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
     private int _maxConcurrentTasks = 4;
-    
+
     public async Task<TaskExecution> ScheduleTaskAsync(
         TaskExecution task,
         CancellationToken cancellationToken = default)
@@ -903,10 +959,10 @@ public class EnhancedTaskScheduler : ITaskScheduler
             // Add to appropriate priority queue
             _queues[task.Priority].Enqueue(task);
             task.UpdateState(TaskState.Queued, "Waiting for execution");
-            
+
             // Try to start task if capacity available
             await TryStartNextTaskInternalAsync(cancellationToken);
-            
+
             return task;
         }
         finally
@@ -914,21 +970,21 @@ public class EnhancedTaskScheduler : ITaskScheduler
             _schedulerSemaphore.Release();
         }
     }
-    
+
     private async Task TryStartNextTaskInternalAsync(
         CancellationToken cancellationToken)
     {
         // Check if we have capacity
         if (_runningTasks.Count >= _maxConcurrentTasks)
             return;
-        
+
         // Find highest priority task with available resources
-        foreach (var priority in new[] { 
-            TaskPriority.Critical, TaskPriority.High, 
+        foreach (var priority in new[] {
+            TaskPriority.Critical, TaskPriority.High,
             TaskPriority.Normal, TaskPriority.Low })
         {
             var queue = _queues[priority];
-            
+
             foreach (var task in queue)
             {
                 // Check resource availability
@@ -936,10 +992,10 @@ public class EnhancedTaskScheduler : ITaskScheduler
                 {
                     queue.Dequeue();
                     _runningTasks.Add(task);
-                    
+
                     // Start execution asynchronously
                     _ = Task.Run(async () => await ExecuteTaskAsync(task, cancellationToken));
-                    
+
                     return;
                 }
             }
@@ -981,10 +1037,10 @@ S7ToolsException (base)
 public class S7ToolsException : Exception
 {
     public S7ToolsException(string message) : base(message) { }
-    
-    public S7ToolsException(string message, Exception innerException) 
+
+    public S7ToolsException(string message, Exception innerException)
         : base(message, innerException) { }
-    
+
     protected S7ToolsException(SerializationInfo info, StreamingContext context)
         : base(info, context) { }
 }
@@ -996,14 +1052,14 @@ public class ProfileException : S7ToolsException
 {
     public int? ProfileId { get; init; }
     public string? ProfileName { get; init; }
-    
+
     public ProfileException(string message, int profileId, string profileName)
         : base(message)
     {
         ProfileId = profileId;
         ProfileName = profileName;
     }
-    
+
     public ProfileException(string message, Exception innerException)
         : base(message, innerException) { }
 }
@@ -1017,7 +1073,7 @@ public class ProfileNotFoundException : ProfileException
         : base($"Profile with ID {profileId} was not found.", profileId, null)
     {
     }
-    
+
     public ProfileNotFoundException(string message, int profileId)
         : base(message, profileId, null)
     {
@@ -1030,14 +1086,14 @@ public class ProfileNotFoundException : ProfileException
 public async Task<T> UpdateAsync(T profile, CancellationToken ct = default)
 {
     T? existingProfile = _profiles.FirstOrDefault(p => p.Id == profile.Id);
-    
+
     if (existingProfile == null)
         throw new ProfileNotFoundException(profile.Id);
-    
+
     if (!existingProfile.CanModify())
         throw new ReadOnlyProfileModificationException(
             existingProfile.Id, existingProfile.Name);
-    
+
     // ... rest of implementation
 }
 ```
@@ -1093,10 +1149,10 @@ public async Task CreateAsync_ValidProfile_ShouldSucceed()
         Device = "/dev/ttyUSB0",
         BaudRate = 115200
     };
-    
+
     // Act
     var result = await service.CreateAsync(profile);
-    
+
     // Assert
     result.Should().NotBeNull();
     result.Id.Should().BeGreaterThan(0);
@@ -1128,10 +1184,10 @@ public async Task SomeOperationAsync_ShouldComplete()
 {
     // Arrange
     var service = CreateService();
-    
+
     // Act
     var result = await service.SomeOperationAsync();
-    
+
     // Assert
     result.Should().NotBeNull();
 }
@@ -1163,19 +1219,19 @@ public void SomeOperationAsync_ShouldComplete()
 public async Task MultipleOperations_ShouldCompleteInParallel()
 {
     var service = CreateService();
-    
+
     var tasks = new[]
     {
         service.Operation1Async(),
         service.Operation2Async(),
         service.Operation3Async()
     };
-    
+
     // ✅ CORRECT: await Task.WhenAll
     var results = await Task.WhenAll(tasks);
-    
+
     // ❌ INCORRECT: Task.WaitAll(tasks)
-    
+
     results.Should().HaveCount(3);
 }
 ```
@@ -1194,11 +1250,11 @@ public async Task UpdateAsync_NonExistentProfile_ShouldThrowNotFoundException()
     // Arrange
     var service = CreateService();
     var profile = new SerialPortProfile { Id = 999, Name = "Test" };
-    
+
     // Act & Assert
     var exception = await Assert.ThrowsAsync<ProfileNotFoundException>(
         () => service.UpdateAsync(profile));
-    
+
     exception.ProfileId.Should().Be(999);
 }
 ```
@@ -1211,11 +1267,11 @@ public async Task CreateAsync_DuplicateName_ShouldThrowWithMessage()
     // Arrange
     var service = CreateService();
     await service.CreateAsync(new SerialPortProfile { Name = "Existing" });
-    
+
     // Act & Assert
     var exception = await Assert.ThrowsAsync<DuplicateProfileNameException>(
         () => service.CreateAsync(new SerialPortProfile { Name = "Existing" }));
-    
+
     exception.Message.Should().Contain("already exists");
     exception.ExistingName.Should().Be("Existing");
 }

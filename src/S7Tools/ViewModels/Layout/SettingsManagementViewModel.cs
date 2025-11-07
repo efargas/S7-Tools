@@ -1,0 +1,601 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Reactive;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration;
+using S7Tools.Resources;
+using S7Tools.Services.Interfaces;
+
+namespace S7Tools.ViewModels.Layout;
+
+/// <summary>
+/// ViewModel for managing application settings and configuration.
+/// Handles all settings-related properties, commands, and persistence.
+/// </summary>
+public class SettingsManagementViewModel : ReactiveObject
+{
+    private readonly ILogger<SettingsManagementViewModel> _logger;
+    private readonly IFileDialogService? _fileDialogService;
+    private readonly IApplicationSettingsService _settingsService;
+
+    // Settings Properties - will be populated from ApplicationSettingsService
+    private string _defaultLogPath = string.Empty;
+    private string _exportPath = string.Empty;
+    private string _minimumLogLevel = "Information";
+    private bool _autoScrollLogs = true;
+    private bool _enableRollingLogs = true;
+    private bool _showTimestampInLogs = true;
+    private bool _showCategoryInLogs = true;
+    private bool _showLogLevelInLogs = true;
+    private string _settingsStatusMessage = UIStrings.Status_SettingsReady;
+    private string _currentSettingsFilePath = string.Empty;
+    private DateTime _settingsLastModified = DateTime.Now;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SettingsManagementViewModel"/> class for design-time.
+    /// </summary>
+    public SettingsManagementViewModel() : this(CreateDesignTimeLogger(), CreateDesignTimeApplicationSettingsService())
+    {
+    }
+
+    /// <summary>
+    /// Creates a design-time logger for the designer.
+    /// </summary>
+    /// <returns>A logger instance for design-time use.</returns>
+    private static ILogger<SettingsManagementViewModel> CreateDesignTimeLogger()
+    {
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
+        return loggerFactory.CreateLogger<SettingsManagementViewModel>();
+    }
+
+    /// <summary>
+    /// Creates a design-time application settings service for the designer.
+    /// </summary>
+    /// <returns>An application settings service instance for design-time use.</returns>
+    private static IApplicationSettingsService CreateDesignTimeApplicationSettingsService()
+    {
+        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
+        ILogger<Services.ApplicationSettingsService> settingsLogger = loggerFactory.CreateLogger<Services.ApplicationSettingsService>();
+        ILogger<Services.PathService> pathLogger = loggerFactory.CreateLogger<Services.PathService>();
+
+        // Create a mock path service for design time
+        var pathService = new Services.PathService(pathLogger);
+        return new Services.ApplicationSettingsService(settingsLogger, pathService);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SettingsManagementViewModel"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="settingsService">The application settings service.</param>
+    /// <param name="fileDialogService">The file dialog service (optional).</param>
+    public SettingsManagementViewModel(
+        ILogger<SettingsManagementViewModel> logger,
+        IApplicationSettingsService settingsService,
+        IFileDialogService? fileDialogService = null)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _fileDialogService = fileDialogService;
+
+        // Initialize commands
+        BrowseDefaultLogPathCommand = ReactiveCommand.CreateFromTask(BrowseDefaultLogPathAsync);
+        BrowseExportPathCommand = ReactiveCommand.CreateFromTask(BrowseExportPathAsync);
+        SaveSettingsCommand = ReactiveCommand.CreateFromTask(SaveSettingsAsync);
+        LoadSettingsCommand = ReactiveCommand.CreateFromTask(LoadSettingsAsync);
+        ResetSettingsCommand = ReactiveCommand.CreateFromTask(ResetSettingsAsync);
+        OpenSettingsFolderCommand = ReactiveCommand.CreateFromTask(OpenSettingsFolderAsync);
+
+        // Load current settings from service
+        RefreshFromSettings();
+
+        // Subscribe to settings changes
+        _settingsService.SettingsChanged += (_, _) => RefreshFromSettings();
+
+        _logger.LogDebug("SettingsManagementViewModel initialized");
+    }
+
+    #region Properties
+
+    /// <summary>
+    /// Gets or sets the default log path.
+    /// </summary>
+    public string DefaultLogPath
+    {
+        get => _defaultLogPath;
+        set => this.RaiseAndSetIfChanged(ref _defaultLogPath, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the export path.
+    /// </summary>
+    public string ExportPath
+    {
+        get => _exportPath;
+        set => this.RaiseAndSetIfChanged(ref _exportPath, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the minimum log level.
+    /// </summary>
+    public string MinimumLogLevel
+    {
+        get => _minimumLogLevel;
+        set => this.RaiseAndSetIfChanged(ref _minimumLogLevel, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to auto-scroll logs.
+    /// </summary>
+    public bool AutoScrollLogs
+    {
+        get => _autoScrollLogs;
+        set => this.RaiseAndSetIfChanged(ref _autoScrollLogs, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to enable rolling log files.
+    /// </summary>
+    public bool EnableRollingLogs
+    {
+        get => _enableRollingLogs;
+        set => this.RaiseAndSetIfChanged(ref _enableRollingLogs, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show timestamp in logs.
+    /// </summary>
+    public bool ShowTimestampInLogs
+    {
+        get => _showTimestampInLogs;
+        set => this.RaiseAndSetIfChanged(ref _showTimestampInLogs, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show category in logs.
+    /// </summary>
+    public bool ShowCategoryInLogs
+    {
+        get => _showCategoryInLogs;
+        set => this.RaiseAndSetIfChanged(ref _showCategoryInLogs, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show log level in logs.
+    /// </summary>
+    public bool ShowLogLevelInLogs
+    {
+        get => _showLogLevelInLogs;
+        set => this.RaiseAndSetIfChanged(ref _showLogLevelInLogs, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the settings status message.
+    /// </summary>
+    public string SettingsStatusMessage
+    {
+        get => _settingsStatusMessage;
+        set => this.RaiseAndSetIfChanged(ref _settingsStatusMessage, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the current settings file path.
+    /// </summary>
+    public string CurrentSettingsFilePath
+    {
+        get => _currentSettingsFilePath;
+        set => this.RaiseAndSetIfChanged(ref _currentSettingsFilePath, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the settings last modified date.
+    /// </summary>
+    public DateTime SettingsLastModified
+    {
+        get => _settingsLastModified;
+        set => this.RaiseAndSetIfChanged(ref _settingsLastModified, value);
+    }
+
+    #endregion
+
+    #region Commands
+
+    /// <summary>
+    /// Gets the command to browse for default log path.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> BrowseDefaultLogPathCommand { get; }
+
+    /// <summary>
+    /// Gets the command to browse for export path.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> BrowseExportPathCommand { get; }
+
+    /// <summary>
+    /// Gets the command to save settings.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to load settings.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> LoadSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to reset settings to defaults.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> ResetSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to open settings folder.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> OpenSettingsFolderCommand { get; }
+
+    #endregion
+
+    #region Command Implementations
+
+    /// <summary>
+    /// Browses for the default log path.
+    /// </summary>
+    private async Task BrowseDefaultLogPathAsync()
+    {
+        try
+        {
+            if (_fileDialogService != null)
+            {
+                string? selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                    "Select Default Log Path",
+                    DefaultLogPath);
+
+                if (!string.IsNullOrEmpty(selectedPath))
+                {
+                    DefaultLogPath = selectedPath;
+                    SettingsStatusMessage = UIStrings.Status_DefaultLogPathUpdatedSuccessfully;
+                    _logger.LogInformation("Default log path updated to: {Path}", selectedPath);
+                }
+                else
+                {
+                    SettingsStatusMessage = UIStrings.Status_FolderSelectionCancelled;
+                }
+            }
+            else
+            {
+                SettingsStatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
+                _logger.LogWarning("File dialog service not available for default log path selection");
+            }
+        }
+        catch (Exception ex)
+        {
+            SettingsStatusMessage = $"Failed to browse for default log path: {ex.Message}";
+            _logger.LogError(ex, "Failed to browse for default log path");
+        }
+    }
+
+    /// <summary>
+    /// Browses for the export path.
+    /// </summary>
+    private async Task BrowseExportPathAsync()
+    {
+        try
+        {
+            if (_fileDialogService != null)
+            {
+                string? selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                    "Select Export Path",
+                    ExportPath);
+
+                if (!string.IsNullOrEmpty(selectedPath))
+                {
+                    ExportPath = selectedPath;
+                    SettingsStatusMessage = UIStrings.Status_ExportPathUpdatedSuccessfully;
+                    _logger.LogInformation("Export path updated to: {Path}", selectedPath);
+                }
+                else
+                {
+                    SettingsStatusMessage = UIStrings.Status_FolderSelectionCancelled;
+                }
+            }
+            else
+            {
+                SettingsStatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
+                _logger.LogWarning("File dialog service not available for export path selection");
+            }
+        }
+        catch (Exception ex)
+        {
+            SettingsStatusMessage = $"Failed to browse for export path: {ex.Message}";
+            _logger.LogError(ex, "Failed to browse for export path");
+        }
+    }
+
+    /// <summary>
+    /// Loads settings from the service into the ViewModel properties.
+    /// </summary>
+    private void RefreshFromSettings()
+    {
+        try
+        {
+            // Load settings using the new ApplicationSettingsService
+            DefaultLogPath = _settingsService.GetSetting<string>("logging.logDirectory", "Resources/Logs/Main");
+            ExportPath = _settingsService.GetSetting<string>("logging.exportDirectory", "Resources/Logs/Exported");
+            MinimumLogLevel = _settingsService.GetSetting<string>("logging.level", "Information");
+            AutoScrollLogs = _settingsService.GetSetting<bool>("ui.autoScrollLogs", true);
+            EnableRollingLogs = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
+            ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
+            ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
+            ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
+
+            CurrentSettingsFilePath = "Resources/AppSettings/AppSettings.json";
+
+            try
+            {
+                var fileInfo = new System.IO.FileInfo(CurrentSettingsFilePath);
+                SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.Now;
+            }
+            catch
+            {
+                SettingsLastModified = DateTime.Now;
+            }
+
+            _logger.LogDebug("Settings loaded from service");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load settings from service");
+        }
+    }
+
+    /// <summary>
+    /// Saves the current ViewModel properties to settings.
+    /// </summary>
+    private async Task SaveSettingsAsync()
+    {
+        try
+        {
+            SettingsStatusMessage = UIStrings.Status_SavingSettings;
+
+            // Create dictionary of settings to save
+            var userSettings = new Dictionary<string, object>
+            {
+                ["logging.logDirectory"] = DefaultLogPath,
+                ["logging.exportDirectory"] = ExportPath,
+                ["logging.level"] = MinimumLogLevel,
+                ["ui.autoScrollLogs"] = AutoScrollLogs,
+                ["logging.enableFileLogging"] = EnableRollingLogs,
+                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
+                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
+                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
+            };
+
+            await _settingsService.SaveUserSettingsAsync(userSettings);
+
+            SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
+            SettingsLastModified = DateTime.Now;
+            _logger.LogInformation("Settings saved to {Path}", CurrentSettingsFilePath);
+        }
+        catch (Exception ex)
+        {
+            SettingsStatusMessage = $"Failed to save settings: {ex.Message}";
+            _logger.LogError(ex, "Failed to save settings");
+        }
+    }
+
+    /// <summary>
+    /// Loads settings from file.
+    /// </summary>
+    private async Task LoadSettingsAsync()
+    {
+        try
+        {
+            // Load settings from file using the service
+            await _settingsService.LoadSettingsAsync();
+
+            // Update ViewModel properties from loaded settings
+            RefreshFromSettings();
+
+            SettingsStatusMessage = UIStrings.Status_SettingsLoadedSuccessfully;
+            SettingsLastModified = DateTime.Now;
+            _logger.LogInformation("Settings loaded from {Path}", CurrentSettingsFilePath);
+        }
+        catch (Exception ex)
+        {
+            SettingsStatusMessage = $"Failed to load settings: {ex.Message}";
+            _logger.LogError(ex, "Failed to load settings");
+        }
+    }
+
+    /// <summary>
+    /// Resets all settings to their default values.
+    /// </summary>
+    private async Task ResetSettingsAsync()
+    {
+        try
+        {
+            // Reset to defaults using the service
+            await _settingsService.RestoreDefaultsAsync();
+
+            // Update ViewModel properties from reset settings
+            RefreshFromSettings();
+
+            SettingsStatusMessage = UIStrings.Status_SettingsResetToDefaults;
+            _logger.LogInformation("Settings reset to default values");
+        }
+        catch (Exception ex)
+        {
+            SettingsStatusMessage = $"Failed to reset settings: {ex.Message}";
+            _logger.LogError(ex, "Failed to reset settings");
+        }
+    }
+
+    /// <summary>
+    /// Opens the settings folder in the file explorer.
+    /// </summary>
+    private async Task OpenSettingsFolderAsync()
+    {
+        try
+        {
+            // Use a simple approach for now - this functionality would need OS-specific implementation
+            string? settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath);
+            SettingsStatusMessage = $"Settings folder: {settingsDir}";
+            _logger.LogInformation("Settings folder: {Path}", settingsDir);
+
+            await Task.CompletedTask; // Placeholder for actual folder opening logic
+        }
+        catch (Exception ex)
+        {
+            SettingsStatusMessage = $"Failed to open settings folder: {ex.Message}";
+            _logger.LogError(ex, "Failed to open settings folder");
+        }
+    }
+
+    #endregion
+
+    #region Public Methods
+
+    /// <summary>
+    /// Validates the current settings configuration.
+    /// </summary>
+    /// <returns>True if settings are valid, false otherwise.</returns>
+    public bool ValidateSettings()
+    {
+        try
+        {
+            // Validate paths exist or can be created
+            if (!string.IsNullOrEmpty(DefaultLogPath))
+            {
+                var logDir = new System.IO.DirectoryInfo(DefaultLogPath);
+                if (!logDir.Exists)
+                {
+                    // Try to create the directory
+                    logDir.Create();
+                }
+            }
+
+            if (!string.IsNullOrEmpty(ExportPath))
+            {
+                var exportDir = new System.IO.DirectoryInfo(ExportPath);
+                if (!exportDir.Exists)
+                {
+                    // Try to create the directory
+                    exportDir.Create();
+                }
+            }
+
+            // Validate log level
+            string[] validLogLevels = new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };
+            if (!validLogLevels.Contains(MinimumLogLevel))
+            {
+                _logger.LogWarning("Invalid log level: {LogLevel}. Resetting to Information.", MinimumLogLevel);
+                MinimumLogLevel = "Information";
+            }
+
+            _logger.LogDebug("Settings validation completed successfully");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Settings validation failed");
+            SettingsStatusMessage = $"Settings validation failed: {ex.Message}";
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Exports the current settings to a JSON string.
+    /// </summary>
+    /// <returns>JSON representation of the current settings.</returns>
+    public string ExportSettingsToJson()
+    {
+        try
+        {
+            // Create a representation of current settings from ViewModel
+            var currentSettings = new Dictionary<string, object>
+            {
+                ["logging.logDirectory"] = DefaultLogPath,
+                ["logging.exportDirectory"] = ExportPath,
+                ["logging.level"] = MinimumLogLevel,
+                ["ui.autoScrollLogs"] = AutoScrollLogs,
+                ["logging.enableFileLogging"] = EnableRollingLogs,
+                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
+                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
+                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
+            };
+
+            // Serialize to JSON with pretty formatting
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
+            string json = JsonSerializer.Serialize(currentSettings, options);
+            _logger.LogInformation("Settings exported to JSON ({Length} characters)", json.Length);
+
+            return json;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to export settings to JSON");
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Imports settings from a JSON string.
+    /// </summary>
+    /// <param name="json">The JSON string containing settings.</param>
+    /// <returns>True if import was successful, false otherwise.</returns>
+    public bool ImportSettingsFromJson(string json)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(json))
+            {
+                _logger.LogWarning("Cannot import settings from empty JSON");
+                SettingsStatusMessage = UIStrings.Status_CannotImportEmptySettings;
+                return false;
+            }
+
+            // Deserialize JSON to Dictionary
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                PropertyNameCaseInsensitive = true
+            };
+
+            Dictionary<string, object>? importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
+
+            if (importedSettings == null)
+            {
+                _logger.LogWarning("Failed to deserialize settings from JSON");
+                SettingsStatusMessage = UIStrings.Status_InvalidSettingsFormat;
+                return false;
+            }
+
+            // Save settings using the service
+            _ = _settingsService.SaveUserSettingsAsync(importedSettings);
+
+            // Update ViewModel properties from imported settings
+            RefreshFromSettings();
+
+            _logger.LogInformation("Settings imported from JSON successfully");
+            SettingsStatusMessage = UIStrings.Status_SettingsImportedSuccessfully;
+            SettingsLastModified = DateTime.Now;
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to import settings from JSON");
+            SettingsStatusMessage = $"Failed to import settings: {ex.Message}";
+            return false;
+        }
+    }
+
+    #endregion
+}

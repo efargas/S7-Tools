@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Layout"
+             xmlns:controls="using:S7Tools.Views.Controls"
+             mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="600"
+             x:Class="S7Tools.Views.Tasks.TaskManagerSidebarView"
+             x:DataType="vm:TaskManagerShellViewModel">
+
+  <Design.DataContext>
+    <vm:TaskManagerShellViewModel />
+  </Design.DataContext>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="0" Margin="0">
+      <controls:SidebarSection Title="TASK MANAGEMENT"
+                               Icon="fa-solid fa-tasks"
+                               ItemsSource="{Binding Categories}"
+                               SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
+                               IsExpanded="True" />
+    </StackPanel>
+  </ScrollViewer>
+
+</UserControl>
