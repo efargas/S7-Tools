@@ -1,7 +1,9 @@
 # S7Tools Architectural Patterns Reference
-**Version**: 1.0
-**Last Updated**: 2025-10-23
+**Version**: 1.1
+**Last Updated**: 2025-11-07
 **Purpose**: Comprehensive reference for all architectural patterns used in S7Tools
+
+**Note**: Version 1.1 includes ViewModels/Views categorization (November 6, 2025) and post-reorganization validation (November 7, 2025).
 
 ---
 
