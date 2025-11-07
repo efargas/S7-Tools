@@ -7,11 +7,12 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.ViewModels.Base;
 
-namespace S7Tools.ViewModels;
+namespace S7Tools.ViewModels.[CATEGORY];  // Replace [CATEGORY] with: Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, or Tasks
 
 /// <summary>
 /// ViewModel for [FEATURE_NAME] feature with sidebar and main content integration.
 /// Follows the S7Tools UI integration pattern: Activity Bar → Side Panel → Main Content.
+/// Category: [CATEGORY] - Choose from Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
 /// </summary>
 public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
 {

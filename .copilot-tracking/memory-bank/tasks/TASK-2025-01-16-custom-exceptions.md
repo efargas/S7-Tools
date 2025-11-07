@@ -6,6 +6,8 @@
 **Priority:** High
 **Type:** Code Quality Improvement
 
+**Note**: This is a historical task document. Test counts reflect the state at task completion (206 tests). Current test suite has 308 tests (99.7% pass rate) as of November 2025.
+
 ## Original Request
 
 Implement custom domain-specific exceptions across all services to replace generic `InvalidOperationException` and `IOException` with semantic exception types that clearly indicate the type of error.

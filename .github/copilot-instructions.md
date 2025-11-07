@@ -147,7 +147,7 @@ SelectedProfile = profiles.FirstOrDefault(p => p.Id == targetId);
 ```bash
 # Essential commands
 dotnet build src/S7Tools.sln --configuration Debug
-dotnet test  # Must maintain 100% passing tests
+dotnet test  # Must maintain 99.7%+ passing tests (308 tests, 1 intentionally skipped)
 dotnet run --project src/S7Tools -- --diag  # Diagnostic mode
 
 # Code quality
@@ -184,7 +184,7 @@ The ViewLocator automatically resolves Views from ViewModels using namespace rep
 
 - Structure: AAA pattern (Arrange-Act-Assert)
 - Async tests: Use `async Task`, avoid `.Wait()` or `.Result`
-- Maintain 100% test pass rate
+- Maintain 99.7%+ test pass rate (308 tests, 1 intentionally skipped)
 - Test exception scenarios with specific exception types
 
 ## Memory Bank Integration

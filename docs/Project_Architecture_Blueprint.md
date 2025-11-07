@@ -1,6 +1,8 @@
 # S7Tools — Project Architecture Blueprint
 
-Generated on: 2025-10-16
+**Version**: 1.1
+**Generated on**: 2025-10-16
+**Last Updated**: 2025-11-07
 
 This document analyzes and captures the architecture of the S7Tools repository to maintain consistency and guide future development. It reflects the actual implementation observed in the codebase (not an idealized template).
 

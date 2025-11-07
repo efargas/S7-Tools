@@ -1,5 +1,7 @@
 # Code Review Documentation Index
 
+**Note**: This directory contains historical code reviews. Test counts and metrics reflect the state at review time. Current project status: 308 tests (99.7% pass rate), Quality Grade A+ (98/100) as of November 2025.
+
 This directory contains comprehensive code reviews for the S7Tools project.
 
 ---
