@@ -395,12 +395,10 @@ public class MyFeatureViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _portDiscovery, value);
     }
     
-    public MyFeatureViewModel(IServiceProvider serviceProvider)
+    // Prefer constructor injection for better testability and DI best practices
+    public MyFeatureViewModel(SerialPortDiscoveryViewModel portDiscovery)
     {
-        // Create port discovery instance
-        PortDiscovery = new SerialPortDiscoveryViewModel(
-            serviceProvider.GetRequiredService<ISerialPortService>(),
-            serviceProvider.GetRequiredService<ILogger<SerialPortDiscoveryViewModel>>());
+        PortDiscovery = portDiscovery ?? throw new ArgumentNullException(nameof(portDiscovery));
     }
 }
 ```
