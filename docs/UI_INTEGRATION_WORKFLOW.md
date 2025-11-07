@@ -1,7 +1,7 @@
 # UI Integration Workflow
 
-**Last Updated**: 2025-10-24
-**Version**: 1.0
+**Last Updated**: 2025-11-07
+**Version**: 1.1
 
 This document explains the S7Tools UI integration pattern: how components connect from the Activity Bar through Side Panels to Main Content Views.
 

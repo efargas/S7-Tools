@@ -1,6 +1,6 @@
-# System Patterns: S7Tools — Consolidated Architecture Guide (v2.0)
+# System Patterns: S7Tools — Consolidated Architecture Guide (v2.1)
 
-Last Updated: 2025-10-20
+Last Updated: 2025-11-07
 Scope: Architecture, patterns, rules, critical fixes, logging/debugging, localization, do/don't, memory bank usage, task workflow, templates, and testing standards.
 
 This living guide consolidates the current rules and lessons for S7Tools. It supersedes previous scattered notes and removes deprecated or duplicate content.

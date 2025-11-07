@@ -1,8 +1,11 @@
 # S7Tools System Architecture Diagram
 
+**Version**: 1.1
+**Last Updated**: 2025-11-07
+
 ## Overview
 
-This document provides visual representations of the S7Tools architecture, patterns, and component relationships.
+This document provides visual representations of the S7Tools architecture, patterns, and component relationships. Updated to reflect the ViewModels/Views categorization (November 6-7, 2025).
 
 ---
 
