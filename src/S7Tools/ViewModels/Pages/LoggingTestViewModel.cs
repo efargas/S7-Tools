@@ -82,8 +82,8 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
         // Set up reactive pattern for button pressed message clearing
         this.WhenAnyValue(x => x.LastButtonPressed)
             .Where(name => !string.IsNullOrEmpty(name))
-            .SelectMany(_ => Observable.Timer(TimeSpan.FromSeconds(3)))
-            .ObserveOn(RxApp.MainThreadScheduler)
+            .Select(_ => Observable.Timer(TimeSpan.FromSeconds(3), RxApp.MainThreadScheduler))
+            .Switch()
             .Subscribe(_ =>
             {
                 LastButtonPressed = "";
