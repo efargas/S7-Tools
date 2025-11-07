@@ -276,14 +276,21 @@ public class JobsManagementViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _mainContent, value);
     }
     
+    // Add a factory to the ViewModel's constructor
+    private readonly Func<JobProfile, JobDetailsViewModel> _jobDetailsViewModelFactory;
+
+    public JobsManagementViewModel(Func<JobProfile, JobDetailsViewModel> jobDetailsViewModelFactory)
+    {
+        _jobDetailsViewModelFactory = jobDetailsViewModelFactory;
+    }
+
     private void OnJobSelected(JobProfile? job)
     {
         if (job != null)
         {
-            // Show job details in main content
-            MainContent = new JobDetailsViewModel(job);
+            // Use the factory to create the details ViewModel
+            MainContent = _jobDetailsViewModelFactory(job);
         }
-    }
 }
 ```
 
