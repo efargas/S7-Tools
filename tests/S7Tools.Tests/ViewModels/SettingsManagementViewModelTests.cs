@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
-using S7Tools.ViewModels;
+using S7Tools.ViewModels.Layout;
 using Xunit;
 
 namespace S7Tools.Tests.ViewModels;

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using Xunit;
 using S7Tools.Converters;
+using S7Tools.ViewModels.Controls;
 using S7Tools.ViewModels.Profiles;
 
 namespace S7Tools.Tests.Converters;
