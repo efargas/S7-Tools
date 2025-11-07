@@ -300,7 +300,8 @@ public static class ServiceCollectionExtensions
             provider.GetRequiredService<IClipboardService>(),
             provider.GetRequiredService<IApplicationSettingsService>(),
             provider.GetService<IFileDialogService>(),
-            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>()));
+            provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<MainWindowViewModel>>(),
+            provider));
 
         // Add Specialized ViewModels for MainWindow decomposition
         services.TryAddSingleton<NavigationViewModel>();
@@ -593,23 +594,107 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
 
-        // Save Layout Service configuration
-        ILayoutService? layoutService = serviceProvider.GetService<ILayoutService>();
-        if (layoutService != null)
+        var logger = serviceProvider.GetService<ILogger<App>>();
+        logger?.LogInformation("Starting application shutdown sequence");
+
+        try
         {
-            await layoutService.SaveLayoutAsync().ConfigureAwait(false);
+            // Save Layout Service configuration
+            ILayoutService? layoutService = serviceProvider.GetService<ILayoutService>();
+            if (layoutService != null)
+            {
+                logger?.LogDebug("Saving layout configuration");
+                await layoutService.SaveLayoutAsync().ConfigureAwait(false);
+            }
+
+            // Save Theme Service configuration
+            IThemeService? themeService = serviceProvider.GetService<IThemeService>();
+            if (themeService != null)
+            {
+                logger?.LogDebug("Saving theme configuration");
+                await themeService.SaveThemeConfigurationAsync().ConfigureAwait(false);
+            }
+
+            // Dispose all IDisposable services with error handling
+            await DisposeServicesAsync(serviceProvider, logger).ConfigureAwait(false);
+
+            logger?.LogInformation("Application shutdown sequence completed successfully");
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Error during application shutdown sequence");
+            throw; // Re-throw to ensure calling code knows about shutdown failures
+        }
+    }
+
+    /// <summary>
+    /// Disposes all IDisposable services in the service provider.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider containing services to dispose.</param>
+    /// <param name="logger">Logger for diagnostic messages.</param>
+    /// <returns>A task representing the asynchronous dispose operation.</returns>
+    private static async Task DisposeServicesAsync(IServiceProvider serviceProvider, ILogger? logger)
+    {
+        // List of service types to dispose in specific order (critical services first)
+        var serviceTypes = new[]
+        {
+            // Critical infrastructure services
+            typeof(ITaskScheduler),
+            typeof(IS7ConnectionProvider),
+            typeof(IPowerSupplyService),
+            typeof(ISocatService),
+            typeof(ISerialPortService),
+
+            // Profile management services
+            typeof(ISerialPortProfileService),
+            typeof(ISocatProfileService),
+            typeof(IPowerSupplyProfileService),
+
+            // UI and logging services
+            typeof(IUIRefreshService),
+            typeof(FileLogWriter),
+            typeof(S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore)
+        };
+
+        foreach (Type serviceType in serviceTypes)
+        {
+            try
+            {
+                var service = serviceProvider.GetService(serviceType);
+                if (service is IDisposable disposable)
+                {
+                    logger?.LogDebug("Disposing service: {ServiceType}", serviceType.Name);
+                    disposable.Dispose();
+                }
+                else if (service is IAsyncDisposable asyncDisposable)
+                {
+                    logger?.LogDebug("Disposing async service: {ServiceType}", serviceType.Name);
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger?.LogWarning(ex, "Error disposing service {ServiceType}", serviceType.Name);
+                // Continue with other services even if one fails
+            }
         }
 
-        // Save Theme Service configuration
-        IThemeService? themeService = serviceProvider.GetService<IThemeService>();
-        if (themeService != null)
+        // Dispose logging infrastructure last
+        try
         {
-            await themeService.SaveThemeConfigurationAsync().ConfigureAwait(false);
+            S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore? logDataStore =
+                serviceProvider.GetService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
+            if (logDataStore is IDisposable disposableLogStore)
+            {
+                logger?.LogDebug("Disposing log data store");
+                disposableLogStore.Dispose();
+            }
         }
-
-        // Dispose logging services
-        ILogDataStore? logDataStore = serviceProvider.GetService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
-        logDataStore?.Dispose();
+        catch (Exception ex)
+        {
+            // Use fallback logging since our logger might be disposed
+            System.Console.WriteLine($"Warning: Error disposing log data store: {ex.Message}");
+        }
     }
 }
 

@@ -3,9 +3,12 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Extensions;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
@@ -24,26 +27,14 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IApplicationSettingsService _settingsService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly IServiceProvider _serviceProvider;
     private readonly CompositeDisposable _disposables = new();
 
     private string _testInputText = UIStrings.TestClipboardText;
     private string _statusMessage = UIStrings.StatusReady;
     private string _lastButtonPressed = "";
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class for design-time.
-    /// </summary>
-    public MainWindowViewModel() : this(
-        new NavigationViewModel(),
-        new BottomPanelViewModel(),
-        new SettingsManagementViewModel(),
-        new DialogService(),
-        new ClipboardService(),
-        CreateDesignTimeApplicationSettingsService(),
-        null,
-        CreateDesignTimeLogger())
-    {
-    }
+    #region Constructor
 
     /// <summary>
     /// Creates a design-time application settings service for the designer.
@@ -81,6 +72,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// <param name="settingsService">The application settings service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="logger">The logger instance.</param>
+    /// <param name="serviceProvider">The service provider for dependency resolution during shutdown.</param>
     public MainWindowViewModel(
         NavigationViewModel navigation,
         BottomPanelViewModel bottomPanel,
@@ -89,7 +81,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         IClipboardService clipboardService,
         IApplicationSettingsService settingsService,
         IFileDialogService? fileDialogService,
-        ILogger<MainWindowViewModel> logger)
+        ILogger<MainWindowViewModel> logger,
+        IServiceProvider serviceProvider)
     {
         Navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
         BottomPanel = bottomPanel ?? throw new ArgumentNullException(nameof(bottomPanel));
@@ -99,6 +92,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _fileDialogService = fileDialogService; // optional in design-time
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
         // Initialize commands
         ExitCommand = ReactiveCommand.CreateFromTask(ExitAsync);
@@ -140,6 +134,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         _logger.LogDebug("MainWindowViewModel initialized with specialized ViewModels");
     }
+
+    #endregion
 
     #region Specialized ViewModels
 
@@ -274,18 +270,27 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Handles application exit with confirmation dialog.
+    /// Used by File menu and keyboard shortcuts.
     /// </summary>
     private async Task ExitAsync()
     {
         try
         {
-            bool result = await _dialogService.ShowConfirmationAsync(
-                UIStrings.Dialog_ExitTitle,
-                UIStrings.Confirm_Exit);
+            _logger.LogInformation("Initiating application exit sequence via command");
+
+            // Show confirmation dialog
+            bool result = await ShowExitConfirmationAsync();
+
             if (result)
             {
-                await CloseApplicationInteraction.Handle(Unit.Default).FirstAsync();
                 _logger.LogInformation("Application exit confirmed by user");
+
+                // Perform shutdown
+                await PerformShutdownAsync();
+
+                // Close the application window
+                await CloseApplicationInteraction.Handle(Unit.Default).FirstAsync();
+                _logger.LogInformation("Application closed successfully");
             }
             else
             {
@@ -294,7 +299,62 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during application exit");
+            _logger.LogError(ex, "Critical error during application exit sequence");
+
+            // Show error to user and force exit if needed
+            try
+            {
+                await _dialogService.ShowErrorAsync(
+                    "Exit Error",
+                    $"An error occurred during application exit: {ex.Message}");
+            }
+            finally
+            {
+                // Force exit if we can't handle the error gracefully
+                Environment.Exit(1);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Shows the exit confirmation dialog.
+    /// </summary>
+    /// <returns>True if user confirms exit, false otherwise.</returns>
+    public async Task<bool> ShowExitConfirmationAsync()
+    {
+        try
+        {
+            _logger.LogDebug("Showing exit confirmation dialog");
+            return await _dialogService.ShowConfirmationAsync(
+                UIStrings.Dialog_ExitTitle,
+                UIStrings.Confirm_Exit);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error showing exit confirmation dialog");
+            // Default to false (don't exit) on error
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Performs graceful shutdown of all services.
+    /// </summary>
+    public async Task PerformShutdownAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Starting application shutdown sequence");
+
+            // Perform graceful shutdown of all services
+            await _serviceProvider.ShutdownS7ToolsServicesAsync().ConfigureAwait(false);
+
+            _logger.LogInformation("Application shutdown sequence completed successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during application shutdown sequence");
+            // Don't rethrow - let the calling code handle it
         }
     }
 
