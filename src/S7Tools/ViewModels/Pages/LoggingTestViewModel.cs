@@ -193,6 +193,10 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
     {
         try
         {
+            if (string.IsNullOrEmpty(TestInputText))
+            {
+                return;
+            }
             await _clipboardService.SetTextAsync(TestInputText);
             TestInputText = string.Empty;
             StatusMessage = UIStrings.ClipboardTextCut;
