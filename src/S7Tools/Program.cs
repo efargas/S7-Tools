@@ -17,8 +17,8 @@ using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
 using S7Tools.ViewModels.Layout;
-using S7Tools.Views.Layout;
 using S7Tools.Views;
+using S7Tools.Views.Layout;
 using Splat.Microsoft.Extensions.DependencyInjection;
 
 

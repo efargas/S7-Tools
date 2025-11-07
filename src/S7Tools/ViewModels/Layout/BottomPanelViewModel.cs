@@ -11,9 +11,9 @@ using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Pages;
 using S7Tools.Views;
 using S7Tools.Views.Pages;
-using S7Tools.ViewModels.Pages;
 
 namespace S7Tools.ViewModels.Layout;
 

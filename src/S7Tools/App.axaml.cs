@@ -17,8 +17,8 @@ using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
 using S7Tools.ViewModels.Dialogs;
 using S7Tools.Views;
-using S7Tools.Views.Layout;
 using S7Tools.Views.Dialogs;
+using S7Tools.Views.Layout;
 
 namespace S7Tools;
 

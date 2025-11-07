@@ -5,15 +5,15 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using ReactiveUI;
-using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Infrastructure.Logging.Core.Models;
+using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels.Pages;
 using S7Tools.ViewModels.Jobs;
-using S7Tools.ViewModels.Tasks;
+using S7Tools.ViewModels.Pages;
 using S7Tools.ViewModels.Settings;
+using S7Tools.ViewModels.Tasks;
 using DesignTimeFactory = S7Tools.Services.DesignTimeViewModelFactory;
 
 namespace S7Tools.ViewModels.Layout;

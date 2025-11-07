@@ -8,9 +8,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Avalonia.Data.Converters;
-using S7Tools.ViewModels.Profiles;
-
 using S7Tools.ViewModels.Controls;
+using S7Tools.ViewModels.Profiles;
 namespace S7Tools.Converters;
 
 /// <summary>

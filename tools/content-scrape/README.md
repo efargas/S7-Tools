@@ -13,7 +13,7 @@ cd tools/content-scrape
 npm install
 ```
 
-## Runpply the lint scope excludes and patch the few flagged files now, then re-run lint and proceed with link checks.
+## Runpply the lint scope excludes and patch the few flagged files now, then re-run lint and proceed with link checks
 
 ```bash
 npm start

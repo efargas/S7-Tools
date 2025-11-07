@@ -12,8 +12,8 @@ using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services;
 using S7Tools.ViewModels;
-using S7Tools.ViewModels.Profiles;
 using S7Tools.ViewModels.Controls;
+using S7Tools.ViewModels.Profiles;
 
 namespace S7Tools.ViewModels.Jobs;
 
