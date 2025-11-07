@@ -258,7 +258,7 @@
                                 <DataTemplate DataType="vmJobs:JobsManagementViewModel">
                                     <viewsJobs:JobsSidebarView />
                                 </DataTemplate>
-                                <DataTemplate DataType="vmLayout:TaskManagerShellViewModel">
+                                <DataTemplate DataType="vm:TaskManagerShellViewModel">
                                     <viewsTasks:TaskManagerSidebarView />
                                 </DataTemplate>
                             </ContentControl.DataTemplates>
