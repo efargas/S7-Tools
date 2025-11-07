@@ -9,7 +9,8 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels;
+using S7Tools.ViewModels.Controls;
+using S7Tools.ViewModels.Jobs;
 using Xunit;
 
 namespace S7Tools.Tests.ViewModels.Jobs;
@@ -28,7 +29,7 @@ public sealed class JobWizardViewModelTests : IDisposable
     private readonly Mock<IFileDialogService> _mockFileDialogService;
     private readonly Mock<IViewModelFactory> _mockViewModelFactory;
     private readonly Mock<ISerialPortService> _mockSerialPortService;
-    private readonly Mock<ILogger<SerialPortScannerViewModel>> _mockScannerLogger;
+    private readonly Mock<ILogger<SerialPortDiscoveryViewModel>> _mockScannerLogger;
 
     public JobWizardViewModelTests()
     {
@@ -41,16 +42,16 @@ public sealed class JobWizardViewModelTests : IDisposable
         _mockFileDialogService = new Mock<IFileDialogService>();
         _mockViewModelFactory = new Mock<IViewModelFactory>();
         _mockSerialPortService = new Mock<ISerialPortService>();
-        _mockScannerLogger = new Mock<ILogger<SerialPortScannerViewModel>>();
+        _mockScannerLogger = new Mock<ILogger<SerialPortDiscoveryViewModel>>();
 
-        // Create a real instance for SerialPortScannerViewModel (can't mock concrete class)
-        var realSerialScanner = new SerialPortScannerViewModel(
+        // Create a real instance for SerialPortDiscoveryViewModel (can't mock concrete class)
+        var realSerialScanner = new SerialPortDiscoveryViewModel(
             _mockSerialPortService.Object,
             _mockUIThreadService.Object,
             _mockScannerLogger.Object);
 
         // Setup view model factory to return the real scanner
-        _mockViewModelFactory.Setup(x => x.Create<SerialPortScannerViewModel>())
+        _mockViewModelFactory.Setup(x => x.Create<SerialPortDiscoveryViewModel>())
             .Returns(realSerialScanner);
 
         // Setup UI thread service to execute synchronously for tests

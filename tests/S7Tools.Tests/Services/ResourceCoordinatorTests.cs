@@ -363,7 +363,7 @@ public class ResourceCoordinatorTests
             }));
         }
 
-        await Task.WhenAll(tasks).ConfigureAwait(false);
+        await Task.WhenAll(tasks);
 
         // Assert
         // This is a probabilistic test - in a truly thread-safe implementation,
