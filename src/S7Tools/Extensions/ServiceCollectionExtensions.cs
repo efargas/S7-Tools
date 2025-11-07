@@ -139,6 +139,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IPowerSupplyProfileService, PowerSupplyProfileService>();
         services.TryAddSingleton<IPowerSupplyService, PowerSupplyService>();
 
+        // Add Memory Region Profile Service (Memory region profiling and mapping)
+        services.TryAddSingleton<IMemoryRegionProfileService, MemoryRegionProfileService>();
+
         return services;
     }
 

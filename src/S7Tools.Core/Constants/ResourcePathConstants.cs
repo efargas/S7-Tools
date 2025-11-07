@@ -61,6 +61,11 @@ namespace S7Tools.Core.Constants
         public const string MemoryRegionsFolder = "MemoryRegions";
 
         /// <summary>
+        /// File name for memory region profiles JSON file
+        /// </summary>
+        public const string MemoryRegionProfilesFile = "MemoryRegionProfiles.json";
+
+        /// <summary>
         /// Folder name for all log files
         /// </summary>
         public const string LogsFolder = "Logs";

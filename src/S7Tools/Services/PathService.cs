@@ -82,6 +82,15 @@ namespace S7Tools.Services
             ResourcePaths.PowerSupplyProfilesFile));
 
         /// <summary>
+        /// Gets the path to Resources/Profiles/MemoryRegions/MemoryRegionProfiles.json
+        /// </summary>
+        public string MemoryRegionProfilesPath => ResolvePath(Path.Combine(
+            ResourcePaths.ResourcesFolder,
+            ResourcePaths.ProfilesFolder,
+            ResourcePaths.MemoryRegionsFolder,
+            ResourcePaths.MemoryRegionProfilesFile));
+
+        /// <summary>
         /// Gets the path to Resources/Profiles/MemoryRegions directory
         /// </summary>
         public string MemoryRegionsDirectory => ResolvePath(Path.Combine(
@@ -323,6 +332,7 @@ namespace S7Tools.Services
                     { "Serial Profiles Path", Path.GetDirectoryName(SerialProfilesPath)! },
                     { "Socat Profiles Path", Path.GetDirectoryName(SocatProfilesPath)! },
                     { "PowerSupply Profiles Path", Path.GetDirectoryName(PowerSupplyProfilesPath)! },
+                    { "Memory Region Profiles Path", Path.GetDirectoryName(MemoryRegionProfilesPath)! },
                     { "Memory Regions Directory", MemoryRegionsDirectory },
                     { "Logs Directory", LogsDirectory },
                     { "Main Logs Directory", MainLogsDirectory },

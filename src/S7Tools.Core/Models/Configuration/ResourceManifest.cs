@@ -174,6 +174,13 @@ namespace S7Tools.Core.Models.Configuration
                 },
                 new FileInfo
                 {
+                    Name = ResourcePaths.MemoryRegionProfilesFile,
+                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionsFolder, ResourcePaths.MemoryRegionProfilesFile),
+                    DefaultContent = "[]",
+                    Purpose = "Memory region profile configurations"
+                },
+                new FileInfo
+                {
                     Name = ResourcePaths.JobsFile,
                     RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.JobsFolder, ResourcePaths.JobsFile),
                     DefaultContent = "[]",
