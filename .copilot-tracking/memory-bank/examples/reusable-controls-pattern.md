@@ -59,14 +59,10 @@ public class ConnectionsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _portDiscovery, value);
     }
     
-    public ConnectionsViewModel(
-        ISerialPortService serialPortService,
-        ILogger<SerialPortDiscoveryViewModel> portDiscoveryLogger)
+    public ConnectionsViewModel(SerialPortDiscoveryViewModel portDiscoveryViewModel)
     {
-        // Create port discovery instance
-        PortDiscovery = new SerialPortDiscoveryViewModel(
-            serialPortService,
-            portDiscoveryLogger);
+        // Receive port discovery instance via DI
+        PortDiscovery = portDiscoveryViewModel ?? throw new ArgumentNullException(nameof(portDiscoveryViewModel));
     }
     
     // Access selected port
