@@ -9,7 +9,7 @@ This living guide consolidates the current rules and lessons for S7Tools. It sup
 
 ## Constitutional Governance Framework
 
-**Reference**: `.specify/memory/constitution.md` v1.0.0 (Ratified: 2025-10-20)
+**Reference**: `.specify/memory/constitution.md` v1.2.0 (Last updated: 2025-11-07)
 
 S7Tools operates under a formal constitutional governance framework that establishes **5 NON-NEGOTIABLE core principles**:
 

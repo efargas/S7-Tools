@@ -121,8 +121,7 @@ S7Tools/
 │
 ├── .vscode/                              # VS Code workspace settings
 │   ├── launch.json                       # Debug configurations
-│   ├── settings.json                     # Workspace settings
-│   └── tasks.json                        # Build and run tasks
+│   └── settings.json                     # Workspace settings
 │
 ├── bootloader-payloads/                  # PLC bootloader payload resources
 │   ├── docker-scripts/                   # Docker utilities
@@ -850,17 +849,23 @@ S7Tools.Core (Domain) ← S7Tools.Infrastructure.Logging (Infrastructure)
 
 ### Build Configuration
 
-**Build Scripts**:
-- Located in `.vscode/tasks.json`
-- Tasks available:
-  - `dotnet: build` (default build task)
-  - `dotnet: clean`
-  - `dotnet: restore`
-  - `dotnet-meteor: Build`
+> [!IMPORTANT]
+> **Constitutional Requirement**: ALL .NET operations MUST use terminal commands. VS Code tasks are FORBIDDEN.
+
+**Build Commands** (Terminal Only):
+```bash
+# Essential commands (MANDATORY)
+dotnet clean src/S7Tools.sln
+dotnet restore src/S7Tools.sln
+dotnet build src/S7Tools.sln --configuration Debug
+dotnet test src/S7Tools.sln --configuration Debug
+dotnet format src/S7Tools.sln
+dotnet run --project src/S7Tools --configuration Debug
+```
 
 **Build Process**:
-1. Restore NuGet packages
-2. Compile C# code
+1. Restore NuGet packages (`dotnet restore`)
+2. Compile C# code (`dotnet build`)
 3. Compile XAML (Avalonia)
 4. Generate XML documentation
 5. Copy assets and resources

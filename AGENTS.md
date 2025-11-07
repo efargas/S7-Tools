@@ -76,12 +76,38 @@ This works seamlessly with the categorized folder structure.
 
 ---
 
+## Development Commands (MANDATORY)
+
+**CRITICAL REQUIREMENT**: All coding agents MUST use terminal commands for .NET operations. VS Code tasks are FORBIDDEN.
+
+### Essential Terminal Commands
+```bash
+# Clean and build (MANDATORY pattern)
+dotnet clean src/S7Tools.sln
+dotnet restore src/S7Tools.sln
+dotnet build src/S7Tools.sln --configuration Debug
+
+# Testing (maintain 99.7%+ pass rate: 308 tests, 1 intentionally skipped)
+dotnet test src/S7Tools.sln --configuration Debug
+
+# Code formatting (REQUIRED before any commit)
+dotnet format src/S7Tools.sln
+
+# Run application with diagnostics
+dotnet run --project src/S7Tools --configuration Debug -- --diag
+```
+
+**NEVER use VS Code tasks** - Always use terminal commands for consistency and to avoid task configuration dependencies.
+
+---
+
 ## Agent Workflow
 
 1. **Start by reading `.copilot-tracking/memory-bank/systemPatterns.md`** — This is the single source of truth for all architecture, patterns, and rules.
-2. **Never duplicate documentation** — Update `systemPatterns.md` and related Memory Bank files after significant changes.
-3. **Do not include session logs or task notes here** — Use the Memory Bank for all project intelligence and progress tracking.
-4. **Use the agent workspace (`.github/agents/workspace/`) for temporary files only** — Never store permanent documentation or code here.
+2. **Use ONLY terminal commands** — Never use VS Code tasks for build, test, format, or run operations.
+3. **Never duplicate documentation** — Update `systemPatterns.md` and related Memory Bank files after significant changes.
+4. **Do not include session logs or task notes here** — Use the Memory Bank for all project intelligence and progress tracking.
+5. **Use the agent workspace (`.github/agents/workspace/`) for temporary files only** — Never store permanent documentation or code here.
 
 ---
 

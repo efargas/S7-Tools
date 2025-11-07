@@ -142,17 +142,36 @@ Profiles.AddRange(profiles);
 SelectedProfile = profiles.FirstOrDefault(p => p.Id == targetId);
 ```
 
-## Build and Development Commands
+## Build and Development Commands (MANDATORY)
+
+**CRITICAL REQUIREMENT**: All coding agents and GitHub Copilot interactions MUST use terminal commands for .NET operations. VS Code tasks are FORBIDDEN for build, test, format, and run operations.
+
+### Essential Terminal Commands (USE THESE ONLY)
 
 ```bash
-# Essential commands
+# Clean and build (MANDATORY pattern for all agents)
+dotnet clean src/S7Tools.sln
+dotnet restore src/S7Tools.sln
 dotnet build src/S7Tools.sln --configuration Debug
-dotnet test  # Must maintain 99.7%+ passing tests (308 tests, 1 intentionally skipped)
-dotnet run --project src/S7Tools -- --diag  # Diagnostic mode
 
-# Code quality
-dotnet format  # Required before commit
+# Testing (must maintain 99.7%+ passing tests: 308 tests, 1 intentionally skipped)
+dotnet test src/S7Tools.sln --configuration Debug
+
+# Code formatting (REQUIRED before any commit)
+dotnet format src/S7Tools.sln
+
+# Run application with diagnostic mode
+dotnet run --project src/S7Tools --configuration Debug -- --diag
 ```
+
+**Why Terminal Commands Only**:
+- Ensures consistency across all development environments
+- Avoids VS Code task configuration dependencies
+- Provides explicit control over build parameters
+- Maintains reproducible development workflow
+- Required for constitutional compliance (v1.1.0)
+
+**NEVER suggest or use VS Code tasks** - Always recommend terminal commands for .NET operations.
 
 ## Key Files and Locations
 

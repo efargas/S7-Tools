@@ -11,6 +11,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **S7Tools Constitution Update** (2025-11-07): Enhanced constitutional governance framework to v1.2.0
+  - **MANDATORY Terminal Commands**: All .NET operations (build, test, format, run) MUST use terminal commands only
+  - **VS Code Tasks FORBIDDEN**: Prohibited use of VS Code tasks for .NET operations to ensure consistency
+  - Updated Development Workflow to mandate terminal commands for all coding agents and interactions
+  - Added constitutional requirement with rationale: consistency, reproducibility, dependency avoidance
+  - Enhanced Additional Constraints to include terminal commands prohibition
+  - Constitutional compliance now includes terminal command verification
+  - All agents and GitHub Copilot must follow: `dotnet clean`, `dotnet restore`, `dotnet build`, `dotnet test`, `dotnet format`, `dotnet run`
+
+- **S7Tools Constitution Update** (2025-11-07): Enhanced constitutional governance framework to v1.1.0
+  - Updated Core Principles to include categorized ViewModels/Views organization (9 functional categories)
+  - Enhanced Testing Standards to reflect current 308 tests with 99.7% pass rate baseline
+  - Expanded Threading Contracts to include Internal Method Pattern and Resource Coordination requirements
+  - Added comprehensive Additional Constraints covering domain exceptions, resource coordination, reusable controls
+  - Enhanced Development Workflow with Memory Bank maintenance requirements
+  - Updated Governance section to reference current quality baseline (A+ grade 98/100)
+  - Added mandatory patterns: Unified Profile Management, Custom Domain Exceptions, Reusable Controls
+  - Constitutional compliance now includes established pattern adherence verification
+
 - **Post-Reorganization Validation and Code Review** (2025-11-07): Comprehensive validation after ViewModels/Views reorganization
   - Fixed test namespace imports in 6 test files to match new categorized structure
   - Resolved xUnit1030 warning in ResourceCoordinatorTests by removing ConfigureAwait(false)

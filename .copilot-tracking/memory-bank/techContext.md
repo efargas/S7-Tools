@@ -1,7 +1,7 @@
 # Technical Context: S7Tools
 
-**Last Updated**: Current Session  
-**Context Type**: Technologies, Tools, and Development Environment  
+**Last Updated**: Current Session
+**Context Type**: Technologies, Tools, and Development Environment
 
 ## Technology Stack
 
@@ -19,7 +19,7 @@
 
 #### **Avalonia UI 11.3.6**
 - **Purpose**: Cross-platform desktop UI framework
-- **Advantages**: 
+- **Advantages**:
   - Cross-platform (Windows, Linux, macOS)
   - XAML-based UI similar to WPF
   - Modern styling and theming support
@@ -102,14 +102,21 @@
 git clone <repository-url>
 cd S7Tools
 
-# Restore dependencies
-dotnet restore src/S7Tools.sln
+# CONSTITUTIONAL REQUIREMENT: Use terminal commands only - VS Code tasks are FORBIDDEN
 
-# Build solution
-dotnet build src/S7Tools.sln
+# Clean, restore, and build (MANDATORY pattern)
+dotnet clean src/S7Tools.sln
+dotnet restore src/S7Tools.sln
+dotnet build src/S7Tools.sln --configuration Debug
 
 # Run application
 dotnet run --project src/S7Tools/S7Tools.csproj
+
+# Test (maintain 99.7%+ pass rate)
+dotnet test src/S7Tools.sln --configuration Debug
+
+# Format (required before commit)
+dotnet format src/S7Tools.sln
 ```
 
 #### **Development Workflow**
@@ -336,6 +343,6 @@ dotnet publish src/S7Tools/S7Tools.csproj -c Release -r win-x64 --self-contained
 
 ---
 
-**Document Status**: Living document reflecting current technical state  
-**Next Review**: After major technology updates  
+**Document Status**: Living document reflecting current technical state
+**Next Review**: After major technology updates
 **Owner**: Development Team and DevOps

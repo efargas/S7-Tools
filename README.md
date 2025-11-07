@@ -28,9 +28,13 @@ S7Tools is a .NET 8 + Avalonia UI application built with Clean Architecture and 
 > [!IMPORTANT]
 > Prerequisite: .NET 8 SDK
 
+> [!WARNING]
+> **MANDATORY**: Use terminal commands only. VS Code tasks are strictly FORBIDDEN for .NET operations.
+
 Build the solution:
 
 ```bash
+dotnet clean src/S7Tools.sln
 dotnet restore src/S7Tools.sln
 dotnet build src/S7Tools.sln --configuration Debug
 ```
@@ -88,18 +92,27 @@ docs/                           # Architecture and additional documentation
 
 ## Development
 
+> [!IMPORTANT]
+> **Constitutional Requirement**: ALL .NET operations MUST use terminal commands. VS Code tasks are FORBIDDEN.
+
+Essential commands:
+
+```bash
+# Build and test
+dotnet clean src/S7Tools.sln
+dotnet restore src/S7Tools.sln
+dotnet build src/S7Tools.sln --configuration Debug
+dotnet test src/S7Tools.sln --configuration Debug
+
+# Code formatting (required before commit)
+dotnet format src/S7Tools.sln
+```
+
 - Pattern highlights:
 	- MVVM with ReactiveUI (`ReactiveCommand`, `Interaction`, `RaiseAndSetIfChanged`)
 	- Service‑oriented design with interfaces in Core, implementations in UI/Infra
 	- Centralized DI and background service initialization helpers
 	- Unified `StandardProfileManager<T>` for thread‑safe, JSON‑backed CRUD with default/profile rules
-
-- Build and run (Debug): see Quick start above
-- Run tests:
-
-```bash
-dotnet test
-```
 
 > [!WARNING]
 > When adding or modifying profile services, avoid nested semaphore acquisitions. Follow the internal helper pattern used in `StandardProfileManager<T>` to prevent deadlocks.

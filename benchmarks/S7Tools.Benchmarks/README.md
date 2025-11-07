@@ -12,6 +12,9 @@ Establish baseline performance metrics for critical operations:
 
 ## Running Benchmarks
 
+> [!IMPORTANT]
+> **Constitutional Requirement**: ALL .NET operations MUST use terminal commands. VS Code tasks are FORBIDDEN.
+
 ### Run All Benchmarks
 ```bash
 cd benchmarks/S7Tools.Benchmarks
