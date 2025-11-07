@@ -25,6 +25,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
 
     private readonly ISerialPortService _portService;
     private readonly IUIThreadService _uiThreadService;
+    private readonly IUIRefreshService _uiRefreshService;
     private readonly ILogger<SerialPortDiscoveryViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
     private readonly Timer _scanTimer;
@@ -40,14 +41,17 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     /// </summary>
     /// <param name="portService">The serial port service.</param>
     /// <param name="uiThreadService">The UI thread service.</param>
+    /// <param name="uiRefreshService">The UI refresh service.</param>
     /// <param name="logger">The logger.</param>
     public SerialPortDiscoveryViewModel(
         ISerialPortService portService,
         IUIThreadService uiThreadService,
+        IUIRefreshService uiRefreshService,
         ILogger<SerialPortDiscoveryViewModel> logger)
     {
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+        _uiRefreshService = uiRefreshService ?? throw new ArgumentNullException(nameof(uiRefreshService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize collections
@@ -56,6 +60,24 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
 
         // Initialize commands
         InitializeCommands();
+
+        // Set up auto-refresh using the reusable service
+        var refreshOptions = new UIRefreshOptions
+        {
+            PeriodicRefreshIntervalSeconds = 2.0,
+            EnablePeriodicRefresh = true,
+            SkipInitialValue = true,
+            EnableLogging = false,
+            MonitoredProperties = new[] 
+            { 
+                nameof(IncludeUsbPorts), 
+                nameof(IncludeAcmPorts), 
+                nameof(IncludeSerialPorts), 
+                nameof(IsScanning) 
+            }
+        };
+        
+        _uiRefreshService.SetupAutoRefresh(this, _disposables, refreshOptions);
 
         // Set up automatic scanning timer (disabled by default)
         _scanTimer = new Timer(OnTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
@@ -206,28 +228,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     public bool IncludeUsbPorts
     {
         get => _includeUsbPorts;
-        set
-        {
-            // If trying to uncheck and it's the last filter, default to UsbPorts=true
-            if (!value && !IncludeAcmPorts && !IncludeSerialPorts)
-            {
-                _logger.LogDebug("Cannot uncheck all filters - defaulting to UsbPorts");
-                // Force UsbPorts to true (prevent uncheck)
-                if (_includeUsbPorts != true)
-                {
-                    _includeUsbPorts = true;
-                    this.RaisePropertyChanged(nameof(IncludeUsbPorts));
-                }
-                return;
-            }
-
-            if (this.RaiseAndSetIfChanged(ref _includeUsbPorts, value))
-            {
-                _logger.LogDebug("IncludeUsbPorts changed to {Value}", value);
-                // Re-apply filters to current discovered ports
-                ApplyFiltersToDiscoveredPorts();
-            }
-        }
+        set => SetFilterProperty(ref _includeUsbPorts, value, nameof(IncludeUsbPorts));
     }
 
     private bool _includeAcmPorts = true;
@@ -237,24 +238,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     public bool IncludeAcmPorts
     {
         get => _includeAcmPorts;
-        set
-        {
-            // If trying to uncheck and it's the last filter, default to UsbPorts=true
-            if (!value && !IncludeUsbPorts && !IncludeSerialPorts)
-            {
-                _logger.LogDebug("Cannot uncheck all filters - defaulting to UsbPorts");
-                // Set UsbPorts to true
-                IncludeUsbPorts = true;
-                return;
-            }
-
-            if (this.RaiseAndSetIfChanged(ref _includeAcmPorts, value))
-            {
-                _logger.LogDebug("IncludeAcmPorts changed to {Value}", value);
-                // Re-apply filters to current discovered ports
-                ApplyFiltersToDiscoveredPorts();
-            }
-        }
+        set => SetFilterProperty(ref _includeAcmPorts, value, nameof(IncludeAcmPorts));
     }
 
     private bool _includeSerialPorts = true;
@@ -264,41 +248,58 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     public bool IncludeSerialPorts
     {
         get => _includeSerialPorts;
-        set
-        {
-            // If trying to uncheck and it's the last filter, default to UsbPorts=true
-            if (!value && !IncludeUsbPorts && !IncludeAcmPorts)
-            {
-                _logger.LogDebug("Cannot uncheck all filters - defaulting to UsbPorts");
-                // Set UsbPorts to true
-                IncludeUsbPorts = true;
-                return;
-            }
+        set => SetFilterProperty(ref _includeSerialPorts, value, nameof(IncludeSerialPorts));
+    }
 
-            if (this.RaiseAndSetIfChanged(ref _includeSerialPorts, value))
+    /// <summary>
+    /// Centralized filter property setter that handles validation and UI updates properly.
+    /// </summary>
+    /// <param name="field">The backing field to update.</param>
+    /// <param name="value">The new value.</param>
+    /// <param name="propertyName">The name of the property being set.</param>
+    private void SetFilterProperty(ref bool field, bool value, string propertyName)
+    {
+        // Special logic for ACM and Serial: if unchecking would leave no filters, force USB=true
+        if (!value && (propertyName == nameof(IncludeAcmPorts) || propertyName == nameof(IncludeSerialPorts)))
+        {
+            // Check if this would leave no filters active
+            bool usbAfter = _includeUsbPorts;
+            bool acmAfter = propertyName == nameof(IncludeAcmPorts) ? false : _includeAcmPorts;
+            bool serialAfter = propertyName == nameof(IncludeSerialPorts) ? false : _includeSerialPorts;
+
+            if (!usbAfter && !acmAfter && !serialAfter)
             {
-                _logger.LogDebug("IncludeSerialPorts changed to {Value}", value);
-                // Re-apply filters to current discovered ports
-                ApplyFiltersToDiscoveredPorts();
+                _logger.LogDebug("Unchecking {PropertyName} would leave no filters - forcing USB to true", propertyName);
+                _includeUsbPorts = true;
+                
+                // The UIRefreshService will handle the property change notifications automatically
+                this.RaisePropertyChanged(nameof(IncludeUsbPorts));
             }
+        }
+
+        // Normal property change - UIRefreshService handles the rest
+        if (this.RaiseAndSetIfChanged(ref field, value))
+        {
+            _logger.LogDebug("{PropertyName} changed to {Value}", propertyName, value);
+            ApplyFiltersToDiscoveredPorts();
         }
     }
 
     /// <summary>
     /// Gets a value indicating whether the USB ports checkbox can be toggled.
-    /// Can toggle when: not scanning AND (other filters are active OR this one is unchecked).
+    /// USB can only be unchecked when at least one other filter is active.
     /// </summary>
-    public bool CanToggleUsbPorts => !IsScanning;
+    public bool CanToggleUsbPorts => !IsScanning && (_includeAcmPorts || _includeSerialPorts);
 
     /// <summary>
     /// Gets a value indicating whether the ACM ports checkbox can be toggled.
-    /// Can toggle when: not scanning AND (other filters are active OR this one is unchecked).
+    /// ACM can always be toggled when not scanning.
     /// </summary>
     public bool CanToggleAcmPorts => !IsScanning;
 
     /// <summary>
     /// Gets a value indicating whether the serial ports checkbox can be toggled.
-    /// Can toggle when: not scanning AND (other filters are active OR this one is unchecked).
+    /// Serial can always be toggled when not scanning.
     /// </summary>
     public bool CanToggleSerialPorts => !IsScanning;
 
@@ -454,7 +455,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
                     break;
                 }
 
-                var portType = GetPortType(portName);
+                PortTypeEnum portType = GetPortType(portName);
                 var portInfo = new SerialPortInfo
                 {
                     PortName = portName,

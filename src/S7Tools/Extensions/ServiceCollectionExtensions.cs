@@ -48,6 +48,9 @@ public static class ServiceCollectionExtensions
         // Add UI Thread Service
         services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
 
+        // Add UI Refresh Service
+        services.TryAddSingleton<IUIRefreshService, UIRefreshService>();
+
         // Add Localization Service
         services.TryAddSingleton<ILocalizationService, LocalizationService>();
 

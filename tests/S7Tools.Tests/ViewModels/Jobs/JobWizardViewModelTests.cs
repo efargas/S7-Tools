@@ -43,11 +43,13 @@ public sealed class JobWizardViewModelTests : IDisposable
         _mockViewModelFactory = new Mock<IViewModelFactory>();
         _mockSerialPortService = new Mock<ISerialPortService>();
         _mockScannerLogger = new Mock<ILogger<SerialPortDiscoveryViewModel>>();
+        var _mockUIRefreshService = new Mock<IUIRefreshService>();
 
         // Create a real instance for SerialPortDiscoveryViewModel (can't mock concrete class)
         var realSerialScanner = new SerialPortDiscoveryViewModel(
             _mockSerialPortService.Object,
             _mockUIThreadService.Object,
+            _mockUIRefreshService.Object,
             _mockScannerLogger.Object);
 
         // Setup view model factory to return the real scanner
