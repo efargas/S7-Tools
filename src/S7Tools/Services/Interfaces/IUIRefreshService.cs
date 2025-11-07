@@ -33,7 +33,7 @@ public interface IUIRefreshService
     /// <param name="refreshAction">Action to execute when properties change.</param>
     /// <param name="disposables">CompositeDisposable to manage subscription lifecycle.</param>
     /// <param name="skipInitialValue">Whether to skip the initial value notification.</param>
-    void SetupPropertyMonitoring<T>(T viewModel, string[] propertyNames, Action refreshAction, 
+    void SetupPropertyMonitoring<T>(T viewModel, string[] propertyNames, Action refreshAction,
         CompositeDisposable disposables, bool skipInitialValue = true)
         where T : class, INotifyPropertyChanged;
 
@@ -61,7 +61,7 @@ public interface IUIRefreshService
 public class UIRefreshOptions
 {
     /// <summary>
-    /// Gets or sets the interval in seconds for periodic refresh. 
+    /// Gets or sets the interval in seconds for periodic refresh.
     /// Set to 0 to disable periodic refresh.
     /// Default: 2 seconds.
     /// </summary>

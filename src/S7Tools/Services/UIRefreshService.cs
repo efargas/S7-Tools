@@ -48,20 +48,20 @@ public sealed class UIRefreshService : IUIRefreshService
         // Set up property monitoring if specified
         if (options.MonitoredProperties?.Count > 0)
         {
-            SetupPropertyMonitoring(viewModel, options.MonitoredProperties.ToArray(), 
+            SetupPropertyMonitoring(viewModel, options.MonitoredProperties.ToArray(),
                 () => RefreshViewModel(viewModel, options), disposables, options.SkipInitialValue);
         }
 
         // Set up periodic refresh if enabled
         if (options.EnablePeriodicRefresh && options.PeriodicRefreshIntervalSeconds > 0)
         {
-            SetupPeriodicRefresh(() => RefreshViewModel(viewModel, options), 
+            SetupPeriodicRefresh(() => RefreshViewModel(viewModel, options),
                 options.PeriodicRefreshIntervalSeconds, disposables);
         }
     }
 
     /// <inheritdoc/>
-    public void SetupPropertyMonitoring<T>(T viewModel, string[] propertyNames, Action refreshAction, 
+    public void SetupPropertyMonitoring<T>(T viewModel, string[] propertyNames, Action refreshAction,
         CompositeDisposable disposables, bool skipInitialValue = true)
         where T : class, INotifyPropertyChanged
     {
@@ -114,7 +114,7 @@ public sealed class UIRefreshService : IUIRefreshService
                 })
                 .DisposeWith(disposables);
 
-            _logger.LogDebug("Property monitoring set up for {PropertyCount} properties in ViewModel: {ViewModelType}", 
+            _logger.LogDebug("Property monitoring set up for {PropertyCount} properties in ViewModel: {ViewModelType}",
                 propertyNames.Length, typeof(T).Name);
         }
         catch (Exception ex)
@@ -188,7 +188,7 @@ public sealed class UIRefreshService : IUIRefreshService
                     // For non-ReactiveObject ViewModels, try to use reflection to trigger PropertyChanged
                     var propertyChangedField = viewModel.GetType()
                         .GetEvent(nameof(INotifyPropertyChanged.PropertyChanged));
-                    
+
                     if (propertyChangedField != null)
                     {
                         foreach (var propertyName in propertyNames)
@@ -223,13 +223,13 @@ public sealed class UIRefreshService : IUIRefreshService
             {
                 // Common UI state properties
                 "CanExecute", "IsEnabled", "IsVisible", "IsLoading", "IsValid",
-                
-                // Toggle/interaction properties  
+
+                // Toggle/interaction properties
                 "CanToggle", "CanEdit", "CanDelete", "CanCreate", "CanSave", "CanCancel",
-                
+
                 // State properties
                 "IsSelected", "IsExpanded", "IsChecked", "IsActive",
-                
+
                 // Status properties
                 "Status", "StatusMessage", "ErrorMessage", "ValidationMessage"
             };
@@ -241,15 +241,15 @@ public sealed class UIRefreshService : IUIRefreshService
             foreach (var property in viewModelType.GetProperties())
             {
                 var propertyName = property.Name;
-                
+
                 // Check if property matches common patterns
                 if (commonProperties.Any(pattern => propertyName.Contains(pattern, StringComparison.OrdinalIgnoreCase)))
                 {
                     propertiesToRefresh.Add(propertyName);
                 }
-                
+
                 // Also check for Can* properties specifically (common in ViewModels)
-                if (propertyName.StartsWith("Can", StringComparison.OrdinalIgnoreCase) && 
+                if (propertyName.StartsWith("Can", StringComparison.OrdinalIgnoreCase) &&
                     property.PropertyType == typeof(bool))
                 {
                     propertiesToRefresh.Add(propertyName);
@@ -259,10 +259,10 @@ public sealed class UIRefreshService : IUIRefreshService
             if (propertiesToRefresh.Count > 0)
             {
                 ForceRefresh(viewModel, propertiesToRefresh.ToArray());
-                
+
                 if (options.EnableLogging)
                 {
-                    _logger.LogDebug("Refreshed {PropertyCount} properties for ViewModel: {ViewModelType}", 
+                    _logger.LogDebug("Refreshed {PropertyCount} properties for ViewModel: {ViewModelType}",
                         propertiesToRefresh.Count, viewModelType.Name);
                 }
             }
@@ -287,7 +287,7 @@ public static class UIRefreshServiceExtensions
     /// <param name="refreshService">The UI refresh service.</param>
     /// <param name="disposables">CompositeDisposable for cleanup.</param>
     /// <param name="options">Optional configuration.</param>
-    public static void SetupAutoRefresh<T>(this T viewModel, IUIRefreshService refreshService, 
+    public static void SetupAutoRefresh<T>(this T viewModel, IUIRefreshService refreshService,
         CompositeDisposable disposables, UIRefreshOptions? options = null)
         where T : ReactiveObject, INotifyPropertyChanged
     {

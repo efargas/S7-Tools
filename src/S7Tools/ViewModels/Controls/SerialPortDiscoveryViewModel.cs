@@ -68,15 +68,15 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             EnablePeriodicRefresh = true,
             SkipInitialValue = true,
             EnableLogging = false,
-            MonitoredProperties = new[] 
-            { 
-                nameof(IncludeUsbPorts), 
-                nameof(IncludeAcmPorts), 
-                nameof(IncludeSerialPorts), 
-                nameof(IsScanning) 
+            MonitoredProperties = new[]
+            {
+                nameof(IncludeUsbPorts),
+                nameof(IncludeAcmPorts),
+                nameof(IncludeSerialPorts),
+                nameof(IsScanning)
             }
         };
-        
+
         _uiRefreshService.SetupAutoRefresh(this, _disposables, refreshOptions);
 
         // Set up automatic scanning timer (disabled by default)
@@ -271,7 +271,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             {
                 _logger.LogDebug("Unchecking {PropertyName} would leave no filters - forcing USB to true", propertyName);
                 _includeUsbPorts = true;
-                
+
                 // The UIRefreshService will handle the property change notifications automatically
                 this.RaisePropertyChanged(nameof(IncludeUsbPorts));
             }
