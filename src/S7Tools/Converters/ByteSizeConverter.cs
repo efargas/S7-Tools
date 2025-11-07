@@ -25,7 +25,9 @@ public class ByteSizeConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
         if (value is not long sizeInBytes)
+        {
             return value?.ToString() ?? "0 B";
+        }
 
         return FormatByteSize(sizeInBytes);
     }
