@@ -39,7 +39,7 @@ public partial class PlcInputViewModel : ObservableObject
 
 ### Vista (XAML)
 ```xml
-<UserControl ... x:Class="S7Tools.Views.PlcInputView">
+<UserControl ... x:Class="S7Tools.Views.Pages.PlcInputView">
   <StackPanel Margin="16" Spacing="8">
     <TextBlock Text="Dirección PLC:" FontWeight="Bold"/>
     <TextBox Text="{Binding Address, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="200"/>
