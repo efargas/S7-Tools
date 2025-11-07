@@ -2,10 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:S7Tools.ViewModels"
-             xmlns:views="using:S7Tools.Views"
+             xmlns:vm="using:S7Tools.ViewModels.[CATEGORY]"
+             xmlns:views="using:S7Tools.Views.[CATEGORY]"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
-             x:Class="S7Tools.Views.[FEATURE_NAME]MainView"
+             x:Class="S7Tools.Views.[CATEGORY].[FEATURE_NAME]MainView"
              x:DataType="vm:[FEATURE_NAME]ViewModel"
              Background="#1E1E1E">
 

@@ -355,16 +355,115 @@ public class MyFeatureViewModel : ViewModelBase
 }
 ```
 
+## Reusable UI Controls
+
+S7Tools provides reusable controls in the `Controls` category for common UI patterns:
+
+### SerialPortDiscoveryControl
+
+**Location**: `Views/Controls/SerialPortDiscoveryControl.axaml`
+**ViewModel**: `ViewModels/Controls/SerialPortDiscoveryViewModel.cs`
+
+A self-contained control for serial port discovery and selection.
+
+**Features**:
+- Automatic port scanning
+- Real-time port availability updates
+- Port details display (name, description, manufacturer)
+- Refresh capability
+- Status indicators
+
+**Usage Example**:
+```xaml
+<UserControl xmlns:controls="using:S7Tools.Views.Controls">
+  <controls:SerialPortDiscoveryControl />
+</UserControl>
+```
+
+**ViewModel Integration**:
+```csharp
+// In your feature ViewModel
+using S7Tools.ViewModels.Controls;
+
+public class MyFeatureViewModel : ViewModelBase
+{
+    private SerialPortDiscoveryViewModel _portDiscovery;
+    
+    public SerialPortDiscoveryViewModel PortDiscovery
+    {
+        get => _portDiscovery;
+        set => this.RaiseAndSetIfChanged(ref _portDiscovery, value);
+    }
+    
+    public MyFeatureViewModel(IServiceProvider serviceProvider)
+    {
+        // Create port discovery instance
+        PortDiscovery = new SerialPortDiscoveryViewModel(
+            serviceProvider.GetRequiredService<ISerialPortService>(),
+            serviceProvider.GetRequiredService<ILogger<SerialPortDiscoveryViewModel>>());
+    }
+}
+```
+
+### SidebarSection
+
+**Location**: `Views/Controls/SidebarSection.axaml`
+
+A collapsible section control for organizing sidebar content.
+
+**Features**:
+- Expandable/collapsible sections
+- Icon support
+- Header customization
+- Consistent styling with VSCode theme
+
+**Usage Example**:
+```xaml
+<UserControl xmlns:controls="using:S7Tools.Views.Controls">
+  <StackPanel>
+    <controls:SidebarSection Header="Settings" 
+                             Icon="fa-solid fa-cog"
+                             IsExpanded="True">
+      <!-- Section content here -->
+      <StackPanel>
+        <TextBlock Text="Option 1" />
+        <TextBlock Text="Option 2" />
+      </StackPanel>
+    </controls:SidebarSection>
+    
+    <controls:SidebarSection Header="Advanced" 
+                             Icon="fa-solid fa-sliders"
+                             IsExpanded="False">
+      <!-- Advanced options -->
+    </controls:SidebarSection>
+  </StackPanel>
+</UserControl>
+```
+
+### Sidebar Views Pattern
+
+**Pattern**: Feature-specific sidebar views in the feature's category
+
+**Examples**:
+- `Views/Jobs/JobsSidebarView.axaml` - Jobs feature sidebar
+- `Views/Tasks/TaskManagerSidebarView.axaml` - Task manager sidebar
+
+**Usage**: These views provide feature-specific navigation and filtering within the sidebar panel while the main content area displays detailed information.
+
 ## Code Templates
 
 See the `docs/templates/ui-integration/` folder for complete scaffolded templates:
 
-- **Feature ViewModel Template**: Complete ViewModel with sidebar integration
-- **Sidebar View Template**: XAML template for sidebar categories
-- **Main Content View Template**: XAML template for main content area
+- **Feature ViewModel Template**: Complete ViewModel with sidebar integration (with category support)
+- **Sidebar View Template**: XAML template for sidebar categories (with category namespaces)
+- **Main Content View Template**: XAML template for main content area (with category namespaces)
 - **Right Panel View Template**: XAML template for optional right panel
 - **Service Template**: Background service template
-- **Integration Checklist**: Step-by-step implementation guide
+- **Integration Checklist**: Step-by-step implementation guide (with category selection)
+
+**Template Placeholders**:
+- `[FEATURE_NAME]` - Replace with your feature name (e.g., Reports, Analytics)
+- `[CATEGORY]` - Replace with chosen category (Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks)
 
 ## Best Practices
 

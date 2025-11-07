@@ -15,7 +15,7 @@ This folder contains scaffolded templates for implementing new features followin
 - IDisposable implementation
 - Design-time constructor
 
-**Usage**: Replace `[FEATURE_NAME]` with your feature name (e.g., `Reports`, `Analytics`)
+**Usage**: Replace `[FEATURE_NAME]` with your feature name (e.g., `Reports`, `Analytics`) and `[CATEGORY]` with your chosen category
 
 ### 2. FeatureSidebarView.template.axaml
 **Purpose**: XAML template for the sidebar panel
@@ -25,8 +25,9 @@ This folder contains scaffolded templates for implementing new features followin
 - Hover and selected states
 - Optional search and action buttons (commented out)
 - Proper data binding with compiled bindings
+- Category-aware namespace declarations
 
-**Usage**: Replace `[FEATURE_NAME]` with your feature name
+**Usage**: Replace `[FEATURE_NAME]` with your feature name and `[CATEGORY]` with your chosen category
 
 ### 3. FeatureMainView.template.axaml
 **Purpose**: XAML template for the main content area
@@ -35,8 +36,9 @@ This folder contains scaffolded templates for implementing new features followin
 - Automatic ViewLocator-based content switching
 - Alternative manual DataTemplate approach (commented out)
 - Proper ViewModel binding
+- Category-aware namespace declarations
 
-**Usage**: Replace `[FEATURE_NAME]` with your feature name
+**Usage**: Replace `[FEATURE_NAME]` with your feature name and `[CATEGORY]` with your chosen category
 
 ### 4. INTEGRATION_CHECKLIST.md
 **Purpose**: Step-by-step implementation guide
@@ -146,6 +148,34 @@ All templates use the following placeholder that you must replace:
 | Placeholder | Description | Example |
 |-------------|-------------|---------|
 | `[FEATURE_NAME]` | Your feature name in PascalCase | `Reports`, `Analytics`, `Dashboard` |
+| `[CATEGORY]` | Category folder name | `Base`, `Controls`, `Dialogs`, `Jobs`, `Layout`, `Pages`, `Profiles`, `Settings`, `Tasks` |
+
+## Category Selection Guide
+
+Choose the appropriate category for your feature:
+
+| Category | Purpose | Examples | When to Use |
+|----------|---------|----------|-------------|
+| **Base** | Foundation classes | ViewModelBase, TabViewModel | Base classes, abstractions |
+| **Controls** | Reusable UI controls | PropertyDisplayItem, SerialPortDiscovery | Reusable controls with ViewModels |
+| **Dialogs** | Modal dialogs | ConfirmationDialog, InputDialog | User dialogs, prompts |
+| **Jobs** | Job management | JobsManagement, JobWizard | Job-related features |
+| **Layout** | Shell/navigation | MainWindow, Navigation, BottomPanel | Application shell, navigation |
+| **Pages** | Main content pages | Home, Connections, LogViewer, About | Primary feature pages |
+| **Profiles** | Profile management | SerialPort, Socat, PowerSupply | Profile editors |
+| **Settings** | Application settings | General, Appearance, Logging | Settings pages |
+| **Tasks** | Task management | TaskManager, TaskQueue | Task-related features |
+
+**Decision Tree**:
+1. Is it a reusable control? → **Controls**
+2. Is it a dialog/prompt? → **Dialogs**
+3. Is it part of the shell/navigation? → **Layout**
+4. Is it a settings page? → **Settings**
+5. Is it profile management? → **Profiles**
+6. Is it job-related? → **Jobs**
+7. Is it task-related? → **Tasks**
+8. Is it a main feature page? → **Pages**
+9. Is it a base class/abstraction? → **Base**
 
 ## Integration Patterns
 
@@ -193,7 +223,8 @@ The ViewLocator uses these rules to map ViewModels to Views:
 | `MyFeatureDetailsViewModel` | `MyFeatureDetailsView` |
 
 **Important**:
-- Namespace must be `S7Tools.ViewModels` → `S7Tools.Views`
+- Namespace must follow category structure: `S7Tools.ViewModels.{Category}` → `S7Tools.Views.{Category}`
+- Category must match between ViewModels and Views folders
 - Suffix must be `ViewModel` → `View`
 
 ## Data Template Override
