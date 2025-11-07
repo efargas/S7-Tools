@@ -62,9 +62,11 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         InitializeCommands();
 
         // Set up auto-refresh using the reusable service
+        // NOTE: Use targeted refresh that only affects SerialPortDiscovery UI elements
+        // This maintains checkbox responsiveness without interfering with LogViewer scroll
         var refreshOptions = new UIRefreshOptions
         {
-            PeriodicRefreshIntervalSeconds = 2.0,
+            PeriodicRefreshIntervalSeconds = 1.0,  // Less frequent to reduce interference
             EnablePeriodicRefresh = true,
             SkipInitialValue = true,
             EnableLogging = false,
@@ -77,7 +79,13 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             }
         };
 
-        _uiRefreshService.SetupAutoRefresh(this, _disposables, refreshOptions);
+        // Use custom refresh action that only refreshes serial port discovery properties
+        _uiRefreshService.SetupPropertyMonitoring(this, refreshOptions.MonitoredProperties.ToArray(),
+            RefreshSerialPortDiscoveryUI, _disposables, refreshOptions.SkipInitialValue);
+
+        // Set up periodic refresh with limited scope to avoid LogViewer interference
+        _uiRefreshService.SetupPeriodicRefresh(RefreshSerialPortDiscoveryUI,
+            refreshOptions.PeriodicRefreshIntervalSeconds, _disposables);
 
         // Set up automatic scanning timer (disabled by default)
         _scanTimer = new Timer(OnTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
@@ -820,6 +828,33 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         {
             _scanTimer.Change(Timeout.Infinite, Timeout.Infinite);
             _logger.LogInformation("Auto-scan disabled");
+        }
+    }
+
+    /// <summary>
+    /// Refreshes only the UI elements specific to SerialPortDiscovery to avoid interfering with LogViewer.
+    /// This method specifically targets the Can* properties that control checkbox enable/disable states.
+    /// </summary>
+    private void RefreshSerialPortDiscoveryUI()
+    {
+        try
+        {
+            // Only refresh the specific properties that are part of SerialPortDiscovery UI
+            // These are scoped to this ViewModel and won't affect other UI components like LogViewer
+            this.RaisePropertyChanged(nameof(CanToggleUsbPorts));
+            this.RaisePropertyChanged(nameof(CanToggleAcmPorts));
+            this.RaisePropertyChanged(nameof(CanToggleSerialPorts));
+
+            // Only refresh counts if not actively scanning to avoid interference
+            if (!IsScanning)
+            {
+                this.RaisePropertyChanged(nameof(TotalPortsFound));
+                this.RaisePropertyChanged(nameof(AccessiblePortsCount));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during SerialPortDiscovery UI refresh");
         }
     }
 
