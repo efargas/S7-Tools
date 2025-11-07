@@ -1,7 +1,8 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
-        xmlns:views="clr-namespace:S7Tools.Views">
+        xmlns:views="clr-namespace:S7Tools.Views"
+        xmlns:viewsPages="clr-namespace:S7Tools.Views.Pages">
     <Style Selector="ui|NavigationViewItem">
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="Transparent" />
@@ -186,24 +187,24 @@
         <Setter Property="BorderBrush" Value="#007ACC" />
     </Style>
 
-    <Style Selector="views|LogViewerView TextBox">
+    <Style Selector="viewsPages|LogViewerView TextBox">
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="8,0" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
-    <Style Selector="views|LogViewerView ComboBox">
+    <Style Selector="viewsPages|LogViewerView ComboBox">
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="8,0" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
-    <Style Selector="views|LogViewerView DatePicker">
+    <Style Selector="viewsPages|LogViewerView DatePicker">
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="8,0" />
         <Setter Property="FontSize" Value="12" />
     </Style>
-    <Style Selector="views|LogViewerView Button">
+    <Style Selector="viewsPages|LogViewerView Button">
         <Setter Property="Height" Value="32" />
         <Setter Property="Padding" Value="8,0" />
         <Setter Property="FontSize" Value="12" />
