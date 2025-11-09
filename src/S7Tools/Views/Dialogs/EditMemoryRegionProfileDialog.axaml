@@ -11,7 +11,6 @@
         Width="700" Height="600"
         MinWidth="600" MinHeight="500"
         WindowStartupLocation="CenterOwner"
-        Icon="/Assets/Icons/memory-profile.png"
         Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
 
   <Design.DataContext>
@@ -174,42 +173,50 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
                   <Button Command="{Binding AddSegmentCommand}"
                           IsEnabled="{Binding CanModify}"
-                          Classes="accent">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                      <Path Width="14" Height="14"
+                          Classes="accent"
+                          MinWidth="80"
+                          Padding="8,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Path Width="16" Height="16"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
-                      <TextBlock Text="Add" />
+                      <TextBlock Text="Add" VerticalAlignment="Center" />
                     </StackPanel>
                   </Button>
 
                   <Button Command="{Binding RemoveSegmentCommand}"
-                          IsEnabled="{Binding CanModify}">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                      <Path Width="14" Height="14"
+                          IsEnabled="{Binding CanModify}"
+                          MinWidth="90"
+                          Padding="8,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Path Width="16" Height="16"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M19,13H5V11H19V13Z" />
-                      <TextBlock Text="Remove" />
+                      <TextBlock Text="Remove" VerticalAlignment="Center" />
                     </StackPanel>
                   </Button>
 
                   <Button Command="{Binding EditSegmentCommand}"
-                          IsEnabled="{Binding CanModify}">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                      <Path Width="14" Height="14"
+                          IsEnabled="{Binding CanModify}"
+                          MinWidth="70"
+                          Padding="8,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Path Width="16" Height="16"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
-                      <TextBlock Text="Edit" />
+                      <TextBlock Text="Edit" VerticalAlignment="Center" />
                     </StackPanel>
                   </Button>
 
                   <Button Command="{Binding DuplicateSegmentCommand}"
-                          IsEnabled="{Binding CanModify}">
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                      <Path Width="14" Height="14"
+                          IsEnabled="{Binding CanModify}"
+                          MinWidth="100"
+                          Padding="8,6">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Path Width="16" Height="16"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M11,17H4A2,2 0 0,1 2,15V3A2,2 0 0,1 4,1H16V3H4V15H11V13L15,16L11,19V17M19,21V7H8V13H6V7A2,2 0 0,1 8,5H19A2,2 0 0,1 21,7V21A2,2 0 0,1 19,23H8A2,2 0 0,1 6,21V19H8V21H19Z" />
-                      <TextBlock Text="Duplicate" />
+                      <TextBlock Text="Duplicate" VerticalAlignment="Center" />
                     </StackPanel>
                   </Button>
                 </StackPanel>
@@ -218,16 +225,20 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
                   <Button Command="{Binding MoveUpCommand}"
                           IsEnabled="{Binding CanModify}"
-                          ToolTip.Tip="Move segment up">
-                    <Path Width="14" Height="14"
+                          ToolTip.Tip="Move segment up"
+                          MinWidth="36"
+                          Padding="8,6">
+                    <Path Width="16" Height="16"
                           Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                           Data="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
                   </Button>
 
                   <Button Command="{Binding MoveDownCommand}"
                           IsEnabled="{Binding CanModify}"
-                          ToolTip.Tip="Move segment down">
-                    <Path Width="14" Height="14"
+                          ToolTip.Tip="Move segment down"
+                          MinWidth="36"
+                          Padding="8,6">
+                    <Path Width="16" Height="16"
                           Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                           Data="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
                   </Button>
@@ -269,7 +280,7 @@
                           CanUserReorderColumns="False"
                           CanUserResizeColumns="True"
                           CanUserSortColumns="False"
-                          IsReadOnly="True"
+                          IsReadOnly="False"
                           GridLinesVisibility="Horizontal"
                           HeadersVisibility="Column"
                           SelectionMode="Single">

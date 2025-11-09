@@ -360,7 +360,12 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             .Select(profile => profile != null);
 
         IObservable<bool> canModify = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile?.CanModify() ?? false);
+            .Select(profile =>
+            {
+                bool canMod = profile?.CanModify() ?? false;
+                System.Diagnostics.Debug.WriteLine($"DEBUG: CanModify for profile '{profile?.Name}' (ID: {profile?.Id}): {canMod} (IsReadOnly: {profile?.IsReadOnly}, IsDefault: {profile?.IsDefault})");
+                return canMod;
+            });
 
         IObservable<bool> canDelete = this.WhenAnyValue(x => x.SelectedProfile)
             .Select(profile => profile?.CanDelete() ?? false);
@@ -589,6 +594,8 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     /// </summary>
     private async Task ExecuteEditAsync()
     {
+        System.Diagnostics.Debug.WriteLine($"DEBUG: ExecuteEditAsync called for {GetProfileTypeName()}");
+
         if (SelectedProfile == null)
         {
             StatusMessage = UIStrings.Status_NoProfileSelectedForEditing;

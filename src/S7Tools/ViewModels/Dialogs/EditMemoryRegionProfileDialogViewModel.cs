@@ -276,10 +276,12 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void InitializeCommands()
     {
+        // Save requires valid input AND at least one segment
         IObservable<bool> canSave = this.WhenAnyValue(
             x => x.IsValid,
             x => x.HasChanges,
-            (valid, changes) => valid && changes && CanModify);
+            x => x.Segments.Count,
+            (valid, changes, segmentCount) => valid && changes && CanModify && segmentCount > 0);
 
         SaveCommand = ReactiveCommand.Create(ExecuteSave, canSave)
             .DisposeWith(_disposables);
@@ -355,7 +357,11 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
         {
             this.RaisePropertyChanged(nameof(SelectedSegmentCount));
             this.RaisePropertyChanged(nameof(TotalSelectedSize));
+            SubscribeToSegmentChanges();
         };
+
+        // Subscribe to existing segments
+        SubscribeToSegmentChanges();
 
         // React to segment selection changes
         this.WhenAnyValue(x => x.SelectedSegment)
@@ -377,14 +383,17 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             return false;
         }
 
-        if (segmentCount == 0)
+        // Allow profiles with 0 segments during editing (user might be about to add segments)
+        // Validation will prevent saving if no segments exist
+
+        // Check for segment overlaps only if segments exist
+        if (segmentCount > 0)
         {
-            return false;
+            List<string> validationErrors = ValidateSegments();
+            return validationErrors.Count == 0;
         }
 
-        // Check for segment overlaps
-        List<string> validationErrors = ValidateSegments();
-        return validationErrors.Count == 0;
+        return true; // Valid if name is present, even with no segments yet
     }
 
     /// <summary>
@@ -417,6 +426,30 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Subscribes to segment property changes.
+    /// </summary>
+    private void SubscribeToSegmentChanges()
+    {
+        foreach (MemorySegment segment in Segments)
+        {
+            segment.PropertyChanged -= OnSegmentPropertyChanged;
+            segment.PropertyChanged += OnSegmentPropertyChanged;
+        }
+    }
+
+    /// <summary>
+    /// Handles property changes in memory segments.
+    /// </summary>
+    private void OnSegmentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MemorySegment.IsSelected))
+        {
+            this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+            this.RaisePropertyChanged(nameof(TotalSelectedSize));
+        }
     }
 
     /// <summary>
