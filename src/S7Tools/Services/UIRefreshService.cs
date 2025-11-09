@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Services.Interfaces;
@@ -79,12 +80,12 @@ public sealed class UIRefreshService : IUIRefreshService
         try
         {
             // Create a reactive subscription that monitors multiple properties
-            var propertyChanges = Observable.Empty<Unit>();
+            IObservable<Unit> propertyChanges = Observable.Empty<Unit>();
 
             // Combine all property change observables
             foreach (var propertyName in propertyNames)
             {
-                var propertyChange = Observable.FromEventPattern<PropertyChangedEventArgs>(
+                IObservable<Unit> propertyChange = Observable.FromEventPattern<PropertyChangedEventArgs>(
                     viewModel, nameof(INotifyPropertyChanged.PropertyChanged))
                     .Where(e => e.EventArgs.PropertyName == propertyName)
                     .Select(_ => Unit.Default);
@@ -93,7 +94,7 @@ public sealed class UIRefreshService : IUIRefreshService
             }
 
             // Set up the subscription
-            var subscription = propertyChanges;
+            IObservable<Unit> subscription = propertyChanges;
             if (skipInitialValue)
             {
                 subscription = subscription.Skip(1);
@@ -186,7 +187,7 @@ public sealed class UIRefreshService : IUIRefreshService
                 else if (viewModel is INotifyPropertyChanged notifyViewModel)
                 {
                     // For non-ReactiveObject ViewModels, try to use reflection to trigger PropertyChanged
-                    var propertyChangedField = viewModel.GetType()
+                    EventInfo? propertyChangedField = viewModel.GetType()
                         .GetEvent(nameof(INotifyPropertyChanged.PropertyChanged));
 
                     if (propertyChangedField != null)
@@ -235,10 +236,10 @@ public sealed class UIRefreshService : IUIRefreshService
             };
 
             // Get all properties of the ViewModel that match common patterns
-            var viewModelType = viewModel.GetType();
+            Type viewModelType = viewModel.GetType();
             var propertiesToRefresh = new List<string>();
 
-            foreach (var property in viewModelType.GetProperties())
+            foreach (PropertyInfo property in viewModelType.GetProperties())
             {
                 var propertyName = property.Name;
 

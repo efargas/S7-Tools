@@ -24,6 +24,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
     private readonly Mock<ISerialPortProfileService> _mockSerialService;
     private readonly Mock<ISocatProfileService> _mockSocatService;
     private readonly Mock<IPowerSupplyProfileService> _mockPowerService;
+    private readonly Mock<IMemoryRegionProfileService> _mockMemoryRegionService;
     private readonly Mock<ILogger<JobInfoDisplayViewModel>> _mockLogger;
     private readonly JobInfoDisplayViewModel _viewModel;
 
@@ -34,6 +35,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
         _mockSerialService = new Mock<ISerialPortProfileService>();
         _mockSocatService = new Mock<ISocatProfileService>();
         _mockPowerService = new Mock<IPowerSupplyProfileService>();
+        _mockMemoryRegionService = new Mock<IMemoryRegionProfileService>();
         _mockLogger = new Mock<ILogger<JobInfoDisplayViewModel>>();
 
         // Setup service provider for dependency injection
@@ -42,6 +44,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
         services.AddSingleton(_mockSerialService.Object);
         services.AddSingleton(_mockSocatService.Object);
         services.AddSingleton(_mockPowerService.Object);
+        services.AddSingleton(_mockMemoryRegionService.Object);
         services.AddSingleton(_mockLogger.Object);
         _serviceProvider = services.BuildServiceProvider();
 
@@ -51,6 +54,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
             _mockSerialService.Object,
             _mockSocatService.Object,
             _mockPowerService.Object,
+            _mockMemoryRegionService.Object,
             _mockLogger.Object);
     }
 
@@ -137,6 +141,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
             _mockSerialService.Object,
             _mockSocatService.Object,
             _mockPowerService.Object,
+            _mockMemoryRegionService.Object,
             _mockLogger.Object);
 
         // Act

@@ -19,6 +19,8 @@ using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Dialogs;
+using S7Tools.Views.Dialogs;
 
 namespace S7Tools.ViewModels.Settings;
 
@@ -263,7 +265,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
 
             // Save the profile to the manager
             _specificLogger.LogDebug("Saving new memory region profile to manager");
-            var savedProfile = await _profileService.CreateAsync(newProfile);
+            MemoryMappingProfile savedProfile = await _profileService.CreateAsync(newProfile);
             _specificLogger.LogInformation("Successfully saved memory region profile: Name={Name}, Id={Id}",
                 savedProfile.Name, savedProfile.Id);
 
@@ -293,58 +295,72 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
 
             _specificLogger.LogDebug("Opening edit dialog for memory region profile: Name={Name}, Id={Id}", SelectedProfile.Name, SelectedProfile.Id);
 
-            // Create a logger for the dialog ViewModel
-            var dialogLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<ViewModels.Dialogs.EditMemoryRegionProfileDialogViewModel>();
-
-            // Create the edit dialog ViewModel and view
-            var dialogViewModel = new ViewModels.Dialogs.EditMemoryRegionProfileDialogViewModel(SelectedProfile, dialogLogger);
-            var dialog = new Views.Dialogs.EditMemoryRegionProfileDialog(dialogViewModel);
-
-            // Show the dialog on UI thread
-            bool? dialogResult = null;
-            await _uiThreadService.InvokeOnUIThreadAsync(async () =>
+            try
             {
-                // Get the main window as parent
-                Avalonia.Controls.Window? mainWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
-                    ? desktop.MainWindow
-                    : null;
+                // Create a logger for the dialog ViewModel
+                ILogger<EditMemoryRegionProfileDialogViewModel> dialogLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<EditMemoryRegionProfileDialogViewModel>();
+                _specificLogger.LogDebug("Created dialog logger successfully");
 
-                if (mainWindow != null)
+                // Create the edit dialog ViewModel and view
+                var dialogViewModel = new EditMemoryRegionProfileDialogViewModel(SelectedProfile, dialogLogger);
+                _specificLogger.LogDebug("Created dialog ViewModel successfully");
+
+                var dialog = new EditMemoryRegionProfileDialog(dialogViewModel);
+                _specificLogger.LogDebug("Created dialog view successfully");
+
+                // Show the dialog on UI thread
+                bool? dialogResult = null;
+                dialogResult = await _uiThreadService.InvokeOnUIThreadAsync(async () =>
                 {
-                    dialogResult = await dialog.ShowDialog<bool?>(mainWindow);
+                    _specificLogger.LogDebug("Getting main window for dialog parent");
+                    // Get the main window as parent
+                    Avalonia.Controls.Window? mainWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                        ? desktop.MainWindow
+                        : null;
+
+                    if (mainWindow != null)
+                    {
+                        _specificLogger.LogDebug("Main window found, showing dialog");
+                        return await dialog.ShowDialog<bool?>(mainWindow);
+                    }
+                    else
+                    {
+                        _specificLogger.LogWarning("Could not get main window for dialog parent");
+                        return false;
+                    }
+                }).ConfigureAwait(false);
+
+                _specificLogger.LogInformation("Edit dialog result: Success={Success}", dialogResult == true);
+
+                if (dialogResult == true)
+                {
+                    MemoryMappingProfile? updatedProfile = dialogViewModel.CreateUpdatedProfile();
+                    if (updatedProfile != null)
+                    {
+                        // Save the updated profile
+                        _specificLogger.LogDebug("Saving updated memory region profile to manager");
+                        MemoryMappingProfile savedProfile = await _profileService.UpdateAsync(updatedProfile);
+                        _specificLogger.LogInformation("Successfully updated memory region profile: Name={Name}, Id={Id}",
+                            savedProfile.Name, savedProfile.Id);
+
+                        return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
+                    }
+                    else
+                    {
+                        _specificLogger.LogError("Failed to create updated profile from dialog");
+                        return ProfileDialogResult<MemoryMappingProfile>.Failure("Failed to create updated profile");
+                    }
                 }
                 else
                 {
-                    _specificLogger.LogWarning("Could not get main window for dialog parent");
-                    dialogResult = false;
-                }
-            });
-
-            _specificLogger.LogInformation("Edit dialog result: Success={Success}", dialogResult == true);
-
-            if (dialogResult == true)
-            {
-                var updatedProfile = dialogViewModel.CreateUpdatedProfile();
-                if (updatedProfile != null)
-                {
-                    // Save the updated profile
-                    _specificLogger.LogDebug("Saving updated memory region profile to manager");
-                    var savedProfile = await _profileService.UpdateAsync(updatedProfile);
-                    _specificLogger.LogInformation("Successfully updated memory region profile: Name={Name}, Id={Id}",
-                        savedProfile.Name, savedProfile.Id);
-
-                    return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
-                }
-                else
-                {
-                    _specificLogger.LogError("Failed to create updated profile from dialog");
-                    return ProfileDialogResult<MemoryMappingProfile>.Failure("Failed to create updated profile");
+                    _specificLogger.LogInformation("Memory region profile edit was cancelled by user");
+                    return ProfileDialogResult<MemoryMappingProfile>.Cancelled();
                 }
             }
-            else
+            catch (Exception dialogEx)
             {
-                _specificLogger.LogInformation("Memory region profile edit was cancelled by user");
-                return ProfileDialogResult<MemoryMappingProfile>.Cancelled();
+                _specificLogger.LogError(dialogEx, "Error creating or showing dialog");
+                return ProfileDialogResult<MemoryMappingProfile>.Failure($"Dialog error: {dialogEx.Message}");
             }
         }
         catch (Exception ex)
@@ -453,7 +469,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
             _specificLogger.LogDebug("Subscribing to segment property changes for profile {ProfileName} with {SegmentCount} segments",
                 SelectedProfile.Name, SelectedProfile.Segments.Count);
 
-            foreach (var segment in SelectedProfile.Segments)
+            foreach (MemorySegment segment in SelectedProfile.Segments)
             {
                 segment.PropertyChanged += OnSegmentPropertyChanged;
             }
@@ -467,7 +483,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     {
         if (SelectedProfile?.Segments != null)
         {
-            foreach (var segment in SelectedProfile.Segments)
+            foreach (MemorySegment segment in SelectedProfile.Segments)
             {
                 segment.PropertyChanged -= OnSegmentPropertyChanged;
             }

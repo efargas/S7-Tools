@@ -110,7 +110,7 @@ public class SettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             // Log the full exception with stack trace to identify the root cause
-            var logger = _serviceProvider.GetRequiredService<ILogger<SettingsViewModel>>();
+            ILogger<SettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<SettingsViewModel>>();
             logger.LogError(ex, "CRITICAL: Failed to create ViewModel for category '{Category}'. Exception: {Message}", category, ex.Message);
 
             // Return a placeholder ViewModel to prevent application crash

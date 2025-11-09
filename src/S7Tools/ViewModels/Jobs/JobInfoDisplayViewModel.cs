@@ -310,7 +310,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             {
                 try
                 {
-                    var memoryProfile = await _memoryRegionService.GetByIdAsync(job.MemoryRegionProfileId);
+                    MemoryMappingProfile? memoryProfile = await _memoryRegionService.GetByIdAsync(job.MemoryRegionProfileId);
                     if (memoryProfile != null)
                     {
                         profileProperties.Add(new PropertyDisplayItem
@@ -350,7 +350,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                         {
                             for (int i = 0; i < selectedSegments.Count; i++)
                             {
-                                var segment = selectedSegments[i];
+                                MemorySegment segment = selectedSegments[i];
                                 segmentProperties.Add(new PropertyDisplayItem
                                 {
                                     Label = $"Segment {i + 1}",
@@ -436,7 +436,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             if (_selectedJob.MemoryRegionProfileId != 0 && MemoryRegionProfileDetails != null)
             {
                 // Check if the profile details contain an error message
-                var errorProperty = MemoryRegionProfileDetails.ConfigurationProperties
+                PropertyDisplayItem? errorProperty = MemoryRegionProfileDetails.ConfigurationProperties
                     ?.FirstOrDefault(p => p.Label == "Profile Status" && p.Value.Contains("Error"));
                 if (errorProperty != null)
                 {

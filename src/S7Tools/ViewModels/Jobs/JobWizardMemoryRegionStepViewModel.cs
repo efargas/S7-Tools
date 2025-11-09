@@ -391,7 +391,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
             _logger.LogDebug("Subscribing to segment property changes for profile {ProfileName} with {SegmentCount} segments",
                 SelectedProfile.Name, SelectedProfile.Segments.Count);
 
-            foreach (var segment in SelectedProfile.Segments)
+            foreach (MemorySegment segment in SelectedProfile.Segments)
             {
                 segment.PropertyChanged += OnSegmentPropertyChanged;
             }
@@ -405,7 +405,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
     {
         if (SelectedProfile?.Segments != null)
         {
-            foreach (var segment in SelectedProfile.Segments)
+            foreach (MemorySegment segment in SelectedProfile.Segments)
             {
                 segment.PropertyChanged -= OnSegmentPropertyChanged;
             }

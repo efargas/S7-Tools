@@ -127,7 +127,7 @@ namespace S7Tools.Services
                 }
 
                 // Fire change events outside the lock
-                foreach (var eventArgs in eventsToFire)
+                foreach (SettingsChangedEventArgs eventArgs in eventsToFire)
                 {
                     SettingsChanged?.Invoke(this, eventArgs);
                 }
