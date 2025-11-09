@@ -329,7 +329,7 @@
                   <TextBlock Text="Size" FontSize="11" />
                 </DataGridTextColumn.Header>
                 <DataGridTextColumn.Binding>
-                  <Binding Path="Size" Converter="{x:Static conv:ByteSizeConverter.Instance}" />
+                  <Binding Path="Size" Mode="OneWay" Converter="{x:Static conv:ByteSizeConverter.Instance}" />
                 </DataGridTextColumn.Binding>
               </DataGridTextColumn>
 

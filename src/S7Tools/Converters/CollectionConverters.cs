@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
 using S7Tools.Core.Models;
 
@@ -48,7 +49,8 @@ public static class CollectionConverters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotImplementedException("SelectedSegmentCountConverter is one-way only.");
+            // Return DoNothing instead of throwing to prevent binding errors
+            return Avalonia.Data.BindingOperations.DoNothing;
         }
     }
 
@@ -69,7 +71,8 @@ public static class CollectionConverters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotImplementedException("CollectionCountConverter is one-way only.");
+            // Return DoNothing instead of throwing to prevent binding errors
+            return Avalonia.Data.BindingOperations.DoNothing;
         }
     }
 
@@ -91,7 +94,8 @@ public static class CollectionConverters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotImplementedException("CollectionIsEmptyConverter is one-way only.");
+            // Return DoNothing instead of throwing to prevent binding errors
+            return Avalonia.Data.BindingOperations.DoNothing;
         }
     }
 
@@ -113,7 +117,8 @@ public static class CollectionConverters
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            throw new NotImplementedException("CollectionHasItemsConverter is one-way only.");
+            // Return DoNothing instead of throwing to prevent binding errors
+            return Avalonia.Data.BindingOperations.DoNothing;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
 
 namespace S7Tools.Converters;
@@ -35,9 +36,15 @@ public class ByteSizeConverter : IValueConverter
     /// <summary>
     /// Not implemented - this converter is one-way only.
     /// </summary>
+    /// <param name="value">The value to convert back (not used).</param>
+    /// <param name="targetType">The target type (not used).</param>
+    /// <param name="parameter">Optional parameter (not used).</param>
+    /// <param name="culture">The culture info (not used).</param>
+    /// <returns>Always returns Avalonia.Data.BindingOperations.DoNothing to indicate conversion is not supported.</returns>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException("ByteSizeConverter is a one-way converter.");
+        // Return DoNothing instead of throwing to prevent binding errors
+        return Avalonia.Data.BindingOperations.DoNothing;
     }
 
     /// <summary>
