@@ -186,7 +186,20 @@ namespace S7Tools.Core.Models.Configuration
             settings.DefaultSettings.Add("profiles.serialPath", "Resources/Profiles/Serial/SerialProfiles.json");
             settings.DefaultSettings.Add("profiles.socatPath", "Resources/Profiles/Socat/SocatProfiles.json");
             settings.DefaultSettings.Add("profiles.powerSupplyPath", "Resources/Profiles/PowerSupply/PowerSupplyProfiles.json");
-            settings.DefaultSettings.Add("profiles.memoryRegionsPath", "Resources/Profiles/MemoryRegions");
+            settings.DefaultSettings.Add("profiles.memoryRegionPath", "Resources/Profiles/MemoryRegions/profiles.json");
+
+            // Memory region specific settings
+            settings.DefaultSettings.Add("memoryRegion.maxProfiles", 100);
+            settings.DefaultSettings.Add("memoryRegion.autoLoadDefaultProfile", true);
+            settings.DefaultSettings.Add("memoryRegion.autoSaveProfiles", true);
+            settings.DefaultSettings.Add("memoryRegion.validationEnabled", true);
+            settings.DefaultSettings.Add("memoryRegion.autoSelectBssSegment", true);
+            settings.DefaultSettings.Add("memoryRegion.maxProfilesInDropdown", 50);
+            settings.DefaultSettings.Add("memoryRegion.enableTemplateImport", true);
+            settings.DefaultSettings.Add("memoryRegion.exportFormats", "JSON");
+            settings.DefaultSettings.Add("memoryRegion.maxSegmentsPerProfile", 50);
+            settings.DefaultSettings.Add("memoryRegion.enableOverlapDetection", true);
+            settings.DefaultSettings.Add("memoryRegion.logProfileOperations", true);
 
             // Export settings
             settings.DefaultSettings.Add("export.defaultFormat", "JSON");

@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -47,13 +49,41 @@ public class MemoryRegionProfileService : StandardProfileManager<MemoryMappingPr
     /// <inheritdoc/>
     protected override async Task CreateDefaultProfilesAsync(CancellationToken cancellationToken)
     {
-        // Create default memory region profile for S7-1200 PLC
-        var defaultProfile = MemoryMappingProfile.CreateDefaultProfile();
+        // Create a default memory region profile using the centralized factory method
+        // This ensures consistency between dialog defaults and saved profile defaults
+        MemoryMappingProfile defaultProfile = MemoryMappingProfile.CreateDefaultProfile();
 
-        // Use the CreateAsync method to ensure proper validation and persistence
-        await CreateAsync(defaultProfile, cancellationToken).ConfigureAwait(false);
+        // Override read-only to allow user modifications of the saved default profile
+        defaultProfile.IsReadOnly = false;
 
-        _logger.LogInformation("Created default memory region profile: {ProfileName}", defaultProfile.Name);
+        _profiles.Add(defaultProfile);
+
+        // Ensure directory exists
+        string? directory = Path.GetDirectoryName(_profilesPath);
+        if (!string.IsNullOrEmpty(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // Save profiles using the same logic as SaveProfilesAsync
+        try
+        {
+            var options = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                WriteIndented = true
+            };
+
+            string json = JsonSerializer.Serialize(_profiles, options);
+            await File.WriteAllTextAsync(_profilesPath, json, cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Created default memory region profile: {ProfileName}", defaultProfile.Name);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save default memory region profile");
+            _profiles.Clear(); // Clear the in-memory profiles if save failed
+        }
     }
 
     #endregion

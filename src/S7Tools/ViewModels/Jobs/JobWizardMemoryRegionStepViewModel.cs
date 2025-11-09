@@ -129,7 +129,9 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         get
         {
             if (SelectedProfile == null)
+            {
                 return "No profile selected";
+            }
 
             return SelectedProfile.GetSummary();
         }
@@ -159,9 +161,21 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         get
         {
             long size = TotalSelectedSize;
-            if (size == 0) return "0 bytes";
-            if (size < 1024) return $"{size} bytes";
-            if (size < 1024 * 1024) return $"{size / 1024.0:F1} KB";
+            if (size == 0)
+            {
+                return "0 bytes";
+            }
+
+            if (size < 1024)
+            {
+                return $"{size} bytes";
+            }
+
+            if (size < 1024 * 1024)
+            {
+                return $"{size / 1024.0:F1} KB";
+            }
+
             return $"{size / (1024.0 * 1024.0):F1} MB";
         }
     }
@@ -182,13 +196,19 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         get
         {
             if (SelectedProfile == null)
+            {
                 return "Please select a memory region profile";
+            }
 
             if (SelectedSegmentCount == 0)
+            {
                 return "Selected profile has no segments marked for dumping";
+            }
 
             if (!HasContiguousSelection)
+            {
                 return "Warning: Selected segments are not contiguous";
+            }
 
             return "Memory region configuration is valid";
         }

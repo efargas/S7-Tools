@@ -144,48 +144,240 @@ public class MemoryMappingProfile : IProfileBase
     #region Factory Methods
 
     /// <summary>
-    /// Creates the default S7Tools memory mapping profile with standard firmware segments.
+    /// Creates the default S7Tools memory mapping profile with comprehensive S7-1200 firmware v4.02.01 segments.
     /// </summary>
-    /// <returns>A new MemoryMappingProfile instance configured with default settings.</returns>
+    /// <returns>A new MemoryMappingProfile instance configured with comprehensive S7-1200 memory mapping.</returns>
     /// <remarks>
-    /// The default profile includes common firmware segments (.text, .data, .bss) with
-    /// the .bss segment pre-selected for typical memory dump operations.
+    /// The default profile includes complete S7-1200 firmware v4.02.01 segments based on actual firmware analysis.
+    /// The .bss segment is pre-selected for typical memory dump operations, with .text, .rodata, and .data
+    /// also recommended for comprehensive firmware analysis.
     /// </remarks>
     public static MemoryMappingProfile CreateDefaultProfile()
     {
         return new MemoryMappingProfile
         {
             Id = 1, // Default profile always has ID 1
-            Name = "S7Tools Default Memory Regions",
-            Description = "Default memory region profile with standard firmware segments (.text, .data, .bss). The .bss segment is pre-selected for typical memory dump operations. This profile cannot be modified or deleted.",
+            Name = "S7-1200 Firmware v4.02.01 Complete",
+            Description = "Complete firmware memory mapping for Siemens S7-1200 v4.02.01 (6ES7212-1AE40-OXBO). Based on actual firmware analysis with comprehensive segment coverage for professional reverse engineering and memory dump operations.",
             Segments = new List<MemorySegment>
             {
+                // Executive and System Segments
+                new()
+                {
+                    Name = ".exec_in_lomem",
+                    StartAddress = "0x00000000",
+                    Size = 30132,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "Executive code in low memory"
+                },
+                new()
+                {
+                    Name = ".bitable",
+                    StartAddress = "0x00040000",
+                    Size = 64,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Binary table segment"
+                },
+                new()
+                {
+                    Name = ".sdramexec",
+                    StartAddress = "0x00040040",
+                    Size = 1232,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "SDRAM executive segment"
+                },
+                new()
+                {
+                    Name = ".syscall",
+                    StartAddress = "0x00040540",
+                    Size = 8,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "System call segment"
+                },
+                new()
+                {
+                    Name = ".th_initial",
+                    StartAddress = "0x00041040",
+                    Size = 10584,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "Thread initialization segment"
+                },
+                new()
+                {
+                    Name = ".secinfo",
+                    StartAddress = "0x000439c0",
+                    Size = 828,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Security information segment"
+                },
+                new()
+                {
+                    Name = ".fixaddr",
+                    StartAddress = "0x00043d00",
+                    Size = 0,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "Fixed address segment"
+                },
+                new()
+                {
+                    Name = ".fixtype",
+                    StartAddress = "0x00043d00",
+                    Size = 0,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "Fixed type segment"
+                },
+
+                // Core Firmware Segments (Recommended for analysis)
                 new()
                 {
                     Name = ".text",
-                    StartAddress = "0x08000000",
-                    Size = 128 * 1024, // 128 KB
+                    StartAddress = "0x00043d00",
+                    Size = 14139040, // ~13.5 MB
                     Type = MemorySegmentType.Flash,
-                    IsSelected = false,
-                    Description = "Program code section - executable instructions"
+                    IsSelected = true,
+                    Description = "Code/text segment - main executable code (RECOMMENDED)"
+                },
+                new()
+                {
+                    Name = ".rodata",
+                    StartAddress = "0x00defdc0",
+                    Size = 3871660, // ~3.7 MB
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = true,
+                    Description = "Read-only data segment - constants and strings (RECOMMENDED)"
                 },
                 new()
                 {
                     Name = ".data",
-                    StartAddress = "0x20000000",
-                    Size = 16 * 1024, // 16 KB
+                    StartAddress = "0x0111a1f80",
+                    Size = 133012, // ~130 KB
                     Type = MemorySegmentType.RAM,
-                    IsSelected = false,
-                    Description = "Initialized data section - variables with initial values"
+                    IsSelected = true,
+                    Description = "Initialized data segment - global variables (RECOMMENDED)"
                 },
                 new()
                 {
                     Name = ".bss",
-                    StartAddress = "0x20004000",
-                    Size = 16 * 1024, // 16 KB
+                    StartAddress = "0x01fe01040",
+                    Size = 8519448, // ~8.1 MB
                     Type = MemorySegmentType.RAM,
                     IsSelected = true,
-                    Description = "Uninitialized data section - zero-initialized variables (default selection)"
+                    Description = "Uninitialized data segment (BSS) - zero-initialized variables (DEFAULT SELECTION)"
+                },
+
+                // Memory Pool and Cache Segments
+                new()
+                {
+                    Name = ".cc_memory",
+                    StartAddress = "0x03641040",
+                    Size = 0,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "Cache coherent memory"
+                },
+                new()
+                {
+                    Name = ".uninitialized",
+                    StartAddress = "0x03c41040",
+                    Size = 54186228, // ~51.7 MB
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Uninitialized memory pool - heap space"
+                },
+                new()
+                {
+                    Name = "CLSI_CACHED_MEM_POOL",
+                    StartAddress = "0x06fac940",
+                    Size = 0,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "CLSI cached memory pool"
+                },
+                new()
+                {
+                    Name = ".dram_uncache",
+                    StartAddress = "0x07ff0000",
+                    Size = 0,
+                    Type = MemorySegmentType.Flash,
+                    IsSelected = false,
+                    Description = "DRAM uncached segment"
+                },
+
+                // Hardware Interface Segments
+                new()
+                {
+                    Name = "MAP_MAC_MEM",
+                    StartAddress = "0x07ff0000",
+                    Size = 1172,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "MAC memory mapping - network interface"
+                },
+
+                // Internal RAM Segments
+                new()
+                {
+                    Name = ".iram0",
+                    StartAddress = "0x10030000",
+                    Size = 31392,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Internal RAM 0 - fast access memory"
+                },
+                new()
+                {
+                    Name = ".iram1",
+                    StartAddress = "0x10040000",
+                    Size = 49756,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Internal RAM 1 - additional fast memory"
+                },
+                new()
+                {
+                    Name = ".qrdtable",
+                    StartAddress = "0x10041400",
+                    Size = 1024,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "QRD table segment"
+                },
+
+                // Boot Segments
+                new()
+                {
+                    Name = ".softboot",
+                    StartAddress = "0x10041800",
+                    Size = 1792,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Soft boot segment - boot loader code"
+                },
+                new()
+                {
+                    Name = ".bootinfo",
+                    StartAddress = "0x10041f00",
+                    Size = 28,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Boot information segment - boot parameters"
+                },
+                new()
+                {
+                    Name = ".dtcm",
+                    StartAddress = "0x10010000",
+                    Size = 11888,
+                    Type = MemorySegmentType.RAM,
+                    IsSelected = false,
+                    Description = "Data tightly coupled memory - processor cache"
                 }
             },
             IsDefault = true,
@@ -200,7 +392,12 @@ public class MemoryMappingProfile : IProfileBase
                 ["Purpose"] = "S7Tools Memory Region Management",
                 ["Author"] = "S7Tools",
                 ["Modifiable"] = "False",
-                ["DefaultSegment"] = ".bss"
+                ["DefaultSegment"] = ".bss",
+                ["PLCModel"] = "6ES7212-1AE40-OXBO",
+                ["FirmwareVersion"] = "v4.02.01",
+                ["TotalSegments"] = "22",
+                ["RecommendedSegments"] = ".text,.rodata,.data,.bss",
+                ["Source"] = "Actual S7-1200 firmware analysis"
             }
         };
     }

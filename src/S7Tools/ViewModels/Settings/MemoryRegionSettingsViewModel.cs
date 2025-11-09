@@ -300,8 +300,19 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     private void InitializePathCommands()
     {
         BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
+        BrowseProfilesPathCommand.ThrownExceptions
+            .Subscribe(ex => HandleCommandException(ex, "browsing profiles path"))
+            .DisposeWith(_disposables);
+
         OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
+        OpenProfilesPathCommand.ThrownExceptions
+            .Subscribe(ex => HandleCommandException(ex, "opening profiles path"))
+            .DisposeWith(_disposables);
+
         ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
+        ResetProfilesPathCommand.ThrownExceptions
+            .Subscribe(ex => HandleCommandException(ex, "resetting profiles path"))
+            .DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -318,8 +329,19 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     /// </summary>
     private void InitializeImportExportCommands()
     {
-        ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync);
+        IObservable<bool> canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
+            .Select(count => count > 0);
+
+        ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
+        ExportProfilesCommand.ThrownExceptions
+            .Subscribe(ex => HandleCommandException(ex, "exporting profiles"))
+            .DisposeWith(_disposables);
+
+        // Import profiles command - always enabled
         ImportProfilesCommand = ReactiveCommand.CreateFromTask(ImportProfilesAsync);
+        ImportProfilesCommand.ThrownExceptions
+            .Subscribe(ex => HandleCommandException(ex, "importing profiles"))
+            .DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -338,11 +360,11 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     /// <summary>
     /// Handles settings changes and refreshes path if relevant settings changed.
     /// </summary>
-    private async void OnSettingsChanged(object? sender, S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs e)
+    private void OnSettingsChanged(object? sender, S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs e)
     {
-        if (e.Key.StartsWith("memoryRegion.", StringComparison.OrdinalIgnoreCase))
+        if (e.Key.StartsWith("memoryRegion.") || e.Key.StartsWith("profiles.memoryRegion"))
         {
-            await _uiThreadService.InvokeOnUIThreadAsync(RefreshFromSettings);
+            RefreshFromSettings();
         }
     }
 
@@ -353,16 +375,35 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     {
         try
         {
-            // Refresh the resolved path
-            ProfilesPath = _pathService.MemoryRegionProfilesPath;
+            // Use the new settings service with key-value access (following PowerSupplySettingsViewModel pattern)
+            string memoryRegionProfilePath = _settingsService.GetSetting<string>("profiles.memoryRegionPath", _pathService.MemoryRegionProfilesPath);
+            string? directoryPath = Path.GetDirectoryName(memoryRegionProfilePath);
 
-            this.RaisePropertyChanged(nameof(ProfilesPath));
+            // Resolve the path using the path service, which handles both absolute and relative paths
+            string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
+
+            // If resolution results in an invalid path, fall back to the memory region profiles directory
+            if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
+            {
+                // Use the directory containing the memory region profiles file as fallback
+                ProfilesPath = Path.GetDirectoryName(_pathService.MemoryRegionProfilesPath) ?? _pathService.ProfilesDirectory;
+            }
+            else
+            {
+                ProfilesPath = resolvedPath;
+            }
 
             _specificLogger.LogDebug("Refreshed memory region settings - ProfilesPath: {ProfilesPath}", ProfilesPath);
         }
         catch (Exception ex)
         {
-            _specificLogger.LogWarning(ex, "Error refreshing memory region settings from application settings");
+            _specificLogger.LogError(ex, "Failed to refresh settings from settings service");
+            _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
+            });
+            // On exception, use the directory containing the memory region profiles file as fallback
+            ProfilesPath = Path.GetDirectoryName(_pathService.MemoryRegionProfilesPath) ?? _pathService.ProfilesDirectory;
         }
     }
 
@@ -371,38 +412,52 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     /// </summary>
     private async Task BrowseProfilesPathAsync()
     {
+        if (_fileDialogService == null)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
+            });
+            _specificLogger.LogWarning("Browse profiles path failed: File dialog service not available");
+            return;
+        }
+
         try
         {
-            if (_fileDialogService == null)
+            _specificLogger.LogDebug("Browsing for memory region profiles path");
+
+            string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
+                "Select Memory Region Profiles Folder").ConfigureAwait(false);
+
+            if (!string.IsNullOrEmpty(folderPath))
             {
-                await _dialogService.ShowErrorAsync(
-                    "File Dialog Unavailable",
-                    "The file dialog service is not available.");
-                return;
+                ProfilesPath = folderPath;
+
+                // Use the new settings service to update the profiles path
+                await _settingsService.SetSettingAsync("profiles.memoryRegionPath", Path.Combine(folderPath, "profiles.json")).ConfigureAwait(false);
+
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = string.Format(UIStrings.Status_ProfilesPathSetTo, Path.GetFileName(folderPath));
+                });
+                _specificLogger.LogInformation("Memory region profiles path changed to: {Path}", folderPath);
             }
-
-            string currentDirectory = Path.GetDirectoryName(ProfilesPath) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
-            string? selectedPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
-                "Select Memory Region Profiles Directory",
-                currentDirectory);
-
-            if (!string.IsNullOrEmpty(selectedPath))
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Access denied while setting profiles path");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                // Create filename for the new path
-                string newProfilesPath = Path.Combine(selectedPath, "profiles.json");
-
-                // Update setting which will trigger refresh
-                await _settingsService.SetSettingAsync("memoryRegion.profilesPath", newProfilesPath);
-
-                StatusMessage = $"Profiles path updated to: {newProfilesPath}";
-                _specificLogger.LogInformation("Memory region profiles path updated to: {ProfilesPath}", newProfilesPath);
-            }
+                StatusMessage = UIStrings.Status_FailedToSetProfilesPathAccessDenied;
+            });
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error browsing for memory region profiles path");
-            await _dialogService.ShowErrorAsync("Browse Error", $"Failed to browse for profiles path: {ex.Message}");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = string.Format(UIStrings.Status_FailedToSetProfilesPath, ex.Message);
+            });
         }
     }
 
@@ -413,28 +468,58 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     {
         try
         {
-            string? directory = Path.GetDirectoryName(ProfilesPath);
-            if (!string.IsNullOrEmpty(directory) && Directory.Exists(directory))
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = directory,
-                    UseShellExecute = true
-                });
+                StatusMessage = UIStrings.Status_OpeningProfilesFolder;
+            });
 
-                StatusMessage = $"Opened directory: {directory}";
-            }
-            else
+            if (string.IsNullOrEmpty(ProfilesPath))
             {
-                await _dialogService.ShowErrorAsync(
-                    "Directory Not Found",
-                    $"The profiles directory does not exist: {directory}");
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = UIStrings.Status_ProfilesPathNotConfigured;
+                });
+                _specificLogger.LogWarning("Cannot open profiles folder: Path is null or empty");
+                return;
             }
+
+            // Ensure the directory exists before trying to open it
+            if (!Directory.Exists(ProfilesPath))
+            {
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = UIStrings.Status_CreatingProfilesFolder;
+                });
+                Directory.CreateDirectory(ProfilesPath);
+                _specificLogger.LogInformation("Created memory region profiles directory: {ProfilesPath}", ProfilesPath);
+            }
+
+            _specificLogger.LogInformation("Opening memory region profiles folder: {ProfilesPath}", ProfilesPath);
+
+            // Use centralized PlatformHelper for consistent cross-platform behavior
+            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
+
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ProfilesFolderOpened;
+            });
+            _specificLogger.LogInformation("Successfully opened memory region profiles folder");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Access denied while opening profiles folder");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_FailedToOpenFolderAccessDenied;
+            });
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error opening memory region profiles directory");
-            await _dialogService.ShowErrorAsync("Open Error", $"Failed to open profiles directory: {ex.Message}");
+            _specificLogger.LogError(ex, "Error opening memory region profiles folder: {Message}", ex.Message);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = string.Format(UIStrings.Status_FailedToOpenFolder, ex.Message);
+            });
         }
     }
 
@@ -445,18 +530,27 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     {
         try
         {
-            string defaultPath = Path.Combine("src", "resources", "MemoryRegionProfiles", "profiles.json");
+            _specificLogger.LogDebug("Resetting memory region profiles path to default");
 
-            // Update setting which will trigger refresh
-            await _settingsService.SetSettingAsync("memoryRegion.profilesPath", defaultPath);
+            // Reset the setting to its default value
+            await _settingsService.ResetSettingAsync("profiles.memoryRegionPath").ConfigureAwait(false);
 
-            StatusMessage = "Profiles path reset to default";
-            _specificLogger.LogInformation("Memory region profiles path reset to default: {DefaultPath}", defaultPath);
+            // Explicitly refresh to ensure UI consistency
+            RefreshFromSettings();
+
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ProfilesPathReset;
+            });
+            _specificLogger.LogInformation("Memory region profiles path reset to default");
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error resetting memory region profiles path");
-            await _dialogService.ShowErrorAsync("Reset Error", $"Failed to reset profiles path: {ex.Message}");
+            _specificLogger.LogError(ex, "Error resetting memory region profiles path to default");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = string.Format(UIStrings.Status_FailedToResetProfilesPath, ex.Message);
+            });
         }
     }
 
@@ -469,38 +563,63 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     /// </summary>
     private async Task ExportProfilesAsync()
     {
+        if (_fileDialogService == null)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
+            });
+            _specificLogger.LogWarning("Export profiles failed: File dialog service not available");
+            return;
+        }
+
         try
         {
-            if (_fileDialogService == null)
-            {
-                await _dialogService.ShowErrorAsync(
-                    "File Dialog Unavailable",
-                    "The file dialog service is not available for export.");
-                return;
-            }
+            _specificLogger.LogDebug("Exporting memory region profiles");
 
-            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
+            string? filePath = await _fileDialogService.ShowSaveFileDialogAsync(
                 "Export Memory Region Profiles",
-                "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
-                Path.GetDirectoryName(ProfilesPath) ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                $"memory-region-profiles-{DateTime.Now:yyyyMMdd-HHmmss}.json");
+                "*.json",
+                null,
+                "memory-region-profiles.json").ConfigureAwait(false);
 
-            if (!string.IsNullOrEmpty(fileName))
+            if (!string.IsNullOrEmpty(filePath))
             {
-                IEnumerable<MemoryMappingProfile> profiles = await _profileService.GetAllAsync();
-                var profileList = profiles.ToList();
-                string json = JsonSerializer.Serialize(profileList, new JsonSerializerOptions { WriteIndented = true });
+                IEnumerable<MemoryMappingProfile> profiles = await _profileService.ExportAsync().ConfigureAwait(false);
+                string json = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
+                await System.IO.File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
 
-                await File.WriteAllTextAsync(fileName, json);
-
-                StatusMessage = $"Exported {profileList.Count} profiles to: {Path.GetFileName(fileName)}";
-                _specificLogger.LogInformation("Exported {Count} memory region profiles to {FileName}", profileList.Count, fileName);
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = string.Format(UIStrings.Status_ProfilesExportedToFile, Profiles.Count, Path.GetFileName(filePath));
+                });
+                _specificLogger.LogInformation("Exported {Count} memory region profiles to {FilePath}",
+                    Profiles.Count, filePath);
             }
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Access denied while exporting profiles to {FilePath}", ex.Message);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ExportFailedAccessDenied;
+            });
+        }
+        catch (IOException ex)
+        {
+            _specificLogger.LogError(ex, "I/O error while exporting profiles");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = string.Format(UIStrings.Status_ExportFailed, ex.Message);
+            });
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error exporting memory region profiles");
-            await _dialogService.ShowErrorAsync("Export Error", $"Failed to export profiles: {ex.Message}");
+            _specificLogger.LogError(ex, "Failed to export memory region profiles");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = string.Format(UIStrings.Status_ExportFailed, ex.Message);
+            });
         }
     }
 
@@ -509,71 +628,100 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     /// </summary>
     private async Task ImportProfilesAsync()
     {
+        if (_fileDialogService == null)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
+            });
+            _specificLogger.LogWarning("Import profiles failed: File dialog service not available");
+            return;
+        }
+
         try
         {
-            if (_fileDialogService == null)
-            {
-                await _dialogService.ShowErrorAsync(
-                    "File Dialog Unavailable",
-                    "The file dialog service is not available for import.");
-                return;
-            }
+            _specificLogger.LogDebug("Importing memory region profiles");
 
-            string? fileName = await _fileDialogService.ShowOpenFileDialogAsync(
+            string? filePath = await _fileDialogService.ShowOpenFileDialogAsync(
                 "Import Memory Region Profiles",
-                "JSON Files (*.json)|*.json|All Files (*.*)|*.*",
-                Path.GetDirectoryName(ProfilesPath) ?? Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
+                "*.json").ConfigureAwait(false);
 
-            if (!string.IsNullOrEmpty(fileName) && File.Exists(fileName))
+            if (!string.IsNullOrEmpty(filePath))
             {
-                string json = await File.ReadAllTextAsync(fileName);
-                List<MemoryMappingProfile>? importedProfiles = JsonSerializer.Deserialize<List<MemoryMappingProfile>>(json);
-                if (importedProfiles == null)
+                string json = await System.IO.File.ReadAllTextAsync(filePath).ConfigureAwait(false);
+                List<MemoryMappingProfile>? profiles = JsonSerializer.Deserialize<List<MemoryMappingProfile>>(json) ?? new List<MemoryMappingProfile>();
+
+                if (profiles.Count == 0)
                 {
-                    await _dialogService.ShowErrorAsync("Import Error", "Failed to parse profiles from file");
+                    await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                    {
+                        StatusMessage = UIStrings.Status_ImportFailedNoValidProfiles;
+                    });
+                    _specificLogger.LogWarning("Import failed: No profiles found in {FilePath}", filePath);
                     return;
                 }
 
-                if (importedProfiles?.Count > 0)
+                IEnumerable<MemoryMappingProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false).ConfigureAwait(false);
+                int count = importedProfiles.Count();
+
+                _ = RefreshCommand.Execute();
+
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
-                    int imported = 0;
-                    int skipped = 0;
-
-                    foreach (MemoryMappingProfile profile in importedProfiles)
-                    {
-                        try
-                        {
-                            // Reset ID to ensure new ID assignment
-                            profile.Id = 0;
-                            await _profileService.CreateAsync(profile);
-                            imported++;
-                        }
-                        catch (Exception ex)
-                        {
-                            _specificLogger.LogWarning(ex, "Skipped importing profile {ProfileName}", profile.Name);
-                            skipped++;
-                        }
-                    }
-
-                    // Refresh the profiles list
-                    RefreshCommand.Execute().Subscribe();
-
-                    StatusMessage = $"Imported {imported} profiles, skipped {skipped} profiles";
-                    _specificLogger.LogInformation("Imported {Imported} memory region profiles, skipped {Skipped}", imported, skipped);
-                }
-                else
-                {
-                    await _dialogService.ShowErrorAsync(
-                        "No Profiles Found",
-                        "The selected file contains no valid memory region profiles.");
-                }
+                    StatusMessage = string.Format(UIStrings.Status_ProfilesImportedFromFile, count, Path.GetFileName(filePath));
+                });
+                _specificLogger.LogInformation("Imported {Count} memory region profiles from {FilePath}",
+                    count, filePath);
             }
+        }
+        catch (FileNotFoundException ex)
+        {
+            _specificLogger.LogError(ex, "Import failed: File not found");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ImportFailedFileNotFound;
+            });
+        }
+        catch (JsonException ex)
+        {
+            _specificLogger.LogError(ex, "Import failed: Invalid JSON format");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ImportFailedInvalidFormat;
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _specificLogger.LogError(ex, "Import failed: Access denied");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ImportFailedAccessDenied;
+            });
         }
         catch (Exception ex)
         {
-            _specificLogger.LogError(ex, "Error importing memory region profiles");
-            await _dialogService.ShowErrorAsync("Import Error", $"Failed to import profiles: {ex.Message}");
+            _specificLogger.LogError(ex, "Failed to import memory region profiles");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = string.Format(UIStrings.Status_ImportFailed, ex.Message);
+            });
         }
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>
+    /// Handles command exceptions with logging and user notification.
+    /// </summary>
+    private void HandleCommandException(Exception ex, string operation)
+    {
+        _specificLogger.LogError(ex, "Error {Operation}", operation);
+        _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
+        {
+            StatusMessage = string.Format(UIStrings.Status_ErrorOperation, operation, ex.Message);
+        });
     }
 
     #endregion
