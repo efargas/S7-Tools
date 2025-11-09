@@ -242,6 +242,7 @@ public static class ServiceCollectionExtensions
             ISerialPortProfileService serialProfileService = serviceProvider.GetRequiredService<ISerialPortProfileService>();
             ISocatProfileService socatProfileService = serviceProvider.GetRequiredService<ISocatProfileService>();
             IPowerSupplyProfileService powerSupplyProfileService = serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
+            IMemoryRegionProfileService memoryRegionProfileService = serviceProvider.GetRequiredService<IMemoryRegionProfileService>();
 
             // Create options with dynamically resolved path
             IOptions<JobManagerOptions> options = Microsoft.Extensions.Options.Options.Create(new S7Tools.Core.Models.Jobs.JobManagerOptions
@@ -249,7 +250,7 @@ public static class ServiceCollectionExtensions
                 ProfilesPath = pathService.JobsPath
             });
 
-            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService);
+            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService, memoryRegionProfileService);
         });
 
         // Add Task Scheduling Services
@@ -348,6 +349,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<TaskManagerShellViewModel>();
         services.TryAddSingleton<JobsManagementViewModel>();
         services.TryAddTransient<JobWizardViewModel>();
+        services.TryAddTransient<JobWizardMemoryRegionStepViewModel>();
 
         return services;
     }
@@ -597,7 +599,7 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(serviceProvider);
 
-        var logger = serviceProvider.GetService<ILogger<App>>();
+        ILogger<App>? logger = serviceProvider.GetService<ILogger<App>>();
         logger?.LogInformation("Starting application shutdown sequence");
 
         try
@@ -639,7 +641,7 @@ public static class ServiceCollectionExtensions
     private static async Task DisposeServicesAsync(IServiceProvider serviceProvider, ILogger? logger)
     {
         // List of service types to dispose in specific order (critical services first)
-        var serviceTypes = new[]
+        Type[] serviceTypes = new[]
         {
             // Critical infrastructure services
             typeof(ITaskScheduler),
@@ -663,7 +665,7 @@ public static class ServiceCollectionExtensions
         {
             try
             {
-                var service = serviceProvider.GetService(serviceType);
+                object? service = serviceProvider.GetService(serviceType);
                 if (service is IDisposable disposable)
                 {
                     logger?.LogDebug("Disposing service: {ServiceType}", serviceType.Name);

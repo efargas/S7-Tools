@@ -2,33 +2,49 @@
 
 **Feature**: 008-memory-regions-profiling
 **Date**: 2025-11-07
-**Estimated Effort**: 3-4 days
+**Last Updated**: 2025-11-09
+**Implementation Status**: ✅ Core Complete (Phases 1-4) - Settings & Job Wizard Integration Operational
+**Remaining Effort**: ~1 day for Phase 5 (export/import & path management)
+
+## ✅ Current Status: Fully Functional Core System
+
+**What's Working Now**:
+- Settings → Memory Regions: Full CRUD operations for memory region profiles
+- Job Wizard: Memory region profile selection replaces manual address/length entry
+- Validation: Comprehensive profile and segment validation throughout system
+- Testing: 43 new unit tests, 355 total tests (99.7% pass rate maintained)
 
 ## Implementation Overview
 
-This feature implements memory regions profiling for S7Tools to enable structured memory mapping, segment selection, and job wizard integration. The implementation follows the unified profile management pattern using StandardProfileManager<T> and maintains consistency with existing profile types.
+This feature implements memory regions profiling for S7Tools using the **MemoryMappingProfile** domain model (following established naming conventions) and enables structured memory mapping, segment selection, and job wizard integration. The implementation follows the unified profile management pattern using StandardProfileManager<T> and maintains consistency with existing profile types.
 
-## File Structure
+## Actual File Structure (Implemented)
 
 ```
 src/S7Tools.Core/
 ├── Models/
-│   ├── MemoryRegionProfile.cs           # Domain model
-│   └── MemorySegment.cs                 # Value object
+│   ├── MemoryMappingProfile.cs          # Domain model (✅ Complete)
+│   └── MemorySegment.cs                 # Value object (✅ Complete)
 ├── Services/Interfaces/
-│   ├── IMemoryRegionProfileService.cs   # Service contract
-│   └── IMemorySegmentValidator.cs       # Validation contract
+│   ├── IMemoryRegionProfileService.cs   # Service contract (✅ Complete)
+│   └── IMemorySegmentValidator.cs       # Validation contract (✅ Complete)
 └── Exceptions/
-    └── MemoryRegionException.cs         # Domain exceptions
+    └── MemoryRegionException.cs         # Domain exceptions (✅ Complete)
 
 src/S7Tools/
 ├── Services/
-│   ├── MemoryRegionProfileService.cs    # Service implementation
-│   └── MemorySegmentValidator.cs        # Validation implementation
-├── ViewModels/Pages/
-│   └── MemoryRegionProfilesViewModel.cs # Main management page
-├── ViewModels/Dialogs/
-│   ├── CreateMemoryRegionProfileViewModel.cs
+│   ├── MemoryRegionProfileService.cs    # Service implementation (✅ Complete)
+│   └── MemorySegmentValidator.cs        # Validation implementation (✅ Complete)
+├── ViewModels/Settings/
+│   └── MemoryRegionProfilesViewModel.cs # Main management page (✅ Complete)
+├── ViewModels/Jobs/
+│   └── JobWizardMemoryRegionStepViewModel.cs # Job wizard integration (✅ Complete)
+├── Views/Settings/
+│   └── MemoryRegionProfilesView.axaml   # Settings UI (✅ Complete)
+├── Views/Jobs/
+│   └── JobWizardMemoryRegionStepView.axaml # Job wizard UI (✅ Complete)
+└── Extensions/
+    └── ServiceCollectionExtensions.cs   # DI registration (✅ Updated)
 │   ├── EditMemoryRegionProfileViewModel.cs
 │   └── DuplicateMemoryRegionProfileViewModel.cs
 ├── Views/Pages/

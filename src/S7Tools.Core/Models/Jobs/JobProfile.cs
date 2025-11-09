@@ -146,9 +146,16 @@ public class JobProfile : IProfileBase
     public int PowerSupplyProfileId { get; set; }
 
     /// <summary>
+    /// Gets or sets the memory region profile reference for this job.
+    /// </summary>
+    /// <value>The ID of the memory region profile to use for memory mapping configuration.</value>
+    public int MemoryRegionProfileId { get; set; }
+
+    /// <summary>
     /// Gets or sets the memory region configuration for this job.
     /// </summary>
     /// <value>The memory region parameters for the dump operation.</value>
+    /// <remarks>This property is deprecated in favor of MemoryRegionProfileId and will be removed in future versions.</remarks>
     [Required(ErrorMessage = "Memory region configuration is required")]
     public MemoryRegionProfile MemoryRegion { get; set; } = new(0x20000000, 0x1000);
 
@@ -203,7 +210,8 @@ public class JobProfile : IProfileBase
             SerialProfileId = 1, // Default serial profile
             SocatProfileId = 1, // Default socat profile
             PowerSupplyProfileId = 1, // Default power supply profile
-            MemoryRegion = new MemoryRegionProfile(0x20000000, 0x1000), // Default 4KB dump from start of user memory
+            MemoryRegionProfileId = 1, // Default memory region profile
+            MemoryRegion = new MemoryRegionProfile(0x20000000, 0x1000), // Default 4KB dump from start of user memory (deprecated)
             Payloads = new PayloadSetProfile("./bootloader-payloads"), // Default payload configuration
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
@@ -241,6 +249,7 @@ public class JobProfile : IProfileBase
             SerialProfileId = 1, // Default to first available profile
             SocatProfileId = 1,
             PowerSupplyProfileId = 1,
+            MemoryRegionProfileId = 1, // Default to first available memory region profile
             MemoryRegion = new MemoryRegionProfile(0x20000000, 0x1000),
             Payloads = new PayloadSetProfile("./bootloader-payloads"),
             OutputPath = "./dumps",
@@ -312,6 +321,7 @@ public class JobProfile : IProfileBase
             SerialProfileId = SerialProfileId,
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
+            MemoryRegionProfileId = MemoryRegionProfileId,
             MemoryRegion = MemoryRegion,
             Payloads = Payloads,
             OutputPath = OutputPath,
@@ -345,6 +355,7 @@ public class JobProfile : IProfileBase
             SerialProfileId = SerialProfileId,
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
+            MemoryRegionProfileId = MemoryRegionProfileId,
             MemoryRegion = MemoryRegion,
             Payloads = Payloads,
             OutputPath = OutputPath,
@@ -398,6 +409,11 @@ public class JobProfile : IProfileBase
         if (PowerSupplyProfileId <= 0)
         {
             errors.Add("Valid power supply profile must be selected");
+        }
+
+        if (MemoryRegionProfileId <= 0)
+        {
+            errors.Add("Valid memory region profile must be selected");
         }
 
         if (MemoryRegion == null)
@@ -477,7 +493,8 @@ public class JobProfile : IProfileBase
         {
             new("serial", SerialProfileId.ToString()),
             new("tcp", SocatProfileId.ToString()),
-            new("power", PowerSupplyProfileId.ToString())
+            new("power", PowerSupplyProfileId.ToString()),
+            new("memory", MemoryRegionProfileId.ToString())
         };
 
         return resources;
@@ -511,7 +528,7 @@ public class JobProfile : IProfileBase
     /// <returns>A string summarizing the profile's configuration.</returns>
     public string GetSummary()
     {
-        var summary = $"{Name}: Memory[{MemoryRegion?.Start:X}-{MemoryRegion?.Start + MemoryRegion?.Length:X}]";
+        string summary = $"{Name}: Memory[{MemoryRegion?.Start:X}-{MemoryRegion?.Start + MemoryRegion?.Length:X}]";
 
         if (IsTemplate)
         {

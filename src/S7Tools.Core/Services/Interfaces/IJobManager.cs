@@ -57,4 +57,12 @@ public interface IJobManager : IProfileManager<JobProfile>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>True if the job can be executed, false otherwise.</returns>
     Task<bool> CanExecuteJobAsync(int jobId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Creates an execution job from a job profile with resolved memory region configuration.
+    /// </summary>
+    /// <param name="jobId">The ID of the job profile to convert.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A Job ready for execution with resolved memory region profile.</returns>
+    Task<Job> CreateExecutionJobAsync(int jobId, CancellationToken cancellationToken = default);
 }

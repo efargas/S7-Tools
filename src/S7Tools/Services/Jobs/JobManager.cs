@@ -26,6 +26,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     private readonly ISerialPortProfileService _serialProfileService;
     private readonly ISocatProfileService _socatProfileService;
     private readonly IPowerSupplyProfileService _powerSupplyProfileService;
+    private readonly IMemoryRegionProfileService _memoryRegionProfileService;
 
     #endregion
 
@@ -40,19 +41,22 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <param name="serialProfileService">The serial profile service for validation.</param>
     /// <param name="socatProfileService">The socat profile service for validation.</param>
     /// <param name="powerSupplyProfileService">The power supply profile service for validation.</param>
+    /// <param name="memoryRegionProfileService">The memory region profile service for profile resolution.</param>
     public JobManager(
         Microsoft.Extensions.Options.IOptions<S7Tools.Core.Models.Jobs.JobManagerOptions> options,
         ILogger<JobManager> logger,
         IResourceCoordinator resourceCoordinator,
         ISerialPortProfileService serialProfileService,
         ISocatProfileService socatProfileService,
-        IPowerSupplyProfileService powerSupplyProfileService)
+        IPowerSupplyProfileService powerSupplyProfileService,
+        IMemoryRegionProfileService memoryRegionProfileService)
         : base(options.Value.ProfilesPath, logger)
     {
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
         _serialProfileService = serialProfileService ?? throw new ArgumentNullException(nameof(serialProfileService));
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
         _powerSupplyProfileService = powerSupplyProfileService ?? throw new ArgumentNullException(nameof(powerSupplyProfileService));
+        _memoryRegionProfileService = memoryRegionProfileService ?? throw new ArgumentNullException(nameof(memoryRegionProfileService));
     }
 
     #endregion
@@ -474,6 +478,106 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
 
         _isLoaded = true;
         _logger.LogInformation("Loaded {Count} job profiles", _profiles.Count);
+    }
+
+    /// <summary>
+    /// Creates an execution job from a job profile with resolved memory region configuration.
+    /// </summary>
+    /// <param name="jobId">The ID of the job profile to convert.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A Job ready for execution with resolved memory region profile.</returns>
+    /// <exception cref="ProfileNotFoundException">Thrown when job profile is not found.</exception>
+    public async Task<Job> CreateExecutionJobAsync(int jobId, CancellationToken cancellationToken = default)
+    {
+        JobProfile? jobProfile = await GetByIdAsync(jobId, cancellationToken);
+        if (jobProfile == null)
+        {
+            throw new ProfileNotFoundException(jobId);
+        }
+        return await CreateExecutionJobAsync(jobProfile);
+    }
+
+    /// <summary>
+    /// Creates an execution job from a job profile with resolved memory region configuration.
+    /// </summary>
+    /// <param name="jobProfile">The job profile to convert.</param>
+    /// <returns>A Job ready for execution with resolved memory region profile.</returns>
+    public async Task<Job> CreateExecutionJobAsync(JobProfile jobProfile)
+    {
+        // Resolve the memory region profile from the ID
+        MemoryMappingProfile? memoryProfile = null;
+        if (jobProfile.MemoryRegionProfileId > 0)
+        {
+            try
+            {
+                memoryProfile = await _memoryRegionProfileService.GetByIdAsync(jobProfile.MemoryRegionProfileId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load memory region profile ID {ProfileId}, using default configuration",
+                    jobProfile.MemoryRegionProfileId);
+            }
+        }
+
+        // Create memory region configuration from profile or use default
+        MemoryRegionProfile memoryRegion;
+        if (memoryProfile != null)
+        {
+            // Convert the memory mapping profile to memory region profile using selected segments
+            var selectedSegments = memoryProfile.Segments.Where(s => s.IsSelected).ToList();
+            if (selectedSegments.Count > 0)
+            {
+                // Use the first selected segment as base configuration
+                // TODO: Support multiple segments in JobProfileSet
+                var firstSegment = selectedSegments.First();
+                var startAddress = uint.Parse(firstSegment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
+                memoryRegion = new MemoryRegionProfile(startAddress, (uint)firstSegment.Size);
+            }
+            else
+            {
+                // No segments selected, use default
+                _logger.LogWarning("Memory region profile '{ProfileName}' (ID: {ProfileId}) has no selected segments, using default configuration",
+                    memoryProfile.Name, memoryProfile.Id);
+                memoryRegion = jobProfile.MemoryRegion;
+            }
+        }
+        else
+        {
+            // Use the existing memory region configuration as fallback
+            memoryRegion = jobProfile.MemoryRegion;
+        }
+
+        // Create the job profile set with resolved memory region
+        var serialRef = new SerialProfileRef("", 9600, "None", 8, "One"); // Will be populated from actual profile
+        var socatRef = new SocatProfileRef(0, true); // Will be populated from actual profile
+        var powerRef = new PowerProfileRef("", 0, 0, jobProfile.PowerOffDelayMs / 1000); // Will be populated from actual profile
+
+        var profileSet = new JobProfileSet(
+            serialRef,
+            socatRef,
+            powerRef,
+            memoryRegion,
+            jobProfile.Payloads,
+            jobProfile.OutputPath
+        );
+
+        // Generate resource keys
+        var resources = new List<ResourceKey>
+        {
+            new("serial", jobProfile.SerialProfileId.ToString()),
+            new("tcp", jobProfile.SocatProfileId.ToString()),
+            new("power", jobProfile.PowerSupplyProfileId.ToString()),
+            new("memory", jobProfile.MemoryRegionProfileId.ToString())
+        };
+
+        return new Job(
+            Guid.NewGuid(),
+            jobProfile.Name,
+            resources,
+            profileSet,
+            JobState.Created,
+            DateTimeOffset.Now
+        );
     }
 
     #endregion

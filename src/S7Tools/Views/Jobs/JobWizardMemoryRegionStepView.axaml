@@ -1,0 +1,252 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Jobs"
+             xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:converters="using:S7Tools.Converters"
+             mc:Ignorable="d"
+             x:Class="S7Tools.Views.Jobs.JobWizardMemoryRegionStepView"
+             x:DataType="vm:JobWizardMemoryRegionStepViewModel">
+
+  <UserControl.Resources>
+    <converters:BooleanToInverseBooleanConverter x:Key="InvBool" />
+  </UserControl.Resources>
+
+  <StackPanel Spacing="12">
+    <!-- Profile Selection -->
+    <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
+      <TextBlock Grid.Column="0"
+                 Text="Memory Profile:"
+                 Foreground="#CCCCCC"
+                 VerticalAlignment="Center" />
+      <ComboBox Grid.Column="1"
+                ItemsSource="{Binding AvailableProfiles}"
+                SelectedItem="{Binding SelectedProfile}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate DataType="models:MemoryMappingProfile">
+            <TextBlock Text="{Binding Name}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </Grid>
+
+    <!-- Loading indicator -->
+    <StackPanel Orientation="Horizontal"
+                Spacing="8"
+                IsVisible="{Binding IsBusy}">
+      <ProgressBar Width="200" IsIndeterminate="True" />
+      <TextBlock Text="{Binding Status}"
+                 Foreground="#CCCCCC"
+                 VerticalAlignment="Center" />
+    </StackPanel>
+
+    <!-- Profile Details -->
+    <Border Background="#2D2D2D"
+            BorderBrush="#464647"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="16"
+            IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}">
+      <StackPanel Spacing="12">
+        <!-- Header -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <icons:Icon Value="fa-solid fa-microchip"
+                      Width="16"
+                      Height="16"
+                      Foreground="#CCCCCC"
+                      VerticalAlignment="Center" />
+          <TextBlock Text="Memory Region Configuration"
+                     FontWeight="SemiBold"
+                     FontSize="14"
+                     Foreground="#CCCCCC" />
+        </StackPanel>
+
+        <!-- Profile Information -->
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+              ColumnDefinitions="140,*"
+              ColumnSpacing="12"
+              RowSpacing="6">
+          <TextBlock Grid.Row="0" Grid.Column="0"
+                     Text="Profile Name:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="0" Grid.Column="1"
+                     Text="{Binding SelectedProfile.Name}"
+                     Foreground="#FFFFFF" />
+
+          <TextBlock Grid.Row="1" Grid.Column="0"
+                     Text="Description:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="1" Grid.Column="1"
+                     Text="{Binding SelectedProfile.Description, FallbackValue='No description'}"
+                     Foreground="#FFFFFF"
+                     TextWrapping="Wrap" />
+
+          <TextBlock Grid.Row="2" Grid.Column="0"
+                     Text="Total Segments:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="2" Grid.Column="1"
+                     Text="{Binding SelectedProfile.SegmentCount}"
+                     Foreground="#FFFFFF" />
+
+          <TextBlock Grid.Row="3" Grid.Column="0"
+                     Text="Selected for Dump:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="3" Grid.Column="1"
+                     Text="{Binding SelectedSegmentCount}"
+                     Foreground="#4CAF50" />
+        </Grid>
+
+        <!-- Memory Segments List -->
+        <Border Background="#1E1E1E"
+                BorderBrush="#464647"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Memory Segments"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC" />
+
+            <!-- Segments List -->
+            <ScrollViewer MaxHeight="200"
+                          HorizontalScrollBarVisibility="Disabled"
+                          VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding SelectedProfile.Segments}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate DataType="models:MemorySegment">
+                    <Border Background="#3C3C3C"
+                            BorderBrush="#555555"
+                            BorderThickness="1"
+                            CornerRadius="3"
+                            Padding="8"
+                            Margin="0,2">
+                      <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                            ColumnSpacing="12">
+                        <!-- Selection indicator -->
+                        <icons:Icon Grid.Column="0"
+                                    Value="fa-solid fa-check-circle"
+                                    Width="12"
+                                    Height="12"
+                                    Foreground="#4CAF50"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding IsSelected}" />
+                        <icons:Icon Grid.Column="0"
+                                    Value="fa-solid fa-circle"
+                                    Width="12"
+                                    Height="12"
+                                    Foreground="#666666"
+                                    VerticalAlignment="Center"
+                                    IsVisible="{Binding IsSelected, Converter={StaticResource InvBool}}" />
+
+                        <!-- Segment info -->
+                        <StackPanel Grid.Column="1">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding Name}"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FFFFFF" />
+                            <TextBlock Text="{Binding Type}"
+                                       FontSize="10"
+                                       Foreground="#AAAAAA" />
+                          </StackPanel>
+                          <TextBlock Text="{Binding Description}"
+                                     FontSize="11"
+                                     Foreground="#AAAAAA"
+                                     TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- Address and Size -->
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding StartAddress}"
+                                   Foreground="#CCCCCC"
+                                   FontFamily="Consolas"
+                                   VerticalAlignment="Center" />
+
+                        <TextBlock Grid.Column="3"
+                                   Text="{Binding Size, Converter={x:Static converters:ByteSizeConverter.Instance}}"
+                                   Foreground="#CCCCCC"
+                                   VerticalAlignment="Center" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </StackPanel>
+        </Border>
+
+        <!-- Summary -->
+        <Border Background="#1E1E1E"
+                BorderBrush="#464647"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Memory Dump Summary"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC" />
+
+            <Grid RowDefinitions="Auto,Auto,Auto"
+                  ColumnDefinitions="140,*"
+                  ColumnSpacing="12"
+                  RowSpacing="4">
+              <TextBlock Grid.Row="0" Grid.Column="0"
+                         Text="Selected Segments:"
+                         Foreground="#CCCCCC" />
+              <TextBlock Grid.Row="0" Grid.Column="1"
+                         Text="{Binding SelectedSegmentCount}"
+                         Foreground="#FFFFFF" />
+
+              <TextBlock Grid.Row="1" Grid.Column="0"
+                         Text="Total Size:"
+                         Foreground="#CCCCCC" />
+              <TextBlock Grid.Row="1" Grid.Column="1"
+                         Text="{Binding TotalSelectedSizeFormatted}"
+                         Foreground="#FFFFFF" />
+
+              <TextBlock Grid.Row="2" Grid.Column="0"
+                         Text="Status:"
+                         Foreground="#CCCCCC" />
+              <TextBlock Grid.Row="2" Grid.Column="1"
+                         Text="{Binding ValidationMessage}"
+                         Foreground="#4CAF50"
+                         IsVisible="{Binding IsStepValid}" />
+              <TextBlock Grid.Row="2" Grid.Column="1"
+                         Text="{Binding ValidationMessage}"
+                         Foreground="#F44336"
+                         IsVisible="{Binding IsStepValid, Converter={StaticResource InvBool}}" />
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Border>
+
+    <!-- No profile selected message -->
+    <Border Background="#2D2D2D"
+            BorderBrush="#464647"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="20"
+            IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNull}}">
+      <StackPanel Spacing="8" HorizontalAlignment="Center">
+        <icons:Icon Value="fa-solid fa-microchip"
+                    Width="32"
+                    Height="32"
+                    Foreground="#666666"
+                    HorizontalAlignment="Center" />
+        <TextBlock Text="Select Memory Region Profile"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   Foreground="#CCCCCC"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="Choose a memory region profile to configure which memory segments will be dumped during job execution."
+                   Foreground="#AAAAAA"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   MaxWidth="300" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>
