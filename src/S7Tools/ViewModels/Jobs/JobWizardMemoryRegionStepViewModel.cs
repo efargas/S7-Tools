@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -81,12 +82,22 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         get => _selectedProfile;
         set
         {
+            // Unsubscribe from previous profile's segments
+            UnsubscribeFromSegmentChanges();
+
             this.RaiseAndSetIfChanged(ref _selectedProfile, value);
+
+            // Subscribe to new profile's segments and update UI
+            SubscribeToSegmentChanges();
             UpdateSelectedSegments();
+
             this.RaisePropertyChanged(nameof(ProfileSummary));
             this.RaisePropertyChanged(nameof(SelectedSegmentCount));
             this.RaisePropertyChanged(nameof(TotalSelectedSize));
             this.RaisePropertyChanged(nameof(HasContiguousSelection));
+
+            _logger.LogDebug("SelectedProfile changed to {ProfileName} (ID: {ProfileId}) with {SegmentCount} segments",
+                value?.Name ?? "null", value?.Id ?? -1, value?.Segments?.Count ?? 0);
         }
     }
 
@@ -356,9 +367,9 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
     {
         SelectedSegments.Clear();
 
-        if (SelectedProfile?.SelectedSegments != null)
+        if (SelectedProfile?.Segments != null)
         {
-            foreach (MemorySegment segment in SelectedProfile.SelectedSegments)
+            foreach (MemorySegment segment in SelectedProfile.Segments.Where(s => s.IsSelected))
             {
                 SelectedSegments.Add(segment);
             }
@@ -366,6 +377,56 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
         this.RaisePropertyChanged(nameof(TotalSelectedSizeFormatted));
         this.RaisePropertyChanged(nameof(ValidationMessage));
+
+        _logger.LogDebug("UpdateSelectedSegments completed: {SelectedCount} segments selected", SelectedSegments.Count);
+    }
+
+    /// <summary>
+    /// Subscribes to memory segment changes to update computed properties.
+    /// </summary>
+    private void SubscribeToSegmentChanges()
+    {
+        if (SelectedProfile?.Segments != null)
+        {
+            _logger.LogDebug("Subscribing to segment property changes for profile {ProfileName} with {SegmentCount} segments",
+                SelectedProfile.Name, SelectedProfile.Segments.Count);
+
+            foreach (var segment in SelectedProfile.Segments)
+            {
+                segment.PropertyChanged += OnSegmentPropertyChanged;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Unsubscribes from memory segment change events.
+    /// </summary>
+    private void UnsubscribeFromSegmentChanges()
+    {
+        if (SelectedProfile?.Segments != null)
+        {
+            foreach (var segment in SelectedProfile.Segments)
+            {
+                segment.PropertyChanged -= OnSegmentPropertyChanged;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles property changes in memory segments to update computed properties.
+    /// </summary>
+    private void OnSegmentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MemorySegment.IsSelected))
+        {
+            _logger.LogDebug("Segment IsSelected property changed, updating job wizard step properties");
+
+            // Update all computed properties that depend on segment selection
+            UpdateSelectedSegments();
+            this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+            this.RaisePropertyChanged(nameof(TotalSelectedSize));
+            this.RaisePropertyChanged(nameof(HasContiguousSelection));
+        }
     }
 
     #endregion
@@ -382,6 +443,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
+            UnsubscribeFromSegmentChanges();
             _disposables.Dispose();
         }
     }

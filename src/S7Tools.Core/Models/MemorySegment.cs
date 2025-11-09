@@ -13,8 +13,31 @@ namespace S7Tools.Core.Models;
 /// Memory segments define contiguous memory regions within a firmware memory map.
 /// They support overlap detection, address validation, and provide formatted display properties.
 /// </remarks>
-public class MemorySegment
+public class MemorySegment : INotifyPropertyChanged
 {
+    #region INotifyPropertyChanged Implementation
+
+    /// <summary>
+    /// Occurs when a property value changes.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    /// Raises the PropertyChanged event for a specified property.
+    /// </summary>
+    /// <param name="propertyName">The name of the property that changed.</param>
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    #endregion
+    #region Fields
+
+    private bool _isSelected;
+
+    #endregion
+
     #region Properties
 
     /// <summary>
@@ -54,7 +77,18 @@ public class MemorySegment
     /// </summary>
     /// <value>True if the segment is selected for memory operations, false otherwise.</value>
     [Display(Name = "Selected")]
-    public bool IsSelected { get; set; }
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected != value)
+            {
+                _isSelected = value;
+                OnPropertyChanged(nameof(IsSelected));
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets an optional description of the segment.

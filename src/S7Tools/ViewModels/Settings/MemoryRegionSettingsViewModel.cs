@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -98,6 +99,21 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
         // Subscribe to settings changes for path updates
         SubscribeToSettingsChanges();
 
+        // Subscribe to SelectedProfile changes to update computed properties
+        this.WhenAnyValue(x => x.SelectedProfile)
+            .Subscribe(_ =>
+            {
+                _specificLogger.LogDebug("SelectedProfile changed, updating computed properties");
+                this.RaisePropertyChanged(nameof(SelectedSegments));
+                this.RaisePropertyChanged(nameof(HasValidSelection));
+                this.RaisePropertyChanged(nameof(SegmentCount));
+                this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+
+                // Subscribe to segment changes if we have a profile
+                SubscribeToSegmentChanges();
+            })
+            .DisposeWith(_disposables);
+
         // Initialize with current settings
         RefreshFromSettings();
 
@@ -106,12 +122,15 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
         {
             try
             {
+                _specificLogger.LogInformation("Starting MemoryRegionSettingsViewModel initialization");
                 await InitializeAsync().ConfigureAwait(false);
+                _specificLogger.LogInformation("InitializeAsync completed, executing refresh command");
                 RefreshCommand.Execute().Subscribe();
+                _specificLogger.LogInformation("MemoryRegionSettingsViewModel initialization completed");
             }
             catch (Exception ex)
             {
-                _specificLogger.LogError(ex, "Error during initialization");
+                _specificLogger.LogError(ex, "Error during MemoryRegionSettingsViewModel initialization");
             }
         });
     }
@@ -220,6 +239,8 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     {
         try
         {
+            _specificLogger.LogDebug("ShowCreateDialogAsync called for memory region profile");
+
             // For now, use the name input dialog until specific memory region dialogs are implemented
             ProfileDialogResult<string> nameResult = await _unifiedDialogService.ShowNameInputDialogAsync(
                 $"Create {GetProfileTypeName()}",
@@ -227,14 +248,26 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
                 request.DefaultName ?? GetDefaultProfileName()
             );
 
+            _specificLogger.LogInformation("Name input dialog result: IsSuccess={IsSuccess}, Name={Name}", nameResult.IsSuccess, nameResult.Result);
+
             if (!nameResult.IsSuccess)
             {
+                _specificLogger.LogInformation("Memory region profile creation cancelled by user");
                 return ProfileDialogResult<MemoryMappingProfile>.Cancelled();
             }
 
             // Create a new profile with the provided name
             var newProfile = MemoryMappingProfile.CreateUserProfile(nameResult.Result ?? "New Profile");
-            return ProfileDialogResult<MemoryMappingProfile>.Success(newProfile);
+            _specificLogger.LogDebug("Created new memory region profile: Name={Name}, Id={Id}, SegmentCount={SegmentCount}",
+                newProfile.Name, newProfile.Id, newProfile.Segments?.Count ?? 0);
+
+            // Save the profile to the manager
+            _specificLogger.LogDebug("Saving new memory region profile to manager");
+            var savedProfile = await _profileService.CreateAsync(newProfile);
+            _specificLogger.LogInformation("Successfully saved memory region profile: Name={Name}, Id={Id}",
+                savedProfile.Name, savedProfile.Id);
+
+            return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
         }
         catch (Exception ex)
         {
@@ -246,24 +279,78 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     /// <summary>
     /// Shows the edit profile dialog.
     /// </summary>
-    protected override Task<ProfileDialogResult<MemoryMappingProfile>> ShowEditDialogAsync(ProfileEditRequest request)
+    protected override async Task<ProfileDialogResult<MemoryMappingProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
         try
         {
-            // For now, just return the existing profile until specific edit dialogs are implemented
+            _specificLogger.LogDebug("ShowEditDialogAsync called for memory region profile");
+
             if (SelectedProfile == null)
             {
-                return Task.FromResult(ProfileDialogResult<MemoryMappingProfile>.Failure("No profile selected for editing"));
+                _specificLogger.LogWarning("Edit dialog called with no selected profile");
+                return ProfileDialogResult<MemoryMappingProfile>.Failure("No profile selected for editing");
             }
 
-            // TODO: Implement proper edit dialog when memory region edit dialogs are available
-            _specificLogger.LogWarning("Memory region profile edit dialog not yet implemented, returning existing profile");
-            return Task.FromResult(ProfileDialogResult<MemoryMappingProfile>.Success(SelectedProfile));
+            _specificLogger.LogDebug("Opening edit dialog for memory region profile: Name={Name}, Id={Id}", SelectedProfile.Name, SelectedProfile.Id);
+
+            // Create a logger for the dialog ViewModel
+            var dialogLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<ViewModels.Dialogs.EditMemoryRegionProfileDialogViewModel>();
+
+            // Create the edit dialog ViewModel and view
+            var dialogViewModel = new ViewModels.Dialogs.EditMemoryRegionProfileDialogViewModel(SelectedProfile, dialogLogger);
+            var dialog = new Views.Dialogs.EditMemoryRegionProfileDialog(dialogViewModel);
+
+            // Show the dialog on UI thread
+            bool? dialogResult = null;
+            await _uiThreadService.InvokeOnUIThreadAsync(async () =>
+            {
+                // Get the main window as parent
+                Avalonia.Controls.Window? mainWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    ? desktop.MainWindow
+                    : null;
+
+                if (mainWindow != null)
+                {
+                    dialogResult = await dialog.ShowDialog<bool?>(mainWindow);
+                }
+                else
+                {
+                    _specificLogger.LogWarning("Could not get main window for dialog parent");
+                    dialogResult = false;
+                }
+            });
+
+            _specificLogger.LogInformation("Edit dialog result: Success={Success}", dialogResult == true);
+
+            if (dialogResult == true)
+            {
+                var updatedProfile = dialogViewModel.CreateUpdatedProfile();
+                if (updatedProfile != null)
+                {
+                    // Save the updated profile
+                    _specificLogger.LogDebug("Saving updated memory region profile to manager");
+                    var savedProfile = await _profileService.UpdateAsync(updatedProfile);
+                    _specificLogger.LogInformation("Successfully updated memory region profile: Name={Name}, Id={Id}",
+                        savedProfile.Name, savedProfile.Id);
+
+                    return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
+                }
+                else
+                {
+                    _specificLogger.LogError("Failed to create updated profile from dialog");
+                    return ProfileDialogResult<MemoryMappingProfile>.Failure("Failed to create updated profile");
+                }
+            }
+            else
+            {
+                _specificLogger.LogInformation("Memory region profile edit was cancelled by user");
+                return ProfileDialogResult<MemoryMappingProfile>.Cancelled();
+            }
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error showing edit dialog for memory region profile");
-            return Task.FromResult(ProfileDialogResult<MemoryMappingProfile>.Failure($"Error editing profile: {ex.Message}"));
+            return ProfileDialogResult<MemoryMappingProfile>.Failure($"Error editing profile: {ex.Message}");
         }
     }
 
@@ -351,6 +438,56 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     {
         _settingsChangedHandler = OnSettingsChanged;
         _settingsService.SettingsChanged += _settingsChangedHandler;
+    }
+
+    /// <summary>
+    /// Subscribes to memory segment changes to update computed properties.
+    /// </summary>
+    private void SubscribeToSegmentChanges()
+    {
+        // First, unsubscribe from any previous segments
+        UnsubscribeFromSegmentChanges();
+
+        if (SelectedProfile?.Segments != null)
+        {
+            _specificLogger.LogDebug("Subscribing to segment property changes for profile {ProfileName} with {SegmentCount} segments",
+                SelectedProfile.Name, SelectedProfile.Segments.Count);
+
+            foreach (var segment in SelectedProfile.Segments)
+            {
+                segment.PropertyChanged += OnSegmentPropertyChanged;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Unsubscribes from memory segment change events.
+    /// </summary>
+    private void UnsubscribeFromSegmentChanges()
+    {
+        if (SelectedProfile?.Segments != null)
+        {
+            foreach (var segment in SelectedProfile.Segments)
+            {
+                segment.PropertyChanged -= OnSegmentPropertyChanged;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Handles property changes in memory segments to update computed properties.
+    /// </summary>
+    private void OnSegmentPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MemorySegment.IsSelected))
+        {
+            _specificLogger.LogDebug("Segment IsSelected property changed, updating computed properties");
+
+            // Update all computed properties that depend on segment selection
+            this.RaisePropertyChanged(nameof(SelectedSegments));
+            this.RaisePropertyChanged(nameof(HasValidSelection));
+            this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+        }
     }
 
     #endregion
@@ -737,6 +874,9 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
         {
             try
             {
+                // Unsubscribe from segment changes
+                UnsubscribeFromSegmentChanges();
+
                 // Unsubscribe from settings changes
                 if (_settingsChangedHandler != null)
                 {

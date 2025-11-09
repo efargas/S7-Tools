@@ -27,6 +27,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortProfileService _serialService;
     private readonly ISocatProfileService _socatService;
     private readonly IPowerSupplyProfileService _powerService;
+    private readonly IMemoryRegionProfileService _memoryRegionService;
     private readonly ILogger<JobInfoDisplayViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
 
@@ -44,12 +45,14 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
         ISerialPortProfileService serialService,
         ISocatProfileService socatService,
         IPowerSupplyProfileService powerService,
+        IMemoryRegionProfileService memoryRegionService,
         ILogger<JobInfoDisplayViewModel> logger)
     {
         _profileDetailsService = profileDetailsService ?? throw new ArgumentNullException(nameof(profileDetailsService));
         _serialService = serialService ?? throw new ArgumentNullException(nameof(serialService));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
         _powerService = powerService ?? throw new ArgumentNullException(nameof(powerService));
+        _memoryRegionService = memoryRegionService ?? throw new ArgumentNullException(nameof(memoryRegionService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize reactive commands
@@ -272,11 +275,11 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private Task LoadMemoryRegionDetailsAsync(JobProfile job)
+    private async Task LoadMemoryRegionDetailsAsync(JobProfile job)
     {
-        // Memory region is embedded in JobProfile, so we'll create a simple display for it
         try
         {
+            // Basic memory region info (always available)
             var basicProperties = new ObservableCollection<PropertyDisplayItem>
             {
                 new PropertyDisplayItem
@@ -299,12 +302,102 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                 }
             };
 
+            var profileProperties = new ObservableCollection<PropertyDisplayItem>();
+            var segmentProperties = new ObservableCollection<PropertyDisplayItem>();
+
+            // Try to load memory region profile if specified
+            if (job.MemoryRegionProfileId > 0)
+            {
+                try
+                {
+                    var memoryProfile = await _memoryRegionService.GetByIdAsync(job.MemoryRegionProfileId);
+                    if (memoryProfile != null)
+                    {
+                        profileProperties.Add(new PropertyDisplayItem
+                        {
+                            Label = "Profile Name",
+                            Value = memoryProfile.Name,
+                            Tooltip = "Selected memory region profile"
+                        });
+
+                        if (!string.IsNullOrEmpty(memoryProfile.Description))
+                        {
+                            profileProperties.Add(new PropertyDisplayItem
+                            {
+                                Label = "Description",
+                                Value = memoryProfile.Description,
+                                Tooltip = "Memory profile description"
+                            });
+                        }
+
+                        profileProperties.Add(new PropertyDisplayItem
+                        {
+                            Label = "Total Segments",
+                            Value = memoryProfile.Segments.Count.ToString(),
+                            Tooltip = "Total number of memory segments in profile"
+                        });
+
+                        var selectedSegments = memoryProfile.Segments.Where(s => s.IsSelected).ToList();
+                        profileProperties.Add(new PropertyDisplayItem
+                        {
+                            Label = "Selected Segments",
+                            Value = selectedSegments.Count.ToString(),
+                            Tooltip = "Number of segments marked for memory dump"
+                        });
+
+                        // Add segment details
+                        if (selectedSegments.Any())
+                        {
+                            for (int i = 0; i < selectedSegments.Count; i++)
+                            {
+                                var segment = selectedSegments[i];
+                                segmentProperties.Add(new PropertyDisplayItem
+                                {
+                                    Label = $"Segment {i + 1}",
+                                    Value = $"{segment.Name} (0x{segment.StartAddress} - 0x{segment.EndAddress:X8}, {segment.Size} bytes)",
+                                    Tooltip = $"Type: {segment.Type}, Selected: {segment.IsSelected}"
+                                });
+                            }
+                        }
+                        else
+                        {
+                            segmentProperties.Add(new PropertyDisplayItem
+                            {
+                                Label = "Warning",
+                                Value = "No segments selected for memory dump",
+                                Tooltip = "This job may not perform any memory operations"
+                            });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to load memory region profile {ProfileId} for job {JobId}",
+                        job.MemoryRegionProfileId, job.Id);
+                    profileProperties.Add(new PropertyDisplayItem
+                    {
+                        Label = "Profile Status",
+                        Value = $"Error loading profile ID {job.MemoryRegionProfileId}",
+                        Tooltip = "The referenced memory region profile could not be loaded"
+                    });
+                }
+            }
+            else
+            {
+                profileProperties.Add(new PropertyDisplayItem
+                {
+                    Label = "Profile Status",
+                    Value = "Using basic memory region configuration",
+                    Tooltip = "No memory region profile selected, using job's memory region settings"
+                });
+            }
+
             MemoryRegionProfileDetails = new ProfileDetailsViewModel(
                 "Memory Region",
-                "Memory Dump Configuration",
+                job.MemoryRegionProfileId > 0 ? "Memory Profile Configuration" : "Basic Memory Configuration",
                 basicProperties,
-                new ObservableCollection<PropertyDisplayItem>(),
-                new ObservableCollection<PropertyDisplayItem>(),
+                profileProperties,
+                segmentProperties,
                 true,
                 null,
                 false);
@@ -314,8 +407,6 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             _logger.LogWarning(ex, "Failed to create memory region details for job {JobId}", job.Id);
             MemoryRegionProfileDetails = null;
         }
-
-        return Task.CompletedTask;
     }
 
     private void UpdateMissingProfilesStatus()
@@ -338,6 +429,19 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             if (_selectedJob.PowerSupplyProfileId != 0 && PowerSupplyProfileDetails == null)
             {
                 _missingProfileWarnings.Add($"Power Supply profile not found (ID: {_selectedJob.PowerSupplyProfileId})");
+            }
+
+            // Note: MemoryRegionProfileDetails can be null but still functional (uses basic memory region)
+            // Only warn if the memory region profile ID is set but the details indicate an error
+            if (_selectedJob.MemoryRegionProfileId != 0 && MemoryRegionProfileDetails != null)
+            {
+                // Check if the profile details contain an error message
+                var errorProperty = MemoryRegionProfileDetails.ConfigurationProperties
+                    ?.FirstOrDefault(p => p.Label == "Profile Status" && p.Value.Contains("Error"));
+                if (errorProperty != null)
+                {
+                    _missingProfileWarnings.Add($"Memory Region profile not found (ID: {_selectedJob.MemoryRegionProfileId})");
+                }
             }
         }
 

@@ -405,37 +405,59 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 
     private async Task LoadProfilesAsync()
     {
+        _logger.LogInformation("LoadProfilesAsync started for {ProfileType}", GetProfileTypeName());
+
         IProfileManager<TProfile> profileManager = GetProfileManager();
         IEnumerable<TProfile> profiles = await profileManager.GetAllAsync().ConfigureAwait(false);
 
+        _logger.LogInformation("Loaded {ProfileCount} profiles from manager for {ProfileType}", profiles?.Count() ?? 0, GetProfileTypeName());
+
         // Store current selection to restore after refresh
         int? selectedId = SelectedProfile?.Id;
+        _logger.LogDebug("Current selected profile ID: {SelectedId} for {ProfileType}", selectedId, GetProfileTypeName());
 
         // Replace collection on UI thread to force DataGrid refresh
         await _uiThreadService.InvokeOnUIThreadAsync(() =>
         {
-            Profiles = new ObservableCollection<TProfile>(profiles);
+            _logger.LogDebug("Updating profiles collection on UI thread for {ProfileType}", GetProfileTypeName());
+            Profiles = new ObservableCollection<TProfile>(profiles ?? Enumerable.Empty<TProfile>());
+            _logger.LogInformation("Profiles collection updated with {Count} items for {ProfileType}", Profiles.Count, GetProfileTypeName());
 
             // Restore selection if possible
             if (selectedId.HasValue)
             {
+                _logger.LogDebug("Attempting to restore selection for profile ID {SelectedId}", selectedId);
                 TProfile? profileToSelect = Profiles.FirstOrDefault(p => p.Id == selectedId.Value);
                 if (profileToSelect != null)
                 {
                     SelectedProfile = profileToSelect;
+                    _logger.LogDebug("Restored selection to profile {ProfileId} ({ProfileName})", profileToSelect.Id, profileToSelect.Name);
                 }
                 else if (Profiles.Count > 0)
                 {
                     // If previously selected profile no longer exists, select first
                     SelectedProfile = Profiles.First();
+                    _logger.LogDebug("Previous selection not found, selected first profile {ProfileId} ({ProfileName})", SelectedProfile.Id, SelectedProfile.Name);
+                }
+                else
+                {
+                    _logger.LogWarning("No profiles available to select after refresh");
                 }
             }
             else if (Profiles.Count > 0 && SelectedProfile == null)
             {
                 // If no previous selection, select first profile
                 SelectedProfile = Profiles.First();
+                _logger.LogDebug("No previous selection, selected first profile {ProfileId} ({ProfileName})", SelectedProfile.Id, SelectedProfile.Name);
+            }
+            else if (Profiles.Count == 0)
+            {
+                SelectedProfile = null;
+                _logger.LogInformation("No profiles available, SelectedProfile set to null");
             }
         });
+
+        _logger.LogInformation("LoadProfilesAsync completed for {ProfileType}, SelectedProfile: {SelectedProfileId}", GetProfileTypeName(), SelectedProfile?.Id);
     }
 
 
@@ -496,38 +518,58 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         {
             IsLoading = true;
             StatusMessage = UIStrings.Status_CreatingProfile;
-            _logger.LogDebug("Starting create profile operation for {ProfileType}", GetProfileTypeName());
+            _logger.LogInformation("Starting create profile operation for {ProfileType}", GetProfileTypeName());
             System.Diagnostics.Debug.WriteLine($"DEBUG: ExecuteCreateAsync called for {GetProfileTypeName()}");
 
             // Create request with default name
+            string defaultName = GetDefaultProfileName();
+            _logger.LogDebug("Getting default profile name: {DefaultName}", defaultName);
+
+            string nextAvailableName = await GetNextAvailableNameAsync(defaultName).ConfigureAwait(false);
+            _logger.LogDebug("Next available name: {AvailableName}", nextAvailableName);
+
             var request = new ProfileCreateRequest
             {
                 Title = $"Create {GetProfileTypeName()} Profile",
-                DefaultName = await GetNextAvailableNameAsync(GetDefaultProfileName()).ConfigureAwait(false),
+                DefaultName = nextAvailableName,
                 DefaultDescription = $"New {GetProfileTypeName()} profile"
             };
+            _logger.LogDebug("Created ProfileCreateRequest: Title={Title}, DefaultName={DefaultName}", request.Title, request.DefaultName);
 
             // Show create dialog using template method
+            _logger.LogDebug("Calling ShowCreateDialogAsync for {ProfileType}", GetProfileTypeName());
             ProfileDialogResult<TProfile> result = await ShowCreateDialogAsync(request).ConfigureAwait(false);
+            _logger.LogInformation("ShowCreateDialogAsync result: IsSuccess={IsSuccess}, HasResult={HasResult}", result.IsSuccess, result.Result != null);
 
             if (result.IsSuccess && result.Result != null)
             {
                 // Dialog SaveAsync already persisted. Refresh and reselect by name
                 string createdName = result.Result.Name;
+                _logger.LogInformation("Profile created successfully with name: {CreatedName}", createdName);
 
+                _logger.LogDebug("Loading profiles after creation");
                 await LoadProfilesAsync().ConfigureAwait(false);
+
                 await _uiThreadService.InvokeOnUIThreadAsync(() =>
                 {
+                    _logger.LogDebug("Selecting newly created profile: {CreatedName}", createdName);
                     SelectedProfile = Profiles.FirstOrDefault(p => string.Equals(p.Name, createdName, StringComparison.OrdinalIgnoreCase))
                                       ?? Profiles.FirstOrDefault();
+                    _logger.LogDebug("Profile selection after creation: SelectedProfile={SelectedProfileId}", SelectedProfile?.Id);
                 }).ConfigureAwait(false);
 
                 StatusMessage = $"Profile '{createdName}' created successfully";
-                _logger.LogInformation("Created {ProfileType} profile: {ProfileName}", GetProfileTypeName(), createdName);
+                _logger.LogInformation("Successfully completed create operation for {ProfileType} profile: {ProfileName}", GetProfileTypeName(), createdName);
+            }
+            else if (!result.IsSuccess)
+            {
+                StatusMessage = result.ErrorMessage ?? UIStrings.Status_ProfileCreationCancelled;
+                _logger.LogWarning("Profile creation failed: {ErrorMessage}", result.ErrorMessage);
             }
             else
             {
                 StatusMessage = UIStrings.Status_ProfileCreationCancelled;
+                _logger.LogInformation("Profile creation was cancelled by user");
             }
         }
         catch (Exception ex)
@@ -538,6 +580,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         finally
         {
             IsLoading = false;
+            _logger.LogDebug("ExecuteCreateAsync completed for {ProfileType}, IsLoading={IsLoading}", GetProfileTypeName(), IsLoading);
         }
     }
 
