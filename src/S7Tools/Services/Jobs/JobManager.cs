@@ -530,7 +530,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
                 // Use the first selected segment as base configuration
                 // TODO: Support multiple segments in JobProfileSet
                 MemorySegment firstSegment = selectedSegments.First();
-                var startAddress = uint.Parse(firstSegment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
+                uint startAddress = uint.Parse(firstSegment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
                 memoryRegion = new MemoryRegionProfile(startAddress, (uint)firstSegment.Size);
             }
             else

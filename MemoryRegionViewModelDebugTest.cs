@@ -54,7 +54,7 @@ class Program
             Console.WriteLine($"Successfully loaded {profiles.Count} profiles:");
             Console.WriteLine();
 
-            foreach (var profile in profiles)
+            foreach (TestMemoryMappingProfile? profile in profiles)
             {
                 Console.WriteLine($"Profile: {profile.Name} (ID: {profile.Id})");
                 Console.WriteLine($"  IsReadOnly: {profile.IsReadOnly}");
@@ -71,12 +71,12 @@ class Program
 
             // Test what happens if we simulate profile selection
             Console.WriteLine("=== Profile Selection Simulation ===");
-            foreach (var profile in profiles)
+            foreach (TestMemoryMappingProfile profile in profiles)
             {
                 Console.WriteLine($"Selecting profile: {profile.Name}");
 
                 // This simulates the WhenAnyValue logic for SelectedProfile
-                var selectedProfile = profile;
+                TestMemoryMappingProfile selectedProfile = profile;
                 bool canModifyResult = selectedProfile?.CanModify() ?? false;
 
                 Console.WriteLine($"  -> SelectedProfile CanModify: {canModifyResult}");

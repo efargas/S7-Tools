@@ -174,49 +174,65 @@
                   <Button Command="{Binding AddSegmentCommand}"
                           IsEnabled="{Binding CanModify}"
                           Classes="accent"
-                          MinWidth="80"
-                          Padding="8,6">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <Path Width="16" Height="16"
+                          MinWidth="100"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
-                      <TextBlock Text="Add" VerticalAlignment="Center" />
+                      <TextBlock Text="Add" 
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
                     </StackPanel>
                   </Button>
 
                   <Button Command="{Binding RemoveSegmentCommand}"
                           IsEnabled="{Binding CanModify}"
-                          MinWidth="90"
-                          Padding="8,6">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <Path Width="16" Height="16"
+                          MinWidth="110"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M19,13H5V11H19V13Z" />
-                      <TextBlock Text="Remove" VerticalAlignment="Center" />
+                      <TextBlock Text="Remove" 
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
                     </StackPanel>
                   </Button>
 
                   <Button Command="{Binding EditSegmentCommand}"
                           IsEnabled="{Binding CanModify}"
-                          MinWidth="70"
-                          Padding="8,6">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <Path Width="16" Height="16"
+                          MinWidth="90"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
-                      <TextBlock Text="Edit" VerticalAlignment="Center" />
+                      <TextBlock Text="Edit" 
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
                     </StackPanel>
                   </Button>
 
                   <Button Command="{Binding DuplicateSegmentCommand}"
                           IsEnabled="{Binding CanModify}"
-                          MinWidth="100"
-                          Padding="8,6">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <Path Width="16" Height="16"
+                          MinWidth="120"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
                             Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                             Data="M11,17H4A2,2 0 0,1 2,15V3A2,2 0 0,1 4,1H16V3H4V15H11V13L15,16L11,19V17M19,21V7H8V13H6V7A2,2 0 0,1 8,5H19A2,2 0 0,1 21,7V21A2,2 0 0,1 19,23H8A2,2 0 0,1 6,21V19H8V21H19Z" />
-                      <TextBlock Text="Duplicate" VerticalAlignment="Center" />
+                      <TextBlock Text="Duplicate" 
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
                     </StackPanel>
                   </Button>
                 </StackPanel>
@@ -226,9 +242,12 @@
                   <Button Command="{Binding MoveUpCommand}"
                           IsEnabled="{Binding CanModify}"
                           ToolTip.Tip="Move segment up"
-                          MinWidth="36"
-                          Padding="8,6">
-                    <Path Width="16" Height="16"
+                          Width="44"
+                          Height="36"
+                          Padding="8">
+                    <Path Width="20" Height="20"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
                           Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                           Data="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
                   </Button>
@@ -236,9 +255,12 @@
                   <Button Command="{Binding MoveDownCommand}"
                           IsEnabled="{Binding CanModify}"
                           ToolTip.Tip="Move segment down"
-                          MinWidth="36"
-                          Padding="8,6">
-                    <Path Width="16" Height="16"
+                          Width="44"
+                          Height="36"
+                          Padding="8">
+                    <Path Width="20" Height="20"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
                           Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
                           Data="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
                   </Button>
@@ -289,39 +311,74 @@
 
                     <!-- Selection Checkbox -->
                     <DataGridCheckBoxColumn Header="Select"
-                                          Binding="{Binding IsSelected}"
-                                          Width="60"
+                                          Binding="{Binding IsSelected, Mode=TwoWay}"
+                                          Width="70"
                                           CanUserResize="False" />
 
-                    <!-- Name -->
+                    <!-- Name (Editable) -->
                     <DataGridTextColumn Header="Name"
-                                      Binding="{Binding Name}"
-                                      Width="120"
-                                      MinWidth="80" />
-
-                    <!-- Address Range -->
-                    <DataGridTextColumn Header="Address Range"
-                                      Binding="{Binding AddressRange}"
+                                      Binding="{Binding Name, Mode=TwoWay}"
                                       Width="150"
-                                      MinWidth="120" />
+                                      MinWidth="120"
+                                      IsReadOnly="False" />
 
-                    <!-- Size -->
+                    <!-- Start Address (Editable) -->
+                    <DataGridTextColumn Header="Start Address"
+                                      Binding="{Binding StartAddress, Mode=TwoWay}"
+                                      Width="150"
+                                      MinWidth="130"
+                                      IsReadOnly="False" />
+
+                    <!-- End Address (Editable - calculates Size) -->
+                    <DataGridTextColumn Header="End Address"
+                                      Binding="{Binding EndAddress, Mode=TwoWay}"
+                                      Width="150"
+                                      MinWidth="130"
+                                      IsReadOnly="False" />
+
+                    <!-- Size (Editable Hex - calculates End Address) -->
+                    <DataGridTextColumn Header="Size (hex)"
+                                      Binding="{Binding Size, Mode=TwoWay}"
+                                      Width="150"
+                                      MinWidth="130"
+                                      IsReadOnly="False" />
+
+                    <!-- Size Display (Computed, Read-Only) -->
                     <DataGridTextColumn Header="Size"
-                                      Binding="{Binding SizeFormatted}"
-                                      Width="80"
-                                      MinWidth="60" />
+                                      Binding="{Binding SizeFormatted, Mode=OneWay}"
+                                      Width="110"
+                                      MinWidth="90"
+                                      IsReadOnly="True" />
 
-                    <!-- Type -->
-                    <DataGridTextColumn Header="Type"
-                                      Binding="{Binding Type}"
-                                      Width="80"
-                                      MinWidth="60" />
+                    <!-- Type (ComboBox) -->
+                    <DataGridTemplateColumn Header="Type"
+                                          Width="120"
+                                          MinWidth="100">
+                      <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                          <TextBlock Text="{Binding Type}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                      </DataGridTemplateColumn.CellTemplate>
+                      <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                          <ComboBox SelectedItem="{Binding Type, Mode=TwoWay}"
+                                    ItemsSource="{Binding $parent[Window].DataContext.MemoryTypes}">
+                            <ComboBox.ItemTemplate>
+                              <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                              </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                          </ComboBox>
+                        </DataTemplate>
+                      </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
 
-                    <!-- Description -->
+                    <!-- Description (Editable) -->
                     <DataGridTextColumn Header="Description"
-                                      Binding="{Binding Description}"
+                                      Binding="{Binding Description, Mode=TwoWay}"
                                       Width="*"
-                                      MinWidth="100" />
+                                      MinWidth="150"
+                                      IsReadOnly="False" />
 
                   </DataGrid.Columns>
 

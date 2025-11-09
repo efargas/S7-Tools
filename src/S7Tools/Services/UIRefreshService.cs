@@ -83,7 +83,7 @@ public sealed class UIRefreshService : IUIRefreshService
             IObservable<Unit> propertyChanges = Observable.Empty<Unit>();
 
             // Combine all property change observables
-            foreach (var propertyName in propertyNames)
+            foreach (string propertyName in propertyNames)
             {
                 IObservable<Unit> propertyChange = Observable.FromEventPattern<PropertyChangedEventArgs>(
                     viewModel, nameof(INotifyPropertyChanged.PropertyChanged))
@@ -179,7 +179,7 @@ public sealed class UIRefreshService : IUIRefreshService
             {
                 if (viewModel is ReactiveObject reactiveViewModel)
                 {
-                    foreach (var propertyName in propertyNames)
+                    foreach (string propertyName in propertyNames)
                     {
                         reactiveViewModel.RaisePropertyChanged(propertyName);
                     }
@@ -192,7 +192,7 @@ public sealed class UIRefreshService : IUIRefreshService
 
                     if (propertyChangedField != null)
                     {
-                        foreach (var propertyName in propertyNames)
+                        foreach (string propertyName in propertyNames)
                         {
                             // This is a fallback - ideally ViewModels should inherit from ReactiveObject
                             _logger.LogWarning("Attempting to force refresh non-ReactiveObject ViewModel property: {PropertyName}", propertyName);
@@ -220,7 +220,7 @@ public sealed class UIRefreshService : IUIRefreshService
         try
         {
             // Common property patterns to refresh across ViewModels
-            var commonProperties = new[]
+            string[] commonProperties = new[]
             {
                 // Common UI state properties
                 "CanExecute", "IsEnabled", "IsVisible", "IsLoading", "IsValid",
@@ -241,7 +241,7 @@ public sealed class UIRefreshService : IUIRefreshService
 
             foreach (PropertyInfo property in viewModelType.GetProperties())
             {
-                var propertyName = property.Name;
+                string propertyName = property.Name;
 
                 // Check if property matches common patterns
                 if (commonProperties.Any(pattern => propertyName.Contains(pattern, StringComparison.OrdinalIgnoreCase)))

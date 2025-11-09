@@ -32,8 +32,8 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
 
     private string _profileName = string.Empty;
     private string _description = string.Empty;
-    private ObservableCollection<MemorySegment> _segments = new();
-    private MemorySegment? _selectedSegment;
+    private ObservableCollection<EditableMemorySegment> _segments = new();
+    private EditableMemorySegment? _selectedSegment;
     private bool _isValid = true;
     private string _validationMessage = string.Empty;
     private bool _hasChanges;
@@ -94,9 +94,9 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Gets the collection of memory segments.
+    /// Gets the collection of editable memory segments.
     /// </summary>
-    public ObservableCollection<MemorySegment> Segments
+    public ObservableCollection<EditableMemorySegment> Segments
     {
         get => _segments;
         private set => this.RaiseAndSetIfChanged(ref _segments, value);
@@ -105,7 +105,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets or sets the selected segment for editing.
     /// </summary>
-    public MemorySegment? SelectedSegment
+    public EditableMemorySegment? SelectedSegment
     {
         get => _selectedSegment;
         set => this.RaiseAndSetIfChanged(ref _selectedSegment, value);
@@ -155,10 +155,15 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     {
         get
         {
-            long totalBytes = Segments.Where(s => s.IsSelected).Sum(s => s.Size);
+            long totalBytes = Segments.Where(s => s.IsSelected).Sum(s => s.Segment.Size);
             return FormatSize(totalBytes);
         }
     }
+
+    /// <summary>
+    /// Gets the available memory types for the combo box.
+    /// </summary>
+    public IReadOnlyList<MemorySegmentType> MemoryTypes { get; } = Enum.GetValues<MemorySegmentType>();
 
     #endregion
 
@@ -234,7 +239,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             MemoryMappingProfile updatedProfile = _originalProfile.Clone();
             updatedProfile.Name = ProfileName.Trim();
             updatedProfile.Description = Description.Trim();
-            updatedProfile.Segments = Segments.ToList();
+            updatedProfile.Segments = Segments.Select(es => es.Segment).ToList();
             updatedProfile.ModifiedAt = DateTime.UtcNow;
 
             _logger.LogInformation("Created updated profile '{ProfileName}' with {SegmentCount} segments",
@@ -258,17 +263,22 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void LoadProfile(MemoryMappingProfile profile)
     {
+        _logger.LogDebug("LoadProfile: Starting to load profile '{ProfileName}' (ID: {ProfileId})", profile.Name, profile.Id);
+
         ProfileName = profile.Name;
         Description = profile.Description;
 
-        // Create observable collection from profile segments
+        // Create observable collection from profile segments, wrapping each in EditableMemorySegment
         Segments.Clear();
         foreach (MemorySegment segment in profile.Segments)
         {
-            Segments.Add(segment);
+            _logger.LogDebug("LoadProfile: Adding segment '{SegmentName}' - Start: {Start}, Size: {Size}, Type: {Type}",
+                segment.Name, segment.StartAddress, segment.Size, segment.Type);
+            Segments.Add(new EditableMemorySegment(segment));
         }
 
-        _logger.LogDebug("Loaded profile with {SegmentCount} segments", Segments.Count);
+        _logger.LogInformation("LoadProfile: Loaded profile with {SegmentCount} segments, CanModify: {CanModify}",
+            Segments.Count, CanModify);
     }
 
     /// <summary>
@@ -308,11 +318,13 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
 
         IObservable<bool> canMoveUp = this.WhenAnyValue(
             x => x.SelectedSegment,
-            selected => selected != null && CanModify && Segments.IndexOf(selected) > 0);
+            x => x.Segments.Count,
+            (selected, count) => selected != null && CanModify && Segments.IndexOf(selected) > 0);
 
         IObservable<bool> canMoveDown = this.WhenAnyValue(
             x => x.SelectedSegment,
-            selected => selected != null && CanModify && Segments.IndexOf(selected) < Segments.Count - 1);
+            x => x.Segments.Count,
+            (selected, count) => selected != null && CanModify && Segments.IndexOf(selected) < count - 1);
 
         MoveUpCommand = ReactiveCommand.Create(ExecuteMoveUp, canMoveUp)
             .DisposeWith(_disposables);
@@ -419,7 +431,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
         // Check if segments have changed
         for (int i = 0; i < Math.Min(Segments.Count, _originalProfile.Segments.Count); i++)
         {
-            if (!SegmentsEqual(Segments[i], _originalProfile.Segments[i]))
+            if (!SegmentsEqual(Segments[i].Segment, _originalProfile.Segments[i]))
             {
                 return true;
             }
@@ -433,10 +445,10 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void SubscribeToSegmentChanges()
     {
-        foreach (MemorySegment segment in Segments)
+        foreach (EditableMemorySegment editableSegment in Segments)
         {
-            segment.PropertyChanged -= OnSegmentPropertyChanged;
-            segment.PropertyChanged += OnSegmentPropertyChanged;
+            editableSegment.Segment.PropertyChanged -= OnSegmentPropertyChanged;
+            editableSegment.Segment.PropertyChanged += OnSegmentPropertyChanged;
         }
     }
 
@@ -461,13 +473,17 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
 
         try
         {
+            _logger.LogDebug("ValidateSegments: Validating {SegmentCount} segments", Segments.Count);
+
             // Check individual segments
             for (int i = 0; i < Segments.Count; i++)
             {
-                MemorySegment segment = Segments[i];
+                MemorySegment segment = Segments[i].Segment;
                 if (!segment.IsValid())
                 {
-                    errors.Add($"Segment {i + 1} ('{segment.Name}') has invalid properties");
+                    string error = $"Segment {i + 1} ('{segment.Name}') has invalid properties";
+                    errors.Add(error);
+                    _logger.LogWarning("ValidateSegments: {Error}", error);
                 }
             }
 
@@ -478,14 +494,18 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 {
                     try
                     {
-                        if (Segments[i].OverlapsWith(Segments[j]))
+                        if (Segments[i].Segment.OverlapsWith(Segments[j].Segment))
                         {
-                            errors.Add($"Segments '{Segments[i].Name}' and '{Segments[j].Name}' have overlapping address ranges");
+                            string error = $"Segments '{Segments[i].Name}' and '{Segments[j].Name}' have overlapping address ranges";
+                            errors.Add(error);
+                            _logger.LogWarning("ValidateSegments: {Error}", error);
                         }
                     }
                     catch (Exception ex)
                     {
-                        errors.Add($"Failed to validate overlap between '{Segments[i].Name}' and '{Segments[j].Name}': {ex.Message}");
+                        string error = $"Failed to validate overlap between '{Segments[i].Name}' and '{Segments[j].Name}': {ex.Message}";
+                        errors.Add(error);
+                        _logger.LogError(ex, "ValidateSegments: Overlap check failed between segments {I} and {J}", i, j);
                     }
                 }
             }
@@ -498,8 +518,12 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
 
             foreach (string duplicateName in duplicateNames)
             {
-                errors.Add($"Duplicate segment name: '{duplicateName}'");
+                string error = $"Duplicate segment name: '{duplicateName}'";
+                errors.Add(error);
+                _logger.LogWarning("ValidateSegments: {Error}", error);
             }
+
+            _logger.LogInformation("ValidateSegments: Validation complete - {ErrorCount} errors found", errors.Count);
         }
         catch (Exception ex)
         {
@@ -579,7 +603,10 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            _logger.LogInformation("Saving changes to memory region profile '{ProfileName}'", ProfileName);
+            _logger.LogInformation("ExecuteSave: Saving changes to memory region profile '{ProfileName}' with {SegmentCount} segments",
+                ProfileName, Segments.Count);
+            _logger.LogDebug("ExecuteSave: IsValid={IsValid}, HasChanges={HasChanges}, CanModify={CanModify}",
+                IsValid, HasChanges, CanModify);
 
             CloseRequested?.Invoke(this, true);
         }
@@ -603,14 +630,16 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 StartAddress = "0x00000000",
                 Size = 1024,
                 Type = MemorySegmentType.Flash,
-                IsSelected = false,
+                IsSelected = false, // Default: checkboxes disabled
                 Description = "Custom memory segment"
             };
 
-            Segments.Add(newSegment);
-            SelectedSegment = newSegment;
+            var editableSegment = new EditableMemorySegment(newSegment);
+            Segments.Add(editableSegment);
+            SelectedSegment = editableSegment;
 
-            _logger.LogDebug("Added new segment: {SegmentName}", newSegment.Name);
+            _logger.LogInformation("ExecuteAddSegment: Added new segment '{SegmentName}' at index {Index}",
+                newSegment.Name, Segments.Count - 1);
         }
         catch (Exception ex)
         {
@@ -628,10 +657,12 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             if (SelectedSegment != null)
             {
                 string segmentName = SelectedSegment.Name;
+                int index = Segments.IndexOf(SelectedSegment);
                 Segments.Remove(SelectedSegment);
                 SelectedSegment = null;
 
-                _logger.LogDebug("Removed segment: {SegmentName}", segmentName);
+                _logger.LogInformation("ExecuteRemoveSegment: Removed segment '{SegmentName}' from index {Index}",
+                    segmentName, index);
             }
         }
         catch (Exception ex)
@@ -650,7 +681,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             if (SelectedSegment != null)
             {
                 // TODO: Open segment edit dialog when available
-                _logger.LogDebug("Edit segment requested for: {SegmentName}", SelectedSegment.Name);
+                _logger.LogDebug("ExecuteEditSegment: Edit segment requested for '{SegmentName}'", SelectedSegment.Name);
             }
         }
         catch (Exception ex)
@@ -672,17 +703,19 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 {
                     Name = $"{SelectedSegment.Name} Copy",
                     StartAddress = SelectedSegment.StartAddress,
-                    Size = SelectedSegment.Size,
+                    Size = SelectedSegment.Segment.Size, // Access underlying segment's Size (long)
                     Type = SelectedSegment.Type,
-                    IsSelected = false,
+                    IsSelected = false, // Default: checkboxes disabled
                     Description = $"Copy of {SelectedSegment.Description}"
                 };
 
+                var editableDuplicated = new EditableMemorySegment(duplicated);
                 int insertIndex = Segments.IndexOf(SelectedSegment) + 1;
-                Segments.Insert(insertIndex, duplicated);
-                SelectedSegment = duplicated;
+                Segments.Insert(insertIndex, editableDuplicated);
+                SelectedSegment = editableDuplicated;
 
-                _logger.LogDebug("Duplicated segment: {SegmentName}", SelectedSegment.Name);
+                _logger.LogInformation("ExecuteDuplicateSegment: Duplicated segment '{Original}' to '{Copy}' at index {Index}",
+                    SelectedSegment.Name, duplicated.Name, insertIndex);
             }
         }
         catch (Exception ex)
@@ -701,10 +734,19 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             if (SelectedSegment != null)
             {
                 int index = Segments.IndexOf(SelectedSegment);
+                _logger.LogDebug("ExecuteMoveUp: Moving segment '{Name}' from index {FromIndex} to {ToIndex}",
+                    SelectedSegment.Name, index, index - 1);
+
                 if (index > 0)
                 {
+                    EditableMemorySegment segment = SelectedSegment;
                     Segments.Move(index, index - 1);
-                    _logger.LogDebug("Moved segment up: {SegmentName}", SelectedSegment.Name);
+                    SelectedSegment = segment; // Re-select after move
+
+                    // Force UI refresh
+                    this.RaisePropertyChanged(nameof(Segments));
+
+                    _logger.LogInformation("Moved segment '{Name}' up successfully", segment.Name);
                 }
             }
         }
@@ -724,10 +766,19 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             if (SelectedSegment != null)
             {
                 int index = Segments.IndexOf(SelectedSegment);
+                _logger.LogDebug("ExecuteMoveDown: Moving segment '{Name}' from index {FromIndex} to {ToIndex}",
+                    SelectedSegment.Name, index, index + 1);
+
                 if (index < Segments.Count - 1)
                 {
+                    EditableMemorySegment segment = SelectedSegment;
                     Segments.Move(index, index + 1);
-                    _logger.LogDebug("Moved segment down: {SegmentName}", SelectedSegment.Name);
+                    SelectedSegment = segment; // Re-select after move
+
+                    // Force UI refresh
+                    this.RaisePropertyChanged(nameof(Segments));
+
+                    _logger.LogInformation("Moved segment '{Name}' down successfully", segment.Name);
                 }
             }
         }

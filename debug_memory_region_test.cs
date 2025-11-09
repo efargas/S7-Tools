@@ -27,7 +27,7 @@ class Program
                 WriteIndented = true
             };
 
-            var profilesArray = JsonSerializer.Deserialize<JsonElement>(json);
+            JsonElement profilesArray = JsonSerializer.Deserialize<JsonElement>(json);
 
             if (profilesArray.ValueKind != JsonValueKind.Array)
             {
@@ -38,11 +38,11 @@ class Program
             Console.WriteLine($"Successfully loaded {profilesArray.GetArrayLength()} profiles:");
             Console.WriteLine();
 
-            foreach (var profileElement in profilesArray.EnumerateArray())
+            foreach (JsonElement profileElement in profilesArray.EnumerateArray())
             {
-                if (profileElement.TryGetProperty("Name", out var nameElement) &&
-                    profileElement.TryGetProperty("Id", out var idElement) &&
-                    profileElement.TryGetProperty("IsReadOnly", out var isReadOnlyElement))
+                if (profileElement.TryGetProperty("Name", out JsonElement nameElement) &&
+                    profileElement.TryGetProperty("Id", out JsonElement idElement) &&
+                    profileElement.TryGetProperty("IsReadOnly", out JsonElement isReadOnlyElement))
                 {
                     string name = nameElement.GetString() ?? "Unknown";
                     int id = idElement.GetInt32();
@@ -53,12 +53,12 @@ class Program
                     Console.WriteLine($"  IsReadOnly: {isReadOnly}");
                     Console.WriteLine($"  CanModify (should be !IsReadOnly): {canModify}");
 
-                    if (profileElement.TryGetProperty("Description", out var descElement))
+                    if (profileElement.TryGetProperty("Description", out JsonElement descElement))
                     {
                         Console.WriteLine($"  Description: {descElement.GetString()}");
                     }
 
-                    if (profileElement.TryGetProperty("Segments", out var segmentsElement) &&
+                    if (profileElement.TryGetProperty("Segments", out JsonElement segmentsElement) &&
                         segmentsElement.ValueKind == JsonValueKind.Array)
                     {
                         Console.WriteLine($"  Segments: {segmentsElement.GetArrayLength()}");

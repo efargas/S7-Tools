@@ -129,7 +129,7 @@ public class JobInfoDisplayViewModelTests
         // Arrange
         JobInfoDisplayViewModel viewModel = CreateViewModel();
         JobProfile job = CreateTestJob("Test Job", "Description");
-        var missingProfileId = 999; // Use int ID instead of Guid
+        int missingProfileId = 999; // Use int ID instead of Guid
         job.SerialProfileId = missingProfileId;
 
         _mockSerialService.Setup(s => s.GetByIdAsync(It.Is<int>(id => id == missingProfileId), It.IsAny<CancellationToken>()))

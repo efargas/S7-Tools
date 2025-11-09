@@ -279,29 +279,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            // Basic memory region info (always available)
-            var basicProperties = new ObservableCollection<PropertyDisplayItem>
-            {
-                new PropertyDisplayItem
-                {
-                    Label = "Start Address",
-                    Value = $"0x{job.MemoryRegion.Start:X8}",
-                    Tooltip = "Starting memory address for dump operation"
-                },
-                new PropertyDisplayItem
-                {
-                    Label = "Length",
-                    Value = $"{job.MemoryRegion.Length} bytes ({job.MemoryRegion.Length / 1024.0:F1} KB)",
-                    Tooltip = "Number of bytes to dump"
-                },
-                new PropertyDisplayItem
-                {
-                    Label = "End Address",
-                    Value = $"0x{job.MemoryRegion.Start + job.MemoryRegion.Length:X8}",
-                    Tooltip = "Ending memory address (exclusive)"
-                }
-            };
-
+            var basicProperties = new ObservableCollection<PropertyDisplayItem>();
             var profileProperties = new ObservableCollection<PropertyDisplayItem>();
             var segmentProperties = new ObservableCollection<PropertyDisplayItem>();
 
@@ -313,22 +291,27 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                     MemoryMappingProfile? memoryProfile = await _memoryRegionService.GetByIdAsync(job.MemoryRegionProfileId);
                     if (memoryProfile != null)
                     {
-                        profileProperties.Add(new PropertyDisplayItem
+                        // Profile information
+                        basicProperties.Add(new PropertyDisplayItem
                         {
-                            Label = "Profile Name",
+                            Label = "Profile",
                             Value = memoryProfile.Name,
                             Tooltip = "Selected memory region profile"
                         });
 
                         if (!string.IsNullOrEmpty(memoryProfile.Description))
                         {
-                            profileProperties.Add(new PropertyDisplayItem
+                            basicProperties.Add(new PropertyDisplayItem
                             {
                                 Label = "Description",
                                 Value = memoryProfile.Description,
                                 Tooltip = "Memory profile description"
                             });
                         }
+
+                        // Segment statistics
+                        var selectedSegments = memoryProfile.Segments.Where(s => s.IsSelected).ToList();
+                        long totalSelectedSize = selectedSegments.Sum(s => s.Size);
 
                         profileProperties.Add(new PropertyDisplayItem
                         {
@@ -337,7 +320,6 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                             Tooltip = "Total number of memory segments in profile"
                         });
 
-                        var selectedSegments = memoryProfile.Segments.Where(s => s.IsSelected).ToList();
                         profileProperties.Add(new PropertyDisplayItem
                         {
                             Label = "Selected Segments",
@@ -345,7 +327,14 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                             Tooltip = "Number of segments marked for memory dump"
                         });
 
-                        // Add segment details
+                        profileProperties.Add(new PropertyDisplayItem
+                        {
+                            Label = "Total Selected Size",
+                            Value = FormatSize(totalSelectedSize),
+                            Tooltip = $"{totalSelectedSize} bytes total"
+                        });
+
+                        // Add detailed segment information
                         if (selectedSegments.Any())
                         {
                             for (int i = 0; i < selectedSegments.Count; i++)
@@ -353,9 +342,9 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                                 MemorySegment segment = selectedSegments[i];
                                 segmentProperties.Add(new PropertyDisplayItem
                                 {
-                                    Label = $"Segment {i + 1}",
-                                    Value = $"{segment.Name} (0x{segment.StartAddress} - 0x{segment.EndAddress:X8}, {segment.Size} bytes)",
-                                    Tooltip = $"Type: {segment.Type}, Selected: {segment.IsSelected}"
+                                    Label = segment.Name,
+                                    Value = $"{segment.AddressRange} ({segment.SizeFormatted})",
+                                    Tooltip = $"Type: {segment.Type}, Size: {segment.Size} bytes"
                                 });
                             }
                         }
@@ -365,7 +354,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                             {
                                 Label = "Warning",
                                 Value = "No segments selected for memory dump",
-                                Tooltip = "This job may not perform any memory operations"
+                                Tooltip = "No segments are currently selected. Configure this in the Job wizard."
                             });
                         }
                     }
@@ -374,7 +363,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                 {
                     _logger.LogWarning(ex, "Failed to load memory region profile {ProfileId} for job {JobId}",
                         job.MemoryRegionProfileId, job.Id);
-                    profileProperties.Add(new PropertyDisplayItem
+                    basicProperties.Add(new PropertyDisplayItem
                     {
                         Label = "Profile Status",
                         Value = $"Error loading profile ID {job.MemoryRegionProfileId}",
@@ -384,11 +373,33 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             }
             else
             {
-                profileProperties.Add(new PropertyDisplayItem
+                // Fallback to basic memory region (legacy)
+                basicProperties.Add(new PropertyDisplayItem
                 {
-                    Label = "Profile Status",
-                    Value = "Using basic memory region configuration",
-                    Tooltip = "No memory region profile selected, using job's memory region settings"
+                    Label = "Configuration",
+                    Value = "Basic Memory Region (Legacy)",
+                    Tooltip = "Using job's basic memory region settings instead of a profile"
+                });
+
+                basicProperties.Add(new PropertyDisplayItem
+                {
+                    Label = "Start Address",
+                    Value = $"0x{job.MemoryRegion.Start:X8}",
+                    Tooltip = "Starting memory address for dump operation"
+                });
+
+                basicProperties.Add(new PropertyDisplayItem
+                {
+                    Label = "Length",
+                    Value = FormatSize(job.MemoryRegion.Length),
+                    Tooltip = $"{job.MemoryRegion.Length} bytes total"
+                });
+
+                basicProperties.Add(new PropertyDisplayItem
+                {
+                    Label = "End Address",
+                    Value = $"0x{job.MemoryRegion.Start + job.MemoryRegion.Length:X8}",
+                    Tooltip = "Ending memory address (exclusive)"
                 });
             }
 
@@ -407,6 +418,21 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             _logger.LogWarning(ex, "Failed to create memory region details for job {JobId}", job.Id);
             MemoryRegionProfileDetails = null;
         }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        const long KB = 1024;
+        const long MB = KB * 1024;
+        const long GB = MB * 1024;
+
+        return bytes switch
+        {
+            >= GB => $"{bytes / (double)GB:F1} GB ({bytes:N0} bytes)",
+            >= MB => $"{bytes / (double)MB:F1} MB ({bytes:N0} bytes)",
+            >= KB => $"{bytes / (double)KB:F1} KB ({bytes:N0} bytes)",
+            _ => $"{bytes:N0} bytes"
+        };
     }
 
     private void UpdateMissingProfilesStatus()

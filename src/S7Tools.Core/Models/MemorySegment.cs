@@ -60,8 +60,8 @@ public class MemorySegment : INotifyPropertyChanged
     /// <summary>
     /// Gets or sets the segment size in bytes.
     /// </summary>
-    /// <value>The size of the memory segment in bytes. Must be positive.</value>
-    [Range(1, long.MaxValue, ErrorMessage = "Size must be positive")]
+    /// <value>The size of the memory segment in bytes. Must be non-negative (0 or positive).</value>
+    [Range(0, long.MaxValue, ErrorMessage = "Size must be non-negative")]
     [Display(Name = "Size (bytes)")]
     public long Size { get; set; }
 
@@ -181,12 +181,22 @@ public class MemorySegment : INotifyPropertyChanged
     /// <returns>True if the segments overlap, false otherwise.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="other"/> is null.</exception>
     /// <exception cref="FormatException">Thrown when address parsing fails.</exception>
+    /// <remarks>
+    /// Segments with size 0 never overlap (they are markers/placeholders).
+    /// Overlap check uses exclusive end boundary: [start, start+size)
+    /// </remarks>
     public bool OverlapsWith(MemorySegment other)
     {
         ArgumentNullException.ThrowIfNull(other);
 
         try
         {
+            // Size 0 segments never overlap - they are just markers/placeholders
+            if (Size == 0 || other.Size == 0)
+            {
+                return false;
+            }
+
             long thisStart = ParseAddress(StartAddress);
             long thisEnd = thisStart + Size;
             long otherStart = ParseAddress(other.StartAddress);
@@ -219,7 +229,7 @@ public class MemorySegment : INotifyPropertyChanged
                 return false;
             }
 
-            if (Size <= 0)
+            if (Size < 0) // Size can be 0 (empty segment) or positive
             {
                 return false;
             }
