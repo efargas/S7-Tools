@@ -1,0 +1,464 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Jobs"
+             xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             xmlns:converters="using:S7Tools.Converters"
+             mc:Ignorable="d"
+             x:Class="S7Tools.Views.Jobs.JobWizardMemoryRegionStepView"
+             x:DataType="vm:JobWizardMemoryRegionStepViewModel">
+
+  <UserControl.Resources>
+    <converters:BooleanToInverseBooleanConverter x:Key="InvBool" />
+  </UserControl.Resources>
+
+  <StackPanel Spacing="16">
+    <!-- IMPORTANT INSTRUCTIONS (Always visible) -->
+    <Border Background="#3D2F00"
+            BorderBrush="#FFCC00"
+            BorderThickness="2"
+            CornerRadius="6"
+            Padding="16">
+      <StackPanel Spacing="10">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <icons:Icon Value="fa-solid fa-exclamation-triangle"
+                      Width="20"
+                      Height="20"
+                      Foreground="#FFCC00" />
+          <TextBlock Text="IMPORTANT: Single Segment Selection Only"
+                     FontSize="14"
+                     FontWeight="Bold"
+                     Foreground="#FFCC00" />
+        </StackPanel>
+        <TextBlock Text="For this job, you must select EXACTLY ONE memory segment to dump."
+                   FontSize="12"
+                   Foreground="#FFFFFF"
+                   TextWrapping="Wrap" />
+        <TextBlock Text="After selecting a profile below, click the checkbox in the 'Sel' column to choose which segment to dump. Selecting a segment will automatically deselect any previously selected segments."
+                   FontSize="11"
+                   Foreground="#DDDDDD"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+
+    <!-- 1. Profile Selection -->
+    <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
+      <TextBlock Grid.Column="0"
+                 Text="Memory Profile:"
+                 Foreground="#CCCCCC"
+                 FontWeight="SemiBold"
+                 FontSize="13"
+                 VerticalAlignment="Center" />
+      <ComboBox Grid.Column="1"
+                ItemsSource="{Binding AvailableProfiles}"
+                SelectedItem="{Binding SelectedProfile}"
+                IsEnabled="{Binding IsBusy, Converter={StaticResource InvBool}}">
+        <ComboBox.ItemTemplate>
+          <DataTemplate DataType="models:MemoryMappingProfile">
+            <TextBlock Text="{Binding Name}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </Grid>
+
+    <!-- Loading indicator -->
+    <StackPanel Orientation="Horizontal"
+                Spacing="8"
+                IsVisible="{Binding IsBusy}">
+      <ProgressBar Width="200" IsIndeterminate="True" />
+      <TextBlock Text="{Binding Status}"
+                 Foreground="#CCCCCC"
+                 VerticalAlignment="Center" />
+    </StackPanel>
+
+    <!-- 2. Segment Selection Section (primary action) -->
+    <Border Background="#2D2D2D"
+            BorderBrush="#464647"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="16"
+            IsVisible="{Binding SelectedProfile, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+      <StackPanel Spacing="12">
+        <!-- Section Header -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <icons:Icon Value="fa-solid fa-list-check"
+                      Width="16"
+                      Height="16"
+                      Foreground="#4CAF50"
+                      VerticalAlignment="Center" />
+          <TextBlock Text="STEP 2: Select ONE Segment"
+                     FontWeight="Bold"
+                     FontSize="14"
+                     Foreground="#4CAF50" />
+        </StackPanel>
+
+        <!-- Instruction Box -->
+        <Border Background="#1E2D1E"
+                BorderBrush="#4CAF50"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+          <StackPanel Spacing="6">
+            <TextBlock Text="📋 How to select a segment:"
+                       FontSize="12"
+                       FontWeight="SemiBold"
+                       Foreground="#FFFFFF" />
+            <TextBlock Text="1. Find the segment you want to dump in the table below"
+                       FontSize="11"
+                       Foreground="#CCCCCC"
+                       Margin="15,0,0,0" />
+            <TextBlock Text="2. Click the checkbox in the 'Sel' column for that segment"
+                       FontSize="11"
+                       Foreground="#CCCCCC"
+                       Margin="15,0,0,0" />
+            <TextBlock Text="3. The previously selected segment (if any) will be automatically deselected"
+                       FontSize="11"
+                       Foreground="#CCCCCC"
+                       Margin="15,0,0,0" />
+          </StackPanel>
+        </Border>
+
+        <!-- Segments DataGrid -->
+        <DataGrid ItemsSource="{Binding SelectedProfile.Segments}"
+                  Background="#3C3C3C"
+                  Foreground="#CCCCCC"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  CanUserReorderColumns="False"
+                  CanUserResizeColumns="True"
+                  CanUserSortColumns="True"
+                  IsReadOnly="False"
+                  Height="200"
+                  Margin="0,0,0,8">
+          <!-- Header style -->
+          <DataGrid.Styles>
+            <Style Selector="DataGridColumnHeader">
+              <Setter Property="FontSize" Value="11" />
+              <Setter Property="FontWeight" Value="SemiBold" />
+              <Setter Property="Padding" Value="8,4,32,4" />
+              <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+              <Setter Property="Template">
+                <ControlTemplate>
+                  <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                    <DockPanel>
+                      <ContentPresenter Content="{TemplateBinding Content}"
+                                        DockPanel.Dock="Left"
+                                        VerticalAlignment="Center" />
+                    </DockPanel>
+                  </Border>
+                </ControlTemplate>
+              </Setter>
+            </Style>
+          </DataGrid.Styles>
+
+          <DataGrid.Columns>
+            <!-- Selected checkbox -->
+            <DataGridCheckBoxColumn Binding="{Binding IsSelected, Mode=TwoWay}" Width="50" IsReadOnly="False">
+              <DataGridCheckBoxColumn.Header>
+                <TextBlock Text="Sel" />
+              </DataGridCheckBoxColumn.Header>
+            </DataGridCheckBoxColumn>
+
+            <!-- Segment Name -->
+            <DataGridTextColumn Binding="{Binding Name}" Width="140" MinWidth="100" IsReadOnly="True">
+              <DataGridTextColumn.Header>
+                <TextBlock Text="Name" />
+              </DataGridTextColumn.Header>
+            </DataGridTextColumn>
+
+            <!-- Start Address -->
+            <DataGridTextColumn Binding="{Binding StartAddress}" Width="140" MinWidth="100" IsReadOnly="True">
+              <DataGridTextColumn.Header>
+                <TextBlock Text="Start Address" />
+              </DataGridTextColumn.Header>
+            </DataGridTextColumn>
+
+            <!-- Size (formatted) -->
+            <DataGridTextColumn Width="110" MinWidth="90" IsReadOnly="True">
+              <DataGridTextColumn.Header>
+                <TextBlock Text="Size" />
+              </DataGridTextColumn.Header>
+              <DataGridTextColumn.Binding>
+                <Binding Path="Size" Mode="OneWay" Converter="{x:Static converters:ByteSizeConverter.Instance}" />
+              </DataGridTextColumn.Binding>
+            </DataGridTextColumn>
+
+            <!-- Memory Type -->
+            <DataGridTextColumn Binding="{Binding Type}" Width="90" MinWidth="70" IsReadOnly="True">
+              <DataGridTextColumn.Header>
+                <TextBlock Text="Type" />
+              </DataGridTextColumn.Header>
+            </DataGridTextColumn>
+
+            <!-- Description -->
+            <DataGridTextColumn Binding="{Binding Description}" Width="*" MinWidth="150" IsReadOnly="True">
+              <DataGridTextColumn.Header>
+                <TextBlock Text="Description" />
+              </DataGridTextColumn.Header>
+            </DataGridTextColumn>
+          </DataGrid.Columns>
+        </DataGrid>
+      </StackPanel>
+    </Border>
+
+    <!-- 3. Profile Details Summary (informational) -->
+    <Border Background="#2D2D2D"
+            BorderBrush="#464647"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="16"
+            IsVisible="{Binding SelectedProfile, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+      <StackPanel Spacing="12">
+        <!-- Header -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <icons:Icon Value="fa-solid fa-microchip"
+                      Width="16"
+                      Height="16"
+                      Foreground="#CCCCCC"
+                      VerticalAlignment="Center" />
+          <TextBlock Text="MEMORY REGION CONFIGURATION"
+                     FontWeight="SemiBold"
+                     FontSize="13"
+                     Foreground="#CCCCCC" />
+        </StackPanel>
+
+        <!-- Profile Information Grid -->
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+              ColumnDefinitions="160,*"
+              ColumnSpacing="12"
+              RowSpacing="6">
+          <TextBlock Grid.Row="0" Grid.Column="0"
+                     Text="Profile Name:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="0" Grid.Column="1"
+                     Text="{Binding SelectedProfile.Name}"
+                     Foreground="#FFFFFF" />
+
+          <TextBlock Grid.Row="1" Grid.Column="0"
+                     Text="Description:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="1" Grid.Column="1"
+                     Text="{Binding SelectedProfile.Description, FallbackValue='No description'}"
+                     Foreground="#FFFFFF"
+                     TextWrapping="Wrap" />
+
+          <TextBlock Grid.Row="2" Grid.Column="0"
+                     Text="Total Segments:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="2" Grid.Column="1"
+                     Text="{Binding SegmentCount}"
+                     Foreground="#FFFFFF" />
+
+          <TextBlock Grid.Row="3" Grid.Column="0"
+                     Text="Selected for Dump:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="3" Grid.Column="1"
+                     Text="{Binding SelectedSegmentCount}"
+                     Foreground="#4CAF50" />
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- 4. Detailed Configuration Summary (moved below segment selection) -->
+    <Border Background="#2D2D2D"
+            BorderBrush="#464647"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="16"
+            IsVisible="{Binding SelectedProfile, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+      <StackPanel Spacing="12">
+        <!-- Header -->
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <icons:Icon Value="fa-solid fa-info-circle"
+                      Width="16"
+                      Height="16"
+                      Foreground="#CCCCCC"
+                      VerticalAlignment="Center" />
+          <TextBlock Text="Memory Region Configuration Summary"
+                     FontWeight="SemiBold"
+                     FontSize="14"
+                     Foreground="#CCCCCC" />
+        </StackPanel>
+
+        <!-- Summary Information -->
+        <Grid RowDefinitions="Auto,Auto"
+              ColumnDefinitions="160,*"
+              ColumnSpacing="12"
+              RowSpacing="6">
+          <TextBlock Grid.Row="0" Grid.Column="0"
+                     Text="Selected:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="0" Grid.Column="1"
+                     Foreground="#FFFFFF">
+            <Run Text="{Binding SelectedSegmentCount}" />
+            <Run Text=" of " />
+            <Run Text="{Binding SegmentCount}" />
+            <Run Text=" segments" />
+          </TextBlock>
+
+          <TextBlock Grid.Row="1" Grid.Column="0"
+                     Text="Valid Selection:"
+                     Foreground="#CCCCCC" />
+          <TextBlock Grid.Row="1" Grid.Column="1"
+                     Text="{Binding ValidationMessage}"
+                     Foreground="#4CAF50"
+                     IsVisible="{Binding IsStepValid}" />
+          <TextBlock Grid.Row="1" Grid.Column="1"
+                     Text="{Binding ValidationMessage}"
+                     Foreground="#F44336"
+                     IsVisible="{Binding IsStepValid, Converter={StaticResource InvBool}}" />
+        </Grid>
+
+        <!-- Selected Segments Details -->
+        <Border Background="#1E1E1E"
+                BorderBrush="#464647"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12"
+                IsVisible="{Binding SelectedSegments, Converter={x:Static converters:CollectionConverters.HasItems}}">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Selected Segments Details"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC" />
+
+            <!-- Individual segment breakdown -->
+            <ItemsControl ItemsSource="{Binding SelectedSegments}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="models:MemorySegment">
+                  <Border Background="#3C3C3C"
+                          BorderBrush="#555555"
+                          BorderThickness="1"
+                          CornerRadius="3"
+                          Padding="10"
+                          Margin="0,3">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto"
+                          ColumnSpacing="14">
+                      <!-- Segment indicator -->
+                      <icons:Icon Grid.Column="0"
+                                  Value="fa-solid fa-check-circle"
+                                  Width="14"
+                                  Height="14"
+                                  Foreground="#4CAF50"
+                                  VerticalAlignment="Center" />
+
+                      <!-- Segment info -->
+                      <StackPanel Grid.Column="1">
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                          <TextBlock Text="{Binding Name}"
+                                     FontWeight="SemiBold"
+                                     Foreground="#FFFFFF" />
+                          <TextBlock Text="{Binding Type}"
+                                     FontSize="10"
+                                     Foreground="#AAAAAA"
+                                     VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding Description}"
+                                   FontSize="11"
+                                   Foreground="#AAAAAA"
+                                   TextWrapping="Wrap"
+                                   Margin="0,2,0,0" />
+                      </StackPanel>
+
+                      <!-- Address -->
+                      <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="Address:"
+                                   FontSize="10"
+                                   Foreground="#888888" />
+                        <TextBlock Text="{Binding StartAddress}"
+                                   Foreground="#CCCCCC"
+                                   FontFamily="Consolas"
+                                   FontSize="11" />
+                      </StackPanel>
+
+                      <!-- Size -->
+                      <StackPanel Grid.Column="3" Spacing="2" VerticalAlignment="Center">
+                        <TextBlock Text="Size:"
+                                   FontSize="10"
+                                   Foreground="#888888" />
+                        <TextBlock Text="{Binding Size, Mode=OneWay, Converter={x:Static converters:ByteSizeConverter.Instance}}"
+                                   Foreground="#CCCCCC"
+                                   FontWeight="SemiBold"
+                                   FontSize="11" />
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <!-- Validation Status -->
+        <!-- Validation Status -->
+        <Border Background="#1E1E1E"
+                BorderBrush="#464647"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+          <StackPanel Spacing="8">
+            <TextBlock Text="Validation"
+                       FontWeight="SemiBold"
+                       Foreground="#CCCCCC" />
+
+            <Grid RowDefinitions="Auto,Auto"
+                  ColumnDefinitions="140,*"
+                  ColumnSpacing="12"
+                  RowSpacing="4">
+              <TextBlock Grid.Row="0" Grid.Column="0"
+                         Text="Status:"
+                         Foreground="#CCCCCC" />
+              <TextBlock Grid.Row="0" Grid.Column="1"
+                         Text="{Binding ValidationMessage}"
+                         Foreground="#4CAF50"
+                         IsVisible="{Binding IsStepValid}" />
+              <TextBlock Grid.Row="0" Grid.Column="1"
+                         Text="{Binding ValidationMessage}"
+                         Foreground="#F44336"
+                         IsVisible="{Binding IsStepValid, Converter={StaticResource InvBool}}" />
+
+              <TextBlock Grid.Row="1" Grid.Column="0"
+                         Text="Contiguous:"
+                         Foreground="#CCCCCC" />
+              <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="{Binding HasContiguousSelection}"
+                           Foreground="#CCCCCC" />
+                <TextBlock Text="(Warning: Non-contiguous segments may require multiple dump operations)"
+                           FontSize="10"
+                           Foreground="#FFA500"
+                           IsVisible="{Binding HasContiguousSelection, Converter={StaticResource InvBool}}" />
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+    </Border>
+
+    <!-- No profile selected message -->
+    <Border Background="#2D2D2D"
+            BorderBrush="#464647"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="20"
+            IsVisible="{Binding SelectedProfile, Converter={x:Static converters:ObjectConverters.IsNull}}">
+      <StackPanel Spacing="8" HorizontalAlignment="Center">
+        <icons:Icon Value="fa-solid fa-microchip"
+                    Width="32"
+                    Height="32"
+                    Foreground="#666666"
+                    HorizontalAlignment="Center" />
+        <TextBlock Text="Select Memory Region Profile"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   Foreground="#CCCCCC"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="Choose a memory region profile to configure which memory segments will be dumped during job execution."
+                   Foreground="#AAAAAA"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   MaxWidth="300" />
+      </StackPanel>
+    </Border>
+  </StackPanel>
+</UserControl>

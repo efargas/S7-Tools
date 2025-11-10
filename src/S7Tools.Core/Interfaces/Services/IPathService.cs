@@ -43,6 +43,11 @@ namespace S7Tools.Core.Interfaces.Services
         string PowerSupplyProfilesPath { get; }
 
         /// <summary>
+        /// Gets the path to Resources/Profiles/MemoryRegions/MemoryRegionProfiles.json
+        /// </summary>
+        string MemoryRegionProfilesPath { get; }
+
+        /// <summary>
         /// Gets the path to Resources/Profiles/MemoryRegions directory
         /// </summary>
         string MemoryRegionsDirectory { get; }

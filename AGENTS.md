@@ -124,28 +124,70 @@ dotnet run --project src/S7Tools --configuration Debug -- --diag
 
 ## Current Baseline Notes (for continuity)
 
-- Scheduler uses Local timezone; due scheduled tasks are auto-promoted to the queue.
-- Job profiles path (Options): `src/resources/JobProfiles/profiles.json`.
-- `PlcClientStub` is registered as a temporary implementation of `IPlcClient`; factory resolves it until the real client is provided.
-- Next major focus: Implement Job Creator wizard in main content area, refactor Jobs details panel, and polish MemoryRegionProfile integration.
+**Last Updated**: 2025-11-10 (branch: 008-memory-regions-profiling)
 
-## Code Quality Standards (Updated 2025-11-07)
+- **Memory Region Profiling**: ✅ COMPLETE — Fully integrated with settings UI, import/export, and job wizard
+- **Job Wizard**: ✅ COMPLETE — Multi-step wizard with memory region selection, validation, and fallback mechanism
+- **Application Settings Service**: ✅ NEW — Centralized settings management with path resolution
+- **Resource Coordinator**: ✅ NEW — Parallel service initialization for improved startup time
+- **UI Refresh Service**: ✅ NEW — Consistent collection refresh with selection preservation
 
-**Build Status**: ✅ 0 errors, 0 warnings
-**Test Status**: ✅ 308 tests (99.7% passing, 1 intentionally skipped)
+**Technical Details**:
+
+- Scheduler uses Local timezone; due scheduled tasks are auto-promoted to the queue
+- Job profiles path (Options): `src/resources/JobProfiles/profiles.json`
+- Memory region profiles path: User-configurable via Settings → Memory Regions
+- `PlcClientStub` registered as temporary implementation of `IPlcClient`; factory resolves it until real client is provided
+- `JobWizardPlaceholderViewModel` is an ACTIVE fallback mechanism (NOT dead code)
+
+## Code Quality Standards (Updated 2025-11-10)
+
+**Build Status**: ✅ 0 errors, 0 warnings (P0+P1: eliminated 59 duplicate resource warnings)
+**Test Status**: ✅ **361 tests (360 passing, 1 intentionally skipped) = 99.7% pass rate** (up from 308 tests)
 **Code Quality**: ✅ A+ grade (98/100)
 
+**Recent P0+P1 Improvements (2025-11-10)**:
+
+**P0 - Critical (COMPLETE)**:
+- **Localization Complete**: 56 new UIStrings resources added, 7 hardcoded strings migrated
+- **Custom Exceptions**: Added `DialogParentNotFoundException` with 6 comprehensive unit tests
+- **Resource Organization**: 8 categories (Clipboard, Status, Profile, Import/Export, PowerSupply, Path, Errors, Values)
+- **Namespace Standardization**: All ViewModels use `S7Tools.Resources.Strings`
+- **Build Quality**: Achieved zero warnings (previously 59 duplicate resource warnings)
+
+**P1 - High (COMPLETE)**:
+- **Magic Numbers Eliminated**: 38 magic numbers/strings extracted to constants
+  - `DateTimeFormats` class: 5 format constants (11 usages)
+  - `NetworkConstants` class: 4 port-related constants (6 usages)
+  - `ColorPalette` class: 9 color groups, 27 RGB values
+  - `MemoryConstants` class: 4 memory-related constants (8 usages)
+- **Documentation Updated**: `systemPatterns.md` v2.2 with 4 new architectural patterns
+- **Pattern Validation**: Verified JobWizardPlaceholder as active fallback (KEEPING)
+- **PATTERNS_REFERENCE.md**: Updated to v1.2 with new patterns:
+  - Memory Region Profile Management pattern
+  - Job Wizard multi-step pattern
+  - ProfileEditDialogService pattern
+  - Application Settings Service pattern
+
 **Key Quality Achievements**:
+
 - Clean Architecture properly implemented
 - ViewModels/Views organized into 9 functional categories
 - Unified Profile Management with StandardProfileManager<T>
+- Memory Region Profiling with segment selection and validation
+- Job Wizard with multi-step navigation and fallback mechanism
 - Internal Method Pattern for semaphore safety (no deadlocks)
 - Resource Coordination Pattern for parallel execution
-- Custom Exception Hierarchy for semantic error handling
-- Comprehensive testing with 99.7% pass rate
+- Custom Exception Hierarchy for semantic error handling (including DialogParentNotFoundException)
+- Type-safe constants for all magic numbers and strings
+- Comprehensive testing with 99.7% pass rate (+6 tests from P0)
+- Centralized localization with UIStrings.resx (1800+ entries)
+- Comprehensive pattern documentation in PATTERNS_REFERENCE.md v1.2
 
 **Pattern Compliance**:
+
 When implementing new features, always:
+
 1. Check `PATTERNS_REFERENCE.md` for applicable patterns
 2. Follow existing implementations as examples
 3. Maintain consistency with established patterns
@@ -153,6 +195,7 @@ When implementing new features, always:
 5. Run `dotnet format` before commit
 
 **Code Review Process**:
+
 - Comprehensive code reviews documented in `reviews/` directory
 - Latest: `reviews/LATEST_REVIEW.md` (stable link)
 - Archived reviews in `reviews/archive/`

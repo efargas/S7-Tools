@@ -1,0 +1,453 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:S7Tools.ViewModels.Dialogs"
+        xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
+        xmlns:converters="clr-namespace:S7Tools.Converters"
+        mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="600"
+        x:Class="S7Tools.Views.Dialogs.EditMemoryRegionProfileDialog"
+        x:DataType="vm:EditMemoryRegionProfileDialogViewModel"
+        Title="Edit Memory Region Profile"
+        Width="700" Height="600"
+        MinWidth="600" MinHeight="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
+
+  <Design.DataContext>
+    <vm:EditMemoryRegionProfileDialogViewModel />
+  </Design.DataContext>
+
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- Header Section -->
+    <Border Grid.Row="0"
+            Background="{DynamicResource SystemControlBackgroundAccentBrush}"
+            CornerRadius="4"
+            Padding="12"
+            Margin="0,0,0,16">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Path Grid.Column="0"
+              Width="24" Height="24"
+              Margin="0,0,12,0"
+              VerticalAlignment="Center"
+              Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+              Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
+
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock Text="Edit Memory Region Profile"
+                     FontSize="16" FontWeight="SemiBold"
+                     Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+          <TextBlock Text="Modify profile settings and memory segment configuration"
+                     FontSize="12" Opacity="0.8"
+                     Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+        </StackPanel>
+
+        <!-- Changes Indicator -->
+        <Border Grid.Column="2"
+                IsVisible="{Binding HasChanges}"
+                Background="{DynamicResource SystemControlHighlightBaseMediumLowBrush}"
+                CornerRadius="12"
+                Padding="8,4">
+          <TextBlock Text="Modified"
+                     FontSize="11" FontWeight="Medium"
+                     Foreground="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- Main Content -->
+    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+      <StackPanel Spacing="16">
+
+        <!-- Basic Information Section -->
+        <Expander Header="Basic Information" IsExpanded="True">
+          <StackPanel Spacing="12" Margin="0,8,0,0">
+
+            <!-- Profile Name -->
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+
+              <TextBlock Grid.Row="0" Text="Profile Name *"
+                         FontWeight="Medium" Margin="0,0,0,4" />
+              <TextBox Grid.Row="1"
+                       Text="{Binding ProfileName}"
+                       IsEnabled="{Binding CanModify}"
+                       Watermark="Enter a unique name for this profile"
+                       Classes.error="{Binding !IsValid}" />
+            </Grid>
+
+            <!-- Description -->
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+
+              <TextBlock Grid.Row="0" Text="Description"
+                         FontWeight="Medium" Margin="0,0,0,4" />
+              <TextBox Grid.Row="1"
+                       Text="{Binding Description}"
+                       IsEnabled="{Binding CanModify}"
+                       AcceptsReturn="True"
+                       TextWrapping="Wrap"
+                       MinHeight="60"
+                       Watermark="Optional description for this memory region profile" />
+            </Grid>
+
+          </StackPanel>
+        </Expander>
+
+        <!-- Memory Segments Section -->
+        <Expander Header="Memory Segments" IsExpanded="True">
+          <StackPanel Spacing="12" Margin="0,8,0,0">
+
+            <!-- Segment Statistics -->
+            <Border Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}"
+                    CornerRadius="4"
+                    Padding="12">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                  <TextBlock Text="{Binding Segments.Count}"
+                             FontSize="18" FontWeight="Bold"
+                             HorizontalAlignment="Center" />
+                  <TextBlock Text="Total Segments"
+                             FontSize="11" Opacity="0.7"
+                             HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1">
+                  <TextBlock Text="{Binding SelectedSegmentCount}"
+                             FontSize="18" FontWeight="Bold"
+                             HorizontalAlignment="Center"
+                             Foreground="{DynamicResource SystemControlHighlightAccentBrush}" />
+                  <TextBlock Text="Selected"
+                             FontSize="11" Opacity="0.7"
+                             HorizontalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                  <TextBlock Text="{Binding TotalSelectedSize}"
+                             FontSize="18" FontWeight="Bold"
+                             HorizontalAlignment="Center"
+                             Foreground="{DynamicResource SystemControlHighlightAccentBrush}" />
+                  <TextBlock Text="Total Size"
+                             FontSize="11" Opacity="0.7"
+                             HorizontalAlignment="Center" />
+                </StackPanel>
+
+              </Grid>
+            </Border>
+
+            <!-- Segment Management Toolbar -->
+            <Border Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}"
+                    CornerRadius="4"
+                    Padding="8">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                  <Button Command="{Binding AddSegmentCommand}"
+                          IsEnabled="{Binding CanModify}"
+                          Classes="accent"
+                          MinWidth="100"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
+                            Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                            Data="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z" />
+                      <TextBlock Text="Add"
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
+                    </StackPanel>
+                  </Button>
+
+                  <Button Command="{Binding RemoveSegmentCommand}"
+                          IsEnabled="{Binding CanModify}"
+                          MinWidth="110"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
+                            Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                            Data="M19,13H5V11H19V13Z" />
+                      <TextBlock Text="Remove"
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
+                    </StackPanel>
+                  </Button>
+
+                  <Button Command="{Binding EditSegmentCommand}"
+                          IsEnabled="{Binding CanModify}"
+                          MinWidth="90"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
+                            Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                            Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z" />
+                      <TextBlock Text="Edit"
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
+                    </StackPanel>
+                  </Button>
+
+                  <Button Command="{Binding DuplicateSegmentCommand}"
+                          IsEnabled="{Binding CanModify}"
+                          MinWidth="120"
+                          Height="36"
+                          Padding="12,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Path Width="18" Height="18"
+                            VerticalAlignment="Center"
+                            Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                            Data="M11,17H4A2,2 0 0,1 2,15V3A2,2 0 0,1 4,1H16V3H4V15H11V13L15,16L11,19V17M19,21V7H8V13H6V7A2,2 0 0,1 8,5H19A2,2 0 0,1 21,7V21A2,2 0 0,1 19,23H8A2,2 0 0,1 6,21V19H8V21H19Z" />
+                      <TextBlock Text="Duplicate"
+                                 VerticalAlignment="Center"
+                                 FontSize="14" />
+                    </StackPanel>
+                  </Button>
+                </StackPanel>
+
+                <!-- Move Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                  <Button Command="{Binding MoveUpCommand}"
+                          IsEnabled="{Binding CanModify}"
+                          ToolTip.Tip="Move segment up"
+                          Width="44"
+                          Height="36"
+                          Padding="8">
+                    <Path Width="20" Height="20"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
+                          Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                          Data="M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z" />
+                  </Button>
+
+                  <Button Command="{Binding MoveDownCommand}"
+                          IsEnabled="{Binding CanModify}"
+                          ToolTip.Tip="Move segment down"
+                          Width="44"
+                          Height="36"
+                          Padding="8">
+                    <Path Width="20" Height="20"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
+                          Fill="{DynamicResource SystemControlForegroundBaseHighBrush}"
+                          Data="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z" />
+                  </Button>
+                </StackPanel>
+
+              </Grid>
+            </Border>
+
+            <!-- Segments List -->
+            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                    CornerRadius="4"
+                    Padding="8"
+                    MinHeight="200">
+
+              <Grid>
+                <!-- Empty State -->
+                <StackPanel IsVisible="{Binding Segments.Count, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=0}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Spacing="8">
+                  <Path Width="48" Height="48"
+                        Fill="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                        Data="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"
+                        HorizontalAlignment="Center" />
+                  <TextBlock Text="No memory segments defined"
+                             FontSize="14"
+                             HorizontalAlignment="Center"
+                             Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                  <TextBlock Text="Click 'Add' to create your first memory segment"
+                             FontSize="12"
+                             HorizontalAlignment="Center"
+                             Opacity="0.7" />
+                </StackPanel>
+
+                <!-- Segments DataGrid -->
+                <DataGrid ItemsSource="{Binding Segments}"
+                          SelectedItem="{Binding SelectedSegment, Mode=TwoWay}"
+                          IsVisible="{Binding Segments.Count, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter=0}"
+                          CanUserReorderColumns="False"
+                          CanUserResizeColumns="True"
+                          CanUserSortColumns="False"
+                          IsReadOnly="False"
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column"
+                          SelectionMode="Single">
+
+                  <DataGrid.Columns>
+
+                    <!-- Selection Checkbox -->
+                    <DataGridCheckBoxColumn Header="Select"
+                                          Binding="{Binding IsSelected, Mode=TwoWay}"
+                                          Width="70"
+                                          CanUserResize="False" />
+
+                    <!-- Name (Editable) -->
+                    <DataGridTextColumn Header="Name"
+                                      Binding="{Binding Name, Mode=TwoWay}"
+                                      Width="150"
+                                      MinWidth="120"
+                                      IsReadOnly="False" />
+
+                    <!-- Start Address (Editable) -->
+                    <DataGridTextColumn Header="Start Address"
+                                      Binding="{Binding StartAddress, Mode=TwoWay}"
+                                      Width="150"
+                                      MinWidth="130"
+                                      IsReadOnly="False" />
+
+                    <!-- End Address (Editable - calculates Size) -->
+                    <DataGridTextColumn Header="End Address"
+                                      Binding="{Binding EndAddress, Mode=TwoWay}"
+                                      Width="150"
+                                      MinWidth="130"
+                                      IsReadOnly="False" />
+
+                    <!-- Size (Editable Hex - calculates End Address) -->
+                    <DataGridTextColumn Header="Size (hex)"
+                                      Binding="{Binding Size, Mode=TwoWay}"
+                                      Width="150"
+                                      MinWidth="130"
+                                      IsReadOnly="False" />
+
+                    <!-- Size Display (Computed, Read-Only) -->
+                    <DataGridTextColumn Header="Size"
+                                      Binding="{Binding SizeFormatted, Mode=OneWay}"
+                                      Width="110"
+                                      MinWidth="90"
+                                      IsReadOnly="True" />
+
+                    <!-- Type (ComboBox) -->
+                    <DataGridTemplateColumn Header="Type"
+                                          Width="120"
+                                          MinWidth="100">
+                      <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                          <TextBlock Text="{Binding Type}" VerticalAlignment="Center" />
+                        </DataTemplate>
+                      </DataGridTemplateColumn.CellTemplate>
+                      <DataGridTemplateColumn.CellEditingTemplate>
+                        <DataTemplate>
+                          <ComboBox SelectedItem="{Binding Type, Mode=TwoWay}"
+                                    ItemsSource="{Binding $parent[Window].DataContext.MemoryTypes}">
+                            <ComboBox.ItemTemplate>
+                              <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                              </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                          </ComboBox>
+                        </DataTemplate>
+                      </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Description (Editable) -->
+                    <DataGridTextColumn Header="Description"
+                                      Binding="{Binding Description, Mode=TwoWay}"
+                                      Width="*"
+                                      MinWidth="150"
+                                      IsReadOnly="False" />
+
+                  </DataGrid.Columns>
+
+                  <DataGrid.Styles>
+                    <Style Selector="DataGridRow:selected">
+                      <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListAccentLowBrush}" />
+                    </Style>
+                    <Style Selector="DataGridRow:pointerover">
+                      <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}" />
+                    </Style>
+                  </DataGrid.Styles>
+
+                </DataGrid>
+
+              </Grid>
+            </Border>
+
+          </StackPanel>
+        </Expander>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Validation/Warning Message -->
+    <Border Grid.Row="2"
+            IsVisible="{Binding ValidationMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+            CornerRadius="4"
+            Padding="12"
+            Margin="0,8,0,0">
+      <!-- Orange for warnings (contains ⚠️), Red for errors -->
+      <Border.Background>
+        <SolidColorBrush Color="{Binding ValidationMessage, Converter={x:Static converters:WarningToColorConverter.Instance}}" />
+      </Border.Background>
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Path Width="16" Height="16"
+              Fill="White"
+              Data="M13,13H11V7H13M12,17.3A1.3,1.3 0 0,1 10.7,16A1.3,1.3 0 0,1 12,14.7A1.3,1.3 0 0,1 13.3,16A1.3,1.3 0 0,1 12,17.3M15.73,3H8.27L3,8.27V15.73L8.27,21H15.73L21,15.73V8.27L15.73,3Z" />
+        <TextBlock Text="{Binding ValidationMessage}"
+                   FontWeight="Medium"
+                   Foreground="White"
+                   TextWrapping="Wrap" />
+      </StackPanel>
+    </Border>
+
+    <!-- Action Buttons -->
+    <Border Grid.Row="3"
+            Background="{DynamicResource SystemControlBackgroundAltMediumLowBrush}"
+            CornerRadius="4"
+            Padding="12"
+            Margin="0,16,0,0">
+      <StackPanel Orientation="Horizontal"
+                  HorizontalAlignment="Right"
+                  Spacing="8">
+
+        <Button Command="{Binding CancelCommand}"
+                Content="Cancel"
+                IsCancel="True"
+                Padding="16,8" />
+
+        <Button Command="{Binding SaveCommand}"
+                Content="Save Changes"
+                IsDefault="True"
+                IsEnabled="{Binding IsValid}"
+                Classes="accent"
+                Padding="16,8" />
+
+      </StackPanel>
+    </Border>
+
+  </Grid>
+</Window>

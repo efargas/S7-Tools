@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Extensions;
 using S7Tools.Resources;
@@ -495,7 +496,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            string exportText = "Log Export - " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string exportText = "Log Export - " + DateTime.Now.ToString(DateTimeFormats.LongDateTime);
             await _clipboardService.SetTextAsync(exportText);
             StatusMessage = UIStrings.LogExportCopied;
             _logger.LogInformation("Log export copied to clipboard");

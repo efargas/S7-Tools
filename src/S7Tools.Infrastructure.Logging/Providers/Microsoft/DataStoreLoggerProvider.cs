@@ -43,7 +43,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
         options?.OnChange(config =>
         {
             // Update configuration for existing loggers
-            foreach (var logger in _loggers.Values)
+            foreach (DataStoreLogger logger in _loggers.Values)
             {
                 // Note: In a real implementation, you might want to recreate loggers
                 // or provide a way to update their configuration

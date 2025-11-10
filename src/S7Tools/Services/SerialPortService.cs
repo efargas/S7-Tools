@@ -52,7 +52,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             // Capture the timer instance to prevent race conditions with Dispose
-            var timer = service._monitoringTimer;
+            Timer? timer = service._monitoringTimer;
             if (timer == null)
             {
                 return;

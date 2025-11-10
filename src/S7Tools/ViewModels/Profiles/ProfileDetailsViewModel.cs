@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.ViewModels.Controls;
 
@@ -110,7 +111,7 @@ public class ProfileDetailsViewModel : ReactiveObject, IProfileDetailsViewModel
         PropertyDisplayItem? idProperty = BasicProperties.FirstOrDefault(p => p.Label == "ID");
         if (idProperty != null)
         {
-            idProperty.Value = profile.Id.ToString("D");
+            idProperty.Value = profile.Id.ToString(DateTimeFormats.DecimalId);
         }
 
         PropertyDisplayItem? descriptionProperty = BasicProperties.FirstOrDefault(p => p.Label == "Description");

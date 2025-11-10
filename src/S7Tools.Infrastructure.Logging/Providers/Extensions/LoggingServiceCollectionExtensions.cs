@@ -42,7 +42,7 @@ public static class LoggingServiceCollectionExtensions
         // Register the data store as singleton
         services.TryAddSingleton<ILogDataStore>(serviceProvider =>
         {
-            var options = serviceProvider.GetRequiredService<IOptions<LogDataStoreOptions>>().Value;
+            LogDataStoreOptions options = serviceProvider.GetRequiredService<IOptions<LogDataStoreOptions>>().Value;
             return new LogDataStore(options);
         });
 
@@ -52,8 +52,8 @@ public static class LoggingServiceCollectionExtensions
         // Register the logger provider
         services.TryAddSingleton<DataStoreLoggerProvider>(serviceProvider =>
         {
-            var dataStore = serviceProvider.GetRequiredService<ILogDataStore>();
-            var configuration = serviceProvider.GetRequiredService<DataStoreLoggerConfiguration>();
+            ILogDataStore dataStore = serviceProvider.GetRequiredService<ILogDataStore>();
+            DataStoreLoggerConfiguration configuration = serviceProvider.GetRequiredService<DataStoreLoggerConfiguration>();
             return new DataStoreLoggerProvider(dataStore, configuration);
         });
 
@@ -93,7 +93,7 @@ public static class LoggingServiceCollectionExtensions
         // Register the data store as singleton
         services.TryAddSingleton<ILogDataStore>(serviceProvider =>
         {
-            var options = serviceProvider.GetRequiredService<IOptions<LogDataStoreOptions>>().Value;
+            LogDataStoreOptions options = serviceProvider.GetRequiredService<IOptions<LogDataStoreOptions>>().Value;
             return new LogDataStore(options);
         });
 
@@ -108,8 +108,8 @@ public static class LoggingServiceCollectionExtensions
         // Register the logger provider
         services.TryAddSingleton<DataStoreLoggerProvider>(serviceProvider =>
         {
-            var dataStore = serviceProvider.GetRequiredService<ILogDataStore>();
-            var configuration = serviceProvider.GetRequiredService<DataStoreLoggerConfiguration>();
+            ILogDataStore dataStore = serviceProvider.GetRequiredService<ILogDataStore>();
+            DataStoreLoggerConfiguration configuration = serviceProvider.GetRequiredService<DataStoreLoggerConfiguration>();
             return new DataStoreLoggerProvider(dataStore, configuration);
         });
 

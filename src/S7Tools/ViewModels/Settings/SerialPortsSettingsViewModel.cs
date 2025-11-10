@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
@@ -797,8 +798,8 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
                          $"Raw Mode: {SelectedProfile.Configuration.RawMode}\n" +
                          $"Default: {SelectedProfile.IsDefault}\n" +
                          $"Read-Only: {SelectedProfile.IsReadOnly}\n" +
-                         $"Created: {SelectedProfile.CreatedAt:yyyy-MM-dd HH:mm:ss}\n" +
-                         $"Modified: {SelectedProfile.ModifiedAt:yyyy-MM-dd HH:mm:ss}";
+                         $"Created: {SelectedProfile.CreatedAt.ToString(DateTimeFormats.LongDateTime)}\n" +
+                         $"Modified: {SelectedProfile.ModifiedAt.ToString(DateTimeFormats.LongDateTime)}";
 
             await _dialogService.ShowErrorAsync("Profile Details", details);
 

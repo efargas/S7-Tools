@@ -12,9 +12,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Controls;
 
@@ -29,11 +31,17 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortProfileService _serialService;
     private readonly ISocatProfileService _socatService;
     private readonly IPowerSupplyProfileService _powerService;
+    private readonly IMemoryRegionProfileService _memoryRegionService;
     private readonly IJobManager _jobManager;
     private readonly IUIThreadService _uiThreadService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly CompositeDisposable _disposables = new();
     private readonly IViewModelFactory _vmFactory;
+
+    // Resource strings (cached for performance)
+    private static readonly string NotAvailable = UIStrings.ResourceManager.GetString("Value_NotAvailable") ?? "N/A";
+    private static readonly string NotConfigured = UIStrings.ResourceManager.GetString("Value_NotConfigured") ?? "Not configured";
+
     // Removed power scan resources
 
     public enum WizardStep
@@ -59,6 +67,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private SerialPortProfile? _selectedSerial;
     private SocatProfile? _selectedSocat;
     private PowerSupplyProfile? _selectedPower;
+    private MemoryMappingProfile? _selectedMemoryRegion;
     // Removed power device scan from wizard per UX guidance
 
     // Port scanning
@@ -67,8 +76,8 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private readonly CancellationTokenSource _scanCancellationTokenSource = new();
 
     // Memory
-    private uint _memoryStart = 0x20000000;
-    private uint _memoryLength = 0x1000;
+    private uint _memoryStart = MemoryConstants.DefaultUserMemoryStart;
+    private uint _memoryLength = MemoryConstants.DefaultDumpSize;
     public sealed record MemoryPreset(string Name, uint Start, uint Length);
     public ObservableCollection<MemoryPreset> MemoryPresets { get; } = new();
     private MemoryPreset? _selectedMemoryPreset;
@@ -84,6 +93,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         ISerialPortProfileService serialService,
         ISocatProfileService socatService,
         IPowerSupplyProfileService powerService,
+        IMemoryRegionProfileService memoryRegionService,
         IJobManager jobManager,
         IUIThreadService uiThreadService,
         IFileDialogService? fileDialogService = null,
@@ -93,6 +103,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         _serialService = serialService;
         _socatService = socatService;
         _powerService = powerService;
+        _memoryRegionService = memoryRegionService;
         _jobManager = jobManager;
         _uiThreadService = uiThreadService;
         _fileDialogService = fileDialogService;
@@ -101,14 +112,19 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         SerialProfiles = new ObservableCollection<SerialPortProfile>();
         SocatProfiles = new ObservableCollection<SocatProfile>();
         PowerProfiles = new ObservableCollection<PowerSupplyProfile>();
+        MemoryProfiles = new ObservableCollection<MemoryMappingProfile>();
         AvailablePorts = new ObservableCollection<string>();
         // Initialize memory presets
-        MemoryPresets.Add(new MemoryPreset("4KB Boot Sector", 0x20000000u, 0x1000u));
+        MemoryPresets.Add(new MemoryPreset("4KB Boot Sector", MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize));
         MemoryPresets.Add(new MemoryPreset("8KB Region", 0x20001000u, 0x2000u));
         MemoryPresets.Add(new MemoryPreset("16KB Region", 0x20002000u, 0x4000u));
 
         // Create port scanner child VM for UI embedding
         PortScanner = _vmFactory.Create<SerialPortDiscoveryViewModel>();
+
+        // Create memory region step ViewModel
+        MemoryRegionStepViewModel = _vmFactory.Create<JobWizardMemoryRegionStepViewModel>();
+        _logger.LogInformation("Created JobWizardMemoryRegionStepViewModel via factory");
 
         // Commands
         IObservable<bool> canBack = this.WhenAnyValue(x => x.CurrentStep)
@@ -119,16 +135,15 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             x => x.SelectedSerial,
             x => x.SelectedSocat,
             x => x.SelectedPower,
-            x => x.MemoryStart,
-            x => x.MemoryLength,
-            (step, serial, socat, power, start, length) =>
+            x => x.SelectedMemoryRegion,
+            (step, serial, socat, power, memoryRegion) =>
             {
                 return step switch
                 {
                     WizardStep.Serial => serial != null,
                     WizardStep.Socat => socat != null,
                     WizardStep.Power => power != null,
-                    WizardStep.Memory => start >= 0 && length > 0,
+                    WizardStep.Memory => memoryRegion != null && memoryRegion.HasSelectedSegments,
                     WizardStep.TimingOutput => !string.IsNullOrWhiteSpace(OutputPath) && !string.IsNullOrWhiteSpace(PayloadsBasePath) && PowerOnTimeMs >= 0 && PowerOffDelayMs >= 0,
                     WizardStep.Review => false,
                     _ => false
@@ -139,16 +154,32 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             x => x.SelectedSerial,
             x => x.SelectedSocat,
             x => x.SelectedPower,
-            x => x.MemoryStart,
-            x => x.MemoryLength,
+            x => x.SelectedMemoryRegion,
             x => x.OutputPath,
             x => x.PayloadsBasePath,
             x => x.PowerOnTimeMs,
             x => x.PowerOffDelayMs,
             x => x.CurrentStep,
-            (serial, socat, power, start, length, outPath, payloads, onMs, offMs, step) =>
-                serial != null && socat != null && power != null && length > 0 &&
-                !string.IsNullOrWhiteSpace(outPath) && !string.IsNullOrWhiteSpace(payloads) && onMs >= 0 && offMs >= 0 && step == WizardStep.Review);
+            (serial, socat, power, memoryRegion, outPath, payloads, onMs, offMs, step) =>
+            {
+                // Basic null checks and step requirements
+                if (serial == null || socat == null || power == null || memoryRegion == null ||
+                    string.IsNullOrWhiteSpace(outPath) || string.IsNullOrWhiteSpace(payloads) ||
+                    onMs < 0 || offMs < 0 || step != WizardStep.Review)
+                {
+                    return false;
+                }
+
+                // Memory region specific validation
+                if (!memoryRegion.HasSelectedSegments)
+                {
+                    return false;
+                }
+
+                // Additional validation - check for contiguous segments if required
+                // Note: Non-contiguous segments are allowed but may produce warnings
+                return true;
+            });
 
         BackCommand = ReactiveCommand.Create<Unit, Unit>(_ =>
         {
@@ -188,9 +219,12 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public ObservableCollection<SerialPortProfile> SerialProfiles { get; }
     public ObservableCollection<SocatProfile> SocatProfiles { get; }
     public ObservableCollection<PowerSupplyProfile> PowerProfiles { get; }
+    public ObservableCollection<MemoryMappingProfile> MemoryProfiles { get; }
     public ObservableCollection<string> AvailablePorts { get; }
     // Port scanner VM for UI embedding
     public SerialPortDiscoveryViewModel PortScanner { get; }
+    // Memory region step VM for wizard integration
+    public JobWizardMemoryRegionStepViewModel MemoryRegionStepViewModel { get; }
 
     public ReactiveCommand<Unit, Unit> BackCommand { get; }
     public ReactiveCommand<Unit, Unit> NextCommand { get; }
@@ -309,6 +343,18 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         }
     }
 
+    public MemoryMappingProfile? SelectedMemoryRegion
+    {
+        get => _selectedMemoryRegion;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedMemoryRegion, value);
+            this.RaisePropertyChanged(nameof(MemoryRegionSummary));
+            this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+            this.RaisePropertyChanged(nameof(TotalSelectedSize));
+        }
+    }
+
     // Removed power scan public properties
 
     public uint MemoryStart
@@ -353,7 +399,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Gets a formatted summary of the memory region (Start - Length bytes).
+    /// Gets a formatted summary of the memory region (Profile Name - X segments selected).
     /// </summary>
     public string MemoryRegionSummary
     {
@@ -361,13 +407,55 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         {
             try
             {
-                return $"0x{MemoryStart:X} - {MemoryLength} bytes";
+                if (SelectedMemoryRegion == null)
+                {
+                    return "No memory region profile selected";
+                }
+
+                var selectedSegments = SelectedMemoryRegion.SelectedSegments.ToList();
+                if (selectedSegments.Count == 0)
+                {
+                    return $"{SelectedMemoryRegion.Name} - No segments selected";
+                }
+
+                // Calculate total size
+                long totalSize = selectedSegments.Sum(s => s.Size);
+                string totalSizeFormatted = totalSize == 0 ? "0 bytes" :
+                    totalSize < 1024 ? $"{totalSize} bytes" :
+                    totalSize < 1024 * 1024 ? $"{totalSize / 1024.0:F1} KB" :
+                    $"{totalSize / (1024.0 * 1024.0):F1} MB";
+
+                // Get segment names
+                string segmentNames = string.Join(", ", selectedSegments.Select(s => s.Name));
+
+                // Check if contiguous
+                string contiguityInfo = SelectedMemoryRegion.HasContiguousSelection()
+                    ? ""
+                    : UIStrings.ResourceManager.GetString("Warning_NonContiguousSegments") ?? " (Warning: Non-contiguous)";
+
+                return $"{SelectedMemoryRegion.Name} - {selectedSegments.Count} segment(s) selected: {segmentNames} ({totalSizeFormatted}){contiguityInfo}";
             }
             catch
             {
-                return "Not configured";
+                return NotConfigured;
             }
         }
+    }
+
+    /// <summary>
+    /// Gets the number of selected segments in the memory region profile.
+    /// </summary>
+    public int SelectedSegmentCount
+    {
+        get { return SelectedMemoryRegion?.SelectedSegments.Count() ?? 0; }
+    }
+
+    /// <summary>
+    /// Gets the total size of selected segments in bytes.
+    /// </summary>
+    public long TotalSelectedSize
+    {
+        get { return SelectedMemoryRegion?.TotalSelectedSize ?? 0; }
     }
 
     /// <summary>
@@ -383,7 +471,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             }
             catch
             {
-                return "Not configured";
+                return NotConfigured;
             }
         }
     }
@@ -413,7 +501,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             {
                 return modbusTcp.Host;
             }
-            return "N/A";
+            return NotAvailable;
         }
     }
 
@@ -428,7 +516,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             {
                 return modbusTcp.Port.ToString();
             }
-            return "N/A";
+            return NotAvailable;
         }
     }
 
@@ -443,7 +531,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             {
                 return modbusTcp.DeviceId.ToString();
             }
-            return "N/A";
+            return NotAvailable;
         }
     }
 
@@ -489,18 +577,20 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            Status = "Loading profiles...";
+            Status = UIStrings.Status_LoadingProfiles;
             _logger.LogInformation("Loading wizard profile lists");
 
             Task<IEnumerable<SerialPortProfile>> serialTask = _serialService.GetAllAsync();
             Task<IEnumerable<SocatProfile>> socatTask = _socatService.GetAllAsync();
             Task<IEnumerable<PowerSupplyProfile>> powerTask = _powerService.GetAllAsync();
+            Task<IEnumerable<MemoryMappingProfile>> memoryTask = _memoryRegionService.GetAllAsync();
 
-            await Task.WhenAll(serialTask, socatTask, powerTask).ConfigureAwait(false);
+            await Task.WhenAll(serialTask, socatTask, powerTask, memoryTask).ConfigureAwait(false);
 
             var serials = (await serialTask.ConfigureAwait(false)).ToList();
             var socats = (await socatTask.ConfigureAwait(false)).ToList();
             var powers = (await powerTask.ConfigureAwait(false)).ToList();
+            var memoryProfiles = (await memoryTask.ConfigureAwait(false)).ToList();
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
@@ -518,6 +608,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 foreach (PowerSupplyProfile? p in powers)
                 {
                     PowerProfiles.Add(p);
+                }
+                MemoryProfiles.Clear();
+                foreach (MemoryMappingProfile? m in memoryProfiles)
+                {
+                    MemoryProfiles.Add(m);
                 }
 
                 // Apply preselection if provided, else fall back to defaults
@@ -554,6 +649,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                     SelectedPower = PowerProfiles.FirstOrDefault(x => x.IsDefault) ?? PowerProfiles.FirstOrDefault();
                 }
 
+                // Memory region profile selection
+                SelectedMemoryRegion = MemoryProfiles.FirstOrDefault(x => x.IsDefault) ?? MemoryProfiles.FirstOrDefault();
+
                 if (!string.IsNullOrWhiteSpace(PreselectJobName))
                 {
                     JobName = PreselectJobName!;
@@ -569,7 +667,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load profiles for wizard");
-            Status = $"Error loading profiles: {ex.Message}";
+            Status = string.Format(UIStrings.Status_ErrorLoadingProfiles, ex.Message);
         }
         finally
         {
@@ -582,11 +680,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            Status = "Creating job...";
+            Status = UIStrings.Status_CreatingJob;
 
-            if (SelectedSerial == null || SelectedSocat == null || SelectedPower == null)
+            if (SelectedSerial == null || SelectedSocat == null || SelectedPower == null || SelectedMemoryRegion == null)
             {
-                Status = "Please select all required profiles";
+                Status = "Please select all required profiles"; // TODO: Add UIStrings.Status_AllRequiredProfilesNeeded
                 return;
             }
 
@@ -595,7 +693,8 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             job.SerialProfileId = SelectedSerial.Id;
             job.SocatProfileId = SelectedSocat.Id;
             job.PowerSupplyProfileId = SelectedPower.Id;
-            job.MemoryRegion = new MemoryRegionProfile(MemoryStart, MemoryLength);
+            job.MemoryRegionProfileId = SelectedMemoryRegion.Id;
+            job.MemoryRegion = new MemoryRegionProfile(MemoryStart, MemoryLength); // Keep for backward compatibility
             job.Payloads = new PayloadSetProfile(PayloadsBasePath);
             job.OutputPath = OutputPath;
             job.PowerOnTimeMs = PowerOnTimeMs;
@@ -603,14 +702,14 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
 
             JobProfile created = await _jobManager.CreateAsync(job).ConfigureAwait(false);
             CreatedJobId = created.Id;
-            Status = "Job created";
+            Status = UIStrings.Status_JobCreated;
             _logger.LogInformation("Job created via wizard: {JobId} {JobName}", created.Id, created.Name);
             Completed = true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create job via wizard");
-            Status = $"Error: {ex.Message}";
+            Status = string.Format(UIStrings.Status_ErrorCreatingJob, ex.Message);
             Completed = false;
         }
         finally
@@ -665,7 +764,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         try
         {
             IsScanning = true;
-            Status = "Scanning for ports...";
+            Status = UIStrings.Status_ScanningForPorts;
 
             // Execute the scanner's scan command and wait for completion
             await PortScanner.ScanPortsCommand.Execute();
@@ -684,7 +783,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to scan ports in job wizard");
-            Status = $"Error scanning ports: {ex.Message}";
+            Status = string.Format(UIStrings.Status_ErrorScanningPorts, ex.Message);
         }
         finally
         {
@@ -712,69 +811,69 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the baud rate of the selected serial profile as a string.
     /// </summary>
-    public string SerialBaudRate => SelectedSerial?.Configuration?.BaudRate.ToString() ?? "N/A";
+    public string SerialBaudRate => SelectedSerial?.Configuration?.BaudRate.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the character size of the selected serial profile as a string.
     /// </summary>
-    public string SerialCharacterSize => SelectedSerial?.Configuration?.CharacterSize.ToString() ?? "N/A";
+    public string SerialCharacterSize => SelectedSerial?.Configuration?.CharacterSize.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the parity of the selected serial profile as a string.
     /// </summary>
-    public string SerialParity => SelectedSerial?.Configuration?.Parity.ToString() ?? "N/A";
+    public string SerialParity => SelectedSerial?.Configuration?.Parity.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the stop bits of the selected serial profile as a string.
     /// </summary>
-    public string SerialStopBits => SelectedSerial?.Configuration?.StopBits.ToString() ?? "N/A";
+    public string SerialStopBits => SelectedSerial?.Configuration?.StopBits.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets whether the receiver is enabled in the selected serial profile.
     /// </summary>
     public string SerialEnableReceiver => SelectedSerial?.Configuration?.EnableReceiver == true ? "Yes" :
-                                         SelectedSerial?.Configuration?.EnableReceiver == false ? "No" : "N/A";
+                                         SelectedSerial?.Configuration?.EnableReceiver == false ? "No" : NotAvailable;
 
     /// <summary>
     /// Gets the version of the selected serial profile.
     /// </summary>
-    public string SerialVersion => SelectedSerial?.Version ?? "N/A";
+    public string SerialVersion => SelectedSerial?.Version ?? NotAvailable;
 
     /// <summary>
     /// Gets the creation date of the selected serial profile.
     /// </summary>
-    public string SerialCreatedAt => SelectedSerial?.CreatedAt.ToString("yyyy-MM-dd HH:mm") ?? "N/A";
+    public string SerialCreatedAt => SelectedSerial?.CreatedAt.ToString(DateTimeFormats.ShortDateTime) ?? NotAvailable;
 
     /// <summary>
     /// Gets the TCP port of the selected socat profile.
     /// </summary>
-    public string SocatTcpPort => SelectedSocat?.Configuration?.TcpPort.ToString() ?? "N/A";
+    public string SocatTcpPort => SelectedSocat?.Configuration?.TcpPort.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the TCP host of the selected socat profile.
     /// </summary>
-    public string SocatTcpHost => SelectedSocat?.Configuration?.TcpHost ?? "N/A";
+    public string SocatTcpHost => SelectedSocat?.Configuration?.TcpHost ?? NotAvailable;
 
     /// <summary>
     /// Gets whether verbose mode is enabled in the selected socat profile.
     /// </summary>
     public string SocatVerbose => SelectedSocat?.Configuration?.Verbose == true ? "Yes" :
-                                 SelectedSocat?.Configuration?.Verbose == false ? "No" : "N/A";
+                                 SelectedSocat?.Configuration?.Verbose == false ? "No" : NotAvailable;
 
     /// <summary>
     /// Gets the host of the selected power supply profile.
     /// </summary>
-    public string PowerHost => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Host : "N/A";
+    public string PowerHost => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Host : NotAvailable;
 
     /// <summary>
     /// Gets the port of the selected power supply profile.
     /// </summary>
-    public string PowerPort => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Port.ToString() : "N/A";
+    public string PowerPort => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Port.ToString() : NotAvailable;
 
     /// <summary>
     /// Gets the device ID of the selected power supply profile.
     /// </summary>
-    public string PowerDeviceId => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.DeviceId.ToString() : "N/A";
+    public string PowerDeviceId => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.DeviceId.ToString() : NotAvailable;
 
     #endregion
 

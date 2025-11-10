@@ -598,16 +598,169 @@ catch (Exception ex)
 
 ---
 
-## 7) Resource & Localization (UIStrings and IResourceManager)
+## 7) Resource & Localization Pattern (UIStrings.resx)
 
-- Use `S7Tools.Resources.UIStrings` for strongly-typed UI text with safe defaults.
-- DI registers an `IResourceManager` abstraction. In dev, defaults to `InMemoryResourceManager`; production uses compiled ResX (UIStrings.resx).
-- Action item: consider renaming `S7Tools.Resources.ResourceManager` class to avoid confusion with `System.Resources.ResourceManager` (see CRITICAL_ISSUES_QUICK_REFERENCE.md).
+**Last Updated**: 2025-11-10 (P0 Code Quality Phase 1 & 2 Complete)
 
-Guidelines:
+### 7.1 Localization Architecture
 
-- Keep resource keys consistent; avoid mixing underscores and camel case across systems.
-- Favor strongly-typed access; provide fallbacks for missing keys.
+S7Tools uses a centralized resource-based localization system with strongly-typed access:
+
+- **Resource File**: `src/S7Tools/Resources/Strings/UIStrings.resx` (1800+ entries)
+- **Generated Code**: `src/S7Tools/Resources/Strings/UIStrings.Designer.cs` (auto-generated property accessors)
+- **Namespace**: `S7Tools.Resources.Strings` (MANDATORY for all ViewModels)
+- **Pattern**: ResX → Designer.cs → strongly-typed properties → ViewModels
+
+### 7.2 Resource Organization (8 Categories)
+
+All resources are organized into logical categories with consistent naming conventions:
+
+1. **Clipboard Messages**: `TestClipboardText`, `ClipboardTextCut`, `ClipboardTextCopied`, `ClipboardTextPasted`
+2. **General Status**: `StatusReady`, `Status_NoProfileSelected`, `Status_ProfileValidationFailed`
+3. **Profile Management**: `Status_ProfileSelected`, `Status_ProfileDuplicated`, `Status_ProfileDeletedSuccessfully`
+4. **Import/Export**: `Status_ProfilesExportedToFile`, `Status_ImportFailedNoValidProfiles`, `Status_ExportFailedAccessDenied`
+5. **Power Supply**: `Status_PowerTurnedOn`, `Status_PowerCycleTurningOff`, `Status_NotConnectedToPowerSupply`
+6. **Path Management**: `Status_ProfilesPathSetTo`, `Status_OpeningProfilesFolder`, `Status_ProfilesPathReset`
+7. **Generic Errors**: `Status_ErrorOperation`, `Status_WarningFailedToLoadSettings`
+8. **Validation Messages**: `Validation_ProfileNameExists`, `Validation_MemoryRegionProfileRequired`, `Validation_ErrorValidatingProfileName`
+
+### 7.3 Naming Conventions (MANDATORY)
+
+```csharp
+// Status messages (user-visible)
+UIStrings.Status_PowerUnknown              // General status
+UIStrings.Status_ProfileSelected           // Profile operations
+UIStrings.Status_LogsExportedToClipboard  // Action confirmation
+
+// Validation messages (error feedback)
+UIStrings.Validation_ProfileNameExists
+UIStrings.Validation_MemoryRegionProfileRequired
+UIStrings.Validation_ErrorValidatingProfileName
+
+// Values (constant strings)
+UIStrings.Value_PowerOn    // "ON"
+UIStrings.Value_PowerOff   // "OFF"
+```
+
+### 7.4 ViewModel Integration Pattern
+
+**Step 1**: Add namespace import (ALL ViewModels)
+```csharp
+using S7Tools.Resources.Strings;  // MANDATORY namespace
+```
+
+**Step 2**: Use strongly-typed properties (NOT string interpolation in logs)
+```csharp
+// GOOD: Strongly-typed resource access
+StatusMessage = UIStrings.Status_PowerUnknown;
+StatusMessage = string.Format(UIStrings.Status_ProfileSelected, profileName);
+
+// BAD: Hardcoded strings
+StatusMessage = "Unknown";  // ❌ NEVER do this
+StatusMessage = "Profile selected: " + profileName;  // ❌ Not localizable
+```
+
+**Step 3**: Handle parameterized resources
+```csharp
+// Single parameter
+var message = string.Format(UIStrings.Status_ProfileSelected, profileName);
+
+// Multiple parameters
+var message = string.Format(UIStrings.Status_ProfilesExportedToFile, count, filename);
+
+// Complex formatting
+var message = string.Format(UIStrings.Status_PowerCycleWaitingBeforeTurningOn, delayMs);
+```
+
+### 7.5 Adding New Resources (Process)
+
+1. **Add to UIStrings.resx** (XML entry):
+```xml
+<data name="Status_NewFeature" xml:space="preserve">
+  <value>New feature status message</value>
+  <comment>Description of when this message is shown</comment>
+</data>
+```
+
+2. **Update UIStrings.Designer.cs** (if manual generation needed):
+```csharp
+public static string Status_NewFeature {
+    get { return ResourceManager.GetString("Status_NewFeature", resourceCulture); }
+}
+```
+
+3. **Rebuild Project**: Resources are auto-generated during build
+4. **Use in ViewModels**: `StatusMessage = UIStrings.Status_NewFeature;`
+
+### 7.6 Anti-Patterns (NEVER DO THIS)
+
+```csharp
+// ❌ Hardcoded strings
+StatusMessage = "Power supply not connected";
+
+// ❌ String concatenation
+StatusMessage = "Profile: " + profileName;
+
+// ❌ String interpolation for UI messages
+StatusMessage = $"Connected to {profileName}";
+
+// ❌ Wrong namespace
+using S7Tools.Resources;  // Old namespace, use S7Tools.Resources.Strings
+
+// ✅ CORRECT: Use resources
+StatusMessage = UIStrings.Status_NotConnectedToPowerSupply;
+StatusMessage = string.Format(UIStrings.Status_ConnectedToProfile, profileName);
+```
+
+### 7.7 DI Integration (IResourceManager)
+
+For advanced scenarios, use the `IResourceManager` abstraction:
+
+```csharp
+public class MyViewModel : ReactiveObject
+{
+    private readonly IResourceManager _resourceManager;
+
+    public MyViewModel(IResourceManager resourceManager)
+    {
+        _resourceManager = resourceManager;
+    }
+
+    private void LoadDynamicResource()
+    {
+        var key = DetermineResourceKey();  // Runtime key determination
+        StatusMessage = _resourceManager.GetString(key);
+    }
+}
+```
+
+**Note**: Direct `UIStrings` access is preferred for 99% of cases. `IResourceManager` is only needed for dynamic key resolution.
+
+### 7.8 Build & Validation
+
+**Duplicate Detection**: Build system detects duplicate resources and issues warnings:
+```
+warning MSB3568: No se permite el nombre de recurso duplicado "Status_PowerUnknown". Se omitirá.
+```
+
+**Resolution**: Remove duplicate entries. First occurrence wins in .NET resource system.
+
+**Testing**: Resource access is tested indirectly through ViewModel tests. No direct resource tests needed.
+
+### 7.9 Current Status (2025-11-10)
+
+- **Total Resources**: 1800+ entries (56 added in P0 Phase 1)
+- **Namespace**: `S7Tools.Resources.Strings` (standardized)
+- **Build Quality**: 0 errors, 0 warnings (59 duplicate warnings eliminated)
+- **Coverage**: All major ViewModels use localized strings
+- **P0 Complete**: 7 hardcoded strings migrated to UIStrings.resx
+
+### 7.10 Future Enhancements
+
+- Consider multi-language support (Spanish, German, etc.) via satellite assemblies
+- Implement `IStringLocalizer<T>` for ASP.NET Core-style localization (if needed)
+- Add ResX validation tool to detect missing/unused resources
+- Document resource key conventions in `.editorconfig` or analyzer rules
 
 ---
 
@@ -622,8 +775,9 @@ Guidelines:
 ## 9) Testing Standards
 
 - Structure: tests per project — `S7Tools.Tests`, `S7Tools.Core.Tests`, `S7Tools.Infrastructure.Logging.Tests`.
-- Current status: 308 tests (99.7% passing, 1 intentionally skipped). Expanded from 178 baseline. Keep coverage high; add tests when behavior changes.
+- Current status: **361 tests (360 passing, 1 intentionally skipped) = 99.7% pass rate** (Updated 2025-11-10). Expanded from 178 baseline. Keep coverage high; add tests when behavior changes.
 - Patterns: AAA (Arrange–Act–Assert), include edge/concurrency cases. ViewModels should be testable without UI.
+- Recent additions: 6 tests for `DialogParentNotFoundException` (constructor validation, inheritance verification, throw/catch scenarios)
 - Async tests: Use `async Task` for test methods, avoid blocking (`.Wait()`, `.Result`, `Task.WaitAll(...)`); prefer `await` and `Task.WhenAll(...)` to satisfy analyzers (xUnit1031) and prevent deadlocks.
 
 ---
@@ -1816,3 +1970,239 @@ public class TaskExecution
 5. **State Management**: Rich TaskExecution model tracks complete lifecycle with timestamps and progress data
 6. **Error Context**: Domain-specific exceptions with comprehensive error information and retry attempt tracking
 7. **Clean Disposal**: Proper resource cleanup with semaphore disposal and memory management
+
+---
+
+## Memory Region Profile Pattern (November 2025)
+
+### **Overview**
+
+The Memory Region Profile pattern provides a flexible system for defining, managing, and selecting PLC memory dump configurations. It enables users to create reusable memory region templates with segment definitions, validation, and profile-based selection.
+
+### **Architecture Components**
+
+#### **MemoryMappingProfile (Domain Model)**
+
+\`\`\`csharp
+// Core model for memory region configuration
+public class MemoryMappingProfile : IProfileBase
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public List<MemorySegment> Segments { get; set; } = new();
+    public bool IsDefault { get; set; }
+    public bool IsReadOnly { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime ModifiedAt { get; set; }
+
+    // Template factory methods
+    public static MemoryMappingProfile CreateS7Template()
+    {
+        return new MemoryMappingProfile
+        {
+            Name = "S7-1200 Standard Layout",
+            Description = "Standard S7-1200 PLC memory layout",
+            Segments = new List<MemorySegment>
+            {
+                new() { Name = ".text", StartAddress = MemoryConstants.DefaultUserMemoryStartHex, Size = "0x800", Description = "Code segment" },
+                new() { Name = ".data", StartAddress = MemoryConstants.DefaultUserMemoryStartHex, Size = "0x400", Description = "Initialized data" },
+                new() { Name = ".bss", StartAddress = "0x20000C00", Size = "0x200", Description = "Uninitialized data" }
+            }
+        };
+    }
+}
+\`\`\`
+
+
+
+---
+
+## Memory Region Profile Pattern (November 2025)
+
+### **Overview**
+
+The Memory Region Profile pattern provides a flexible system for defining, managing, and selecting PLC memory dump configurations. It enables users to create reusable memory region templates with segment definitions, validation, and profile-based selection.
+
+### **Key Components**
+
+- **MemoryMappingProfile**: Domain model with segment list, metadata, and template factory methods
+- **Segment Editor**: DataGrid-based UI for defining memory segments (.text, .data, .bss, etc.)
+- **Validation**: Hex address validation, segment overlap detection, size validation
+- **Import/Export**: JSON-based profile sharing with conflict resolution
+- **Job Wizard Integration**: Profile selection with automatic memory region configuration
+
+### **Benefits**
+
+1. **Reusability**: Templates can be shared across jobs and exported for team collaboration
+2. **Validation**: Segment overlap detection and address validation prevent memory dump errors
+3. **Flexibility**: Support for custom segments, sizes, and descriptions
+4. **Standards Compliance**: Uses MemoryConstants for standard S7-1200 addresses (0x20000000)
+
+### **Anti-Patterns**
+
+- ❌ Hardcoding memory addresses in job profiles
+- ❌ Skipping segment validation (can cause PLC communication errors)
+- ❌ Allowing segment overlaps without warnings
+
+---
+
+## Job Wizard Pattern (Multi-Step Workflow)
+
+### **Overview**
+
+The Job Wizard pattern implements a multi-step configuration workflow for creating complex bootloader jobs. It coordinates profile selection from four different profile types with validation, memory presets, and fallback mechanisms.
+
+### **Key Components**
+
+- **Step Management**: CurrentStep/TotalSteps tracking with conditional navigation
+- **Profile Coordination**: Manages 4 profile types (Serial, Socat, PowerSupply, MemoryMapping)
+- **Validation**: Per-step validation with CanGoNext reactive observable
+- **Memory Presets**: Quick configuration (4KB Boot Sector, 64KB Full Dump, Custom Range)
+- **Fallback Mechanism**: Optional memory mapping with manual configuration fallback
+
+### **Workflow Steps**
+
+1. **Serial Port Selection** (Required): Choose communication port profile
+2. **Network Bridge Selection** (Required): Select Socat TCP/UDP bridge configuration
+3. **Power Supply Selection** (Required): Choose PLC power control profile
+4. **Memory Region Configuration** (Optional): Select memory mapping profile OR use manual config
+5. **Review and Confirm**: Validate complete job configuration before creation
+
+### **Benefits**
+
+1. **Guided Workflow**: Step-by-step process prevents configuration errors
+2. **Profile Coordination**: Seamlessly integrates 4 different profile types
+3. **Validation**: Per-step validation with clear error messages
+4. **Fallback Support**: Optional memory mapping with manual configuration fallback
+5. **Flexibility**: Mix profile-based and manual configuration
+
+### **Anti-Patterns**
+
+- ❌ Skipping validation on optional steps (always validate even if optional)
+- ❌ Not providing fallback for optional profiles (causes null reference errors)
+- ❌ Allowing navigation without validating current step
+- ❌ Forgetting to load profiles on wizard initialization
+
+---
+
+## Resource Path Management Pattern
+
+### **Overview**
+
+The Resource Path Management pattern provides centralized configuration of application resource paths with support for relative/absolute paths, user overrides, and settings integration.
+
+### **Key Components**
+
+- **ApplicationSettingsService**: Centralized settings with event-driven updates
+- **PathService**: Path resolution (relative → absolute), standard resource paths
+- **Settings Refresh Pattern**: ViewModels subscribe to SettingsChanged events
+- **Three-Tier Fallback**: resolved → profile-specific → default directory
+
+### **Settings Schema Convention**
+
+```
+logging.*          - Logging configuration (logDirectory, exportDirectory, level)
+ui.*               - UI preferences (autoScrollLogs, showTimestampInLogs)
+profiles.*         - Profile paths (serialPath, socatPath, powerSupplyPath)
+powerSupply.*      - Power supply specific settings
+```
+
+### **Path Resolution Flow**
+
+1. Get Setting → Extract Directory → Resolve Path
+2. Valid & Exists? → Use Resolved Path
+3. Invalid? → Use Profile Directory
+4. Exception? → Safe Fallback + User Notification
+
+### **Benefits**
+
+1. **Centralized Configuration**: Single source of truth for all application paths
+2. **Flexible Paths**: Support for both relative and absolute paths
+3. **Event-Driven Updates**: ViewModels auto-refresh when settings change
+4. **Robust Fallbacks**: Three-tier fallback prevents null/invalid paths
+
+### **Anti-Patterns**
+
+- ❌ Hardcoding paths in ViewModels (use PathService)
+- ❌ Not validating path existence before use
+- ❌ Forgetting to unsubscribe event handlers (memory leaks)
+- ❌ Using string concatenation for paths (use Path.Combine)
+
+---
+
+## Application Settings Service Pattern
+
+### **Overview**
+
+The Application Settings Service pattern provides centralized, type-safe configuration management with event-driven updates, persistence, and seamless ViewModel integration.
+
+### **Key Components**
+
+- **Generic Get/Set**: Type-safe setting access with default values
+- **Event Notification**: SettingsChanged event for reactive updates
+- **JSON Persistence**: Automatic save/load with indented formatting
+- **Resource Coordinator**: Parallel service initialization for fast startup
+- **Validation Support**: Optional validators for critical settings
+
+### **ViewModel Integration Pattern**
+
+```csharp
+// Subscribe to settings changes with filter
+_settingsChangedHandler = (_, args) =>
+{
+    if (args.Key.StartsWith("logging."))
+    {
+        LoadFromSettings();
+    }
+};
+_settingsService.SettingsChanged += _settingsChangedHandler;
+
+// CRITICAL: Always unsubscribe in Dispose
+protected override void Dispose(bool disposing)
+{
+    if (disposing && _settingsChangedHandler != null)
+    {
+        _settingsService.SettingsChanged -= _settingsChangedHandler;
+    }
+    base.Dispose(disposing);
+}
+```
+
+### **Parallel Initialization Pattern**
+
+```csharp
+// Resource Coordinator for fast startup
+public async Task InitializeAsync(CancellationToken ct = default)
+{
+    var tasks = new List<Task>
+    {
+        _settingsService.LoadAsync(),
+        InitializeProfileServicesAsync(),
+        InitializeLoggingServicesAsync()
+    };
+    await Task.WhenAll(tasks);
+}
+```
+
+### **Benefits**
+
+1. **Centralized Configuration**: Single service manages all application settings
+2. **Type Safety**: Generic Get/Set methods with type conversion
+3. **Event-Driven Updates**: ViewModels auto-refresh when settings change
+4. **Parallel Initialization**: Fast startup with parallel service initialization
+5. **Logging Integration**: Full observability of setting changes
+
+### **Anti-Patterns**
+
+- ❌ Not unsubscribing from SettingsChanged (memory leaks)
+- ❌ Circular update loops (check _isLoadingFromSettings flag)
+- ❌ Blocking UI thread during SaveAsync/LoadAsync
+- ❌ Storing large objects in settings (use separate config files)
+- ❌ Calling SaveAsync on every property change (batch updates)
+
+---
+
+**Document Status**: Authoritative consolidated edition (v2.2). Review after major architectural changes or when critical patterns evolve.
+
+**Last Updated**: 2025-11-10 (P1 Task 5: Added 4 new architectural patterns)

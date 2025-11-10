@@ -24,6 +24,7 @@ public sealed class JobWizardViewModelTests : IDisposable
     private readonly Mock<ISerialPortProfileService> _mockSerialService;
     private readonly Mock<ISocatProfileService> _mockSocatService;
     private readonly Mock<IPowerSupplyProfileService> _mockPowerService;
+    private readonly Mock<IMemoryRegionProfileService> _mockMemoryRegionService;
     private readonly Mock<IJobManager> _mockJobManager;
     private readonly Mock<IUIThreadService> _mockUIThreadService;
     private readonly Mock<IFileDialogService> _mockFileDialogService;
@@ -37,6 +38,7 @@ public sealed class JobWizardViewModelTests : IDisposable
         _mockSerialService = new Mock<ISerialPortProfileService>();
         _mockSocatService = new Mock<ISocatProfileService>();
         _mockPowerService = new Mock<IPowerSupplyProfileService>();
+        _mockMemoryRegionService = new Mock<IMemoryRegionProfileService>();
         _mockJobManager = new Mock<IJobManager>();
         _mockUIThreadService = new Mock<IUIThreadService>();
         _mockFileDialogService = new Mock<IFileDialogService>();
@@ -484,6 +486,7 @@ public sealed class JobWizardViewModelTests : IDisposable
             _mockSerialService.Object,
             _mockSocatService.Object,
             _mockPowerService.Object,
+            _mockMemoryRegionService.Object,
             _mockJobManager.Object,
             _mockUIThreadService.Object,
             _mockFileDialogService.Object,

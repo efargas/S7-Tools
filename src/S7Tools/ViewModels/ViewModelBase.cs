@@ -32,7 +32,7 @@ public class ViewModelBase : ReactiveObject
 
         var currentItemsSet = new HashSet<T>(collection);
         // Add new items that aren't already in the collection
-        foreach (var item in newItemsSet)
+        foreach (T? item in newItemsSet)
         {
             if (!currentItemsSet.Contains(item))
             {

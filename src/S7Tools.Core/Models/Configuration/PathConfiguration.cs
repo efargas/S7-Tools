@@ -82,7 +82,7 @@ namespace S7Tools.Core.Models.Configuration
         /// <summary>
         /// Gets the profile file path for a specific profile type
         /// </summary>
-        /// <param name="profileType">The type of profile (Serial, Socat, PowerSupply)</param>
+        /// <param name="profileType">The type of profile (Serial, Socat, PowerSupply, MemoryRegion)</param>
         /// <returns>Full path to the profile JSON file</returns>
         public string GetProfileFilePath(string profileType)
         {
@@ -91,6 +91,7 @@ namespace S7Tools.Core.Models.Configuration
                 "Serial" => Path.Combine(GetProfileDirectory(profileType), ResourcePaths.SerialProfilesFile),
                 "Socat" => Path.Combine(GetProfileDirectory(profileType), ResourcePaths.SocatProfilesFile),
                 "PowerSupply" => Path.Combine(GetProfileDirectory(profileType), ResourcePaths.PowerSupplyProfilesFile),
+                "MemoryRegion" => Path.Combine(GetProfileDirectory("MemoryRegions"), ResourcePaths.MemoryRegionProfilesFile),
                 _ => throw new ArgumentException($"Profile type {profileType} does not have a single file", nameof(profileType))
             };
         }

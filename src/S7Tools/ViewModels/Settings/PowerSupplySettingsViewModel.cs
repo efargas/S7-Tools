@@ -15,7 +15,7 @@ using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
-using S7Tools.Resources;
+using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
@@ -163,7 +163,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         private set => this.RaiseAndSetIfChanged(ref _connectionStatus, value);
     }
 
-    private string _powerStatus = "Unknown";
+    private string _powerStatus = UIStrings.Status_PowerUnknown;
     /// <summary>
     /// Gets or sets the power status message.
     /// </summary>
@@ -378,7 +378,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
                 if (!connected)
                 {
                     IsPowerOn = false;
-                    PowerStatus = "Unknown";
+                    PowerStatus = UIStrings.Status_PowerUnknown;
                 }
             })
             .DisposeWith(_disposables);
@@ -860,7 +860,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 IsPowerOn = false;
-                PowerStatus = "Unknown";
+                PowerStatus = UIStrings.Status_PowerUnknown;
                 StatusMessage = Constants.StatusMessages.Disconnected;
             });
             _specificLogger.LogInformation("Disconnected from power supply successfully");

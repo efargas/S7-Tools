@@ -26,6 +26,7 @@ public class JobInfoDisplayViewModelTests
     private readonly Mock<ISerialPortProfileService> _mockSerialService;
     private readonly Mock<ISocatProfileService> _mockSocatService;
     private readonly Mock<IPowerSupplyProfileService> _mockPowerService;
+    private readonly Mock<IMemoryRegionProfileService> _mockMemoryRegionService;
     private readonly Mock<ILogger<JobInfoDisplayViewModel>> _mockLogger;
 
     public JobInfoDisplayViewModelTests()
@@ -34,6 +35,7 @@ public class JobInfoDisplayViewModelTests
         _mockSerialService = new Mock<ISerialPortProfileService>();
         _mockSocatService = new Mock<ISocatProfileService>();
         _mockPowerService = new Mock<IPowerSupplyProfileService>();
+        _mockMemoryRegionService = new Mock<IMemoryRegionProfileService>();
         _mockLogger = new Mock<ILogger<JobInfoDisplayViewModel>>();
     }
 
@@ -127,7 +129,7 @@ public class JobInfoDisplayViewModelTests
         // Arrange
         JobInfoDisplayViewModel viewModel = CreateViewModel();
         JobProfile job = CreateTestJob("Test Job", "Description");
-        var missingProfileId = 999; // Use int ID instead of Guid
+        int missingProfileId = 999; // Use int ID instead of Guid
         job.SerialProfileId = missingProfileId;
 
         _mockSerialService.Setup(s => s.GetByIdAsync(It.Is<int>(id => id == missingProfileId), It.IsAny<CancellationToken>()))
@@ -231,6 +233,7 @@ public class JobInfoDisplayViewModelTests
             _mockSerialService.Object,
             _mockSocatService.Object,
             _mockPowerService.Object,
+            _mockMemoryRegionService.Object,
             _mockLogger.Object);
     }
 

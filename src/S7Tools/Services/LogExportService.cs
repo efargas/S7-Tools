@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Models;
@@ -146,7 +147,7 @@ public class LogExportService : ILogExportService
     /// <inheritdoc/>
     public string GenerateDefaultFileName(ExportFormat format)
     {
-        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string timestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
         string extension = format switch
         {
             ExportFormat.Text => "txt",
@@ -248,7 +249,7 @@ public class LogExportService : ILogExportService
         // CSV Data
         foreach (LogModel? log in logs.OrderBy(l => l.Timestamp))
         {
-            string timestamp = log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            string timestamp = log.Timestamp.ToString(DateTimeFormats.MillisecondDateTime);
             string level = log.Level.ToString();
             string category = EscapeCsvField(log.Category);
             string message = EscapeCsvField(log.FormattedMessage);

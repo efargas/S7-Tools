@@ -1,5 +1,6 @@
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
@@ -421,7 +422,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             Directory.CreateDirectory(outputPath);
 
             // Generate filename with timestamp and task ID
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string timestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
             string fileName = $"memory_dump_{timestamp}_{taskId:N}.bin";
             string filePath = Path.Combine(outputPath, fileName);
 

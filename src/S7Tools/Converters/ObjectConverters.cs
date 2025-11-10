@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Constants;
 
 namespace S7Tools.Converters;
 
@@ -29,14 +30,14 @@ public static class ObjectConverters
     public static readonly IValueConverter LogLevelToColor =
         new FuncValueConverter<LogLevel, Color>(level => level switch
         {
-            LogLevel.Trace => Color.FromRgb(128, 128, 128),      // Gray
-            LogLevel.Debug => Color.FromRgb(0, 122, 204),        // Blue
-            LogLevel.Information => Color.FromRgb(0, 150, 0),    // Green
-            LogLevel.Warning => Color.FromRgb(255, 165, 0),      // Orange
-            LogLevel.Error => Color.FromRgb(220, 20, 60),        // Crimson
-            LogLevel.Critical => Color.FromRgb(139, 0, 0),       // Dark Red
-            LogLevel.None => Color.FromRgb(64, 64, 64),          // Dark Gray
-            _ => Color.FromRgb(128, 128, 128)                    // Default Gray
+            LogLevel.Trace => Color.FromRgb(ColorPalette.Trace.R, ColorPalette.Trace.G, ColorPalette.Trace.B),
+            LogLevel.Debug => Color.FromRgb(ColorPalette.Debug.R, ColorPalette.Debug.G, ColorPalette.Debug.B),
+            LogLevel.Information => Color.FromRgb(ColorPalette.Information.R, ColorPalette.Information.G, ColorPalette.Information.B),
+            LogLevel.Warning => Color.FromRgb(ColorPalette.Warning.R, ColorPalette.Warning.G, ColorPalette.Warning.B),
+            LogLevel.Error => Color.FromRgb(ColorPalette.Error.R, ColorPalette.Error.G, ColorPalette.Error.B),
+            LogLevel.Critical => Color.FromRgb(ColorPalette.Critical.R, ColorPalette.Critical.G, ColorPalette.Critical.B),
+            LogLevel.None => Color.FromRgb(ColorPalette.None.R, ColorPalette.None.G, ColorPalette.None.B),
+            _ => Color.FromRgb(ColorPalette.Default.R, ColorPalette.Default.G, ColorPalette.Default.B)
         });
 
     /// <summary>
@@ -45,14 +46,14 @@ public static class ObjectConverters
     public static readonly IValueConverter LogLevelToBrush =
         new FuncValueConverter<LogLevel, IBrush>(level => new SolidColorBrush(level switch
         {
-            LogLevel.Trace => Color.FromRgb(128, 128, 128),      // Gray
-            LogLevel.Debug => Color.FromRgb(0, 122, 204),        // Blue
-            LogLevel.Information => Color.FromRgb(0, 150, 0),    // Green
-            LogLevel.Warning => Color.FromRgb(255, 165, 0),      // Orange
-            LogLevel.Error => Color.FromRgb(220, 20, 60),        // Crimson
-            LogLevel.Critical => Color.FromRgb(139, 0, 0),       // Dark Red
-            LogLevel.None => Color.FromRgb(64, 64, 64),          // Dark Gray
-            _ => Color.FromRgb(128, 128, 128)                    // Default Gray
+            LogLevel.Trace => Color.FromRgb(ColorPalette.Trace.R, ColorPalette.Trace.G, ColorPalette.Trace.B),
+            LogLevel.Debug => Color.FromRgb(ColorPalette.Debug.R, ColorPalette.Debug.G, ColorPalette.Debug.B),
+            LogLevel.Information => Color.FromRgb(ColorPalette.Information.R, ColorPalette.Information.G, ColorPalette.Information.B),
+            LogLevel.Warning => Color.FromRgb(ColorPalette.Warning.R, ColorPalette.Warning.G, ColorPalette.Warning.B),
+            LogLevel.Error => Color.FromRgb(ColorPalette.Error.R, ColorPalette.Error.G, ColorPalette.Error.B),
+            LogLevel.Critical => Color.FromRgb(ColorPalette.Critical.R, ColorPalette.Critical.G, ColorPalette.Critical.B),
+            LogLevel.None => Color.FromRgb(ColorPalette.None.R, ColorPalette.None.G, ColorPalette.None.B),
+            _ => Color.FromRgb(ColorPalette.Default.R, ColorPalette.Default.G, ColorPalette.Default.B)
         }));
 
     /// <summary>

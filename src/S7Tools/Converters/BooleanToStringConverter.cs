@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
 using S7Tools.Resources;
 
@@ -43,10 +44,9 @@ public class BooleanToStringConverter : IValueConverter
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">The converter parameter.</param>
     /// <param name="culture">The culture info.</param>
-    /// <returns>This method is not supported.</returns>
-    /// <exception cref="NotImplementedException">This converter does not support ConvertBack.</exception>
+    /// <returns>Always returns DoNothing to indicate conversion back is not supported.</returns>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException(UIStrings.Exception_BooleanToStringConverterNoConvertBack);
+        return BindingOperations.DoNothing;
     }
 }
