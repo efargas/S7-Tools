@@ -1,7 +1,19 @@
-# S7Tools System Architecture Diagram
+---
+title: "S7Tools System Architecture Diagrams"
+version: "1.1.0"
+created: "2025-10-16"
+last-updated: "2025-11-07"
+status: "current"
+tags: ["architecture", "diagrams", "visualization", "mermaid", "clean-architecture", "mvvm"]
+related:
+  - "docs/architecture/overview.md"
+  - "docs/architecture/clean-architecture.md"
+  - "docs/architecture/mvvm-patterns.md"
+  - "docs/patterns/system-patterns.md"
+supersedes: []
+---
 
-**Version**: 1.1
-**Last Updated**: 2025-11-07
+# S7Tools System Architecture Diagrams
 
 ## Overview
 

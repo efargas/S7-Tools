@@ -1,7 +1,21 @@
+---
+title: "System Patterns: S7Tools Consolidated Architecture Guide"
+version: "2.1.0"
+created: "2025-10-16"
+last-updated: "2025-11-07"
+status: "current"
+tags: ["patterns", "architecture", "rules", "best-practices", "clean-architecture", "mvvm", "threading", "logging", "testing"]
+related:
+  - "docs/architecture/overview.md"
+  - "docs/architecture/clean-architecture.md"
+  - "docs/architecture/mvvm-patterns.md"
+  - "docs/patterns/_index.md"
+supersedes: []
+---
+
 # System Patterns: S7Tools — Consolidated Architecture Guide (v2.1)
 
-Last Updated: 2025-11-07
-Scope: Architecture, patterns, rules, critical fixes, logging/debugging, localization, do/don't, memory bank usage, task workflow, templates, and testing standards.
+**Scope**: Architecture, patterns, rules, critical fixes, logging/debugging, localization, do/don't, memory bank usage, task workflow, templates, and testing standards.
 
 This living guide consolidates the current rules and lessons for S7Tools. It supersedes previous scattered notes and removes deprecated or duplicate content.
 

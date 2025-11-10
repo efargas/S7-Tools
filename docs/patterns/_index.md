@@ -1,6 +1,20 @@
+---
+title: "S7Tools Architectural Patterns Reference"
+version: "1.2.0"
+created: "2025-10-16"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["patterns", "reference", "catalog", "profile-management", "threading", "mvvm", "services", "dialogs", "wizard", "settings"]
+related:
+  - "docs/architecture/overview.md"
+  - "docs/architecture/clean-architecture.md"
+  - "docs/architecture/mvvm-patterns.md"
+  - "docs/patterns/system-patterns.md"
+supersedes: []
+---
+
 # S7Tools Architectural Patterns Reference
-**Version**: 1.2
-**Last Updated**: 2025-11-10
+
 **Purpose**: Comprehensive reference for all architectural patterns used in S7Tools
 
 **Note**: Version 1.2 includes Memory Region Profiling, Job Wizard pattern, ProfileEditDialogService, and Application Settings Service (November 10, 2025).

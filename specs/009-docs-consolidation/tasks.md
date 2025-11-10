@@ -112,10 +112,18 @@
 - [X] T031 [P] [US1] Migrate `PATTERNS_REFERENCE.md` to `docs/patterns/_index.md` using git mv and enhance with category index
     - Completed: 2025-11-10 ✅
     - Notes: Migration tracked in migration-log.json, git history preserved. Enhancement with category index is next step
-- [ ] T032 [P] [US1] Create `docs/architecture/overview.md` consolidating content from `.copilot-tracking/memory-bank/productContext.md` and `Project_Architecture_Blueprint.md`
-- [ ] T033 [P] [US1] Create `docs/architecture/clean-architecture.md` extracting Clean Architecture sections from systemPatterns.md
-- [ ] T034 [P] [US1] Create `docs/architecture/mvvm-patterns.md` extracting MVVM and ReactiveUI patterns
-- [ ] T035 [US1] Add frontmatter metadata to all migrated architecture files (version, created, last-updated, status, tags, related)
+- [X] T032 [P] [US1] Create `docs/architecture/overview.md` consolidating content from `.copilot-tracking/memory-bank/productContext.md` and `Project_Architecture_Blueprint.md`
+    - Completed: 2025-11-10 ✅
+    - Notes: 650+ line comprehensive overview consolidating vision, architecture, technology stack, layer architecture, component architecture, design patterns, UX philosophy, and core workflows
+- [X] T033 [P] [US1] Create `docs/architecture/clean-architecture.md` extracting Clean Architecture sections from systemPatterns.md
+    - Completed: 2025-11-10 ✅
+    - Notes: 700+ line comprehensive guide covering Clean Architecture principles, layer architecture, dependency flow rules, common patterns, benefits, anti-patterns, and validation checklist
+- [X] T034 [P] [US1] Create `docs/architecture/mvvm-patterns.md` extracting MVVM and ReactiveUI patterns
+    - Completed: 2025-11-10 ✅
+    - Notes: 850+ line comprehensive guide covering MVVM architecture, ReactiveUI fundamentals, property change monitoring, ViewModel organization, common patterns, thread safety, data binding, best practices, and testing
+- [X] T035 [US1] Add frontmatter metadata to all migrated architecture files (version, created, last-updated, status, tags, related)
+    - Completed: 2025-11-10 ✅
+    - Notes: Added complete YAML frontmatter to all 3 migrated files (diagrams.md, system-patterns.md, _index.md). All 7 architecture/pattern files now have proper frontmatter with version, dates, status, tags, and cross-references
 - [ ] T036 [US1] Update internal links in architecture files to use new `docs/` paths
 - [ ] T037 [US1] Create `docs/architecture/_index.md` as category index linking to all architecture documents
 
