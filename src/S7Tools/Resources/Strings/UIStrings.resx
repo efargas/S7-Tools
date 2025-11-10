@@ -907,6 +907,32 @@
     <comment>Validation message when ModbusTcp coil address is out of range</comment>
   </data>
 
+  <!-- Validation Messages - Job Wizard and Memory Regions -->
+  <data name="Validation_MemoryRegionProfileRequired" xml:space="preserve">
+    <value>Memory region profile must be selected</value>
+    <comment>Validation message when memory region profile is not selected in job wizard</comment>
+  </data>
+  <data name="Validation_ExactlyOneSegmentRequired" xml:space="preserve">
+    <value>Exactly one segment must be selected for dumping</value>
+    <comment>Validation message when no segment or multiple segments are selected</comment>
+  </data>
+  <data name="Validation_OnlyOneSegmentAllowed" xml:space="preserve">
+    <value>Only one segment can be selected per job</value>
+    <comment>Validation message when multiple segments are selected</comment>
+  </data>
+  <data name="Validation_AllRequiredProfilesNeeded" xml:space="preserve">
+    <value>Please select all required profiles</value>
+    <comment>Validation message when required profiles are missing in job wizard</comment>
+  </data>
+  <data name="Validation_ProfileNameExists" xml:space="preserve">
+    <value>A profile with this name already exists</value>
+    <comment>Validation message when attempting to create a profile with a duplicate name</comment>
+  </data>
+  <data name="Validation_ErrorValidatingProfileName" xml:space="preserve">
+    <value>Error validating profile name</value>
+    <comment>Error message when profile name validation fails</comment>
+  </data>
+
   <!-- Error Messages - Operations -->
   <data name="Error_InvalidOperation" xml:space="preserve">
     <value>Invalid operation while {0}</value>
@@ -1523,6 +1549,48 @@
   <data name="Status_ExportPathUpdatedSuccessfully" xml:space="preserve">
     <value>Export path updated successfully</value>
     <comment>Status message when export path is updated successfully</comment>
+  </data>
+
+  <!-- Job Wizard Status Messages -->
+  <data name="Status_LoadingMemoryRegionProfiles" xml:space="preserve">
+    <value>Loading memory region profiles...</value>
+    <comment>Status message when loading memory region profiles in job wizard</comment>
+  </data>
+  <data name="Status_NoProfilesAvailable" xml:space="preserve">
+    <value>No profiles available</value>
+    <comment>Status message when no profiles are available</comment>
+  </data>
+  <data name="Status_CreatingJob" xml:space="preserve">
+    <value>Creating job...</value>
+    <comment>Status message when creating a job</comment>
+  </data>
+  <data name="Status_JobCreated" xml:space="preserve">
+    <value>Job created</value>
+    <comment>Status message when job is successfully created</comment>
+  </data>
+
+  <!-- Status Messages - Power Supply -->
+  <data name="Status_PowerUnknown" xml:space="preserve">
+    <value>Unknown</value>
+    <comment>Status message when power state is unknown</comment>
+  </data>
+
+  <!-- Status Messages - General with Formatting -->
+  <data name="Status_ErrorLoadingProfiles" xml:space="preserve">
+    <value>Error loading profiles: {0}</value>
+    <comment>Status message when profile loading fails, {0} is error message</comment>
+  </data>
+  <data name="Status_ErrorCreatingJob" xml:space="preserve">
+    <value>Error: {0}</value>
+    <comment>Generic error status message, {0} is error message</comment>
+  </data>
+  <data name="Status_ErrorScanningPorts" xml:space="preserve">
+    <value>Error scanning ports: {0}</value>
+    <comment>Status message when port scanning fails, {0} is error message</comment>
+  </data>
+  <data name="Status_LogsExportedToClipboard" xml:space="preserve">
+    <value>Logs exported to clipboard</value>
+    <comment>Status message when logs are successfully exported to clipboard</comment>
   </data>
 
   <!-- About and UI Labels -->

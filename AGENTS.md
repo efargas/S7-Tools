@@ -124,18 +124,30 @@ dotnet run --project src/S7Tools --configuration Debug -- --diag
 
 ## Current Baseline Notes (for continuity)
 
-- Scheduler uses Local timezone; due scheduled tasks are auto-promoted to the queue.
-- Job profiles path (Options): `src/resources/JobProfiles/profiles.json`.
-- `PlcClientStub` is registered as a temporary implementation of `IPlcClient`; factory resolves it until the real client is provided.
-- Next major focus: Implement Job Creator wizard in main content area, refactor Jobs details panel, and polish MemoryRegionProfile integration.
+**Last Updated**: 2025-11-10 (branch: 008-memory-regions-profiling)
 
-## Code Quality Standards (Updated 2025-11-07)
+- **Memory Region Profiling**: ✅ COMPLETE — Fully integrated with settings UI, import/export, and job wizard
+- **Job Wizard**: ✅ COMPLETE — Multi-step wizard with memory region selection, validation, and fallback mechanism
+- **Application Settings Service**: ✅ NEW — Centralized settings management with path resolution
+- **Resource Coordinator**: ✅ NEW — Parallel service initialization for improved startup time
+- **UI Refresh Service**: ✅ NEW — Consistent collection refresh with selection preservation
+
+**Technical Details**:
+
+- Scheduler uses Local timezone; due scheduled tasks are auto-promoted to the queue
+- Job profiles path (Options): `src/resources/JobProfiles/profiles.json`
+- Memory region profiles path: User-configurable via Settings → Memory Regions
+- `PlcClientStub` registered as temporary implementation of `IPlcClient`; factory resolves it until real client is provided
+- `JobWizardPlaceholderViewModel` is an ACTIVE fallback mechanism (NOT dead code)
+
+## Code Quality Standards (Updated 2025-11-10)
 
 **Build Status**: ✅ 0 errors, 0 warnings
 **Test Status**: ✅ 308 tests (99.7% passing, 1 intentionally skipped)
 **Code Quality**: ✅ A+ grade (98/100)
 
 **Key Quality Achievements**:
+
 - Clean Architecture properly implemented
 - ViewModels/Views organized into 9 functional categories
 - Unified Profile Management with StandardProfileManager<T>
@@ -145,7 +157,9 @@ dotnet run --project src/S7Tools --configuration Debug -- --diag
 - Comprehensive testing with 99.7% pass rate
 
 **Pattern Compliance**:
+
 When implementing new features, always:
+
 1. Check `PATTERNS_REFERENCE.md` for applicable patterns
 2. Follow existing implementations as examples
 3. Maintain consistency with established patterns
@@ -153,6 +167,7 @@ When implementing new features, always:
 5. Run `dotnet format` before commit
 
 **Code Review Process**:
+
 - Comprehensive code reviews documented in `reviews/` directory
 - Latest: `reviews/LATEST_REVIEW.md` (stable link)
 - Archived reviews in `reviews/archive/`

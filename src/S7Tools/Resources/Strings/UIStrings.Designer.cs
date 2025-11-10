@@ -10,8 +10,8 @@
 
 namespace S7Tools.Resources.Strings {
     using System;
-    
-    
+
+
     /// <summary>
     ///   A strongly-typed resource class, for looking up localized strings, etc.
     /// </summary>
@@ -23,15 +23,15 @@ namespace S7Tools.Resources.Strings {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class UIStrings {
-        
+
         private static global::System.Resources.ResourceManager resourceMan;
-        
+
         private static global::System.Globalization.CultureInfo resourceCulture;
-        
+
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal UIStrings() {
         }
-        
+
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
@@ -45,7 +45,7 @@ namespace S7Tools.Resources.Strings {
                 return resourceMan;
             }
         }
-        
+
         /// <summary>
         ///   Overrides the current thread's CurrentUICulture property for all
         ///   resource lookups using this strongly-typed resource class.
@@ -59,7 +59,7 @@ namespace S7Tools.Resources.Strings {
                 resourceCulture = value;
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Clear.
         /// </summary>
@@ -68,7 +68,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Clear", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
@@ -77,7 +77,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Close", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Connect.
         /// </summary>
@@ -86,7 +86,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Connect", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Disconnect.
         /// </summary>
@@ -95,7 +95,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Disconnect", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Exit.
         /// </summary>
@@ -104,7 +104,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Exit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Export.
         /// </summary>
@@ -113,7 +113,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Export", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Open.
         /// </summary>
@@ -122,7 +122,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Open", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
@@ -131,7 +131,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Action_Save", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Connections.
         /// </summary>
@@ -140,7 +140,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("ActivityBar_Connections", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Explorer.
         /// </summary>
@@ -149,7 +149,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("ActivityBar_Explorer", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Log Viewer.
         /// </summary>
@@ -158,7 +158,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("ActivityBar_LogViewer", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Settings.
         /// </summary>
@@ -167,7 +167,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("ActivityBar_Settings", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Siemens S7 PLC Tools with Integrated LogViewer.
         /// </summary>
@@ -176,7 +176,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("ApplicationDescription", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to S7Tools.
         /// </summary>
@@ -185,7 +185,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("ApplicationTitle", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to clear all logs?.
         /// </summary>
@@ -194,7 +194,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Confirm_ClearLogs", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to exit?.
         /// </summary>
@@ -203,7 +203,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Confirm_Exit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Connection failed. Please check your settings and try again..
         /// </summary>
@@ -212,7 +212,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Error_ConnectionFailed", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to File not found. Please check the file path and try again..
         /// </summary>
@@ -221,7 +221,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Error_FileNotFound", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Invalid configuration. Please check your settings..
         /// </summary>
@@ -230,7 +230,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Error_InvalidConfiguration", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Category.
         /// </summary>
@@ -239,7 +239,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("LogViewer_Category", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Filter.
         /// </summary>
@@ -248,7 +248,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("LogViewer_Filter", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Level.
         /// </summary>
@@ -257,7 +257,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("LogViewer_Level", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Message.
         /// </summary>
@@ -266,7 +266,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("LogViewer_Message", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Search logs....
         /// </summary>
@@ -275,7 +275,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("LogViewer_Search", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Timestamp.
         /// </summary>
@@ -284,7 +284,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("LogViewer_Timestamp", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Log Viewer.
         /// </summary>
@@ -293,7 +293,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("LogViewer_Title", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
@@ -302,7 +302,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Menu_Edit", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to File.
         /// </summary>
@@ -311,7 +311,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Menu_File", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Help.
         /// </summary>
@@ -320,7 +320,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Menu_Help", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Tools.
         /// </summary>
@@ -329,7 +329,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Menu_Tools", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to View.
         /// </summary>
@@ -338,7 +338,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Menu_View", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Connected.
         /// </summary>
@@ -347,7 +347,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Status_Connected", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Disconnected.
         /// </summary>
@@ -356,7 +356,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Status_Disconnected", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Loading....
         /// </summary>
@@ -365,7 +365,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Status_Loading", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Ready.
         /// </summary>
@@ -374,7 +374,160 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Status_Ready", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Loading memory region profiles....
+        /// </summary>
+        public static string Status_LoadingMemoryRegionProfiles {
+            get {
+                return ResourceManager.GetString("Status_LoadingMemoryRegionProfiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No profiles available.
+        /// </summary>
+        public static string Status_NoProfilesAvailable {
+            get {
+                return ResourceManager.GetString("Status_NoProfilesAvailable", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Creating job....
+        /// </summary>
+        public static string Status_CreatingJob {
+            get {
+                return ResourceManager.GetString("Status_CreatingJob", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Job created.
+        /// </summary>
+        public static string Status_JobCreated {
+            get {
+                return ResourceManager.GetString("Status_JobCreated", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown.
+        /// </summary>
+        public static string Status_PowerUnknown {
+            get {
+                return ResourceManager.GetString("Status_PowerUnknown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error loading profiles: {0}.
+        /// </summary>
+        public static string Status_ErrorLoadingProfiles {
+            get {
+                return ResourceManager.GetString("Status_ErrorLoadingProfiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0}.
+        /// </summary>
+        public static string Status_ErrorCreatingJob {
+            get {
+                return ResourceManager.GetString("Status_ErrorCreatingJob", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error scanning ports: {0}.
+        /// </summary>
+        public static string Status_ErrorScanningPorts {
+            get {
+                return ResourceManager.GetString("Status_ErrorScanningPorts", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Logs exported to clipboard.
+        /// </summary>
+        public static string Status_LogsExportedToClipboard {
+            get {
+                return ResourceManager.GetString("Status_LogsExportedToClipboard", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Loading profiles....
+        /// </summary>
+        public static string Status_LoadingProfiles {
+            get {
+                return ResourceManager.GetString("Status_LoadingProfiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scanning for ports....
+        /// </summary>
+        public static string Status_ScanningForPorts {
+            get {
+                return ResourceManager.GetString("Status_ScanningForPorts", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile name is required.
+        /// </summary>
+        public static string Validation_ProfileNameRequired {
+            get {
+                return ResourceManager.GetString("Validation_ProfileNameRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile name already exists.
+        /// </summary>
+        public static string Validation_ProfileNameExists {
+            get {
+                return ResourceManager.GetString("Validation_ProfileNameExists", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a memory region profile.
+        /// </summary>
+        public static string Validation_SelectMemoryRegionProfile {
+            get {
+                return ResourceManager.GetString("Validation_SelectMemoryRegionProfile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Job name is required.
+        /// </summary>
+        public static string Validation_JobNameRequired {
+            get {
+                return ResourceManager.GetString("Validation_JobNameRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Base address must be a valid hexadecimal value.
+        /// </summary>
+        public static string Validation_BaseAddressHex {
+            get {
+                return ResourceManager.GetString("Validation_BaseAddressHex", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Size must be greater than zero.
+        /// </summary>
+        public static string Validation_SizeGreaterThanZero {
+            get {
+                return ResourceManager.GetString("Validation_SizeGreaterThanZero", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Auto.
         /// </summary>
@@ -383,7 +536,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Theme_Auto", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Dark.
         /// </summary>
@@ -392,7 +545,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Theme_Dark", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Light.
         /// </summary>
@@ -401,7 +554,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Theme_Light", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Switch Theme.
         /// </summary>
@@ -410,7 +563,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Tooltip_SwitchTheme", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Toggle Bottom Panel.
         /// </summary>
@@ -419,7 +572,7 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Tooltip_ToggleBottomPanel", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Toggle Sidebar.
         /// </summary>

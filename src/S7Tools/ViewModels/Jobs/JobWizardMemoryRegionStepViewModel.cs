@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Jobs;
@@ -337,14 +338,14 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            Status = "Loading memory region profiles...";
+            Status = UIStrings.Status_LoadingMemoryRegionProfiles;
 
             IEnumerable<MemoryMappingProfile> profiles = await _memoryRegionService.GetAllAsync().ConfigureAwait(false);
 
             if (profiles == null)
             {
                 _logger.LogWarning("Service returned null profiles collection");
-                Status = "No profiles available";
+                Status = UIStrings.Status_NoProfilesAvailable;
                 return;
             }
 
@@ -381,7 +382,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load memory region profiles");
-            Status = $"Error loading profiles: {ex.Message}";
+            Status = string.Format(UIStrings.Status_ErrorLoadingProfiles, ex.Message);
         }
         finally
         {

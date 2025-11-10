@@ -15,6 +15,7 @@ using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Controls;
 
@@ -570,7 +571,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            Status = "Loading profiles...";
+            Status = UIStrings.Status_LoadingProfiles;
             _logger.LogInformation("Loading wizard profile lists");
 
             Task<IEnumerable<SerialPortProfile>> serialTask = _serialService.GetAllAsync();
@@ -660,7 +661,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load profiles for wizard");
-            Status = $"Error loading profiles: {ex.Message}";
+            Status = string.Format(UIStrings.Status_ErrorLoadingProfiles, ex.Message);
         }
         finally
         {
@@ -673,11 +674,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            Status = "Creating job...";
+            Status = UIStrings.Status_CreatingJob;
 
             if (SelectedSerial == null || SelectedSocat == null || SelectedPower == null || SelectedMemoryRegion == null)
             {
-                Status = "Please select all required profiles";
+                Status = "Please select all required profiles"; // TODO: Add UIStrings.Status_AllRequiredProfilesNeeded
                 return;
             }
 
@@ -695,14 +696,14 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
 
             JobProfile created = await _jobManager.CreateAsync(job).ConfigureAwait(false);
             CreatedJobId = created.Id;
-            Status = "Job created";
+            Status = UIStrings.Status_JobCreated;
             _logger.LogInformation("Job created via wizard: {JobId} {JobName}", created.Id, created.Name);
             Completed = true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to create job via wizard");
-            Status = $"Error: {ex.Message}";
+            Status = string.Format(UIStrings.Status_ErrorCreatingJob, ex.Message);
             Completed = false;
         }
         finally
@@ -757,7 +758,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         try
         {
             IsScanning = true;
-            Status = "Scanning for ports...";
+            Status = UIStrings.Status_ScanningForPorts;
 
             // Execute the scanner's scan command and wait for completion
             await PortScanner.ScanPortsCommand.Execute();
@@ -776,7 +777,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to scan ports in job wizard");
-            Status = $"Error scanning ports: {ex.Message}";
+            Status = string.Format(UIStrings.Status_ErrorScanningPorts, ex.Message);
         }
         finally
         {
