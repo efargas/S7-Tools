@@ -5,6 +5,7 @@
              xmlns:vm="using:S7Tools.ViewModels.Jobs"
              xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
              xmlns:views="clr-namespace:S7Tools.Views.Profiles"
+             xmlns:jobviews="clr-namespace:S7Tools.Views.Jobs"
              xmlns:converters="using:S7Tools.Converters"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              xmlns:fa="using:FluentAvalonia.UI.Controls"
@@ -342,50 +343,7 @@
       <!-- Step 4: Memory Region Configuration -->
       <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4" Padding="16"
               IsVisible="{Binding IsMemoryStep}">
-        <StackPanel Spacing="12">
-          <TextBlock Text="Step 4: Memory Region Profile" FontSize="18" FontWeight="SemiBold" Foreground="#CCCCCC" />
-
-          <!-- Memory Region Profile Selection -->
-          <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
-            <TextBlock Grid.Column="0" Text="Memory Profile:" Foreground="#CCCCCC" VerticalAlignment="Center" />
-            <ComboBox Grid.Column="1" ItemsSource="{Binding MemoryProfiles}" SelectedItem="{Binding SelectedMemoryRegion}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding Name}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-          </Grid>
-
-          <!-- Memory Region Profile Details -->
-          <Border Classes="ProfileSection"
-                  IsVisible="{Binding SelectedMemoryRegion, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <StackPanel Spacing="8">
-              <!-- Header -->
-              <Border Background="#2D2D30" BorderBrush="#464647" BorderThickness="0,0,0,1" Padding="8,6">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <icons:Icon Value="fa-solid fa-microchip" Width="16" Height="16" Foreground="#CCCCCC" VerticalAlignment="Center" />
-                  <TextBlock Text="MEMORY REGION CONFIGURATION" FontWeight="SemiBold" FontSize="12" Foreground="#CCCCCC" VerticalAlignment="Center" />
-                </StackPanel>
-              </Border>
-              <!-- Details -->
-              <Grid Margin="12,8" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="140,*" ColumnSpacing="12" RowSpacing="6">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Profile Name:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedMemoryRegion.Name}" Foreground="#FFFFFF" />
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedMemoryRegion.Description, FallbackValue='No description'}"
-                           Foreground="#FFFFFF" TextWrapping="Wrap" />
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Total Segments:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedMemoryRegion.SegmentCount}" Foreground="#FFFFFF" />
-
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Selected for Dump:" Foreground="#CCCCCC" />
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedSegmentCount}" Foreground="#4CAF50" />
-              </Grid>
-            </StackPanel>
-          </Border>
-        </StackPanel>
+        <jobviews:JobWizardMemoryRegionStepView DataContext="{Binding MemoryRegionStepViewModel}" />
       </Border>
 
       <!-- Step 5: Timing and Output Configuration -->

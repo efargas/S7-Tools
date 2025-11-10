@@ -91,14 +91,14 @@ public sealed class DataStoreLogger : ILogger
             return null;
         }
 
-        var scope = LoggerScope<object>.Current;
+        LoggerScope<object>? scope = LoggerScope<object>.Current;
         if (scope == null)
         {
             return null;
         }
 
         var sb = new StringBuilder();
-        var currentScope = scope;
+        LoggerScope<object>? currentScope = scope;
 
         while (currentScope != null)
         {
@@ -120,7 +120,7 @@ public sealed class DataStoreLogger : ILogger
 
         if (state is IEnumerable<KeyValuePair<string, object?>> keyValuePairs)
         {
-            foreach (var kvp in keyValuePairs)
+            foreach (KeyValuePair<string, object?> kvp in keyValuePairs)
             {
                 if (!string.IsNullOrEmpty(kvp.Key) && kvp.Key != "{OriginalFormat}")
                 {

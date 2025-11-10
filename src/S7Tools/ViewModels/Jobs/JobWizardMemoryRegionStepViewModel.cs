@@ -51,13 +51,17 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         _memoryRegionService = memoryRegionService ?? throw new ArgumentNullException(nameof(memoryRegionService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
 
+        _logger.LogInformation("JobWizardMemoryRegionStepViewModel CONSTRUCTOR called");
+
         AvailableProfiles = new ObservableCollection<MemoryMappingProfile>();
         SelectedSegments = new ObservableCollection<MemorySegment>();
 
         SetupValidation();
 
+        _logger.LogInformation("JobWizardMemoryRegionStepViewModel: About to start LoadProfilesAsync");
         // Load profiles when initialized
         _ = LoadProfilesAsync();
+        _logger.LogInformation("JobWizardMemoryRegionStepViewModel: LoadProfilesAsync started (fire-and-forget)");
     }
 
     #endregion
@@ -82,22 +86,31 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         get => _selectedProfile;
         set
         {
+            _logger.LogInformation("SelectedProfile setter called: OLD={OldProfile}, NEW={NewProfile}",
+                _selectedProfile?.Name ?? "null", value?.Name ?? "null");
+
             // Unsubscribe from previous profile's segments
             UnsubscribeFromSegmentChanges();
 
             this.RaiseAndSetIfChanged(ref _selectedProfile, value);
+
+            _logger.LogInformation("SelectedProfile changed to {ProfileName} (ID: {ProfileId}), HasSegments: {HasSegments}, SegmentCount: {SegmentCount}",
+                value?.Name ?? "null",
+                value?.Id ?? -1,
+                value?.Segments != null,
+                value?.Segments?.Count ?? 0);
 
             // Subscribe to new profile's segments and update UI
             SubscribeToSegmentChanges();
             UpdateSelectedSegments();
 
             this.RaisePropertyChanged(nameof(ProfileSummary));
+            this.RaisePropertyChanged(nameof(SegmentCount));
             this.RaisePropertyChanged(nameof(SelectedSegmentCount));
             this.RaisePropertyChanged(nameof(TotalSelectedSize));
             this.RaisePropertyChanged(nameof(HasContiguousSelection));
 
-            _logger.LogDebug("SelectedProfile changed to {ProfileName} (ID: {ProfileId}) with {SegmentCount} segments",
-                value?.Name ?? "null", value?.Id ?? -1, value?.Segments?.Count ?? 0);
+            _logger.LogDebug("SelectedProfile property notifications raised");
         }
     }
 
@@ -157,6 +170,14 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
+    /// Gets the total number of segments in the selected profile.
+    /// </summary>
+    public int SegmentCount
+    {
+        get { return SelectedProfile?.SegmentCount ?? 0; }
+    }
+
+    /// <summary>
     /// Gets the total size of selected segments in bytes.
     /// </summary>
     public long TotalSelectedSize
@@ -213,15 +234,15 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
             if (SelectedSegmentCount == 0)
             {
-                return "Selected profile has no segments marked for dumping";
+                return "Please select exactly one segment to dump (click checkbox in Sel column)";
             }
 
-            if (!HasContiguousSelection)
+            if (SelectedSegmentCount > 1)
             {
-                return "Warning: Selected segments are not contiguous";
+                return "Only one segment can be selected for this job";
             }
 
-            return "Memory region configuration is valid";
+            return $"✓ Memory segment '{SelectedSegments.FirstOrDefault()?.Name}' selected for dumping";
         }
     }
 
@@ -277,7 +298,11 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
         if (SelectedSegmentCount == 0)
         {
-            errors.Add("Selected profile must have at least one segment marked for dumping");
+            errors.Add("Exactly one segment must be selected for dumping");
+        }
+        else if (SelectedSegmentCount > 1)
+        {
+            errors.Add("Only one segment can be selected per job");
         }
 
         // Validate the profile itself
@@ -313,7 +338,8 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
     private bool ValidateStepConfiguration()
     {
-        return SelectedProfile != null && SelectedSegmentCount > 0;
+        // Valid only if exactly one segment is selected
+        return SelectedProfile != null && SelectedSegmentCount == 1;
     }
 
     private async Task LoadProfilesAsync()
@@ -322,44 +348,69 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         {
             IsBusy = true;
             Status = "Loading memory region profiles...";
-            _logger.LogInformation("Loading memory region profiles for wizard step");
+            _logger.LogInformation("LoadProfilesAsync START: Calling GetAllAsync on memory region service");
 
             IEnumerable<MemoryMappingProfile> profiles = await _memoryRegionService.GetAllAsync().ConfigureAwait(false);
 
+            _logger.LogInformation("LoadProfilesAsync: Received {Count} profiles from service", profiles?.Count() ?? 0);
+
+            if (profiles == null)
+            {
+                _logger.LogWarning("LoadProfilesAsync: Service returned null profiles collection");
+                Status = "No profiles available";
+                return;
+            }
+
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
+                _logger.LogInformation("LoadProfilesAsync: Inside UI thread callback");
+
                 int? currentSelectionId = SelectedProfile?.Id;
 
                 AvailableProfiles.Clear();
                 foreach (MemoryMappingProfile profile in profiles)
                 {
+                    _logger.LogDebug("Adding profile to AvailableProfiles: {ProfileName} (ID: {ProfileId})", profile.Name, profile.Id);
                     AvailableProfiles.Add(profile);
                 }
+
+                _logger.LogInformation("LoadProfilesAsync: Added {Count} profiles to AvailableProfiles collection", AvailableProfiles.Count);
 
                 // Try to preserve selection, or select default, or select first
                 if (currentSelectionId.HasValue)
                 {
                     SelectedProfile = AvailableProfiles.FirstOrDefault(p => p.Id == currentSelectionId.Value);
+                    _logger.LogInformation("LoadProfilesAsync: Preserved selection ID {Id}", currentSelectionId.Value);
                 }
 
                 if (SelectedProfile == null)
                 {
-                    SelectedProfile = AvailableProfiles.FirstOrDefault(p => p.IsDefault)
-                                   ?? AvailableProfiles.FirstOrDefault();
+                    MemoryMappingProfile? defaultProfile = AvailableProfiles.FirstOrDefault(p => p.IsDefault);
+                    MemoryMappingProfile? firstProfile = AvailableProfiles.FirstOrDefault();
+
+                    _logger.LogInformation("LoadProfilesAsync: No preserved selection. Default profile: {DefaultProfile}, First profile: {FirstProfile}",
+                        defaultProfile?.Name ?? "null", firstProfile?.Name ?? "null");
+
+                    SelectedProfile = defaultProfile ?? firstProfile;
+
+                    _logger.LogInformation("LoadProfilesAsync: AUTO-SELECTED profile: {ProfileName} (ID: {ProfileId})",
+                        SelectedProfile?.Name ?? "null", SelectedProfile?.Id ?? -1);
                 }
 
                 Status = $"Loaded {AvailableProfiles.Count} profile(s)";
-                _logger.LogInformation("Loaded {ProfileCount} memory region profiles", AvailableProfiles.Count);
+                _logger.LogInformation("LoadProfilesAsync COMPLETED: {ProfileCount} profiles loaded, SelectedProfile={SelectedProfile}",
+                    AvailableProfiles.Count, SelectedProfile?.Name ?? "null");
             }).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to load memory region profiles for wizard step");
+            _logger.LogError(ex, "LoadProfilesAsync FAILED: {ErrorMessage}", ex.Message);
             Status = $"Error loading profiles: {ex.Message}";
         }
         finally
         {
             IsBusy = false;
+            _logger.LogInformation("LoadProfilesAsync: IsBusy set to false");
         }
     }
 
@@ -414,6 +465,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Handles property changes in memory segments to update computed properties.
+    /// Enforces single-segment selection for job wizard (only one segment can be selected at a time).
     /// </summary>
     private void OnSegmentPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -421,8 +473,36 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         {
             _logger.LogDebug("Segment IsSelected property changed, updating job wizard step properties");
 
+            // SINGLE SELECTION MODE: If a segment was just selected, deselect all others
+            if (sender is MemorySegment selectedSegment && selectedSegment.IsSelected && SelectedProfile?.Segments != null)
+            {
+                _logger.LogDebug("Enforcing single-segment selection: deselecting all except {SegmentName}", selectedSegment.Name);
+
+                // Temporarily unsubscribe to avoid recursive calls
+                foreach (MemorySegment segment in SelectedProfile.Segments)
+                {
+                    segment.PropertyChanged -= OnSegmentPropertyChanged;
+                }
+
+                // Deselect all segments except the one that was just selected
+                foreach (MemorySegment segment in SelectedProfile.Segments)
+                {
+                    if (segment != selectedSegment && segment.IsSelected)
+                    {
+                        segment.IsSelected = false;
+                    }
+                }
+
+                // Resubscribe to all segments
+                foreach (MemorySegment segment in SelectedProfile.Segments)
+                {
+                    segment.PropertyChanged += OnSegmentPropertyChanged;
+                }
+            }
+
             // Update all computed properties that depend on segment selection
             UpdateSelectedSegments();
+            this.RaisePropertyChanged(nameof(SegmentCount));
             this.RaisePropertyChanged(nameof(SelectedSegmentCount));
             this.RaisePropertyChanged(nameof(TotalSelectedSize));
             this.RaisePropertyChanged(nameof(HasContiguousSelection));

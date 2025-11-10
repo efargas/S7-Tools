@@ -487,28 +487,8 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 }
             }
 
-            // Check for overlapping segments
-            for (int i = 0; i < Segments.Count; i++)
-            {
-                for (int j = i + 1; j < Segments.Count; j++)
-                {
-                    try
-                    {
-                        if (Segments[i].Segment.OverlapsWith(Segments[j].Segment))
-                        {
-                            string error = $"Segments '{Segments[i].Name}' and '{Segments[j].Name}' have overlapping address ranges";
-                            errors.Add(error);
-                            _logger.LogWarning("ValidateSegments: {Error}", error);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        string error = $"Failed to validate overlap between '{Segments[i].Name}' and '{Segments[j].Name}': {ex.Message}";
-                        errors.Add(error);
-                        _logger.LogError(ex, "ValidateSegments: Overlap check failed between segments {I} and {J}", i, j);
-                    }
-                }
-            }
+            // Note: Overlap check removed from errors - firmware segments can legitimately overlap (nested segments)
+            // Overlaps are shown as warnings in the UI but don't prevent saving
 
             // Check for duplicate names
             IEnumerable<string> duplicateNames = Segments
@@ -532,6 +512,44 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
         }
 
         return errors;
+    }
+
+    /// <summary>
+    /// Gets a list of overlapping segment warnings (does not block saving).
+    /// </summary>
+    private List<string> GetOverlapWarnings()
+    {
+        var warnings = new List<string>();
+
+        try
+        {
+            // Check for overlapping segments
+            for (int i = 0; i < Segments.Count; i++)
+            {
+                for (int j = i + 1; j < Segments.Count; j++)
+                {
+                    try
+                    {
+                        if (Segments[i].Segment.OverlapsWith(Segments[j].Segment))
+                        {
+                            string warning = $"Segments '{Segments[i].Name}' and '{Segments[j].Name}' have overlapping address ranges";
+                            warnings.Add(warning);
+                            _logger.LogDebug("GetOverlapWarnings: {Warning}", warning);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "GetOverlapWarnings: Overlap check failed between segments {I} and {J}", i, j);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting overlap warnings");
+        }
+
+        return warnings;
     }
 
     /// <summary>
@@ -559,6 +577,15 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             {
                 ValidationMessage += $" (and {errors.Count - 2} more...)";
             }
+            return;
+        }
+
+        // Show overlap warnings (if any) but don't block saving
+        List<string> warnings = GetOverlapWarnings();
+        if (warnings.Count > 0)
+        {
+            ValidationMessage = $"⚠️ Warning: {warnings.Count} overlapping segment(s) detected (and {warnings.Count - 1} more...)";
+            _logger.LogDebug("UpdateValidationMessage: Showing overlap warning for {Count} overlaps", warnings.Count);
             return;
         }
 

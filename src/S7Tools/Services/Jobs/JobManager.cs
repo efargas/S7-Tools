@@ -144,9 +144,8 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
                 throw new ProfileNotFoundException(templateId);
             }
 
-            // Create new job from template
+            // Create new job from template (Duplicate already sets IsReadOnly=false, IsDefault=false, IsTemplate=false)
             JobProfile newJob = template.Duplicate(newName);
-            newJob.IsTemplate = false; // New job is not a template
 
             // Validate uniqueness
             if (_profiles.Any(p => string.Equals(p.Name, newName, StringComparison.OrdinalIgnoreCase)))

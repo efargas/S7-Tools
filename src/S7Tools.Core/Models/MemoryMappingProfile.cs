@@ -242,7 +242,7 @@ public class MemoryMappingProfile : IProfileBase
                     StartAddress = "0x00043d00",
                     Size = 14139040, // ~13.5 MB
                     Type = MemorySegmentType.Flash,
-                    IsSelected = true,
+                    IsSelected = false,
                     Description = "Code/text segment - main executable code (RECOMMENDED)"
                 },
                 new()
@@ -251,22 +251,22 @@ public class MemoryMappingProfile : IProfileBase
                     StartAddress = "0x00defdc0",
                     Size = 3871660, // ~3.7 MB
                     Type = MemorySegmentType.RAM,
-                    IsSelected = true,
+                    IsSelected = false,
                     Description = "Read-only data segment - constants and strings (RECOMMENDED)"
                 },
                 new()
                 {
                     Name = ".data",
-                    StartAddress = "0x0111a1f80",
+                    StartAddress = "0x011a1180",
                     Size = 133012, // ~130 KB
                     Type = MemorySegmentType.RAM,
-                    IsSelected = true,
+                    IsSelected = false,
                     Description = "Initialized data segment - global variables (RECOMMENDED)"
                 },
                 new()
                 {
                     Name = ".bss",
-                    StartAddress = "0x01fe01040",
+                    StartAddress = "0x01e01040",
                     Size = 8519448, // ~8.1 MB
                     Type = MemorySegmentType.RAM,
                     IsSelected = true,
@@ -343,12 +343,12 @@ public class MemoryMappingProfile : IProfileBase
                 },
                 new()
                 {
-                    Name = ".qrdtable",
+                    Name = ".crctable",
                     StartAddress = "0x10041400",
                     Size = 1024,
                     Type = MemorySegmentType.RAM,
                     IsSelected = false,
-                    Description = "QRD table segment"
+                    Description = "CRC table segment"
                 },
 
                 // Boot Segments
@@ -364,7 +364,7 @@ public class MemoryMappingProfile : IProfileBase
                 new()
                 {
                     Name = ".bootinfo",
-                    StartAddress = "0x10041f00",
+                    StartAddress = "0x1004ff00",
                     Size = 28,
                     Type = MemorySegmentType.RAM,
                     IsSelected = false,
@@ -374,7 +374,7 @@ public class MemoryMappingProfile : IProfileBase
                 {
                     Name = ".dtcm",
                     StartAddress = "0x10010000",
-                    Size = 11888,
+                    Size = 11376,
                     Type = MemorySegmentType.RAM,
                     IsSelected = false,
                     Description = "Data tightly coupled memory - processor cache"
@@ -395,7 +395,7 @@ public class MemoryMappingProfile : IProfileBase
                 ["DefaultSegment"] = ".bss",
                 ["PLCModel"] = "6ES7212-1AE40-OXBO",
                 ["FirmwareVersion"] = "v4.02.01",
-                ["TotalSegments"] = "22",
+                ["TotalSegments"] = "23",
                 ["RecommendedSegments"] = ".text,.rodata,.data,.bss",
                 ["Source"] = "Actual S7-1200 firmware analysis"
             }

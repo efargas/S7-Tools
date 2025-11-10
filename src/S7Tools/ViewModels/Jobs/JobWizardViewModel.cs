@@ -115,6 +115,10 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         // Create port scanner child VM for UI embedding
         PortScanner = _vmFactory.Create<SerialPortDiscoveryViewModel>();
 
+        // Create memory region step ViewModel
+        MemoryRegionStepViewModel = _vmFactory.Create<JobWizardMemoryRegionStepViewModel>();
+        _logger.LogInformation("Created JobWizardMemoryRegionStepViewModel via factory");
+
         // Commands
         IObservable<bool> canBack = this.WhenAnyValue(x => x.CurrentStep)
             .Select(step => step != WizardStep.Serial);
@@ -212,6 +216,8 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public ObservableCollection<string> AvailablePorts { get; }
     // Port scanner VM for UI embedding
     public SerialPortDiscoveryViewModel PortScanner { get; }
+    // Memory region step VM for wizard integration
+    public JobWizardMemoryRegionStepViewModel MemoryRegionStepViewModel { get; }
 
     public ReactiveCommand<Unit, Unit> BackCommand { get; }
     public ReactiveCommand<Unit, Unit> NextCommand { get; }

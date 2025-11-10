@@ -14,6 +14,7 @@
     "plcModel": "6ES7212-1AE40-OXBO",
     "firmwareVersion": "v4.02.01",
     "isDefault": false,
+    "isReadOnly": true,
     "segments": [
       {
         "name": ".exec_in_lomem",
@@ -23,7 +24,7 @@
         "sizeHex": "0x000075b4",
         "flags": 1,
         "description": "Executive code in low memory",
-        "type": "executable",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -34,7 +35,7 @@
         "sizeHex": "0x00000040",
         "flags": 1,
         "description": "Binary table segment",
-        "type": "data",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -45,7 +46,7 @@
         "sizeHex": "0x000004d0",
         "flags": 1,
         "description": "SDRAM executive segment",
-        "type": "executable",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -56,7 +57,7 @@
         "sizeHex": "0x00000008",
         "flags": 1,
         "description": "System call segment",
-        "type": "system",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -67,7 +68,7 @@
         "sizeHex": "0x00002958",
         "flags": 33,
         "description": "Thread initialization segment",
-        "type": "executable",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -78,7 +79,7 @@
         "sizeHex": "0x0000033c",
         "flags": 34,
         "description": "Security information segment",
-        "type": "data",
+        "type": "RAM",
         "isSelected": false
       },
       {
@@ -89,7 +90,7 @@
         "sizeHex": "0x00000000",
         "flags": 4,
         "description": "Fixed address segment",
-        "type": "system",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -100,57 +101,52 @@
         "sizeHex": "0x00000000",
         "flags": 4,
         "description": "Fixed type segment",
-        "type": "system",
+        "type": "Flash",
         "isSelected": false
       },
       {
         "name": ".text",
         "startAddress": "0x00043d00",
-        "endAddress": "0x000defda0",
+        "endAddress": "0x00defda0",
         "size": 14139040,
-        "sizeHex": "0x0dac0a0",
+        "sizeHex": "0x00dac0a0",
         "flags": 33,
-        "description": "Code/text segment - main executable code",
-        "type": "executable",
-        "isSelected": true,
-        "recommended": true
+        "description": "Code/text segment - main executable code (RECOMMENDED)",
+        "type": "Flash",
+        "isSelected": false
       },
       {
         "name": ".rodata",
-        "startAddress": "0x000defdc0",
-        "endAddress": "0x0111a1f6c",
+        "startAddress": "0x00defdc0",
+        "endAddress": "0x0111a116c",
         "size": 3871660,
         "sizeHex": "0x003b13ac",
         "flags": 34,
-        "description": "Read-only data segment - constants and strings",
-        "type": "data",
-        "isSelected": true,
-        "recommended": true
+        "description": "Read-only data segment - constants and strings (RECOMMENDED)",
+        "type": "RAM",
+        "isSelected": false
       },
       {
         "name": ".data",
-        "startAddress": "0x0111a1f80",
-        "endAddress": "0x011fc1df4",
+        "startAddress": "0x011a1180",
+        "endAddress": "0x011c1d14",
         "size": 133012,
         "sizeHex": "0x00020b94",
         "flags": 42,
-        "description": "Initialized data segment - global variables",
-        "type": "data",
-        "isSelected": true,
-        "recommended": true
+        "description": "Initialized data segment - global variables (RECOMMENDED)",
+        "type": "RAM",
+        "isSelected": false
       },
       {
         "name": ".bss",
-        "startAddress": "0x01fe01040",
+        "startAddress": "0x01e01040",
         "endAddress": "0x02620f58",
         "size": 8519448,
         "sizeHex": "0x0081ff18",
         "flags": 12,
-        "description": "Uninitialized data segment (BSS) - zero-initialized variables",
-        "type": "data",
-        "isSelected": true,
-        "default": true,
-        "recommended": true
+        "description": "Uninitialized data segment (BSS) - zero-initialized variables (DEFAULT SELECTION)",
+        "type": "RAM",
+        "isSelected": true
       },
       {
         "name": ".cc_memory",
@@ -160,7 +156,7 @@
         "sizeHex": "0x00000000",
         "flags": 4,
         "description": "Cache coherent memory",
-        "type": "system",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -171,7 +167,7 @@
         "sizeHex": "0x0336b8f4",
         "flags": 12,
         "description": "Uninitialized memory pool - heap space",
-        "type": "memory",
+        "type": "RAM",
         "isSelected": false
       },
       {
@@ -182,7 +178,7 @@
         "sizeHex": "0x00000000",
         "flags": 4,
         "description": "CLSI cached memory pool",
-        "type": "system",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -193,7 +189,7 @@
         "sizeHex": "0x00000000",
         "flags": 4,
         "description": "DRAM uncached segment",
-        "type": "memory",
+        "type": "Flash",
         "isSelected": false
       },
       {
@@ -204,7 +200,7 @@
         "sizeHex": "0x00000494",
         "flags": 12,
         "description": "MAC memory mapping - network interface",
-        "type": "hardware",
+        "type": "RAM",
         "isSelected": false
       },
       {
@@ -215,7 +211,7 @@
         "sizeHex": "0x00007aa0",
         "flags": 12,
         "description": "Internal RAM 0 - fast access memory",
-        "type": "memory",
+        "type": "RAM",
         "isSelected": false
       },
       {
@@ -226,51 +222,51 @@
         "sizeHex": "0x0000c35c",
         "flags": 12,
         "description": "Internal RAM 1 - additional fast memory",
-        "type": "memory",
+        "type": "RAM",
         "isSelected": false
       },
       {
-        "name": ".qrdtable",
+        "name": ".crctable",
         "startAddress": "0x10041400",
         "endAddress": "0x10041800",
         "size": 1024,
         "sizeHex": "0x00000400",
         "flags": 12,
         "description": "QRD table segment",
-        "type": "data",
+        "type": "RAM",
         "isSelected": false
       },
       {
         "name": ".softboot",
         "startAddress": "0x10041800",
-        "endAddress": "0x10041f00",
+        "endAddress": "0x1004ff00",
         "size": 1792,
         "sizeHex": "0x00000700",
         "flags": 12,
         "description": "Soft boot segment - boot loader code",
-        "type": "boot",
+        "type": "RAM",
         "isSelected": false
       },
       {
         "name": ".bootinfo",
-        "startAddress": "0x10041f00",
-        "endAddress": "0x10041f1c",
+        "startAddress": "0x1004ff00",
+        "endAddress": "0x1004ff1c",
         "size": 28,
         "sizeHex": "0x0000001c",
         "flags": 12,
         "description": "Boot information segment - boot parameters",
-        "type": "boot",
+        "type": "RAM",
         "isSelected": false
       },
       {
         "name": ".dtcm",
         "startAddress": "0x10010000",
-        "endAddress": "0x10012e70",
-        "size": 11888,
-        "sizeHex": "0x00002e70",
+        "endAddress": "0x10012c70",
+        "size": 11376,
+        "sizeHex": "0x00002c70",
         "flags": 12,
         "description": "Data tightly coupled memory - processor cache",
-        "type": "memory",
+        "type": "RAM",
         "isSelected": false
       }
     ],
@@ -278,9 +274,9 @@
     "recommendedSegments": [".text", ".rodata", ".data", ".bss"],
     "memoryLayout": {
       "description": "Standard S7-1200 firmware memory layout based on v4.02.01",
-      "totalSegments": 22,
+      "totalSegments": 23,
       "executableRegions": [".exec_in_lomem", ".sdramexec", ".th_initial", ".text"],
-      "dataRegions": [".bitable", ".secinfo", ".rodata", ".data", ".bss", ".qrdtable"],
+      "dataRegions": [".bitable", ".secinfo", ".rodata", ".data", ".bss", ".crctable"],
       "systemRegions": [".syscall", ".fixaddr", ".fixtype", ".cc_memory", "CLSI_CACHED_MEM_POOL"],
       "memoryRegions": [".uninitialized", ".dram_uncache", ".iram0", ".iram1", ".dtcm"],
       "hardwareRegions": ["MAP_MAC_MEM"],
