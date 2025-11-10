@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
@@ -836,7 +837,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the creation date of the selected serial profile.
     /// </summary>
-    public string SerialCreatedAt => SelectedSerial?.CreatedAt.ToString("yyyy-MM-dd HH:mm") ?? "N/A";
+    public string SerialCreatedAt => SelectedSerial?.CreatedAt.ToString(DateTimeFormats.ShortDateTime) ?? "N/A";
 
     /// <summary>
     /// Gets the TCP port of the selected socat profile.

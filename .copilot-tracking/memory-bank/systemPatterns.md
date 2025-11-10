@@ -598,16 +598,169 @@ catch (Exception ex)
 
 ---
 
-## 7) Resource & Localization (UIStrings and IResourceManager)
+## 7) Resource & Localization Pattern (UIStrings.resx)
 
-- Use `S7Tools.Resources.UIStrings` for strongly-typed UI text with safe defaults.
-- DI registers an `IResourceManager` abstraction. In dev, defaults to `InMemoryResourceManager`; production uses compiled ResX (UIStrings.resx).
-- Action item: consider renaming `S7Tools.Resources.ResourceManager` class to avoid confusion with `System.Resources.ResourceManager` (see CRITICAL_ISSUES_QUICK_REFERENCE.md).
+**Last Updated**: 2025-11-10 (P0 Code Quality Phase 1 & 2 Complete)
 
-Guidelines:
+### 7.1 Localization Architecture
 
-- Keep resource keys consistent; avoid mixing underscores and camel case across systems.
-- Favor strongly-typed access; provide fallbacks for missing keys.
+S7Tools uses a centralized resource-based localization system with strongly-typed access:
+
+- **Resource File**: `src/S7Tools/Resources/Strings/UIStrings.resx` (1800+ entries)
+- **Generated Code**: `src/S7Tools/Resources/Strings/UIStrings.Designer.cs` (auto-generated property accessors)
+- **Namespace**: `S7Tools.Resources.Strings` (MANDATORY for all ViewModels)
+- **Pattern**: ResX → Designer.cs → strongly-typed properties → ViewModels
+
+### 7.2 Resource Organization (8 Categories)
+
+All resources are organized into logical categories with consistent naming conventions:
+
+1. **Clipboard Messages**: `TestClipboardText`, `ClipboardTextCut`, `ClipboardTextCopied`, `ClipboardTextPasted`
+2. **General Status**: `StatusReady`, `Status_NoProfileSelected`, `Status_ProfileValidationFailed`
+3. **Profile Management**: `Status_ProfileSelected`, `Status_ProfileDuplicated`, `Status_ProfileDeletedSuccessfully`
+4. **Import/Export**: `Status_ProfilesExportedToFile`, `Status_ImportFailedNoValidProfiles`, `Status_ExportFailedAccessDenied`
+5. **Power Supply**: `Status_PowerTurnedOn`, `Status_PowerCycleTurningOff`, `Status_NotConnectedToPowerSupply`
+6. **Path Management**: `Status_ProfilesPathSetTo`, `Status_OpeningProfilesFolder`, `Status_ProfilesPathReset`
+7. **Generic Errors**: `Status_ErrorOperation`, `Status_WarningFailedToLoadSettings`
+8. **Validation Messages**: `Validation_ProfileNameExists`, `Validation_MemoryRegionProfileRequired`, `Validation_ErrorValidatingProfileName`
+
+### 7.3 Naming Conventions (MANDATORY)
+
+```csharp
+// Status messages (user-visible)
+UIStrings.Status_PowerUnknown              // General status
+UIStrings.Status_ProfileSelected           // Profile operations
+UIStrings.Status_LogsExportedToClipboard  // Action confirmation
+
+// Validation messages (error feedback)
+UIStrings.Validation_ProfileNameExists
+UIStrings.Validation_MemoryRegionProfileRequired
+UIStrings.Validation_ErrorValidatingProfileName
+
+// Values (constant strings)
+UIStrings.Value_PowerOn    // "ON"
+UIStrings.Value_PowerOff   // "OFF"
+```
+
+### 7.4 ViewModel Integration Pattern
+
+**Step 1**: Add namespace import (ALL ViewModels)
+```csharp
+using S7Tools.Resources.Strings;  // MANDATORY namespace
+```
+
+**Step 2**: Use strongly-typed properties (NOT string interpolation in logs)
+```csharp
+// GOOD: Strongly-typed resource access
+StatusMessage = UIStrings.Status_PowerUnknown;
+StatusMessage = string.Format(UIStrings.Status_ProfileSelected, profileName);
+
+// BAD: Hardcoded strings
+StatusMessage = "Unknown";  // ❌ NEVER do this
+StatusMessage = "Profile selected: " + profileName;  // ❌ Not localizable
+```
+
+**Step 3**: Handle parameterized resources
+```csharp
+// Single parameter
+var message = string.Format(UIStrings.Status_ProfileSelected, profileName);
+
+// Multiple parameters
+var message = string.Format(UIStrings.Status_ProfilesExportedToFile, count, filename);
+
+// Complex formatting
+var message = string.Format(UIStrings.Status_PowerCycleWaitingBeforeTurningOn, delayMs);
+```
+
+### 7.5 Adding New Resources (Process)
+
+1. **Add to UIStrings.resx** (XML entry):
+```xml
+<data name="Status_NewFeature" xml:space="preserve">
+  <value>New feature status message</value>
+  <comment>Description of when this message is shown</comment>
+</data>
+```
+
+2. **Update UIStrings.Designer.cs** (if manual generation needed):
+```csharp
+public static string Status_NewFeature {
+    get { return ResourceManager.GetString("Status_NewFeature", resourceCulture); }
+}
+```
+
+3. **Rebuild Project**: Resources are auto-generated during build
+4. **Use in ViewModels**: `StatusMessage = UIStrings.Status_NewFeature;`
+
+### 7.6 Anti-Patterns (NEVER DO THIS)
+
+```csharp
+// ❌ Hardcoded strings
+StatusMessage = "Power supply not connected";
+
+// ❌ String concatenation
+StatusMessage = "Profile: " + profileName;
+
+// ❌ String interpolation for UI messages
+StatusMessage = $"Connected to {profileName}";
+
+// ❌ Wrong namespace
+using S7Tools.Resources;  // Old namespace, use S7Tools.Resources.Strings
+
+// ✅ CORRECT: Use resources
+StatusMessage = UIStrings.Status_NotConnectedToPowerSupply;
+StatusMessage = string.Format(UIStrings.Status_ConnectedToProfile, profileName);
+```
+
+### 7.7 DI Integration (IResourceManager)
+
+For advanced scenarios, use the `IResourceManager` abstraction:
+
+```csharp
+public class MyViewModel : ReactiveObject
+{
+    private readonly IResourceManager _resourceManager;
+
+    public MyViewModel(IResourceManager resourceManager)
+    {
+        _resourceManager = resourceManager;
+    }
+
+    private void LoadDynamicResource()
+    {
+        var key = DetermineResourceKey();  // Runtime key determination
+        StatusMessage = _resourceManager.GetString(key);
+    }
+}
+```
+
+**Note**: Direct `UIStrings` access is preferred for 99% of cases. `IResourceManager` is only needed for dynamic key resolution.
+
+### 7.8 Build & Validation
+
+**Duplicate Detection**: Build system detects duplicate resources and issues warnings:
+```
+warning MSB3568: No se permite el nombre de recurso duplicado "Status_PowerUnknown". Se omitirá.
+```
+
+**Resolution**: Remove duplicate entries. First occurrence wins in .NET resource system.
+
+**Testing**: Resource access is tested indirectly through ViewModel tests. No direct resource tests needed.
+
+### 7.9 Current Status (2025-11-10)
+
+- **Total Resources**: 1800+ entries (56 added in P0 Phase 1)
+- **Namespace**: `S7Tools.Resources.Strings` (standardized)
+- **Build Quality**: 0 errors, 0 warnings (59 duplicate warnings eliminated)
+- **Coverage**: All major ViewModels use localized strings
+- **P0 Complete**: 7 hardcoded strings migrated to UIStrings.resx
+
+### 7.10 Future Enhancements
+
+- Consider multi-language support (Spanish, German, etc.) via satellite assemblies
+- Implement `IStringLocalizer<T>` for ASP.NET Core-style localization (if needed)
+- Add ResX validation tool to detect missing/unused resources
+- Document resource key conventions in `.editorconfig` or analyzer rules
 
 ---
 
@@ -622,8 +775,9 @@ Guidelines:
 ## 9) Testing Standards
 
 - Structure: tests per project — `S7Tools.Tests`, `S7Tools.Core.Tests`, `S7Tools.Infrastructure.Logging.Tests`.
-- Current status: 308 tests (99.7% passing, 1 intentionally skipped). Expanded from 178 baseline. Keep coverage high; add tests when behavior changes.
+- Current status: **361 tests (360 passing, 1 intentionally skipped) = 99.7% pass rate** (Updated 2025-11-10). Expanded from 178 baseline. Keep coverage high; add tests when behavior changes.
 - Patterns: AAA (Arrange–Act–Assert), include edge/concurrency cases. ViewModels should be testable without UI.
+- Recent additions: 6 tests for `DialogParentNotFoundException` (constructor validation, inheritance verification, throw/catch scenarios)
 - Async tests: Use `async Task` for test methods, avoid blocking (`.Wait()`, `.Result`, `Task.WaitAll(...)`); prefer `await` and `Task.WhenAll(...)` to satisfy analyzers (xUnit1031) and prevent deadlocks.
 
 ---
