@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Resources;
+using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Pages;
@@ -277,7 +277,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
             // For now, just show a message. Full implementation would export actual logs.
             string exportedLogs = $"Log export requested at {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
             await _clipboardService.SetTextAsync(exportedLogs);
-            StatusMessage = "Logs exported to clipboard";
+            StatusMessage = UIStrings.Status_LogsExportedToClipboard;
             LastButtonPressed = "Export";
             _logger.LogInformation("Logs exported to clipboard");
         }

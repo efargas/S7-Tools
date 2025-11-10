@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
+using S7Tools.Resources.Strings;
 using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Dialogs;
@@ -339,14 +340,14 @@ public class DuplicateMemoryRegionProfileDialogViewModel : ViewModelBase, IDispo
         {
             if (_nameExistsChecker(trimmedName))
             {
-                ValidationMessage = "A profile with this name already exists";
+                ValidationMessage = UIStrings.Validation_ProfileNameExists;
                 return;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error checking if profile name exists");
-            ValidationMessage = "Error validating profile name";
+            ValidationMessage = UIStrings.Validation_ErrorValidatingProfileName;
             return;
         }
 

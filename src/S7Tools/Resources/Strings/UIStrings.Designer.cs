@@ -581,5 +581,581 @@ namespace S7Tools.Resources.Strings {
                 return ResourceManager.GetString("Tooltip_ToggleSidebar", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Memory region profile must be selected.
+        /// </summary>
+        public static string Validation_MemoryRegionProfileRequired {
+            get {
+                return ResourceManager.GetString("Validation_MemoryRegionProfileRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Exactly one segment must be selected for dumping.
+        /// </summary>
+        public static string Validation_ExactlyOneSegmentRequired {
+            get {
+                return ResourceManager.GetString("Validation_ExactlyOneSegmentRequired", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Only one segment can be selected per job.
+        /// </summary>
+        public static string Validation_OnlyOneSegmentAllowed {
+            get {
+                return ResourceManager.GetString("Validation_OnlyOneSegmentAllowed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to A profile with this name already exists.
+        /// </summary>
+        public static string Validation_ProfileNameAlreadyExists {
+            get {
+                return ResourceManager.GetString("Validation_ProfileNameAlreadyExists", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error validating profile name.
+        /// </summary>
+        public static string Validation_ErrorValidatingProfileName {
+            get {
+                return ResourceManager.GetString("Validation_ErrorValidatingProfileName", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Test clipboard text.
+        /// </summary>
+        public static string TestClipboardText {
+            get {
+                return ResourceManager.GetString("TestClipboardText", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Text cut to clipboard.
+        /// </summary>
+        public static string ClipboardTextCut {
+            get {
+                return ResourceManager.GetString("ClipboardTextCut", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Text copied to clipboard.
+        /// </summary>
+        public static string ClipboardTextCopied {
+            get {
+                return ResourceManager.GetString("ClipboardTextCopied", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Text pasted from clipboard.
+        /// </summary>
+        public static string ClipboardTextPasted {
+            get {
+                return ResourceManager.GetString("ClipboardTextPasted", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Ready.
+        /// </summary>
+        public static string StatusReady {
+            get {
+                return ResourceManager.GetString("StatusReady", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile selected: {0}.
+        /// </summary>
+        public static string Status_ProfileSelected {
+            get {
+                return ResourceManager.GetString("Status_ProfileSelected", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile '{0}' deleted successfully.
+        /// </summary>
+        public static string Status_ProfileDeletedSuccessfully {
+            get {
+                return ResourceManager.GetString("Status_ProfileDeletedSuccessfully", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile duplicated: {0}.
+        /// </summary>
+        public static string Status_ProfileDuplicated {
+            get {
+                return ResourceManager.GetString("Status_ProfileDuplicated", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile '{0}' set as default.
+        /// </summary>
+        public static string Status_ProfileSetAsDefault {
+            get {
+                return ResourceManager.GetString("Status_ProfileSetAsDefault", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error refreshing profiles.
+        /// </summary>
+        public static string Status_ErrorRefreshingProfiles {
+            get {
+                return ResourceManager.GetString("Status_ErrorRefreshingProfiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profiles refreshed.
+        /// </summary>
+        public static string Status_ProfilesRefreshed {
+            get {
+                return ResourceManager.GetString("Status_ProfilesRefreshed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No profile selected.
+        /// </summary>
+        public static string Status_NoProfileSelected {
+            get {
+                return ResourceManager.GetString("Status_NoProfileSelected", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Selected profile has no configuration.
+        /// </summary>
+        public static string Status_SelectedProfileHasNoConfiguration {
+            get {
+                return ResourceManager.GetString("Status_SelectedProfileHasNoConfiguration", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile validation failed: {0}.
+        /// </summary>
+        public static string Status_ProfileValidationFailed {
+            get {
+                return ResourceManager.GetString("Status_ProfileValidationFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile name cannot be empty.
+        /// </summary>
+        public static string Status_ProfileNameCannotBeEmpty {
+            get {
+                return ResourceManager.GetString("Status_ProfileNameCannotBeEmpty", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile name is too long.
+        /// </summary>
+        public static string Status_ProfileNameTooLong {
+            get {
+                return ResourceManager.GetString("Status_ProfileNameTooLong", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profile name '{0}' is already in use.
+        /// </summary>
+        public static string Status_ProfileNameAlreadyInUse {
+            get {
+                return ResourceManager.GetString("Status_ProfileNameAlreadyInUse", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to File dialog service not available.
+        /// </summary>
+        public static string Status_FileDialogServiceNotAvailable {
+            get {
+                return ResourceManager.GetString("Status_FileDialogServiceNotAvailable", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} profile(s) exported to {1}.
+        /// </summary>
+        public static string Status_ProfilesExportedToFile {
+            get {
+                return ResourceManager.GetString("Status_ProfilesExportedToFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Export failed: Access denied.
+        /// </summary>
+        public static string Status_ExportFailedAccessDenied {
+            get {
+                return ResourceManager.GetString("Status_ExportFailedAccessDenied", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Export failed: {0}.
+        /// </summary>
+        public static string Status_ExportFailed {
+            get {
+                return ResourceManager.GetString("Status_ExportFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Import failed: No valid profiles found in file.
+        /// </summary>
+        public static string Status_ImportFailedNoValidProfiles {
+            get {
+                return ResourceManager.GetString("Status_ImportFailedNoValidProfiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} profile(s) imported from {1}.
+        /// </summary>
+        public static string Status_ProfilesImportedFromFile {
+            get {
+                return ResourceManager.GetString("Status_ProfilesImportedFromFile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Import failed: File not found.
+        /// </summary>
+        public static string Status_ImportFailedFileNotFound {
+            get {
+                return ResourceManager.GetString("Status_ImportFailedFileNotFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Import failed: Invalid file format.
+        /// </summary>
+        public static string Status_ImportFailedInvalidFormat {
+            get {
+                return ResourceManager.GetString("Status_ImportFailedInvalidFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Import failed: Access denied.
+        /// </summary>
+        public static string Status_ImportFailedAccessDenied {
+            get {
+                return ResourceManager.GetString("Status_ImportFailedAccessDenied", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Import failed: {0}.
+        /// </summary>
+        public static string Status_ImportFailed {
+            get {
+                return ResourceManager.GetString("Status_ImportFailed", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Connected to {0}.
+        /// </summary>
+        public static string Status_ConnectedToProfile {
+            get {
+                return ResourceManager.GetString("Status_ConnectedToProfile", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Turning power ON....
+        /// </summary>
+        public static string Status_TurningPowerOn {
+            get {
+                return ResourceManager.GetString("Status_TurningPowerOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power turned ON.
+        /// </summary>
+        public static string Status_PowerTurnedOn {
+            get {
+                return ResourceManager.GetString("Status_PowerTurnedOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to turn power ON.
+        /// </summary>
+        public static string Status_FailedToTurnPowerOn {
+            get {
+                return ResourceManager.GetString("Status_FailedToTurnPowerOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Turning power OFF....
+        /// </summary>
+        public static string Status_TurningPowerOff {
+            get {
+                return ResourceManager.GetString("Status_TurningPowerOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power turned OFF.
+        /// </summary>
+        public static string Status_PowerTurnedOff {
+            get {
+                return ResourceManager.GetString("Status_PowerTurnedOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to turn power OFF.
+        /// </summary>
+        public static string Status_FailedToTurnPowerOff {
+            get {
+                return ResourceManager.GetString("Status_FailedToTurnPowerOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Reading power state....
+        /// </summary>
+        public static string Status_ReadingPowerState {
+            get {
+                return ResourceManager.GetString("Status_ReadingPowerState", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power state: {0}.
+        /// </summary>
+        public static string Status_PowerStateOnOff {
+            get {
+                return ResourceManager.GetString("Status_PowerStateOnOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error reading state: {0}.
+        /// </summary>
+        public static string Status_ReadStateError {
+            get {
+                return ResourceManager.GetString("Status_ReadStateError", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Not connected to power supply.
+        /// </summary>
+        public static string Status_NotConnectedToPowerSupply {
+            get {
+                return ResourceManager.GetString("Status_NotConnectedToPowerSupply", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power cycle: Turning OFF....
+        /// </summary>
+        public static string Status_PowerCycleTurningOff {
+            get {
+                return ResourceManager.GetString("Status_PowerCycleTurningOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power cycle failed: Could not turn OFF.
+        /// </summary>
+        public static string Status_PowerCycleFailedCouldNotTurnOff {
+            get {
+                return ResourceManager.GetString("Status_PowerCycleFailedCouldNotTurnOff", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power cycle: Waiting {0}ms before turning ON....
+        /// </summary>
+        public static string Status_PowerCycleWaitingBeforeTurningOn {
+            get {
+                return ResourceManager.GetString("Status_PowerCycleWaitingBeforeTurningOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power cycle: Turning ON....
+        /// </summary>
+        public static string Status_PowerCycleTurningOn {
+            get {
+                return ResourceManager.GetString("Status_PowerCycleTurningOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power cycle failed: Could not turn ON.
+        /// </summary>
+        public static string Status_PowerCycleFailedCouldNotTurnOn {
+            get {
+                return ResourceManager.GetString("Status_PowerCycleFailedCouldNotTurnOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Power cycle: Waiting {0}ms to stabilize....
+        /// </summary>
+        public static string Status_PowerCycleWaitingToStabilize {
+            get {
+                return ResourceManager.GetString("Status_PowerCycleWaitingToStabilize", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profiles path set to: {0}.
+        /// </summary>
+        public static string Status_ProfilesPathSetTo {
+            get {
+                return ResourceManager.GetString("Status_ProfilesPathSetTo", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to set profiles path: Access denied.
+        /// </summary>
+        public static string Status_FailedToSetProfilesPathAccessDenied {
+            get {
+                return ResourceManager.GetString("Status_FailedToSetProfilesPathAccessDenied", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to set profiles path: {0}.
+        /// </summary>
+        public static string Status_FailedToSetProfilesPath {
+            get {
+                return ResourceManager.GetString("Status_FailedToSetProfilesPath", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Opening profiles folder....
+        /// </summary>
+        public static string Status_OpeningProfilesFolder {
+            get {
+                return ResourceManager.GetString("Status_OpeningProfilesFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profiles path not configured.
+        /// </summary>
+        public static string Status_ProfilesPathNotConfigured {
+            get {
+                return ResourceManager.GetString("Status_ProfilesPathNotConfigured", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Creating profiles folder....
+        /// </summary>
+        public static string Status_CreatingProfilesFolder {
+            get {
+                return ResourceManager.GetString("Status_CreatingProfilesFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profiles folder opened.
+        /// </summary>
+        public static string Status_ProfilesFolderOpened {
+            get {
+                return ResourceManager.GetString("Status_ProfilesFolderOpened", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to open folder: Access denied.
+        /// </summary>
+        public static string Status_FailedToOpenFolderAccessDenied {
+            get {
+                return ResourceManager.GetString("Status_FailedToOpenFolderAccessDenied", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to open folder: {0}.
+        /// </summary>
+        public static string Status_FailedToOpenFolder {
+            get {
+                return ResourceManager.GetString("Status_FailedToOpenFolder", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Profiles path reset to default.
+        /// </summary>
+        public static string Status_ProfilesPathReset {
+            get {
+                return ResourceManager.GetString("Status_ProfilesPathReset", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to reset profiles path: {0}.
+        /// </summary>
+        public static string Status_FailedToResetProfilesPath {
+            get {
+                return ResourceManager.GetString("Status_FailedToResetProfilesPath", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Failed to load settings.
+        /// </summary>
+        public static string Status_WarningFailedToLoadSettings {
+            get {
+                return ResourceManager.GetString("Status_WarningFailedToLoadSettings", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error during {0}: {1}.
+        /// </summary>
+        public static string Status_ErrorOperation {
+            get {
+                return ResourceManager.GetString("Status_ErrorOperation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to ON.
+        /// </summary>
+        public static string Value_PowerOn {
+            get {
+                return ResourceManager.GetString("Value_PowerOn", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to OFF.
+        /// </summary>
+        public static string Value_PowerOff {
+            get {
+                return ResourceManager.GetString("Value_PowerOff", resourceCulture);
+            }
+        }
     }
 }

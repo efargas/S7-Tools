@@ -283,17 +283,17 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
         if (SelectedProfile == null)
         {
-            errors.Add("Memory region profile must be selected");
+            errors.Add(UIStrings.Validation_MemoryRegionProfileRequired);
             return errors;
         }
 
         if (SelectedSegmentCount == 0)
         {
-            errors.Add("Exactly one segment must be selected for dumping");
+            errors.Add(UIStrings.Validation_ExactlyOneSegmentRequired);
         }
         else if (SelectedSegmentCount > 1)
         {
-            errors.Add("Only one segment can be selected per job");
+            errors.Add(UIStrings.Validation_OnlyOneSegmentAllowed);
         }
 
         // Validate the profile itself
