@@ -591,6 +591,7 @@ git log --follow docs/new/location.md
 - [Index](../INDEX.md)
 - [Overview](../architecture/overview.md)
 - [Development Workflow](development-workflow.md)
+- [Versioning Guide](versioning-guide.md)
 - [_Index](../patterns/_index.md)
 
 ---

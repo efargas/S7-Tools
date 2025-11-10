@@ -441,11 +441,10 @@ See `docs/.metadata/schema.json` for the complete frontmatter JSON Schema.
 
 ## Related Documentation
 
-- [Memory Bank Usage Guide](./memory-bank-usage.md)
-- [Development Workflow](./development-workflow.md)
-- [Frontmatter Schema](../.metadata/schema.json)
-- [Pattern Template](../templates/pattern-template.md)
+- [Index](../INDEX.md)
+- [_Index](migration/_index.md)
+- [Breaking Changes](migration/breaking-changes.md)
+- [Deprecated Patterns](migration/deprecated-patterns.md)
 
 ---
-
-**Maintenance**: This guide follows its own versioning rules. When updating, increment version and add history entry.
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

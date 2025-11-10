@@ -2415,10 +2415,16 @@ This reference provides patterns for:
 - [Code Style](../guides/code-style.md)
 - [Development Workflow](../guides/development-workflow.md)
 - [Memory Bank Usage](../guides/memory-bank-usage.md)
+- [_Index](../guides/migration/_index.md)
+- [Deprecated Patterns](../guides/migration/deprecated-patterns.md)
 - [Onboarding](../guides/onboarding.md)
 - [Testing Guide](../guides/testing-guide.md)
 - [Custom Exceptions](custom-exceptions.md)
+- [Internal Method](internal-method.md)
+- [Profile Management](profile-management.md)
+- [Resource Coordination](resource-coordination.md)
 - [Reusable Controls](reusable-controls.md)
+- [Pattern Template](../templates/pattern-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

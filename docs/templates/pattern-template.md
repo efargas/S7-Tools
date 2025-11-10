@@ -116,16 +116,8 @@ public async Task TestExample()
 
 ## Related Documentation
 
-- [Pattern Index](../patterns/_index.md)
-- [Architecture Overview](../architecture/overview.md)
+- [Index](../INDEX.md)
+- [Versioning Guide](../guides/versioning-guide.md)
 
 ---
-
-**Maintenance Notes**:
-- Update `last-updated` field when making changes
-- Increment `version` according to semantic versioning rules:
-  - **PATCH** (x.y.Z): Typos, clarifications, no semantic change
-  - **MINOR** (x.Y.0): New sections, expanded examples, backward compatible
-  - **MAJOR** (X.0.0): Breaking changes, pattern redesign
-- Add entry to Version History section for each version bump
-- Keep examples synchronized with actual codebase
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

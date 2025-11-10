@@ -262,3 +262,10 @@ When external code reviews flag issues:
 - ❌ Forgetting to unsubscribe event handlers in Dispose
 
 This architecture enables rapid development while maintaining clean separation of concerns and excellent testability.
+
+## Related Documentation
+
+- [Project_Folders_Structure_Blueprint](../docs/Project_Folders_Structure_Blueprint.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

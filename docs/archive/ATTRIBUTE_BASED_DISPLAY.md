@@ -247,3 +247,10 @@ The attribute-based approach provides:
 - **Maintainability**: Self-documenting models that specify UI requirements
 - **Flexibility**: Easy to adjust display without changing UI code
 - **Robustness**: Protected against accidental display of internal properties
+
+## Related Documentation
+
+- [Attribute_Based_Display](../ATTRIBUTE_BASED_DISPLAY.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

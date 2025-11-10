@@ -26,6 +26,7 @@ And a link to the [broken document](./broken-link.md) which doesn't exist.
 ## Related Documentation
 
 - [Related Doc](related-doc.md)
+- [Versioned Doc](versioned-doc.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -85,6 +85,7 @@ See [New Improved Pattern](./superseding-doc.md) for the replacement documentati
 ## Related Documentation
 
 - [Superseding Doc](superseding-doc.md)
+- [Versioned Doc](versioned-doc.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

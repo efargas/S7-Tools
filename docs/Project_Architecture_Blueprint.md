@@ -36,3 +36,14 @@ If you were using this document:
 4. Update references - Update any bookmarks or links to point to the new location
 
 For questions or concerns, please file an issue in the repository.
+
+## Related Documentation
+
+- [Clean Architecture](architecture/clean-architecture.md)
+- [Mvvm Patterns](architecture/mvvm-patterns.md)
+- [Overview](architecture/overview.md)
+- [Project_Architecture_Blueprint](archive/Project_Architecture_Blueprint.md)
+- [Deprecated Patterns](guides/migration/deprecated-patterns.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

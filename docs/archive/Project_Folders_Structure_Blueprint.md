@@ -1686,17 +1686,7 @@ This blueprint works in conjunction with:
 
 ## Related Documentation
 
-- **UI Integration Workflow**: `UI_INTEGRATION_WORKFLOW.md` - Complete UI integration guide
-- **UI Templates**: `templates/ui-integration/` - Scaffolded code templates
-- **Architecture Patterns**: `.copilot-tracking/memory-bank/systemPatterns.md`
-- **Agent Guidelines**: `AGENTS.md` - Agent onboarding
-- **Code Reviews**: `reviews/LATEST_REVIEW.md` - Quality baseline
-- **Coding Instructions**: `.github/copilot-instructions.md`
+- [Project_Folders_Structure_Blueprint](../Project_Folders_Structure_Blueprint.md)
 
 ---
-
-**Version**: 1.3
-**Last Updated**: 2025-10-24
-**Maintainer**: AI Development Agent
-**Review Frequency**: After significant structural changes or at least quarterly
-**Change Log**: See Version History Table in Section 13
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

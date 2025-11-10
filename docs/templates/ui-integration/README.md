@@ -1,3 +1,20 @@
+---
+title: "UI Integration Templates"
+created: "2025-10-30"
+last-updated: "2025-11-10"
+version: "1.0.0"
+status: "current"
+tags:
+  - template
+  - ui
+  - mvvm
+  - avalonia
+related:
+  - docs/guides/UI_INTEGRATION_WORKFLOW.md
+  - docs/patterns/mvvm-patterns.md
+  - docs/architecture/mvvm-patterns.md
+---
+
 # UI Integration Templates
 
 This folder contains scaffolded templates for implementing new features following the S7Tools UI integration pattern.

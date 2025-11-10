@@ -337,10 +337,8 @@ When introducing a breaking change:
 
 ## Related Documentation
 
-- [Migration Index](./_index.md)
-- [Deprecated Patterns](./deprecated-patterns.md)
-- [Versioning Guide](../versioning-guide.md)
+- [_Index](_index.md)
+- [Deprecated Patterns](deprecated-patterns.md)
 
 ---
-
-**Maintenance**: Update this document whenever introducing breaking changes. Include migration guides and impact assessments.
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

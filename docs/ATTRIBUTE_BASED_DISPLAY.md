@@ -35,3 +35,12 @@ If you were using this document:
 3. Update references - Update any bookmarks or links to point to the new location
 
 For questions or concerns, please file an issue in the repository.
+
+## Related Documentation
+
+- [Attribute_Based_Display](archive/ATTRIBUTE_BASED_DISPLAY.md)
+- [Deprecated Patterns](guides/migration/deprecated-patterns.md)
+- [Reusable Controls](patterns/reusable-controls.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

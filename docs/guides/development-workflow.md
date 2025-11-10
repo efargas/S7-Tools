@@ -454,8 +454,10 @@ dotnet build src/S7Tools.sln --configuration Debug
 - [Ai Agent Guide](ai-agent-guide.md)
 - [Code Style](code-style.md)
 - [Memory Bank Usage](memory-bank-usage.md)
+- [_Index](migration/_index.md)
 - [Onboarding](onboarding.md)
 - [Testing Guide](testing-guide.md)
+- [Versioning Guide](versioning-guide.md)
 - [_Index](../patterns/_index.md)
 
 ---

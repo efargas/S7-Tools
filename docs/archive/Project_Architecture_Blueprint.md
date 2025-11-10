@@ -259,3 +259,10 @@ private string EnsureUniqueNameCore(string baseName, int? excludeId = null) { /*
     - Avoid nested semaphore acquisitions (see Memory Bank note).
     - Do not register services in `Program.cs` directly; keep all in extensions.
     - Keep Core free of UI/infrastructure dependencies.
+
+## Related Documentation
+
+- [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

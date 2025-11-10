@@ -105,7 +105,7 @@ When adding new reviews:
 - [Reusable Controls](../patterns/reusable-controls.md)
 - [2025 11 07 Comprehensive Review](2025-11-07-comprehensive-review.md)
 - [2025 11 10 Quality Improvements](2025-11-10-quality-improvements.md)
-- [Archive](archive)
+- [Latest](LATEST.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -584,9 +584,12 @@ public class SerialPortScannerViewModelTests
 
 ## Related Documentation
 
+- [Attribute_Based_Display](../ATTRIBUTE_BASED_DISPLAY.md)
 - [Index](../INDEX.md)
+- [Clean Architecture](../architecture/clean-architecture.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
 - [_Index](_index.md)
+- [Profile Management](profile-management.md)
 - [_Index](../reviews/_index.md)
 
 ---

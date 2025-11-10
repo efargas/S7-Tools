@@ -154,17 +154,8 @@ And a deprecation notice would appear here.
 
 ## Related Documentation
 
-- [Complete Doc Example](./complete-doc.md)
-- [Deprecated Doc Example](./deprecated-doc.md)
+- [Complete Doc](complete-doc.md)
+- [Deprecated Doc](deprecated-doc.md)
 
 ---
-
-**Test Assertions**:
-- ✅ Frontmatter has semantic version (2.1.0)
-- ✅ Version history shows MAJOR, MINOR, PATCH changes
-- ✅ Breaking changes include migration guide with before/after
-- ✅ Git history can be traced using `git log --follow`
-- ✅ Status is "current" (not deprecated)
-
----
-*This is a test fixture. Do not use for actual documentation.*
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

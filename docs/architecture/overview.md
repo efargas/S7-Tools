@@ -641,12 +641,15 @@ sequenceDiagram
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
+- [Project_Folders_Structure_Blueprint](../Project_Folders_Structure_Blueprint.md)
 - [_Index](_index.md)
 - [Ai Agent Guide](../guides/ai-agent-guide.md)
 - [Code Style](../guides/code-style.md)
 - [Development Workflow](../guides/development-workflow.md)
 - [Memory Bank Usage](../guides/memory-bank-usage.md)
 - [Onboarding](../guides/onboarding.md)
+- [Pattern Template](../templates/pattern-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

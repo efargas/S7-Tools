@@ -309,9 +309,26 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 ## Related Documentation
 
 - [_Index](architecture/_index.md)
+- [Clean Architecture](architecture/clean-architecture.md)
+- [_Index](architecture/decisions/_index.md)
+- [Diagrams](architecture/diagrams.md)
+- [Mvvm Patterns](architecture/mvvm-patterns.md)
+- [Overview](architecture/overview.md)
 - [Ai Agent Guide](guides/ai-agent-guide.md)
+- [Code Style](guides/code-style.md)
+- [Development Workflow](guides/development-workflow.md)
 - [Memory Bank Usage](guides/memory-bank-usage.md)
 - [Onboarding](guides/onboarding.md)
+- [Testing Guide](guides/testing-guide.md)
+- [_Index](patterns/_index.md)
+- [Custom Exceptions](patterns/custom-exceptions.md)
+- [Internal Method](patterns/internal-method.md)
+- [Profile Management](patterns/profile-management.md)
+- [Resource Coordination](patterns/resource-coordination.md)
+- [Reusable Controls](patterns/reusable-controls.md)
+- [System Patterns](patterns/system-patterns.md)
+- [2025 11 10 Quality Improvements](reviews/2025-11-10-quality-improvements.md)
+- [Latest](reviews/LATEST.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

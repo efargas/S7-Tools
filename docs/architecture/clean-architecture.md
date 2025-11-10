@@ -633,6 +633,7 @@ When adding new features, verify:
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
 - [_Index](_index.md)
 - [Onboarding](../guides/onboarding.md)
 - [Testing Guide](../guides/testing-guide.md)

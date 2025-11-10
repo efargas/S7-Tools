@@ -306,10 +306,12 @@ When deprecating a pattern:
 
 ## Related Documentation
 
-- [Migration Index](./_index.md)
-- [Breaking Changes](./breaking-changes.md)
-- [Versioning Guide](../versioning-guide.md)
+- [Attribute_Based_Display](../../ATTRIBUTE_BASED_DISPLAY.md)
+- [Index](../../INDEX.md)
+- [Project_Architecture_Blueprint](../../Project_Architecture_Blueprint.md)
+- [Project_Folders_Structure_Blueprint](../../Project_Folders_Structure_Blueprint.md)
+- [_Index](_index.md)
+- [Breaking Changes](breaking-changes.md)
 
 ---
-
-**Maintenance**: Update this document when patterns are deprecated or when deprecations are completed.
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

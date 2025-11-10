@@ -626,6 +626,7 @@ public class StandardProfileManagerTests
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Clean Architecture](../architecture/clean-architecture.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
 - [Ai Agent Guide](../guides/ai-agent-guide.md)
 - [Onboarding](../guides/onboarding.md)

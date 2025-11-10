@@ -715,6 +715,7 @@ public class JobListViewModelTests
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
 - [_Index](_index.md)
 - [Internal Method](../patterns/internal-method.md)
 - [Profile Management](../patterns/profile-management.md)
