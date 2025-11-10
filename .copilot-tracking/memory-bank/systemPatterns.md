@@ -1970,3 +1970,239 @@ public class TaskExecution
 5. **State Management**: Rich TaskExecution model tracks complete lifecycle with timestamps and progress data
 6. **Error Context**: Domain-specific exceptions with comprehensive error information and retry attempt tracking
 7. **Clean Disposal**: Proper resource cleanup with semaphore disposal and memory management
+
+---
+
+## Memory Region Profile Pattern (November 2025)
+
+### **Overview**
+
+The Memory Region Profile pattern provides a flexible system for defining, managing, and selecting PLC memory dump configurations. It enables users to create reusable memory region templates with segment definitions, validation, and profile-based selection.
+
+### **Architecture Components**
+
+#### **MemoryMappingProfile (Domain Model)**
+
+\`\`\`csharp
+// Core model for memory region configuration
+public class MemoryMappingProfile : IProfileBase
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public List<MemorySegment> Segments { get; set; } = new();
+    public bool IsDefault { get; set; }
+    public bool IsReadOnly { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime ModifiedAt { get; set; }
+
+    // Template factory methods
+    public static MemoryMappingProfile CreateS7Template()
+    {
+        return new MemoryMappingProfile
+        {
+            Name = "S7-1200 Standard Layout",
+            Description = "Standard S7-1200 PLC memory layout",
+            Segments = new List<MemorySegment>
+            {
+                new() { Name = ".text", StartAddress = MemoryConstants.DefaultUserMemoryStartHex, Size = "0x800", Description = "Code segment" },
+                new() { Name = ".data", StartAddress = MemoryConstants.DefaultUserMemoryStartHex, Size = "0x400", Description = "Initialized data" },
+                new() { Name = ".bss", StartAddress = "0x20000C00", Size = "0x200", Description = "Uninitialized data" }
+            }
+        };
+    }
+}
+\`\`\`
+
+
+
+---
+
+## Memory Region Profile Pattern (November 2025)
+
+### **Overview**
+
+The Memory Region Profile pattern provides a flexible system for defining, managing, and selecting PLC memory dump configurations. It enables users to create reusable memory region templates with segment definitions, validation, and profile-based selection.
+
+### **Key Components**
+
+- **MemoryMappingProfile**: Domain model with segment list, metadata, and template factory methods
+- **Segment Editor**: DataGrid-based UI for defining memory segments (.text, .data, .bss, etc.)
+- **Validation**: Hex address validation, segment overlap detection, size validation
+- **Import/Export**: JSON-based profile sharing with conflict resolution
+- **Job Wizard Integration**: Profile selection with automatic memory region configuration
+
+### **Benefits**
+
+1. **Reusability**: Templates can be shared across jobs and exported for team collaboration
+2. **Validation**: Segment overlap detection and address validation prevent memory dump errors
+3. **Flexibility**: Support for custom segments, sizes, and descriptions
+4. **Standards Compliance**: Uses MemoryConstants for standard S7-1200 addresses (0x20000000)
+
+### **Anti-Patterns**
+
+- ❌ Hardcoding memory addresses in job profiles
+- ❌ Skipping segment validation (can cause PLC communication errors)
+- ❌ Allowing segment overlaps without warnings
+
+---
+
+## Job Wizard Pattern (Multi-Step Workflow)
+
+### **Overview**
+
+The Job Wizard pattern implements a multi-step configuration workflow for creating complex bootloader jobs. It coordinates profile selection from four different profile types with validation, memory presets, and fallback mechanisms.
+
+### **Key Components**
+
+- **Step Management**: CurrentStep/TotalSteps tracking with conditional navigation
+- **Profile Coordination**: Manages 4 profile types (Serial, Socat, PowerSupply, MemoryMapping)
+- **Validation**: Per-step validation with CanGoNext reactive observable
+- **Memory Presets**: Quick configuration (4KB Boot Sector, 64KB Full Dump, Custom Range)
+- **Fallback Mechanism**: Optional memory mapping with manual configuration fallback
+
+### **Workflow Steps**
+
+1. **Serial Port Selection** (Required): Choose communication port profile
+2. **Network Bridge Selection** (Required): Select Socat TCP/UDP bridge configuration
+3. **Power Supply Selection** (Required): Choose PLC power control profile
+4. **Memory Region Configuration** (Optional): Select memory mapping profile OR use manual config
+5. **Review and Confirm**: Validate complete job configuration before creation
+
+### **Benefits**
+
+1. **Guided Workflow**: Step-by-step process prevents configuration errors
+2. **Profile Coordination**: Seamlessly integrates 4 different profile types
+3. **Validation**: Per-step validation with clear error messages
+4. **Fallback Support**: Optional memory mapping with manual configuration fallback
+5. **Flexibility**: Mix profile-based and manual configuration
+
+### **Anti-Patterns**
+
+- ❌ Skipping validation on optional steps (always validate even if optional)
+- ❌ Not providing fallback for optional profiles (causes null reference errors)
+- ❌ Allowing navigation without validating current step
+- ❌ Forgetting to load profiles on wizard initialization
+
+---
+
+## Resource Path Management Pattern
+
+### **Overview**
+
+The Resource Path Management pattern provides centralized configuration of application resource paths with support for relative/absolute paths, user overrides, and settings integration.
+
+### **Key Components**
+
+- **ApplicationSettingsService**: Centralized settings with event-driven updates
+- **PathService**: Path resolution (relative → absolute), standard resource paths
+- **Settings Refresh Pattern**: ViewModels subscribe to SettingsChanged events
+- **Three-Tier Fallback**: resolved → profile-specific → default directory
+
+### **Settings Schema Convention**
+
+```
+logging.*          - Logging configuration (logDirectory, exportDirectory, level)
+ui.*               - UI preferences (autoScrollLogs, showTimestampInLogs)
+profiles.*         - Profile paths (serialPath, socatPath, powerSupplyPath)
+powerSupply.*      - Power supply specific settings
+```
+
+### **Path Resolution Flow**
+
+1. Get Setting → Extract Directory → Resolve Path
+2. Valid & Exists? → Use Resolved Path
+3. Invalid? → Use Profile Directory
+4. Exception? → Safe Fallback + User Notification
+
+### **Benefits**
+
+1. **Centralized Configuration**: Single source of truth for all application paths
+2. **Flexible Paths**: Support for both relative and absolute paths
+3. **Event-Driven Updates**: ViewModels auto-refresh when settings change
+4. **Robust Fallbacks**: Three-tier fallback prevents null/invalid paths
+
+### **Anti-Patterns**
+
+- ❌ Hardcoding paths in ViewModels (use PathService)
+- ❌ Not validating path existence before use
+- ❌ Forgetting to unsubscribe event handlers (memory leaks)
+- ❌ Using string concatenation for paths (use Path.Combine)
+
+---
+
+## Application Settings Service Pattern
+
+### **Overview**
+
+The Application Settings Service pattern provides centralized, type-safe configuration management with event-driven updates, persistence, and seamless ViewModel integration.
+
+### **Key Components**
+
+- **Generic Get/Set**: Type-safe setting access with default values
+- **Event Notification**: SettingsChanged event for reactive updates
+- **JSON Persistence**: Automatic save/load with indented formatting
+- **Resource Coordinator**: Parallel service initialization for fast startup
+- **Validation Support**: Optional validators for critical settings
+
+### **ViewModel Integration Pattern**
+
+```csharp
+// Subscribe to settings changes with filter
+_settingsChangedHandler = (_, args) =>
+{
+    if (args.Key.StartsWith("logging."))
+    {
+        LoadFromSettings();
+    }
+};
+_settingsService.SettingsChanged += _settingsChangedHandler;
+
+// CRITICAL: Always unsubscribe in Dispose
+protected override void Dispose(bool disposing)
+{
+    if (disposing && _settingsChangedHandler != null)
+    {
+        _settingsService.SettingsChanged -= _settingsChangedHandler;
+    }
+    base.Dispose(disposing);
+}
+```
+
+### **Parallel Initialization Pattern**
+
+```csharp
+// Resource Coordinator for fast startup
+public async Task InitializeAsync(CancellationToken ct = default)
+{
+    var tasks = new List<Task>
+    {
+        _settingsService.LoadAsync(),
+        InitializeProfileServicesAsync(),
+        InitializeLoggingServicesAsync()
+    };
+    await Task.WhenAll(tasks);
+}
+```
+
+### **Benefits**
+
+1. **Centralized Configuration**: Single service manages all application settings
+2. **Type Safety**: Generic Get/Set methods with type conversion
+3. **Event-Driven Updates**: ViewModels auto-refresh when settings change
+4. **Parallel Initialization**: Fast startup with parallel service initialization
+5. **Logging Integration**: Full observability of setting changes
+
+### **Anti-Patterns**
+
+- ❌ Not unsubscribing from SettingsChanged (memory leaks)
+- ❌ Circular update loops (check _isLoadingFromSettings flag)
+- ❌ Blocking UI thread during SaveAsync/LoadAsync
+- ❌ Storing large objects in settings (use separate config files)
+- ❌ Calling SaveAsync on every property change (batch updates)
+
+---
+
+**Document Status**: Authoritative consolidated edition (v2.2). Review after major architectural changes or when critical patterns evolve.
+
+**Last Updated**: 2025-11-10 (P1 Task 5: Added 4 new architectural patterns)
