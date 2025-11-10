@@ -37,6 +37,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private readonly IFileDialogService? _fileDialogService;
     private readonly CompositeDisposable _disposables = new();
     private readonly IViewModelFactory _vmFactory;
+
+    // Resource strings (cached for performance)
+    private static readonly string NotAvailable = UIStrings.ResourceManager.GetString("Value_NotAvailable") ?? "N/A";
+    private static readonly string NotConfigured = UIStrings.ResourceManager.GetString("Value_NotConfigured") ?? "Not configured";
+
     // Removed power scan resources
 
     public enum WizardStep
@@ -426,13 +431,13 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 // Check if contiguous
                 string contiguityInfo = SelectedMemoryRegion.HasContiguousSelection()
                     ? ""
-                    : " (Warning: Non-contiguous)";
+                    : UIStrings.ResourceManager.GetString("Warning_NonContiguousSegments") ?? " (Warning: Non-contiguous)";
 
                 return $"{SelectedMemoryRegion.Name} - {selectedSegments.Count} segment(s) selected: {segmentNames} ({totalSizeFormatted}){contiguityInfo}";
             }
             catch
             {
-                return "Not configured";
+                return NotConfigured;
             }
         }
     }
@@ -466,7 +471,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             }
             catch
             {
-                return "Not configured";
+                return NotConfigured;
             }
         }
     }
@@ -496,7 +501,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             {
                 return modbusTcp.Host;
             }
-            return "N/A";
+            return NotAvailable;
         }
     }
 
@@ -511,7 +516,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             {
                 return modbusTcp.Port.ToString();
             }
-            return "N/A";
+            return NotAvailable;
         }
     }
 
@@ -526,7 +531,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             {
                 return modbusTcp.DeviceId.ToString();
             }
-            return "N/A";
+            return NotAvailable;
         }
     }
 
@@ -806,69 +811,69 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the baud rate of the selected serial profile as a string.
     /// </summary>
-    public string SerialBaudRate => SelectedSerial?.Configuration?.BaudRate.ToString() ?? "N/A";
+    public string SerialBaudRate => SelectedSerial?.Configuration?.BaudRate.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the character size of the selected serial profile as a string.
     /// </summary>
-    public string SerialCharacterSize => SelectedSerial?.Configuration?.CharacterSize.ToString() ?? "N/A";
+    public string SerialCharacterSize => SelectedSerial?.Configuration?.CharacterSize.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the parity of the selected serial profile as a string.
     /// </summary>
-    public string SerialParity => SelectedSerial?.Configuration?.Parity.ToString() ?? "N/A";
+    public string SerialParity => SelectedSerial?.Configuration?.Parity.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the stop bits of the selected serial profile as a string.
     /// </summary>
-    public string SerialStopBits => SelectedSerial?.Configuration?.StopBits.ToString() ?? "N/A";
+    public string SerialStopBits => SelectedSerial?.Configuration?.StopBits.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets whether the receiver is enabled in the selected serial profile.
     /// </summary>
     public string SerialEnableReceiver => SelectedSerial?.Configuration?.EnableReceiver == true ? "Yes" :
-                                         SelectedSerial?.Configuration?.EnableReceiver == false ? "No" : "N/A";
+                                         SelectedSerial?.Configuration?.EnableReceiver == false ? "No" : NotAvailable;
 
     /// <summary>
     /// Gets the version of the selected serial profile.
     /// </summary>
-    public string SerialVersion => SelectedSerial?.Version ?? "N/A";
+    public string SerialVersion => SelectedSerial?.Version ?? NotAvailable;
 
     /// <summary>
     /// Gets the creation date of the selected serial profile.
     /// </summary>
-    public string SerialCreatedAt => SelectedSerial?.CreatedAt.ToString(DateTimeFormats.ShortDateTime) ?? "N/A";
+    public string SerialCreatedAt => SelectedSerial?.CreatedAt.ToString(DateTimeFormats.ShortDateTime) ?? NotAvailable;
 
     /// <summary>
     /// Gets the TCP port of the selected socat profile.
     /// </summary>
-    public string SocatTcpPort => SelectedSocat?.Configuration?.TcpPort.ToString() ?? "N/A";
+    public string SocatTcpPort => SelectedSocat?.Configuration?.TcpPort.ToString() ?? NotAvailable;
 
     /// <summary>
     /// Gets the TCP host of the selected socat profile.
     /// </summary>
-    public string SocatTcpHost => SelectedSocat?.Configuration?.TcpHost ?? "N/A";
+    public string SocatTcpHost => SelectedSocat?.Configuration?.TcpHost ?? NotAvailable;
 
     /// <summary>
     /// Gets whether verbose mode is enabled in the selected socat profile.
     /// </summary>
     public string SocatVerbose => SelectedSocat?.Configuration?.Verbose == true ? "Yes" :
-                                 SelectedSocat?.Configuration?.Verbose == false ? "No" : "N/A";
+                                 SelectedSocat?.Configuration?.Verbose == false ? "No" : NotAvailable;
 
     /// <summary>
     /// Gets the host of the selected power supply profile.
     /// </summary>
-    public string PowerHost => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Host : "N/A";
+    public string PowerHost => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Host : NotAvailable;
 
     /// <summary>
     /// Gets the port of the selected power supply profile.
     /// </summary>
-    public string PowerPort => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Port.ToString() : "N/A";
+    public string PowerPort => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.Port.ToString() : NotAvailable;
 
     /// <summary>
     /// Gets the device ID of the selected power supply profile.
     /// </summary>
-    public string PowerDeviceId => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.DeviceId.ToString() : "N/A";
+    public string PowerDeviceId => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.DeviceId.ToString() : NotAvailable;
 
     #endregion
 

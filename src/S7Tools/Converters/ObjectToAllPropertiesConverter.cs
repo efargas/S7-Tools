@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Avalonia.Data.Converters;
+using S7Tools.Core.Constants;
 using S7Tools.ViewModels.Controls;
 using S7Tools.ViewModels.Profiles;
 namespace S7Tools.Converters;
@@ -157,12 +158,12 @@ public class ObjectToAllPropertiesConverter : IValueConverter
 
         if (value is DateTime dateTime)
         {
-            return dateTime.ToString("yyyy-MM-dd HH:mm");
+            return dateTime.ToString(DateTimeFormats.ShortDateTime);
         }
 
         if (value is DateTimeOffset dateTimeOffset)
         {
-            return dateTimeOffset.ToString("yyyy-MM-dd HH:mm");
+            return dateTimeOffset.ToString(DateTimeFormats.ShortDateTime);
         }
 
         return value.ToString() ?? "N/A";

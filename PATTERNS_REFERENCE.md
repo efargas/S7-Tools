@@ -1,9 +1,9 @@
 # S7Tools Architectural Patterns Reference
-**Version**: 1.1
-**Last Updated**: 2025-11-07
+**Version**: 1.2
+**Last Updated**: 2025-11-10
 **Purpose**: Comprehensive reference for all architectural patterns used in S7Tools
 
-**Note**: Version 1.1 includes ViewModels/Views categorization (November 6, 2025) and post-reorganization validation (November 7, 2025).
+**Note**: Version 1.2 includes Memory Region Profiling, Job Wizard pattern, ProfileEditDialogService, and Application Settings Service (November 10, 2025).
 
 ---
 
@@ -15,8 +15,11 @@
 4. [MVVM & ReactiveUI Patterns](#mvvm--reactiveui-patterns)
 5. [Service Patterns](#service-patterns)
 6. [Task Management Patterns](#task-management-patterns)
-7. [Error Handling Patterns](#error-handling-patterns)
-8. [Testing Patterns](#testing-patterns)
+7. [Dialog Patterns](#dialog-patterns)
+8. [Wizard Patterns](#wizard-patterns)
+9. [Settings Management Patterns](#settings-management-patterns)
+10. [Error Handling Patterns](#error-handling-patterns)
+11. [Testing Patterns](#testing-patterns)
 
 ---
 
@@ -263,6 +266,252 @@ public class SerialPortProfileService : StandardProfileManager<SerialPortProfile
 **Key Files**:
 - `src/S7Tools/Services/StandardProfileManager.cs` - Base implementation
 - `src/S7Tools/Services/*ProfileService.cs` - Concrete implementations
+
+---
+
+### 3a. Memory Region Profile Management Pattern
+
+**Description**: Specialized profile management for memory dump configurations with segment selection
+
+**Purpose**:
+- Define custom memory regions for PLC dumps
+- Select specific segments to dump (Work, DB, etc.)
+- Support multi-segment dumps with contiguity validation
+- Import/export memory region profiles
+
+**Domain Model**:
+```csharp
+public class MemoryRegionProfile : IProfileBase
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public List<MemorySegment> Segments { get; set; } = new();
+    public DateTime CreatedAt { get; set; }
+    public DateTime ModifiedAt { get; set; }
+    public bool IsDefault { get; set; }
+    public bool CanModify() => !IsSystemProfile;
+    public bool CanDelete() => !IsSystemProfile && !IsDefault;
+
+    // Helper methods
+    public IEnumerable<MemorySegment> GetSelectedSegments()
+        => Segments.Where(s => s.IsSelected);
+
+    public bool AreSelectedSegmentsContiguous()
+    {
+        var selected = GetSelectedSegments().OrderBy(s => s.StartAddress).ToList();
+        if (selected.Count <= 1) return true;
+
+        for (int i = 0; i < selected.Count - 1; i++)
+        {
+            var current = selected[i];
+            var next = selected[i + 1];
+            if (current.StartAddress + current.Size != next.StartAddress)
+                return false;
+        }
+        return true;
+    }
+
+    public uint GetTotalSize()
+        => (uint)GetSelectedSegments().Sum(s => (long)s.Size);
+}
+
+public class MemorySegment
+{
+    public string Name { get; set; } = string.Empty;
+    public uint StartAddress { get; set; }
+    public uint Size { get; set; }
+    public bool IsSelected { get; set; }
+    public string Description { get; set; } = string.Empty;
+}
+```
+
+**Service Implementation**:
+```csharp
+public class MemoryRegionProfileService
+    : StandardProfileManager<MemoryRegionProfile>,
+      IMemoryRegionProfileService
+{
+    protected override MemoryRegionProfile CreateDefaultProfile()
+    {
+        return new MemoryRegionProfile
+        {
+            Name = "Default Memory Region",
+            Segments = new List<MemorySegment>
+            {
+                new() { Name = "Work Memory", StartAddress = 0x20000000,
+                        Size = 0x1000, IsSelected = true },
+                new() { Name = "DB Memory", StartAddress = 0x20001000,
+                        Size = 0x2000, IsSelected = false }
+            }
+        };
+    }
+
+    protected override async Task<ValidationResult> ValidateProfileAsync(
+        MemoryRegionProfile profile, CancellationToken ct)
+    {
+        var errors = new List<ValidationError>();
+
+        if (string.IsNullOrWhiteSpace(profile.Name))
+            errors.Add(new ValidationError("Name", "Name is required"));
+
+        if (profile.Segments == null || profile.Segments.Count == 0)
+            errors.Add(new ValidationError("Segments", "At least one segment required"));
+
+        var selected = profile.GetSelectedSegments().ToList();
+        if (selected.Count == 0)
+            errors.Add(new ValidationError("Segments",
+                "At least one segment must be selected"));
+
+        // Check for overlapping segments
+        for (int i = 0; i < profile.Segments.Count - 1; i++)
+        {
+            var current = profile.Segments[i];
+            for (int j = i + 1; j < profile.Segments.Count; j++)
+            {
+                var other = profile.Segments[j];
+                if (SegmentsOverlap(current, other))
+                    errors.Add(new ValidationError("Segments",
+                        $"Segments '{current.Name}' and '{other.Name}' overlap"));
+            }
+        }
+
+        return errors.Count == 0
+            ? ValidationResult.Success()
+            : ValidationResult.Failure(errors.ToArray());
+    }
+
+    private bool SegmentsOverlap(MemorySegment a, MemorySegment b)
+    {
+        var aEnd = a.StartAddress + a.Size;
+        var bEnd = b.StartAddress + b.Size;
+        return (a.StartAddress < bEnd && aEnd > b.StartAddress);
+    }
+
+    // Additional methods for import/export
+    public async Task<MemoryRegionProfile> ImportFromFileAsync(
+        string filePath, CancellationToken ct = default)
+    {
+        var json = await File.ReadAllTextAsync(filePath, ct);
+        var profile = JsonSerializer.Deserialize<MemoryRegionProfile>(json)
+            ?? throw new InvalidOperationException("Failed to deserialize profile");
+
+        // Validate and create
+        return await CreateAsync(profile, ct);
+    }
+
+    public async Task ExportToFileAsync(
+        int profileId, string filePath, CancellationToken ct = default)
+    {
+        var profile = await GetByIdAsync(profileId, ct);
+        var json = JsonSerializer.Serialize(profile,
+            new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(filePath, json, ct);
+    }
+}
+```
+
+**ViewModel Integration Example**:
+```csharp
+public class MemoryRegionSettingsViewModel : ViewModelBase
+{
+    private readonly IMemoryRegionProfileService _profileService;
+    private ObservableCollection<MemoryRegionProfile> _profiles = new();
+    private MemoryRegionProfile? _selectedProfile;
+
+    public async Task LoadProfilesAsync()
+    {
+        var profiles = await _profileService.GetAllAsync();
+        Profiles.Clear();
+        Profiles.AddRange(profiles);
+
+        // Select default or first
+        SelectedProfile = profiles.FirstOrDefault(p => p.IsDefault)
+                       ?? profiles.FirstOrDefault();
+    }
+
+    public async Task ImportProfileAsync()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filters = new List<FileDialogFilter>
+            {
+                new() { Name = "Memory Region Profile", Extensions = { "json" } }
+            }
+        };
+
+        var result = await dialog.ShowAsync(GetParentWindow());
+        if (result?.Length > 0)
+        {
+            try
+            {
+                var imported = await _profileService.ImportFromFileAsync(result[0]);
+                await LoadProfilesAsync();
+                SelectedProfile = Profiles.FirstOrDefault(p => p.Id == imported.Id);
+                StatusMessage = UIStrings.Status_ProfileImported;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to import profile");
+                StatusMessage = string.Format(UIStrings.Error_ImportFailed, ex.Message);
+            }
+        }
+    }
+}
+```
+
+**Job Wizard Integration**:
+```csharp
+// In JobWizardMemoryRegionStepViewModel
+public void ValidateStep()
+{
+    var errors = new List<string>();
+
+    if (SelectedProfile == null)
+    {
+        errors.Add(UIStrings.Validation_MemoryRegionRequired);
+        IsValid = false;
+        return;
+    }
+
+    var selectedSegments = SelectedProfile.GetSelectedSegments().ToList();
+
+    if (selectedSegments.Count == 0)
+    {
+        errors.Add(UIStrings.Validation_AtLeastOneSegmentRequired);
+    }
+    else if (selectedSegments.Count == 1)
+    {
+        // Single segment is always valid
+        IsValid = true;
+    }
+    else
+    {
+        // Multi-segment requires contiguity
+        if (!SelectedProfile.AreSelectedSegmentsContiguous())
+        {
+            ValidationWarning = UIStrings.Warning_NonContiguousSegments;
+            // Still valid, just warn the user
+        }
+    }
+
+    IsValid = errors.Count == 0;
+    ValidationErrors = string.Join(Environment.NewLine, errors);
+}
+```
+
+**Key Features**:
+- Segment-based memory mapping
+- Selection validation (single or contiguous)
+- Overlap detection
+- Import/export functionality
+- Integration with Job Wizard
+- Configurable via Application Settings
+
+**Key Files**:
+- `src/S7Tools.Core/Models/MemoryRegionProfile.cs` - Domain model
+- `src/S7Tools/Services/MemoryRegionProfileService.cs` - Service implementation
+- `src/S7Tools/ViewModels/Settings/MemoryRegionSettingsViewModel.cs` - Settings UI
+- `src/S7Tools/ViewModels/Jobs/JobWizardMemoryRegionStepViewModel.cs` - Wizard integration
 
 ---
 
@@ -1015,6 +1264,829 @@ public class EnhancedTaskScheduler : ITaskScheduler
 
 ---
 
+## Dialog Patterns
+
+### 16. ProfileEditDialogService Pattern
+
+**Description**: Centralized service for managing Create/Edit/Duplicate profile dialogs with consistent success patterns
+
+**Purpose**:
+- Eliminate code duplication across profile management ViewModels
+- Standardize dialog workflows (Create, Edit, Duplicate)
+- Enforce consistent collection refresh and selection patterns
+- Handle dialog parent resolution automatically
+
+**Service Interface**:
+```csharp
+public interface IProfileEditDialogService
+{
+    Task<T?> ShowCreateDialogAsync<T>(
+        Visual parentWindow,
+        Func<Task<T>> createCallback,
+        Action<T>? onSuccess = null)
+        where T : class, IProfileBase;
+
+    Task<T?> ShowEditDialogAsync<T>(
+        Visual parentWindow,
+        T profile,
+        Func<T, Task<T>> editCallback,
+        Action<T>? onSuccess = null)
+        where T : class, IProfileBase;
+
+    Task<T?> ShowDuplicateDialogAsync<T>(
+        Visual parentWindow,
+        T sourceProfile,
+        Func<T, Task<T>> duplicateCallback,
+        Action<T>? onSuccess = null)
+        where T : class, IProfileBase;
+}
+```
+
+**Implementation Pattern**:
+```csharp
+public class ProfileEditDialogService : IProfileEditDialogService
+{
+    private readonly ILogger<ProfileEditDialogService> _logger;
+
+    public async Task<T?> ShowCreateDialogAsync<T>(
+        Visual parentWindow,
+        Func<Task<T>> createCallback,
+        Action<T>? onSuccess = null)
+        where T : class, IProfileBase
+    {
+        try
+        {
+            // Create and show dialog
+            var dialog = CreateDialogFor<T>(DialogMode.Create);
+            var result = await dialog.ShowDialog<T?>(parentWindow);
+
+            if (result == null)
+                return null; // User cancelled
+
+            // Execute callback (service CreateAsync)
+            var created = await createCallback();
+
+            // Invoke success callback (refresh collection, reselect)
+            onSuccess?.Invoke(created);
+
+            return created;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create profile");
+            throw;
+        }
+    }
+
+    public async Task<T?> ShowEditDialogAsync<T>(
+        Visual parentWindow,
+        T profile,
+        Func<T, Task<T>> editCallback,
+        Action<T>? onSuccess = null)
+        where T : class, IProfileBase
+    {
+        try
+        {
+            var dialog = CreateDialogFor<T>(DialogMode.Edit, profile);
+            var result = await dialog.ShowDialog<T?>(parentWindow);
+
+            if (result == null)
+                return null;
+
+            var updated = await editCallback(result);
+            onSuccess?.Invoke(updated);
+
+            return updated;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to edit profile");
+            throw;
+        }
+    }
+
+    private Window CreateDialogFor<T>(DialogMode mode, T? existingProfile = null)
+        where T : class, IProfileBase
+    {
+        // Resolve correct dialog type based on T
+        // Return new instance with ViewModel configured
+        throw new NotImplementedException();
+    }
+}
+```
+
+**ViewModel Usage Pattern**:
+```csharp
+public class SerialProfilesViewModel : ViewModelBase
+{
+    private readonly ISerialPortProfileService _profileService;
+    private readonly IProfileEditDialogService _dialogService;
+    private ObservableCollection<SerialPortProfile> _profiles = new();
+
+    public ReactiveCommand<Unit, Unit> CreateCommand { get; }
+    public ReactiveCommand<SerialPortProfile, Unit> EditCommand { get; }
+    public ReactiveCommand<SerialPortProfile, Unit> DuplicateCommand { get; }
+
+    public SerialProfilesViewModel(
+        ISerialPortProfileService profileService,
+        IProfileEditDialogService dialogService)
+    {
+        _profileService = profileService;
+        _dialogService = dialogService;
+
+        CreateCommand = ReactiveCommand.CreateFromTask(CreateProfileAsync);
+        EditCommand = ReactiveCommand.CreateFromTask<SerialPortProfile>(
+            EditProfileAsync);
+        DuplicateCommand = ReactiveCommand.CreateFromTask<SerialPortProfile>(
+            DuplicateProfileAsync);
+    }
+
+    private async Task CreateProfileAsync()
+    {
+        var parent = GetParentWindow();
+
+        await _dialogService.ShowCreateDialogAsync<SerialPortProfile>(
+            parent,
+            createCallback: async () =>
+            {
+                // Dialog already validated and created profile
+                // Service will save it
+                var newProfile = /* get from dialog */;
+                return await _profileService.CreateAsync(newProfile);
+            },
+            onSuccess: created =>
+            {
+                // Refresh and reselect
+                RefreshProfilesAndSelect(created.Name);
+            });
+    }
+
+    private async Task EditProfileAsync(SerialPortProfile profile)
+    {
+        var parent = GetParentWindow();
+
+        await _dialogService.ShowEditDialogAsync(
+            parent,
+            profile,
+            editCallback: async (modified) =>
+            {
+                return await _profileService.UpdateAsync(modified);
+            },
+            onSuccess: updated =>
+            {
+                RefreshProfilesAndSelect(updated.Id);
+            });
+    }
+
+    private async Task DuplicateProfileAsync(SerialPortProfile source)
+    {
+        var parent = GetParentWindow();
+
+        await _dialogService.ShowDuplicateDialogAsync(
+            parent,
+            source,
+            duplicateCallback: async (duplicated) =>
+            {
+                return await _profileService.CreateAsync(duplicated);
+            },
+            onSuccess: created =>
+            {
+                RefreshProfilesAndSelect(created.Name);
+            });
+    }
+
+    private void RefreshProfilesAndSelect(string profileName)
+    {
+        // Load all profiles
+        var profiles = await _profileService.GetAllAsync();
+
+        // Replace entire collection (triggers DataGrid refresh)
+        Profiles.Clear();
+        Profiles.AddRange(profiles);
+
+        // Reselect by name (for create/duplicate)
+        SelectedProfile = profiles.FirstOrDefault(p => p.Name == profileName);
+    }
+
+    private void RefreshProfilesAndSelect(int profileId)
+    {
+        var profiles = await _profileService.GetAllAsync();
+        Profiles.Clear();
+        Profiles.AddRange(profiles);
+
+        // Reselect by ID (for edit)
+        SelectedProfile = profiles.FirstOrDefault(p => p.Id == profileId);
+    }
+}
+```
+
+**Dialog Success Pattern** (CRITICAL):
+
+When a dialog completes successfully:
+
+1. **Close dialog ONLY after SaveAsync succeeds**
+   ```csharp
+   // In dialog ViewModel
+   private async Task SaveAsync()
+   {
+       IsValid = await ValidateAsync();
+       if (!IsValid) return;
+
+       try
+       {
+           // Update profile with form values
+           UpdateProfileFromForm();
+
+           // Close with result (triggers callback)
+           CloseDialog(updatedProfile);
+       }
+       catch (Exception ex)
+       {
+           // Do NOT close dialog on error
+           _logger.LogError(ex, "Failed to save");
+           StatusMessage = $"Error: {ex.Message}";
+       }
+   }
+   ```
+
+2. **Replace entire ObservableCollection to trigger refresh**
+   ```csharp
+   // ❌ WRONG - DataGrid won't refresh selection properly
+   var updated = await _service.UpdateAsync(profile);
+   var existing = Profiles.First(p => p.Id == updated.Id);
+   Profiles[Profiles.IndexOf(existing)] = updated;
+
+   // ✅ CORRECT - Full refresh guarantees UI sync
+   var profiles = await _service.GetAllAsync();
+   Profiles.Clear();
+   Profiles.AddRange(profiles);
+   ```
+
+3. **Reselect by ID for Edit, by Name for Create/Duplicate**
+   ```csharp
+   // After Edit - use ID (stable identifier)
+   SelectedProfile = profiles.FirstOrDefault(p => p.Id == editedId);
+
+   // After Create/Duplicate - use Name (ID not known beforehand)
+   SelectedProfile = profiles.FirstOrDefault(p => p.Name == createdName);
+   ```
+
+**Key Benefits**:
+- Eliminates 50+ lines of boilerplate per ViewModel
+- Consistent success patterns across all profile types
+- Centralized error handling and logging
+- Easy to test (mock dialog service)
+- Type-safe generic implementation
+
+**Key Files**:
+- `src/S7Tools/Services/ProfileEditDialogService.cs` - Service implementation
+- `src/S7Tools/ViewModels/Dialogs/*ProfileDialogViewModel.cs` - Dialog ViewModels
+- `src/S7Tools/ViewModels/Profiles/*ProfilesViewModel.cs` - Usage examples
+
+---
+
+## Wizard Patterns
+
+### 17. Multi-Step Wizard Pattern
+
+**Description**: Multi-step wizard with navigation, validation, and state management
+
+**Purpose**:
+- Guide users through complex multi-step workflows
+- Validate each step before proceeding
+- Maintain state across steps
+- Support navigation (Next, Previous, Finish)
+
+**Architecture**:
+```
+JobWizardViewModel (Coordinator)
+├── JobWizardSerialStepViewModel (Step 1)
+├── JobWizardSocatStepViewModel (Step 2)
+├── JobWizardPowerSupplyStepViewModel (Step 3)
+├── JobWizardMemoryRegionStepViewModel (Step 4)
+└── JobWizardSummaryStepViewModel (Step 5)
+```
+
+**Base Step ViewModel**:
+```csharp
+public abstract class WizardStepViewModel : ViewModelBase
+{
+    private bool _isValid;
+    private string _validationErrors = string.Empty;
+
+    public bool IsValid
+    {
+        get => _isValid;
+        protected set => this.RaiseAndSetIfChanged(ref _isValid, value);
+    }
+
+    public string ValidationErrors
+    {
+        get => _validationErrors;
+        protected set => this.RaiseAndSetIfChanged(ref _validationErrors, value);
+    }
+
+    public abstract string StepTitle { get; }
+    public abstract int StepNumber { get; }
+
+    public abstract void ValidateStep();
+    public abstract Task LoadDataAsync();
+    public abstract Task<bool> SaveStepDataAsync();
+}
+```
+
+**Coordinator ViewModel**:
+```csharp
+public class JobWizardViewModel : ViewModelBase
+{
+    private readonly List<WizardStepViewModel> _steps;
+    private int _currentStepIndex;
+    private WizardStepViewModel _currentStep;
+
+    public ReactiveCommand<Unit, Unit> NextCommand { get; }
+    public ReactiveCommand<Unit, Unit> PreviousCommand { get; }
+    public ReactiveCommand<Unit, Unit> FinishCommand { get; }
+    public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+
+    public JobWizardViewModel(/* inject step ViewModels */)
+    {
+        _steps = new List<WizardStepViewModel>
+        {
+            _serialStep,
+            _socatStep,
+            _powerSupplyStep,
+            _memoryRegionStep,
+            _summaryStep
+        };
+
+        // Command validation
+        var canGoNext = this.WhenAnyValue(
+            x => x.CurrentStep.IsValid,
+            x => x.CurrentStepIndex,
+            (valid, index) => valid && index < _steps.Count - 1);
+
+        var canGoPrevious = this.WhenAnyValue(
+            x => x.CurrentStepIndex,
+            index => index > 0);
+
+        var canFinish = this.WhenAnyValue(
+            x => x.CurrentStepIndex,
+            x => x.CurrentStep.IsValid,
+            (index, valid) => index == _steps.Count - 1 && valid);
+
+        NextCommand = ReactiveCommand.CreateFromTask(NextAsync, canGoNext);
+        PreviousCommand = ReactiveCommand.Create(Previous, canGoPrevious);
+        FinishCommand = ReactiveCommand.CreateFromTask(FinishAsync, canFinish);
+        CancelCommand = ReactiveCommand.Create(Cancel);
+
+        // Initialize
+        CurrentStep = _steps[0];
+    }
+
+    private async Task NextAsync()
+    {
+        // Validate current step
+        CurrentStep.ValidateStep();
+        if (!CurrentStep.IsValid)
+            return;
+
+        // Save step data
+        if (!await CurrentStep.SaveStepDataAsync())
+            return;
+
+        // Move to next
+        CurrentStepIndex++;
+        CurrentStep = _steps[CurrentStepIndex];
+
+        // Load next step data
+        await CurrentStep.LoadDataAsync();
+    }
+
+    private void Previous()
+    {
+        if (CurrentStepIndex > 0)
+        {
+            CurrentStepIndex--;
+            CurrentStep = _steps[CurrentStepIndex];
+        }
+    }
+
+    private async Task FinishAsync()
+    {
+        try
+        {
+            StatusMessage = UIStrings.Status_CreatingJob;
+
+            // Collect all step data
+            var jobProfile = new JobProfile
+            {
+                SerialPortProfileId = _serialStep.SelectedProfileId,
+                SocatProfileId = _socatStep.SelectedProfileId,
+                PowerSupplyProfileId = _powerSupplyStep.SelectedProfileId,
+                MemoryRegionProfileId = _memoryRegionStep.SelectedProfileId,
+                SelectedSegments = _memoryRegionStep.GetSelectedSegments()
+            };
+
+            // Create job
+            var created = await _jobService.CreateAsync(jobProfile);
+
+            StatusMessage = UIStrings.Status_JobCreated;
+
+            // Close wizard with success
+            CloseDialog(created);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create job");
+            StatusMessage = string.Format(UIStrings.Error_CreateJobFailed, ex.Message);
+        }
+    }
+}
+```
+
+**Step Implementation Example** (Memory Region Step):
+```csharp
+public class JobWizardMemoryRegionStepViewModel : WizardStepViewModel
+{
+    private readonly IMemoryRegionProfileService _profileService;
+    private ObservableCollection<MemoryRegionProfile> _profiles = new();
+    private MemoryRegionProfile? _selectedProfile;
+
+    public override string StepTitle => "Memory Region";
+    public override int StepNumber => 4;
+
+    public async override Task LoadDataAsync()
+    {
+        try
+        {
+            StatusMessage = UIStrings.Status_LoadingMemoryRegionProfiles;
+
+            var profiles = await _profileService.GetAllAsync();
+
+            Profiles.Clear();
+            Profiles.AddRange(profiles);
+
+            // Auto-select default
+            SelectedProfile = profiles.FirstOrDefault(p => p.IsDefault)
+                           ?? profiles.FirstOrDefault();
+
+            if (Profiles.Count == 0)
+            {
+                StatusMessage = UIStrings.Status_NoProfilesAvailable;
+                IsValid = false;
+            }
+            else
+            {
+                StatusMessage = string.Empty;
+                ValidateStep();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load profiles");
+            StatusMessage = string.Format(UIStrings.Error_LoadingProfiles, ex.Message);
+            IsValid = false;
+        }
+    }
+
+    public override void ValidateStep()
+    {
+        var errors = new List<string>();
+
+        if (SelectedProfile == null)
+        {
+            errors.Add(UIStrings.Validation_MemoryRegionRequired);
+            IsValid = false;
+            return;
+        }
+
+        var selectedSegments = SelectedProfile.GetSelectedSegments().ToList();
+
+        if (selectedSegments.Count == 0)
+        {
+            errors.Add(UIStrings.Validation_AtLeastOneSegmentRequired);
+        }
+        else if (selectedSegments.Count > 1)
+        {
+            // Warn if non-contiguous (not an error)
+            if (!SelectedProfile.AreSelectedSegmentsContiguous())
+            {
+                ValidationWarning = UIStrings.Warning_NonContiguousSegments;
+            }
+        }
+
+        IsValid = errors.Count == 0;
+        ValidationErrors = string.Join(Environment.NewLine, errors);
+    }
+
+    public override Task<bool> SaveStepDataAsync()
+    {
+        // Save selection to shared wizard state
+        WizardState.MemoryRegionProfileId = SelectedProfile?.Id;
+        WizardState.SelectedSegments = SelectedProfile?.GetSelectedSegments().ToList();
+        return Task.FromResult(true);
+    }
+
+    public List<MemorySegment> GetSelectedSegments()
+        => SelectedProfile?.GetSelectedSegments().ToList() ?? new();
+}
+```
+
+**Fallback Mechanism** (JobWizardPlaceholderViewModel):
+```csharp
+// Active fallback when step-specific ViewModels are unavailable
+public class JobWizardPlaceholderViewModel : WizardStepViewModel
+{
+    public override string StepTitle => "Loading...";
+    public override int StepNumber => 0;
+
+    public override void ValidateStep()
+    {
+        IsValid = true; // Always valid (placeholder)
+    }
+
+    public override Task LoadDataAsync() => Task.CompletedTask;
+    public override Task<bool> SaveStepDataAsync() => Task.FromResult(true);
+}
+```
+
+**Key Features**:
+- Step-by-step validation
+- Automatic navigation control (Next/Previous/Finish)
+- Shared wizard state across steps
+- Async data loading per step
+- Fallback mechanism for missing steps
+- Integration with profile services
+- Comprehensive error handling
+
+**Key Files**:
+- `src/S7Tools/ViewModels/Jobs/JobWizardViewModel.cs` - Coordinator
+- `src/S7Tools/ViewModels/Jobs/JobWizard*StepViewModel.cs` - Step ViewModels
+- `src/S7Tools/ViewModels/Jobs/JobWizardPlaceholderViewModel.cs` - Fallback
+- `src/S7Tools/Views/Jobs/JobWizardView.axaml` - Wizard UI
+
+---
+
+## Settings Management Patterns
+
+### 18. Application Settings Service Pattern
+
+**Description**: Centralized settings management with change notification and path resolution
+
+**Purpose**:
+- Single source of truth for all application settings
+- Type-safe setting access
+- Change notification for reactive updates
+- Path resolution (relative → absolute)
+- Settings schema validation
+
+**Service Interface**:
+```csharp
+public interface IApplicationSettingsService
+{
+    // Get/Set settings
+    T? GetSetting<T>(string key, T? defaultValue = default);
+    void SetSetting<T>(string key, T value);
+
+    // Path resolution
+    string ResolvePath(string path);
+    string GetProfilePath(string settingKey, string defaultFileName);
+
+    // Change notification
+    event EventHandler<SettingChangedEventArgs> SettingChanged;
+
+    // Bulk operations
+    void ResetToDefaults();
+    Task SaveAsync();
+    Task LoadAsync();
+}
+
+public class SettingChangedEventArgs : EventArgs
+{
+    public string Key { get; init; }
+    public object? OldValue { get; init; }
+    public object? NewValue { get; init; }
+}
+```
+
+**Implementation**:
+```csharp
+public class ApplicationSettingsService : IApplicationSettingsService
+{
+    private readonly Dictionary<string, object> _settings = new();
+    private readonly IPathService _pathService;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    public event EventHandler<SettingChangedEventArgs>? SettingChanged;
+
+    public T? GetSetting<T>(string key, T? defaultValue = default)
+    {
+        _semaphore.Wait();
+        try
+        {
+            if (_settings.TryGetValue(key, out var value))
+            {
+                if (value is T typedValue)
+                    return typedValue;
+
+                // Try conversion
+                try
+                {
+                    return (T)Convert.ChangeType(value, typeof(T));
+                }
+                catch
+                {
+                    return defaultValue;
+                }
+            }
+
+            return defaultValue;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    public void SetSetting<T>(string key, T value)
+    {
+        _semaphore.Wait();
+        try
+        {
+            var oldValue = _settings.TryGetValue(key, out var existing)
+                ? existing
+                : null;
+
+            _settings[key] = value!;
+
+            // Raise change notification
+            SettingChanged?.Invoke(this, new SettingChangedEventArgs
+            {
+                Key = key,
+                OldValue = oldValue,
+                NewValue = value
+            });
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    public string ResolvePath(string path)
+    {
+        return _pathService.ResolvePath(path);
+    }
+
+    public string GetProfilePath(string settingKey, string defaultFileName)
+    {
+        var configuredPath = GetSetting<string>(settingKey);
+
+        if (!string.IsNullOrEmpty(configuredPath))
+        {
+            var resolved = ResolvePath(configuredPath);
+            if (File.Exists(resolved))
+                return resolved;
+        }
+
+        // Fallback to default
+        return ResolvePath(defaultFileName);
+    }
+}
+```
+
+**Settings Schema** (dot notation):
+```csharp
+public static class SettingKeys
+{
+    // Logging settings
+    public const string LoggingEnabled = "logging.enabled";
+    public const string LoggingLevel = "logging.level";
+    public const string LoggingRetentionDays = "logging.retentionDays";
+
+    // UI settings
+    public const string UiShowDemoData = "ui.showDemoData";
+    public const string UiShowPlaceholders = "ui.showPlaceholders";
+    public const string UiTheme = "ui.theme";
+
+    // Profile paths
+    public const string ProfilesSerialPath = "profiles.serial.path";
+    public const string ProfilesSocatPath = "profiles.socat.path";
+    public const string ProfilesPowerSupplyPath = "profiles.powerSupply.path";
+    public const string ProfilesMemoryRegionPath = "profiles.memoryRegion.path";
+    public const string ProfilesJobPath = "profiles.job.path";
+}
+```
+
+**ViewModel Integration** (Settings Refresh Pattern):
+```csharp
+public class SomeViewModel : ViewModelBase
+{
+    private readonly IApplicationSettingsService _settingsService;
+    private readonly IPathService _pathService;
+    private string _profilesPath = string.Empty;
+
+    public SomeViewModel(IApplicationSettingsService settingsService)
+    {
+        _settingsService = settingsService;
+
+        // Subscribe to settings changes (with key filter)
+        _settingsService.SettingChanged += OnSettingChanged;
+
+        // Initial load
+        RefreshFromSettings();
+    }
+
+    private void OnSettingChanged(object? sender, SettingChangedEventArgs e)
+    {
+        // Filter by relevant keys
+        if (e.Key.StartsWith("profiles."))
+        {
+            RefreshFromSettings();
+        }
+    }
+
+    private void RefreshFromSettings()
+    {
+        // Three-tier fallback:
+        // 1. Resolved path from settings
+        // 2. Profile-specific default
+        // 3. Global default
+
+        var configuredPath = _settingsService.GetSetting<string>(
+            SettingKeys.ProfilesSerialPath);
+
+        if (!string.IsNullOrEmpty(configuredPath))
+        {
+            ProfilesPath = _pathService.ResolvePath(configuredPath);
+        }
+        else
+        {
+            ProfilesPath = _pathService.ResolvePath(
+                "src/resources/SerialProfiles/profiles.json");
+        }
+    }
+
+    public override void Dispose()
+    {
+        // CRITICAL: Unsubscribe to prevent memory leaks
+        _settingsService.SettingChanged -= OnSettingChanged;
+        base.Dispose();
+    }
+}
+```
+
+**Path Resolution Pattern**:
+```csharp
+public interface IPathService
+{
+    string ResolvePath(string path);
+    string GetBasePath();
+}
+
+public class PathService : IPathService
+{
+    private readonly string _basePath;
+
+    public PathService()
+    {
+        _basePath = AppDomain.CurrentDomain.BaseDirectory;
+    }
+
+    public string ResolvePath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return _basePath;
+
+        // Already absolute
+        if (Path.IsPathRooted(path))
+            return path;
+
+        // Relative - combine with base
+        return Path.GetFullPath(Path.Combine(_basePath, path));
+    }
+
+    public string GetBasePath() => _basePath;
+}
+```
+
+**Key Features**:
+- Type-safe setting access with generics
+- Change notification with event filtering
+- Three-tier path fallback (configured → profile default → global default)
+- Relative/absolute path resolution
+- Thread-safe with semaphore
+- Bulk save/load operations
+- Settings schema documentation
+
+**Key Files**:
+- `src/S7Tools/Services/ApplicationSettingsService.cs` - Service implementation
+- `src/S7Tools/Services/PathService.cs` - Path resolution
+- `src/S7Tools/Constants/SettingKeys.cs` - Schema constants
+- `docs/SETTINGS_SCHEMA.md` - Full documentation
+
+---
+
 ## Error Handling Patterns
 
 ### 14. Custom Exception Hierarchy Pattern
@@ -1285,14 +2357,17 @@ public async Task CreateAsync_DuplicateName_ShouldThrowWithMessage()
 
 This reference provides patterns for:
 
-1. **Architecture**: Clean Architecture, DI
-2. **Profiles**: Unified management with StandardProfileManager<T>
+1. **Architecture**: Clean Architecture, DI, ViewModels/Views categorization
+2. **Profiles**: Unified management with StandardProfileManager<T>, Memory Region profiling
 3. **Concurrency**: Internal Method Pattern, UI marshaling, resource coordination
 4. **MVVM**: Reactive properties, commands, disposal
-5. **Services**: Decorator pattern, retry logic
+5. **Services**: Decorator pattern, retry logic, Application Settings Service
 6. **Tasks**: State management, priority scheduling
-7. **Errors**: Custom exception hierarchy
-8. **Testing**: AAA pattern, async tests, exception tests
+7. **Dialogs**: ProfileEditDialogService for consistent CRUD workflows
+8. **Wizards**: Multi-step wizards with validation and navigation (Job Wizard)
+9. **Settings**: Centralized settings with change notification and path resolution
+10. **Errors**: Custom exception hierarchy
+11. **Testing**: AAA pattern, async tests, exception tests
 
 **For New Features**:
 1. Identify applicable patterns from this reference

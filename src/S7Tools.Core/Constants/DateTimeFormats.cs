@@ -44,4 +44,22 @@ public static class DateTimeFormats
     /// Example: "14:30"
     /// </summary>
     public const string ShortTime = "HH:mm";
+
+    /// <summary>
+    /// Timestamp format for filenames: "yyyyMMdd_HHmmss"
+    /// Example: "20251110_143045"
+    /// </summary>
+    public const string FileTimestamp = "yyyyMMdd_HHmmss";
+
+    /// <summary>
+    /// Millisecond precision date-time format: "yyyy-MM-dd HH:mm:ss.fff"
+    /// Example: "2025-11-10 14:30:45.123"
+    /// </summary>
+    public const string MillisecondDateTime = "yyyy-MM-dd HH:mm:ss.fff";
+
+    /// <summary>
+    /// Decimal format for IDs: "D"
+    /// Example: "00123"
+    /// </summary>
+    public const string DecimalId = "D";
 }

@@ -5,6 +5,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Resources.Strings;
 using S7Tools.ViewModels.Base;
@@ -400,7 +401,7 @@ public class DuplicateMemoryRegionProfileDialogViewModel : ViewModelBase, IDispo
         }
 
         // Last resort - add timestamp
-        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        string timestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
         return $"{baseName} Copy {timestamp}";
     }
 

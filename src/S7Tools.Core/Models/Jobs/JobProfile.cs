@@ -156,7 +156,11 @@ public class JobProfile : IProfileBase
     /// Gets or sets the memory region configuration for this job.
     /// </summary>
     /// <value>The memory region parameters for the dump operation.</value>
-    /// <remarks>This property is deprecated in favor of MemoryRegionProfileId and will be removed in future versions.</remarks>
+    /// <remarks>
+    /// This property is deprecated in favor of MemoryRegionProfileId and will be removed in version 2.0.0.
+    /// See docs/DEPRECATED_PROPERTY_MIGRATION.md for migration guidance.
+    /// </remarks>
+    [Obsolete("Use MemoryRegionProfileId instead. This property will be removed in version 2.0.0. See docs/DEPRECATED_PROPERTY_MIGRATION.md for migration guidance.", false)]
     [Required(ErrorMessage = "Memory region configuration is required")]
     public MemoryRegionProfile MemoryRegion { get; set; } = new(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize);
 

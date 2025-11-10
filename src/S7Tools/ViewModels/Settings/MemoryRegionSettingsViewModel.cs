@@ -12,6 +12,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
@@ -334,7 +335,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
                     if (mainWindow == null)
                     {
                         _specificLogger.LogError("Could not get main window for dialog parent - ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime or MainWindow is null");
-                        throw new InvalidOperationException("Could not get main window for dialog parent");
+                        throw new DialogParentNotFoundException();
                     }
 
                     _specificLogger.LogDebug("Main window found, showing dialog with parent window: {WindowTitle}", mainWindow.Title);
@@ -372,7 +373,8 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
                 else
                 {
                     _specificLogger.LogError("Dialog succeeded but CreateUpdatedProfile returned null");
-                    return ProfileDialogResult<MemoryMappingProfile>.Failure("Failed to create updated profile from dialog");
+                    return ProfileDialogResult<MemoryMappingProfile>.Failure(
+                        UIStrings.ResourceManager.GetString("Error_ProfileCreationFailed") ?? "Failed to create updated profile from dialog");
                 }
             }
             else if (dialogResult == false)

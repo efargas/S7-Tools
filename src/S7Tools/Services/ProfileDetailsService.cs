@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.ViewModels.Controls;
@@ -118,14 +119,14 @@ public class ProfileDetailsService : IProfileDetailsService
             basicProperties.Add(new PropertyDisplayItem
             {
                 Label = "Created",
-                Value = profile.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                Value = profile.CreatedAt.ToString(DateTimeFormats.LongDateTime),
                 Tooltip = "When this profile was created"
             });
 
             basicProperties.Add(new PropertyDisplayItem
             {
                 Label = "Modified",
-                Value = profile.ModifiedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+                Value = profile.ModifiedAt.ToString(DateTimeFormats.LongDateTime),
                 Tooltip = "When this profile was last modified"
             });
 
@@ -208,7 +209,7 @@ public class ProfileDetailsService : IProfileDetailsService
             string str when string.IsNullOrEmpty(str) => "Not set",
             string str => str,
             bool b => b ? "Yes" : "No",
-            DateTime dt => dt.ToString("yyyy-MM-dd HH:mm:ss"),
+            DateTime dt => dt.ToString(DateTimeFormats.LongDateTime),
             TimeSpan ts => FormatTimeSpan(ts),
             _ => value.ToString() ?? "Unknown"
         };
@@ -463,14 +464,14 @@ public class ProfileDetailsService : IProfileDetailsService
         properties.Add(new PropertyDisplayItem
         {
             Label = "Config Created",
-            Value = config.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Value = config.CreatedAt.ToString(DateTimeFormats.LongDateTime),
             Tooltip = "When this configuration was created"
         });
 
         properties.Add(new PropertyDisplayItem
         {
             Label = "Config Modified",
-            Value = config.ModifiedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Value = config.ModifiedAt.ToString(DateTimeFormats.LongDateTime),
             Tooltip = "When this configuration was last modified"
         });
 
@@ -610,14 +611,14 @@ public class ProfileDetailsService : IProfileDetailsService
         properties.Add(new PropertyDisplayItem
         {
             Label = "Config Created",
-            Value = config.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Value = config.CreatedAt.ToString(DateTimeFormats.LongDateTime),
             Tooltip = "When this configuration was created"
         });
 
         properties.Add(new PropertyDisplayItem
         {
             Label = "Config Modified",
-            Value = config.ModifiedAt.ToString("yyyy-MM-dd HH:mm:ss"),
+            Value = config.ModifiedAt.ToString(DateTimeFormats.LongDateTime),
             Tooltip = "When this configuration was last modified"
         });
 

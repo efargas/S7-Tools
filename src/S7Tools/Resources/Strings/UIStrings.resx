@@ -636,6 +636,10 @@
     <value>Unable to generate unique name after 1000 attempts.</value>
     <comment>Error message when unable to generate a unique profile name</comment>
   </data>
+  <data name="Error_ProfileCreationFailed" xml:space="preserve">
+    <value>Failed to create updated profile from dialog</value>
+    <comment>Error message when profile creation from dialog data fails</comment>
+  </data>
 
   <!-- Common Status Messages -->
   <data name="Status_ProfileLoaded" xml:space="preserve">
@@ -1058,6 +1062,10 @@
     <value>Warning: Failed to load settings</value>
     <comment>Warning message when settings fail to load</comment>
   </data>
+  <data name="Warning_NonContiguousSegments" xml:space="preserve">
+    <value> (Warning: Non-contiguous)</value>
+    <comment>Warning suffix for non-contiguous memory segment selection</comment>
+  </data>
   <data name="Status_ProfileDeletedSuccessfully" xml:space="preserve">
     <value>Profile '{0}' deleted successfully</value>
     <comment>Status message when profile is deleted, {0} is profile name</comment>
@@ -1245,6 +1253,14 @@
   <data name="Value_PowerOff" xml:space="preserve">
     <value>OFF</value>
     <comment>Power state value: OFF</comment>
+  </data>
+  <data name="Value_NotAvailable" xml:space="preserve">
+    <value>N/A</value>
+    <comment>Value placeholder when data is not available</comment>
+  </data>
+  <data name="Value_NotConfigured" xml:space="preserve">
+    <value>Not configured</value>
+    <comment>Value placeholder when item is not configured</comment>
   </data>
 
   <!-- Logging Settings Messages -->
