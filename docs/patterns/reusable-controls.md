@@ -589,9 +589,11 @@ public class SerialPortScannerViewModelTests
 - [Ui_Integration_Workflow](../UI_INTEGRATION_WORKFLOW.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [Overview](../architecture/overview.md)
 - [Attribute_Based_Display](../archive/ATTRIBUTE_BASED_DISPLAY.md)
 - [_Index](_index.md)
 - [Profile Management](profile-management.md)
+- [System Patterns](system-patterns.md)
 - [_Index](../reviews/_index.md)
 
 ---

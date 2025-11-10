@@ -556,6 +556,7 @@ public async Task IsNameUniqueInternal_Should_Ignore_Excluded_Id()
 - [Semaphore Pattern Example](examples/semaphore-pattern-example.md)
 - [Profile Management](profile-management.md)
 - [Resource Coordination](resource-coordination.md)
+- [System Patterns](system-patterns.md)
 - [_Index](../reviews/_index.md)
 
 ---

@@ -294,7 +294,11 @@ var profile = await service.GetByIdAsync(id);  // Returns CustomProfile, not obj
 
 ## Related Documentation
 
+- [Development Workflow](../../guides/development-workflow.md)
+- [Internal Method](../internal-method.md)
 - [Profile Management](../profile-management.md)
+- [Service Template](../../templates/service-template.md)
+- [Viewmodel Template](../../templates/viewmodel-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

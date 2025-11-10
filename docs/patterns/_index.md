@@ -2411,6 +2411,9 @@ This reference provides patterns for:
 
 - [Index](../INDEX.md)
 - [_Index](../architecture/_index.md)
+- [Clean Architecture](../architecture/clean-architecture.md)
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [Overview](../architecture/overview.md)
 - [Ai Agent Guide](../guides/ai-agent-guide.md)
 - [Code Style](../guides/code-style.md)
 - [Development Workflow](../guides/development-workflow.md)

@@ -641,6 +641,7 @@ public class StandardProfileManagerTests
 - [Internal Method](internal-method.md)
 - [Resource Coordination](resource-coordination.md)
 - [Reusable Controls](reusable-controls.md)
+- [System Patterns](system-patterns.md)
 - [_Index](../reviews/_index.md)
 
 ---

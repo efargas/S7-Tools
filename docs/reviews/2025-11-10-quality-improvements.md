@@ -338,6 +338,7 @@ All P0, P1, P2, and P3 tasks are complete. The codebase is now:
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Overview](../architecture/overview.md)
 - [Ai Agent Guide](../guides/ai-agent-guide.md)
 - [Onboarding](../guides/onboarding.md)
 - [Testing Guide](../guides/testing-guide.md)

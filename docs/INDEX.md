@@ -332,6 +332,7 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [2025 11 10 Quality Improvements](reviews/2025-11-10-quality-improvements.md)
 - [Latest](reviews/LATEST.md)
 - [_Index](reviews/_index.md)
+- [Adr Template](templates/adr-template.md)
 - [Pattern Template](templates/pattern-template.md)
 
 ---

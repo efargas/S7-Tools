@@ -322,6 +322,8 @@ This pattern is used in:
 
 ## Related Documentation
 
+- [Code Style](../../guides/code-style.md)
+- [Development Workflow](../../guides/development-workflow.md)
 - [Resource Coordinator Example](resource-coordinator-example.md)
 - [Internal Method](../internal-method.md)
 

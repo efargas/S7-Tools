@@ -674,6 +674,10 @@ This architecture demonstrates:
 
 - [Index](../INDEX.md)
 - [_Index](_index.md)
+- [Clean Architecture](clean-architecture.md)
+- [Mvvm Patterns](mvvm-patterns.md)
+- [Overview](overview.md)
+- [System Patterns](../patterns/system-patterns.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

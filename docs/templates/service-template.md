@@ -82,6 +82,8 @@ services.TryAddSingleton<I[SERVICE_NAME]Service, [SERVICE_NAME]Service>();
 
 ## Related Documentation
 
+- [Clean Architecture](../architecture/clean-architecture.md)
+- [Development Workflow](../guides/development-workflow.md)
 - [Profile Manager Example](../patterns/examples/profile-manager-example.md)
 
 ---

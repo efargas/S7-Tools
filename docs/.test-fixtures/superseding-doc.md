@@ -227,6 +227,7 @@ public async Task ProcessAsync(CancellationToken token)
 ## Related Documentation
 
 - [Deprecated Doc](deprecated-doc.md)
+- [Versioned Doc](versioned-doc.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

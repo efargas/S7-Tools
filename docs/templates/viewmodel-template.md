@@ -227,6 +227,8 @@ this.WhenAnyValue(x => x.Property)
 
 ## Related Documentation
 
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [Development Workflow](../guides/development-workflow.md)
 - [Profile Manager Example](../patterns/examples/profile-manager-example.md)
 
 ---

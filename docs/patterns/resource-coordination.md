@@ -607,6 +607,7 @@ public async Task TryAcquire_Should_Prevent_Concurrent_Access()
 - [Resource Coordinator Example](examples/resource-coordinator-example.md)
 - [Internal Method](internal-method.md)
 - [Profile Management](profile-management.md)
+- [System Patterns](system-patterns.md)
 - [_Index](../reviews/_index.md)
 
 ---

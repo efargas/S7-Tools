@@ -251,6 +251,8 @@ The attribute-based approach provides:
 ## Related Documentation
 
 - [Attribute_Based_Display](../ATTRIBUTE_BASED_DISPLAY.md)
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [Reusable Controls](../patterns/reusable-controls.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

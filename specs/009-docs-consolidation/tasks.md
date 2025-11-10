@@ -220,45 +220,45 @@
 
 ### US2: ADR Migration
 
-- [ ] T060 [P] [US2] Migrate `docs/adr/_index.md` to `docs/architecture/decisions/_index.md` using git mv
-- [ ] T061 [P] [US2] Migrate `docs/adr/_template.md` to `docs/architecture/decisions/_template.md` using git mv
-- [ ] T062 [P] [US2] Migrate `docs/adr/ADR-0001-ui-framework-avalonia-reactiveui.md` to `docs/architecture/decisions/0001-ui-framework.md` using git mv
-- [ ] T063 [P] [US2] Migrate `docs/adr/ADR-0002-logging-inmemory-datastore-provider.md` to `docs/architecture/decisions/0002-logging-provider.md` using git mv
-- [ ] T064 [US2] Add frontmatter metadata to all ADR files (version, created, status, tags)
-- [ ] T065 [US2] Update internal links in ADR files to reference new `docs/` paths
+- [X] T060 [P] [US2] Migrate `docs/adr/_index.md` to `docs/architecture/decisions/_index.md` using git mv
+- [X] T061 [P] [US2] Migrate `docs/adr/_template.md` to `docs/architecture/decisions/_template.md` using git mv
+- [X] T062 [P] [US2] Migrate `docs/adr/ADR-0001-ui-framework-avalonia-reactiveui.md` to `docs/architecture/decisions/0001-ui-framework.md` using git mv
+- [X] T063 [P] [US2] Migrate `docs/adr/ADR-0002-logging-inmemory-datastore-provider.md` to `docs/architecture/decisions/0002-logging-provider.md` using git mv
+- [X] T064 [US2] Add frontmatter metadata to all ADR files (version, created, status, tags)
+- [X] T065 [US2] Update internal links in ADR files to reference new `docs/` paths
 
 ### US2: Code Reviews Migration
 
-- [ ] T066 [P] [US2] Create `docs/reviews/_index.md` as category index with review timeline
-- [ ] T067 [P] [US2] Migrate `reviews/LATEST_REVIEW.md` to `docs/reviews/LATEST.md` as symlink or copy using git mv
-- [ ] T068 [P] [US2] Migrate `reviews/CODE_QUALITY_IMPROVEMENTS_2025-11-10.md` to `docs/reviews/2025-11-10-quality-improvements.md` using git mv
-- [ ] T069 [P] [US2] Migrate `reviews/COMPREHENSIVE_CODE_REVIEW_2025-11-07.md` to `docs/reviews/2025-11-07-comprehensive-review.md` using git mv
-- [ ] T070 [US2] Add frontmatter metadata to all review files with cross-references to affected patterns
-- [ ] T071 [US2] Create bidirectional links from reviews to patterns (e.g., review mentions Profile Management → link to pattern doc)
-- [ ] T072 [US2] Move older reviews to `docs/reviews/archive/` with README explaining archive policy
+- [X] T066 [P] [US2] Create `docs/reviews/_index.md` as category index with review timeline
+- [X] T067 [P] [US2] Migrate `reviews/LATEST_REVIEW.md` to `docs/reviews/LATEST.md` as symlink or copy using git mv
+- [X] T068 [P] [US2] Migrate `reviews/CODE_QUALITY_IMPROVEMENTS_2025-11-10.md` to `docs/reviews/2025-11-10-quality-improvements.md` using git mv
+- [X] T069 [P] [US2] Migrate `reviews/COMPREHENSIVE_CODE_REVIEW_2025-11-07.md` to `docs/reviews/2025-11-07-comprehensive-review.md` using git mv
+- [X] T070 [US2] Add frontmatter metadata to all review files with cross-references to affected patterns
+- [X] T071 [US2] Create bidirectional links from reviews to patterns (e.g., review mentions Profile Management → link to pattern doc)
+- [X] T072 [US2] Move older reviews to `docs/reviews/archive/` with README explaining archive policy
 
 ### US2: Development Guides
 
-- [ ] T073 [P] [US2] Create `docs/guides/development-workflow.md` consolidating terminal commands requirement and daily workflow
-- [ ] T074 [P] [US2] Create `docs/guides/testing-guide.md` extracting testing standards from systemPatterns.md and constitution
-- [ ] T075 [P] [US2] Create `docs/guides/code-style.md` extracting EditorConfig rules and formatting standards
-- [ ] T076 [P] [US2] Create `docs/guides/memory-bank-usage.md` explaining how to maintain Memory Bank (now docs/)
-- [ ] T077 [US2] Add frontmatter metadata and cross-references to all guide files
+- [X] T073 [P] [US2] Create `docs/guides/development-workflow.md` consolidating terminal commands requirement and daily workflow
+- [X] T074 [P] [US2] Create `docs/guides/testing-guide.md` extracting testing standards from systemPatterns.md and constitution
+- [X] T075 [P] [US2] Create `docs/guides/code-style.md` extracting EditorConfig rules and formatting standards
+- [X] T076 [P] [US2] Create `docs/guides/memory-bank-usage.md` explaining how to maintain Memory Bank (now docs/)
+- [X] T077 [US2] Add frontmatter metadata and cross-references to all guide files
 
 ### US2: Automated Cross-Reference Generation
 
-- [ ] T078 [US2] Run cross-reference generator on all `docs/` files to build relationship graph
-- [ ] T079 [US2] Generate "Related Documentation" sections at end of each file based on frontmatter and content links
-- [ ] T080 [US2] Generate `docs/.metadata/cross-references.json` with full bidirectional link graph
-- [ ] T081 [US2] Verify bidirectional links: if A links to B, B should have "Related" section mentioning A
+- [X] T078 [US2] Run cross-reference generator on all `docs/` files to build relationship graph
+- [X] T079 [US2] Generate "Related Documentation" sections at end of each file based on frontmatter and content links
+- [X] T080 [US2] Generate `docs/.metadata/cross-references.json` with full bidirectional link graph
+- [X] T081 [US2] Verify bidirectional links: if A links to B, B should have "Related" section mentioning A
 
 ### US2: Validation and Testing
 
-- [ ] T082 [US2] Run frontmatter validator on all User Story 2 files, verify all metadata complete
-- [ ] T083 [US2] Run markdown-link-check on all User Story 2 files, verify 100% link validity
-- [ ] T084 [US2] Run orphan detector on entire `docs/` directory, verify zero orphans (except intentional like INDEX.md)
-- [ ] T085 [US2] Test documentation update: modify a pattern file, run cross-reference generator, verify related sections auto-update
-- [ ] T086 [US2] Update `docs/.metadata/migration-log.json` with all User Story 2 migrations
+- [X] T082 [US2] Run frontmatter validator on all User Story 2 files, verify all metadata complete
+- [X] T083 [US2] Run markdown-link-check on all User Story 2 files, verify 100% link validity
+- [X] T084 [US2] Run orphan detector on entire `docs/` directory, verify zero orphans (except intentional like INDEX.md)
+- [X] T085 [US2] Test documentation update: modify a pattern file, run cross-reference generator, verify related sections auto-update
+- [X] T086 [US2] Update `docs/.metadata/migration-log.json` with all User Story 2 migrations
 
 **Checkpoint**: Developers can update single canonical files, cross-references auto-generate, orphan detection prevents drift ✅
 
@@ -272,45 +272,45 @@
 
 ### US3: Validation Tests
 
-- [ ] T087 [P] [US3] Create test documentation file with version history section in `docs/.test-fixtures/versioned-doc.md`
-- [ ] T088 [P] [US3] Verify git history preserved for migrated files using `git log --follow`
-- [ ] T089 [P] [US3] Create test deprecated file with supersedes relationship in `docs/.test-fixtures/deprecated-doc.md`
+- [X] T087 [P] [US3] Create test documentation file with version history section in `docs/.test-fixtures/versioned-doc.md`
+- [X] T088 [P] [US3] Verify git history preserved for migrated files using `git log --follow`
+- [X] T089 [P] [US3] Create test deprecated file with supersedes relationship in `docs/.test-fixtures/deprecated-doc.md`
 
 ### US3: Versioning Infrastructure
 
-- [ ] T090 [US3] Create JSON schema for frontmatter metadata at `docs/.metadata/schema.json` (version 1.0.0)
-- [ ] T091 [US3] Enhance frontmatter validator to check semantic versioning format (MAJOR.MINOR.PATCH)
-- [ ] T092 [US3] Add version history section template to all documentation type templates
-- [ ] T093 [US3] Create `docs/guides/versioning-guide.md` explaining when to increment MAJOR/MINOR/PATCH for docs
+- [X] T090 [US3] Create JSON schema for frontmatter metadata at `docs/.metadata/schema.json` (version 1.0.0)
+- [X] T091 [US3] Enhance frontmatter validator to check semantic versioning format (MAJOR.MINOR.PATCH)
+- [X] T092 [US3] Add version history section template to all documentation type templates
+- [X] T093 [US3] Create `docs/guides/versioning-guide.md` explaining when to increment MAJOR/MINOR/PATCH for docs
 
 ### US3: Migration Guides
 
-- [ ] T094 [P] [US3] Create `docs/guides/migration/_index.md` as migration guide category index
-- [ ] T095 [P] [US3] Create `docs/guides/migration/deprecated-patterns.md` listing all deprecated patterns with replacements
-- [ ] T096 [P] [US3] Create `docs/guides/migration/breaking-changes.md` documenting major version changes in patterns
-- [ ] T097 [US3] For each deprecated pattern identified during analysis, add migration entry with before/after examples
-- [ ] T098 [US3] Add frontmatter supersedes fields to all deprecated pattern files pointing to replacements
+- [X] T094 [P] [US3] Create `docs/guides/migration/_index.md` as migration guide category index
+- [X] T095 [P] [US3] Create `docs/guides/migration/deprecated-patterns.md` listing all deprecated patterns with replacements
+- [X] T096 [P] [US3] Create `docs/guides/migration/breaking-changes.md` documenting major version changes in patterns
+- [X] T097 [US3] For each deprecated pattern identified during analysis, add migration entry with before/after examples
+- [X] T098 [US3] Add frontmatter supersedes fields to all deprecated pattern files pointing to replacements
 
 ### US3: Archive Organization
 
-- [ ] T099 [US3] Create `docs/archive/_index.md` with archive policy (2-year retention, deprecation reasons)
-- [ ] T100 [US3] Move deprecated content from `.copilot-tracking/archive/` to `docs/archive/` using git mv
-- [ ] T101 [US3] Add frontmatter to archived files: status=deprecated, archiveDate, removalDate (+2 years), replacement link
-- [ ] T102 [US3] Create archive entry table in `docs/archive/_index.md` with deprecation dates and reasons
+- [X] T099 [US3] Create `docs/archive/_index.md` with archive policy (2-year retention, deprecation reasons)
+- [X] T100 [US3] Move deprecated content from `.copilot-tracking/archive/` to `docs/archive/` using git mv
+- [X] T101 [US3] Add frontmatter to archived files: status=deprecated, archiveDate, removalDate (+2 years), replacement link
+- [X] T102 [US3] Create archive entry table in `docs/archive/_index.md` with deprecation dates and reasons
 
 ### US3: Git History Verification
 
-- [ ] T103 [US3] Run verification script to confirm all migrated files have preserved git history (`git log --follow` check)
-- [ ] T104 [US3] Generate migration report showing old path → new path → git history status for all migrations
-- [ ] T105 [US3] Document git history preservation process in `docs/guides/migration/git-history-preservation.md`
+- [X] T103 [US3] Run verification script to confirm all migrated files have preserved git history (`git log --follow` check)
+- [X] T104 [US3] Generate migration report showing old path → new path → git history status for all migrations
+- [X] T105 [US3] Document git history preservation process in `docs/guides/migration/git-history-preservation.md`
 
 ### US3: Validation and Testing
 
-- [ ] T106 [US3] Run frontmatter validator with strict version format checking on all docs
-- [ ] T107 [US3] Verify all deprecated files have supersedes field pointing to current replacement
-- [ ] T108 [US3] Test version query: use git to checkout specific date, verify documentation reflects patterns current at that time
-- [ ] T109 [US3] Test deprecation workflow: mark pattern deprecated, verify migration guide entry created, verify replacement link valid
-- [ ] T110 [US3] Update `docs/.metadata/migration-log.json` with archive migrations and deprecation metadata
+- [X] T106 [US3] Run frontmatter validator with strict version format checking on all docs
+- [X] T107 [US3] Verify all deprecated files have supersedes field pointing to current replacement
+- [X] T108 [US3] Test version query: use git to checkout specific date, verify documentation reflects patterns current at that time
+- [X] T109 [US3] Test deprecation workflow: mark pattern deprecated, verify migration guide entry created, verify replacement link valid
+- [X] T110 [US3] Update `docs/.metadata/migration-log.json` with archive migrations and deprecation metadata
 
 **Checkpoint**: Documentation versioned, migration paths documented, git history preserved, time-based queries supported ✅
 
@@ -324,53 +324,87 @@
 
 ### US4: Validation Tests
 
-- [ ] T111 [P] [US4] Create test documentation file with related field in frontmatter in `docs/.test-fixtures/cross-ref-source.md`
-- [ ] T112 [P] [US4] Create test documentation file that should be cross-referenced in `docs/.test-fixtures/cross-ref-target.md`
-- [ ] T113 [P] [US4] Run cross-reference generator, verify bidirectional link created between source and target
+- [X] T111 [P] [US4] Create test documentation file with related field in frontmatter in `docs/.test-fixtures/cross-ref-source.md`
+- [X] T112 [P] [US4] Create test documentation file that should be cross-referenced in `docs/.test-fixtures/cross-ref-target.md`
+- [X] T113 [P] [US4] Run cross-reference generator, verify bidirectional link created between source and target
 
 ### US4: Templates Migration
 
-- [ ] T114 [P] [US4] Migrate `docs/templates/ui-integration/` directory to `docs/templates/ui-integration/` (already in correct location, add frontmatter)
-- [ ] T115 [P] [US4] Create `docs/templates/viewmodel-template.cs` with MVVM pattern boilerplate and usage comments
-- [ ] T116 [P] [US4] Create `docs/templates/service-template.cs` with service pattern boilerplate and DI registration example
-- [ ] T117 [P] [US4] Create `docs/templates/test-template.cs` with AAA pattern test boilerplate
-- [ ] T118 [P] [US4] Create `docs/templates/adr-template.md` for Architecture Decision Records
-- [ ] T119 [P] [US4] Create `docs/templates/pattern-template.md` for pattern documentation
-- [ ] T120 [US4] Add frontmatter to all templates with cross-references to related patterns
-- [ ] T121 [US4] Create `docs/templates/_index.md` as template catalog
+- [X] T114 [P] [US4] Migrate `docs/templates/ui-integration/` directory to `docs/templates/ui-integration/` (already in correct location, add frontmatter)
+- [X] T115 [P] [US4] Create `docs/templates/viewmodel-template.cs` with MVVM pattern boilerplate and usage comments
+- [X] T116 [P] [US4] Create `docs/templates/service-template.cs` with service pattern boilerplate and DI registration example
+- [X] T117 [P] [US4] Create `docs/templates/test-template.cs` with AAA pattern test boilerplate
+- [X] T118 [P] [US4] Create `docs/templates/adr-template.md` for Architecture Decision Records
+- [X] T119 [P] [US4] Create `docs/templates/pattern-template.md` for pattern documentation
+- [X] T120 [US4] Add frontmatter to all templates with cross-references to related patterns
+- [X] T121 [US4] Create `docs/templates/_index.md` as template catalog
 
 ### US4: Pattern Examples
 
-- [ ] T122 [P] [US4] Create `docs/patterns/examples/profile-manager-example.cs` demonstrating StandardProfileManager<T> usage
-- [ ] T123 [P] [US4] Create `docs/patterns/examples/semaphore-pattern-example.cs` demonstrating Internal Method Pattern
-- [ ] T124 [P] [US4] Create `docs/patterns/examples/resource-coordinator-example.cs` demonstrating IResourceCoordinator usage
-- [ ] T125 [US4] Add frontmatter to all example files with cross-references to parent pattern docs
-- [ ] T126 [US4] Update pattern docs to link to examples in "See Also" or "Examples" sections
+- [X] T122 [P] [US4] Create `docs/patterns/examples/profile-manager-example.cs` demonstrating StandardProfileManager<T> usage
+- [X] T123 [P] [US4] Create `docs/patterns/examples/semaphore-pattern-example.cs` demonstrating Internal Method Pattern
+- [X] T124 [P] [US4] Create `docs/patterns/examples/resource-coordinator-example.cs` demonstrating IResourceCoordinator usage
+- [X] T125 [US4] Add frontmatter to all example files with cross-references to parent pattern docs
+- [X] T126 [US4] Update pattern docs to link to examples in "See Also" or "Examples" sections
 
 ### US4: Cross-Reference Enhancement
 
-- [ ] T127 [US4] Enhance cross-reference generator to detect code examples in patterns and auto-link to example files
-- [ ] T128 [US4] Enhance cross-reference generator to detect template mentions and auto-link to template files
-- [ ] T129 [US4] Enhance cross-reference generator to detect test references and auto-link to test documentation
-- [ ] T130 [US4] Re-run cross-reference generator on all files with enhanced detection
-- [ ] T131 [US4] Generate visual relationship graph showing pattern → example → template → test links
+- [X] T127 [US4] Enhance cross-reference generator to detect code examples in patterns and auto-link to example files
+- [X] T128 [US4] Enhance cross-reference generator to detect template mentions and auto-link to template files
+- [X] T129 [US4] Enhance cross-reference generator to detect test references and auto-link to test documentation
+- [X] T130 [US4] Re-run cross-reference generator on all files with enhanced detection
+- [X] T131 [US4] Generate visual relationship graph showing pattern → example → template → test links
 
 ### US4: Navigation Testing
 
-- [ ] T132 [US4] Test 2-click navigation: start from `docs/patterns/profile-management.md`, verify example reachable in 1 click
-- [ ] T133 [US4] Test 2-click navigation: start from pattern, verify template reachable in 2 clicks (pattern → example → template)
-- [ ] T134 [US4] Test bidirectional links: verify example file has "Related" section linking back to parent pattern
-- [ ] T135 [US4] Run orphan detector, verify all examples and templates have incoming links from patterns or guides
+- [X] T132 [US4] Test 2-click navigation: start from `docs/patterns/profile-management.md`, verify example reachable in 1 click
+- [X] T133 [US4] Test 2-click navigation: start from pattern, verify template reachable in 2 clicks (pattern → example → template)
+- [X] T134 [US4] Test bidirectional links: verify example file has "Related" section linking back to parent pattern
+- [X] T135 [US4] Run orphan detector, verify all examples and templates have incoming links from patterns or guides
 
 ### US4: Validation and Testing
 
-- [ ] T136 [US4] Run frontmatter validator on all templates and examples, verify metadata complete
-- [ ] T137 [US4] Run markdown-link-check on all User Story 4 files, verify 100% link validity
-- [ ] T138 [US4] Verify pattern coverage: ensure all patterns have at least one linked example and template (SC-010)
-- [ ] T139 [US4] Update `docs/.metadata/cross-references.json` with final bidirectional relationship graph
-- [ ] T140 [US4] Generate coverage report: pattern → example → template mapping with gap identification
+- [X] T136 [US4] Run frontmatter validator on all templates and examples, verify metadata complete
+- [X] T137 [US4] Run markdown-link-check on all User Story 4 files, verify 100% link validity
+- [X] T138 [US4] Verify pattern coverage: ensure all patterns have at least one linked example and template (SC-010)
+- [X] T139 [US4] Update `docs/.metadata/cross-references.json` with final bidirectional relationship graph
+- [X] T140 [US4] Generate coverage report: pattern → example → template mapping with gap identification
 
 **Checkpoint**: All documentation elements cross-referenced, 2-click navigation verified, 100% pattern coverage ✅
+
+---
+
+## Phase 6.5: User Story 5 - Archive Management (Priority: P5)
+
+**Goal**: Implement deprecation policy enforcement and archive management with automated 2-year retention tracking
+
+**Independent Test**: Archive a document, verify 2-year removal date calculated, redirect stub created, inventory updated
+
+### US5: Archive Structure Validation
+
+- [X] T141 [US5] Create `scripts/validate-archive.py` script to validate archive structure and deprecation policy compliance
+- [X] T142 [US5] Verify all archived documents have proper frontmatter (status, deprecated-date, superseded-by, removal-date)
+- [X] T143 [US5] Verify all superseding references exist and are valid
+- [X] T144 [US5] Audit deprecated documents in archive for 2-year retention policy compliance
+- [X] T145 [US5] Create archive inventory with `scripts/archive-inventory.py` generating JSON and human-readable reports
+
+### US5: Automated Cleanup
+
+- [X] T146 [US5] Implement deprecation date tracker in archive-inventory.py showing days until removal
+- [X] T147 [US5] Create `scripts/auto-archive.py` for automated document archiving with redirect stub generation
+- [X] T148 [US5] Add 2-year removal date calculator (deprecated-date + 730 days) to auto-archive.py
+- [X] T149 [US5] Generate deprecation warnings in archived document headers and redirect stubs
+- [X] T150 [US5] Add cross-reference update reminders to auto-archive.py workflow
+
+### US5: Retention Tracking
+
+- [X] T151 [US5] Create removal calendar system integrated into archive-inventory.py
+- [X] T152 [US5] Implement expiration notification system showing days remaining per document
+- [X] T153 [US5] Add archive statistics dashboard (total archived, pending removal, next removal date)
+- [X] T154 [US5] Validate 2-year retention policy enforcement across all archived documents
+- [X] T155 [US5] Document complete archive management workflow in `docs/guides/archive-management.md`
+
+**Checkpoint**: Archive management fully automated, 2-year retention enforced, removal calendar operational ✅
 
 ---
 
@@ -380,61 +414,61 @@
 
 ### Redirect Stubs and Transition Period
 
-- [ ] T141 [P] Create redirect stub at `.copilot-tracking/memory-bank/systemPatterns.md` pointing to `docs/patterns/system-patterns.md`
-- [ ] T142 [P] Create redirect stub at `AGENTS.md` pointing to `docs/guides/ai-agent-guide.md`
-- [ ] T143 [P] Create redirect stub at `PATTERNS_REFERENCE.md` pointing to `docs/patterns/_index.md`
-- [ ] T144 [P] Create redirect stub at `reviews/LATEST_REVIEW.md` pointing to `docs/reviews/LATEST.md`
-- [ ] T145 Update all redirect stubs with deprecation date (2025-11-10) and removal date (2026-02-15, +3 months)
-- [ ] T146 Create calendar reminder task for stub removal date in project tracking system
+- [ ] T156 [P] Create redirect stub at `.copilot-tracking/memory-bank/systemPatterns.md` pointing to `docs/patterns/system-patterns.md`
+- [ ] T157 [P] Create redirect stub at `AGENTS.md` pointing to `docs/guides/ai-agent-guide.md`
+- [ ] T158 [P] Create redirect stub at `PATTERNS_REFERENCE.md` pointing to `docs/patterns/_index.md`
+- [ ] T159 [P] Create redirect stub at `reviews/LATEST_REVIEW.md` pointing to `docs/reviews/LATEST.md`
+- [ ] T160 Update all redirect stubs with deprecation date (2025-11-10) and removal date (2026-02-15, +3 months)
+- [ ] T161 Create calendar reminder task for stub removal date in project tracking system
 
 ### CI/CD Integration
 
-- [ ] T147 Create GitHub Actions workflow file at `.github/workflows/docs-validation.yml`
-- [ ] T148 Add frontmatter validation job to workflow (blocking gate)
-- [ ] T149 Add link validation job to workflow (blocking gate)
-- [ ] T150 Add orphan detection job to workflow (warning, non-blocking)
-- [ ] T151 Add duplicate detection job to workflow (warning, non-blocking)
-- [ ] T152 Configure workflow to run on push and pull_request for any changes to `docs/` directory
-- [ ] T153 Test CI/CD workflow: create test PR with broken link, verify workflow fails
+- [ ] T162 Create GitHub Actions workflow file at `.github/workflows/docs-validation.yml`
+- [ ] T163 Add frontmatter validation job to workflow (blocking gate)
+- [ ] T164 Add link validation job to workflow (blocking gate)
+- [ ] T165 Add orphan detection job to workflow (warning, non-blocking)
+- [ ] T166 Add duplicate detection job to workflow (warning, non-blocking)
+- [ ] T167 Configure workflow to run on push and pull_request for any changes to `docs/` directory
+- [ ] T168 Test CI/CD workflow: create test PR with broken link, verify workflow fails
 
 ### Master Index and Quick Reference
 
-- [ ] T154 Enhance `docs/INDEX.md` with comprehensive table of contents for all categories
-- [ ] T155 Add search tips section to `docs/INDEX.md` (grep examples, tag-based search)
-- [ ] T156 Create `docs/README.md` as entry point with quick navigation and purpose explanation
-- [ ] T157 Add visual diagram to `docs/INDEX.md` showing documentation structure hierarchy
+- [ ] T169 Enhance `docs/INDEX.md` with comprehensive table of contents for all categories
+- [ ] T170 Add search tips section to `docs/INDEX.md` (grep examples, tag-based search)
+- [ ] T171 Create `docs/README.md` as entry point with quick navigation and purpose explanation
+- [ ] T172 Add visual diagram to `docs/INDEX.md` showing documentation structure hierarchy
 
 ### Documentation Templates
 
-- [ ] T158 Create comprehensive documentation template guide at `docs/guides/documentation-templates.md`
-- [ ] T159 Document frontmatter schema with examples in `docs/guides/frontmatter-schema.md`
-- [ ] T160 Create contribution guide for documentation updates at `docs/guides/contributing-to-docs.md`
+- [ ] T173 Create comprehensive documentation template guide at `docs/guides/documentation-templates.md`
+- [ ] T174 Document frontmatter schema with examples in `docs/guides/frontmatter-schema.md`
+- [ ] T175 Create contribution guide for documentation updates at `docs/guides/contributing-to-docs.md`
 
 ### Final Validation and Metrics
 
-- [ ] T161 Run full validation suite on entire `docs/` directory: frontmatter, links, orphans, duplicates
-- [ ] T162 Generate final migration report with statistics: files migrated, duplicates eliminated, links updated
-- [ ] T163 Measure success criteria: time to locate pattern (SC-001), duplicate count (SC-002), link validity (SC-003)
-- [ ] T164 Create documentation quality dashboard at `docs/.metadata/quality-report.md` with validation results
-- [ ] T165 Verify all 10 success criteria from spec.md are measurably met
+- [ ] T176 Run full validation suite on entire `docs/` directory: frontmatter, links, orphans, duplicates
+- [ ] T177 Generate final migration report with statistics: files migrated, duplicates eliminated, links updated
+- [ ] T178 Measure success criteria: time to locate pattern (SC-001), duplicate count (SC-002), link validity (SC-003)
+- [ ] T179 Create documentation quality dashboard at `docs/.metadata/quality-report.md` with validation results
+- [ ] T180 Verify all 10 success criteria from spec.md are measurably met
 
 ### Cleanup (After Transition Period)
 
 ⚠️ **SCHEDULED FOR 2026-02-15** (3 months after migration)
 
-- [ ] T166 Remove `.copilot-tracking/` directory and all contents
-- [ ] T167 Remove root-level `reviews/` directory and all contents
-- [ ] T168 Remove deprecated root-level documentation files (AGENTS.md, PATTERNS_REFERENCE.md, ARCHITECTURE_DIAGRAMS.md)
-- [ ] T169 Update code comments/references that mention old documentation paths
-- [ ] T170 Run final validation sweep to ensure no broken references to removed directories
-- [ ] T171 Update `docs/.metadata/migration-log.json` marking migration complete
+- [ ] T181 Remove `.copilot-tracking/` directory and all contents
+- [ ] T182 Remove root-level `reviews/` directory and all contents
+- [ ] T183 Remove deprecated root-level documentation files (AGENTS.md, PATTERNS_REFERENCE.md, ARCHITECTURE_DIAGRAMS.md)
+- [ ] T184 Update code comments/references that mention old documentation paths
+- [ ] T185 Run final validation sweep to ensure no broken references to removed directories
+- [ ] T186 Update `docs/.metadata/migration-log.json` marking migration complete
 
 ### User Adoption and Training
 
-- [ ] T172 Create announcement document explaining new documentation structure for team
-- [ ] T173 Host documentation walkthrough session demonstrating navigation and update workflow
-- [ ] T174 Create FAQ document addressing common questions about new structure
-- [ ] T175 Monitor first month usage: track broken link reports, gather feedback on navigation
+- [ ] T187 Create announcement document explaining new documentation structure for team
+- [ ] T188 Host documentation walkthrough session demonstrating navigation and update workflow
+- [ ] T189 Create FAQ document addressing common questions about new structure
+- [ ] T190 Monitor first month usage: track broken link reports, gather feedback on navigation
 
 ---
 
@@ -528,14 +562,15 @@ Task T051-T055: Validation and testing (depends on all US1 tasks)
 
 ### Incremental Delivery
 
-1. **Foundation** (Phase 1+2): Validation infrastructure ready → ~3 days
-2. **MVP** (Phase 3): AI agent onboarding enabled → ~2-3 days → Deploy 🚀
-3. **Maintenance** (Phase 4): Developer workflows improved → ~2 days → Deploy 🚀
-4. **History** (Phase 5): Version control and migration guides → ~2 days → Deploy 🚀
-5. **Navigation** (Phase 6): Full cross-reference network → ~2 days → Deploy 🚀
-6. **Production** (Phase 7): CI/CD integration, cleanup → ~1 day → Deploy 🚀
+1. ✅ **Foundation** (Phase 1+2): Validation infrastructure ready → ~3 days
+2. ✅ **MVP** (Phase 3): AI agent onboarding enabled → ~2-3 days → Deploy 🚀
+3. ✅ **Maintenance** (Phase 4): Developer workflows improved → ~2 days → Deploy 🚀
+4. ✅ **History** (Phase 5): Version control and migration guides → ~2 days → Deploy 🚀
+5. ✅ **Navigation** (Phase 6): Full cross-reference network → ~2 days → Deploy 🚀
+6. ✅ **Archive** (Phase 6.5): Archive management automation → ~1 day → Deploy 🚀
+7. ⏭️ **Production** (Phase 7): CI/CD integration, cleanup → ~1 day → Deploy 🚀
 
-**Total Timeline**: ~2-3 weeks for complete implementation
+**Total Timeline**: ~2-3 weeks for complete implementation (12 days delivered, 1 day remaining)
 
 ### Parallel Team Strategy
 
@@ -553,11 +588,34 @@ With 3 developers after Foundational phase:
 
 ## Task Summary
 
-**Total Tasks**: 175 tasks
+**Total Tasks**: 190 tasks (updated from 175 with US5 addition)
 
 **By Phase**:
 
-- Phase 1 (Setup): 9 tasks
+- Phase 1 (Setup): 9 tasks ✅
+- Phase 2 (Foundational): 10 tasks ✅
+- Phase 3 (US1 - AI Agent Onboarding): 36 tasks ✅ (MVP)
+- Phase 4 (US2 - Documentation Maintenance): 31 tasks ✅
+- Phase 5 (US3 - Version Control): 24 tasks ✅
+- Phase 6 (US4 - Cross-References): 30 tasks ✅
+- Phase 6.5 (US5 - Archive Management): 15 tasks ✅
+- Phase 7 (Polish): 35 tasks ⏭️
+
+**Progress Summary**:
+
+- ✅ **Completed**: 155/190 tasks (82%)
+- ⏭️ **Remaining**: 35/190 tasks (18%)
+
+**User Story Status**:
+
+- ✅ US1: AI Agent Onboarding (36/36 - 100%) - MVP DELIVERED
+- ✅ US2: Developer Maintenance (31/31 - 100%)
+- ✅ US3: Version Control Integration (24/24 - 100%)
+- ✅ US4: Cross-Reference Navigation (30/30 - 100%)
+- ✅ US5: Archive Management (15/15 - 100%)
+- ⏭️ US6: Quality & Polish (0/35 - 0%)
+
+**Parallel Opportunities Identified**: 47 tasks marked [P] for parallel execution
 - Phase 2 (Foundational): 10 tasks
 - Phase 3 (US1 - AI Agent Onboarding): 36 tasks (MVP)
 - Phase 4 (US2 - Documentation Maintenance): 31 tasks
@@ -569,12 +627,13 @@ With 3 developers after Foundational phase:
 
 **Independent Test Criteria**:
 
-- US1: AI agent locates pattern from INDEX.md in <30 seconds
-- US2: Single file update, cross-refs auto-generate, zero orphans
-- US3: Query docs by date, retrieve correct version; deprecate pattern, migration guide created
-- US4: Navigate from any pattern to related materials in ≤2 clicks
+- ✅ US1: AI agent locates pattern from INDEX.md in <30 seconds
+- ✅ US2: Single file update, cross-refs auto-generate, zero orphans
+- ✅ US3: Query docs by date, retrieve correct version; deprecate pattern, migration guide created
+- ✅ US4: Navigate from any pattern to related materials in ≤2 clicks
+- ✅ US5: Archive document, verify 2-year removal date, redirect stub created, inventory updated
 
-**Suggested MVP Scope**: Phase 1 + Phase 2 + Phase 3 (User Story 1 only) = 55 tasks
+**Suggested MVP Scope**: Phase 1 + Phase 2 + Phase 3 (User Story 1 only) = 55 tasks ✅ DELIVERED
 
 **Format Validation**: ✅ All tasks follow checklist format: `- [ ] [ID] [P?] [Story?] Description with file path`
 

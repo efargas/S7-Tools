@@ -695,6 +695,7 @@ public async Task SaveAsync()
 - [_Index](_index.md)
 - [Internal Method](internal-method.md)
 - [Profile Management](profile-management.md)
+- [System Patterns](system-patterns.md)
 - [_Index](../reviews/_index.md)
 
 ---

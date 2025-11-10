@@ -305,6 +305,7 @@ For questions or issues:
 ## Related Documentation
 
 - [Ui_Integration_Workflow](../../UI_INTEGRATION_WORKFLOW.md)
+- [Mvvm Patterns](../../architecture/mvvm-patterns.md)
 - [Integration_Checklist](INTEGRATION_CHECKLIST.md)
 
 ---

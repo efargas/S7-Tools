@@ -89,6 +89,8 @@ related:
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [_Index](../architecture/decisions/_index.md)
+- [Development Workflow](../guides/development-workflow.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

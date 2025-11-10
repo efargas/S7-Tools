@@ -98,6 +98,8 @@ When adding new reviews:
 
 ## Related Documentation
 
+- [Index](../INDEX.md)
+- [_Index](../patterns/_index.md)
 - [Custom Exceptions](../patterns/custom-exceptions.md)
 - [Internal Method](../patterns/internal-method.md)
 - [Profile Management](../patterns/profile-management.md)

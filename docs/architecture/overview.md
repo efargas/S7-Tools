@@ -664,6 +664,7 @@ sequenceDiagram
 - [2025 11 07 Comprehensive Review](../reviews/2025-11-07-comprehensive-review.md)
 - [2025 11 10 Quality Improvements](../reviews/2025-11-10-quality-improvements.md)
 - [Latest](../reviews/LATEST.md)
+- [Pattern Template](../templates/pattern-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -263,6 +263,8 @@ private string EnsureUniqueNameCore(string baseName, int? excludeId = null) { /*
 ## Related Documentation
 
 - [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
+- [Clean Architecture](../architecture/clean-architecture.md)
+- [Overview](../architecture/overview.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

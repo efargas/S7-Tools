@@ -356,6 +356,7 @@ Welcome to the team! 🚀
 - [Index](../INDEX.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
 - [Overview](../architecture/overview.md)
+- [Ai Agent Guide](ai-agent-guide.md)
 - [Development Workflow](development-workflow.md)
 - [Testing Guide](testing-guide.md)
 - [_Index](../patterns/_index.md)

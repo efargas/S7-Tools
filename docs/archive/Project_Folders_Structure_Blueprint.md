@@ -1687,6 +1687,8 @@ This blueprint works in conjunction with:
 ## Related Documentation
 
 - [Project_Folders_Structure_Blueprint](../Project_Folders_Structure_Blueprint.md)
+- [Clean Architecture](../architecture/clean-architecture.md)
+- [Overview](../architecture/overview.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
