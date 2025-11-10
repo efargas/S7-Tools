@@ -5,81 +5,89 @@
       "oldPath": ".copilot-tracking/memory-bank/systemPatterns.md",
       "newPath": "docs/patterns/system-patterns.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "ARCHITECTURE_DIAGRAMS.md",
       "newPath": "docs/architecture/diagrams.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "PATTERNS_REFERENCE.md",
       "newPath": "docs/patterns/_index.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "AGENTS.md",
       "newPath": "docs/guides/ai-agent-guide.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "docs/adr/_index.md",
       "newPath": "docs/architecture/decisions/_index.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "docs/adr/_template.md",
       "newPath": "docs/architecture/decisions/_template.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "docs/adr/ADR-0001-ui-framework-avalonia-reactiveui.md",
       "newPath": "docs/architecture/decisions/0001-ui-framework.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "docs/adr/ADR-0002-logging-inmemory-datastore-provider.md",
       "newPath": "docs/architecture/decisions/0002-logging-provider.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "reviews/CODE_QUALITY_IMPROVEMENTS_2025-11-10.md",
       "newPath": "docs/reviews/2025-11-10-quality-improvements.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
     },
     {
       "oldPath": "reviews/COMPREHENSIVE_CODE_REVIEW_2025-11-07.md",
       "newPath": "docs/reviews/2025-11-07-comprehensive-review.md",
       "migrationDate": "2025-11-10",
-      "redirectStubCreated": false,
-      "stubRemovalDate": "",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
       "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "reviews/LATEST_REVIEW.md",
+      "newPath": "docs/reviews/LATEST.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-15",
+      "gitHistoryPreserved": false
     },
     {
       "oldPath": "docs/ATTRIBUTE_BASED_DISPLAY.md",

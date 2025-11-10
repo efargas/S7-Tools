@@ -1,0 +1,146 @@
+name: Documentation Validation
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'scripts/**'
+      - '.markdown-link-check.json'
+      - '.github/workflows/docs-validation.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'scripts/**'
+      - '.markdown-link-check.json'
+      - '.github/workflows/docs-validation.yml'
+
+jobs:
+  markdown-lint:
+    name: Markdown Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install markdownlint-cli
+        run: npm install -g markdownlint-cli
+
+      - name: Run markdown linting
+        run: markdownlint 'docs/**/*.md' --ignore 'docs/.metadata/**' --ignore 'docs/archive/**'
+        continue-on-error: true
+
+  frontmatter-validation:
+    name: Frontmatter Validation (BLOCKING)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install pyyaml
+
+      - name: Validate frontmatter
+        run: python scripts/validate-frontmatter.py docs/
+
+  link-validation:
+    name: Link Validation (BLOCKING)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install markdown-link-check
+        run: npm install -g markdown-link-check
+
+      - name: Check links in documentation
+        run: |
+          find docs -name "*.md" -not -path "docs/.metadata/*" -exec markdown-link-check --config .markdown-link-check.json {} \;
+
+  orphan-detection:
+    name: Orphan Detection (WARNING)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install pyyaml
+
+      - name: Detect orphaned files
+        run: python scripts/detect-orphans.py docs/ --report
+        continue-on-error: true
+
+      - name: Upload orphan report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: orphan-report
+          path: docs/.metadata/reports/orphans.txt
+          if-no-files-found: ignore
+
+  duplicate-detection:
+    name: Duplicate Detection (WARNING)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Detect duplicate content
+        run: python scripts/detect-duplicates.py docs/ --threshold=80 --output=docs/.metadata/reports/duplicates.csv
+        continue-on-error: true
+
+      - name: Upload duplicate report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: duplicate-report
+          path: docs/.metadata/reports/duplicates.csv
+          if-no-files-found: ignore
+
+  validation-summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [frontmatter-validation, link-validation, orphan-detection, duplicate-detection]
+    if: always()
+    steps:
+      - name: Check validation results
+        run: |
+          echo "Documentation Validation Summary"
+          echo "================================"
+          echo ""
+          echo "Frontmatter Validation: ${{ needs.frontmatter-validation.result }}"
+          echo "Link Validation: ${{ needs.link-validation.result }}"
+          echo "Orphan Detection: ${{ needs.orphan-detection.result }} (non-blocking)"
+          echo "Duplicate Detection: ${{ needs.duplicate-detection.result }} (non-blocking)"
+          echo ""
+          if [ "${{ needs.frontmatter-validation.result }}" != "success" ] || [ "${{ needs.link-validation.result }}" != "success" ]; then
+            echo "❌ VALIDATION FAILED: Please fix frontmatter and link errors before merging."
+            exit 1
+          else
+            echo "✅ VALIDATION PASSED: All blocking checks passed."
+          fi

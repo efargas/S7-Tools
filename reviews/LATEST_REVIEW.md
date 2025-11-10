@@ -1,4 +1,35 @@
-# Latest Code Review
+# ⚠️ DOCUMENT MOVED
+
+This document has been **deprecated** and moved to the consolidated documentation structure.
+
+**New Location**: [`docs/reviews/LATEST.md`](../docs/reviews/LATEST.md)
+
+**Deprecation Date**: 2025-11-10
+
+**Removal Date**: 2026-02-15 (3-month transition period)
+
+---
+
+## What Happened?
+
+As part of the documentation consolidation project (spec 009-docs-consolidation), all code reviews have been moved to `docs/reviews/`. The latest review symlink is now at `docs/reviews/LATEST.md`.
+
+## What You Should Do
+
+1. **Update your bookmarks** to point to [`docs/reviews/LATEST.md`](../docs/reviews/LATEST.md)
+2. **Use the reviews index** at [`docs/reviews/_index.md`](../docs/reviews/_index.md) for the complete review timeline
+
+## This File Will Be Removed
+
+This redirect stub will be **permanently removed on 2026-02-15**. Please update your references before that date.
+
+---
+
+*Original content below is outdated. See new location above.*
+
+---
+
+# Latest Code Review (OUTDATED)
 
 **Current Review**: [COMPREHENSIVE_CODE_REVIEW_2025-11-07.md](COMPREHENSIVE_CODE_REVIEW_2025-11-07.md)
 

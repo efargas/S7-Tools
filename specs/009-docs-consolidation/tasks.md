@@ -414,35 +414,35 @@
 
 ### Redirect Stubs and Transition Period
 
-- [ ] T156 [P] Create redirect stub at `.copilot-tracking/memory-bank/systemPatterns.md` pointing to `docs/patterns/system-patterns.md`
-- [ ] T157 [P] Create redirect stub at `AGENTS.md` pointing to `docs/guides/ai-agent-guide.md`
-- [ ] T158 [P] Create redirect stub at `PATTERNS_REFERENCE.md` pointing to `docs/patterns/_index.md`
-- [ ] T159 [P] Create redirect stub at `reviews/LATEST_REVIEW.md` pointing to `docs/reviews/LATEST.md`
-- [ ] T160 Update all redirect stubs with deprecation date (2025-11-10) and removal date (2026-02-15, +3 months)
+- [X] T156 [P] Create redirect stub at `.copilot-tracking/memory-bank/systemPatterns.md` pointing to `docs/patterns/system-patterns.md`
+- [X] T157 [P] Create redirect stub at `AGENTS.md` pointing to `docs/guides/ai-agent-guide.md`
+- [X] T158 [P] Create redirect stub at `PATTERNS_REFERENCE.md` pointing to `docs/patterns/_index.md`
+- [X] T159 [P] Create redirect stub at `reviews/LATEST_REVIEW.md` pointing to `docs/reviews/LATEST.md`
+- [X] T160 Update all redirect stubs with deprecation date (2025-11-10) and removal date (2026-02-15, +3 months)
 - [ ] T161 Create calendar reminder task for stub removal date in project tracking system
 
 ### CI/CD Integration
 
-- [ ] T162 Create GitHub Actions workflow file at `.github/workflows/docs-validation.yml`
-- [ ] T163 Add frontmatter validation job to workflow (blocking gate)
-- [ ] T164 Add link validation job to workflow (blocking gate)
-- [ ] T165 Add orphan detection job to workflow (warning, non-blocking)
-- [ ] T166 Add duplicate detection job to workflow (warning, non-blocking)
-- [ ] T167 Configure workflow to run on push and pull_request for any changes to `docs/` directory
+- [X] T162 Create GitHub Actions workflow file at `.github/workflows/docs-validation.yml`
+- [X] T163 Add frontmatter validation job to workflow (blocking gate)
+- [X] T164 Add link validation job to workflow (blocking gate)
+- [X] T165 Add orphan detection job to workflow (warning, non-blocking)
+- [X] T166 Add duplicate detection job to workflow (warning, non-blocking)
+- [X] T167 Configure workflow to run on push and pull_request for any changes to `docs/` directory
 - [ ] T168 Test CI/CD workflow: create test PR with broken link, verify workflow fails
 
 ### Master Index and Quick Reference
 
-- [ ] T169 Enhance `docs/INDEX.md` with comprehensive table of contents for all categories
-- [ ] T170 Add search tips section to `docs/INDEX.md` (grep examples, tag-based search)
-- [ ] T171 Create `docs/README.md` as entry point with quick navigation and purpose explanation
+- [X] T169 Enhance `docs/INDEX.md` with comprehensive table of contents for all categories
+- [X] T170 Add search tips section to `docs/INDEX.md` (grep examples, tag-based search)
+- [X] T171 Create `docs/README.md` as entry point with quick navigation and purpose explanation
 - [ ] T172 Add visual diagram to `docs/INDEX.md` showing documentation structure hierarchy
 
 ### Documentation Templates
 
-- [ ] T173 Create comprehensive documentation template guide at `docs/guides/documentation-templates.md`
-- [ ] T174 Document frontmatter schema with examples in `docs/guides/frontmatter-schema.md`
-- [ ] T175 Create contribution guide for documentation updates at `docs/guides/contributing-to-docs.md`
+- [X] T173 Create comprehensive documentation template guide at `docs/guides/documentation-templates.md`
+- [X] T174 Document frontmatter schema with examples in `docs/guides/frontmatter-schema.md`
+- [X] T175 Create contribution guide for documentation updates at `docs/guides/contributing-to-docs.md`
 
 ### Final Validation and Metrics
 
