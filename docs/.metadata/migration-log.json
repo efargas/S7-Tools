@@ -80,6 +80,30 @@
       "redirectStubCreated": false,
       "stubRemovalDate": "",
       "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "newPath": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-08",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "docs/Project_Architecture_Blueprint.md",
+      "newPath": "docs/archive/Project_Architecture_Blueprint.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-08",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "docs/Project_Folders_Structure_Blueprint.md",
+      "newPath": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": true,
+      "stubRemovalDate": "2026-02-08",
+      "gitHistoryPreserved": true
     }
   ]
 }

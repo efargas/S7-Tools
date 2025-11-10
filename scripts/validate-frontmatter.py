@@ -54,9 +54,11 @@ class FrontmatterValidator:
     """Validates frontmatter in Markdown documentation files"""
 
     REQUIRED_FIELDS = ['title', 'version', 'created', 'last-updated', 'status', 'tags']
-    VALID_STATUSES = ['current', 'deprecated', 'draft']
-    SEMVER_PATTERN = r'^\d+\.\d+\.\d+$'
-    DATE_PATTERN = r'^\d{4}-\d{2}-\d{2}$'
+    VALID_STATUSES = ['current', 'deprecated', 'draft', 'redirect']
+    # Full semantic versioning pattern (supports pre-release and build metadata)
+    # Examples: 1.0.0, 2.1.3, 1.0.0-beta.1, 3.2.1+build.123
+    SEMVER_PATTERN = r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
+    DATE_PATTERN = r'^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$'
 
     def __init__(self, docs_root: str, strict: bool = False):
         self.docs_root = Path(docs_root)
@@ -118,6 +120,27 @@ class FrontmatterValidator:
             if not isinstance(frontmatter['tags'], list) or len(frontmatter['tags']) == 0:
                 self.add_violation(str(file_path), "META-005", "error",
                                  "Tags must be a non-empty array")
+
+        # Validate deprecated documents have required fields
+        if frontmatter.get('status') == 'deprecated':
+            if 'deprecated-date' not in frontmatter:
+                self.add_violation(str(file_path), "META-007", "error",
+                                 "Deprecated documents must have 'deprecated-date' field")
+            if 'superseded-by' not in frontmatter:
+                self.add_violation(str(file_path), "META-008", "warning",
+                                 "Deprecated documents should have 'superseded-by' field")
+
+            # Validate deprecated-date format
+            if 'deprecated-date' in frontmatter:
+                if not re.match(self.DATE_PATTERN, str(frontmatter['deprecated-date'])):
+                    self.add_violation(str(file_path), "META-003", "error",
+                                     f"Invalid deprecated-date format (expected YYYY-MM-DD, got {frontmatter['deprecated-date']})")
+
+            # Validate removal-date if present
+            if 'removal-date' in frontmatter:
+                if not re.match(self.DATE_PATTERN, str(frontmatter['removal-date'])):
+                    self.add_violation(str(file_path), "META-003", "error",
+                                     f"Invalid removal-date format (expected YYYY-MM-DD, got {frontmatter['removal-date']})")
 
         # Check related paths exist (if specified)
         if 'related' in frontmatter and isinstance(frontmatter['related'], list):

@@ -1,0 +1,229 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/efargas/S7-Tools/docs/metadata-schema.json",
+  "title": "S7Tools Documentation Frontmatter Schema",
+  "description": "JSON Schema for validating YAML frontmatter in S7Tools markdown documentation files",
+  "version": "1.0.0",
+  "type": "object",
+  "required": [
+    "title",
+    "version",
+    "created",
+    "last-updated",
+    "status",
+    "tags"
+  ],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Human-readable title of the document",
+      "minLength": 3,
+      "maxLength": 100,
+      "examples": [
+        "Profile Management Pattern",
+        "Development Workflow Guide"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version in MAJOR.MINOR.PATCH format",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+      "examples": [
+        "1.0.0",
+        "2.1.3",
+        "1.0.0-beta.1",
+        "3.2.1+build.123"
+      ]
+    },
+    "created": {
+      "type": "string",
+      "description": "ISO8601 date when document was first created (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+      "examples": [
+        "2025-01-15",
+        "2025-11-10"
+      ]
+    },
+    "last-updated": {
+      "type": "string",
+      "description": "ISO8601 date when document was last modified (YYYY-MM-DD)",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+      "examples": [
+        "2025-11-10"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "description": "Current lifecycle status of the document",
+      "enum": [
+        "current",
+        "deprecated",
+        "draft"
+      ],
+      "examples": [
+        "current"
+      ]
+    },
+    "tags": {
+      "type": "array",
+      "description": "Categorization tags for search and filtering",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "string",
+        "minLength": 2,
+        "maxLength": 30,
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "uniqueItems": true,
+      "examples": [
+        ["patterns", "profile-management", "mvvm"],
+        ["guide", "testing", "tdd"]
+      ]
+    },
+    "related": {
+      "type": "array",
+      "description": "Paths to related documentation files (relative from repository root)",
+      "items": {
+        "type": "string",
+        "pattern": "^docs/.*\\.md$"
+      },
+      "uniqueItems": true,
+      "maxItems": 10,
+      "examples": [
+        [
+          "docs/architecture/overview.md",
+          "docs/patterns/profile-management.md"
+        ]
+      ]
+    },
+    "supersedes": {
+      "type": "string",
+      "description": "Path to the document this one replaces (for current documents that replaced deprecated ones)",
+      "pattern": "^docs/.*\\.md$",
+      "examples": [
+        "docs/archive/old-pattern.md"
+      ]
+    },
+    "superseded-by": {
+      "type": "string",
+      "description": "Path to the document that replaces this one (for deprecated documents)",
+      "pattern": "^docs/.*\\.md$",
+      "examples": [
+        "docs/patterns/new-pattern.md"
+      ]
+    },
+    "deprecated-date": {
+      "type": "string",
+      "description": "ISO8601 date when document was marked deprecated (required if status=deprecated)",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+      "examples": [
+        "2025-11-10"
+      ]
+    },
+    "removal-date": {
+      "type": "string",
+      "description": "ISO8601 date when deprecated document will be removed (typically deprecated-date + 2 years)",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+      "examples": [
+        "2027-11-10"
+      ]
+    },
+    "archived": {
+      "type": "string",
+      "description": "ISO8601 date when document was moved to archive",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$",
+      "examples": [
+        "2025-11-10"
+      ]
+    },
+    "replacement": {
+      "type": "string",
+      "description": "Path to the replacement document (for archived documents)",
+      "pattern": "^docs/.*\\.md$",
+      "examples": [
+        "docs/patterns/improved-pattern.md"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "deprecated"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "deprecated-date",
+          "superseded-by"
+        ],
+        "properties": {
+          "deprecated-date": {
+            "type": "string"
+          },
+          "superseded-by": {
+            "type": "string"
+          },
+          "removal-date": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "supersedes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "supersedes"
+        ]
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "current"
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "title": "Profile Management Pattern",
+      "version": "1.2.0",
+      "created": "2025-01-15",
+      "last-updated": "2025-11-10",
+      "status": "current",
+      "tags": [
+        "patterns",
+        "profile-management",
+        "mvvm"
+      ],
+      "related": [
+        "docs/architecture/clean-architecture.md",
+        "docs/patterns/internal-method.md"
+      ]
+    },
+    {
+      "title": "Old Pattern (Deprecated)",
+      "version": "1.0.0",
+      "created": "2024-01-15",
+      "last-updated": "2025-11-10",
+      "status": "deprecated",
+      "deprecated-date": "2025-11-10",
+      "superseded-by": "docs/patterns/new-pattern.md",
+      "removal-date": "2027-11-10",
+      "tags": [
+        "patterns",
+        "deprecated"
+      ]
+    }
+  ],
+  "additionalProperties": false
+}
