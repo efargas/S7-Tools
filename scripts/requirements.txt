@@ -1,0 +1,4 @@
+# Python requirements for S7Tools documentation validation scripts
+# Install with: pip install -r requirements.txt
+
+pyyaml>=6.0
