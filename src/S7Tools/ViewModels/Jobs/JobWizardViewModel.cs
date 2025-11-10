@@ -71,8 +71,8 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private readonly CancellationTokenSource _scanCancellationTokenSource = new();
 
     // Memory
-    private uint _memoryStart = 0x20000000;
-    private uint _memoryLength = 0x1000;
+    private uint _memoryStart = MemoryConstants.DefaultUserMemoryStart;
+    private uint _memoryLength = MemoryConstants.DefaultDumpSize;
     public sealed record MemoryPreset(string Name, uint Start, uint Length);
     public ObservableCollection<MemoryPreset> MemoryPresets { get; } = new();
     private MemoryPreset? _selectedMemoryPreset;
@@ -110,7 +110,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         MemoryProfiles = new ObservableCollection<MemoryMappingProfile>();
         AvailablePorts = new ObservableCollection<string>();
         // Initialize memory presets
-        MemoryPresets.Add(new MemoryPreset("4KB Boot Sector", 0x20000000u, 0x1000u));
+        MemoryPresets.Add(new MemoryPreset("4KB Boot Sector", MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize));
         MemoryPresets.Add(new MemoryPreset("8KB Region", 0x20001000u, 0x2000u));
         MemoryPresets.Add(new MemoryPreset("16KB Region", 0x20002000u, 0x4000u));
 

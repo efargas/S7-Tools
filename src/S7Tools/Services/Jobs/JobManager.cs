@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
@@ -92,7 +93,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         var fullTemplate = JobProfile.CreateUserProfile("Full Memory Dump", "Complete memory dump template");
         fullTemplate.IsTemplate = true;
         fullTemplate.Id = 3;
-        fullTemplate.MemoryRegion = new MemoryRegionProfile(0x20000000, 0x10000); // 64KB
+        fullTemplate.MemoryRegion = new MemoryRegionProfile(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.ExtendedDumpSize); // 64KB
         _profiles.Add(fullTemplate);
 
         _logger.LogInformation("Created {Count} job profiles in memory", _profiles.Count);

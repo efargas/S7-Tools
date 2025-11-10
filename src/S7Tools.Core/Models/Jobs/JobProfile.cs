@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Core.Models.Jobs;
@@ -157,7 +158,7 @@ public class JobProfile : IProfileBase
     /// <value>The memory region parameters for the dump operation.</value>
     /// <remarks>This property is deprecated in favor of MemoryRegionProfileId and will be removed in future versions.</remarks>
     [Required(ErrorMessage = "Memory region configuration is required")]
-    public MemoryRegionProfile MemoryRegion { get; set; } = new(0x20000000, 0x1000);
+    public MemoryRegionProfile MemoryRegion { get; set; } = new(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize);
 
     /// <summary>
     /// Gets or sets the payload configuration for this job.
@@ -211,7 +212,7 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1, // Default socat profile
             PowerSupplyProfileId = 1, // Default power supply profile
             MemoryRegionProfileId = 1, // Default memory region profile
-            MemoryRegion = new MemoryRegionProfile(0x20000000, 0x1000), // Default 4KB dump from start of user memory (deprecated)
+            MemoryRegion = new MemoryRegionProfile(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize), // Default 4KB dump from start of user memory (deprecated)
             Payloads = new PayloadSetProfile("./bootloader-payloads"), // Default payload configuration
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
@@ -250,7 +251,7 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1,
             PowerSupplyProfileId = 1,
             MemoryRegionProfileId = 1, // Default to first available memory region profile
-            MemoryRegion = new MemoryRegionProfile(0x20000000, 0x1000),
+            MemoryRegion = new MemoryRegionProfile(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize),
             Payloads = new PayloadSetProfile("./bootloader-payloads"),
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,

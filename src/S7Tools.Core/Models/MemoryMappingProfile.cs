@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json.Serialization;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Core.Models;
@@ -428,7 +429,7 @@ public class MemoryMappingProfile : IProfileBase
                 new()
                 {
                     Name = ".data",
-                    StartAddress = "0x20000000",
+                    StartAddress = MemoryConstants.DefaultUserMemoryStartHex,
                     Size = 16 * 1024,
                     Type = MemorySegmentType.RAM,
                     Description = "Initialized data section"

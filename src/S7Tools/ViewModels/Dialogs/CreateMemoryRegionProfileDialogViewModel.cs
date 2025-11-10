@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Resources;
 using S7Tools.ViewModels.Base;
@@ -330,7 +331,7 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
                 new()
                 {
                     Name = ".data",
-                    StartAddress = "0x20000000",
+                    StartAddress = MemoryConstants.DefaultUserMemoryStartHex,
                     Size = 16 * 1024, // 16 KB
                     Type = MemorySegmentType.RAM,
                     IsSelected = false,
