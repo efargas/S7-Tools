@@ -21,6 +21,18 @@ supersedes: []
 
 ---
 
+## Quick Navigation: Essential Patterns
+
+**New for 2025-11-10**: Five core patterns extracted into dedicated documents for rapid AI agent discovery:
+
+| Pattern Document | Focus | Use When |
+|-----------------|-------|----------|
+| **[Profile Management](profile-management.md)** | IProfileBase, StandardProfileManager<T>, Template Method | Creating/managing profile types (Serial, Socat, PowerSupply, Job, MemoryRegion) |
+| **[Internal Method](internal-method.md)** | Semaphore deadlock prevention | Implementing thread-safe services with concurrent operations |
+| **[Resource Coordination](resource-coordination.md)** | Parallel service initialization | Optimizing startup time, managing resource conflicts |
+| **[Custom Exceptions](custom-exceptions.md)** | Domain-specific exception hierarchy | Error handling with contextual information |
+| **[Reusable Controls](reusable-controls.md)** | UserControl extraction pattern | Eliminating duplicate UI sections (SerialPortDiscoveryControl) |
+
 ## Table of Contents
 
 1. [Core Architectural Patterns](#core-architectural-patterns)
