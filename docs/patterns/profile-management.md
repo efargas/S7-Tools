@@ -622,3 +622,14 @@ public class StandardProfileManagerTests
 **Last Updated**: 2025-11-10
 **Status**: Current implementation standard
 **Pattern Maturity**: Production-proven (5 profile types)
+
+## Related Documentation
+
+- [_Index](_index.md)
+- [Custom Exceptions](custom-exceptions.md)
+- [Internal Method](internal-method.md)
+- [Resource Coordination](resource-coordination.md)
+- [Reusable Controls](reusable-controls.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

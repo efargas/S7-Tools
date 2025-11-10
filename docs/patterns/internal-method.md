@@ -538,3 +538,13 @@ public async Task IsNameUniqueInternal_Should_Ignore_Excluded_Id()
 **Last Updated**: 2025-11-10
 **Status**: Required pattern for all semaphore-protected services
 **Pattern Maturity**: Production-proven (zero deadlocks since implementation)
+
+## Related Documentation
+
+- [_Index](_index.md)
+- [Custom Exceptions](custom-exceptions.md)
+- [Profile Management](profile-management.md)
+- [Resource Coordination](resource-coordination.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

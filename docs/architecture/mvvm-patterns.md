@@ -714,13 +714,9 @@ public class JobListViewModelTests
 
 ## Related Documentation
 
-- [Architecture Overview](overview.md) - Complete system architecture
-- [Clean Architecture](clean-architecture.md) - Layer boundaries and dependencies
-- [Dependency Injection](dependency-injection.md) - DI patterns and service registration
-- [System Patterns](../patterns/system-patterns.md) - All implementation patterns
+- [Internal Method](../patterns/internal-method.md)
+- [Profile Management](../patterns/profile-management.md)
+- [Reusable Controls](../patterns/reusable-controls.md)
 
 ---
-
-**Last Updated**: 2025-11-10
-**Status**: Current MVVM standard
-**Compliance**: Constitutional Article III - MVVM with ReactiveUI
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

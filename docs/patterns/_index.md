@@ -2406,3 +2406,14 @@ This reference provides patterns for:
 - `reviews/LATEST_REVIEW.md` - Latest detailed code review
 - `.copilot-tracking/memory-bank/systemPatterns.md` - Architecture guide
 - `.github/copilot-instructions.md` - Development instructions
+
+## Related Documentation
+
+- [Custom Exceptions](custom-exceptions.md)
+- [Internal Method](internal-method.md)
+- [Profile Management](profile-management.md)
+- [Resource Coordination](resource-coordination.md)
+- [Reusable Controls](reusable-controls.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -1,8 +1,94 @@
 ---
-# AGENTS.md — Coding Agent Onboarding & Best Practices Guide
+title: "AI Coding Agent Onboarding Guide"
+version: "1.0.0"
+created: "2025-01-15"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["guide", "ai-agent", "onboarding", "quick-start"]
+related:
+  - docs/INDEX.md
+  - docs/architecture/overview.md
+  - docs/patterns/_index.md
+  - docs/guides/development-workflow.md
+---
+
+# AI Coding Agent Onboarding Guide
+
+## 30-Second Onboarding Workflow
+
+**Start Here** → Follow this exact sequence for rapid onboarding:
+
+1. **Read This Section** (10 seconds) - Get orientation
+2. **Read Architecture Overview** (10 seconds) - Understand system design
+   - → [`docs/architecture/overview.md`](../architecture/overview.md)
+3. **Scan Pattern Catalog** (10 seconds) - Know available patterns
+   - → [`docs/patterns/_index.md`](../patterns/_index.md)
+4. **Reference Specific Patterns** (as needed) - Deep dive when implementing
+
+**Total Time**: < 30 seconds to locate any pattern or architectural decision.
+
+## Context Gathering Strategy
+
+### Efficient AI Agent Workflow
+
+```python
+# Recommended context gathering for any task
+def gather_context_for_task(task_description):
+    # Phase 1: Core Architecture (ALWAYS read - 20 seconds)
+    architecture = read("docs/architecture/overview.md")
+    clean_arch = read("docs/architecture/clean-architecture.md")
+
+    # Phase 2: Identify Relevant Patterns (10 seconds)
+    pattern_catalog = read("docs/patterns/_index.md")
+    relevant_patterns = filter_by_tags(pattern_catalog, task_description)
+
+    # Phase 3: Deep Dive (as needed - 30-60 seconds)
+    for pattern in relevant_patterns[:3]:  # Top 3 most relevant
+        pattern_details = read(pattern)
+        examples = read(pattern + "/examples/")
+
+    # Phase 4: Existing Implementation Reference (optional)
+    if has_similar_feature(task_description):
+        similar_code = find_similar_implementation()
+        cross_reference_with_patterns(similar_code)
+
+    # Phase 5: Template Selection (if creating new code)
+    template = select_template_from("docs/templates/", task_description)
+
+    return context
+```
+
+### Tag-Based Pattern Discovery
+
+Use tags to quickly find relevant patterns:
+
+```bash
+# Find all MVVM-related patterns
+grep -r "tags:.*mvvm" docs/patterns/
+
+# Find thread safety patterns
+grep -r "tags:.*thread" docs/patterns/
+
+# Find service-related patterns
+grep -r "tags:.*service" docs/patterns/
+```
+
+## Quick Reference: Key Files
+
+| Need | File | Purpose |
+|------|------|---------|
+| **Master Index** | [`docs/INDEX.md`](../INDEX.md) | All documentation entry point |
+| **System Architecture** | [`docs/architecture/overview.md`](../architecture/overview.md) | Clean Architecture + MVVM |
+| **Pattern Catalog** | [`docs/patterns/_index.md`](../patterns/_index.md) | All implementation patterns |
+| **Profile Management** | [`docs/patterns/profile-management.md`](../patterns/profile-management.md) | Unified profile pattern |
+| **Semaphore Safety** | [`docs/patterns/internal-method.md`](../patterns/internal-method.md) | Deadlock prevention |
+| **Development Workflow** | [`docs/guides/development-workflow.md`](./development-workflow.md) | Daily commands & workflow |
+| **Latest Review** | [`docs/reviews/LATEST.md`](../reviews/LATEST.md) | Current quality baseline |
+
+---
 
 ## Purpose
-This document provides essential onboarding, architecture, and coding standards for all coding agents working on the S7Tools repository. It is designed to ensure consistency, maintainability, and compliance with project rules. **Do not include task-specific or session-specific notes here.**
+This document provides essential onboarding, architecture, and coding standards for all coding agents working on the S7Tools repository. It is designed to ensure consistency, maintainability, and compliance with project rules.
 
 ---
 
@@ -103,22 +189,23 @@ dotnet run --project src/S7Tools --configuration Debug -- --diag
 
 ## Agent Workflow
 
-1. **Start by reading `.copilot-tracking/memory-bank/systemPatterns.md`** — This is the single source of truth for all architecture, patterns, and rules.
-2. **Use ONLY terminal commands** — Never use VS Code tasks for build, test, format, or run operations.
-3. **Never duplicate documentation** — Update `systemPatterns.md` and related Memory Bank files after significant changes.
-4. **Do not include session logs or task notes here** — Use the Memory Bank for all project intelligence and progress tracking.
-5. **Use the agent workspace (`.github/agents/workspace/`) for temporary files only** — Never store permanent documentation or code here.
+1. **Start with the Master Index** — Read [`docs/INDEX.md`](../INDEX.md) to understand documentation structure
+2. **Read Core Architecture** — [`docs/architecture/overview.md`](../architecture/overview.md) is the single source of truth for system design
+3. **Use ONLY terminal commands** — Never use VS Code tasks for build, test, format, or run operations
+4. **Reference patterns as needed** — Check [`docs/patterns/_index.md`](../patterns/_index.md) for implementation patterns
+5. **Follow established patterns** — All patterns documented in `docs/patterns/` directory
+6. **Update documentation** — When adding new patterns, update relevant files in `docs/` structure
 
 ---
 
 ## References
 
-- `.copilot-tracking/memory-bank/systemPatterns.md` — All patterns, rules, and templates
-- `PATTERNS_REFERENCE.md` — Comprehensive architectural patterns documentation
-- `reviews/LATEST_REVIEW.md` — Latest quality baseline and code review
-- `.copilot-tracking/memory-bank/` — Project documentation and Memory Bank
-- `ServiceCollectionExtensions.cs` — Service registration
-- `README.md` — Project summary and setup
+- **Master Index**: [`docs/INDEX.md`](../INDEX.md) - Entry point for all documentation
+- **Architecture**: [`docs/architecture/`](../architecture/) - System design and decisions
+- **Patterns**: [`docs/patterns/`](../patterns/) - All implementation patterns and examples
+- **Guides**: [`docs/guides/`](./README.md) - Development workflows and guides
+- **Latest Review**: [`docs/reviews/LATEST.md`](../reviews/LATEST.md) - Current quality baseline
+- **Templates**: [`docs/templates/`](../templates/) - Code and documentation templates
 
 ---
 

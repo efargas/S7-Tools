@@ -581,3 +581,10 @@ public class SerialPortScannerViewModelTests
 **Last Updated**: 2025-11-10
 **Status**: Current implementation standard (Spec 006)
 **Code Reduction**: 73% (305 lines → 83 lines)
+
+## Related Documentation
+
+- [_Index](_index.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

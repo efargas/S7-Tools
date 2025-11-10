@@ -687,3 +687,10 @@ public async Task SaveAsync()
 **Last Updated**: 2025-11-10
 **Status**: Current implementation standard
 **Test Coverage**: 6 exception tests (100% coverage of exception constructors)
+
+## Related Documentation
+
+- [_Index](_index.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

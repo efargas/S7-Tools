@@ -632,13 +632,10 @@ When adding new features, verify:
 
 ## Related Documentation
 
-- [Architecture Overview](overview.md) - Complete system architecture
-- [MVVM Patterns](mvvm-patterns.md) - ReactiveUI implementation
-- [Dependency Injection](dependency-injection.md) - DI configuration
-- [System Patterns](../patterns/system-patterns.md) - All implementation patterns
+- [Custom Exceptions](../patterns/custom-exceptions.md)
+- [Profile Management](../patterns/profile-management.md)
+- [Resource Coordination](../patterns/resource-coordination.md)
+- [Reusable Controls](../patterns/reusable-controls.md)
 
 ---
-
-**Last Updated**: 2025-11-10
-**Status**: Current architectural standard
-**Compliance**: Constitutional Article II - Clean Architecture Boundaries
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

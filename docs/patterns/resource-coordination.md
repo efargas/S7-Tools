@@ -593,3 +593,11 @@ public async Task TryAcquire_Should_Prevent_Concurrent_Access()
 **Last Updated**: 2025-11-10
 **Status**: Production-proven pattern
 **Performance**: 80% startup time reduction (5s → 1s)
+
+## Related Documentation
+
+- [_Index](_index.md)
+- [Internal Method](internal-method.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
