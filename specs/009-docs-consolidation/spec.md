@@ -197,12 +197,11 @@ When working with any documentation element (pattern, template, review, test), u
 
 ## Related Documentation
 
-- **AGENTS.md**: Primary onboarding document for AI coding agents (requires update to reference new documentation structure)
-- **PATTERNS_REFERENCE.md**: Comprehensive architectural patterns (becomes part of consolidated patterns/ directory)
-- **.copilot-tracking/memory-bank/systemPatterns.md**: Current system patterns v2.1 (merges into consolidated architecture documentation)
-- **reviews/LATEST_REVIEW.md**: Latest code review baseline (moves to reviews/ with automatic linking)
-- **.specify/memory/constitution.md**: Constitutional governance framework v1.2.0 (remains authoritative, linked from index)
-- **docs/adr/_index.md**: ADR index (integrates into consolidated architecture decisions section)
+- **docs/guides/ai-agent-guide.md**: Primary onboarding document for AI coding agents (migrated from AGENTS.md)
+- **docs/patterns/_index.md**: Comprehensive architectural patterns catalog (migrated from PATTERNS_REFERENCE.md)
+- **docs/patterns/system-patterns.md**: System patterns documentation (migrated from .copilot-tracking/memory-bank/systemPatterns.md)
+- **docs/reviews/LATEST.md**: Latest code review baseline (migrated from reviews/LATEST_REVIEW.md)
+- **docs/architecture/decisions/_index.md**: ADR index and catalog (migrated from docs/adr/_index.md)
 
 ## Implementation Notes
 

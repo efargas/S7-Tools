@@ -187,9 +187,9 @@ Serial port discovery UI is duplicated across 3+ views with inconsistent styling
 - [Avalonia WrapPanel](https://docs.avaloniaui.net/docs/reference/controls/wrappanel)
 
 ### Project Documentation
-- [`PATTERNS_REFERENCE.md`](../../PATTERNS_REFERENCE.md) - Project patterns
-- [`AGENTS.md`](../../AGENTS.md) - Agent guidelines
-- [`.copilot-tracking/memory-bank/systemPatterns.md`](../../.copilot-tracking/memory-bank/systemPatterns.md) - System patterns
+- [Pattern Catalog](../../docs/patterns/_index.md) - Project patterns
+- [AI Agent Guide](../../docs/guides/ai-agent-guide.md) - Agent guidelines
+- [System Patterns](../../docs/patterns/system-patterns.md) - System patterns
 
 ---
 
@@ -235,9 +235,9 @@ Before implementation:
 ## Contact
 
 For questions or clarifications:
-- See Memory Bank: `.copilot-tracking/memory-bank/`
-- See Project Patterns: `PATTERNS_REFERENCE.md`
-- See Agent Guidelines: `AGENTS.md`
+- See Documentation Index: `docs/INDEX.md`
+- See Pattern Catalog: `docs/patterns/_index.md`
+- See AI Agent Guide: `docs/guides/ai-agent-guide.md`
 
 ---
 
