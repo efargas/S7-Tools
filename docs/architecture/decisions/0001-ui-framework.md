@@ -1,3 +1,15 @@
+---
+title: "ADR-0001: UI Framework — Avalonia + ReactiveUI"
+version: "1.0.0"
+created: "2025-10-16"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["adr", "architecture", "ui", "avalonia", "reactiveui"]
+related:
+  - docs/architecture/mvvm-patterns.md
+  - docs/architecture/overview.md
+---
+
 # ADR-0001: UI Framework — Avalonia + ReactiveUI
 
 - Status: Accepted

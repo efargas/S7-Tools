@@ -32,6 +32,54 @@
       "redirectStubCreated": false,
       "stubRemovalDate": "",
       "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "docs/adr/_index.md",
+      "newPath": "docs/architecture/decisions/_index.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "docs/adr/_template.md",
+      "newPath": "docs/architecture/decisions/_template.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "docs/adr/ADR-0001-ui-framework-avalonia-reactiveui.md",
+      "newPath": "docs/architecture/decisions/0001-ui-framework.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "docs/adr/ADR-0002-logging-inmemory-datastore-provider.md",
+      "newPath": "docs/architecture/decisions/0002-logging-provider.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "reviews/CODE_QUALITY_IMPROVEMENTS_2025-11-10.md",
+      "newPath": "docs/reviews/2025-11-10-quality-improvements.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "reviews/COMPREHENSIVE_CODE_REVIEW_2025-11-07.md",
+      "newPath": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
     }
   ]
 }

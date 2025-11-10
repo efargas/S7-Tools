@@ -1,3 +1,15 @@
+---
+title: "ADR-0002: Logging — In-memory DataStore Provider"
+version: "1.0.0"
+created: "2025-10-16"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["adr", "architecture", "logging", "infrastructure"]
+related:
+  - docs/architecture/overview.md
+  - docs/architecture/clean-architecture.md
+---
+
 # ADR-0002: Logging — In-memory DataStore Provider
 
 - Status: Accepted
