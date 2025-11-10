@@ -28,6 +28,9 @@ This index lists the key architectural decisions for S7Tools. New decisions shou
 
 - [Index](../../INDEX.md)
 - [_Index](../_index.md)
+- [_Template](_template.md)
+- [_Index](../../templates/_index.md)
+- [Adr Template](../../templates/adr-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

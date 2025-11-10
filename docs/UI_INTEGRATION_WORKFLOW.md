@@ -532,16 +532,17 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 - Check ViewLocator can resolve the ViewModel → View mapping
 - Ensure `ContentControl.Content` binding is correct
 
-## Related Documentation
-
-- **Architecture Blueprint**: `docs/Project_Architecture_Blueprint.md`
-- **Folder Structure**: `docs/Project_Folders_Structure_Blueprint.md`
-- **Code Templates**: `docs/templates/ui-integration/`
-- **ViewLocator Implementation**: `src/S7Tools/ViewLocator.cs`
-- **Navigation ViewModel**: `src/S7Tools/ViewModels/NavigationViewModel.cs`
-
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-10-24 | Initial documentation with ViewLocator pattern |
+
+## Related Documentation
+
+- [Mvvm Patterns](architecture/mvvm-patterns.md)
+- [Reusable Controls](patterns/reusable-controls.md)
+- [Readme](templates/ui-integration/README.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -169,8 +169,11 @@ When deprecating a pattern:
 
 ## Related Documentation
 
+- [Development Workflow](../development-workflow.md)
 - [Breaking Changes](breaking-changes.md)
 - [Deprecated Patterns](deprecated-patterns.md)
+- [Versioning Guide](../versioning-guide.md)
+- [_Index](../../patterns/_index.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

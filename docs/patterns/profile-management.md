@@ -599,6 +599,10 @@ public class StandardProfileManagerTests
 - [Clean Architecture](../architecture/clean-architecture.md) - Layer separation
 - [MVVM Patterns](../architecture/mvvm-patterns.md) - ViewModel integration
 
+## Examples
+
+- [Profile Manager Pattern Example](examples/profile-manager-example.md) - Complete implementation walkthrough with code samples
+
 ## Implementation Files
 
 **Core**:
@@ -625,6 +629,7 @@ public class StandardProfileManagerTests
 
 ## Related Documentation
 
+- [Cross Ref Source](../.test-fixtures/cross-ref-source.md)
 - [Index](../INDEX.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
@@ -632,6 +637,7 @@ public class StandardProfileManagerTests
 - [Onboarding](../guides/onboarding.md)
 - [_Index](_index.md)
 - [Custom Exceptions](custom-exceptions.md)
+- [Profile Manager Example](examples/profile-manager-example.md)
 - [Internal Method](internal-method.md)
 - [Resource Coordination](resource-coordination.md)
 - [Reusable Controls](reusable-controls.md)

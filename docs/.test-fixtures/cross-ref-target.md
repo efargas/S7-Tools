@@ -33,3 +33,10 @@ After running the cross-reference generator, this file should have a "Related Do
 1. Verify "Related Documentation" section exists below this section
 2. Verify link to `cross-ref-source.md` is present and valid
 3. Verify bidirectional navigation works (can navigate from source → target → source)
+
+## Related Documentation
+
+- [Cross Ref Source](cross-ref-source.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

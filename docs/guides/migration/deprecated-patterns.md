@@ -307,11 +307,14 @@ When deprecating a pattern:
 ## Related Documentation
 
 - [Attribute_Based_Display](../../ATTRIBUTE_BASED_DISPLAY.md)
+- [Deprecated_Property_Migration](../../DEPRECATED_PROPERTY_MIGRATION.md)
 - [Index](../../INDEX.md)
 - [Project_Architecture_Blueprint](../../Project_Architecture_Blueprint.md)
 - [Project_Folders_Structure_Blueprint](../../Project_Folders_Structure_Blueprint.md)
 - [_Index](_index.md)
 - [Breaking Changes](breaking-changes.md)
+- [Versioning Guide](../versioning-guide.md)
+- [_Index](../../patterns/_index.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

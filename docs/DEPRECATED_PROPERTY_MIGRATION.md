@@ -179,3 +179,11 @@ No additional deprecations are currently planned.
 
 **Last Updated**: 2025-11-10
 **Maintainer**: S7Tools Development Team
+
+## Related Documentation
+
+- [Deprecated Patterns](guides/migration/deprecated-patterns.md)
+- [Versioning Guide](guides/versioning-guide.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

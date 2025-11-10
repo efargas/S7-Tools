@@ -298,6 +298,7 @@ When implementing new features, always:
 - [Index](../INDEX.md)
 - [Overview](../architecture/overview.md)
 - [Development Workflow](development-workflow.md)
+- [Onboarding](onboarding.md)
 - [_Index](../patterns/_index.md)
 - [Internal Method](../patterns/internal-method.md)
 - [Profile Management](../patterns/profile-management.md)

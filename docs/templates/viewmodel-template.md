@@ -224,3 +224,10 @@ this.WhenAnyValue(x => x.Property)
 - Service Template - `service-template.md`
 - Test Template - `test-template.md`
 - [Development Workflow](../guides/development-workflow.md)
+
+## Related Documentation
+
+- [Profile Manager Example](../patterns/examples/profile-manager-example.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

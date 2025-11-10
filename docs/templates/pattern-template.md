@@ -117,7 +117,8 @@ public async Task TestExample()
 ## Related Documentation
 
 - [Index](../INDEX.md)
-- [Versioning Guide](../guides/versioning-guide.md)
+- [Overview](../architecture/overview.md)
+- [_Index](../patterns/_index.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

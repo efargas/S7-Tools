@@ -520,6 +520,10 @@ public async Task IsNameUniqueInternal_Should_Ignore_Excluded_Id()
 - [Resource Coordination](resource-coordination.md) - Parallel initialization with semaphores
 - [MVVM Patterns](../architecture/mvvm-patterns.md) - UI thread safety considerations
 
+## Examples
+
+- [Semaphore Internal Method Pattern Example](examples/semaphore-pattern-example.md) - Detailed code walkthrough preventing deadlocks
+
 ## Implementation Files
 
 **Core Services** (using pattern):
@@ -547,6 +551,9 @@ public async Task IsNameUniqueInternal_Should_Ignore_Excluded_Id()
 - [Onboarding](../guides/onboarding.md)
 - [_Index](_index.md)
 - [Custom Exceptions](custom-exceptions.md)
+- [Profile Manager Example](examples/profile-manager-example.md)
+- [Resource Coordinator Example](examples/resource-coordinator-example.md)
+- [Semaphore Pattern Example](examples/semaphore-pattern-example.md)
 - [Profile Management](profile-management.md)
 - [Resource Coordination](resource-coordination.md)
 - [_Index](../reviews/_index.md)

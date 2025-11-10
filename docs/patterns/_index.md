@@ -2424,6 +2424,9 @@ This reference provides patterns for:
 - [Profile Management](profile-management.md)
 - [Resource Coordination](resource-coordination.md)
 - [Reusable Controls](reusable-controls.md)
+- [System Patterns](system-patterns.md)
+- [_Index](../reviews/_index.md)
+- [_Index](../templates/_index.md)
 - [Pattern Template](../templates/pattern-template.md)
 
 ---

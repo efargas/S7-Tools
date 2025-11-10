@@ -43,3 +43,11 @@ Implement a custom in-memory log DataStore provider integrated with `Microsoft.E
 
 - Infrastructure project: `src/S7Tools.Infrastructure.Logging`
 - Registration: `AddS7ToolsLogging` and `AddDataStore` in DI setup
+
+## Related Documentation
+
+- [Clean Architecture](../clean-architecture.md)
+- [Overview](../overview.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

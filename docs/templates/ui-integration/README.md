@@ -301,3 +301,11 @@ For questions or issues:
 1. Review the full UI Integration Workflow documentation
 2. Check existing features for reference (Jobs, Settings, TaskManager)
 3. Consult the Integration Checklist for missed steps
+
+## Related Documentation
+
+- [Ui_Integration_Workflow](../../UI_INTEGRATION_WORKFLOW.md)
+- [Integration_Checklist](INTEGRATION_CHECKLIST.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -32,3 +32,10 @@ What is the change that’s being proposed and/or decided?
 ## References
 
 - Links to PRs, issues, docs
+
+## Related Documentation
+
+- [_Index](_index.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

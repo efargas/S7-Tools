@@ -577,6 +577,10 @@ public async Task TryAcquire_Should_Prevent_Concurrent_Access()
 - [Profile Management](profile-management.md) - Profile service initialization
 - [Clean Architecture](../architecture/clean-architecture.md) - Service layer organization
 
+## Examples
+
+- [Resource Coordinator Pattern Example](examples/resource-coordinator-example.md) - Job execution and hardware coordination walkthrough
+
 ## Implementation Files
 
 **Core**:
@@ -600,6 +604,7 @@ public async Task TryAcquire_Should_Prevent_Concurrent_Access()
 - [Clean Architecture](../architecture/clean-architecture.md)
 - [Onboarding](../guides/onboarding.md)
 - [_Index](_index.md)
+- [Resource Coordinator Example](examples/resource-coordinator-example.md)
 - [Internal Method](internal-method.md)
 - [Profile Management](profile-management.md)
 - [_Index](../reviews/_index.md)

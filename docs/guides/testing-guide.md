@@ -599,8 +599,11 @@ public void DeleteCommand_HasSelection_CanExecute()
 - [Development Workflow](development-workflow.md)
 - [Onboarding](onboarding.md)
 - [_Index](../patterns/_index.md)
+- [Resource Coordinator Example](../patterns/examples/resource-coordinator-example.md)
 - [2025 11 10 Quality Improvements](../reviews/2025-11-10-quality-improvements.md)
 - [Latest](../reviews/LATEST.md)
+- [_Index](../templates/_index.md)
+- [Test Template](../templates/test-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

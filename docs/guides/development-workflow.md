@@ -450,6 +450,7 @@ dotnet build src/S7Tools.sln --configuration Debug
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Settings_Schema](../SETTINGS_SCHEMA.md)
 - [Overview](../architecture/overview.md)
 - [Ai Agent Guide](ai-agent-guide.md)
 - [Code Style](code-style.md)
@@ -459,6 +460,13 @@ dotnet build src/S7Tools.sln --configuration Debug
 - [Testing Guide](testing-guide.md)
 - [Versioning Guide](versioning-guide.md)
 - [_Index](../patterns/_index.md)
+- [Profile Manager Example](../patterns/examples/profile-manager-example.md)
+- [Resource Coordinator Example](../patterns/examples/resource-coordinator-example.md)
+- [Semaphore Pattern Example](../patterns/examples/semaphore-pattern-example.md)
+- [_Index](../templates/_index.md)
+- [Adr Template](../templates/adr-template.md)
+- [Service Template](../templates/service-template.md)
+- [Viewmodel Template](../templates/viewmodel-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

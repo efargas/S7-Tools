@@ -318,8 +318,10 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [Code Style](guides/code-style.md)
 - [Development Workflow](guides/development-workflow.md)
 - [Memory Bank Usage](guides/memory-bank-usage.md)
+- [Deprecated Patterns](guides/migration/deprecated-patterns.md)
 - [Onboarding](guides/onboarding.md)
 - [Testing Guide](guides/testing-guide.md)
+- [Versioning Guide](guides/versioning-guide.md)
 - [_Index](patterns/_index.md)
 - [Custom Exceptions](patterns/custom-exceptions.md)
 - [Internal Method](patterns/internal-method.md)
@@ -329,6 +331,8 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [System Patterns](patterns/system-patterns.md)
 - [2025 11 10 Quality Improvements](reviews/2025-11-10-quality-improvements.md)
 - [Latest](reviews/LATEST.md)
+- [_Index](reviews/_index.md)
+- [Pattern Template](templates/pattern-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

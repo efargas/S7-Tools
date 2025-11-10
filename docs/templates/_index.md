@@ -122,13 +122,6 @@ When deprecating templates:
 3. Provide migration guide
 4. Maintain 2-year retention period
 
-## Related Documentation
-
-- [Development Workflow](../guides/development-workflow.md)
-- [Testing Guide](../guides/testing-guide.md)
-- [Code Style Guide](../guides/code-style.md)
-- [Patterns Index](../patterns/_index.md)
-
 ## Contributing
 
 Found a template improvement? See [Development Workflow](../guides/development-workflow.md) for contribution guidelines.
@@ -136,3 +129,14 @@ Found a template improvement? See [Development Workflow](../guides/development-w
 ---
 
 *Last updated: 2025-11-10 | Version: 1.0.0*
+
+## Related Documentation
+
+- [_Index](../architecture/decisions/_index.md)
+- [Code Style](../guides/code-style.md)
+- [Development Workflow](../guides/development-workflow.md)
+- [Testing Guide](../guides/testing-guide.md)
+- [_Index](../patterns/_index.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

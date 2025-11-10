@@ -8,16 +8,22 @@ Usage:
     python scripts/generate-cross-references.py <docs_root> [--dry-run] [--output=<file>]
 
 Requirements:
-    Python 3.7+ (no external dependencies)
+    pip install pyyaml
 """
 
 import sys
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 from dataclasses import dataclass
 import json
+
+try:
+    import yaml
+except ImportError:
+    print("Error: PyYAML not installed. Run: pip install pyyaml", file=sys.stderr)
+    sys.exit(2)
 
 
 @dataclass
@@ -60,12 +66,22 @@ class CrossReferenceGenerator:
             self.update_files()
 
     def extract_relationships(self, content: str, source_file: Path):
-        """Extract links to build relationship graph"""
+        """Extract links and frontmatter relationships to build graph"""
         source_key = str(source_file)
         if source_key not in self.graph:
             self.graph[source_key] = set()
 
-        # Extract markdown links
+        # Extract frontmatter 'related' field
+        frontmatter_related = self.extract_frontmatter_related(content, source_file)
+        for related_path in frontmatter_related:
+            self.graph[source_key].add(related_path)
+            self.cross_refs.append(CrossReference(
+                source=source_key,
+                target=related_path,
+                link_type="frontmatter-related"
+            ))
+
+        # Extract markdown links in content
         link_pattern = r'\[([^\]]+)\]\(([^)]+)\)'
 
         for match in re.finditer(link_pattern, content):
@@ -91,10 +107,59 @@ class CrossReferenceGenerator:
                     self.cross_refs.append(CrossReference(
                         source=source_key,
                         target=str(target_path),
-                        link_type="relates-to"
+                        link_type="markdown-link"
                     ))
             except Exception:
                 pass
+
+    def extract_frontmatter_related(self, content: str, source_file: Path) -> Set[str]:
+        """Extract 'related' field from YAML frontmatter"""
+        related_paths = set()
+
+        # Check for frontmatter (--- ... ---)
+        frontmatter_match = re.match(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+        if not frontmatter_match:
+            return related_paths
+
+        try:
+            frontmatter_text = frontmatter_match.group(1)
+            frontmatter = yaml.safe_load(frontmatter_text)
+
+            if not isinstance(frontmatter, dict):
+                return related_paths
+
+            # Extract 'related' field
+            related = frontmatter.get('related', [])
+            if not isinstance(related, list):
+                return related_paths
+
+            # Resolve each related path
+            for rel_path in related:
+                if not isinstance(rel_path, str):
+                    continue
+
+                # Skip external URLs
+                if rel_path.startswith('http://') or rel_path.startswith('https://'):
+                    continue
+
+                try:
+                    # Handle both absolute (docs/...) and relative paths
+                    if rel_path.startswith('docs/'):
+                        # Absolute from repo root
+                        target_path = (self.docs_root.parent / rel_path).resolve()
+                    else:
+                        # Relative to source file
+                        target_path = (source_file.parent / rel_path).resolve()
+
+                    if target_path.exists():
+                        related_paths.add(str(target_path))
+                except Exception:
+                    pass
+
+        except yaml.YAMLError:
+            pass
+
+        return related_paths
 
     def bidirectionalize(self):
         """Make all relationships bidirectional"""

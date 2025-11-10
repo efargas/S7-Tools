@@ -339,6 +339,7 @@ When introducing a breaking change:
 
 - [_Index](_index.md)
 - [Deprecated Patterns](deprecated-patterns.md)
+- [Versioning Guide](../versioning-guide.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

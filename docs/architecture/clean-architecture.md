@@ -635,12 +635,21 @@ When adding new features, verify:
 - [Index](../INDEX.md)
 - [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
 - [_Index](_index.md)
+- [0002 Logging Provider](decisions/0002-logging-provider.md)
+- [Diagrams](diagrams.md)
+- [Mvvm Patterns](mvvm-patterns.md)
+- [Overview](overview.md)
+- [Project_Architecture_Blueprint](../archive/Project_Architecture_Blueprint.md)
+- [Project_Folders_Structure_Blueprint](../archive/Project_Folders_Structure_Blueprint.md)
 - [Onboarding](../guides/onboarding.md)
 - [Testing Guide](../guides/testing-guide.md)
+- [_Index](../patterns/_index.md)
 - [Custom Exceptions](../patterns/custom-exceptions.md)
 - [Profile Management](../patterns/profile-management.md)
 - [Resource Coordination](../patterns/resource-coordination.md)
 - [Reusable Controls](../patterns/reusable-controls.md)
+- [System Patterns](../patterns/system-patterns.md)
+- [Service Template](../templates/service-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

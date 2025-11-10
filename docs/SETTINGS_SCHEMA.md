@@ -354,3 +354,11 @@ protected override void Dispose(bool disposing)
 
 **Maintainers**: Update this document when adding, changing, or removing settings.
 **Developers**: Consult this document before creating new settings.
+
+## Related Documentation
+
+- [Overview](architecture/overview.md)
+- [Development Workflow](guides/development-workflow.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

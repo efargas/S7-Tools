@@ -2225,6 +2225,16 @@ public async Task InitializeAsync(CancellationToken ct = default)
 
 - [Index](../INDEX.md)
 - [_Index](../architecture/_index.md)
+- [Clean Architecture](../architecture/clean-architecture.md)
+- [Diagrams](../architecture/diagrams.md)
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [Overview](../architecture/overview.md)
+- [_Index](_index.md)
+- [Custom Exceptions](custom-exceptions.md)
+- [Internal Method](internal-method.md)
+- [Profile Management](profile-management.md)
+- [Resource Coordination](resource-coordination.md)
+- [Reusable Controls](reusable-controls.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

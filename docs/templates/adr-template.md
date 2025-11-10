@@ -85,3 +85,10 @@ related:
 **Last Updated**: YYYY-MM-DD  
 **Version**: 1.0.0  
 **Tags**: architecture, decision, [domain]
+
+## Related Documentation
+
+- [Index](../INDEX.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

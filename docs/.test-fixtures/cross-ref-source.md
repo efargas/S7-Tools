@@ -24,10 +24,6 @@ This document explicitly references `cross-ref-target.md` in its frontmatter `re
 2. Add a reciprocal link in `cross-ref-target.md`'s "Related Documentation" section
 3. Create bidirectional navigation
 
-## Related Documentation
-
-This section should be auto-populated by the cross-reference generator.
-
 ## Usage in Testing
 
 **Test Case**: T111-T113 - Bidirectional Cross-Reference Generation
@@ -36,3 +32,11 @@ This section should be auto-populated by the cross-reference generator.
 - `cross-ref-target.md` gets a "Related Documentation" section
 - That section contains a link back to this file
 - Both files have complete bidirectional navigation
+
+## Related Documentation
+
+- [Cross Ref Target](cross-ref-target.md)
+- [Profile Management](../patterns/profile-management.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

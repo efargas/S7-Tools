@@ -43,3 +43,11 @@ Adopt Avalonia UI for cross-platform desktop UI and ReactiveUI as the MVVM frame
 
 - Registration centralized in `src/S7Tools/Extensions/ServiceCollectionExtensions.cs`
 - Bootstrapped in `src/S7Tools/Program.cs` with ReactiveUI and Splat integration
+
+## Related Documentation
+
+- [Mvvm Patterns](../mvvm-patterns.md)
+- [Overview](../overview.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

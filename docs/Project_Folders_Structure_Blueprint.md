@@ -39,7 +39,6 @@ For questions or concerns, please file an issue in the repository.
 
 ## Related Documentation
 
-- [Copilot Instructions](../.github/copilot-instructions.md)
 - [Overview](architecture/overview.md)
 - [Project_Folders_Structure_Blueprint](archive/Project_Folders_Structure_Blueprint.md)
 - [Deprecated Patterns](guides/migration/deprecated-patterns.md)

@@ -441,10 +441,14 @@ See `docs/.metadata/schema.json` for the complete frontmatter JSON Schema.
 
 ## Related Documentation
 
+- [Deprecated_Property_Migration](../DEPRECATED_PROPERTY_MIGRATION.md)
 - [Index](../INDEX.md)
+- [Development Workflow](development-workflow.md)
+- [Memory Bank Usage](memory-bank-usage.md)
 - [_Index](migration/_index.md)
 - [Breaking Changes](migration/breaking-changes.md)
 - [Deprecated Patterns](migration/deprecated-patterns.md)
+- [Pattern Template](../templates/pattern-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

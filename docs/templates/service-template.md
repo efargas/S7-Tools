@@ -79,3 +79,10 @@ services.TryAddSingleton<I[SERVICE_NAME]Service, [SERVICE_NAME]Service>();
 
 - ViewModel Template - `viewmodel-template.md`
 - Test Template - `test-template.md`
+
+## Related Documentation
+
+- [Profile Manager Example](../patterns/examples/profile-manager-example.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

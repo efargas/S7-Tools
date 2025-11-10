@@ -156,6 +156,7 @@ And a deprecation notice would appear here.
 
 - [Complete Doc](complete-doc.md)
 - [Deprecated Doc](deprecated-doc.md)
+- [Superseding Doc](superseding-doc.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

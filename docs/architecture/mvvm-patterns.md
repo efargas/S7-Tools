@@ -716,10 +716,20 @@ public class JobListViewModelTests
 
 - [Index](../INDEX.md)
 - [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
+- [Ui_Integration_Workflow](../UI_INTEGRATION_WORKFLOW.md)
 - [_Index](_index.md)
+- [Clean Architecture](clean-architecture.md)
+- [0001 Ui Framework](decisions/0001-ui-framework.md)
+- [Diagrams](diagrams.md)
+- [Overview](overview.md)
+- [Attribute_Based_Display](../archive/ATTRIBUTE_BASED_DISPLAY.md)
+- [_Index](../patterns/_index.md)
 - [Internal Method](../patterns/internal-method.md)
 - [Profile Management](../patterns/profile-management.md)
 - [Reusable Controls](../patterns/reusable-controls.md)
+- [System Patterns](../patterns/system-patterns.md)
+- [Readme](../templates/ui-integration/README.md)
+- [Viewmodel Template](../templates/viewmodel-template.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

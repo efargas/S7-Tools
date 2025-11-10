@@ -101,3 +101,10 @@ public class [FEATURE]Tests : IDisposable
 - ViewModel Template - `viewmodel-template.md`
 - Service Template - `service-template.md`
 - [Testing Guide](../guides/testing-guide.md)
+
+## Related Documentation
+
+- [Testing Guide](../guides/testing-guide.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
