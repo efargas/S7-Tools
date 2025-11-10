@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
@@ -202,11 +203,11 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             info += $"\nDescription: {job.Description}";
         }
 
-        info += $"\nCreated: {job.CreatedAt:yyyy-MM-dd HH:mm}";
+        info += $"\nCreated: {job.CreatedAt.ToString(DateTimeFormats.ShortDateTime)}";
 
         if (job.ModifiedAt != job.CreatedAt)
         {
-            info += $"\nModified: {job.ModifiedAt:yyyy-MM-dd HH:mm}";
+            info += $"\nModified: {job.ModifiedAt.ToString(DateTimeFormats.ShortDateTime)}";
         }
 
         JobBasicInfo = info;

@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using S7Tools.Core.Constants;
 
 namespace S7Tools.Converters;
 
@@ -18,11 +19,11 @@ public class WarningToColorConverter : IValueConverter
         {
             // Orange for warnings, Red for errors
             return message.Contains("⚠️") || message.Contains("Warning")
-                ? Color.FromRgb(255, 152, 0)  // Orange
-                : Color.FromRgb(211, 47, 47);   // Red
+                ? Color.FromRgb(ColorPalette.WarningLight.R, ColorPalette.WarningLight.G, ColorPalette.WarningLight.B)
+                : Color.FromRgb(ColorPalette.ErrorRed.R, ColorPalette.ErrorRed.G, ColorPalette.ErrorRed.B);
         }
 
-        return Color.FromRgb(211, 47, 47); // Default to red
+        return Color.FromRgb(ColorPalette.ErrorRed.R, ColorPalette.ErrorRed.G, ColorPalette.ErrorRed.B); // Default to red
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

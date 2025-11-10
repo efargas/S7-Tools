@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
@@ -146,9 +147,9 @@ public class SocatService : ISocatService, IDisposable
             {
                 if (int.TryParse(tcpListenMatch.Groups[1].Value, out int port))
                 {
-                    if (port < 1 || port > 65535)
+                    if (!NetworkConstants.IsValidPort(port))
                     {
-                        result.Errors.Add($"TCP port {port} is not in valid range (1-65535)");
+                        result.Errors.Add(string.Format(NetworkConstants.PortRangeError, port));
                         result.IsValid = false;
                     }
                     else
@@ -661,9 +662,9 @@ public class SocatService : ISocatService, IDisposable
     /// </summary>
     private Task<bool> IsPortInUseInternalAsync(int tcpPort, CancellationToken cancellationToken = default)
     {
-        if (tcpPort < 1 || tcpPort > 65535)
+        if (!NetworkConstants.IsValidPort(tcpPort))
         {
-            throw new ArgumentException("TCP port must be between 1 and 65535", nameof(tcpPort));
+            throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
         }
 
         try
@@ -708,9 +709,9 @@ public class SocatService : ISocatService, IDisposable
     /// <returns>True if the port is in use, false otherwise.</returns>
     public async Task<bool> IsPortInUseAsync(int tcpPort, CancellationToken cancellationToken = default)
     {
-        if (tcpPort < 1 || tcpPort > 65535)
+        if (!NetworkConstants.IsValidPort(tcpPort))
         {
-            throw new ArgumentException("TCP port must be between 1 and 65535", nameof(tcpPort));
+            throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
         }
 
         try
@@ -754,9 +755,9 @@ public class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<SocatProcessInfo?> GetProcessByPortAsync(int tcpPort, CancellationToken cancellationToken = default)
     {
-        if (tcpPort < 1 || tcpPort > 65535)
+        if (!NetworkConstants.IsValidPort(tcpPort))
         {
-            throw new ArgumentException("TCP port must be between 1 and 65535", nameof(tcpPort));
+            throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
         }
 
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -954,9 +955,9 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("TCP host cannot be null or empty", nameof(tcpHost));
         }
 
-        if (tcpPort < 1 || tcpPort > 65535)
+        if (!NetworkConstants.IsValidPort(tcpPort))
         {
-            throw new ArgumentException("TCP port must be between 1 and 65535", nameof(tcpPort));
+            throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
         }
 
         try

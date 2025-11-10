@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
@@ -324,7 +325,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         {
             if (logEntry != null)
             {
-                string logText = $"[{logEntry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
+                string logText = $"[{logEntry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{logEntry.Timestamp.Millisecond:000}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
                 await _clipboardService.SetTextAsync(logText);
             }
         });
