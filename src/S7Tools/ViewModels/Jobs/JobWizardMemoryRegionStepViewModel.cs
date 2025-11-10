@@ -51,17 +51,13 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         _memoryRegionService = memoryRegionService ?? throw new ArgumentNullException(nameof(memoryRegionService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
 
-        _logger.LogInformation("JobWizardMemoryRegionStepViewModel CONSTRUCTOR called");
-
         AvailableProfiles = new ObservableCollection<MemoryMappingProfile>();
         SelectedSegments = new ObservableCollection<MemorySegment>();
 
         SetupValidation();
 
-        _logger.LogInformation("JobWizardMemoryRegionStepViewModel: About to start LoadProfilesAsync");
         // Load profiles when initialized
         _ = LoadProfilesAsync();
-        _logger.LogInformation("JobWizardMemoryRegionStepViewModel: LoadProfilesAsync started (fire-and-forget)");
     }
 
     #endregion
@@ -86,18 +82,14 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         get => _selectedProfile;
         set
         {
-            _logger.LogInformation("SelectedProfile setter called: OLD={OldProfile}, NEW={NewProfile}",
-                _selectedProfile?.Name ?? "null", value?.Name ?? "null");
-
             // Unsubscribe from previous profile's segments
             UnsubscribeFromSegmentChanges();
 
             this.RaiseAndSetIfChanged(ref _selectedProfile, value);
 
-            _logger.LogInformation("SelectedProfile changed to {ProfileName} (ID: {ProfileId}), HasSegments: {HasSegments}, SegmentCount: {SegmentCount}",
+            _logger.LogDebug("SelectedProfile changed to {ProfileName} (ID: {ProfileId}), SegmentCount: {SegmentCount}",
                 value?.Name ?? "null",
                 value?.Id ?? -1,
-                value?.Segments != null,
                 value?.Segments?.Count ?? 0);
 
             // Subscribe to new profile's segments and update UI
@@ -109,8 +101,6 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
             this.RaisePropertyChanged(nameof(SelectedSegmentCount));
             this.RaisePropertyChanged(nameof(TotalSelectedSize));
             this.RaisePropertyChanged(nameof(HasContiguousSelection));
-
-            _logger.LogDebug("SelectedProfile property notifications raised");
         }
     }
 
@@ -348,69 +338,54 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         {
             IsBusy = true;
             Status = "Loading memory region profiles...";
-            _logger.LogInformation("LoadProfilesAsync START: Calling GetAllAsync on memory region service");
 
             IEnumerable<MemoryMappingProfile> profiles = await _memoryRegionService.GetAllAsync().ConfigureAwait(false);
 
-            _logger.LogInformation("LoadProfilesAsync: Received {Count} profiles from service", profiles?.Count() ?? 0);
-
             if (profiles == null)
             {
-                _logger.LogWarning("LoadProfilesAsync: Service returned null profiles collection");
+                _logger.LogWarning("Service returned null profiles collection");
                 Status = "No profiles available";
                 return;
             }
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                _logger.LogInformation("LoadProfilesAsync: Inside UI thread callback");
-
                 int? currentSelectionId = SelectedProfile?.Id;
 
                 AvailableProfiles.Clear();
                 foreach (MemoryMappingProfile profile in profiles)
                 {
-                    _logger.LogDebug("Adding profile to AvailableProfiles: {ProfileName} (ID: {ProfileId})", profile.Name, profile.Id);
                     AvailableProfiles.Add(profile);
                 }
 
-                _logger.LogInformation("LoadProfilesAsync: Added {Count} profiles to AvailableProfiles collection", AvailableProfiles.Count);
+                _logger.LogDebug("Loaded {Count} profiles to AvailableProfiles collection", AvailableProfiles.Count);
 
                 // Try to preserve selection, or select default, or select first
                 if (currentSelectionId.HasValue)
                 {
                     SelectedProfile = AvailableProfiles.FirstOrDefault(p => p.Id == currentSelectionId.Value);
-                    _logger.LogInformation("LoadProfilesAsync: Preserved selection ID {Id}", currentSelectionId.Value);
                 }
 
                 if (SelectedProfile == null)
                 {
                     MemoryMappingProfile? defaultProfile = AvailableProfiles.FirstOrDefault(p => p.IsDefault);
-                    MemoryMappingProfile? firstProfile = AvailableProfiles.FirstOrDefault();
+                    SelectedProfile = defaultProfile ?? AvailableProfiles.FirstOrDefault();
 
-                    _logger.LogInformation("LoadProfilesAsync: No preserved selection. Default profile: {DefaultProfile}, First profile: {FirstProfile}",
-                        defaultProfile?.Name ?? "null", firstProfile?.Name ?? "null");
-
-                    SelectedProfile = defaultProfile ?? firstProfile;
-
-                    _logger.LogInformation("LoadProfilesAsync: AUTO-SELECTED profile: {ProfileName} (ID: {ProfileId})",
-                        SelectedProfile?.Name ?? "null", SelectedProfile?.Id ?? -1);
+                    _logger.LogDebug("Auto-selected profile: {ProfileName} (ID: {ProfileId})",
+                        SelectedProfile?.Name ?? "none", SelectedProfile?.Id ?? -1);
                 }
 
                 Status = $"Loaded {AvailableProfiles.Count} profile(s)";
-                _logger.LogInformation("LoadProfilesAsync COMPLETED: {ProfileCount} profiles loaded, SelectedProfile={SelectedProfile}",
-                    AvailableProfiles.Count, SelectedProfile?.Name ?? "null");
             }).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "LoadProfilesAsync FAILED: {ErrorMessage}", ex.Message);
+            _logger.LogError(ex, "Failed to load memory region profiles");
             Status = $"Error loading profiles: {ex.Message}";
         }
         finally
         {
             IsBusy = false;
-            _logger.LogInformation("LoadProfilesAsync: IsBusy set to false");
         }
     }
 

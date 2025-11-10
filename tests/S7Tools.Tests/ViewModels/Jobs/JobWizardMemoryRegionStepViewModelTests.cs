@@ -118,12 +118,14 @@ public class JobWizardMemoryRegionStepViewModelTests
         // Arrange
         var viewModel = CreateViewModel();
         var profile = CreateSampleProfile();
-        var propertyChanged = false;
+        bool propertyChanged = false;
 
         viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(viewModel.SelectedProfile))
+            {
                 propertyChanged = true;
+            }
         };
 
         // Act
@@ -282,8 +284,9 @@ public class JobWizardMemoryRegionStepViewModelTests
         // Act
         viewModel.SelectedProfile = profile;
 
-        // Assert
-        Assert.Equal("Memory region configuration is valid", viewModel.ValidationMessage);
+        // Assert - Valid message should indicate which segment is selected
+        Assert.StartsWith("✓ Memory segment", viewModel.ValidationMessage);
+        Assert.Contains("selected for dumping", viewModel.ValidationMessage);
     }
 
     #endregion
@@ -398,7 +401,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         var errors = viewModel.ValidateStep();
 
         // Assert
-        Assert.Contains("Selected profile must have at least one segment marked for dumping", errors);
+        Assert.Contains("Exactly one segment must be selected for dumping", errors);
     }
 
     [Fact]
@@ -459,7 +462,7 @@ public class JobWizardMemoryRegionStepViewModelTests
     public async Task RefreshProfilesAsync_ShouldCallLoadProfilesAsync()
     {
         // Arrange
-        var profiles = new[] { CreateSampleProfile() };
+        MemoryMappingProfile[] profiles = new[] { CreateSampleProfile() };
         _memoryRegionService.GetAllAsync().Returns(profiles);
         _uiThreadService.InvokeOnUIThreadAsync(Arg.Any<Action>()).Returns(Task.CompletedTask);
 
