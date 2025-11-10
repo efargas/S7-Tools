@@ -236,3 +236,10 @@ python scripts/generate-cross-references.py docs/ --dry-run
 # Check exit codes
 echo $?  # 0 = success, 1 = errors, 2 = warnings (if --strict)
 ```
+
+## Related Documentation
+
+- [Index](../docs/INDEX.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

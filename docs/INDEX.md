@@ -305,3 +305,13 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - Click category headings to jump to sections
 - Follow "Quick Links" for common destinations
 - All paths are relative to repository root
+
+## Related Documentation
+
+- [_Index](architecture/_index.md)
+- [Ai Agent Guide](guides/ai-agent-guide.md)
+- [Memory Bank Usage](guides/memory-bank-usage.md)
+- [Onboarding](guides/onboarding.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

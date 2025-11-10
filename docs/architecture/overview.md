@@ -640,14 +640,13 @@ sequenceDiagram
 
 ## Related Documentation
 
-- [Clean Architecture Details](clean-architecture.md) - Layer boundaries and dependency rules
-- [MVVM Patterns](mvvm-patterns.md) - ReactiveUI and ViewModel patterns
-- [Dependency Injection](dependency-injection.md) - Service registration and DI patterns
-- [System Patterns](../patterns/system-patterns.md) - Implementation patterns reference
-- [Pattern Catalog](../patterns/_index.md) - Browse all architectural patterns
+- [Index](../INDEX.md)
+- [_Index](_index.md)
+- [Ai Agent Guide](../guides/ai-agent-guide.md)
+- [Code Style](../guides/code-style.md)
+- [Development Workflow](../guides/development-workflow.md)
+- [Memory Bank Usage](../guides/memory-bank-usage.md)
+- [Onboarding](../guides/onboarding.md)
 
 ---
-
-**Document Status**: Current architecture overview consolidating product context and blueprint
-**Last Review**: 2025-11-10
-**Next Review**: After major architectural changes
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

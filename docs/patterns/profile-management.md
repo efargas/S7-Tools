@@ -625,11 +625,16 @@ public class StandardProfileManagerTests
 
 ## Related Documentation
 
+- [Index](../INDEX.md)
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [Ai Agent Guide](../guides/ai-agent-guide.md)
+- [Onboarding](../guides/onboarding.md)
 - [_Index](_index.md)
 - [Custom Exceptions](custom-exceptions.md)
 - [Internal Method](internal-method.md)
 - [Resource Coordination](resource-coordination.md)
 - [Reusable Controls](reusable-controls.md)
+- [_Index](../reviews/_index.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

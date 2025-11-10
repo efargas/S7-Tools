@@ -22,3 +22,10 @@ This document should pass all validation checks.
 Here's a link to [another test document](./related-doc.md).
 
 And a link to the [broken document](./broken-link.md) which doesn't exist.
+
+## Related Documentation
+
+- [Related Doc](related-doc.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

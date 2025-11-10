@@ -714,6 +714,8 @@ public class JobListViewModelTests
 
 ## Related Documentation
 
+- [Index](../INDEX.md)
+- [_Index](_index.md)
 - [Internal Method](../patterns/internal-method.md)
 - [Profile Management](../patterns/profile-management.md)
 - [Reusable Controls](../patterns/reusable-controls.md)

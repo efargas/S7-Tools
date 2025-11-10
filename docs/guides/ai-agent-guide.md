@@ -292,3 +292,17 @@ When implementing new features, always:
 ---
 
 **For any coding agent: Always align with the latest `systemPatterns.md` and never introduce new patterns or rules without updating the Memory Bank.**
+
+## Related Documentation
+
+- [Index](../INDEX.md)
+- [Overview](../architecture/overview.md)
+- [Development Workflow](development-workflow.md)
+- [_Index](../patterns/_index.md)
+- [Internal Method](../patterns/internal-method.md)
+- [Profile Management](../patterns/profile-management.md)
+- [2025 11 10 Quality Improvements](../reviews/2025-11-10-quality-improvements.md)
+- [Latest](../reviews/LATEST.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

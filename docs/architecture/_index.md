@@ -190,3 +190,17 @@ All architecture documents must:
 **Last Updated**: 2025-11-10
 **Status**: Current architecture documentation index
 **Document Count**: 4 current, 2 planned
+
+## Related Documentation
+
+- [Index](../INDEX.md)
+- [Clean Architecture](clean-architecture.md)
+- [_Index](decisions/_index.md)
+- [Diagrams](diagrams.md)
+- [Mvvm Patterns](mvvm-patterns.md)
+- [Overview](overview.md)
+- [_Index](../patterns/_index.md)
+- [System Patterns](../patterns/system-patterns.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

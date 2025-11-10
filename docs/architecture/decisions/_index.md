@@ -1,3 +1,15 @@
+---
+title: "Architectural Decision Records (ADR) Index"
+version: "1.0.0"
+created: "2025-01-15"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["architecture", "adr", "decisions", "index"]
+related:
+  - docs/architecture/_index.md
+  - docs/architecture/overview.md
+---
+
 # Architectural Decision Records (ADR)
 
 This index lists the key architectural decisions for S7Tools. New decisions should be added as separate files and linked here.
@@ -11,3 +23,11 @@ This index lists the key architectural decisions for S7Tools. New decisions shou
 2. Fill in Status, Date, Context, Decision, Consequences, and References.
 3. Add a link to the new ADR in the list above, keeping the list sorted by ID.
 4. If an ADR supersedes another, mark the older one as “Superseded by ADR-XXXX”.
+
+## Related Documentation
+
+- [Index](../../INDEX.md)
+- [_Index](../_index.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

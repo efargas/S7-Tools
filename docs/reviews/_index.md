@@ -95,3 +95,17 @@ When adding new reviews:
 ---
 
 *Last Updated*: 2025-11-10
+
+## Related Documentation
+
+- [Custom Exceptions](../patterns/custom-exceptions.md)
+- [Internal Method](../patterns/internal-method.md)
+- [Profile Management](../patterns/profile-management.md)
+- [Resource Coordination](../patterns/resource-coordination.md)
+- [Reusable Controls](../patterns/reusable-controls.md)
+- [2025 11 07 Comprehensive Review](2025-11-07-comprehensive-review.md)
+- [2025 11 10 Quality Improvements](2025-11-10-quality-improvements.md)
+- [Archive](archive)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

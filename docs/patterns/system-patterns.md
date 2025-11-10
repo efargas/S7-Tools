@@ -2220,3 +2220,11 @@ public async Task InitializeAsync(CancellationToken ct = default)
 **Document Status**: Authoritative consolidated edition (v2.2). Review after major architectural changes or when critical patterns evolve.
 
 **Last Updated**: 2025-11-10 (P1 Task 5: Added 4 new architectural patterns)
+
+## Related Documentation
+
+- [Index](../INDEX.md)
+- [_Index](../architecture/_index.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

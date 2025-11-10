@@ -632,6 +632,10 @@ When adding new features, verify:
 
 ## Related Documentation
 
+- [Index](../INDEX.md)
+- [_Index](_index.md)
+- [Onboarding](../guides/onboarding.md)
+- [Testing Guide](../guides/testing-guide.md)
 - [Custom Exceptions](../patterns/custom-exceptions.md)
 - [Profile Management](../patterns/profile-management.md)
 - [Resource Coordination](../patterns/resource-coordination.md)

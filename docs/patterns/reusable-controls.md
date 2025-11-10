@@ -584,7 +584,10 @@ public class SerialPortScannerViewModelTests
 
 ## Related Documentation
 
+- [Index](../INDEX.md)
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
 - [_Index](_index.md)
+- [_Index](../reviews/_index.md)
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -670,3 +670,10 @@ This architecture demonstrates:
 
 **Result:** A production-ready, maintainable, and testable codebase with excellent separation of concerns and adherence to .NET best practices.
 
+## Related Documentation
+
+- [Index](../INDEX.md)
+- [_Index](_index.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

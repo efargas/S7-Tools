@@ -350,3 +350,20 @@ See [Latest Review](../reviews/LATEST.md) for current quality baseline.
 ---
 
 Welcome to the team! 🚀
+
+## Related Documentation
+
+- [Index](../INDEX.md)
+- [Clean Architecture](../architecture/clean-architecture.md)
+- [Overview](../architecture/overview.md)
+- [Development Workflow](development-workflow.md)
+- [Testing Guide](testing-guide.md)
+- [_Index](../patterns/_index.md)
+- [Internal Method](../patterns/internal-method.md)
+- [Profile Management](../patterns/profile-management.md)
+- [Resource Coordination](../patterns/resource-coordination.md)
+- [2025 11 10 Quality Improvements](../reviews/2025-11-10-quality-improvements.md)
+- [Latest](../reviews/LATEST.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
