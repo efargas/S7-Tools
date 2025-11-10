@@ -1,4 +1,29 @@
 {
   "version": "1.0.0",
-  "migrations": []
+  "migrations": [
+    {
+      "oldPath": ".copilot-tracking/memory-bank/systemPatterns.md",
+      "newPath": "docs/patterns/system-patterns.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "ARCHITECTURE_DIAGRAMS.md",
+      "newPath": "docs/architecture/diagrams.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    },
+    {
+      "oldPath": "PATTERNS_REFERENCE.md",
+      "newPath": "docs/patterns/_index.md",
+      "migrationDate": "2025-11-10",
+      "redirectStubCreated": false,
+      "stubRemovalDate": "",
+      "gitHistoryPreserved": true
+    }
+  ]
 }
