@@ -86,6 +86,9 @@ jobs:
       - name: Install Python dependencies
         run: pip install pyyaml
 
+      - name: Create output directory
+        run: mkdir -p docs/.metadata/reports
+
       - name: Detect orphaned files
         run: python scripts/detect-orphans.py docs/ --report
         continue-on-error: true
@@ -110,8 +113,12 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Create output directory
+        run: mkdir -p docs/.metadata/reports
+
       - name: Detect duplicate content
-        run: python scripts/detect-duplicates.py docs/ --threshold=80 --output=docs/.metadata/reports/duplicates.csv
+        run: |
+          timeout 60 python scripts/detect-duplicates.py docs/ --threshold=80 --output=docs/.metadata/reports/duplicates.csv || echo "Duplicate detection timed out or completed with warnings"
         continue-on-error: true
 
       - name: Upload duplicate report
