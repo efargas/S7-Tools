@@ -118,7 +118,7 @@ jobs:
 
       - name: Detect duplicate content
         run: |
-          timeout 60 python scripts/detect-duplicates.py docs/ --threshold=80 --output=docs/.metadata/reports/duplicates.csv || echo "Duplicate detection timed out or completed with warnings"
+          timeout 60 python scripts/detect-duplicates.py docs/ --threshold=80 --output=docs/.metadata/reports/duplicates.csv || true
         continue-on-error: true
 
       - name: Upload duplicate report
