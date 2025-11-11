@@ -1,3 +1,16 @@
+---
+title: "Technology Stack"
+version: "1.0.0"
+created: "2025-11-11"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["architecture", "technology", "stack", "libraries"]
+related:
+  - "docs/architecture/overview.md"
+  - "docs/architecture/project-brief.md"
+  - "docs/guides/development-standards.md"
+---
+
 # Technical Context: S7Tools
 
 **Last Updated**: Current Session

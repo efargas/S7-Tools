@@ -1,3 +1,17 @@
+---
+title: "Development Standards and Guidelines"
+version: "1.0.0"
+created: "2025-11-11"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["development", "standards", "guidelines", "patterns", "best-practices"]
+related:
+  - "docs/patterns/system-patterns.md"
+  - "docs/architecture/overview.md"
+  - "docs/guides/ai-agent-guide.md"
+  - "docs/guides/code-style.md"
+---
+
 # Instructions: S7Tools Development Guidelines
 
 **Last Updated**: January 2025 - New Functionality Phase

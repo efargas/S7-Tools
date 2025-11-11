@@ -233,7 +233,7 @@ Currently, no breaking changes in testing patterns.
 
 **Old → New Paths**:
 ```
-.copilot-tracking/memory-bank/systemPatterns.md
+docs/patterns/system-patterns.md
   → docs/patterns/system-patterns.md
 
 ARCHITECTURE_DIAGRAMS.md

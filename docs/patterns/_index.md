@@ -2404,7 +2404,7 @@ This reference provides patterns for:
 
 **References**:
 - `reviews/LATEST_REVIEW.md` - Latest detailed code review
-- `.copilot-tracking/memory-bank/systemPatterns.md` - Architecture guide
+- `docs/patterns/system-patterns.md` - Architecture guide
 - `.github/copilot-instructions.md` - Development instructions
 
 ## Related Documentation

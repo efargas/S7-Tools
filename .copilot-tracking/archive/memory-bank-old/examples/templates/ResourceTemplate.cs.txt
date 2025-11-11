@@ -1,4 +1,0 @@
-// Resource Pattern Template
-// .resx file: LogMessages.resx
-// Access:
-var message = LogMessages.ResourceManager.GetString("ExportSuccess");

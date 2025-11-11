@@ -126,7 +126,7 @@ This document provides essential onboarding, architecture, and coding standards 
   - `Exceptions/` — Custom exception hierarchy
 - `src/S7Tools.Infrastructure.Logging/` — Logging infrastructure
 - `tests/` — Unit and integration tests
-- `.copilot-tracking/memory-bank/` — Project documentation, patterns, and Memory Bank
+- `specs/` — Feature specifications and planning documents for AI agent working memory
 
 ---
 

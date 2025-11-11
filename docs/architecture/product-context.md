@@ -1,3 +1,16 @@
+---
+title: "Product Context and Vision"
+version: "1.0.0"
+created: "2025-11-11"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["architecture", "product-vision", "ux-goals", "market-analysis"]
+related:
+  - "docs/architecture/overview.md"
+  - "docs/architecture/project-brief.md"
+  - "docs/architecture/technology-stack.md"
+---
+
 # Product Context: S7Tools
 
 **Last Updated**: Current Session

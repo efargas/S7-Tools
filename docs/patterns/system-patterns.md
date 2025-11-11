@@ -856,8 +856,8 @@ Agent Workspace:
 
 **Documentation Consolidation:**
 - All scattered tracking files and plans are now consolidated into the Memory Bank structure:
-    - `.copilot-tracking/details/` → `memory-bank/systemPatterns.md`
-    - `.copilot-tracking/plans/`   → `memory-bank/progress.md`
+    - `specs/` → Feature specifications and planning
+    - `docs/` → Documentation and patterns
     - Various tracking files        → `memory-bank/activeContext.md`
 
 **Session Continuity:**

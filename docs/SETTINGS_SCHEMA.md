@@ -347,7 +347,7 @@ protected override void Dispose(bool disposing)
 - **Implementation**: `src/S7Tools/Services/SettingsService.cs`
 - **Interface**: `src/S7Tools.Core/Interfaces/Services/ISettingsService.cs`
 - **Path Service**: `src/S7Tools.Core/Interfaces/Services/IPathService.cs`
-- **Architecture**: `.copilot-tracking/memory-bank/systemPatterns.md` (Section 4.5)
+- **Architecture**: `docs/patterns/system-patterns.md` (Section 4.5)
 - **Examples**: See ViewModels: `PowerSupplySettingsViewModel`, `LoggingSettingsViewModel`
 
 ---

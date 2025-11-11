@@ -1,3 +1,16 @@
+---
+title: "Project Brief"
+version: "1.0.0"
+created: "2025-11-11"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["architecture", "project-brief", "mission", "goals"]
+related:
+  - "docs/architecture/overview.md"
+  - "docs/architecture/product-context.md"
+  - "docs/architecture/technology-stack.md"
+---
+
 # Project Brief: S7Tools
 
 **Created:** 2025-10-14
