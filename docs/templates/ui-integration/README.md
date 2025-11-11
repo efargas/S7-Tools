@@ -10,9 +10,9 @@ tags:
   - mvvm
   - avalonia
 related:
-  - docs/guides/UI_INTEGRATION_WORKFLOW.md
-  - docs/patterns/mvvm-patterns.md
+  - docs/UI_INTEGRATION_WORKFLOW.md
   - docs/architecture/mvvm-patterns.md
+  - docs/templates/ui-integration/INTEGRATION_CHECKLIST.md
 ---
 
 # UI Integration Templates

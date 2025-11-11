@@ -10,9 +10,9 @@ tags:
   - ui
   - workflow
 related:
-  - docs/guides/UI_INTEGRATION_WORKFLOW.md
+  - docs/UI_INTEGRATION_WORKFLOW.md
   - docs/templates/ui-integration/README.md
-  - docs/patterns/mvvm-patterns.md
+  - docs/architecture/mvvm-patterns.md
 ---
 
 # UI Integration Implementation Checklist

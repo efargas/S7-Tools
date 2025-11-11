@@ -6,9 +6,10 @@ last-updated: "2025-11-10"
 status: "current"
 tags: ["architecture", "mvvm", "reactiveui", "viewmodels", "patterns"]
 related:
-  - "docs/architecture/overview.md"
-  - "docs/architecture/clean-architecture.md"
-  - "docs/architecture/dependency-injection.md"
+  - docs/architecture/overview.md
+  - docs/architecture/clean-architecture.md
+  - docs/patterns/system-patterns.md
+---
   - "docs/patterns/system-patterns.md"
 supersedes: []
 ---

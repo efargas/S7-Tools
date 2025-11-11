@@ -1,8 +1,16 @@
-# Archive Management Workflow
+---
+title: "Archive Management Workflow"
+version: "1.0.0"
+created: "2025-11-10"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["documentation", "archive", "workflow", "deprecation"]
+related:
+  - docs/guides/contributing-to-docs.md
+  - docs/INDEX.md
+---
 
-**Version**: 1.0.0
-**Last Updated**: 2025-11-10
-**Status**: current
+# Archive Management Workflow
 
 ## Overview
 

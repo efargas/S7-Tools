@@ -1,12 +1,13 @@
 ---
 title: "Pattern Documentation Template"
 version: "1.0.0"
-created: "YYYY-MM-DD"
-last-updated: "YYYY-MM-DD"
+created: "2025-11-10"
+last-updated: "2025-11-11"
 status: "current"
 tags: ["template", "pattern"]
 related:
   - docs/patterns/_index.md
+  - docs/guides/contributing-to-docs.md
 ---
 
 # Pattern Name

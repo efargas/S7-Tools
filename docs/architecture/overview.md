@@ -8,7 +8,6 @@ tags: ["architecture", "overview", "clean-architecture", "mvvm"]
 related:
   - "docs/architecture/clean-architecture.md"
   - "docs/architecture/mvvm-patterns.md"
-  - "docs/architecture/dependency-injection.md"
   - "docs/patterns/system-patterns.md"
 ---
 

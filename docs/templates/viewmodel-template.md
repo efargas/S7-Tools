@@ -1,7 +1,7 @@
 ---
 title: "ViewModel Template"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-11"
 version: "1.0.0"
 status: "current"
 tags:
@@ -10,9 +10,9 @@ tags:
   - viewmodel
   - mvvm
 related:
-  - docs/patterns/mvvm-patterns.md
-  - docs/guides/development-workflow.md
   - docs/architecture/mvvm-patterns.md
+  - docs/guides/development-workflow.md
+  - docs/patterns/system-patterns.md
 ---
 
 # ViewModel Template

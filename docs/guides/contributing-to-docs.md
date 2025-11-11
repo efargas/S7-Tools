@@ -2,14 +2,14 @@
 title: "Contributing to Documentation"
 version: "1.0.0"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-11"
 status: "current"
 tags: ["documentation", "contribution", "guide", "workflow"]
 related:
-  - guides/documentation-templates.md
-  - guides/frontmatter-schema.md
-  - guides/versioning-guide.md
-  - guides/code-style.md
+  - docs/guides/documentation-templates.md
+  - docs/guides/frontmatter-schema.md
+  - docs/guides/versioning-guide.md
+  - docs/guides/code-style.md
 ---
 
 # Contributing to Documentation

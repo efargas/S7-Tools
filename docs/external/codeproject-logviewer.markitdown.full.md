@@ -1,3 +1,15 @@
+---
+title: "External Reference: CodeProject LogViewer Control (Full)"
+version: "1.0.0"
+created: "2025-11-06"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["external", "reference", "logging", "ui-controls", "avalonia", "full-text"]
+related:
+  - docs/external/codeproject-logviewer.markitdown.md
+  - docs/architecture/overview.md
+---
+
 CODEPROJECT
 
 # CODEPROJECT

@@ -1,7 +1,7 @@
 ---
 title: "Service Template"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-11"
 version: "1.0.0"
 status: "current"
 tags:
@@ -10,7 +10,7 @@ tags:
   - service
   - dependency-injection
 related:
-  - docs/patterns/service-registration.md
+  - docs/patterns/system-patterns.md
   - docs/architecture/clean-architecture.md
   - docs/guides/development-workflow.md
 ---

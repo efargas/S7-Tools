@@ -1,7 +1,7 @@
 ---
 title: "Semaphore Internal Method Pattern - Example"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-11"
 version: "1.0.0"
 status: "current"
 tags:
@@ -12,7 +12,7 @@ tags:
   - code
 related:
   - docs/patterns/internal-method.md
-  - docs/patterns/threading-patterns.md
+  - docs/patterns/system-patterns.md
 ---
 
 # Semaphore Internal Method Pattern - Example

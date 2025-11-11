@@ -2,15 +2,15 @@
 title: "Documentation Templates Guide"
 version: "1.0.0"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-11"
 status: "current"
 tags: ["documentation", "templates", "guide", "contribution"]
 related:
-  - guides/frontmatter-schema.md
-  - guides/contributing-to-docs.md
-  - guides/versioning-guide.md
-  - templates/pattern-template.md
-  - templates/adr-template.md
+  - docs/guides/frontmatter-schema.md
+  - docs/guides/contributing-to-docs.md
+  - docs/guides/versioning-guide.md
+  - docs/templates/pattern-template.md
+  - docs/templates/adr-template.md
 ---
 
 # Documentation Templates Guide

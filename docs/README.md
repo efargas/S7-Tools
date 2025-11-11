@@ -1,3 +1,16 @@
+---
+title: "S7Tools Documentation System"
+version: "1.0.0"
+created: "2025-11-10"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["documentation", "index", "navigation", "readme"]
+related:
+  - docs/INDEX.md
+  - docs/guides/ai-agent-guide.md
+  - docs/guides/onboarding.md
+---
+
 # S7Tools Documentation
 
 Welcome to the S7Tools consolidated documentation system! This directory contains all project documentation organized into clear, navigable categories.

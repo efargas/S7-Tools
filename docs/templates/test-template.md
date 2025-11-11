@@ -1,7 +1,7 @@
 ---
 title: "Test Template"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-11"
 version: "1.0.0"
 status: "current"
 tags:
@@ -11,7 +11,7 @@ tags:
   - xunit
 related:
   - docs/guides/testing-guide.md
-  - docs/patterns/testing-patterns.md
+  - docs/patterns/system-patterns.md
 ---
 
 # Test Template
