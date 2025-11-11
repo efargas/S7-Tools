@@ -1,3 +1,20 @@
+---
+title: "UI Integration Implementation Checklist"
+created: "2025-10-30"
+last-updated: "2025-11-10"
+version: "1.0.0"
+status: "current"
+tags:
+  - checklist
+  - template
+  - ui
+  - workflow
+related:
+  - docs/UI_INTEGRATION_WORKFLOW.md
+  - docs/templates/ui-integration/README.md
+  - docs/architecture/mvvm-patterns.md
+---
+
 # UI Integration Implementation Checklist
 
 Use this checklist when adding a new feature to S7Tools following the UI integration pattern.
@@ -278,3 +295,10 @@ Keyboard Shortcut: _______________
 Service Dependencies: _______________
 Special Considerations: _______________
 ```
+
+## Related Documentation
+
+- [Readme](README.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

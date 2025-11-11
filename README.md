@@ -151,9 +151,11 @@ dotnet publish src/S7Tools/S7Tools.csproj -c Release -r osx-arm64 --self-contain
 
 ## Documentation
 
-- Architecture Blueprint: docs/Project_Architecture_Blueprint.md
-- Agent guidelines: AGENTS.md
-- Architectural Decisions: docs/adr/_index.md
+- Documentation Index: docs/INDEX.md
+- AI Agent Guide: docs/guides/ai-agent-guide.md
+- Architecture Overview: docs/architecture/overview.md
+- Architectural Decisions: docs/architecture/decisions/_index.md
+- Pattern Catalog: docs/patterns/_index.md
 
 ## Logging Viewer
 
@@ -172,3 +174,9 @@ The app includes a real-time Log Viewer backed by an in-memory DataStore provide
 - Linux serial access may require adding your user to the `dialout` group and re‑logging.
 - For socat‑related features, ensure `socat` is installed and accessible on your system.
 
+## Related Documentation
+
+- [Index](docs/INDEX.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

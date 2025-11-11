@@ -1,0 +1,15 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^http"
+    },
+    {
+      "pattern": "^https"
+    }
+  ],
+  "replacementPatterns": [],
+  "httpHeaders": [],
+  "timeout": "5s",
+  "retryOn429": false,
+  "aliveStatusCodes": [200, 206]
+}

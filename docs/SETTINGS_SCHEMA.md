@@ -1,6 +1,18 @@
+---
+title: "Settings Schema Documentation"
+version: "1.0.0"
+created: "2025-10-23"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["reference", "settings", "schema", "configuration"]
+related:
+  - docs/architecture/overview.md
+  - docs/guides/development-workflow.md
+---
+
 # S7Tools Settings Schema Documentation
 
-**Last Updated**: October 23, 2025  
+**Last Updated**: 2025-11-10
 **Version**: 1.0
 
 ## Overview
@@ -240,13 +252,13 @@ private void RefreshFromSettings()
     {
         // Get setting with default
         string profilePath = _settingsService.GetSetting<string>(
-            "profiles.powerSupplyPath", 
+            "profiles.powerSupplyPath",
             _pathService.PowerSupplyProfilesPath);
-        
+
         // Process and validate
         string? directory = Path.GetDirectoryName(profilePath);
         string resolved = _pathService.ResolvePath(directory ?? string.Empty);
-        
+
         // Apply with fallback
         if (!string.IsNullOrEmpty(resolved) && Directory.Exists(resolved))
         {
@@ -254,7 +266,7 @@ private void RefreshFromSettings()
         }
         else
         {
-            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) 
+            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath)
                 ?? _pathService.ProfilesDirectory;
         }
     }
@@ -335,10 +347,18 @@ protected override void Dispose(bool disposing)
 - **Implementation**: `src/S7Tools/Services/SettingsService.cs`
 - **Interface**: `src/S7Tools.Core/Interfaces/Services/ISettingsService.cs`
 - **Path Service**: `src/S7Tools.Core/Interfaces/Services/IPathService.cs`
-- **Architecture**: `.copilot-tracking/memory-bank/systemPatterns.md` (Section 4.5)
+- **Architecture**: `docs/patterns/system-patterns.md` (Section 4.5)
 - **Examples**: See ViewModels: `PowerSupplySettingsViewModel`, `LoggingSettingsViewModel`
 
 ---
 
-**Maintainers**: Update this document when adding, changing, or removing settings.  
+**Maintainers**: Update this document when adding, changing, or removing settings.
 **Developers**: Consult this document before creating new settings.
+
+## Related Documentation
+
+- [Overview](architecture/overview.md)
+- [Development Workflow](guides/development-workflow.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

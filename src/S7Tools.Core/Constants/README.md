@@ -248,9 +248,9 @@ When modifying constants:
 
 ## 🔗 Related Documentation
 
-- [PATTERNS_REFERENCE.md](../../../PATTERNS_REFERENCE.md) - Architecture patterns
-- [DEPRECATED_PROPERTY_MIGRATION.md](../../../docs/DEPRECATED_PROPERTY_MIGRATION.md) - Migration guides
-- [systemPatterns.md](../../../.copilot-tracking/memory-bank/systemPatterns.md) - System patterns
+- [Pattern Catalog](../../../docs/patterns/_index.md) - Architecture patterns
+- [Deprecated Property Migration](../../../docs/DEPRECATED_PROPERTY_MIGRATION.md) - Migration guides
+- [System Patterns](../../../docs/patterns/system-patterns.md) - System patterns
 
 ---
 

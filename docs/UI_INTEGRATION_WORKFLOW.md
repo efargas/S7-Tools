@@ -1,6 +1,19 @@
+---
+title: "UI Integration Workflow"
+version: "1.1.0"
+created: "2025-01-15"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["guide", "ui", "integration", "workflow", "avalonia"]
+related:
+  - docs/architecture/mvvm-patterns.md
+  - docs/patterns/reusable-controls.md
+  - docs/templates/ui-integration/README.md
+---
+
 # UI Integration Workflow
 
-**Last Updated**: 2025-11-07
+**Last Updated**: 2025-11-10
 **Version**: 1.1
 
 This document explains the S7Tools UI integration pattern: how components connect from the Activity Bar through Side Panels to Main Content Views.
@@ -388,13 +401,13 @@ using S7Tools.ViewModels.Controls;
 public class MyFeatureViewModel : ViewModelBase
 {
     private SerialPortDiscoveryViewModel _portDiscovery;
-    
+
     public SerialPortDiscoveryViewModel PortDiscovery
     {
         get => _portDiscovery;
         set => this.RaiseAndSetIfChanged(ref _portDiscovery, value);
     }
-    
+
     // Prefer constructor injection for better testability and DI best practices
     public MyFeatureViewModel(SerialPortDiscoveryViewModel portDiscovery)
     {
@@ -419,7 +432,7 @@ A collapsible section control for organizing sidebar content.
 ```xaml
 <UserControl xmlns:controls="using:S7Tools.Views.Controls">
   <StackPanel>
-    <controls:SidebarSection Header="Settings" 
+    <controls:SidebarSection Header="Settings"
                              Icon="fa-solid fa-cog"
                              IsExpanded="True">
       <!-- Section content here -->
@@ -428,8 +441,8 @@ A collapsible section control for organizing sidebar content.
         <TextBlock Text="Option 2" />
       </StackPanel>
     </controls:SidebarSection>
-    
-    <controls:SidebarSection Header="Advanced" 
+
+    <controls:SidebarSection Header="Advanced"
                              Icon="fa-solid fa-sliders"
                              IsExpanded="False">
       <!-- Advanced options -->
@@ -519,16 +532,17 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 - Check ViewLocator can resolve the ViewModel → View mapping
 - Ensure `ContentControl.Content` binding is correct
 
-## Related Documentation
-
-- **Architecture Blueprint**: `docs/Project_Architecture_Blueprint.md`
-- **Folder Structure**: `docs/Project_Folders_Structure_Blueprint.md`
-- **Code Templates**: `docs/templates/ui-integration/`
-- **ViewLocator Implementation**: `src/S7Tools/ViewLocator.cs`
-- **Navigation ViewModel**: `src/S7Tools/ViewModels/NavigationViewModel.cs`
-
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-10-24 | Initial documentation with ViewLocator pattern |
+
+## Related Documentation
+
+- [Mvvm Patterns](architecture/mvvm-patterns.md)
+- [Reusable Controls](patterns/reusable-controls.md)
+- [Readme](templates/ui-integration/README.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

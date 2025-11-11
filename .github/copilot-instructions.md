@@ -154,7 +154,7 @@ dotnet clean src/S7Tools.sln
 dotnet restore src/S7Tools.sln
 dotnet build src/S7Tools.sln --configuration Debug
 
-# Testing (must maintain 99.7%+ passing tests: 308 tests, 1 intentionally skipped)
+# Testing (must maintain 99.7%+ passing tests: 361 tests, 1 intentionally skipped)
 dotnet test src/S7Tools.sln --configuration Debug
 
 # Code formatting (REQUIRED before any commit)
@@ -180,11 +180,13 @@ dotnet run --project src/S7Tools --configuration Debug -- --diag
   - Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks
 - **Views**: Organized by category in `src/S7Tools/Views/` (mirrors ViewModels structure)
 - **Domain Models**: `src/S7Tools.Core/Models/` (including `Jobs/JobManagerOptions.cs`)
-- **Architecture Patterns**: `.copilot-tracking/memory-bank/systemPatterns.md`
-- **Pattern Reference**: `PATTERNS_REFERENCE.md` (comprehensive pattern documentation)
-- **Code Review Reports**: `reviews/LATEST_REVIEW.md` (latest review)
-- **Project Documentation**: `.copilot-tracking/memory-bank/`
 - **Custom Exceptions**: `src/S7Tools.Core/Exceptions/`
+- **Documentation**: `docs/` (all project documentation)
+- **Specifications**: `specs/` (active development specs and tasks)
+- **Architecture Docs**: `docs/architecture/` (overview, diagrams, patterns, product context)
+- **Development Guides**: `docs/guides/` (development workflow, testing, code style)
+- **System Patterns**: `docs/patterns/system-patterns.md` (comprehensive pattern documentation)
+- **Code Reviews**: `docs/reviews/LATEST.md` (latest review)
 
 ## Namespace Conventions
 
@@ -203,18 +205,32 @@ The ViewLocator automatically resolves Views from ViewModels using namespace rep
 
 - Structure: AAA pattern (Arrange-Act-Assert)
 - Async tests: Use `async Task`, avoid `.Wait()` or `.Result`
-- Maintain 99.7%+ test pass rate (308 tests, 1 intentionally skipped)
+- Maintain 99.7%+ test pass rate (361 tests, 1 intentionally skipped)
 - Test exception scenarios with specific exception types
 
-## Memory Bank Integration
+## Documentation and Specifications
 
-Always review Memory Bank files before starting work:
-1. `activeContext.md` - Current work focus
-2. `systemPatterns.md` - Architecture patterns and rules
-3. `progress.md` - Implementation status
-4. `tasks/_index.md` - Priority tasks
+### Primary Documentation Structure
+All project documentation is consolidated in the unified `docs/` directory:
+- `docs/architecture/` - Architecture patterns, diagrams, technology stack, product context
+- `docs/guides/` - Development guides, testing, code style, migration guides
+- `docs/patterns/` - Design patterns and system patterns reference
+- `docs/reviews/` - Code review reports
+- `docs/.metadata/` - Migration tracking and documentation metadata
 
-Update Memory Bank after significant architectural changes or when requested with "update memory bank".
+### AI Agent Working Memory
+For active development work and task tracking, use the `specs/` directory:
+- Each specification has its own directory (e.g., `specs/009-docs-consolidation/`)
+- Contains: `spec.md`, `tasks.md`, `README.md`, and related planning documents
+- Use `specs/` for scratchpad, active context, and work-in-progress documentation
+- Permanent documentation should be migrated to `docs/` when complete
+
+### Key Documentation Files
+- **System Patterns**: `docs/patterns/system-patterns.md` - Architecture patterns and rules
+- **Development Standards**: `docs/guides/development-standards.md` - Comprehensive development guidelines
+- **Project Brief**: `docs/architecture/project-brief.md` - Core mission and goals
+- **Technology Stack**: `docs/architecture/technology-stack.md` - Technology details and libraries
+- **AI Agent Guide**: `docs/guides/ai-agent-guide.md` - AI agent integration patterns
 
 ## Settings and Configuration Patterns
 
@@ -262,3 +278,14 @@ When external code reviews flag issues:
 - ❌ Forgetting to unsubscribe event handlers in Dispose
 
 This architecture enables rapid development while maintaining clean separation of concerns and excellent testability.
+
+## Related Documentation
+
+- **Architecture Overview**: [docs/architecture/overview.md](../docs/architecture/overview.md)
+- **System Patterns**: [docs/patterns/system-patterns.md](../docs/patterns/system-patterns.md)
+- **Development Standards**: [docs/guides/development-standards.md](../docs/guides/development-standards.md)
+- **AI Agent Guide**: [docs/guides/ai-agent-guide.md](../docs/guides/ai-agent-guide.md)
+- **Documentation Index**: [docs/INDEX.md](../docs/INDEX.md)
+
+---
+*Last updated: 2025-11-11 (Documentation consolidation complete)*

@@ -1,0 +1,52 @@
+{
+  "generated": "2025-11-10T18:22:27.877668",
+  "archive_root": "docs/archive",
+  "documents": [
+    {
+      "file": "archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "title": "Attribute-Based Property Display Documentation",
+      "deprecated_date": "2025-11-10",
+      "removal_date": "2027-11-10",
+      "days_until_removal": 729,
+      "superseded_by": "docs/patterns/reusable-controls.md",
+      "tags": [
+        "deprecated",
+        "ui",
+        "attributes",
+        "display"
+      ]
+    },
+    {
+      "file": "archive/Project_Architecture_Blueprint.md",
+      "title": "Project Architecture Blueprint (Deprecated)",
+      "deprecated_date": "2025-11-10",
+      "removal_date": "2027-11-10",
+      "days_until_removal": 729,
+      "superseded_by": "docs/architecture/overview.md",
+      "tags": [
+        "deprecated",
+        "architecture",
+        "blueprint"
+      ]
+    },
+    {
+      "file": "archive/Project_Folders_Structure_Blueprint.md",
+      "title": "Project Folder Structure Blueprint (Deprecated)",
+      "deprecated_date": "2025-11-10",
+      "removal_date": "2027-11-10",
+      "days_until_removal": 729,
+      "superseded_by": "docs/architecture/overview.md",
+      "tags": [
+        "deprecated",
+        "architecture",
+        "structure",
+        "folders"
+      ]
+    }
+  ],
+  "statistics": {
+    "total_archived": 3,
+    "pending_removal": 3,
+    "days_until_next_removal": 729
+  }
+}

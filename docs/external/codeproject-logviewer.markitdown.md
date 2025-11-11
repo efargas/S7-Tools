@@ -1,3 +1,15 @@
+---
+title: "External Reference: CodeProject LogViewer Control"
+version: "1.0.0"
+created: "2025-11-06"
+last-updated: "2025-11-11"
+status: "current"
+tags: ["external", "reference", "logging", "ui-controls", "avalonia"]
+related:
+  - docs/architecture/overview.md
+  - docs/patterns/system-patterns.md
+---
+
 # CODEPROJECT
 
 Source: <https://www.codeproject.com/articles/LogViewer-Control-for-WinForms-WPF-and-Avalonia-in>

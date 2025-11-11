@@ -1,3 +1,15 @@
+---
+title: "Deprecated Property Migration Guide"
+version: "1.0.0"
+created: "2025-11-10"
+last-updated: "2025-11-10"
+status: "current"
+tags: ["guide", "migration", "deprecated", "properties"]
+related:
+  - docs/guides/migration/deprecated-patterns.md
+  - docs/guides/versioning-guide.md
+---
+
 # Deprecated Property Migration Guide
 
 ## Overview
@@ -167,3 +179,11 @@ No additional deprecations are currently planned.
 
 **Last Updated**: 2025-11-10
 **Maintainer**: S7Tools Development Team
+
+## Related Documentation
+
+- [Deprecated Patterns](guides/migration/deprecated-patterns.md)
+- [Versioning Guide](guides/versioning-guide.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
