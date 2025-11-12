@@ -148,7 +148,7 @@ class PatternValidator:
             pattern_name="Resource Coordination",
             documented_location="docs/patterns/resource-coordination.md",
             expected_files=[
-                "src/S7Tools/Services/ResourceCoordinator.cs",
+                "src/S7Tools/Services/Tasking/ResourceCoordinator.cs",
                 "src/S7Tools.Core/Services/Interfaces/IResourceCoordinator.cs"
             ]
         ))
@@ -172,7 +172,7 @@ class PatternValidator:
             expected_files=[
                 "src/S7Tools/Views/Controls/SerialPortDiscoveryControl.axaml",
                 "src/S7Tools/Views/Controls/SerialPortDiscoveryControl.axaml.cs",
-                "src/S7Tools/ViewModels/Controls/SerialPortScannerViewModel.cs"
+                "src/S7Tools/ViewModels/Controls/SerialPortDiscoveryViewModel.cs"
             ]
         ))
 
@@ -227,7 +227,7 @@ class PatternValidator:
             ],
             "Reusable Controls": [
                 "SerialPortDiscoveryControl",
-                "SerialPortScannerViewModel"
+                "SerialPortDiscoveryViewModel"
             ]
         }
 

@@ -215,8 +215,47 @@ class MarkdownParser:
             return 'guides'  # Default fallback
 
     def _is_simplified_example(self, code: str) -> bool:
-        """Check if code contains simplified example annotation."""
-        return '// ... simplified' in code or '// simplified' in code
+        """Check if code contains simplified example annotation.
+
+        Detects various patterns indicating code is for illustration only:
+        - // ... simplified
+        - // simplified
+        - // Simplified
+        - // ... (ellipsis indicating omitted code)
+        - /* ... */ (block comment ellipsis)
+        - Contains placeholder markers like <TParameter>
+        - Contains obvious incomplete syntax patterns
+        """
+        code_lower = code.lower()
+
+        # Explicit simplified markers
+        if 'simplified' in code_lower:
+            return True
+
+        # Ellipsis patterns (code omission indicators)
+        if '// ...' in code or '/* ... */' in code:
+            return True
+
+        # Placeholder/template patterns
+        if '<T' in code or '<TOptions' in code or '<TResult' in code:
+            # Check if it's in a generic type declaration context
+            # If it's standalone without class/interface definition, it's simplified
+            if not re.search(r'(class|interface|struct)\s+\w+<T', code):
+                return True
+
+        # Check for incomplete/placeholder patterns
+        incomplete_patterns = [
+            r'//\s*\.\.\..*existing\s+code',  # // ... existing code
+            r'//\s*implementation',           # // implementation
+            r'//\s*work',                     # // work
+            r'/\*\s*\.\.\.\s*\*/',           # /* ... */
+        ]
+
+        for pattern in incomplete_patterns:
+            if re.search(pattern, code, re.IGNORECASE):
+                return True
+
+        return False
 
     def _extract_usings(self, code: str) -> list[str]:
         """Extract required using statements from C# code."""

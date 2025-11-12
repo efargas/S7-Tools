@@ -12,6 +12,8 @@ Options:
     --verbose           Enable verbose output
     --skip-compilation  Skip slow code compilation checks
     --category <cat>    Validate specific category only (architecture, patterns, guides, etc.)
+    --exclude-archives  Exclude archived/deprecated documentation from validation
+    --exclude-examples  Exclude tutorial/example documentation from validation
     --output <path>     Output directory for reports (default: docs/.metadata/)
 """
 
@@ -58,6 +60,8 @@ class DocumentationValidator:
         self,
         workspace_root: Path,
         skip_compilation: bool = False,
+        exclude_archives: bool = False,
+        exclude_examples: bool = False,
         verbose: bool = False
     ):
         """Initialize validator.
@@ -65,10 +69,14 @@ class DocumentationValidator:
         Args:
             workspace_root: Path to S7Tools workspace root
             skip_compilation: Skip code compilation checks (faster)
+            exclude_archives: Exclude archived/deprecated documentation
+            exclude_examples: Exclude tutorial/example documentation
             verbose: Enable verbose logging
         """
         self.workspace_root = workspace_root
         self.skip_compilation = skip_compilation
+        self.exclude_archives = exclude_archives
+        self.exclude_examples = exclude_examples
         self.verbose = verbose
 
         # Initialize components
@@ -96,6 +104,10 @@ class DocumentationValidator:
         self._log(f"{Fore.CYAN}Starting S7Tools documentation validation...{Style.RESET_ALL}")
         self._log(f"Workspace: {self.workspace_root}")
         self._log(f"Skip compilation: {self.skip_compilation}")
+        if self.exclude_archives:
+            self._log(f"Excluding archived documentation")
+        if self.exclude_examples:
+            self._log(f"Excluding tutorial/example documentation")
 
         # 1. Find and parse documentation files
         self._log("\n📄 Scanning documentation files...")
@@ -219,6 +231,8 @@ class DocumentationValidator:
             return []
 
         doc_files = []
+        excluded_count = 0
+
         for md_file in docs_dir.rglob("*.md"):
             # Skip certain files
             if md_file.name in ["README.md", "CHANGELOG.md"]:
@@ -232,9 +246,25 @@ class DocumentationValidator:
                 if category and doc_file.category != category:
                     continue
 
+                # Exclude archived documentation if flag set
+                if self.exclude_archives and doc_file.category == "archive":
+                    excluded_count += 1
+                    continue
+
+                # Exclude tutorial/example documentation if flag set
+                if self.exclude_examples and doc_file.frontmatter:
+                    doc_type = doc_file.frontmatter.get("type", "")
+                    status = doc_file.frontmatter.get("status", "")
+                    if doc_type in ["example", "tutorial"] or status == "example":
+                        excluded_count += 1
+                        continue
+
                 doc_files.append(doc_file)
             except Exception as e:
                 self._log(f"Warning: Failed to parse {md_file}: {e}")
+
+        if excluded_count > 0:
+            self._log(f"Excluded {excluded_count} files based on filters")
 
         return doc_files
 
@@ -293,6 +323,16 @@ def main():
         help="Skip code compilation checks (faster)"
     )
     parser.add_argument(
+        "--exclude-archives",
+        action="store_true",
+        help="Exclude archived/deprecated documentation from validation"
+    )
+    parser.add_argument(
+        "--exclude-examples",
+        action="store_true",
+        help="Exclude tutorial/example documentation from validation"
+    )
+    parser.add_argument(
         "--category",
         type=str,
         choices=["architecture", "patterns", "guides", "templates", "reviews", "archive"],
@@ -315,6 +355,8 @@ def main():
     validator = DocumentationValidator(
         workspace_root=workspace_root,
         skip_compilation=args.skip_compilation,
+        exclude_archives=args.exclude_archives,
+        exclude_examples=args.exclude_examples,
         verbose=args.verbose
     )
 

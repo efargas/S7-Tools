@@ -17,7 +17,7 @@ related:
 
 **This document is deprecated as of 2025-11-10.**
 
-**Use instead**: [Reusable Controls Pattern](./patterns/reusable-controls.md)
+**Use instead**: [Reusable Controls Pattern](../patterns/reusable-controls.md)
 
 **Removal Date**: 2027-11-10 (2-year retention policy)
 

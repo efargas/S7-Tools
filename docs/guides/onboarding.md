@@ -232,8 +232,8 @@ See [Internal Method Pattern](../patterns/internal-method.md) for semaphore safe
 1. Read feature specification in `specs/XXX-feature-name/spec.md`
 2. Check [Architecture Guide](../architecture/clean-architecture.md) for layer placement
 3. Find similar features for reference
-4. Use [ViewModel Template](../templates/viewmodel-template.cs) as starting point
-5. Write tests using [Test Template](../templates/test-template.cs)
+4. Use [ViewModel Template](../templates/viewmodel-template.md) as starting point
+5. Write tests using [Test Template](../templates/test-template.md)
 6. Implement following established patterns
 7. Run `dotnet format` and `dotnet test`
 8. Commit with descriptive message

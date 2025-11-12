@@ -98,8 +98,8 @@ Welcome to the S7Tools Documentation System. This is the master index for all S7
 
 | Template Type | Files |
 |---------------|-------|
-| **Code** | [ViewModel Template](templates/viewmodel-template.cs), [Service Template](templates/service-template.cs) |
-| **Testing** | [Test Template](templates/test-template.cs) |
+| **Code** | [ViewModel Template](templates/viewmodel-template.md), [Service Template](templates/service-template.md) |
+| **Testing** | [Test Template](templates/test-template.md) |
 | **Documentation** | [ADR Template](templates/adr-template.md), [Pattern Template](templates/pattern-template.md) |
 | **UI Integration** | [UI Integration Templates](templates/ui-integration/) |
 
@@ -169,7 +169,7 @@ grep -r "status: \"deprecated\"" docs/
 
 1. Read [Architecture Overview](architecture/overview.md) - Understand layers
 2. Check [Pattern Catalog](patterns/_index.md) - Find relevant patterns
-3. Copy [ViewModel Template](templates/viewmodel-template.cs) - Start with boilerplate
+3. Copy [ViewModel Template](templates/viewmodel-template.md) - Start with boilerplate
 4. Follow [Testing Guide](guides/testing-guide.md) - Write tests first
 5. Review [Latest Code Review](reviews/LATEST.md) - Check quality standards
 

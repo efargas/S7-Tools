@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-12",
+  "migrations": [
+    {
+      "id": "001",
+      "date": "2025-11-10",
+      "type": "consolidation",
+      "source": "specs/009-docs-consolidation/",
+      "target": "docs/",
+      "status": "completed",
+      "filesAffected": 82,
+      "description": "Consolidated documentation from specs/ to unified docs/ structure"
+    },
+    {
+      "id": "002",
+      "date": "2025-11-10",
+      "type": "archive",
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/archive/Project_Architecture_Blueprint.md",
+      "status": "completed",
+      "reason": "Superseded by docs/architecture/overview.md",
+      "retentionUntil": "2027-11-10"
+    },
+    {
+      "id": "003",
+      "date": "2025-11-10",
+      "type": "archive",
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "status": "completed",
+      "reason": "Superseded by docs/architecture/overview.md",
+      "retentionUntil": "2027-11-10"
+    },
+    {
+      "id": "004",
+      "date": "2025-11-10",
+      "type": "archive",
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "status": "completed",
+      "reason": "Superseded by docs/patterns/reusable-controls.md",
+      "retentionUntil": "2027-11-10"
+    }
+  ],
+  "deprecationSchedule": [
+    {
+      "document": "docs/archive/Project_Architecture_Blueprint.md",
+      "archiveDate": "2025-11-10",
+      "reviewDate": "2026-11-10",
+      "deleteAfter": "2027-11-10",
+      "status": "archived"
+    },
+    {
+      "document": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "archiveDate": "2025-11-10",
+      "reviewDate": "2026-11-10",
+      "deleteAfter": "2027-11-10",
+      "status": "archived"
+    },
+    {
+      "document": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "archiveDate": "2025-11-10",
+      "reviewDate": "2026-11-10",
+      "deleteAfter": "2027-11-10",
+      "status": "archived"
+    }
+  ],
+  "activeReplacements": [
+    {
+      "deprecated": "docs/archive/Project_Architecture_Blueprint.md",
+      "replacement": "docs/architecture/overview.md",
+      "migrationComplete": true
+    },
+    {
+      "deprecated": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "replacement": "docs/architecture/overview.md",
+      "migrationComplete": true
+    },
+    {
+      "deprecated": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "replacement": "docs/patterns/reusable-controls.md",
+      "migrationComplete": true
+    }
+  ]
+}

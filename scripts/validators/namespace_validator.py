@@ -26,6 +26,12 @@ class NamespaceValidator:
         "Pages", "Profiles", "Settings", "Tasks"
     ]
 
+    # Files to exclude from namespace validation (base classes, utilities)
+    EXCLUDED_FILES = [
+        "ViewModelBase.cs",  # Base class - intentionally uses S7Tools.ViewModels
+        "ViewLocator.cs",    # Utility class - no category needed
+    ]
+
     # Namespace patterns
     VIEWMODEL_PATTERN = r"^S7Tools\.ViewModels\.(\w+)$"
     VIEW_PATTERN = r"^S7Tools\.Views\.(\w+)$"
@@ -84,6 +90,19 @@ class NamespaceValidator:
         Returns:
             NamespaceValidation entity with compliance status
         """
+        # Check if file is in exclusion list
+        if file_path.name in self.EXCLUDED_FILES:
+            # Excluded files are automatically compliant
+            declared_namespace = self.extract_namespace_from_file(file_path)
+            return NamespaceValidation(
+                source_file=str(file_path.relative_to(self.workspace_root)),
+                declared_namespace=declared_namespace or "",
+                expected_pattern="N/A (excluded base class)",
+                is_compliant=True,
+                category=None,
+                violation_details=None
+            )
+
         # Extract namespace from file
         declared_namespace = self.extract_namespace_from_file(file_path)
 
