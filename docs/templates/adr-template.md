@@ -1,5 +1,6 @@
 ---
 title: "ADR Template"
+type: "template"
 created: "2025-11-10"
 last-updated: "2025-11-10"
 version: "1.0.0"
@@ -16,10 +17,10 @@ related:
 
 # ADR-NNNN: [Decision Title]
 
-**Status**: [Proposed | Accepted | Deprecated | Superseded]  
-**Date**: YYYY-MM-DD  
-**Deciders**: [List of people involved]  
-**Supersedes**: [ADR-NNNN if applicable]  
+**Status**: [Proposed | Accepted | Deprecated | Superseded]
+**Date**: YYYY-MM-DD
+**Deciders**: [List of people involved]
+**Supersedes**: [ADR-NNNN if applicable]
 **Superseded By**: [ADR-NNNN if applicable]
 
 ## Context and Problem Statement
@@ -81,9 +82,9 @@ related:
 
 ## Metadata
 
-**Created**: YYYY-MM-DD  
-**Last Updated**: YYYY-MM-DD  
-**Version**: 1.0.0  
+**Created**: YYYY-MM-DD
+**Last Updated**: YYYY-MM-DD
+**Version**: 1.0.0
 **Tags**: architecture, decision, [domain]
 
 ## Related Documentation

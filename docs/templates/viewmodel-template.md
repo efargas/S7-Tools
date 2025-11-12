@@ -1,5 +1,6 @@
 ---
 title: "ViewModel Template"
+type: "template"
 created: "2025-11-10"
 last-updated: "2025-11-11"
 version: "1.0.0"

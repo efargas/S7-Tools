@@ -4,6 +4,7 @@ version: "1.0.0"
 created: "2025-11-10"
 last-updated: "2025-11-11"
 status: "current"
+type: "tutorial"
 tags: ["documentation", "templates", "guide", "contribution"]
 related:
   - docs/guides/frontmatter-schema.md
@@ -68,9 +69,9 @@ This guide explains how to use documentation templates effectively and when to u
 ### 4. Code Templates
 
 **Locations**:
-- [`templates/viewmodel-template.cs`](../templates/viewmodel-template.cs) - MVVM ViewModels
-- [`templates/service-template.cs`](../templates/service-template.cs) - Service classes
-- [`templates/test-template.cs`](../templates/test-template.cs) - Unit tests
+- [`templates/viewmodel-template.md`](../templates/viewmodel-template.md) - MVVM ViewModels
+- [`templates/service-template.md`](../templates/service-template.md) - Service classes
+- [`templates/test-template.md`](../templates/test-template.md) - Unit tests
 
 **When to use**: Creating new code files following established patterns
 

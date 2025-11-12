@@ -4,6 +4,7 @@ version: "1.0.0"
 created: "2025-11-10"
 last-updated: "2025-11-11"
 status: "current"
+type: "tutorial"
 tags: ["documentation", "contribution", "guide", "workflow"]
 related:
   - docs/guides/documentation-templates.md

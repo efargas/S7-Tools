@@ -72,10 +72,10 @@ supersedes: []
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:S7Tools.ViewModels.Controls"
              x:Class="S7Tools.Views.Controls.SerialPortDiscoveryControl"
-             x:DataType="vm:SerialPortScannerViewModel">
+             x:DataType="vm:SerialPortDiscoveryViewModel">
 
     <Design.DataContext>
-        <vm:SerialPortScannerViewModel />
+        <vm:SerialPortDiscoveryViewModel />
     </Design.DataContext>
 
     <StackPanel Spacing="8">
@@ -125,19 +125,24 @@ supersedes: []
 
 ### 2. Create Dedicated ViewModel
 
-**File**: `src/S7Tools/ViewModels/Controls/SerialPortScannerViewModel.cs`
+**File**: `src/S7Tools/ViewModels/Controls/SerialPortDiscoveryViewModel.cs`
+
+```csharp
+### Control ViewModel Pattern
+
+**File**: `src/S7Tools/ViewModels/Controls/SerialPortDiscoveryViewModel.cs`
 
 ```csharp
 namespace S7Tools.ViewModels.Controls;
 
-public class SerialPortScannerViewModel : ReactiveObject
+public class SerialPortDiscoveryViewModel : ReactiveObject
 {
     private readonly ISerialPortDiscoveryService _discoveryService;
-    private readonly ILogger<SerialPortScannerViewModel> _logger;
+    private readonly ILogger<SerialPortDiscoveryViewModel> _logger;
 
-    public SerialPortScannerViewModel(
+    public SerialPortDiscoveryViewModel(
         ISerialPortDiscoveryService discoveryService,
-        ILogger<SerialPortScannerViewModel> logger)
+        ILogger<SerialPortDiscoveryViewModel> logger)
     {
         _discoveryService = discoveryService;
         _logger = logger;
@@ -222,8 +227,8 @@ public class SerialPortScannerViewModel : ReactiveObject
 public static IServiceCollection AddS7ToolsControlViewModels(this IServiceCollection services)
 {
     // ✅ CRITICAL: Register as Transient for state isolation
-    // Each parent ViewModel instance gets its own SerialPortScannerViewModel
-    services.TryAddTransient<SerialPortScannerViewModel>();
+    // Each parent ViewModel instance gets its own SerialPortDiscoveryViewModel
+    services.TryAddTransient<SerialPortDiscoveryViewModel>();
 
     // Other control ViewModels
     services.TryAddTransient<MemoryRegionSelectorViewModel>();
@@ -274,9 +279,9 @@ namespace S7Tools.ViewModels.Settings;
 
 public class SerialPortsSettingsViewModel : ViewModelBase
 {
-    private readonly SerialPortScannerViewModel _portScanner;
+    private readonly SerialPortDiscoveryViewModel _portScanner;
 
-    public SerialPortsSettingsViewModel(SerialPortScannerViewModel portScanner)
+    public SerialPortsSettingsViewModel(SerialPortDiscoveryViewModel portScanner)
     {
         _portScanner = portScanner;
 
@@ -287,7 +292,7 @@ public class SerialPortsSettingsViewModel : ViewModelBase
     }
 
     // Expose child ViewModel for binding
-    public SerialPortScannerViewModel PortScanner => _portScanner;
+    public SerialPortDiscoveryViewModel PortScanner => _portScanner;
 
     private void OnPortSelected(string? port)
     {
@@ -376,7 +381,7 @@ var wizard2 = new JobWizardViewModel(portScanner2);
 public async Task ScanPorts_Should_Populate_AvailablePorts()
 {
     // Arrange
-    var viewModel = new SerialPortScannerViewModel(_discoveryService, _logger);
+    var viewModel = new SerialPortDiscoveryViewModel(_discoveryService, _logger);
 
     // Act
     await viewModel.ScanPortsCommand.Execute();
@@ -455,7 +460,7 @@ public async Task ScanPorts_Should_Populate_AvailablePorts()
 
 ```csharp
 // BAD: Singleton causes state conflicts
-services.TryAddSingleton<SerialPortScannerViewModel>();
+services.TryAddSingleton<SerialPortDiscoveryViewModel>();
 
 // Two parent instances share the same scanner!
 var parent1 = new JobWizardViewModel(scanner);  // ❌ Same scanner
@@ -465,7 +470,7 @@ var parent2 = new JobWizardViewModel(scanner);  // ❌ Same scanner
 **Fix**: Register as Transient:
 ```csharp
 // GOOD: Each parent gets its own instance
-services.TryAddTransient<SerialPortScannerViewModel>();
+services.TryAddTransient<SerialPortDiscoveryViewModel>();
 ```
 
 ### ❌ Don't: Duplicate ViewModel Logic
@@ -488,9 +493,9 @@ public class SocatSettingsViewModel
 // GOOD: Reuse child ViewModel logic
 public class JobWizardViewModel
 {
-    private readonly SerialPortScannerViewModel _portScanner;
+    private readonly SerialPortDiscoveryViewModel _portScanner;
 
-    public SerialPortScannerViewModel PortScanner => _portScanner;
+    public SerialPortDiscoveryViewModel PortScanner => _portScanner;
 
     // Delegate to child ViewModel
     public Task ScanPortsAsync() => _portScanner.ScanPortsCommand.Execute();
@@ -502,17 +507,17 @@ public class JobWizardViewModel
 ### Test UserControl ViewModel
 
 ```csharp
-public class SerialPortScannerViewModelTests
+public class SerialPortDiscoveryViewModelTests
 {
     private readonly Mock<ISerialPortDiscoveryService> _mockDiscoveryService;
-    private readonly Mock<ILogger<SerialPortScannerViewModel>> _mockLogger;
-    private readonly SerialPortScannerViewModel _viewModel;
+    private readonly Mock<ILogger<SerialPortDiscoveryViewModel>> _mockLogger;
+    private readonly SerialPortDiscoveryViewModel _viewModel;
 
-    public SerialPortScannerViewModelTests()
+    public SerialPortDiscoveryViewModelTests()
     {
         _mockDiscoveryService = new Mock<ISerialPortDiscoveryService>();
-        _mockLogger = new Mock<ILogger<SerialPortScannerViewModel>>();
-        _viewModel = new SerialPortScannerViewModel(_mockDiscoveryService.Object, _mockLogger.Object);
+        _mockLogger = new Mock<ILogger<SerialPortDiscoveryViewModel>>();
+        _viewModel = new SerialPortDiscoveryViewModel(_mockDiscoveryService.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -564,7 +569,7 @@ public class SerialPortScannerViewModelTests
 - `ProfileSelectorControl.axaml` - Profile dropdown selector
 
 **Control ViewModels** (`src/S7Tools/ViewModels/Controls/`):
-- `SerialPortScannerViewModel.cs` - Port scanning logic
+- `SerialPortDiscoveryViewModel.cs` - Port scanning logic
 - `MemoryRegionSelectorViewModel.cs` - Memory region selection logic
 - `ProfileSelectorViewModel.cs` - Profile selection logic
 

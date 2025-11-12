@@ -6,6 +6,16 @@ set -e  # Exit on first error
 
 DOCS_ROOT="${1:-docs}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Use virtual environment if available, otherwise use system python3
+if [ -f "$REPO_ROOT/.venv/bin/python" ]; then
+    PYTHON="$REPO_ROOT/.venv/bin/python"
+    echo "Using virtual environment: $REPO_ROOT/.venv"
+else
+    PYTHON="python3"
+    echo "Using system Python"
+fi
 
 echo "========================================="
 echo "S7Tools Documentation Validation Suite"
@@ -24,7 +34,7 @@ echo ""
 # Frontmatter validation (BLOCKING)
 echo "1️⃣  Validating frontmatter..."
 echo "-----------------------------------"
-if python3 "$SCRIPT_DIR/validate-frontmatter.py" "$DOCS_ROOT"; then
+if $PYTHON "$SCRIPT_DIR/validate-frontmatter.py" "$DOCS_ROOT"; then
     echo "✓ Frontmatter validation passed"
 else
     echo "✗ Frontmatter validation FAILED"
@@ -51,13 +61,24 @@ echo ""
 # Orphan detection (WARNING only)
 echo "3️⃣  Detecting orphaned files..."
 echo "-----------------------------------"
-python3 "$SCRIPT_DIR/detect-orphans.py" "$DOCS_ROOT" || true
+$PYTHON "$SCRIPT_DIR/detect-orphans.py" "$DOCS_ROOT" || true
 echo ""
 
 # Duplicate detection (WARNING only)
 echo "4️⃣  Detecting duplicate content..."
 echo "-----------------------------------"
-python3 "$SCRIPT_DIR/detect-duplicates.py" "$DOCS_ROOT" || true
+$PYTHON "$SCRIPT_DIR/detect-duplicates.py" "$DOCS_ROOT" || true
+echo ""
+
+# Documentation validation (code examples, file refs, namespaces, patterns, links)
+echo "5️⃣  Validating documentation against source code..."
+echo "-----------------------------------"
+if $PYTHON "$SCRIPT_DIR/validate-documentation.py" --output "$REPO_ROOT/docs/.metadata"; then
+    echo "✓ Documentation validation passed"
+else
+    echo "✗ Documentation validation FAILED"
+    exit 1
+fi
 echo ""
 
 echo "========================================="

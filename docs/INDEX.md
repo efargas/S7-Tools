@@ -98,8 +98,8 @@ Welcome to the S7Tools Documentation System. This is the master index for all S7
 
 | Template Type | Files |
 |---------------|-------|
-| **Code** | [ViewModel Template](templates/viewmodel-template.cs), [Service Template](templates/service-template.cs) |
-| **Testing** | [Test Template](templates/test-template.cs) |
+| **Code** | [ViewModel Template](templates/viewmodel-template.md), [Service Template](templates/service-template.md) |
+| **Testing** | [Test Template](templates/test-template.md) |
 | **Documentation** | [ADR Template](templates/adr-template.md), [Pattern Template](templates/pattern-template.md) |
 | **UI Integration** | [UI Integration Templates](templates/ui-integration/) |
 
@@ -169,7 +169,7 @@ grep -r "status: \"deprecated\"" docs/
 
 1. Read [Architecture Overview](architecture/overview.md) - Understand layers
 2. Check [Pattern Catalog](patterns/_index.md) - Find relevant patterns
-3. Copy [ViewModel Template](templates/viewmodel-template.cs) - Start with boilerplate
+3. Copy [ViewModel Template](templates/viewmodel-template.md) - Start with boilerplate
 4. Follow [Testing Guide](guides/testing-guide.md) - Write tests first
 5. Review [Latest Code Review](reviews/LATEST.md) - Check quality standards
 
@@ -202,9 +202,9 @@ grep -r "status: \"deprecated\"" docs/
 
 1. **Architecture** → `docs/architecture/overview.md` (system structure)
 2. **Patterns** → `docs/patterns/_index.md` (pattern catalog)
-3. **Specific Pattern** → `docs/patterns/<pattern-name>.md` (detailed implementation)
-4. **Examples** → `docs/patterns/examples/<pattern>-example.cs` (code samples)
-5. **Templates** → `docs/templates/<type>-template.cs` (boilerplate)
+3. **Specific Pattern** → Choose from available patterns in catalog (detailed implementation)
+4. **Examples** → `docs/patterns/examples/` (code samples)
+5. **Templates** → `docs/templates/` (boilerplate)
 
 ### Key Files for Every Session
 

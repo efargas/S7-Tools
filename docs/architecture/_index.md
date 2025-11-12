@@ -45,8 +45,7 @@ This directory contains comprehensive architectural documentation for S7Tools, c
 
 | Document | Purpose | Quick Description |
 |----------|---------|-------------------|
-| [Dependency Injection](dependency-injection.md) | DI patterns and service registration | Service registration, lifetime management, DI best practices *(Coming Soon)* |
-| [Testing Architecture](testing-architecture.md) | Testing strategies and patterns | Unit testing, integration testing, test organization *(Coming Soon)* |
+| [Dependency Injection](dependency-injection.md) | DI patterns and service registration | Service registration, lifetime management, DI best practices |
 
 ### Architecture Decisions
 

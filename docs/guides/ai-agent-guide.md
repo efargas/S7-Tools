@@ -203,7 +203,7 @@ dotnet run --project src/S7Tools --configuration Debug -- --diag
 - **Master Index**: [`docs/INDEX.md`](../INDEX.md) - Entry point for all documentation
 - **Architecture**: [`docs/architecture/`](../architecture/) - System design and decisions
 - **Patterns**: [`docs/patterns/`](../patterns/) - All implementation patterns and examples
-- **Guides**: [`docs/guides/`](./README.md) - Development workflows and guides
+- **Guides**: [`docs/guides/`](./_index.md) - Development workflows and guides
 - **Latest Review**: [`docs/reviews/LATEST.md`](../reviews/LATEST.md) - Current quality baseline
 - **Templates**: [`docs/templates/`](../templates/) - Code and documentation templates
 

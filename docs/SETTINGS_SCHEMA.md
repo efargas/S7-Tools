@@ -344,8 +344,8 @@ protected override void Dispose(bool disposing)
 
 ## See Also
 
-- **Implementation**: `src/S7Tools/Services/SettingsService.cs`
-- **Interface**: `src/S7Tools.Core/Interfaces/Services/ISettingsService.cs`
+- **Implementation**: `src/S7Tools/Services/ApplicationSettingsService.cs`
+- **Interface**: `src/S7Tools.Core/Interfaces/Services/IApplicationSettingsService.cs`
 - **Path Service**: `src/S7Tools.Core/Interfaces/Services/IPathService.cs`
 - **Architecture**: `docs/patterns/system-patterns.md` (Section 4.5)
 - **Examples**: See ViewModels: `PowerSupplySettingsViewModel`, `LoggingSettingsViewModel`

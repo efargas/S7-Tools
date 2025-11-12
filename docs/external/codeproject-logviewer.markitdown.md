@@ -1,5 +1,6 @@
 ---
 title: "External Reference: CodeProject LogViewer Control"
+type: "external"
 version: "1.0.0"
 created: "2025-11-06"
 last-updated: "2025-11-11"
