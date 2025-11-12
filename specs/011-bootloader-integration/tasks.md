@@ -67,7 +67,7 @@ S7Tools uses Clean Architecture with categorized MVVM structure:
 - [ ] T022 [P] Create IPlcClient interface in src/S7Tools.Core/Services/Interfaces/IPlcClient.cs with high-level bootloader workflow methods
 - [ ] T023 [P] Create IPayloadProvider interface in src/S7Tools.Core/Services/Interfaces/IPayloadProvider.cs with GetStagerAsync, GetMemoryDumperAsync methods
 - [ ] T024 Create IResourceCoordinator interface in src/S7Tools.Core/Services/Interfaces/IResourceCoordinator.cs with TryAcquire, TryAcquireAsync, Release, AreAvailable methods and ResourceLockChanged event per contracts/IResourceCoordinator.md
-- [ ] T025 Create IJobScheduler interface in src/S7Tools.Core/Services/Interfaces/IJobScheduler.cs with EnqueueAsync, CancelJobAsync, GetJobsByStateAsync, StartAsync, StopAsync methods and JobStateChanged, JobProgressChanged events per contracts/IJobScheduler.md
+- [X] T025: Create IJobScheduler interface in src/S7Tools.Core/Services/Interfaces/IJobScheduler.cs with EnqueueAsync, CancelJobAsync, GetJobsByStateAsync, StartAsync, StopAsync methods and JobStateChanged, JobProgressChanged events per contracts/IJobScheduler.md
 - [ ] T026 Create IBootloaderService interface in src/S7Tools.Core/Services/Interfaces/IBootloaderService.cs with DumpMemoryAsync, ValidateProfileSetAsync, EstimateDuration methods per contracts/IBootloaderService.md
 
 ### Event and Progress Types (Core Layer)
@@ -152,7 +152,7 @@ S7Tools uses Clean Architecture with categorized MVVM structure:
 #### Service Registration (DI Container)
 
 - [ ] T055 [US1] Register bootloader services in src/S7Tools/Extensions/ServiceCollectionExtensions.cs - add AddS7ToolsBootloaderServices() extension method registering: IResourceCoordinator → ResourceCoordinator (Singleton), IJobScheduler → JobScheduler (Singleton), IBootloaderService → BootloaderService (Transient), IPlcClient → PlcClientAdapter (Transient), IPlcProtocol → PlcProtocolAdapter (Transient), IPlcTransport → PlcTransportAdapter (Transient), IPayloadProvider → FilePayloadProvider (Singleton), StandardProfileManager<Job>, StandardProfileManager<PayloadSetProfile>
-- [ ] T056 [US1] Call AddS7ToolsBootloaderServices() in src/S7Tools/Program.cs - invoke extension method in service registration section
+- [X] T056 [US1] Call AddS7ToolsBootloaderServices() in src/S7Tools/Program.cs - invoke extension method in service registration section
 
 #### Validation and Error Handling
 

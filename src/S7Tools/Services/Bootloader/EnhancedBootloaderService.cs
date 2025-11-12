@@ -18,7 +18,6 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
     private readonly ILogger<EnhancedBootloaderService> _logger;
     private readonly IBootloaderService _baseBootloaderService;
     private readonly IResourceCoordinator _resourceCoordinator;
-    private readonly IValidationService _validationService;
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
 
     private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
@@ -30,17 +29,14 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
     /// <param name="logger">Logger instance for diagnostics.</param>
     /// <param name="baseBootloaderService">The base bootloader service to wrap.</param>
     /// <param name="resourceCoordinator">Service for resource coordination and conflict detection.</param>
-    /// <param name="validationService">Service for validation operations.</param>
     public EnhancedBootloaderService(
         ILogger<EnhancedBootloaderService> logger,
         IBootloaderService baseBootloaderService,
-        IResourceCoordinator resourceCoordinator,
-        IValidationService validationService)
+        IResourceCoordinator resourceCoordinator)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _baseBootloaderService = baseBootloaderService ?? throw new ArgumentNullException(nameof(baseBootloaderService));
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
-        _validationService = validationService ?? throw new ArgumentNullException(nameof(validationService));
     }
 
     /// <inheritdoc />
@@ -188,13 +184,13 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 validationErrors.Add("One or more required resources are not available or are locked by another task");
             }
 
-            // Additional profile validation
-            ValidationResult profileValidation = await _validationService.ValidateAsync(profiles, cancellationToken)
+            // Additional profile validation using base service
+            ValidationResult profileValidation = await _baseBootloaderService.ValidateProfileSetAsync(profiles, cancellationToken)
                 .ConfigureAwait(false);
 
             if (!profileValidation.IsValid)
             {
-                validationErrors.AddRange(profileValidation.Errors.Select(e => e.ErrorMessage));
+                validationErrors.AddRange(profileValidation.Errors.Select(e => e.Message));
             }
 
             ValidationResult result = validationErrors.Count == 0
