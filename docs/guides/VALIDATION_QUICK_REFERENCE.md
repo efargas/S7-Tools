@@ -1,3 +1,15 @@
+---
+title: "Documentation Validation Quick Reference"
+version: "1.0.0"
+created: "2025-11-12"
+last-updated: "2025-11-12"
+status: "current"
+tags: ["validation", "documentation", "guide", "reference"]
+related:
+  - docs/guides/development-workflow.md
+  - docs/guides/contributing-to-docs.md
+---
+
 # Documentation Validation Quick Reference
 
 ## New Validation Flags (Phase 4)
