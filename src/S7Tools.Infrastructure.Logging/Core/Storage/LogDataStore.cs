@@ -176,7 +176,7 @@ public sealed class LogDataStore : ILogDataStore
             }
 
             var addedEntries = new List<LogModel>();
-            var startIndex = _count;
+            int startIndex = _count;
 
             lock (_lock)
             {

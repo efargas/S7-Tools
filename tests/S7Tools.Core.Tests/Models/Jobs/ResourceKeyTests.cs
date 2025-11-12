@@ -18,7 +18,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("serial", "COM1");
 
         // Act
-        var result = key1.Equals(key2);
+        bool result = key1.Equals(key2);
 
         // Assert
         result.Should().BeTrue();
@@ -32,7 +32,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("SERIAL", "COM1");
 
         // Act
-        var result = key1.Equals(key2);
+        bool result = key1.Equals(key2);
 
         // Assert
         result.Should().BeTrue("Kind should be compared case-insensitively");
@@ -46,7 +46,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("serial", "com1");
 
         // Act
-        var result = key1.Equals(key2);
+        bool result = key1.Equals(key2);
 
         // Assert
         result.Should().BeTrue("Id should be compared case-insensitively");
@@ -60,7 +60,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("SERIAL", "com1");
 
         // Act
-        var result = key1.Equals(key2);
+        bool result = key1.Equals(key2);
 
         // Assert
         result.Should().BeTrue("Both Kind and Id should be compared case-insensitively");
@@ -74,7 +74,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("tcp", "COM1");
 
         // Act
-        var result = key1.Equals(key2);
+        bool result = key1.Equals(key2);
 
         // Assert
         result.Should().BeFalse();
@@ -88,7 +88,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("serial", "COM2");
 
         // Act
-        var result = key1.Equals(key2);
+        bool result = key1.Equals(key2);
 
         // Assert
         result.Should().BeFalse();
@@ -102,7 +102,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("serial", "COM1");
 
         // Act
-        var result = key1 == key2;
+        bool result = key1 == key2;
 
         // Assert
         result.Should().BeTrue();
@@ -116,7 +116,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("SERIAL", "com1");
 
         // Act
-        var result = key1 == key2;
+        bool result = key1 == key2;
 
         // Assert
         result.Should().BeTrue("Equality operator should use case-insensitive comparison");
@@ -130,7 +130,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("tcp", "8080");
 
         // Act
-        var result = key1 != key2;
+        bool result = key1 != key2;
 
         // Assert
         result.Should().BeTrue();
@@ -144,7 +144,7 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("SERIAL", "com1");
 
         // Act
-        var result = key1 != key2;
+        bool result = key1 != key2;
 
         // Assert
         result.Should().BeFalse("Inequality operator should use case-insensitive comparison");
@@ -162,8 +162,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("serial", "COM1");
 
         // Act
-        var hash1 = key1.GetHashCode();
-        var hash2 = key2.GetHashCode();
+        int hash1 = key1.GetHashCode();
+        int hash2 = key2.GetHashCode();
 
         // Assert
         hash1.Should().Be(hash2);
@@ -177,8 +177,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("SERIAL", "COM1");
 
         // Act
-        var hash1 = key1.GetHashCode();
-        var hash2 = key2.GetHashCode();
+        int hash1 = key1.GetHashCode();
+        int hash2 = key2.GetHashCode();
 
         // Assert
         hash1.Should().Be(hash2, "Hash code should be case-insensitive for Kind");
@@ -192,8 +192,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("serial", "com1");
 
         // Act
-        var hash1 = key1.GetHashCode();
-        var hash2 = key2.GetHashCode();
+        int hash1 = key1.GetHashCode();
+        int hash2 = key2.GetHashCode();
 
         // Assert
         hash1.Should().Be(hash2, "Hash code should be case-insensitive for Id");
@@ -207,8 +207,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("SERIAL", "com1");
 
         // Act
-        var hash1 = key1.GetHashCode();
-        var hash2 = key2.GetHashCode();
+        int hash1 = key1.GetHashCode();
+        int hash2 = key2.GetHashCode();
 
         // Assert
         hash1.Should().Be(hash2, "Hash code should be case-insensitive for both Kind and Id");
@@ -222,8 +222,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("tcp", "8080");
 
         // Act
-        var hash1 = key1.GetHashCode();
-        var hash2 = key2.GetHashCode();
+        int hash1 = key1.GetHashCode();
+        int hash2 = key2.GetHashCode();
 
         // Assert
         hash1.Should().NotBe(hash2, "Different resource keys should have different hash codes (in most cases)");
@@ -243,7 +243,7 @@ public class ResourceKeyTests
 
         // Act
         set.Add(key1);
-        var addResult = set.Add(key2);
+        bool addResult = set.Add(key2);
 
         // Assert
         addResult.Should().BeFalse("HashSet should treat keys with different casing as duplicates");
@@ -260,7 +260,7 @@ public class ResourceKeyTests
         set.Add(key1);
 
         // Act
-        var result = set.Contains(key2);
+        bool result = set.Contains(key2);
 
         // Assert
         result.Should().BeTrue("HashSet.Contains should use case-insensitive comparison");
@@ -276,7 +276,7 @@ public class ResourceKeyTests
         set.Add(key1);
 
         // Act
-        var removeResult = set.Remove(key2);
+        bool removeResult = set.Remove(key2);
 
         // Assert
         removeResult.Should().BeTrue("HashSet.Remove should use case-insensitive comparison");
@@ -314,7 +314,7 @@ public class ResourceKeyTests
         dict[key1] = "test value";
 
         // Act
-        var result = dict.TryGetValue(key2, out var value);
+        bool result = dict.TryGetValue(key2, out string? value);
 
         // Assert
         result.Should().BeTrue("TryGetValue should use case-insensitive comparison");
@@ -331,7 +331,7 @@ public class ResourceKeyTests
         dict[key1] = "test value";
 
         // Act
-        var result = dict.ContainsKey(key2);
+        bool result = dict.ContainsKey(key2);
 
         // Assert
         result.Should().BeTrue("ContainsKey should use case-insensitive comparison");
@@ -348,7 +348,7 @@ public class ResourceKeyTests
         var key = new ResourceKey("serial", "COM1");
 
         // Act
-        var result = key.ToString();
+        string result = key.ToString();
 
         // Assert
         result.Should().Be("serial:COM1");
@@ -361,7 +361,7 @@ public class ResourceKeyTests
         var key = new ResourceKey("SERIAL", "com1");
 
         // Act
-        var result = key.ToString();
+        string result = key.ToString();
 
         // Assert
         result.Should().Be("SERIAL:com1", "ToString should preserve the original casing");
@@ -380,8 +380,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("SERIAL", "/dev/TTYUSB0");
 
         // Act - Attempt to lock the same resource with different casing
-        var lock1Acquired = locks.Add(key1);
-        var lock2Acquired = locks.Add(key2);
+        bool lock1Acquired = locks.Add(key1);
+        bool lock2Acquired = locks.Add(key2);
 
         // Assert
         lock1Acquired.Should().BeTrue("First lock should be acquired");
@@ -398,8 +398,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("TCP", "8080");
 
         // Act
-        var lock1Acquired = locks.Add(key1);
-        var lock2Acquired = locks.Add(key2);
+        bool lock1Acquired = locks.Add(key1);
+        bool lock2Acquired = locks.Add(key2);
 
         // Assert
         lock1Acquired.Should().BeTrue("First lock should be acquired");
@@ -416,8 +416,8 @@ public class ResourceKeyTests
         var key2 = new ResourceKey("MODBUS", "192.168.1.100:502");
 
         // Act
-        var lock1Acquired = locks.Add(key1);
-        var lock2Acquired = locks.Add(key2);
+        bool lock1Acquired = locks.Add(key1);
+        bool lock2Acquired = locks.Add(key2);
 
         // Assert
         lock1Acquired.Should().BeTrue("First lock should be acquired");

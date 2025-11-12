@@ -173,7 +173,7 @@ public class PlcAddressTests
         var plcAddress = new PlcAddress("DB1.DBX0.0");
 
         // Act
-        var result = plcAddress.ToString();
+        string result = plcAddress.ToString();
 
         // Assert
         result.Should().Be("DB1.DBX0.0");

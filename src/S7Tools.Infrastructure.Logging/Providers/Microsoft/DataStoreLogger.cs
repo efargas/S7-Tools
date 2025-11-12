@@ -53,7 +53,7 @@ public sealed class DataStoreLogger : ILogger
             return;
         }
 
-        var message = _configuration.FormatMessages && formatter != null
+        string message = _configuration.FormatMessages && formatter != null
             ? formatter(state, exception)
             : state?.ToString() ?? string.Empty;
 

@@ -13,10 +13,10 @@ public class DateTimeToStringConverterTests
         // Arrange
         var converter = new DateTimeToStringConverter();
         var dateTime = new DateTime(2025, 10, 22, 14, 30, 45);
-        var format = "yyyy-MM-dd HH:mm";
+        string format = "yyyy-MM-dd HH:mm";
 
         // Act
-        var result = converter.Convert(dateTime, typeof(string), format, CultureInfo.InvariantCulture);
+        object? result = converter.Convert(dateTime, typeof(string), format, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal("2025-10-22 14:30", result);
@@ -28,10 +28,10 @@ public class DateTimeToStringConverterTests
         // Arrange
         var converter = new DateTimeToStringConverter();
         var dateTimeOffset = new DateTimeOffset(2025, 10, 22, 14, 30, 45, TimeSpan.Zero);
-        var format = "yyyy-MM-dd HH:mm";
+        string format = "yyyy-MM-dd HH:mm";
 
         // Act
-        var result = converter.Convert(dateTimeOffset, typeof(string), format, CultureInfo.InvariantCulture);
+        object? result = converter.Convert(dateTimeOffset, typeof(string), format, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal("2025-10-22 14:30", result);
@@ -44,7 +44,7 @@ public class DateTimeToStringConverterTests
         var converter = new DateTimeToStringConverter();
 
         // Act
-        var result = converter.Convert(null, typeof(string), "yyyy-MM-dd", CultureInfo.InvariantCulture);
+        object? result = converter.Convert(null, typeof(string), "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal(string.Empty, result);
@@ -58,7 +58,7 @@ public class DateTimeToStringConverterTests
         var dateTime = new DateTime(2025, 10, 22, 14, 30, 45);
 
         // Act
-        var result = converter.Convert(dateTime, typeof(string), null, CultureInfo.InvariantCulture);
+        object? result = converter.Convert(dateTime, typeof(string), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal("2025-10-22 14:30", result);
@@ -70,10 +70,10 @@ public class DateTimeToStringConverterTests
         // Arrange
         var converter = new DateTimeToStringConverter();
         var dateTime = new DateTime(2025, 10, 22, 14, 30, 45);
-        var format = "MMM dd, yyyy";
+        string format = "MMM dd, yyyy";
 
         // Act
-        var result = converter.Convert(dateTime, typeof(string), format, CultureInfo.InvariantCulture);
+        object? result = converter.Convert(dateTime, typeof(string), format, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal("Oct 22, 2025", result);
@@ -84,10 +84,10 @@ public class DateTimeToStringConverterTests
     {
         // Arrange
         var converter = new DateTimeToStringConverter();
-        var value = "Some string value";
+        string value = "Some string value";
 
         // Act
-        var result = converter.Convert(value, typeof(string), null, CultureInfo.InvariantCulture);
+        object? result = converter.Convert(value, typeof(string), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal("Some string value", result);

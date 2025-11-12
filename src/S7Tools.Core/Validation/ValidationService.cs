@@ -61,7 +61,7 @@ public class ValidationService : IValidationService
 
     private IValidator<T>? GetValidator<T>()
     {
-        if (_validators.TryGetValue(typeof(T), out var validator) && validator is IValidator<T> typed)
+        if (_validators.TryGetValue(typeof(T), out object? validator) && validator is IValidator<T> typed)
         {
             return typed;
         }

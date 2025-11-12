@@ -101,7 +101,7 @@ public sealed class DataStoreLoggerConfiguration
         }
 
         // Convert wildcard pattern to regex-like matching
-        var regexPattern = "^" + pattern
+        string regexPattern = "^" + pattern
             .Replace(".", "\\.")
             .Replace("*", ".*")
             .Replace("?", ".")

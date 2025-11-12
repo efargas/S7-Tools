@@ -51,7 +51,7 @@ public class ResultTests
         var result = Result<int>.Success(42);
 
         // Act
-        var value = result.GetValueOrThrow();
+        int value = result.GetValueOrThrow();
 
         // Assert
         value.Should().Be(42);
