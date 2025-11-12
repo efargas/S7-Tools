@@ -4,8 +4,8 @@ using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
+using S7Tools.Core.Models.Validation;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Core.Validation;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -466,6 +466,20 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             }
             _disposed = true;
         }
+    }
+
+    /// <inheritdoc />
+    public Task<ValidationResult> ValidateProfileSetAsync(
+        JobProfileSet profiles,
+        CancellationToken cancellationToken = default)
+    {
+        return _baseBootloaderService.ValidateProfileSetAsync(profiles, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public TimeSpan EstimateDuration(MemoryRegionProfile memoryRegion)
+    {
+        return _baseBootloaderService.EstimateDuration(memoryRegion);
     }
 
     /// <inheritdoc />

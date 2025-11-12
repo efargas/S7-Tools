@@ -255,6 +255,7 @@ public static class ServiceCollectionExtensions
 
         // Add Task Scheduling Services
         services.TryAddSingleton<ITaskScheduler, EnhancedTaskScheduler>();
+        services.TryAddSingleton<IJobScheduler, Services.Tasking.JobScheduler>();
 
         // Add Resource Coordination Services
         services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
@@ -264,10 +265,12 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
 
         // Add Payload Services
-        services.TryAddSingleton<IPayloadProvider, Services.Bootloader.FilePayloadProvider>();
+        services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();
 
-        // Register PLC Client stub
-        services.TryAddTransient<IPlcClient, PlcClientStub>();
+        // Add PLC Adapters
+        services.TryAddTransient<IPlcTransport, Services.Adapters.PlcTransportAdapter>();
+        services.TryAddTransient<IPlcProtocol, Services.Adapters.PlcProtocolAdapter>();
+        services.TryAddTransient<IPlcClient, Services.Adapters.PlcClientAdapter>();
 
         // Add PLC Client Factory
         services.TryAddTransient<Func<JobProfileSet, IPlcClient>>(provider =>
