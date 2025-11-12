@@ -70,6 +70,17 @@ echo "-----------------------------------"
 $PYTHON "$SCRIPT_DIR/detect-duplicates.py" "$DOCS_ROOT" || true
 echo ""
 
+# Documentation validation (code examples, file refs, namespaces, patterns, links)
+echo "5️⃣  Validating documentation against source code..."
+echo "-----------------------------------"
+if $PYTHON "$SCRIPT_DIR/validate-documentation.py" --output "$REPO_ROOT/docs/.metadata"; then
+    echo "✓ Documentation validation passed"
+else
+    echo "✗ Documentation validation FAILED"
+    exit 1
+fi
+echo ""
+
 echo "========================================="
 echo "✓ Validation suite complete"
 echo "========================================="

@@ -1,0 +1,57 @@
+#!/bin/bash
+# Sample pre-commit hook for S7Tools repository
+# Copy to .git/hooks/pre-commit and chmod +x to enable
+#
+# This hook validates documentation before allowing commits
+# to ensure code examples compile and references are valid.
+
+set -e
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+SCRIPT_DIR="$REPO_ROOT/scripts"
+
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo "🔍 Running pre-commit documentation validation..."
+
+# Check if virtual environment exists
+if [ ! -d "$REPO_ROOT/.venv" ]; then
+    echo -e "${YELLOW}⚠️  Virtual environment not found. Run:${NC}"
+    echo "   python3 -m venv .venv"
+    echo "   source .venv/bin/activate"
+    echo "   pip install -r requirements.txt"
+    exit 1
+fi
+
+# Activate virtual environment
+source "$REPO_ROOT/.venv/bin/activate"
+
+# Check if any documentation files are staged
+STAGED_DOCS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^docs/.*\.md$' || true)
+
+if [ -z "$STAGED_DOCS" ]; then
+    echo -e "${GREEN}✅ No documentation files staged, skipping validation${NC}"
+    exit 0
+fi
+
+echo -e "${YELLOW}📝 Documentation files changed:${NC}"
+echo "$STAGED_DOCS" | sed 's/^/  - /'
+echo ""
+
+# Run quick validation (skip compilation for speed)
+echo "Running quick validation (skipping compilation)..."
+if python3 "$SCRIPT_DIR/validate-documentation.py" --skip-compilation --output "$REPO_ROOT/docs/.metadata"; then
+    echo -e "${GREEN}✅ Documentation validation passed${NC}"
+    exit 0
+else
+    echo -e "${RED}❌ Documentation validation failed!${NC}"
+    echo ""
+    echo "Fix the errors above or use:"
+    echo "  git commit --no-verify"
+    echo "to bypass this check (not recommended)."
+    exit 1
+fi

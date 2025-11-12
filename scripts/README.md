@@ -104,7 +104,46 @@ python scripts/track-migration.py report [--output=migration-report.md]
 python scripts/track-migration.py status
 ```
 
-### 6. Validation Suite (All-in-One)
+### 6. Documentation Validation (Code Sync)
+
+Validates documentation against source code: compiles C# examples, checks file references, validates namespace conventions, verifies pattern implementations, and checks internal links.
+
+```bash
+python scripts/validate-documentation.py [options]
+```
+
+**Options:**
+- `--verbose`: Enable verbose output with detailed progress
+- `--skip-compilation`: Skip code compilation (faster, for quick checks)
+- `--category <cat>`: Validate specific category only (architecture, patterns, guides, etc.)
+- `--output <path>`: Output directory for reports (default: docs/.metadata/)
+
+**Output:**
+- JSON report: `docs/.metadata/validation-results.json` (machine-readable)
+- Markdown report: `docs/.metadata/validation-report.md` (human-readable)
+- Console output with color-coded status (green ✅/red ❌/yellow ⚠️)
+
+**Exit codes:**
+- `0`: All validations passed
+- `1`: Validation errors found
+- `2`: Exception during validation
+
+**Example usage:**
+```bash
+# Full validation (all checks including compilation)
+python scripts/validate-documentation.py
+
+# Quick validation (skip compilation for speed)
+python scripts/validate-documentation.py --skip-compilation
+
+# Validate specific category with verbose output
+python scripts/validate-documentation.py --category patterns --verbose
+
+# Custom output directory
+python scripts/validate-documentation.py --output /tmp/validation-reports
+```
+
+### 7. Validation Suite (All-in-One)
 
 Runs all validation checks in sequence.
 
