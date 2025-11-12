@@ -202,9 +202,9 @@ grep -r "status: \"deprecated\"" docs/
 
 1. **Architecture** → `docs/architecture/overview.md` (system structure)
 2. **Patterns** → `docs/patterns/_index.md` (pattern catalog)
-3. **Specific Pattern** → `docs/patterns/<pattern-name>.md` (detailed implementation)
-4. **Examples** → `docs/patterns/examples/<pattern>-example.cs` (code samples)
-5. **Templates** → `docs/templates/<type>-template.cs` (boilerplate)
+3. **Specific Pattern** → Choose from available patterns in catalog (detailed implementation)
+4. **Examples** → `docs/patterns/examples/` (code samples)
+5. **Templates** → `docs/templates/` (boilerplate)
 
 ### Key Files for Every Session
 

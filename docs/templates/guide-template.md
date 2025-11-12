@@ -1,5 +1,6 @@
 ---
 title: "Guide Documentation Template"
+type: "template"
 version: "1.0.0"
 created: "2025-11-10"
 last-updated: "2025-11-11"

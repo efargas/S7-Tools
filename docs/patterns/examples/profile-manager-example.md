@@ -283,7 +283,7 @@ var profile = await service.GetByIdAsync(id);  // Returns CustomProfile, not obj
 ## Related Patterns
 
 - [Profile Management Pattern](../profile-management.md) - Full pattern documentation
-- [Service Registration Pattern](../service-registration.md) - DI registration
+- [System Patterns](../system-patterns.md) - All architectural patterns
 - [Internal Method Pattern](../internal-method.md) - Thread-safe operations
 
 ## See Also

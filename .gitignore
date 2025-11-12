@@ -495,3 +495,31 @@ $RECYCLE.BIN/
 
 .github/agents/workspace/reference-projects/LogViewerControl
 build_output*.txt
+
+# Documentation validation auto-generated reports
+docs/.metadata/validation-report.md
+docs/.metadata/validation-results.json
+
+# Auto-generated summary and tracking files
+*SUMMARY*.md
+*COMPLETION*.md
+*IMPLEMENTATION*.md
+*TEST_REPORT*.md
+*VALIDATION_IMPROVEMENTS*.md
+*PATH_RESOLUTION*.md
+*FIRST_RUN*.md
+*CLEANUP_COMPLETE*.md
+*PHASE*_COMPLETE*.md
+*DOCUMENTATION_CORRECTIONS*.md
+NEXT_STEPS.md
+QUICK_TEST_FIX_SUMMARY.md
+analyzers-report.json
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+
+# Validation output folders
+json/validation*.md
+json/validation*.json

@@ -1,5 +1,6 @@
 ---
 title: "External Reference: CodeProject LogViewer Control (Full)"
+type: "external"
 version: "1.0.0"
 created: "2025-11-06"
 last-updated: "2025-11-11"
@@ -83,14 +84,14 @@ _**Note**: The three animated GIFs may take a moment to load..._
         *   [Storage - LogDataStore and LogModel classes](https://www.codeproject.com/#storage---logdatastore-and-logmodel-classes)
         *   [Configuration - DataStoreLoggerConfiguration class and LogEntryColor class](https://www.codeproject.com/#configuration---datastoreloggerconfiguration-class-and-logentrycolor-class)
     *   [Custom Microsoft Logger Implementation](https://www.codeproject.com/#custom-microsoft-logger-implementation)
-        
+
         *   [Logger - DataStoreLogger class](https://www.codeproject.com/#logger---datastorelogger-class)
         *   [Logger Provider - DataStoreLoggerProvider class](https://www.codeproject.com/#logger-provider---datastoreloggerprovider-class)
         *   [Registering Microsoft Loggers](https://www.codeproject.com/#registering-microsoft-loggers)
         *   [Registration - ServicesExtension class](https://www.codeproject.com/#registration---servicesextension-class)
         *   [Dependency Injection](https://www.codeproject.com/#dependency-injection)
         *   [Manually (without Dependency Injection)](https://www.codeproject.com/#manually-without-dependency-injection)
-        
+
     *   [Custom Serilog Logger Implementation](https://www.codeproject.com/#custom-serilog-logger-implementation)
         *   [Logger - DataStoreLoggerSink class](https://www.codeproject.com/#logger---datastoreloggersink-class)
         *   [Configuring the Custom Sink - DataStoreLoggerSinkExtensions class](https://www.codeproject.com/#configuring-the-custom-sink---datastoreloggersinkextensions-class)
@@ -236,11 +237,11 @@ Both **VB** and **C#** solutions are included and have identical layouts. The on
 **NOTES**
 
 *   The application project names are made up of 3 parts: **\[Application Type\]\[Logger\]\[Implementation\]**
-    
+
     1.  Application Type: **Avalonia**, **WinForms**, **Wpf**
     2.  Logger: Logger (Default .NET Implementation) or Serilog
     3.  Implementation: DI = Dependency Injection; NoDI = Manual / No Dependency Injection
-    
+
 *   For supporting Projects, the Name Suffix identifies the project type:
     1.  **.Core** for common code
     2.  **.Avalonia**, **.WinForms**, **.Wpf** for application-specific types
@@ -308,7 +309,7 @@ private LoggerInformation[] CreateLoggers(string categoryName)
     var loggers = new LoggerInformation[_providerRegistrations.Count];
     for (int i = 0; i < _providerRegistrations.Count; i++)
     {
-        loggers[i] = new LoggerInformation(_providerRegistrations[i].Provider, 
+        loggers[i] = new LoggerInformation(_providerRegistrations[i].Provider,
                      categoryName);
     }
     return loggers;
@@ -345,7 +346,7 @@ CS
   internal sealed class Logger : ILogger
   {
        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
-                               Exception? exception, Func<TState, Exception?, 
+                               Exception? exception, Func<TState, Exception?,
                                string> formatter)
       {
           MessageLogger[]? loggers = MessageLoggers;
@@ -373,7 +374,7 @@ CS
           }
 
           static void LoggerLog(LogLevel logLevel, EventId eventId, ILogger logger,
-                                Exception? exception, Func<TState, 
+                                Exception? exception, Func<TState,
                                 Exception?, string> formatter,
                                 ref List<Exception>? exceptions, in TState state)
           {
@@ -550,7 +551,7 @@ CS
 public class DataStoreLoggerConfiguration
 {
     #region Properties
-    
+
     public EventId EventId { get; set; }
 
     public Dictionary<LogLevel, LogEntryColor> Colors { get; } = new()
@@ -559,9 +560,9 @@ public class DataStoreLoggerConfiguration
         [LogLevel.Debug] = new() { Foreground = Color.Gray },
         [LogLevel.Information] = new(),
         [LogLevel.Warning] = new() { Foreground = Color.Orange},
-        [LogLevel.Error] = new() 
+        [LogLevel.Error] = new()
         { Foreground = Color.White, Background = Color.OrangeRed },
-        [LogLevel.Critical] = new() 
+        [LogLevel.Critical] = new()
         { Foreground=Color.White, Background = Color.Red },
         [LogLevel.None] = new(),
     };
@@ -655,7 +656,7 @@ public class DataStoreLogger: ILogger
 
     #region methods
 
-    public IDisposable BeginScope<TState>(TState state)  
+    public IDisposable BeginScope<TState>(TState state)
                        where TState : notnull => default!;
 
     public bool IsEnabled(LogLevel logLevel) => true;
@@ -678,16 +679,16 @@ public class DataStoreLogger: ILogger
             Timestamp = DateTime.UtcNow,
             LogLevel = logLevel,
             // do we override the default EventId if it exists?
-            EventId = eventId.Id == 0 && config.EventId != 0 ? 
+            EventId = eventId.Id == 0 && config.EventId != 0 ?
                       config.EventId : eventId,
             State = state,
-            Exception = exception?.Message ?? 
+            Exception = exception?.Message ??
                 (logLevel == LogLevel.Error ? state?.ToString() ?? "" : ""),
             Color = config.Colors[logLevel],
         });
-        
+
         Debug.WriteLine(
-          $"--- [{logLevel.ToString()[..3]}] 
+          $"--- [{logLevel.ToString()[..3]}]
           {_name} - {formatter(state, exception!)}");
     }
 
@@ -788,7 +789,7 @@ CS
 public class DataStoreLoggerProvider: ILoggerProvider
 {
     #region Constructor
-    
+
     public DataStoreLoggerProvider(
         IOptionsMonitor<DataStoreLoggerConfiguration> config,
         ILogDataStore dataStore)
@@ -802,18 +803,18 @@ public class DataStoreLoggerProvider: ILoggerProvider
     #endregion
 
     #region fields
-    
+
     private DataStoreLoggerConfiguration _currentConfig;
 
     private readonly IDisposable? _onChangeToken;
     protected readonly ILogDataStore _dataStore;
 
     protected readonly ConcurrentDictionary<string, DataStoreLogger> _loggers = new();
-    
+
     #endregion
 
     #region Methods
-    
+
     public ILogger CreateLogger(string categoryName)
         => _loggers.GetOrAdd(categoryName, name
             => new DataStoreLogger(name, GetCurrentConfig, _dataStore));
@@ -825,7 +826,7 @@ public class DataStoreLoggerProvider: ILoggerProvider
     {
         _loggers.Clear();
         _onChangeToken?.Dispose();
-    } 
+    }
 
     #endregion
 }
@@ -932,8 +933,8 @@ public sealed class HostApplicationBuilder
     public IServiceCollection Services => _serviceCollection;
 
     /// <summary>
-    /// A collection of logging providers for the application to compose. 
-    /// This is useful for adding new logging providers. 
+    /// A collection of logging providers for the application to compose.
+    /// This is useful for adding new logging providers.
     /// </summary>
     public ILoggingBuilder Logging { get; }
 
@@ -1458,12 +1459,12 @@ CS
 public class DataStoreLoggerSink : ILogEventSink
 {
     protected readonly Func<ILogDataStore> _dataStoreProvider;
-    
+
     private readonly IFormatProvider? _formatProvider;
     private readonly Func<DataStoreLoggerConfiguration>? _getCurrentConfig;
 
     public DataStoreLoggerSink(Func<ILogDataStore> dataStoreProvider,
-                               Func<DataStoreLoggerConfiguration>? 
+                               Func<DataStoreLoggerConfiguration>?
                                getCurrentConfig = null,
                                IFormatProvider? formatProvider = null)
     {
@@ -1492,7 +1493,7 @@ public class DataStoreLoggerSink : ILogEventSink
             eventId = config.EventId;
 
         string message = logEvent.RenderMessage(_formatProvider);
-        
+
         string exception =
             logEvent.Exception?.Message ?? (logEvent.Level >= LogEventLevel.Error
                 ? message
@@ -1512,7 +1513,7 @@ public class DataStoreLoggerSink : ILogEventSink
     {
         ILogDataStore? dataStore = _dataStoreProvider.Invoke();
 
-        // ReSharper disable once 
+        // ReSharper disable once
         // ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (dataStore == null)
             return; // app is shutting down
@@ -1533,7 +1534,7 @@ public class DataStoreLoggerSink : ILogEventSink
         EventId eventId;
         if (!logEvent.Properties.TryGetValue("EventId", out LogEventPropertyValue? src))
             return new();
-        
+
         int? id = null;
         string? eventName = null;
 
@@ -1684,7 +1685,7 @@ public static class DataStoreLoggerSinkExtensions
     public static LoggerConfiguration DataStoreLoggerSink
     (
         this LoggerSinkConfiguration loggerConfiguration,
-        Func<ILogDataStore> dataStoreProvider, 
+        Func<ILogDataStore> dataStoreProvider,
         Action<DataStoreLoggerConfiguration>? configuration = null,
         IFormatProvider formatProvider = null!
     )
@@ -1772,7 +1773,7 @@ JAVASCRIPT
         "Name": "Console",
         "Args": {
           "outputTemplate":
-            "[{Timestamp:HH:mm:ss} {Level:u3}] {EventId.Name} | 
+            "[{Timestamp:HH:mm:ss} {Level:u3}] {EventId.Name} |
               {Message:lj} {NewLine}{Exception}"
         }
       },
@@ -1881,19 +1882,19 @@ services.AddLogging(configure: cfg =>
                 Foreground = Color.White,
                 Background = Color.DarkGray
             };
-        
+
             options.Colors[LogLevel.Debug] = new()
             {
                 Foreground = Color.White,
                 Background = Color.Gray
             };
-        
+
             options.Colors[LogLevel.Information] = new()
             {
                 Foreground = Color.White,
                 Background = Color.DodgerBlue
             };
-        
+
             options.Colors[LogLevel.Warning] = new()
             {
                 Foreground = Color.White,
@@ -2047,7 +2048,7 @@ public static class LoggingHelper
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
             .WriteTo.DataStoreLoggerSink(
-            
+
                 // Use Default Colors
                 dataStoreProvider: () => MainControlsDataStore.DataStore)
             .CreateLogger();
@@ -2170,7 +2171,7 @@ public static class LoggingHelper
             .CreateLogger();
 
         // wire up the loggers
-        Factory = LoggerFactory.Create(loggingBuilder => 
+        Factory = LoggerFactory.Create(loggingBuilder =>
                   loggingBuilder.AddSerilog(Log.Logger));
     }
 
@@ -2238,7 +2239,7 @@ Public Module LoggingHelper
    .CreateLogger()
 
   ' wire up the loggers
-  Factory = LoggerFactory.Create(Sub(LoggingBuilder) 
+  Factory = LoggerFactory.Create(Sub(LoggingBuilder)
             LoggingBuilder.AddSerilog(Log.Logger))
 
  End Sub
@@ -2285,7 +2286,7 @@ Creating the logger as a constructor parameter is acceptable. For example, the f
 CS
 
 ```csharp
-RandomLoggingService service = 
+RandomLoggingService service =
     new(new Logger<RandomLoggingService>(LoggingHelper.Factory));
 
 ```csharp
@@ -2366,7 +2367,7 @@ public class DataStoreLoggerTarget : TargetWithLayout
                       (logLevel == MsLogLevel.Error ? message : ""),
             Color = _config!.Colors[logLevel],
         });
-        
+
         Debug.WriteLine(
             $"--- [{logLevel.ToString()[..3]}]
             {message} - {logEvent.Exception?.Message ?? "no error"}");
@@ -2451,7 +2452,7 @@ Public Class DataStoreLoggerTarget : Inherits TargetWithLayout
         })
 
         Debug.WriteLine(
-          $"--- [{logLevel.ToString()(0.3)}] {message} - " + 
+          $"--- [{logLevel.ToString()(0.3)}] {message} - " +
           $"{If(String.IsNullOrWhiteSpace(exMessage), "no error", exMessage)}")
 
         MyBase.Write(logEvent)
@@ -3122,54 +3123,54 @@ There are three (3) parts to adding `EventId` support:
 Following is the implementation used:
 
 1.  `Logger` wrapper
-    
+
     a. `IEventIDLog` Interface
-    
+
     CS
-    
+
     ```csharp
     	public interface IEventIDLog : ILog
     	{
     		void Log(EventId eventId, LoggingEvent loggingEvent);
     	}
-    	
+
     ```csharp
     b. `EventIDLogImpl` class
-    
+
     CS
-    
+
     ```csharp
     	public class EventIDLogImpl : LogImpl, IEventIDLog
     	{
     		public EventIDLogImpl(log4net.Core.ILogger logger)
                 : base(logger) { /* skip */ }
-    
+
     		#region Implementation of IEventIDLog
-    
+
     		public void Log(EventId eventId, LoggingEvent loggingEvent)
     		{
     			// is the EventId empty?
     			if (!(eventId.Id == 0 && string.IsNullOrWhiteSpace(eventId.Name)))
     				loggingEvent.Properties[nameof(EventId)] = eventId;
-    
+
     			Logger.Log(loggingEvent);
     		}
-    
+
     		#endregion
     	}
-    	
+
     ```csharp
 2.  Update `Log4NetLogger` class
-    
+
     I will only be showing the changes made - we change the implementation and now can inject the missing `EventId` reference.
-    
+
     CS
-    
+
     ```csharp
         public class Log4NetLogger : ILogger
         {
             private readonly IEventIDLog eventIdLogger;
-        
+
             public void Log<TState>(
                 LogLevel logLevel,
                 EventId eventId,
@@ -3181,22 +3182,22 @@ Following is the implementation used:
                 {
                     return;
                 }
-        
+
                 EnsureValidFormatter(formatter);
-        
+
                 var candidate = new MessageCandidate<TState>(
                     logLevel, eventId, state, exception, formatter);
-        
+
                 LoggingEvent loggingEvent = options.LoggingEventFactory.CreateLoggingEvent(
                     in candidate, eventIdLogger.Logger, options, externalScopeProvider);
-        
+
                 if (loggingEvent == null)
                     return;
-        
+
                 this.eventIdLogger.Log(eventId, loggingEvent);
             }
         }
-        
+
     ```csharp
 ##### Adding Dependency Injection support for the Appender support
 
@@ -3208,17 +3209,17 @@ This has 2 parts:
 Following is the implementation used:
 
 1.  `ServiceAppenderSkeleton` wrapper class for DI support
-    
+
     We define an `internal` explicit method for setting the DI service provider reference and a `protected` method that can be used from within our custom appender to resolve any required dependencies.
-    
+
     CS
-    
+
     ```csharp
             internal interface IAppenderServiceProvider
             {
                 IServiceProvider ServiceProvider { set; }
             }
-            
+
             public abstract class ServiceAppenderSkeleton
                 : AppenderSkeleton, IServiceAppenderSkeleton, IDisposable
             {
@@ -3227,59 +3228,59 @@ Following is the implementation used:
                 {
                     set => _serviceProvider = value;
                 }
-            
+
                 protected T ResolveService<T>() where T : class
                 {
                     if (_serviceProvider == null)
                         return default;
-            
+
                     return _serviceProvider.GetService<T>();
                 }
-            
+
                 public void Dispose() => _serviceProvider = null;
             }
-            
+
     ```csharp
 2.  Updating the `Log4NetProvider` class
-    
+
     I will only be showing the changes made to add a DI service provider reference to the Appenders that implement the `IAppenderServiceProvider` interface.
-    
+
     CS
-    
+
     ```csharp
             public class Log4NetProvider : ILoggerProvider, ISupportExternalScope
             {
                 #region IOC implementation
-            
+
                 public Log4NetProvider(IServiceProvider serviceCollection)
                     : this(new Log4NetProviderOptions(), serviceCollection)
                 {
                 }
-            
-                public Log4NetProvider(string log4NetConfigFileName, 
+
+                public Log4NetProvider(string log4NetConfigFileName,
                                               IServiceProvider serviceProvider)
-                    : this(new Log4NetProviderOptions(log4NetConfigFileName), 
+                    : this(new Log4NetProviderOptions(log4NetConfigFileName),
                            serviceProvider)
                 {
                 }
-            
-                public Log4NetProvider(Log4NetProviderOptions options, 
+
+                public Log4NetProvider(Log4NetProviderOptions options,
                                        IServiceProvider serviceProvider)
                 {
                     this.serviceProvider = serviceProvider;
-            
+
                     this.SetOptionsIfValid(options);
-            
+
                     Assembly loggingAssembly = GetLoggingReferenceAssembly();
-            
+
                     this.CreateLoggerRepository(loggingAssembly)
                         .ConfigureLog4NetLibrary(loggingAssembly);
                 }
-            
+
                 private IServiceProvider serviceProvider;
-            
+
                 #endregion
-            
+
                 private Log4NetProvider ConfigureLog4NetLibrary(Assembly assembly)
                 {
                     if (this.options.UseWebOrAppConfig)
@@ -3287,7 +3288,7 @@ Following is the implementation used:
                         XmlConfigurator.Configure(this.Repository);
                         return this;
                     }
-            
+
                     if (!this.options.ExternalConfigurationSetup)
                     {
                         string fileNamePath = CreateLog4NetFilePath(assembly);
@@ -3307,32 +3308,32 @@ Following is the implementation used:
                                     configXml,
                                     this.options.PropertyOverrides);
                             }
-            
-                            XmlConfigurator.Configure(this.Repository, 
+
+                            XmlConfigurator.Configure(this.Repository,
                                             configXml.DocumentElement);
                         }
                     }
-            
+
                     this.InjectServices();
-            
+
                     return this;
                 }
-            
+
                 private void InjectServices()
                 {
                     if (this.Repository is null)
                         return;
-                    
+
                     IEnumerable<IAppenderServiceProvider> adapters =
                         this.Repository
                             .GetAppenders()
                             .OfType<IAppenderServiceProvider>();
-            
+
                     foreach (IAppenderServiceProvider adapter in adapters)
                         adapter.ServiceProvider = serviceProvider;
                 }
             }
-            
+
     ```csharp
 #### Logger - DataStoreLoggerAppender class
 
@@ -3345,9 +3346,9 @@ public class DataStoreLoggerAppender : AppenderServiceProvider
 
     private ILogDataStore? _dataStore;
     private DataStoreLoggerConfiguration? _options;
-    
+
     private IServiceProvider? _serviceProvider;
-    
+
     #endregion
 
     #region Methods
@@ -3358,7 +3359,7 @@ public class DataStoreLoggerAppender : AppenderServiceProvider
             Initialize();
 
         // cast matching Log4Net Loglevel to Microsoft LogLevel type
-        LogLevel logLevel = loggingEvent.Level.Value switch 
+        LogLevel logLevel = loggingEvent.Level.Value switch
         {
             int.MaxValue => LogLevel.None,
             120000 => LogLevel.Debug,
@@ -3369,15 +3370,15 @@ public class DataStoreLoggerAppender : AppenderServiceProvider
             _ => LogLevel.Information
         };
 
-        DataStoreLoggerConfiguration config = _options ?? 
+        DataStoreLoggerConfiguration config = _options ??
 new DataStoreLoggerConfiguration();
 
         EventId? eventId = (EventId?)loggingEvent.LookupProperty(nameof(EventId));
-        eventId = eventId is null && config.EventId.Id != 0 ? 
+        eventId = eventId is null && config.EventId.Id != 0 ?
                                      config.EventId : eventId;
 
         string message = loggingEvent.RenderedMessage ?? string.Empty;
-        
+
         string exceptionMessage = loggingEvent.GetExceptionString();
 
         _dataStore!.AddEntry(new()
@@ -3564,18 +3565,18 @@ XML
 <log4net>
 	<appender name="DebugAppender" type="log4net.Appender.DebugAppender" >
 		<layout type="log4net.Layout.PatternLayout">
-			<conversionPattern value="%date 
+			<conversionPattern value="%date
              [%thread] %-5level %logger - %message%newline" />
 		</layout>
 	</appender>
 	<appender name="ConsoleAppender" type="log4net.Appender.ConsoleAppender">
 		<threshold value="ALL" />
 		<layout type="log4net.Layout.PatternLayout">
-			<conversionPattern value="%date 
+			<conversionPattern value="%date
             [%thread] %-5level %logger - %message%newline" />
 		</layout>
 	</appender>
-	<appender name="DataStoreLogger" 
+	<appender name="DataStoreLogger"
      type="Log4Net.Appender.LogView.Core.DataStoreLoggerAppender">
 		<threshold value="ALL" />
 	</appender>
@@ -3854,7 +3855,7 @@ Public Module ServicesExtension
     Public Function AddLog4NetNoDI(builder As ILoggingBuilder,
         config As IConfiguration) As ILoggingBuilder
 
-        ' We need to use a shared instance of the DataStore to pass to 
+        ' We need to use a shared instance of the DataStore to pass to
         '  the LogViewerControl
         builder.Services.AddSingleton(MainControlsDataStore.DataStore)
 
@@ -4166,7 +4167,7 @@ CS
 ```csharp
 public class MyConsumer
 {
-    #region Constructors 
+    #region Constructors
 
     public MyConsumer(ILogDataStore dataStore)
         => _dataStore = dataStore;
@@ -5110,7 +5111,7 @@ public partial class LogViewerControl
         // Okay, we can now get the item and scroll into view
         LogModel? item = (DataContext as ILogDataStoreImpl)
                 ?.DataStore.Entries.LastOrDefault();
-        
+
         if (item is null)
             return;
 
@@ -5327,7 +5328,7 @@ public partial class LogViewerControl : UserControl
 
     private ILogDataStoreImpl? vm;
     private LogModel? item;
-  
+
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
         if (DataContext is null)
@@ -5350,7 +5351,7 @@ public partial class LogViewerControl : UserControl
         item = null;
     }
 
-    private void OnDetachedFromLogicalTree(object? sender, 
+    private void OnDetachedFromLogicalTree(object? sender,
                  LogicalTreeAttachmentEventArgs e)
     {
         if (vm is null) return;
@@ -5395,7 +5396,7 @@ Partial Public Class LogViewerControl : Inherits UserControl
     End If
 
     _vm = DirectCast(DataContext, ILogDataStoreImpl)
-    AddHandler _vm.DataStore.Entries.CollectionChanged, 
+    AddHandler _vm.DataStore.Entries.CollectionChanged,
                AddressOf OnCollectionChanged
 
 
@@ -5592,7 +5593,7 @@ public class EventIdConverter : IValueConverter
     }
 
     // If not implemented, an error is thrown
-    public object ConvertBack(object? value, Type targetType, 
+    public object ConvertBack(object? value, Type targetType,
                               object? parameter, CultureInfo culture)
         => new EventId(0, value?.ToString() ?? string.Empty);
 }
@@ -5862,7 +5863,7 @@ public partial class MainForm : Form
 
         // Start generating log entries
         _ = service.StartAsync(CancellationToken.None);
-        
+
         // manually wire up the logging to the view ...
         //   the control will show backlog entries...
         LogViewerControl.RegisterLogDataStore(MainControlsDataStore.DataStore);
@@ -6134,7 +6135,7 @@ public partial class MainWindow : ILogDataStoreImpl
 
         // Start generating log entries
         _ = service.StartAsync(CancellationToken.None);
-        
+
         // manually wire up the logging to the view ...
         //   the control will show backlog entries...
         DataStore = MainControlsDataStore.DataStore;
@@ -6381,7 +6382,7 @@ XML
         mc:Ignorable="d"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        
+
         Title="C# AVALONIA MINIMAL | LogViewer Control Example - Dot Net 7.0"
         Icon="/Assets/avalonia-logo.ico"
         WindowStartupLocation="CenterScreen" Height="634" Width="600">
@@ -6410,7 +6411,7 @@ public partial class MainWindow : ILogDataStoreImpl
 
         // Start generating log entries
         _ = service.StartAsync(CancellationToken.None);
-        
+
         // manually wire up the logging to the view ...
         //   the control will show backlog entries...
         DataStore = MainControlsDataStore.DataStore;
@@ -6522,7 +6523,7 @@ public class RandomLoggingService : BackgroundService
     };
 
     private readonly Random _random = new();
-    private static readonly EventId EventId = 
+    private static readonly EventId EventId =
             new(id: 0x1A4, name: "RandomLoggingService");
 
     #endregion
@@ -6537,14 +6538,14 @@ public class RandomLoggingService : BackgroundService
         {
             // wait for a pre-determined interval
             await Task.Delay(1000, stoppingToken).ConfigureAwait(false);
-            
+
             if (stoppingToken.IsCancellationRequested)
                 return;
 
             // heartbeat logging
             GenerateLogEntry();
         }
-  
+
         _logger.Emit(EventId, LogLevel.Information, "Stopped");
     }
 
@@ -6820,7 +6821,7 @@ CS
 
 ```csharp
 // Initialize service and pass in the Logger
-RandomLoggingService service = 
+RandomLoggingService service =
    new(new Logger<RandomLoggingService>(LoggingHelper.Factory));
 
 // Start generating log entries
@@ -6876,7 +6877,7 @@ public static partial class ApplicationLog
     [LoggerMessage (EventId = 0, EventName = AppName, Message = "{msg}")]
     public static partial void Emit(ILogger logger,  LogLevel level, string msg);
 
-    public static void Emit(ILogger logger, LogLevel level, 
+    public static void Emit(ILogger logger, LogLevel level,
                             string msg, Exception exception)
         => Emit(logger, level, $"{msg} - {exception}");
 }
@@ -6931,101 +6932,101 @@ public static partial class RandomServiceLog
         ["OnLanguageChanged"] = LogOnLanguageChanged
     };
 
-    public static void Emit(ILogger logger, EventId eventId, 
+    public static void Emit(ILogger logger, EventId eventId,
         LogLevel level, string message, Exception? exception = null)
-        => Events[eventId.Name!].Invoke(logger, level, exception is null ? 
+        => Events[eventId.Name!].Invoke(logger, level, exception is null ?
         message : $"{message} - {exception}");
 
     [LoggerMessage (EventId = 101, EventName = "OnButtonClicked", Message = "{msg}")]
-    private static partial void LogOnButtonClicked(ILogger logger,  
+    private static partial void LogOnButtonClicked(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 102, 
+    [LoggerMessage (EventId = 102,
         EventName = "OnMenuItemSelected", Message = "{msg}")]
-    private static partial void LogOnMenuItemSelected(ILogger logger, 
+    private static partial void LogOnMenuItemSelected(ILogger logger,
         LogLevel level, string msg);
 
     [LoggerMessage (EventId = 103, EventName = "OnWindowResized", Message = "{msg}")]
-    private static partial void LogOnWindowResized(ILogger logger,  
+    private static partial void LogOnWindowResized(ILogger logger,
         LogLevel level, string msg);
 
     [LoggerMessage (EventId = 104, EventName = "OnDataLoaded", Message = "{msg}")]
-    private static partial void LogOnDataLoaded(ILogger logger,  
+    private static partial void LogOnDataLoaded(ILogger logger,
         LogLevel level, string msg);
 
     [LoggerMessage (EventId = 105, EventName = "OnFormSubmitted", Message = "{msg}")]
-    private static partial void LogOnFormSubmitted(ILogger logger, 
+    private static partial void LogOnFormSubmitted(ILogger logger,
         LogLevel level, string msg);
 
     [LoggerMessage (EventId = 106, EventName = "OnTabChanged", Message = "{msg}")]
-    private static partial void LogOnTabChanged(ILogger logger,  
+    private static partial void LogOnTabChanged(ILogger logger,
         LogLevel level, string msg);
 
     [LoggerMessage (EventId = 107, EventName = "OnItemSelected", Message = "{msg}")]
-    private static partial void LogOnItemSelected(ILogger logger,  
+    private static partial void LogOnItemSelected(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 108, EventName = "OnValidationFailed", 
+    [LoggerMessage (EventId = 108, EventName = "OnValidationFailed",
         Message = "{msg}")]
-    private static partial void LogOnValidationFailed(ILogger logger,  
+    private static partial void LogOnValidationFailed(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 109, EventName = "OnNotificationReceived", 
+    [LoggerMessage (EventId = 109, EventName = "OnNotificationReceived",
         Message = "{msg}")]
-    private static partial void LogOnNotificationReceived(ILogger logger,  
+    private static partial void LogOnNotificationReceived(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 110, EventName = "OnApplicationStarted", 
+    [LoggerMessage (EventId = 110, EventName = "OnApplicationStarted",
         Message = "{msg}")]
-    private static partial void LogOnApplicationStarted(ILogger logger,  
+    private static partial void LogOnApplicationStarted(ILogger logger,
         LogLevel level, string msg);
 
     [LoggerMessage (EventId = 111, EventName = "OnUserLoggedIn", Message = "{msg}")]
-    private static partial void LogOnUserLoggedIn(ILogger logger,  
+    private static partial void LogOnUserLoggedIn(ILogger logger,
         LogLevel level, string msg);
 
     [LoggerMessage (EventId = 112, EventName = "OnUploadStarted", Message = "{msg}")]
-    private static partial void LogOnUploadStarted(ILogger logger,  
+    private static partial void LogOnUploadStarted(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 113, EventName = "OnDownloadCompleted", 
+    [LoggerMessage (EventId = 113, EventName = "OnDownloadCompleted",
         Message = "{msg}")]
-    private static partial void LogOnDownloadCompleted(ILogger logger,  
+    private static partial void LogOnDownloadCompleted(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 114, EventName = "OnProgressUpdated", 
+    [LoggerMessage (EventId = 114, EventName = "OnProgressUpdated",
         Message = "{msg}")]
-    private static partial void LogOnProgressUpdated(ILogger logger,  
+    private static partial void LogOnProgressUpdated(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 115, EventName = "OnNetworkErrorOccurred", 
+    [LoggerMessage (EventId = 115, EventName = "OnNetworkErrorOccurred",
         Message = "{msg}")]
-    private static partial void LogOnNetworkErrorOccurred(ILogger logger,  
+    private static partial void LogOnNetworkErrorOccurred(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 116, EventName = "OnPaymentSuccessful", 
+    [LoggerMessage (EventId = 116, EventName = "OnPaymentSuccessful",
         Message = "{msg}")]
-    private static partial void LogOnPaymentSuccessful(ILogger logger,  
+    private static partial void LogOnPaymentSuccessful(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 117, EventName = "OnProfileUpdated", 
+    [LoggerMessage (EventId = 117, EventName = "OnProfileUpdated",
         Message = "{msg}")]
-    private static partial void LogOnProfileUpdated(ILogger logger,  
+    private static partial void LogOnProfileUpdated(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 118, EventName = "OnSearchCompleted", 
+    [LoggerMessage (EventId = 118, EventName = "OnSearchCompleted",
         Message = "{msg}")]
-    private static partial void LogOnSearchCompleted(ILogger logger,  
+    private static partial void LogOnSearchCompleted(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 119, EventName = "OnFilterChanged", 
+    [LoggerMessage (EventId = 119, EventName = "OnFilterChanged",
         Message = "{msg}")]
-    private static partial void LogOnFilterChanged(ILogger logger,  
+    private static partial void LogOnFilterChanged(ILogger logger,
         LogLevel level, string msg);
 
-    [LoggerMessage (EventId = 120, EventName = "OnLanguageChanged", 
+    [LoggerMessage (EventId = 120, EventName = "OnLanguageChanged",
         Message = "{msg}")]
-    private static partial void LogOnLanguageChanged(ILogger logger,  
+    private static partial void LogOnLanguageChanged(ILogger logger,
         LogLevel level, string msg);
 }
 
@@ -7100,24 +7101,24 @@ public class RandomLoggingService : BackgroundService
         "Error: Could not connect to the server. Please check your internet connection.",
         "Warning: Your computer's operating system is not compatible with this software.",
         "Error: Insufficient memory. Please close other programs and try again.",
-        "Warning: Your graphics card drivers may be outdated. 
+        "Warning: Your graphics card drivers may be outdated.
          Please update them before playing.",
         "Error: The installation file is corrupt. Please download a new copy.",
-        "Warning: Your computer may be running too hot. 
+        "Warning: Your computer may be running too hot.
          Please check the temperature and cooling system.",
         "Error: The required DirectX version is not installed on your computer.",
-        "Warning: Your sound card may not be supported. 
+        "Warning: Your sound card may not be supported.
          Please check the system requirements.",
-        "Error: The installation directory is full. 
+        "Error: The installation directory is full.
          Please free up space and try again.",
-        "Warning: Your computer's power supply may not be sufficient. 
+        "Warning: Your computer's power supply may not be sufficient.
          Please check the requirements.",
-        "Error: The installation process was interrupted. 
+        "Error: The installation process was interrupted.
          Please restart the setup.",
-        "Warning: Your antivirus software may interfere with the game. 
+        "Warning: Your antivirus software may interfere with the game.
          Please add it to the exception list.",
         "Error: The required Microsoft library is not installed.",
-        "Warning: Your input devices may not be compatible. 
+        "Warning: Your input devices may not be compatible.
          Please check the system requirements.",
         "Error: The installation process failed. Please contact support for assistance.",
         "Warning: Your network speed may cause lag and disconnections.",
@@ -7142,14 +7143,14 @@ public class RandomLoggingService : BackgroundService
         {
             // wait for a pre-determined interval
             await Task.Delay(1000, stoppingToken).ConfigureAwait(false);
-            
+
             if (stoppingToken.IsCancellationRequested)
                 return;
 
             // heartbeat logging
             GenerateLogEntry();
         }
-  
+
         ApplicationLog.Emit(_logger, LogLevel.Information, "Stopped");
     }
 
@@ -7192,7 +7193,7 @@ public class RandomLoggingService : BackgroundService
 
         if (level < LogLevel.Error)
         {
-            RandomServiceLog.Emit(_logger, GenerateEventId(), 
+            RandomServiceLog.Emit(_logger, GenerateEventId(),
                                   level, message: GetMessage());
             return;
         }
@@ -7231,7 +7232,7 @@ If you have any questions, please post below and I would be more than happy to a
 ### Documentation, Articles, etc.
 
 *   #### .NET (Core) 7.0 Framework
-    
+
     *   [.NET App Settings Demystified (C# & VB) | CodeProject](https://www.codeproject.com/Articles/5354478/NET-App-Settings-Demystified-Csharp-VB)
     *   [Logging in .NET | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging?tabs=command-line)
     *   [Implement a custom logging provider in .NET | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/custom-logging-provider)
@@ -7245,15 +7246,15 @@ If you have any questions, please post below and I would be more than happy to a
     *   [Compile-time logging source generation | Microsoft Learn](https://learn.microsoft.com/en-us/dotnet/core/extensions/logger-message-generator)
     *   [What's new in .NET 8 Preview 6 > Expanding LoggerMessageAttribute Constructor Overloads for Enhanced Functionality | Github](https://github.com/dotnet/core/issues/8437#issuecomment-1605698272)
 *   #### Avalonia UI
-    
+
     *   [Avalonia UI](https://avaloniaui.net/)
     *   [Comparison of Avalonia with WPF and UWP | Avalonia UI](https://docs.avaloniaui.net/guides/developer-guides/comparison-of-avalonia-with-wpf-and-uwp)
     *   [The Missing Avalonia Templates for VB | Code Project](https://www.codeproject.com/Articles/5357284/Avalonia-for-VB)
 *   #### Serilog
-    
+
     *   [Serilog](https://serilog.net/)
 *   #### NLog
-    
+
     *   [Getting started with .NET Core 2 Console application | NLog](https://github.com/NLog/NLog/wiki/Getting-started-with-.NET-Core-2---Console-application#a-minimal-example)
     *   [Getting started with ASP.NET Core 6 | NLog](https://github.com/NLog/NLog/wiki/Getting-started-with-ASP.NET-Core-6)
     *   [How to write a custom target | NLog](https://github.com/NLog/NLog/wiki/How-to-write-a-custom-target)
@@ -7262,7 +7263,7 @@ If you have any questions, please post below and I would be more than happy to a
     *   [NLog properties with Microsoft Extension Logging | NLog](https://github.com/NLog/NLog.Extensions.Logging/wiki/NLog-properties-with-Microsoft-Extension-Logging)
     *   [NLog.Extensions.Logging changes capture of EventId | NLog](https://nlog-project.org/2021/08/25/nlog-5-0-preview1-ready.html#nlogextensionslogging-changes-capture-of-eventid)
 *   #### Log4Net
-    
+
     *   [Apache Log4Net | Apache](https://logging.apache.org/log4net/)
     *   [Apache log4net Manual - Configuration | Apache](https://logging.apache.org/log4net/release/manual/configuration.html)
     *   [http://svn.apache.org/logging/log4net | Apache Repository](http://svn.apache.org/viewvc/logging/log4net/trunk/examples/net/2.0/Extensibility/EventIDLogApp/cs/src/)
@@ -7272,7 +7273,7 @@ If you have any questions, please post below and I would be more than happy to a
 ### Nuget Packages
 
 *   #### .NET (Core) 7.0 Framework
-    
+
     *   [Microsoft.Extensions.Configuration](https://www.nuget.org/packages/Microsoft.Extensions.Configuration)
     *   [Microsoft.Extensions.Configuration.EnvironmentVariables](https://www.nuget.org/packages/Microsoft.Extensions.Configuration.EnvironmentVariables)
     *   [Microsoft.Extensions.Configuration.Json](https://www.nuget.org/packages/Microsoft.Extensions.Configuration.Json)
@@ -7283,13 +7284,13 @@ If you have any questions, please post below and I would be more than happy to a
     *   [CommunityToolkit.Mvvm 8.1.0](https://www.nuget.org/packages/CommunityToolkit.Mvvm) (used by Avalonia)
     *   [XamlNameReferenceGenerator 1.6.1](https://www.nuget.org/packages/XamlNameReferenceGenerator) (used by Avalonia)
 *   #### Avalonia
-    
+
     *   [Avalonia 0.10.18](https://www.nuget.org/packages/Avalonia/)
     *   [Avalonia.Desktop 0.10.18](https://www.nuget.org/packages/Avalonia.Desktop)
     *   [Avalonia.Controls.DataGrid 0.10.18](https://www.nuget.org/packages/Avalonia.Controls.DataGrid/)
     *   [MessageBox.Avalonia 2.2.0](https://www.nuget.org/packages/MessageBox.Avalonia)
 *   #### Serilog
-    
+
     *   [Serilog 2.12.0](https://www.nuget.org/packages/Serilog)
     *   [Serilog.Enrichers.Environment 2.2.0](https://www.nuget.org/packages/Serilog.Enrichers.Environment)
     *   [Serilog.Enrichers.Process 2.0.2](https://www.nuget.org/packages/Serilog.Enrichers.Process)
@@ -7301,11 +7302,11 @@ If you have any questions, please post below and I would be more than happy to a
     *   [Serilog.Sinks.Debug 2.0.0](https://www.nuget.org/packages/Serilog.Sinks.Debug)
     *   [Serilog.Sinks.File 5.0.0](https://www.nuget.org/packages/Serilog.Sinks.File)
 *   #### NLog
-    
+
     *   [NLog 5.1.2](https://www.nuget.org/packages/NLog/)
     *   [NLog.Extensions.Logging 5.2.2](https://www.nuget.org/packages/NLog.Extensions.Logging)
 *   #### Log4Net
-    
+
     *   [log4net 2.0.15](https://www.nuget.org/packages/log4net/)
 
 ## History

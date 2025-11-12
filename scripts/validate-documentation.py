@@ -251,11 +251,11 @@ class DocumentationValidator:
                     excluded_count += 1
                     continue
 
-                # Exclude tutorial/example documentation if flag set
+                # Exclude tutorial/example/tracking/external documentation if flag set
                 if self.exclude_examples and doc_file.frontmatter:
                     doc_type = doc_file.frontmatter.get("type", "")
                     status = doc_file.frontmatter.get("status", "")
-                    if doc_type in ["example", "tutorial"] or status == "example":
+                    if doc_type in ["example", "tutorial", "template", "tracking", "external"] or status == "example":
                         excluded_count += 1
                         continue
 

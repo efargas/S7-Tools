@@ -14,8 +14,8 @@ related:
 
 This index lists the key architectural decisions for S7Tools. New decisions should be added as separate files and linked here.
 
-- [ADR-0001: UI Framework — Avalonia + ReactiveUI](ADR-0001-ui-framework-avalonia-reactiveui.md)
-- [ADR-0002: Logging — In-memory DataStore Provider](ADR-0002-logging-inmemory-datastore-provider.md)
+- [ADR-0001: UI Framework — Avalonia + ReactiveUI](0001-ui-framework.md)
+- [ADR-0002: Logging — In-memory DataStore Provider](0002-logging-provider.md)
 
 ## How to add an ADR
 

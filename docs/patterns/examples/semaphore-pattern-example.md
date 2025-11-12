@@ -312,7 +312,7 @@ This pattern is used in:
 ## Related Patterns
 
 - [Internal Method Pattern](../internal-method.md) - Full pattern documentation
-- [Threading Patterns](../threading-patterns.md) - Other concurrency patterns
+- [System Patterns](../system-patterns.md) - Comprehensive concurrency patterns
 - [Resource Coordinator Example](./resource-coordinator-example.md) - Another semaphore usage
 
 ## See Also

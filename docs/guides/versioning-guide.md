@@ -294,11 +294,11 @@ removal-date: "2027-11-10"  # ← 2-year retention
 
 **This pattern is deprecated as of 2025-11-10.**
 
-**Use instead**: [New Pattern](./new-pattern.md)
+**Use instead**: See current patterns in [Pattern Index](../patterns/_index.md)
 
 **Removal Date**: 2027-11-10 (2-year retention policy)
 
-**Reason**: The old pattern had X limitation. The new pattern provides Y benefit.
+**Reason**: The old pattern had X limitation. New patterns provide Y benefit.
 
 ## Migration Guide
 

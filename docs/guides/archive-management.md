@@ -246,8 +246,8 @@ All redirect stubs include migration path:
 
 If you were using this document:
 
-1. Read the new documentation - See [new-doc.md](new-doc.md)
-2. Check migration guide - See [deprecated-patterns.md](guides/migration/deprecated-patterns.md)
+1. Read the new documentation - Check current documentation in relevant category
+2. Check migration guide - See [deprecated-patterns.md](migration/deprecated-patterns.md)
 3. Update references - Update any bookmarks or links
 
 For questions, file an issue in the repository.
@@ -315,9 +315,9 @@ Provide clear, actionable reasons:
 
 ## Related Documentation
 
-- [Settings Schema](SETTINGS_SCHEMA.md) - Frontmatter field definitions
-- [Version Control Integration](../adr/ADR-0003-version-control-integration.md) - Git workflow
-- [Cross-Reference Network](../patterns/cross-reference-network.md) - Link management
+- [Settings Schema](../SETTINGS_SCHEMA.md) - Frontmatter field definitions
+- [Architecture Decisions](../architecture/decisions/_index.md) - ADR index
+- [System Patterns](../patterns/system-patterns.md) - Pattern documentation
 
 ## Appendix: Script Reference
 

@@ -23,13 +23,13 @@ Comprehensive catalog of all templates available in the S7Tools documentation sy
 **File**: `viewmodel-template.md`
 **Purpose**: Create ReactiveUI ViewModels with proper MVVM patterns
 **Use When**: Adding new feature ViewModels
-**Related**: [MVVM Patterns](../patterns/mvvm-patterns.md)
+**Related**: [MVVM Patterns](../architecture/mvvm-patterns.md)
 
 ### Service Template
 **File**: `service-template.md`
 **Purpose**: Create service classes with dependency injection
 **Use When**: Adding new service layer components
-**Related**: [Service Registration](../patterns/service-registration.md)
+**Related**: [System Patterns](../patterns/system-patterns.md)
 
 ### Test Template
 **File**: `test-template.md`
@@ -70,7 +70,7 @@ Comprehensive catalog of all templates available in the S7Tools documentation sy
 - `INTEGRATION_CHECKLIST.md` - Step-by-step implementation checklist
 - `README.md` - Detailed usage instructions
 
-**Related**: [UI Integration Workflow](../guides/UI_INTEGRATION_WORKFLOW.md)
+**Related**: [UI Integration Workflow](../UI_INTEGRATION_WORKFLOW.md)
 
 ## Usage Guidelines
 

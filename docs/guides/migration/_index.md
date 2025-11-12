@@ -103,7 +103,7 @@ All patterns and guides are current and maintained.
 
 **Impact**: No code changes required. Documentation paths updated.
 
-**Migration**: See [migration-log.json](../.metadata/migration-log.json)
+**Migration**: See [migration-log.json](../../.metadata/migration-log.json)
 
 ## Planned Migrations
 
