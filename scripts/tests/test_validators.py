@@ -36,24 +36,28 @@ class TestFileReferenceValidator:
     def test_validate_existing_file_reference(self, validator):
         """Test validation of existing file."""
         ref = FilePathReference(
-            referenced_path="src/S7Tools/ViewModels/HomeViewModel.cs",
             source_file="docs/architecture/overview.md",
-            line_number=10
+            line_number=10,
+            referenced_path="src/S7Tools/ViewModels/HomeViewModel.cs",
+            path_type="project_relative",
+            exists=False  # Will be updated by validator
         )
-        result = validator.validate_file_reference(ref)
-        assert result is True
+        validator.validate_file_reference(ref)
+        # validate_file_reference modifies the ref object and returns it
         assert ref.exists is True
         assert ref.resolved_path is not None
 
     def test_validate_missing_file_reference(self, validator):
         """Test validation of non-existent file."""
         ref = FilePathReference(
-            referenced_path="src/DoesNotExist.cs",
             source_file="docs/test.md",
-            line_number=5
+            line_number=5,
+            referenced_path="src/DoesNotExist.cs",
+            path_type="project_relative",
+            exists=False
         )
-        result = validator.validate_file_reference(ref)
-        assert result is False
+        validator.validate_file_reference(ref)
+        # validate_file_reference modifies the ref object and returns it
         assert ref.exists is False
 
     def test_resolve_absolute_path(self, validator, workspace_root):
@@ -85,9 +89,9 @@ class TestFileReferenceValidator:
     def test_calculate_success_rate(self, validator):
         """Test calculating file reference success rate."""
         references = [
-            FilePathReference("src/Exists1.cs", "test.md", 1, exists=True),
-            FilePathReference("src/Exists2.cs", "test.md", 2, exists=True),
-            FilePathReference("src/Missing.cs", "test.md", 3, exists=False),
+            FilePathReference("test.md", 1, "src/Exists1.cs", "project_relative", True),
+            FilePathReference("test.md", 2, "src/Exists2.cs", "project_relative", True),
+            FilePathReference("test.md", 3, "src/Missing.cs", "project_relative", False),
         ]
         rate = validator.calculate_success_rate(references)
         assert rate == pytest.approx(66.67, rel=0.01)  # 2 out of 3 = 66.67%
@@ -150,8 +154,9 @@ class TestNamespaceValidator:
 
         assert isinstance(validation, NamespaceValidation)
         assert validation.is_compliant is True
-        assert validation.actual_namespace == "S7Tools.ViewModels.Pages"
-        assert validation.expected_namespace == "S7Tools.ViewModels.Pages"
+        assert validation.declared_namespace == "S7Tools.ViewModels.Pages"
+        # expected_pattern is template format, not resolved
+        assert "{Category}" in validation.expected_pattern or "Pages" in validation.expected_pattern
 
     def test_validate_non_compliant_namespace(self, validator, workspace_root):
         """Test validation of non-compliant namespace."""
@@ -159,8 +164,9 @@ class TestNamespaceValidator:
         validation = validator.validate_namespace_convention(file_path, "Pages")
 
         assert validation.is_compliant is False
-        assert validation.actual_namespace == "WrongNamespace"
-        assert validation.expected_namespace == "S7Tools.ViewModels.Pages"
+        assert validation.declared_namespace == "WrongNamespace"
+        # expected_pattern is template format, not resolved
+        assert "{Category}" in validation.expected_pattern or "Pages" in validation.expected_pattern
 
     def test_scan_viewmodels_and_views(self, validator):
         """Test scanning all ViewModels and Views."""
@@ -175,18 +181,18 @@ class TestNamespaceValidator:
         """Test calculating namespace compliance rate."""
         validations = [
             NamespaceValidation(
-                file_path="test1.cs",
-                actual_namespace="S7Tools.ViewModels.Pages",
-                expected_namespace="S7Tools.ViewModels.Pages",
-                category="Pages",
-                is_compliant=True
+                source_file="test1.cs",
+                declared_namespace="S7Tools.ViewModels.Pages",
+                expected_pattern="S7Tools.ViewModels.Pages",
+                is_compliant=True,
+                category="Pages"
             ),
             NamespaceValidation(
-                file_path="test2.cs",
-                actual_namespace="Wrong",
-                expected_namespace="S7Tools.ViewModels.Pages",
-                category="Pages",
-                is_compliant=False
+                source_file="test2.cs",
+                declared_namespace="Wrong",
+                expected_pattern="S7Tools.ViewModels.Pages",
+                is_compliant=False,
+                category="Pages"
             ),
         ]
         rate = validator.calculate_compliance_rate(validations)

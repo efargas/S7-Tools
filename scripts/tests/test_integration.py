@@ -5,8 +5,22 @@ report generation.
 """
 
 import pytest
+import sys
+import importlib.util
 from pathlib import Path
-from validate_documentation import DocumentationValidator
+
+# Add scripts directory to path for imports
+scripts_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(scripts_dir))
+
+# Import validate-documentation.py (has dashes, use importlib)
+spec = importlib.util.spec_from_file_location(
+    "validate_documentation",
+    scripts_dir / "validate-documentation.py"
+)
+validate_documentation = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(validate_documentation)
+DocumentationValidator = validate_documentation.DocumentationValidator
 
 
 class TestDocumentationValidatorIntegration:
@@ -138,7 +152,7 @@ public interface IProfileBase {}""")
 
         # Verify namespace validations
         assert len(report.namespace_validations) >= 1
-        home_vm = [v for v in report.namespace_validations if "HomeViewModel" in v.file_path]
+        home_vm = [v for v in report.namespace_validations if "HomeViewModel" in v.source_file]
         assert len(home_vm) > 0
         assert home_vm[0].is_compliant is True
 
