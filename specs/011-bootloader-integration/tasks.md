@@ -144,30 +144,30 @@ S7Tools uses Clean Architecture with categorized MVVM structure:
 
 #### Adapters (Wrapping Reference Implementation)
 
-- [ ] T048 [P] [US1] Implement FilePayloadProvider in src/S7Tools/Services/Adapters/FilePayloadProvider.cs implementing IPayloadProvider - reads payloads from PayloadSetProfile.BasePath using File.ReadAllBytesAsync, validates file exists before reading
-- [ ] T049 [P] [US1] Implement PlcTransportAdapter in src/S7Tools/Services/Adapters/PlcTransportAdapter.cs implementing IPlcTransport - wraps reference ICommunicationChannel with ConfigureAwait(false) on all async methods
-- [ ] T050 [P] [US1] Implement PlcProtocolAdapter in src/S7Tools/Services/Adapters/PlcProtocolAdapter.cs implementing IPlcProtocol - wraps reference PlcProtocol with structured logging via ILogger<PlcProtocolAdapter>
-- [ ] T051 [P] [US1] Implement PlcClientAdapter in src/S7Tools/Services/Adapters/PlcClientAdapter.cs implementing IPlcClient - wraps reference PlcClient, delegates HandshakeAsync, InstallPayloadAsync, DumpMemoryAsync calls to reference implementation
+- [X] T048 [P] [US1] Implement FilePayloadProvider in src/S7Tools/Services/Adapters/FilePayloadProvider.cs implementing IPayloadProvider - reads payloads from PayloadSetProfile.BasePath using File.ReadAllBytesAsync, validates file exists before reading
+- [X] T049 [P] [US1] Implement PlcTransportAdapter in src/S7Tools/Services/Adapters/PlcTransportAdapter.cs implementing IPlcTransport - wraps reference ICommunicationChannel with ConfigureAwait(false) on all async methods
+- [X] T050 [P] [US1] Implement PlcProtocolAdapter in src/S7Tools/Services/Adapters/PlcProtocolAdapter.cs implementing IPlcProtocol - wraps reference PlcProtocol with structured logging via ILogger<PlcProtocolAdapter>
+- [X] T051 [P] [US1] Implement PlcClientAdapter in src/S7Tools/Services/Adapters/PlcClientAdapter.cs implementing IPlcClient - wraps reference PlcClient, delegates HandshakeAsync, InstallPayloadAsync, DumpMemoryAsync calls to reference implementation
 
 #### Core Services (Resource Coordination and Job Scheduling)
 
-- [ ] T052 [US1] Implement ResourceCoordinator in src/S7Tools/Services/Tasking/ResourceCoordinator.cs implementing IResourceCoordinator - uses ConcurrentDictionary<ResourceKey, int> for lock tracking, single _atomicLock object for TryAcquire atomicity, raises ResourceLockChanged events, implements TryAcquireAsync with 100ms retry loop
-- [ ] T053 [US1] Implement JobScheduler in src/S7Tools/Services/Tasking/JobScheduler.cs implementing IJobScheduler - maintains ConcurrentQueue<Job> for queued jobs, ProcessQueueAsync background loop checks queue every 500ms, executes jobs when resources available via Task.Run, propagates progress via IProgress<BootloaderProgress>, raises JobStateChanged and JobProgressChanged events, uses IUIThreadService for thread-safe event invocation
-- [ ] T054 [US1] Implement BootloaderService in src/S7Tools/Services/Bootloader/BootloaderService.cs implementing IBootloaderService - orchestrates 7-stage workflow (socat → power → handshake → stager → dump → teardown → complete), acquires resources via IResourceCoordinator in try-finally, reports progress at each stage (0% socat, 10% power, 20% handshake, 30% stager, 50% dump, 95% teardown, 100% complete), uses ConfigureAwait(false) throughout
+- [X] T052 [US1] Implement ResourceCoordinator in src/S7Tools/Services/Tasking/ResourceCoordinator.cs implementing IResourceCoordinator - uses ConcurrentDictionary<ResourceKey, int> for lock tracking, single _atomicLock object for TryAcquire atomicity, raises ResourceLockChanged events, implements TryAcquireAsync with 100ms retry loop
+- [X] T053 [US1] Implement JobScheduler in src/S7Tools/Services/Tasking/JobScheduler.cs implementing IJobScheduler - maintains ConcurrentQueue<Job> for queued jobs, ProcessQueueAsync background loop checks queue every 500ms, executes jobs when resources available via Task.Run, propagates progress via IProgress<BootloaderProgress>, raises JobStateChanged and JobProgressChanged events, uses IUIThreadService for thread-safe event invocation
+- [X] T054 [US1] Implement BootloaderService in src/S7Tools/Services/Bootloader/BootloaderService.cs implementing IBootloaderService - orchestrates 7-stage workflow (socat → power → handshake → stager → dump → teardown → complete), acquires resources via IResourceCoordinator in try-finally, reports progress at each stage (0% socat, 10% power, 20% handshake, 30% stager, 50% dump, 95% teardown, 100% complete), uses ConfigureAwait(false) throughout
 
 #### Service Registration (DI Container)
 
-- [ ] T055 [US1] Register bootloader services in src/S7Tools/Extensions/ServiceCollectionExtensions.cs - add AddS7ToolsBootloaderServices() extension method registering: IResourceCoordinator → ResourceCoordinator (Singleton), IJobScheduler → JobScheduler (Singleton), IBootloaderService → BootloaderService (Transient), IPlcClient → PlcClientAdapter (Transient), IPlcProtocol → PlcProtocolAdapter (Transient), IPlcTransport → PlcTransportAdapter (Transient), IPayloadProvider → FilePayloadProvider (Singleton), StandardProfileManager<Job>, StandardProfileManager<PayloadSetProfile>
-- [X] T056 [US1] Call AddS7ToolsBootloaderServices() in src/S7Tools/Program.cs - invoke extension method in service registration section
+- [X] T055 [US1] Register bootloader services in src/S7Tools/Extensions/ServiceCollectionExtensions.cs - add AddS7ToolsTaskManagerServices() extension method registering: IResourceCoordinator → ResourceCoordinator (Singleton), IJobScheduler → JobScheduler (Singleton), IBootloaderService → BootloaderService (Singleton), IPlcClient → PlcClientAdapter (Transient), IPlcProtocol → PlcProtocolAdapter (Transient), IPlcTransport → PlcTransportAdapter (Transient), IPayloadProvider → FilePayloadProvider (Singleton), IJobManager → JobManager (Singleton with factory pattern)
+- [X] T056 [US1] Call AddS7ToolsTaskManagerServices() in src/S7Tools/Program.cs - invoked via AddS7ToolsServices() chain
 
 #### Validation and Error Handling
 
-- [ ] T057 [US1] Implement BootloaderService.ValidateProfileSetAsync in src/S7Tools/Services/Bootloader/BootloaderService.cs - validate serial port accessible via File.Exists(device) on Linux or SerialPort.GetPortNames() on Windows, validate TCP port not in use, validate modbus host reachable with 5s timeout, validate payloads exist at BasePath, validate memory region start + length no overflow, return ValidationResult with errors for each failed check
-- [ ] T058 [US1] Implement BootloaderService.EstimateDuration in src/S7Tools/Services/Bootloader/BootloaderService.cs - calculate based on memory region size: base 15s overhead + (length / 256 bytes/sec), clamp to 5-300s range per SC-001
+- [X] T057 [US1] Implement BootloaderService.ValidateProfileSetAsync in src/S7Tools/Services/Bootloader/BootloaderService.cs - validate serial port accessible via File.Exists(device) on Linux or SerialPort.GetPortNames() on Windows, validate TCP port not in use, validate modbus host reachable with 5s timeout, validate payloads exist at BasePath, validate memory region start + length no overflow, return ValidationResult with errors for each failed check
+- [X] T058 [US1] Implement BootloaderService.EstimateDuration in src/S7Tools/Services/Bootloader/BootloaderService.cs - calculate based on memory region size: base 15s overhead + (length / 256 bytes/sec), clamp to 5-300s range per SC-001
 
 #### Background Initialization
 
-- [ ] T059 [US1] Initialize JobScheduler on application startup in src/S7Tools/Program.cs or App.axaml.cs - call StartAsync(CancellationToken.None) after service registration, ensure scheduler running before UI shown
+- [X] T059 [US1] Initialize JobScheduler on application startup in src/S7Tools/App.axaml.cs - call StartAsync(CancellationToken.None) after profile service initialization completes, ensure scheduler running before jobs can be executed
 
 **Checkpoint**: User Story 1 complete - single job execution works end-to-end with resource coordination, progress reporting, and dump file output
 

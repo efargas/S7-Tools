@@ -91,6 +91,26 @@ public partial class App : Application
                         {
                             await _serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
                             logger.LogInformation("✅ Profile services initialization completed successfully");
+
+                            // Start the JobScheduler after profile services are initialized
+                            try
+                            {
+                                logger.LogInformation("🚀 Starting JobScheduler...");
+                                Core.Services.Interfaces.IJobScheduler? jobScheduler = _serviceProvider.GetService<Core.Services.Interfaces.IJobScheduler>();
+                                if (jobScheduler != null)
+                                {
+                                    await jobScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);
+                                    logger.LogInformation("✅ JobScheduler started successfully");
+                                }
+                                else
+                                {
+                                    logger.LogWarning("⚠️ JobScheduler service not found in DI container");
+                                }
+                            }
+                            catch (Exception schedulerEx)
+                            {
+                                logger.LogError(schedulerEx, "❌ Failed to start JobScheduler");
+                            }
                         }
                         catch (Exception profileEx)
                         {
