@@ -86,15 +86,28 @@ class LinkValidator:
         if not link_path:
             return True
 
-        # Resolve relative link
+        # Resolve link using multiple strategies
         if link_path.startswith('../') or link_path.startswith('./'):
+            # Explicit relative path
             target_path = (source.parent / link_path).resolve()
         elif link_path.startswith('/'):
             # Absolute path from repo root
             target_path = self.workspace_root / link_path.lstrip('/')
         else:
-            # Relative to docs root
-            target_path = self.workspace_root / "docs" / link_path
+            # Simple path - try multiple resolution strategies
+            # Strategy 1: Relative to source file's directory
+            target_path = (source.parent / link_path).resolve()
+            if target_path.exists():
+                return True
+
+            # Strategy 2: If source is in docs/, try relative to docs/ root
+            if str(source).startswith(str(self.workspace_root / 'docs')):
+                target_path = self.workspace_root / "docs" / link_path
+                if target_path.exists():
+                    return True
+
+            # Strategy 3: Try from workspace root (fallback)
+            target_path = self.workspace_root / link_path
 
         # Check if target exists
         if not target_path.exists():

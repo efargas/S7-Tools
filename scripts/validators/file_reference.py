@@ -74,7 +74,21 @@ class FileReferenceValidator:
         if referenced_path.startswith('/'):
             return Path(referenced_path)
 
-        # Handle simple paths - try from workspace root
+        # Handle simple paths - try multiple resolution strategies
+        # Strategy 1: Relative to source file's directory
+        source_path = Path(source_file)
+        abs_source = self.workspace_root / source_path if not source_path.is_absolute() else source_path
+        candidate = (abs_source.parent / referenced_path).resolve()
+        if candidate.exists():
+            return candidate
+
+        # Strategy 2: If source is in docs/, try relative to docs/ root
+        if source_file.startswith('docs/'):
+            docs_candidate = self.workspace_root / 'docs' / referenced_path
+            if docs_candidate.exists():
+                return docs_candidate
+
+        # Strategy 3: Try from workspace root (fallback)
         return self.workspace_root / referenced_path
 
     def validate_all_references(

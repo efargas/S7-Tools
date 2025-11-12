@@ -180,7 +180,8 @@ fi
 - name: Validate documentation
   run: |
     source scripts/.venv/bin/activate
-    python scripts/validate-documentation.py --all
+    # No arguments = validate all categories (default behavior)
+    python scripts/validate-documentation.py
 ```
 
 ---
@@ -263,10 +264,16 @@ fi
    pytest scripts/tests/ -v --cov=scripts
    ```
 
-3. ⏳ **Initial Run** (on full documentation):
+3. ✅ **Initial Run** (on full documentation):
    ```bash
-   python scripts/validate-documentation.py --all
+   # No arguments = validate all categories (default behavior)
+   python scripts/validate-documentation.py
    ```
+
+   **First Run Results**: Found 1,153 errors in 79 documentation files (521.91s execution)
+   - See `specs/010-docs-validation-sync/FIRST_RUN_RESULTS.md` for detailed analysis
+   - Most errors are legitimate documentation issues (broken links, simplified code examples)
+   - Validator is working correctly
 
 4. ⏳ **CI Integration**:
    - Enable `validate-all.sh` in CI pipeline

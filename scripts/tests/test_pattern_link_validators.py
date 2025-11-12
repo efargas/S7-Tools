@@ -161,17 +161,15 @@ Broken link to [missing](missing-file.md).
     def test_resolve_same_directory_link(self, validator, workspace_root):
         """Test resolving link in same directory.
 
-        Note: Current implementation treats bare filenames as relative to docs/ root,
-        not the source file's directory. This is a known limitation.
+        Fixed: Now correctly resolves bare filenames relative to source file's directory.
         """
         source_file = workspace_root / "docs" / "architecture" / "overview.md"
         target = "clean-architecture.md"
 
         # resolve_markdown_link returns bool
         exists = validator.resolve_markdown_link(target, source_file)
-        # Due to current implementation, this resolves to docs/clean-architecture.md
-        # which doesn't exist, so returns False
-        assert exists is False  # Known limitation: should be relative to source dir
+        # Now correctly resolves to docs/architecture/clean-architecture.md
+        assert exists is True  # Fixed: now resolves relative to source directory
 
     def test_resolve_broken_link(self, validator, workspace_root):
         """Test detecting broken link."""
@@ -277,13 +275,12 @@ Link with anchor to [section](overview.md#section-name).
     def test_anchor_link_handling(self, validator, workspace_root):
         """Test that anchor links are handled correctly.
 
-        Note: Due to link resolution implementation, bare filenames are treated
-        as relative to docs/ root, not source directory.
+        Fixed: Now correctly resolves bare filenames relative to source directory.
         """
         source_file = workspace_root / "docs" / "architecture" / "overview.md"
         target = "clean-architecture.md#section-name"
 
         # resolve_markdown_link returns bool, should ignore anchor and check file
         exists = validator.resolve_markdown_link(target, source_file)
-        # Due to current implementation, resolves to docs/clean-architecture.md (doesn't exist)
-        assert exists is False  # Known limitation in link resolution
+        # Now correctly resolves to docs/architecture/clean-architecture.md
+        assert exists is True  # Fixed: correctly resolves relative to source directory
