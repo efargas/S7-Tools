@@ -72,23 +72,23 @@ S7Tools uses Clean Architecture with categorized MVVM structure:
 
 ### Event and Progress Types (Core Layer)
 
-- [ ] T027 [P] Create ResourceLockChangedEventArgs in src/S7Tools.Core/Models/Jobs/ResourceLockChangedEventArgs.cs with Resource, Action, JobId, Timestamp fields
-- [ ] T028 [P] Create JobStateChangedEventArgs in src/S7Tools.Core/Models/Jobs/JobStateChangedEventArgs.cs with JobId, PreviousState, NewState, Timestamp, ErrorMessage fields
-- [ ] T029 [P] Create JobProgressChangedEventArgs in src/S7Tools.Core/Models/Jobs/JobProgressChangedEventArgs.cs with JobId, ProgressPercentage, CurrentOperation, Timestamp fields
-- [ ] T030 [P] Create BootloaderProgress record in src/S7Tools.Core/Models/Jobs/BootloaderProgress.cs with Stage, Percentage, CurrentOperation, Data fields
+- [X] T027 [P] Create ResourceLockChangedEventArgs in src/S7Tools.Core/Models/Jobs/ResourceLockChangedEventArgs.cs with Resource, Action, JobId, Timestamp fields
+- [X] T028 [P] Create JobStateChangedEventArgs in src/S7Tools.Core/Models/Jobs/JobStateChangedEventArgs.cs with JobId, PreviousState, NewState, Timestamp, ErrorMessage fields
+- [X] T029 [P] Create JobProgressChangedEventArgs in src/S7Tools.Core/Models/Jobs/JobProgressChangedEventArgs.cs with JobId, ProgressPercentage, CurrentOperation, Timestamp fields
+- [X] T030 [P] Create BootloaderProgress record in src/S7Tools.Core/Models/Jobs/BootloaderProgress.cs with Stage, Percentage, CurrentOperation, Data fields
 
 ### Custom Exceptions (Core Layer)
 
-- [ ] T031 [P] Create BootloaderException in src/S7Tools.Core/Exceptions/BootloaderException.cs inheriting from S7ToolsException
-- [ ] T032 [P] Create HandshakeFailedException in src/S7Tools.Core/Exceptions/HandshakeFailedException.cs inheriting from BootloaderException
-- [ ] T033 [P] Create PayloadInstallException in src/S7Tools.Core/Exceptions/PayloadInstallException.cs inheriting from BootloaderException
-- [ ] T034 [P] Create MemoryDumpException in src/S7Tools.Core/Exceptions/MemoryDumpException.cs inheriting from BootloaderException
-- [ ] T035 [P] Create ResourceUnavailableException in src/S7Tools.Core/Exceptions/ResourceUnavailableException.cs inheriting from BootloaderException
+- [X] T031 [P] Create BootloaderException in src/S7Tools.Core/Exceptions/BootloaderException.cs inheriting from S7ToolsException
+- [X] T032 [P] Create HandshakeFailedException in src/S7Tools.Core/Exceptions/HandshakeFailedException.cs inheriting from BootloaderException
+- [X] T033 [P] Create PayloadInstallException in src/S7Tools.Core/Exceptions/PayloadInstallException.cs inheriting from BootloaderException
+- [X] T034 [P] Create MemoryDumpException in src/S7Tools.Core/Exceptions/MemoryDumpException.cs inheriting from BootloaderException
+- [X] T035 [P] Create ResourceUnavailableException in src/S7Tools.Core/Exceptions/ResourceUnavailableException.cs inheriting from BootloaderException
 
 ### Validation Models (Core Layer)
 
-- [ ] T036 [P] Create ValidationResult record in src/S7Tools.Core/Models/Validation/ValidationResult.cs with IsValid, Errors fields and Success/Failure factory methods
-- [ ] T037 [P] Create ValidationError record in src/S7Tools.Core/Models/Validation/ValidationError.cs with Field, Message fields
+- [X] T036 [P] Create ValidationResult record in src/S7Tools.Core/Models/Validation/ValidationResult.cs with IsValid, Errors fields and Success/Failure factory methods
+- [X] T037 [P] Create ValidationError record in src/S7Tools.Core/Models/Validation/ValidationError.cs with Field, Message fields
 
 **Checkpoint**: Foundation ready - all domain models, interfaces, and event types exist. User story implementation can now begin.
 
