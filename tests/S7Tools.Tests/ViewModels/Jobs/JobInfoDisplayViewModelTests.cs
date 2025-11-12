@@ -250,7 +250,7 @@ public class JobInfoDisplayViewModelTests
 
     private SerialPortProfile CreateTestSerialProfile()
     {
-        var profile = SerialPortProfile.CreateUserProfile("Test Serial Profile")
+        SerialPortProfile profile = SerialPortProfile.CreateUserProfile("Test Serial Profile")
             .ClonePreserveId();
         profile.Id = 1; // Set a non-zero ID for testing
         return profile;
@@ -258,7 +258,7 @@ public class JobInfoDisplayViewModelTests
 
     private SocatProfile CreateTestSocatProfile()
     {
-        var profile = SocatProfile.CreateUserProfile("Test Socat Profile", "Test socat bridge")
+        SocatProfile profile = SocatProfile.CreateUserProfile("Test Socat Profile", "Test socat bridge")
             .ClonePreserveId();
         profile.Id = 2; // Set a non-zero ID for testing
         return profile;

@@ -78,11 +78,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialBaudRate_WhenSelectedSerialIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSerial = null;
 
         // Act
-        var result = viewModel.SerialBaudRate;
+        string result = viewModel.SerialBaudRate;
 
         // Assert
         result.Should().Be("N/A");
@@ -92,12 +92,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialBaudRate_WhenSelectedSerialHasBaudRate_ReturnsBaudRateString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSerialProfile(baudRate: 9600);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SerialPortProfile profile = CreateSerialProfile(baudRate: 9600);
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialBaudRate;
+        string result = viewModel.SerialBaudRate;
 
         // Assert
         result.Should().Be("9600");
@@ -107,11 +107,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialCharacterSize_WhenSelectedSerialIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSerial = null;
 
         // Act
-        var result = viewModel.SerialCharacterSize;
+        string result = viewModel.SerialCharacterSize;
 
         // Assert
         result.Should().Be("N/A");
@@ -121,12 +121,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialCharacterSize_WhenSelectedSerialHasCharacterSize_ReturnsCharacterSizeString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSerialProfile(characterSize: 7);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SerialPortProfile profile = CreateSerialProfile(characterSize: 7);
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialCharacterSize;
+        string result = viewModel.SerialCharacterSize;
 
         // Assert
         result.Should().Be("7");
@@ -136,11 +136,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialParity_WhenSelectedSerialIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSerial = null;
 
         // Act
-        var result = viewModel.SerialParity;
+        string result = viewModel.SerialParity;
 
         // Assert
         result.Should().Be("N/A");
@@ -150,12 +150,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialParity_WhenSelectedSerialHasParity_ReturnsParityString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSerialProfile(parity: ParityMode.Odd);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SerialPortProfile profile = CreateSerialProfile(parity: ParityMode.Odd);
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialParity;
+        string result = viewModel.SerialParity;
 
         // Assert
         result.Should().Be("Odd");
@@ -165,11 +165,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialStopBits_WhenSelectedSerialIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSerial = null;
 
         // Act
-        var result = viewModel.SerialStopBits;
+        string result = viewModel.SerialStopBits;
 
         // Assert
         result.Should().Be("N/A");
@@ -179,12 +179,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialStopBits_WhenSelectedSerialHasStopBits_ReturnsStopBitsString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSerialProfile(stopBits: StopBits.Two);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SerialPortProfile profile = CreateSerialProfile(stopBits: StopBits.Two);
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialStopBits;
+        string result = viewModel.SerialStopBits;
 
         // Assert
         result.Should().Be("Two");
@@ -194,11 +194,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialEnableReceiver_WhenSelectedSerialIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSerial = null;
 
         // Act
-        var result = viewModel.SerialEnableReceiver;
+        string result = viewModel.SerialEnableReceiver;
 
         // Assert
         result.Should().Be("N/A");
@@ -208,12 +208,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialEnableReceiver_WhenSelectedSerialHasTrueValue_ReturnsYes()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSerialProfile(enableReceiver: true);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SerialPortProfile profile = CreateSerialProfile(enableReceiver: true);
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialEnableReceiver;
+        string result = viewModel.SerialEnableReceiver;
 
         // Assert
         result.Should().Be("Yes");
@@ -223,12 +223,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialEnableReceiver_WhenSelectedSerialHasFalseValue_ReturnsNo()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSerialProfile(enableReceiver: false);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SerialPortProfile profile = CreateSerialProfile(enableReceiver: false);
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialEnableReceiver;
+        string result = viewModel.SerialEnableReceiver;
 
         // Assert
         result.Should().Be("No");
@@ -238,11 +238,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialVersion_WhenSelectedSerialIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSerial = null;
 
         // Act
-        var result = viewModel.SerialVersion;
+        string result = viewModel.SerialVersion;
 
         // Assert
         result.Should().Be("N/A");
@@ -252,12 +252,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialVersion_WhenSelectedSerialHasVersion_ReturnsVersionString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSerialProfile(version: "2.1");
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SerialPortProfile profile = CreateSerialProfile(version: "2.1");
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialVersion;
+        string result = viewModel.SerialVersion;
 
         // Assert
         result.Should().Be("2.1");
@@ -267,11 +267,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialCreatedAt_WhenSelectedSerialIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSerial = null;
 
         // Act
-        var result = viewModel.SerialCreatedAt;
+        string result = viewModel.SerialCreatedAt;
 
         // Assert
         result.Should().Be("N/A");
@@ -281,13 +281,13 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SerialCreatedAt_WhenSelectedSerialHasCreatedAt_ReturnsFormattedDate()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         var createdAt = new DateTime(2025, 10, 21, 14, 30, 0);
-        var profile = CreateSerialProfile(createdAt: createdAt);
+        SerialPortProfile profile = CreateSerialProfile(createdAt: createdAt);
         viewModel.SelectedSerial = profile;
 
         // Act
-        var result = viewModel.SerialCreatedAt;
+        string result = viewModel.SerialCreatedAt;
 
         // Assert
         result.Should().Be("2025-10-21 14:30");
@@ -301,11 +301,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SocatTcpPort_WhenSelectedSocatIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSocat = null;
 
         // Act
-        var result = viewModel.SocatTcpPort;
+        string result = viewModel.SocatTcpPort;
 
         // Assert
         result.Should().Be("N/A");
@@ -315,12 +315,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SocatTcpPort_WhenSelectedSocatHasTcpPort_ReturnsTcpPortString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSocatProfile(tcpPort: 8080);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SocatProfile profile = CreateSocatProfile(tcpPort: 8080);
         viewModel.SelectedSocat = profile;
 
         // Act
-        var result = viewModel.SocatTcpPort;
+        string result = viewModel.SocatTcpPort;
 
         // Assert
         result.Should().Be("8080");
@@ -330,11 +330,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SocatTcpHost_WhenSelectedSocatIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSocat = null;
 
         // Act
-        var result = viewModel.SocatTcpHost;
+        string result = viewModel.SocatTcpHost;
 
         // Assert
         result.Should().Be("N/A");
@@ -344,12 +344,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SocatTcpHost_WhenSelectedSocatHasTcpHost_ReturnsTcpHostString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSocatProfile(tcpHost: "192.168.1.100");
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SocatProfile profile = CreateSocatProfile(tcpHost: "192.168.1.100");
         viewModel.SelectedSocat = profile;
 
         // Act
-        var result = viewModel.SocatTcpHost;
+        string result = viewModel.SocatTcpHost;
 
         // Assert
         result.Should().Be("192.168.1.100");
@@ -359,11 +359,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SocatVerbose_WhenSelectedSocatIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedSocat = null;
 
         // Act
-        var result = viewModel.SocatVerbose;
+        string result = viewModel.SocatVerbose;
 
         // Assert
         result.Should().Be("N/A");
@@ -373,12 +373,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void SocatVerbose_WhenSelectedSocatHasTrueValue_ReturnsYes()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreateSocatProfile(verbose: true);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        SocatProfile profile = CreateSocatProfile(verbose: true);
         viewModel.SelectedSocat = profile;
 
         // Act
-        var result = viewModel.SocatVerbose;
+        string result = viewModel.SocatVerbose;
 
         // Assert
         result.Should().Be("Yes");
@@ -392,11 +392,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void PowerHost_WhenSelectedPowerIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedPower = null;
 
         // Act
-        var result = viewModel.PowerHost;
+        string result = viewModel.PowerHost;
 
         // Assert
         result.Should().Be("N/A");
@@ -406,12 +406,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void PowerHost_WhenSelectedPowerHasModbusTcpHost_ReturnsHostString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreatePowerProfile(host: "192.168.1.200");
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        PowerSupplyProfile profile = CreatePowerProfile(host: "192.168.1.200");
         viewModel.SelectedPower = profile;
 
         // Act
-        var result = viewModel.PowerHost;
+        string result = viewModel.PowerHost;
 
         // Assert
         result.Should().Be("192.168.1.200");
@@ -421,11 +421,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void PowerPort_WhenSelectedPowerIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedPower = null;
 
         // Act
-        var result = viewModel.PowerPort;
+        string result = viewModel.PowerPort;
 
         // Assert
         result.Should().Be("N/A");
@@ -435,12 +435,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void PowerPort_WhenSelectedPowerHasModbusTcpPort_ReturnsPortString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreatePowerProfile(port: 1502);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        PowerSupplyProfile profile = CreatePowerProfile(port: 1502);
         viewModel.SelectedPower = profile;
 
         // Act
-        var result = viewModel.PowerPort;
+        string result = viewModel.PowerPort;
 
         // Assert
         result.Should().Be("1502");
@@ -450,11 +450,11 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void PowerDeviceId_WhenSelectedPowerIsNull_ReturnsNA()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
         viewModel.SelectedPower = null;
 
         // Act
-        var result = viewModel.PowerDeviceId;
+        string result = viewModel.PowerDeviceId;
 
         // Assert
         result.Should().Be("N/A");
@@ -464,12 +464,12 @@ public sealed class JobWizardViewModelTests : IDisposable
     public void PowerDeviceId_WhenSelectedPowerHasModbusTcpDeviceId_ReturnsDeviceIdString()
     {
         // Arrange
-        var viewModel = CreateJobWizardViewModel();
-        var profile = CreatePowerProfile(deviceId: 5);
+        JobWizardViewModel viewModel = CreateJobWizardViewModel();
+        PowerSupplyProfile profile = CreatePowerProfile(deviceId: 5);
         viewModel.SelectedPower = profile;
 
         // Act
-        var result = viewModel.PowerDeviceId;
+        string result = viewModel.PowerDeviceId;
 
         // Assert
         result.Should().Be("5");

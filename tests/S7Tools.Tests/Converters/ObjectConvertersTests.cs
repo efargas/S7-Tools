@@ -12,7 +12,7 @@ public class ObjectConvertersTests
     public void IsNotNull_WithNonNullValue_ReturnsTrue()
     {
         // Arrange
-        var converter = ObjectConverters.IsNotNull;
+        Avalonia.Data.Converters.IValueConverter converter = ObjectConverters.IsNotNull;
         string value = "test";
 
         // Act
@@ -26,7 +26,7 @@ public class ObjectConvertersTests
     public void IsNotNull_WithNullValue_ReturnsFalse()
     {
         // Arrange
-        var converter = ObjectConverters.IsNotNull;
+        Avalonia.Data.Converters.IValueConverter converter = ObjectConverters.IsNotNull;
 
         // Act
         object? result = converter.Convert(null, typeof(bool), (object?)null, CultureInfo.InvariantCulture);
@@ -39,7 +39,7 @@ public class ObjectConvertersTests
     public void LogLevelToColor_WithInformation_ReturnsGreen()
     {
         // Arrange
-        var converter = ObjectConverters.LogLevelToColor;
+        Avalonia.Data.Converters.IValueConverter converter = ObjectConverters.LogLevelToColor;
 
         // Act
         object? result = converter.Convert(LogLevel.Information, typeof(Color), (object?)null, CultureInfo.InvariantCulture);
@@ -52,7 +52,7 @@ public class ObjectConvertersTests
     public void LogLevelToColor_WithError_ReturnsCrimson()
     {
         // Arrange
-        var converter = ObjectConverters.LogLevelToColor;
+        Avalonia.Data.Converters.IValueConverter converter = ObjectConverters.LogLevelToColor;
 
         // Act
         object? result = converter.Convert(LogLevel.Error, typeof(Color), (object?)null, CultureInfo.InvariantCulture);

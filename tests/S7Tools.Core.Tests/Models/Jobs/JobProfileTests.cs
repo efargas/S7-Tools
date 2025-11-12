@@ -155,7 +155,7 @@ public class JobProfileTests
         };
 
         // Act
-        var errors = profile.Validate();
+        List<string> errors = profile.Validate();
 
         // Assert
         Assert.Contains(errors, error => error.Contains("Valid memory region profile must be selected"));
@@ -173,7 +173,7 @@ public class JobProfileTests
         };
 
         // Act
-        var errors = profile.Validate();
+        List<string> errors = profile.Validate();
 
         // Assert
         Assert.Contains(errors, error => error.Contains("Memory region configuration is required"));
@@ -191,7 +191,7 @@ public class JobProfileTests
         };
 
         // Act
-        var errors = profile.Validate();
+        List<string> errors = profile.Validate();
 
         // Assert
         Assert.Contains(errors, error => error.Contains("Memory region length must be greater than 0"));
@@ -213,7 +213,7 @@ public class JobProfileTests
         };
 
         // Act
-        var errors = profile.Validate();
+        List<string> errors = profile.Validate();
 
         // Assert
         // Should not contain memory-related errors
@@ -241,7 +241,7 @@ public class JobProfileTests
         };
 
         // Act
-        var job = profile.ToExecutionJob();
+        Job job = profile.ToExecutionJob();
 
         // Assert
         Assert.Equal(memoryRegion, job.Profiles.Memory);
@@ -264,7 +264,7 @@ public class JobProfileTests
         };
 
         // Act
-        var job = profile.ToExecutionJob();
+        Job job = profile.ToExecutionJob();
 
         // Assert
         var memoryResources = job.Resources.Where(r => r.Kind == "memory").ToList();
@@ -292,7 +292,7 @@ public class JobProfileTests
         };
 
         // Act
-        var job = profile.ToExecutionJob();
+        Job job = profile.ToExecutionJob();
         var resources = job.Resources.ToList();
 
         // Assert
@@ -314,7 +314,7 @@ public class JobProfileTests
         };
 
         // Act
-        var job = profile.ToExecutionJob();
+        Job job = profile.ToExecutionJob();
         var resourceKinds = job.Resources.Select(r => r.Kind).ToHashSet();
 
         // Assert

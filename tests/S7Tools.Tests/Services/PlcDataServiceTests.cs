@@ -37,7 +37,7 @@ public sealed class PlcDataServiceTests : IDisposable
         var address = new PlcAddress("DB1.DBX0.0");
 
         // Act
-        var result = await _service.ReadTagAsync(address);
+        Result<Tag> result = await _service.ReadTagAsync(address);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -54,7 +54,7 @@ public sealed class PlcDataServiceTests : IDisposable
         await _service.ConnectAsync(config);
 
         // Act
-        var result = await _service.ReadTagAsync(address);
+        Result<Tag> result = await _service.ReadTagAsync(address);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -69,7 +69,7 @@ public sealed class PlcDataServiceTests : IDisposable
         var config = new S7ConnectionConfig("192.168.1.100");
 
         // Act
-        var result = await _service.ConnectAsync(config);
+        Result result = await _service.ConnectAsync(config);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -84,7 +84,7 @@ public sealed class PlcDataServiceTests : IDisposable
         await _service.ConnectAsync(config);
 
         // Act
-        var result = await _service.DisconnectAsync();
+        Result result = await _service.DisconnectAsync();
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -98,7 +98,7 @@ public sealed class PlcDataServiceTests : IDisposable
         var config = new S7ConnectionConfig("192.168.1.100");
 
         // Act
-        var result = await _service.TestConnectionAsync(config);
+        Result result = await _service.TestConnectionAsync(config);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -112,7 +112,7 @@ public sealed class PlcDataServiceTests : IDisposable
         await _service.ConnectAsync(config);
 
         // Act
-        var result = await _service.GetPlcInfoAsync();
+        Result<PlcInfo> result = await _service.GetPlcInfoAsync();
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -124,17 +124,17 @@ public sealed class PlcDataServiceTests : IDisposable
     public async Task AddTagAsync_AddsTagToManagedTags()
     {
         // Arrange
-        var tagResult = Tag.Create("TestTag", "DB1.DBX0.0", true);
+        Result<Tag> tagResult = Tag.Create("TestTag", "DB1.DBX0.0", true);
         Assert.True(tagResult.IsSuccess);
-        var tag = tagResult.Value;
+        Tag? tag = tagResult.Value;
 
         // Act
-        var result = await _service.AddTagAsync(tag!);
+        Result result = await _service.AddTagAsync(tag!);
 
         // Assert
         Assert.True(result.IsSuccess);
 
-        var allTagsResult = await _service.GetAllTagsAsync();
+        Result<IReadOnlyCollection<Tag>> allTagsResult = await _service.GetAllTagsAsync();
         Assert.True(allTagsResult.IsSuccess);
         Assert.Contains(allTagsResult.Value!, t => t.Name == "TestTag");
     }
@@ -146,7 +146,7 @@ public sealed class PlcDataServiceTests : IDisposable
         var address = new PlcAddress("DB1.DBX0.0");
 
         // Act
-        var result = await _service.WriteTagAsync(address, true);
+        Result result = await _service.WriteTagAsync(address, true);
 
         // Assert
         Assert.True(result.IsFailure);
@@ -163,7 +163,7 @@ public sealed class PlcDataServiceTests : IDisposable
         await _service.ConnectAsync(config);
 
         // Act
-        var result = await _service.WriteTagAsync(address, true);
+        Result result = await _service.WriteTagAsync(address, true);
 
         // Assert
         Assert.True(result.IsSuccess);

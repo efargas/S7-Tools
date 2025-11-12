@@ -16,10 +16,10 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var keys = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] keys = new[] { new ResourceKey("serial", "COM1") };
 
         // Act
-        var result = coordinator.TryAcquire(keys);
+        bool result = coordinator.TryAcquire(keys);
 
         // Assert
         result.Should().BeTrue();
@@ -30,11 +30,11 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var keys = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] keys = new[] { new ResourceKey("serial", "COM1") };
         coordinator.TryAcquire(keys);
 
         // Act
-        var result = coordinator.TryAcquire(keys);
+        bool result = coordinator.TryAcquire(keys);
 
         // Assert
         result.Should().BeFalse("Resource should already be locked");
@@ -45,8 +45,8 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var keys1 = new[] { new ResourceKey("serial", "COM1") };
-        var keys2 = new[]
+        ResourceKey[] keys1 = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] keys2 = new[]
         {
             new ResourceKey("serial", "COM1"),
             new ResourceKey("tcp", "8080")
@@ -54,13 +54,13 @@ public class ResourceCoordinatorTests
         coordinator.TryAcquire(keys1);
 
         // Act
-        var result = coordinator.TryAcquire(keys2);
+        bool result = coordinator.TryAcquire(keys2);
 
         // Assert
         result.Should().BeFalse("Should not acquire any locks if one resource is unavailable");
 
         // Verify tcp port is still available
-        var tcpKeys = new[] { new ResourceKey("tcp", "8080") };
+        ResourceKey[] tcpKeys = new[] { new ResourceKey("tcp", "8080") };
         coordinator.TryAcquire(tcpKeys).Should().BeTrue("TCP port should still be available");
     }
 
@@ -82,10 +82,10 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var emptyKeys = Array.Empty<ResourceKey>();
+        ResourceKey[] emptyKeys = Array.Empty<ResourceKey>();
 
         // Act
-        var result = coordinator.TryAcquire(emptyKeys);
+        bool result = coordinator.TryAcquire(emptyKeys);
 
         // Assert
         result.Should().BeTrue("Acquiring no resources should succeed");
@@ -100,12 +100,12 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var key1 = new[] { new ResourceKey("serial", "COM1") };
-        var key2 = new[] { new ResourceKey("SERIAL", "COM1") };
+        ResourceKey[] key1 = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] key2 = new[] { new ResourceKey("SERIAL", "COM1") };
         coordinator.TryAcquire(key1);
 
         // Act
-        var result = coordinator.TryAcquire(key2);
+        bool result = coordinator.TryAcquire(key2);
 
         // Assert
         result.Should().BeFalse("Resource should be recognized as locked despite different Kind casing");
@@ -116,12 +116,12 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var key1 = new[] { new ResourceKey("serial", "COM1") };
-        var key2 = new[] { new ResourceKey("serial", "com1") };
+        ResourceKey[] key1 = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] key2 = new[] { new ResourceKey("serial", "com1") };
         coordinator.TryAcquire(key1);
 
         // Act
-        var result = coordinator.TryAcquire(key2);
+        bool result = coordinator.TryAcquire(key2);
 
         // Assert
         result.Should().BeFalse("Resource should be recognized as locked despite different Id casing");
@@ -132,12 +132,12 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var key1 = new[] { new ResourceKey("serial", "COM1") };
-        var key2 = new[] { new ResourceKey("SERIAL", "com1") };
+        ResourceKey[] key1 = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] key2 = new[] { new ResourceKey("SERIAL", "com1") };
         coordinator.TryAcquire(key1);
 
         // Act
-        var result = coordinator.TryAcquire(key2);
+        bool result = coordinator.TryAcquire(key2);
 
         // Assert
         result.Should().BeFalse("Resource should be recognized as locked despite different casing in both Kind and Id");
@@ -152,7 +152,7 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var keys = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] keys = new[] { new ResourceKey("serial", "COM1") };
         coordinator.TryAcquire(keys);
 
         // Act
@@ -167,7 +167,7 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var keys = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] keys = new[] { new ResourceKey("serial", "COM1") };
 
         // Act
         Action act = () => coordinator.Release(keys);
@@ -194,8 +194,8 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var key1 = new[] { new ResourceKey("serial", "COM1") };
-        var key2 = new[] { new ResourceKey("SERIAL", "com1") };
+        ResourceKey[] key1 = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] key2 = new[] { new ResourceKey("SERIAL", "com1") };
         coordinator.TryAcquire(key1);
 
         // Act
@@ -210,7 +210,7 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var keys = new[]
+        ResourceKey[] keys = new[]
         {
             new ResourceKey("serial", "COM1"),
             new ResourceKey("tcp", "8080"),
@@ -222,7 +222,7 @@ public class ResourceCoordinatorTests
         coordinator.Release(keys);
 
         // Assert
-        foreach (var key in keys)
+        foreach (ResourceKey key in keys)
         {
             coordinator.TryAcquire(new[] { key }).Should().BeTrue($"Resource {key} should be unlocked");
         }
@@ -241,9 +241,9 @@ public class ResourceCoordinatorTests
         var job2Key = new ResourceKey("SERIAL", "/dev/TTYUSB0"); // Different casing
 
         // Act - Job 1 acquires the serial port
-        var job1Acquired = coordinator.TryAcquire(new[] { job1Key });
+        bool job1Acquired = coordinator.TryAcquire(new[] { job1Key });
         // Job 2 tries to acquire the same port (with different casing)
-        var job2Acquired = coordinator.TryAcquire(new[] { job2Key });
+        bool job2Acquired = coordinator.TryAcquire(new[] { job2Key });
 
         // Assert
         job1Acquired.Should().BeTrue("Job 1 should acquire the lock");
@@ -255,12 +255,12 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var job1Keys = new[]
+        ResourceKey[] job1Keys = new[]
         {
             new ResourceKey("serial", "COM1"),
             new ResourceKey("tcp", "8080")
         };
-        var job2Keys = new[]
+        ResourceKey[] job2Keys = new[]
         {
             new ResourceKey("SERIAL", "com1"), // Same resource, different casing
             new ResourceKey("TCP", "8080")     // Same resource, different casing
@@ -271,7 +271,7 @@ public class ResourceCoordinatorTests
         coordinator.TryAcquire(job2Keys).Should().BeFalse("Job 2 is blocked");
 
         coordinator.Release(job1Keys); // Job 1 completes and releases
-        var job2SecondAttempt = coordinator.TryAcquire(job2Keys);
+        bool job2SecondAttempt = coordinator.TryAcquire(job2Keys);
 
         // Assert
         job2SecondAttempt.Should().BeTrue("Job 2 should acquire resources after Job 1 releases");
@@ -282,12 +282,12 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var job1Keys = new[] { new ResourceKey("serial", "COM1") };
-        var job2Keys = new[] { new ResourceKey("serial", "COM2") };
+        ResourceKey[] job1Keys = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] job2Keys = new[] { new ResourceKey("serial", "COM2") };
 
         // Act
-        var job1Acquired = coordinator.TryAcquire(job1Keys);
-        var job2Acquired = coordinator.TryAcquire(job2Keys);
+        bool job1Acquired = coordinator.TryAcquire(job1Keys);
+        bool job2Acquired = coordinator.TryAcquire(job2Keys);
 
         // Assert
         job1Acquired.Should().BeTrue("Job 1 should acquire COM1");
@@ -299,8 +299,8 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var job1Keys = new[] { new ResourceKey("serial", "COM1") };
-        var job2Keys = new[]
+        ResourceKey[] job1Keys = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] job2Keys = new[]
         {
             new ResourceKey("SERIAL", "com1"), // Already locked (different casing)
             new ResourceKey("tcp", "8080")     // Available
@@ -309,13 +309,13 @@ public class ResourceCoordinatorTests
         coordinator.TryAcquire(job1Keys);
 
         // Act
-        var job2Acquired = coordinator.TryAcquire(job2Keys);
+        bool job2Acquired = coordinator.TryAcquire(job2Keys);
 
         // Assert
         job2Acquired.Should().BeFalse("Job 2 should not acquire any locks if one is unavailable");
 
         // Verify TCP port is still available
-        var tcpOnly = new[] { new ResourceKey("tcp", "8080") };
+        ResourceKey[] tcpOnly = new[] { new ResourceKey("tcp", "8080") };
         coordinator.TryAcquire(tcpOnly).Should().BeTrue("TCP port should still be available for other jobs");
     }
 
@@ -324,12 +324,12 @@ public class ResourceCoordinatorTests
     {
         // Arrange
         var coordinator = new ResourceCoordinator();
-        var serialJob = new[] { new ResourceKey("serial", "COM1") };
-        var modbusJob = new[] { new ResourceKey("modbus", "192.168.1.100:502") };
+        ResourceKey[] serialJob = new[] { new ResourceKey("serial", "COM1") };
+        ResourceKey[] modbusJob = new[] { new ResourceKey("modbus", "192.168.1.100:502") };
 
         // Act
-        var serialAcquired = coordinator.TryAcquire(serialJob);
-        var modbusAcquired = coordinator.TryAcquire(modbusJob);
+        bool serialAcquired = coordinator.TryAcquire(serialJob);
+        bool modbusAcquired = coordinator.TryAcquire(modbusJob);
 
         // Assert
         serialAcquired.Should().BeTrue("Serial job should acquire lock");
@@ -346,7 +346,7 @@ public class ResourceCoordinatorTests
         // Arrange
         var coordinator = new ResourceCoordinator();
         var key = new ResourceKey("serial", "COM1");
-        var successCount = 0;
+        int successCount = 0;
         var tasks = new List<Task>();
 
         // Act - Simulate 10 concurrent attempts to acquire the same resource

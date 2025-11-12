@@ -45,7 +45,7 @@ public class DialogServiceTests
         });
 
         // Act
-        var result = await _dialogService.ShowConfirmationAsync(title, message);
+        bool result = await _dialogService.ShowConfirmationAsync(title, message);
 
         // Assert
         result.Should().Be(expectedResult);
@@ -66,7 +66,7 @@ public class DialogServiceTests
         });
 
         // Act
-        var result = await _dialogService.ShowConfirmationAsync(title, message);
+        bool result = await _dialogService.ShowConfirmationAsync(title, message);
 
         // Assert
         result.Should().Be(expectedResult);
@@ -78,7 +78,7 @@ public class DialogServiceTests
         // Arrange
         const string title = "Error Title";
         const string message = "Error Message";
-        var handlerCalled = false;
+        bool handlerCalled = false;
 
         // Register handler
         _dialogService.ShowError.RegisterHandler(interaction =>
@@ -102,7 +102,7 @@ public class DialogServiceTests
         // Arrange
         const string title = "Test Title";
         const string message = "Test Message";
-        var handlerCalled = false;
+        bool handlerCalled = false;
 
         // Register first handler
         _dialogService.ShowConfirmation.RegisterHandler(interaction =>
@@ -119,7 +119,7 @@ public class DialogServiceTests
         });
 
         // Act
-        var result = await _dialogService.ShowConfirmationAsync(title, message);
+        bool result = await _dialogService.ShowConfirmationAsync(title, message);
 
         // Assert
         handlerCalled.Should().BeTrue();
@@ -142,7 +142,7 @@ public class DialogServiceTests
         });
 
         // Act
-        var result = await _dialogService.ShowConfirmationAsync(title, message);
+        bool result = await _dialogService.ShowConfirmationAsync(title, message);
 
         // Assert
         result.Should().Be(expectedResult);
@@ -154,7 +154,7 @@ public class DialogServiceTests
         // Arrange
         const string title = "Error Title";
         const string message = "Error Message";
-        var handlerCalled = false;
+        bool handlerCalled = false;
 
         // Register async handler
         _dialogService.ShowError.RegisterHandler(async interaction =>
@@ -186,7 +186,7 @@ public class DialogServiceTests
         });
 
         // Act & Assert
-        var act = async () => await _dialogService.ShowConfirmationAsync(title, message);
+        Func<Task<bool>> act = async () => await _dialogService.ShowConfirmationAsync(title, message);
         await act.Should().NotThrowAsync();
     }
 
@@ -205,7 +205,7 @@ public class DialogServiceTests
         });
 
         // Act & Assert
-        var act = async () => await _dialogService.ShowErrorAsync(title, message);
+        Func<Task> act = async () => await _dialogService.ShowErrorAsync(title, message);
         await act.Should().NotThrowAsync();
     }
 
@@ -215,7 +215,7 @@ public class DialogServiceTests
     public async Task ShowConfirmationAsync_ConcurrentCalls_ShouldHandleCorrectly()
     {
         // Arrange
-        var callCount = 0;
+        int callCount = 0;
         _dialogService.ShowConfirmation.RegisterHandler(interaction =>
         {
             Interlocked.Increment(ref callCount);
@@ -223,11 +223,11 @@ public class DialogServiceTests
         });
 
         // Act
-        var tasks = Enumerable.Range(0, 10)
+        Task<bool>[] tasks = Enumerable.Range(0, 10)
             .Select(i => _dialogService.ShowConfirmationAsync($"Title {i}", $"Message {i}"))
             .ToArray();
 
-        var results = await Task.WhenAll(tasks);
+        bool[] results = await Task.WhenAll(tasks);
 
         // Assert
         results.Should().AllSatisfy(result => result.Should().BeTrue());
@@ -238,7 +238,7 @@ public class DialogServiceTests
     public async Task ShowErrorAsync_ConcurrentCalls_ShouldHandleCorrectly()
     {
         // Arrange
-        var callCount = 0;
+        int callCount = 0;
         _dialogService.ShowError.RegisterHandler(interaction =>
         {
             Interlocked.Increment(ref callCount);
@@ -246,7 +246,7 @@ public class DialogServiceTests
         });
 
         // Act
-        var tasks = Enumerable.Range(0, 10)
+        Task[] tasks = Enumerable.Range(0, 10)
             .Select(i => _dialogService.ShowErrorAsync($"Title {i}", $"Message {i}"))
             .ToArray();
 
@@ -265,7 +265,7 @@ public class DialogServiceTests
         const string defaultValue = "Default";
         const string placeholder = "Placeholder";
         const string expectedValue = "User Input";
-        var handlerCalled = false;
+        bool handlerCalled = false;
 
         // Register handler
         _dialogService.ShowInput.RegisterHandler(interaction =>
@@ -279,7 +279,7 @@ public class DialogServiceTests
         });
 
         // Act
-        var result = await _dialogService.ShowInputAsync(title, message, defaultValue, placeholder);
+        InputResult result = await _dialogService.ShowInputAsync(title, message, defaultValue, placeholder);
 
         // Assert
         handlerCalled.Should().BeTrue();
@@ -298,7 +298,7 @@ public class DialogServiceTests
         });
 
         // Act
-        var result = await _dialogService.ShowInputAsync("Title", "Message");
+        InputResult result = await _dialogService.ShowInputAsync("Title", "Message");
 
         // Assert
         result.Should().NotBeNull();

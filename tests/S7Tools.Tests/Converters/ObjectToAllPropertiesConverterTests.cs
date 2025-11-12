@@ -26,11 +26,11 @@ public class ObjectToAllPropertiesConverterTests
     public void Convert_WithNullValue_ReturnsEmptyCollection()
     {
         // Act
-        var result = _converter.Convert(null, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(null, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Empty(collection);
     }
 
@@ -45,11 +45,11 @@ public class ObjectToAllPropertiesConverterTests
         };
 
         // Act
-        var result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
 
         // Should show both properties (unlike ObjectToPropertiesConverter which would hide HiddenProperty)
         Assert.Equal(2, collection.Count);
@@ -67,11 +67,11 @@ public class ObjectToAllPropertiesConverterTests
         };
 
         // Act
-        var result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Single(collection);
         Assert.Equal("Custom Display Name", collection[0].Label);
         Assert.Equal("Test Value", collection[0].Value);

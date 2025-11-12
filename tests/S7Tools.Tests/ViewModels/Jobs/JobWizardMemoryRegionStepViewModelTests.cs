@@ -73,7 +73,7 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void Constructor_WithValidParameters_ShouldInitializeSuccessfully()
     {
         // Act
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Assert
         Assert.NotNull(viewModel);
@@ -116,8 +116,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void SelectedProfile_WhenSet_ShouldRaisePropertyChanged()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
         bool propertyChanged = false;
 
         viewModel.PropertyChanged += (_, e) =>
@@ -140,7 +140,7 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void ProfileSummary_WithNoProfile_ShouldReturnNoProfileMessage()
     {
         // Arrange
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
         Assert.Equal("No profile selected", viewModel.ProfileSummary);
@@ -150,8 +150,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void ProfileSummary_WithProfile_ShouldReturnProfileSummary()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -164,7 +164,7 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void SelectedSegmentCount_WithNoProfile_ShouldReturnZero()
     {
         // Arrange
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
         Assert.Equal(0, viewModel.SelectedSegmentCount);
@@ -174,8 +174,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void SelectedSegmentCount_WithProfile_ShouldReturnCorrectCount()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -188,7 +188,7 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void TotalSelectedSize_WithNoProfile_ShouldReturnZero()
     {
         // Arrange
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
         Assert.Equal(0, viewModel.TotalSelectedSize);
@@ -198,8 +198,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void TotalSelectedSize_WithProfile_ShouldReturnCorrectSize()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -212,8 +212,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void TotalSelectedSizeFormatted_WithSmallSize_ShouldReturnBytesFormat()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
         profile.Segments.First(s => s.IsSelected).Size = 512; // 512 bytes
 
         // Act
@@ -227,8 +227,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void TotalSelectedSizeFormatted_WithKilobyteSize_ShouldReturnKBFormat()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -244,7 +244,7 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void IsStepValid_WithNoProfile_ShouldReturnFalse()
     {
         // Arrange
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
         Assert.False(viewModel.IsStepValid);
@@ -254,8 +254,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void IsStepValid_WithProfileAndSelectedSegments_ShouldReturnTrue()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -268,7 +268,7 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void ValidationMessage_WithNoProfile_ShouldReturnSelectProfileMessage()
     {
         // Arrange
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
         Assert.Equal("Please select a memory region profile", viewModel.ValidationMessage);
@@ -278,8 +278,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void ValidationMessage_WithValidProfile_ShouldReturnValidMessage()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -297,10 +297,10 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void GetSelectedProfileId_WithNoProfile_ShouldReturnNull()
     {
         // Arrange
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act
-        var result = viewModel.GetSelectedProfileId();
+        int? result = viewModel.GetSelectedProfileId();
 
         // Assert
         Assert.Null(result);
@@ -310,12 +310,12 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void GetSelectedProfileId_WithProfile_ShouldReturnProfileId()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile(id: 42);
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile(id: 42);
 
         // Act
         viewModel.SelectedProfile = profile;
-        var result = viewModel.GetSelectedProfileId();
+        int? result = viewModel.GetSelectedProfileId();
 
         // Assert
         Assert.Equal(42, result);
@@ -325,13 +325,13 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void SetSelectedProfileId_WithNullId_ShouldClearSelection()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
         viewModel.AvailableProfiles.Add(profile);
         viewModel.SelectedProfile = profile;
 
         // Act
-        var result = viewModel.SetSelectedProfileId(null);
+        bool result = viewModel.SetSelectedProfileId(null);
 
         // Assert
         Assert.True(result);
@@ -342,12 +342,12 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void SetSelectedProfileId_WithValidId_ShouldSelectProfile()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile(id: 42);
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile(id: 42);
         viewModel.AvailableProfiles.Add(profile);
 
         // Act
-        var result = viewModel.SetSelectedProfileId(42);
+        bool result = viewModel.SetSelectedProfileId(42);
 
         // Assert
         Assert.True(result);
@@ -358,12 +358,12 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void SetSelectedProfileId_WithInvalidId_ShouldReturnFalse()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile(id: 42);
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile(id: 42);
         viewModel.AvailableProfiles.Add(profile);
 
         // Act
-        var result = viewModel.SetSelectedProfileId(99);
+        bool result = viewModel.SetSelectedProfileId(99);
 
         // Assert
         Assert.False(result);
@@ -374,10 +374,10 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void ValidateStep_WithNoProfile_ShouldReturnError()
     {
         // Arrange
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act
-        var errors = viewModel.ValidateStep();
+        List<string> errors = viewModel.ValidateStep();
 
         // Assert
         Assert.Single(errors);
@@ -388,17 +388,17 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void ValidateStep_WithProfileButNoSelectedSegments_ShouldReturnError()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
         // Clear all segment selections
-        foreach (var segment in profile.Segments)
+        foreach (MemorySegment segment in profile.Segments)
         {
             segment.IsSelected = false;
         }
 
         // Act
         viewModel.SelectedProfile = profile;
-        var errors = viewModel.ValidateStep();
+        List<string> errors = viewModel.ValidateStep();
 
         // Assert
         Assert.Contains("Exactly one segment must be selected for dumping", errors);
@@ -408,12 +408,12 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void ValidateStep_WithValidProfileAndSelectedSegments_ShouldReturnNoErrors()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
-        var errors = viewModel.ValidateStep();
+        List<string> errors = viewModel.ValidateStep();
 
         // Assert
         Assert.Empty(errors);
@@ -427,9 +427,9 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void IsStepValid_ShouldUpdateWhenProfileChanges()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var initialValid = viewModel.IsStepValid;
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        bool initialValid = viewModel.IsStepValid;
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -443,8 +443,8 @@ public class JobWizardMemoryRegionStepViewModelTests
     public void SelectedSegments_ShouldUpdateWhenProfileChanges()
     {
         // Arrange
-        var viewModel = CreateViewModel();
-        var profile = CreateSampleProfile();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
+        MemoryMappingProfile profile = CreateSampleProfile();
 
         // Act
         viewModel.SelectedProfile = profile;
@@ -466,7 +466,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         _memoryRegionService.GetAllAsync().Returns(profiles);
         _uiThreadService.InvokeOnUIThreadAsync(Arg.Any<Action>()).Returns(Task.CompletedTask);
 
-        var viewModel = CreateViewModel();
+        JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act
         await viewModel.RefreshProfilesAsync();

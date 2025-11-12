@@ -77,7 +77,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
     public async Task ViewModel_WhenJobIsSelected_ShouldUpdateBasicInfo()
     {
         // Arrange
-        var testJob = CreateTestJob("Integration Test Job", "Test job for integration testing");
+        JobProfile testJob = CreateTestJob("Integration Test Job", "Test job for integration testing");
 
         // Act
         _viewModel.SelectedJob = testJob;
@@ -94,7 +94,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
     public void RefreshCommand_ShouldBeExecutable()
     {
         // Arrange
-        var testJob = CreateTestJob("Test Job", "Description");
+        JobProfile testJob = CreateTestJob("Test Job", "Description");
         _viewModel.SelectedJob = testJob;
 
         // Act & Assert
@@ -111,7 +111,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
     public async Task ViewModel_WithMissingProfiles_ShouldShowWarnings()
     {
         // Arrange
-        var jobWithMissingProfiles = CreateTestJob("Job with Missing Profiles", "Test job");
+        JobProfile jobWithMissingProfiles = CreateTestJob("Job with Missing Profiles", "Test job");
         jobWithMissingProfiles.SerialProfileId = 999; // Non-existent profile
         jobWithMissingProfiles.SocatProfileId = 999; // Non-existent profile
 
@@ -167,7 +167,7 @@ public sealed class JobInfoDisplayViewModelIntegrationTests : IDisposable
     public void ViewModel_WhenJobCleared_ShouldResetAllProperties()
     {
         // Arrange
-        var testJob = CreateTestJob("Test Job", "Description");
+        JobProfile testJob = CreateTestJob("Test Job", "Description");
         _viewModel.SelectedJob = testJob;
 
         // Act

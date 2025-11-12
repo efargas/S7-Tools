@@ -22,11 +22,11 @@ public class ObjectToPropertiesConverterTests
     public void Convert_WithNullValue_ReturnsEmptyCollection()
     {
         // Arrange & Act
-        var result = _converter.Convert(null, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(null, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Empty(collection);
     }
 
@@ -41,17 +41,17 @@ public class ObjectToPropertiesConverterTests
         };
 
         // Act
-        var result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Equal(2, collection.Count);
 
-        var nameItem = collection.First(p => p.Label.Contains("Name"));
+        PropertyDisplayItem nameItem = collection.First(p => p.Label.Contains("Name"));
         Assert.Equal("Test", nameItem.Value);
 
-        var valueItem = collection.First(p => p.Label.Contains("Value"));
+        PropertyDisplayItem valueItem = collection.First(p => p.Label.Contains("Value"));
         Assert.Equal("42", valueItem.Value);
     }
 
@@ -66,11 +66,11 @@ public class ObjectToPropertiesConverterTests
         };
 
         // Act
-        var result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Single(collection);
         Assert.Equal("Visible Property", collection[0].Label);
         Assert.Equal("Visible", collection[0].Value);
@@ -87,17 +87,17 @@ public class ObjectToPropertiesConverterTests
         };
 
         // Act
-        var result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Equal(2, collection.Count);
 
-        var portItem = collection.First(p => p.Label == "TCP Port");
+        PropertyDisplayItem portItem = collection.First(p => p.Label == "TCP Port");
         Assert.Equal("1234", portItem.Value);
 
-        var hostItem = collection.First(p => p.Label == "Host Address");
+        PropertyDisplayItem hostItem = collection.First(p => p.Label == "Host Address");
         Assert.Equal("192.168.1.1", hostItem.Value);
     }
 
@@ -113,11 +113,11 @@ public class ObjectToPropertiesConverterTests
         };
 
         // Act
-        var result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Equal(3, collection.Count);
 
         Assert.Equal("First Property", collection[0].Label);
@@ -141,17 +141,17 @@ public class ObjectToPropertiesConverterTests
         };
 
         // Act
-        var result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.NotNull(result);
-        var collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
+        ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
         Assert.Equal(2, collection.Count);
 
-        var enabledItem = collection.First(p => p.Label.Contains("Enabled"));
+        PropertyDisplayItem enabledItem = collection.First(p => p.Label.Contains("Enabled"));
         Assert.Equal("True", enabledItem.Value);
 
-        var disabledItem = collection.First(p => p.Label.Contains("Disabled"));
+        PropertyDisplayItem disabledItem = collection.First(p => p.Label.Contains("Disabled"));
         Assert.Equal("False", disabledItem.Value);
     }
 
@@ -159,7 +159,7 @@ public class ObjectToPropertiesConverterTests
     public void ConvertBack_ReturnsUnsetValue()
     {
         // Arrange & Act
-        var result = _converter.ConvertBack(null, typeof(object), null, CultureInfo.InvariantCulture);
+        object? result = _converter.ConvertBack(null, typeof(object), null, CultureInfo.InvariantCulture);
 
         // Assert
         Assert.Equal(Avalonia.AvaloniaProperty.UnsetValue, result);
@@ -173,12 +173,12 @@ public class ObjectToPropertiesConverterTests
         var secondObject = new SimpleTestObject { Name = "Second", Value = 2 };
 
         // Act - Convert first object (will populate cache using ConditionalWeakTable)
-        var firstResult = _converter.Convert(firstObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
-        var firstCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(firstResult);
+        object? firstResult = _converter.Convert(firstObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        ObservableCollection<PropertyDisplayItem> firstCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(firstResult);
 
         // Act - Convert second object (should use cache)
-        var secondResult = _converter.Convert(secondObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
-        var secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
+        object? secondResult = _converter.Convert(secondObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        ObservableCollection<PropertyDisplayItem> secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
 
         // Assert - Both conversions produce correct results with same structure
         Assert.Equal(2, firstCollection.Count);
@@ -215,11 +215,11 @@ public class ObjectToPropertiesConverterTests
         var secondObject = new TestObjectWithOrder { Third = "C2", First = "A2", Second = "B2" };
 
         // Act
-        var firstResult = _converter.Convert(firstObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
-        var firstCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(firstResult);
+        object? firstResult = _converter.Convert(firstObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        ObservableCollection<PropertyDisplayItem> firstCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(firstResult);
 
-        var secondResult = _converter.Convert(secondObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
-        var secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
+        object? secondResult = _converter.Convert(secondObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
+        ObservableCollection<PropertyDisplayItem> secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
 
         // Assert - Order is consistent across both conversions
         Assert.Equal(3, firstCollection.Count);
