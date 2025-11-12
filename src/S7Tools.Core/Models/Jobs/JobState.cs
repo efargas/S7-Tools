@@ -8,30 +8,30 @@ public enum JobState
     /// <summary>
     /// Job has been created but not yet queued.
     /// </summary>
-    Created,
+    Created = 0,
 
     /// <summary>
     /// Job is queued and waiting for execution.
     /// </summary>
-    Queued,
+    Queued = 1,
 
     /// <summary>
     /// Job is currently running.
     /// </summary>
-    Running,
+    Running = 2,
 
     /// <summary>
     /// Job completed successfully.
     /// </summary>
-    Completed,
+    Completed = 3,
 
     /// <summary>
     /// Job failed with an error.
     /// </summary>
-    Failed,
+    Failed = 4,
 
     /// <summary>
     /// Job was canceled before completion.
     /// </summary>
-    Canceled
+    Canceled = 5
 }

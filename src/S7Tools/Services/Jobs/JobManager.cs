@@ -562,22 +562,22 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         );
 
         // Generate resource keys
-        var resources = new List<ResourceKey>
-        {
-            new("serial", jobProfile.SerialProfileId.ToString()),
-            new("tcp", jobProfile.SocatProfileId.ToString()),
-            new("power", jobProfile.PowerSupplyProfileId.ToString()),
-            new("memory", jobProfile.MemoryRegionProfileId.ToString())
-        };
+        // Generate a deterministic ID based on the profile ID
+        int jobId = jobProfile.Id;
 
-        return new Job(
-            Guid.NewGuid(),
-            jobProfile.Name,
-            resources,
-            profileSet,
-            JobState.Created,
-            DateTimeOffset.Now
-        );
+        return new Job
+        {
+            Id = jobId,
+            Name = jobProfile.Name,
+            Description = jobProfile.Description ?? string.Empty,
+            ProfileSet = profileSet,
+            State = JobState.Created,
+            CreatedAt = DateTime.UtcNow,
+            ModifiedAt = DateTime.UtcNow,
+            Progress = 0.0,
+            CurrentOperation = string.Empty,
+            OutputPath = jobProfile.OutputPath ?? string.Empty
+        };
     }
 
     #endregion

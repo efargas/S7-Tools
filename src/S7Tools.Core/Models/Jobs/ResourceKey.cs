@@ -3,6 +3,27 @@ using System;
 namespace S7Tools.Core.Models.Jobs;
 
 /// <summary>
+/// Represents the type of hardware resource used in bootloader operations.
+/// </summary>
+public enum ResourceType
+{
+    /// <summary>
+    /// Serial port resource (e.g., /dev/ttyUSB0, COM1).
+    /// </summary>
+    Serial = 0,
+
+    /// <summary>
+    /// TCP network port resource (e.g., port 10102 for socat bridge).
+    /// </summary>
+    Tcp = 1,
+
+    /// <summary>
+    /// Modbus communication channel for power supply control.
+    /// </summary>
+    Modbus = 2
+}
+
+/// <summary>
 /// Represents a unique identifier for a system resource.
 /// Used for resource locking and coordination across concurrent jobs.
 /// </summary>

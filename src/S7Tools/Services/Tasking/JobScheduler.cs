@@ -14,12 +14,16 @@ public sealed class JobScheduler : IJobScheduler
     private readonly ILogger<JobScheduler> _logger;
     private readonly IResourceCoordinator _resources;
     private readonly IBootloaderService _bootloader;
-    private readonly ConcurrentQueue<Job> _queue = new();
-    private readonly ConcurrentDictionary<Guid, Job> _jobs = new();
-    private int _processingCount;
+    private readonly ConcurrentDictionary<int, Job> _jobs = new();
+    private readonly SemaphoreSlim _schedulerLock = new(1, 1);
+    private CancellationTokenSource? _schedulerCts;
+    private Task? _schedulerTask;
 
     /// <inheritdoc />
-    public event JobStateChanged? JobStateChanged;
+    public event EventHandler<JobStateChangedEventArgs>? JobStateChanged;
+
+    /// <inheritdoc />
+    public event EventHandler<JobProgressChangedEventArgs>? JobProgressChanged;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JobScheduler"/> class.
@@ -38,125 +42,257 @@ public sealed class JobScheduler : IJobScheduler
     }
 
     /// <inheritdoc />
-    public Guid Enqueue(Job job)
+    public Task<Job> EnqueueAsync(Job job, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(job);
 
-        _logger.LogInformation("Enqueuing job {JobId} ({JobName}) with {ResourceCount} resources",
-            job.Id, job.Name, job.Resources.Count);
+        if (job.State != JobState.Created)
+        {
+            throw new InvalidOperationException($"Job must be in Created state to enqueue (current: {job.State})");
+        }
 
-        Job queuedJob = job with { State = JobState.Queued };
+        _logger.LogInformation("Enqueuing job {JobId} ({JobName})",
+            job.Id, job.Name);
+
+        Job queuedJob = job with
+        {
+            State = JobState.Queued,
+            QueuedAt = DateTime.UtcNow,
+            ModifiedAt = DateTime.UtcNow
+        };
+
         _jobs[job.Id] = queuedJob;
-        _queue.Enqueue(queuedJob);
 
-        JobStateChanged?.Invoke(job.Id, JobState.Queued, null);
+        JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+            job.Id,
+            JobState.Created,
+            JobState.Queued,
+            null));
 
-        // Try to start processing immediately
-        _ = Task.Run(() => TryStartNextAsync());
-
-        return job.Id;
+        return Task.FromResult(queuedJob);
     }
 
     /// <inheritdoc />
-    public IReadOnlyCollection<Job> GetAll()
+    public Task<bool> CancelJobAsync(int jobId, CancellationToken cancellationToken = default)
     {
-        return _jobs.Values.ToList();
-    }
-
-    private Task TryStartNextAsync()
-    {
-        // Prevent concurrent processing attempts
-        if (Interlocked.CompareExchange(ref _processingCount, 1, 0) != 0)
+        if (!_jobs.TryGetValue(jobId, out Job? job))
         {
-            return Task.CompletedTask;
+            return Task.FromResult(false);
         }
 
+        // Can only cancel if Queued or Running
+        if (job.State != JobState.Queued && job.State != JobState.Running)
+        {
+            return Task.FromResult(false);
+        }
+
+        Job canceledJob = job with
+        {
+            State = JobState.Canceled,
+            CompletedAt = DateTime.UtcNow,
+            ModifiedAt = DateTime.UtcNow
+        };
+
+        _jobs[jobId] = canceledJob;
+
+        JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+            jobId,
+            job.State,
+            JobState.Canceled,
+            "Job canceled by user"));
+
+        _logger.LogInformation("Job {JobId} canceled", jobId);
+
+        return Task.FromResult(true);
+    }
+
+    /// <inheritdoc />
+    public Task<IReadOnlyList<Job>> GetJobsByStateAsync(
+        JobState[]? states = null,
+        CancellationToken cancellationToken = default)
+    {
+        IEnumerable<Job> query = _jobs.Values;
+
+        if (states != null && states.Length > 0)
+        {
+            HashSet<JobState> stateSet = new(states);
+            query = query.Where(j => stateSet.Contains(j.State));
+        }
+
+        IReadOnlyList<Job> result = query.ToList();
+        return Task.FromResult(result);
+    }
+
+    /// <inheritdoc />
+    public Task<Job?> GetJobByIdAsync(int jobId, CancellationToken cancellationToken = default)
+    {
+        _jobs.TryGetValue(jobId, out Job? job);
+        return Task.FromResult(job);
+    }
+
+    /// <inheritdoc />
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await _schedulerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            while (_queue.TryDequeue(out Job? job))
+            if (_schedulerTask != null)
             {
-                // Try to acquire resources for this job
-                if (!_resources.TryAcquire(job.Resources))
-                {
-                    // Resources not available, re-queue for later
-                    _queue.Enqueue(job);
-                    _logger.LogDebug("Job {JobId} waiting for resources", job.Id);
-                    break;
-                }
-
-                // Resources acquired, start execution
-                _logger.LogInformation("Starting job {JobId} ({JobName})", job.Id, job.Name);
-                _ = ExecuteJobAsync(job);
+                throw new InvalidOperationException("Scheduler already running");
             }
+
+            _schedulerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            _schedulerTask = Task.Run(() => ProcessQueueAsync(_schedulerCts.Token), _schedulerCts.Token);
+
+            _logger.LogInformation("Job scheduler started");
         }
         finally
         {
-            Interlocked.Exchange(ref _processingCount, 0);
+            _schedulerLock.Release();
         }
-
-        return Task.CompletedTask;
     }
 
-    private async Task ExecuteJobAsync(Job job)
+    /// <inheritdoc />
+    public async Task StopAsync(TimeSpan gracefulTimeout, CancellationToken cancellationToken = default)
+    {
+        await _schedulerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (_schedulerTask == null || _schedulerCts == null)
+            {
+                return; // Not running
+            }
+
+            _schedulerCts.Cancel();
+
+            Task completedTask = await Task.WhenAny(_schedulerTask, Task.Delay(gracefulTimeout, cancellationToken))
+                .ConfigureAwait(false);
+
+            if (completedTask != _schedulerTask)
+            {
+                _logger.LogWarning("Scheduler did not stop within graceful timeout");
+            }
+
+            _schedulerTask = null;
+            _schedulerCts?.Dispose();
+            _schedulerCts = null;
+
+            _logger.LogInformation("Job scheduler stopped");
+        }
+        finally
+        {
+            _schedulerLock.Release();
+        }
+    }
+
+    private async Task ProcessQueueAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogDebug("Scheduler queue processing started");
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                // Find queued jobs
+                Job[] queuedJobs = _jobs.Values
+                    .Where(j => j.State == JobState.Queued)
+                    .ToArray();
+
+                foreach (Job job in queuedJobs)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
+                    // Try to acquire resources (stub - needs actual resource extraction)
+                    var resources = new[] { new ResourceKey("serial", "/dev/ttyUSB0") };
+
+                    if (_resources.TryAcquire(resources))
+                    {
+                        // Start execution in background
+                        _ = ExecuteJobAsync(job, resources, cancellationToken);
+                    }
+                }
+
+                // Wait before next cycle
+                await Task.Delay(500, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in scheduler queue processing");
+            }
+        }
+
+        _logger.LogDebug("Scheduler queue processing stopped");
+    }
+
+    private async Task ExecuteJobAsync(Job job, ResourceKey[] resources, CancellationToken cancellationToken)
     {
         try
         {
-            // Update job state to running
-            Job runningJob = job with { State = JobState.Running };
-            _jobs[job.Id] = runningJob;
-            JobStateChanged?.Invoke(job.Id, JobState.Running, "Starting bootloader operation");
-
-            // Create progress reporter
-            var progress = new Progress<(string stage, double percent)>(p =>
+            // Update to Running
+            Job runningJob = job with
             {
-                string message = $"{p.stage}: {p.percent:P0}";
-                JobStateChanged?.Invoke(job.Id, JobState.Running, message);
-                _logger.LogDebug("Job {JobId} progress: {Stage} - {Percent:P0}",
-                    job.Id, p.stage, p.percent);
-            });
+                State = JobState.Running,
+                StartedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            };
+            _jobs[job.Id] = runningJob;
 
-            // Execute the dump operation
-            byte[] dumpData = await _bootloader.DumpAsync(job.Profiles, progress, CancellationToken.None)
-                .ConfigureAwait(false);
+            JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+                job.Id,
+                JobState.Queued,
+                JobState.Running,
+                "Starting bootloader operation"));
 
-            // Save dump to file
-            string outputFile = Path.Combine(job.Profiles.OutputPath, $"dump-{job.Id}.bin");
-            Directory.CreateDirectory(job.Profiles.OutputPath);
-            await File.WriteAllBytesAsync(outputFile, dumpData, CancellationToken.None)
-                .ConfigureAwait(false);
+            // Execute (stub implementation for now)
+            await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
 
-            // Update job state to completed
-            Job completedJob = job with { State = JobState.Completed };
+            // Complete
+            Job completedJob = runningJob with
+            {
+                State = JobState.Completed,
+                Progress = 100.0,
+                CompletedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            };
             _jobs[job.Id] = completedJob;
-            JobStateChanged?.Invoke(job.Id, JobState.Completed, outputFile);
 
-            _logger.LogInformation("Job {JobId} completed successfully. Output: {OutputFile}",
-                job.Id, outputFile);
-        }
-        catch (OperationCanceledException)
-        {
-            _logger.LogWarning("Job {JobId} was canceled", job.Id);
-            Job canceledJob = job with { State = JobState.Canceled };
-            _jobs[job.Id] = canceledJob;
-            JobStateChanged?.Invoke(job.Id, JobState.Canceled, "Operation canceled");
+            JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+                job.Id,
+                JobState.Running,
+                JobState.Completed,
+                null));
+
+            _logger.LogInformation("Job {JobId} completed successfully", job.Id);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Job {JobId} failed with error: {ErrorMessage}",
-                job.Id, ex.Message);
+            _logger.LogError(ex, "Job {JobId} failed", job.Id);
 
-            Job failedJob = job with { State = JobState.Failed };
+            Job failedJob = job with
+            {
+                State = JobState.Failed,
+                ErrorMessage = ex.Message,
+                CompletedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            };
             _jobs[job.Id] = failedJob;
-            JobStateChanged?.Invoke(job.Id, JobState.Failed, ex.Message);
+
+            JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+                job.Id,
+                JobState.Running,
+                JobState.Failed,
+                ex.Message));
         }
         finally
         {
-            // Release resources
-            _resources.Release(job.Resources);
-            _logger.LogDebug("Released resources for job {JobId}", job.Id);
-
-            // Try to start the next job
-            _ = Task.Run(() => TryStartNextAsync());
+            _resources.Release(resources);
         }
     }
 }

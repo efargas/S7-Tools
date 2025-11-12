@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 
@@ -9,8 +10,11 @@ namespace S7Tools.Services.Tasking;
 /// </summary>
 public sealed class ResourceCoordinator : IResourceCoordinator
 {
-    private readonly HashSet<ResourceKey> _locks = new();
+    private readonly ConcurrentDictionary<ResourceKey, int> _locks = new();
     private readonly object _syncRoot = new();
+
+    /// <inheritdoc />
+    public event EventHandler<ResourceLockChangedEventArgs>? ResourceLockChanged;
 
     /// <inheritdoc />
     public bool TryAcquire(IEnumerable<ResourceKey> keys)
@@ -22,19 +26,46 @@ public sealed class ResourceCoordinator : IResourceCoordinator
         lock (_syncRoot)
         {
             // Check if any of the requested resources are already locked
-            if (keysArray.Any(_locks.Contains))
+            if (keysArray.Any(k => _locks.ContainsKey(k)))
             {
                 return false;
             }
 
-            // Acquire all resources
+            // Acquire all resources (use jobId = 0 as default for now)
             foreach (ResourceKey key in keysArray)
             {
-                _locks.Add(key);
+                _locks[key] = 0;
+                ResourceLockChanged?.Invoke(this,
+                    new ResourceLockChangedEventArgs(key, ResourceLockAction.Acquired, 0));
             }
 
             return true;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> TryAcquireAsync(
+        IEnumerable<ResourceKey> resources,
+        TimeSpan timeout,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+
+        DateTime deadline = DateTime.UtcNow.Add(timeout);
+        ResourceKey[] resourcesArray = resources.ToArray();
+
+        while (DateTime.UtcNow < deadline)
+        {
+            if (TryAcquire(resourcesArray))
+            {
+                return true;
+            }
+
+            // Wait 100ms before retrying
+            await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+        }
+
+        return false;
     }
 
     /// <inheritdoc />
@@ -46,8 +77,29 @@ public sealed class ResourceCoordinator : IResourceCoordinator
         {
             foreach (ResourceKey key in keys)
             {
-                _locks.Remove(key);
+                if (_locks.TryRemove(key, out int jobId))
+                {
+                    ResourceLockChanged?.Invoke(this,
+                        new ResourceLockChangedEventArgs(key, ResourceLockAction.Released, jobId));
+                }
             }
         }
+    }
+
+    /// <inheritdoc />
+    public bool AreAvailable(IEnumerable<ResourceKey> resources)
+    {
+        ArgumentNullException.ThrowIfNull(resources);
+
+        lock (_syncRoot)
+        {
+            return !resources.Any(r => _locks.ContainsKey(r));
+        }
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<ResourceKey, int> GetLockedResources()
+    {
+        return _locks.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 }

@@ -476,16 +476,22 @@ public class JobProfile : IProfileBase
             OutputPath
         );
 
-        IReadOnlyList<ResourceKey> resources = GenerateResourceKeys();
+        // Generate a deterministic ID based on the profile name
+        int jobId = Math.Abs(Name.GetHashCode()) % 100000 + 1;
 
-        return new Job(
-            Guid.NewGuid(),
-            Name,
-            resources,
-            profileSet,
-            JobState.Created,
-            DateTimeOffset.UtcNow
-        );
+        return new Job
+        {
+            Id = jobId,
+            Name = Name,
+            Description = Description ?? string.Empty,
+            ProfileSet = profileSet,
+            State = JobState.Created,
+            CreatedAt = DateTime.UtcNow,
+            ModifiedAt = DateTime.UtcNow,
+            Progress = 0.0,
+            CurrentOperation = string.Empty,
+            OutputPath = OutputPath
+        };
     }
 
     /// <summary>

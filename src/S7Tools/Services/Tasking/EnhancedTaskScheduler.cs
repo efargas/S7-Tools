@@ -664,7 +664,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
             // Execute the job
             Job executionJob = jobProfile.ToExecutionJob();
-            byte[] dumpData = await _bootloaderService.DumpAsync(executionJob.Profiles, progress, CancellationToken.None)
+            byte[] dumpData = await _bootloaderService.DumpAsync(executionJob.ProfileSet, progress, CancellationToken.None)
                 .ConfigureAwait(false);
 
             // Save the output

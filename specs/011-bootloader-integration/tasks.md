@@ -50,25 +50,25 @@ S7Tools uses Clean Architecture with categorized MVVM structure:
 
 ### Domain Models (Core Layer)
 
-- [ ] T011 [P] Create JobState enum in src/S7Tools.Core/Models/Jobs/JobState.cs with values: Created=0, Queued=1, Running=2, Completed=3, Failed=4, Canceled=5
-- [ ] T012 [P] Create ResourceType enum in src/S7Tools.Core/Models/Jobs/ResourceKey.cs with values: Serial=0, Tcp=1, Modbus=2
-- [ ] T013 [P] Create ResourceKey value object in src/S7Tools.Core/Models/Jobs/ResourceKey.cs with Type, Identifier fields and value equality semantics
-- [ ] T014 [P] Create SerialProfileRef value object in src/S7Tools.Core/Models/Jobs/SerialProfileRef.cs with ProfileId, ProfileName, Device fields
-- [ ] T015 [P] Create SocatProfileRef value object in src/S7Tools.Core/Models/Jobs/SocatProfileRef.cs with ProfileId, ProfileName, Port fields
-- [ ] T016 [P] Create PowerProfileRef value object in src/S7Tools.Core/Models/Jobs/PowerProfileRef.cs with ProfileId, ProfileName, ModbusAddress fields
-- [ ] T017 [P] Create PayloadSetProfile entity in src/S7Tools.Core/Models/Jobs/PayloadSetProfile.cs implementing IProfileBase with Id, Name, Description, BasePath, IsDefault, IsReadOnly fields
-- [ ] T018 Create JobProfileSet value object in src/S7Tools.Core/Models/Jobs/JobProfileSet.cs aggregating Serial, Socat, Power, MemoryRegion, PayloadSet references
-- [ ] T019 Create Job entity in src/S7Tools.Core/Models/Jobs/Job.cs with Id, Name, Description, ProfileSet, State, Progress, OutputPath, timestamps, and state transition validation
+- [X] T011 [P] Create JobState enum in src/S7Tools.Core/Models/Jobs/JobState.cs with values: Created=0, Queued=1, Running=2, Completed=3, Failed=4, Canceled=5
+- [X] T012 [P] Create ResourceType enum in src/S7Tools.Core/Models/Jobs/ResourceKey.cs with values: Serial=0, Tcp=1, Modbus=2
+- [X] T013 [P] Create ResourceKey value object in src/S7Tools.Core/Models/Jobs/ResourceKey.cs with Type, Identifier fields and value equality semantics
+- [X] T014 [P] Create SerialProfileRef value object in src/S7Tools.Core/Models/Jobs/SerialProfileRef.cs with ProfileId, ProfileName, Device fields
+- [X] T015 [P] Create SocatProfileRef value object in src/S7Tools.Core/Models/Jobs/SocatProfileRef.cs with ProfileId, ProfileName, Port fields
+- [X] T016 [P] Create PowerProfileRef value object in src/S7Tools.Core/Models/Jobs/PowerProfileRef.cs with ProfileId, ProfileName, ModbusAddress fields
+- [X] T017 [P] Create PayloadSetProfile entity in src/S7Tools.Core/Models/Jobs/PayloadSetProfile.cs implementing IProfileBase with Id, Name, Description, BasePath, IsDefault, IsReadOnly fields
+- [X] T018 Create JobProfileSet value object in src/S7Tools.Core/Models/Jobs/JobProfileSet.cs aggregating Serial, Socat, Power, MemoryRegion, PayloadSet references
+- [X] T019 **ENHANCED** Create Job entity in src/S7Tools.Core/Models/Jobs/Job.cs with Id (int), Name, Description, ProfileSet, State, Progress, OutputPath, timestamps (CreatedAt, ModifiedAt, QueuedAt, StartedAt, CompletedAt), CurrentOperation, ErrorMessage, and state transition validation via CanTransitionTo method
 
 ### Service Interfaces (Core Layer)
 
-- [ ] T020 [P] Create IPlcTransport interface in src/S7Tools.Core/Services/Interfaces/IPlcTransport.cs with OpenAsync, CloseAsync, SendAsync, ReceiveAsync methods
-- [ ] T021 [P] Create IPlcProtocol interface in src/S7Tools.Core/Services/Interfaces/IPlcProtocol.cs with HandshakeAsync, InstallPayloadAsync, DumpMemoryAsync methods
-- [ ] T022 [P] Create IPlcClient interface in src/S7Tools.Core/Services/Interfaces/IPlcClient.cs with high-level bootloader workflow methods
-- [ ] T023 [P] Create IPayloadProvider interface in src/S7Tools.Core/Services/Interfaces/IPayloadProvider.cs with GetStagerAsync, GetMemoryDumperAsync methods
-- [ ] T024 Create IResourceCoordinator interface in src/S7Tools.Core/Services/Interfaces/IResourceCoordinator.cs with TryAcquire, TryAcquireAsync, Release, AreAvailable methods and ResourceLockChanged event per contracts/IResourceCoordinator.md
+- [X] T020 [P] Create IPlcTransport interface in src/S7Tools.Core/Services/Interfaces/IPlcTransport.cs with OpenAsync, CloseAsync, SendAsync, ReceiveAsync methods
+- [X] T021 [P] Create IPlcProtocol interface in src/S7Tools.Core/Services/Interfaces/IPlcProtocol.cs with HandshakeAsync, InstallPayloadAsync, DumpMemoryAsync methods
+- [X] T022 [P] Create IPlcClient interface in src/S7Tools.Core/Services/Interfaces/IPlcClient.cs with high-level bootloader workflow methods
+- [X] T023 [P] Create IPayloadProvider interface in src/S7Tools.Core/Services/Interfaces/IPayloadProvider.cs with GetStagerAsync, GetMemoryDumperAsync methods
+- [X] T024 Create IResourceCoordinator interface in src/S7Tools.Core/Services/Interfaces/IResourceCoordinator.cs with TryAcquire, TryAcquireAsync, Release, AreAvailable methods and ResourceLockChanged event per contracts/IResourceCoordinator.md
 - [X] T025: Create IJobScheduler interface in src/S7Tools.Core/Services/Interfaces/IJobScheduler.cs with EnqueueAsync, CancelJobAsync, GetJobsByStateAsync, StartAsync, StopAsync methods and JobStateChanged, JobProgressChanged events per contracts/IJobScheduler.md
-- [ ] T026 Create IBootloaderService interface in src/S7Tools.Core/Services/Interfaces/IBootloaderService.cs with DumpMemoryAsync, ValidateProfileSetAsync, EstimateDuration methods per contracts/IBootloaderService.md
+- [X] T026 Create IBootloaderService interface in src/S7Tools.Core/Services/Interfaces/IBootloaderService.cs with DumpMemoryAsync, ValidateProfileSetAsync, EstimateDuration methods per contracts/IBootloaderService.md
 
 ### Event and Progress Types (Core Layer)
 
