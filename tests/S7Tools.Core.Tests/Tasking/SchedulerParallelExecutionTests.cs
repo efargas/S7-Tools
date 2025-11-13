@@ -96,7 +96,7 @@ public class SchedulerParallelExecutionTests
         await scheduler.StartAsync(CancellationToken.None);
 
         // Wait for both jobs to start (with timeout)
-        var timeout = DateTime.UtcNow.AddSeconds(5);
+        DateTime timeout = DateTime.UtcNow.AddSeconds(5);
         while (startTimes.Count < 2 && DateTime.UtcNow < timeout)
         {
             await Task.Delay(100);
@@ -107,9 +107,9 @@ public class SchedulerParallelExecutionTests
         // Assert
         startTimes.Should().HaveCount(2, "both jobs should start");
 
-        var job1Start = startTimes[1];
-        var job2Start = startTimes[2];
-        var timeDifference = Math.Abs((job2Start - job1Start).TotalSeconds);
+        DateTime job1Start = startTimes[1];
+        DateTime job2Start = startTimes[2];
+        double timeDifference = Math.Abs((job2Start - job1Start).TotalSeconds);
 
         timeDifference.Should().BeLessThan(1.0,
             "jobs with independent resources should start within 1 second of each other");
@@ -191,7 +191,7 @@ public class SchedulerParallelExecutionTests
         await scheduler.StartAsync(CancellationToken.None);
 
         // Wait for both jobs to complete (with timeout)
-        var timeout = DateTime.UtcNow.AddSeconds(10);
+        DateTime timeout = DateTime.UtcNow.AddSeconds(10);
         while ((!timestamps.ContainsKey(1) || !timestamps[1].complete.HasValue ||
                 !timestamps.ContainsKey(2) || !timestamps[2].complete.HasValue) &&
                DateTime.UtcNow < timeout)
@@ -294,7 +294,7 @@ public class SchedulerParallelExecutionTests
         await scheduler.StartAsync(CancellationToken.None);
 
         // Wait for job to fail (with timeout)
-        var timeout = DateTime.UtcNow.AddSeconds(5);
+        DateTime timeout = DateTime.UtcNow.AddSeconds(5);
         while (!jobFailed && DateTime.UtcNow < timeout)
         {
             await Task.Delay(100);
@@ -347,8 +347,8 @@ public class SchedulerParallelExecutionTests
         };
 
         var runningJobs = new HashSet<int>();
-        var maxConcurrent = 0;
-        var lockObject = new object();
+        int maxConcurrent = 0;
+        object lockObject = new object();
 
         scheduler.JobStateChanged += (sender, args) =>
         {
@@ -367,7 +367,7 @@ public class SchedulerParallelExecutionTests
         };
 
         // Act
-        foreach (var job in jobs)
+        foreach (Job job in jobs)
         {
             await scheduler.EnqueueAsync(job);
         }
@@ -375,7 +375,7 @@ public class SchedulerParallelExecutionTests
         await scheduler.StartAsync(CancellationToken.None);
 
         // Wait for all jobs to start running (with timeout)
-        var timeout = DateTime.UtcNow.AddSeconds(10);
+        DateTime timeout = DateTime.UtcNow.AddSeconds(10);
         while (maxConcurrent < 4 && DateTime.UtcNow < timeout)
         {
             await Task.Delay(100);

@@ -310,7 +310,7 @@ public class BootloaderServiceTests
         socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
-                var token = callInfo.Arg<CancellationToken>();
+                CancellationToken token = callInfo.Arg<CancellationToken>();
                 token.ThrowIfCancellationRequested();
                 return new SocatProcessInfo { ProcessId = 1234, TcpPort = 8080 };
             });

@@ -212,7 +212,7 @@ public sealed class JobScheduler : IJobScheduler
             try
             {
                 // STEP 1: Clean up completed jobs
-                foreach (var kvp in _runningJobs.ToArray())
+                foreach (KeyValuePair<int, Task> kvp in _runningJobs.ToArray())
                 {
                     if (kvp.Value.IsCompleted)
                     {
@@ -262,7 +262,7 @@ public sealed class JobScheduler : IJobScheduler
                 _logger.LogInformation("Starting batch of {Count} jobs simultaneously", jobsToStart.Count);
 
                 // STEP 4: Update ALL states synchronously FIRST
-                foreach (var (job, resources) in jobsToStart)
+                foreach ((Job? job, ResourceKey[]? resources) in jobsToStart)
                 {
                     Job runningJob = job with
                     {
@@ -281,7 +281,7 @@ public sealed class JobScheduler : IJobScheduler
                 }
 
                 // STEP 5: Launch ALL tasks AFTER state changes complete
-                foreach (var (job, resources) in jobsToStart)
+                foreach ((Job? job, ResourceKey[]? resources) in jobsToStart)
                 {
                     Job runningJob = _jobs[job.Id];  // Get updated job with Running state
                     Task executionTask = Task.Run(
