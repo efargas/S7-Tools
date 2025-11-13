@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 
@@ -22,13 +23,18 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly IResourceCoordinator _resourceCoordinator;
     private readonly IBootloaderService _bootloaderService;
     private readonly IJobManager _jobManager;
+    private readonly IPathService _pathService;
+    private readonly ITaskLoggerFactory _taskLoggerFactory;
+    private readonly string _tasksFilePath;
 
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
     private readonly ConcurrentQueue<Guid> _taskQueue = new();
     private readonly ConcurrentDictionary<Guid, DateTime> _scheduledTasks = new();
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
+    private readonly SemaphoreSlim _persistenceSemaphore = new(1, 1);
     private readonly Timer _processingTimer;
     private readonly Timer _cleanupTimer;
+    private readonly Timer _persistenceTimer;
 
     private bool _isRunning;
     private bool _disposed;
@@ -63,22 +69,46 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <param name="resourceCoordinator">Resource coordinator for managing exclusive resource access.</param>
     /// <param name="bootloaderService">Bootloader service for job execution.</param>
     /// <param name="jobManager">Job manager for accessing job configurations.</param>
+    /// <param name="pathService">Path service for resolving application paths.</param>
+    /// <param name="taskLoggerFactory">Task logger factory for creating task-specific loggers.</param>
     public EnhancedTaskScheduler(
         ILogger<EnhancedTaskScheduler> logger,
         IResourceCoordinator resourceCoordinator,
         IBootloaderService bootloaderService,
-        IJobManager jobManager)
+        IJobManager jobManager,
+        IPathService pathService,
+        ITaskLoggerFactory taskLoggerFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
         _bootloaderService = bootloaderService ?? throw new ArgumentNullException(nameof(bootloaderService));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
+        _taskLoggerFactory = taskLoggerFactory ?? throw new ArgumentNullException(nameof(taskLoggerFactory));
 
-        // Set up timers for periodic processing and cleanup
-        _processingTimer = new Timer(ProcessTasks, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
-        _cleanupTimer = new Timer(PerformCleanup, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        // Set up tasks file path using PathService
+        _tasksFilePath = _pathService.TasksPath;
+        string? tasksDirectory = Path.GetDirectoryName(_tasksFilePath);
+        if (!string.IsNullOrEmpty(tasksDirectory))
+        {
+            Directory.CreateDirectory(tasksDirectory);
+        }
 
-        _logger.LogInformation("EnhancedTaskScheduler initialized with max concurrent tasks: {MaxConcurrentTasks}", _maxConcurrentTasks);
+        // Set up timers for periodic processing, cleanup, and persistence
+        _processingTimer = new Timer(ProcessTasks, null, Timeout.Infinite, Timeout.Infinite);
+        _cleanupTimer = new Timer(PerformCleanup, null, Timeout.Infinite, Timeout.Infinite);
+        _persistenceTimer = new Timer(PersistTasks, null, Timeout.Infinite, Timeout.Infinite);
+
+        // Start timers
+        _processingTimer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+        _cleanupTimer.Change(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+        _persistenceTimer.Change(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+
+        // Load existing tasks from persistence
+        _ = LoadTasksAsync();
+
+        _logger.LogInformation("EnhancedTaskScheduler initialized with max concurrent tasks: {MaxConcurrentTasks}, persistence path: {Path}",
+            _maxConcurrentTasks, _tasksFilePath);
     }
 
     #endregion
@@ -118,6 +148,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _tasks[taskExecution.TaskId] = taskExecution;
 
         TaskStateChanged?.Invoke(taskExecution);
+        _ = Task.Run(() => SaveTasksAsync()); // Persist task creation
 
         _logger.LogInformation("Created task {TaskId} for job '{JobName}' with {ResourceCount} resources",
             taskExecution.TaskId, jobProfile.Name, executionJob.Resources.Count);
@@ -385,6 +416,108 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         return _resourceCoordinator.TryAcquire(task.LockedResources);
     }
 
+    /// <summary>
+    /// Gets detailed reasons why a task cannot execute currently.
+    /// </summary>
+    /// <param name="taskId">The ID of the task to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of blocking reasons, or empty list if task can execute.</returns>
+    public async Task<List<string>> GetTaskBlockingReasonsAsync(Guid taskId, CancellationToken cancellationToken = default)
+    {
+        var reasons = new List<string>();
+
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
+        {
+            reasons.Add("Task not found");
+            return reasons;
+        }
+
+        if (task.State != TaskState.Queued)
+        {
+            reasons.Add($"Task is in '{task.State}' state (must be Queued to execute)");
+            return reasons;
+        }
+
+        // Check max concurrent tasks limit
+        int runningCount = _tasks.Values.Count(t => t.State == TaskState.Running);
+        if (runningCount >= _maxConcurrentTasks)
+        {
+            reasons.Add($"Max concurrent tasks limit reached ({runningCount}/{_maxConcurrentTasks})");
+        }
+
+        // Check job profile validity
+        JobProfile? jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId, cancellationToken).ConfigureAwait(false);
+        if (jobProfile == null)
+        {
+            reasons.Add($"Job profile {task.JobProfileId} not found");
+            return reasons;
+        }
+
+        bool canExecuteJob = await _jobManager.CanExecuteJobAsync(task.JobProfileId, cancellationToken).ConfigureAwait(false);
+        if (!canExecuteJob)
+        {
+            reasons.Add($"Job profile '{jobProfile.Name}' validation failed");
+        }
+
+        // Check resource locks - detailed per resource type
+        Job executionJob = jobProfile.ToExecutionJob();
+        foreach (ResourceKey resource in executionJob.Resources)
+        {
+            if (!_resourceCoordinator.TryAcquire(new[] { resource }))
+            {
+                // Resource is locked - find which task is using it
+                TaskExecution? lockingTask = _tasks.Values.FirstOrDefault(t =>
+                    t.State == TaskState.Running &&
+                    t.LockedResources.Any(r => r.Kind == resource.Kind && r.Id == resource.Id));
+
+                if (lockingTask != null)
+                {
+                    switch (resource.Kind.ToLowerInvariant())
+                    {
+                        case "serial":
+                            reasons.Add($"Serial port '{resource.Id}' is in use by task '{lockingTask.JobName}' (started {lockingTask.StartedAt:HH:mm:ss})");
+                            break;
+                        case "tcp":
+                            reasons.Add($"TCP port {resource.Id} is in use by task '{lockingTask.JobName}' (socat server running)");
+                            break;
+                        case "modbus":
+                            reasons.Add($"Modbus connection '{resource.Id}' is in use by task '{lockingTask.JobName}' (power supply control active)");
+                            break;
+                        default:
+                            reasons.Add($"Resource '{resource.Kind}:{resource.Id}' is in use by task '{lockingTask.JobName}'");
+                            break;
+                    }
+                }
+                else
+                {
+                    // Resource locked but no running task found - might be system lock
+                    switch (resource.Kind.ToLowerInvariant())
+                    {
+                        case "serial":
+                            reasons.Add($"Serial port '{resource.Id}' is not available (may be in use by another application)");
+                            break;
+                        case "tcp":
+                            reasons.Add($"TCP port {resource.Id} is not available (may be in use or socat not configured)");
+                            break;
+                        case "modbus":
+                            reasons.Add($"Modbus connection '{resource.Id}' is not available (power supply not reachable)");
+                            break;
+                        default:
+                            reasons.Add($"Resource '{resource.Kind}:{resource.Id}' is not available");
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                // Release immediately - we were just testing
+                _resourceCoordinator.Release(new[] { resource });
+            }
+        }
+
+        return reasons;
+    }
+
     /// <inheritdoc/>
     public async Task<DateTime?> GetEstimatedStartTimeAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
@@ -612,6 +745,15 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     }
                     else
                     {
+                        // Get detailed blocking reasons and update task
+                        List<string> blockingReasons = await GetTaskBlockingReasonsAsync(taskId, CancellationToken.None).ConfigureAwait(false);
+                        string reasonsText = blockingReasons.Count > 0
+                            ? string.Join("; ", blockingReasons)
+                            : "Resources not available";
+
+                        task.UpdateProgress(task.ProgressPercentage, $"Waiting: {reasonsText}");
+                        TaskProgressUpdated?.Invoke(task.TaskId, task.ProgressPercentage, task.CurrentOperation ?? string.Empty);
+
                         // Re-queue for later
                         _taskQueue.Enqueue(taskId);
                         break; // Stop trying if resources aren't available
@@ -643,10 +785,27 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return;
         }
 
+        TaskLogger? taskLogger = null;
+
         try
         {
             task.UpdateState(TaskState.Running, "Starting task execution");
             TaskStateChanged?.Invoke(task);
+
+            // Create task-specific logger
+            taskLogger = await _taskLoggerFactory.CreateTaskLoggerAsync(
+                taskId,
+                task.JobName,
+                captureProtocol: true,
+                captureProcessOutput: true,
+                CancellationToken.None).ConfigureAwait(false);
+
+            task.Logger = taskLogger;
+
+            // Log task start
+            taskLogger.MainLogger?.LogInformation(
+                "Task execution started: {JobName} (ID: {TaskId}) at {StartTime}",
+                task.JobName, taskId, DateTime.UtcNow);
 
             // Get the job profile
             JobProfile? jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false);
@@ -655,22 +814,38 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 throw new InvalidOperationException($"Job profile {task.JobProfileId} not found");
             }
 
+            taskLogger.MainLogger?.LogInformation("Job profile loaded: {ProfileName}", jobProfile.Name);
+
             // Create progress reporter
             var progress = new Progress<(string stage, double percent)>(p =>
             {
                 task.UpdateProgress(p.percent, p.stage);
                 TaskProgressUpdated?.Invoke(task.TaskId, p.percent, p.stage);
+
+                // Log progress to task logger
+                taskLogger.MainLogger?.LogInformation(
+                    "Progress: {Stage} - {Percent:F1}%",
+                    p.stage, p.percent);
             });
 
             // Execute the job
+            taskLogger.MainLogger?.LogInformation("Starting bootloader execution");
             Job executionJob = jobProfile.ToExecutionJob();
-            byte[] dumpData = await _bootloaderService.DumpAsync(executionJob.ProfileSet, progress, CancellationToken.None)
+            byte[] dumpData = await _bootloaderService.DumpAsync(
+                executionJob.ProfileSet,
+                progress,
+                taskLogger.ProcessLogger,
+                CancellationToken.None)
                 .ConfigureAwait(false);
+
+            taskLogger.MainLogger?.LogInformation("Bootloader dump completed. Size: {Size} bytes", dumpData.Length);
 
             // Save the output
             string outputFile = Path.Combine(jobProfile.OutputPath, $"dump-{task.TaskId:N}.bin");
             Directory.CreateDirectory(jobProfile.OutputPath);
             await File.WriteAllBytesAsync(outputFile, dumpData, CancellationToken.None).ConfigureAwait(false);
+
+            taskLogger.MainLogger?.LogInformation("Output saved to: {OutputFile}", outputFile);
 
             // Mark as completed
             task.MarkAsCompleted(outputFile, dumpData.Length);
@@ -692,6 +867,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 }
             }
 
+            taskLogger.MainLogger?.LogInformation(
+                "Task completed successfully. Execution time: {ExecutionTime}",
+                task.ExecutionTime);
+
             _logger.LogInformation("Task {TaskId} ({JobName}) completed successfully. Output: {OutputFile}",
                 taskId, task.JobName, outputFile);
         }
@@ -700,6 +879,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             task.UpdateState(TaskState.Cancelled, "Task was cancelled");
             TaskStateChanged?.Invoke(task);
             Interlocked.Increment(ref _cancelledTasks);
+
+            taskLogger?.MainLogger?.LogWarning("Task was cancelled");
             _logger.LogWarning("Task {TaskId} ({JobName}) was cancelled", taskId, task.JobName);
         }
         catch (Exception ex)
@@ -708,10 +889,26 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             TaskStateChanged?.Invoke(task);
             Interlocked.Increment(ref _totalTasksProcessed);
             Interlocked.Increment(ref _failedTasks);
+
+            taskLogger?.MainLogger?.LogError(ex, "Task failed: {ErrorMessage}", ex.Message);
             _logger.LogError(ex, "Task {TaskId} ({JobName}) failed: {ErrorMessage}", taskId, task.JobName, ex.Message);
         }
         finally
         {
+            // Finalize task logger
+            if (taskLogger != null)
+            {
+                try
+                {
+                    await _taskLoggerFactory.FinalizeTaskLoggerAsync(taskId, CancellationToken.None).ConfigureAwait(false);
+                    _logger.LogInformation("Task logger finalized. Logs saved to: {LogPath}", taskLogger.MainLogFilePath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to finalize task logger for task {TaskId}", taskId);
+                }
+            }
+
             // Release resources
             _resourceCoordinator.Release(task.LockedResources);
             _logger.LogDebug("Released {Count} resources for task {TaskId}", task.LockedResources.Count, taskId);
@@ -734,13 +931,130 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             try
             {
                 // Clean up tasks older than 24 hours
-                await CleanupOldTasksAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
+                int cleanedCount = await CleanupOldTasksAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
+
+                // Persist changes after cleanup
+                if (cleanedCount > 0)
+                {
+                    await SaveTasksAsync().ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during periodic cleanup");
             }
         });
+    }
+
+    /// <summary>
+    /// Timer callback for periodic task persistence.
+    /// </summary>
+    /// <param name="state">Timer state (unused).</param>
+    private void PersistTasks(object? state)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await SaveTasksAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during periodic task persistence");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Saves all tasks to persistent storage.
+    /// </summary>
+    private async Task SaveTasksAsync()
+    {
+        await _persistenceSemaphore.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            var tasksToSave = _tasks.Values.ToList();
+            string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            await File.WriteAllTextAsync(_tasksFilePath, json).ConfigureAwait(false);
+            _logger.LogDebug("Saved {Count} tasks to {Path}", tasksToSave.Count, _tasksFilePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save tasks to {Path}", _tasksFilePath);
+        }
+        finally
+        {
+            _persistenceSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Loads tasks from persistent storage.
+    /// </summary>
+    private async Task LoadTasksAsync()
+    {
+        await _persistenceSemaphore.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            if (!File.Exists(_tasksFilePath))
+            {
+                _logger.LogInformation("No existing tasks file found at {Path}", _tasksFilePath);
+                return;
+            }
+
+            string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
+            List<TaskExecution>? loadedTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+
+            if (loadedTasks != null && loadedTasks.Count > 0)
+            {
+                foreach (TaskExecution task in loadedTasks)
+                {
+                    _tasks[task.TaskId] = task;
+
+                    // Restore queued and scheduled tasks to their queues
+                    if (task.State == TaskState.Queued)
+                    {
+                        _taskQueue.Enqueue(task.TaskId);
+                    }
+                    else if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
+                    {
+                        if (scheduledObj is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                        {
+                            string? dateString = jsonElement.GetString();
+                            if (!string.IsNullOrEmpty(dateString) && DateTime.TryParse(dateString, out DateTime scheduledTime))
+                            {
+                                _scheduledTasks[task.TaskId] = scheduledTime;
+                            }
+                        }
+                    }
+                    // Reset running tasks to queued (they were interrupted by app close)
+                    else if (task.State == TaskState.Running)
+                    {
+                        task.UpdateState(TaskState.Queued, "Restored from interrupted session");
+                        _taskQueue.Enqueue(task.TaskId);
+                    }
+                }
+
+                _logger.LogInformation("Loaded {Count} tasks from {Path}", loadedTasks.Count, _tasksFilePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load tasks from {Path}", _tasksFilePath);
+        }
+        finally
+        {
+            _persistenceSemaphore.Release();
+        }
     }
 
     #endregion
@@ -766,9 +1080,21 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
         if (disposing)
         {
+            // Save tasks before disposing
+            try
+            {
+                SaveTasksAsync().GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving tasks on dispose");
+            }
+
             _processingTimer?.Dispose();
             _cleanupTimer?.Dispose();
+            _persistenceTimer?.Dispose();
             _schedulerSemaphore?.Dispose();
+            _persistenceSemaphore?.Dispose();
         }
         _disposed = true;
         _logger.LogInformation("EnhancedTaskScheduler disposed");

@@ -226,8 +226,12 @@ public sealed class JobScheduler : IJobScheduler
                     .Where(j => j.State == JobState.Queued)
                     .ToArray();
 
-                _logger.LogDebug("Found {Count} queued jobs, {RunningCount} currently running",
-                    queuedJobs.Length, _runningJobs.Count);
+                // Only log when there are queued jobs (avoid log spam when idle)
+                if (queuedJobs.Length > 0)
+                {
+                    _logger.LogDebug("Found {Count} queued jobs, {RunningCount} currently running",
+                        queuedJobs.Length, _runningJobs.Count);
+                }
 
                 // STEP 3: Collect ALL jobs that can acquire resources (snapshot approach)
                 var jobsToStart = new List<(Job job, ResourceKey[] resources)>();
@@ -259,7 +263,11 @@ public sealed class JobScheduler : IJobScheduler
                     }
                 }
 
-                _logger.LogInformation("Starting batch of {Count} jobs simultaneously", jobsToStart.Count);
+                // Only log when actually starting jobs (avoid log spam when idle)
+                if (jobsToStart.Count > 0)
+                {
+                    _logger.LogInformation("Starting batch of {Count} jobs simultaneously", jobsToStart.Count);
+                }
 
                 // STEP 4: Update ALL states synchronously FIRST
                 foreach ((Job? job, ResourceKey[]? resources) in jobsToStart)
@@ -349,6 +357,7 @@ public sealed class JobScheduler : IJobScheduler
             byte[] dumpData = await _bootloader.DumpAsync(
                 job.ProfileSet,
                 progress,
+                null, // No process logger in JobScheduler (legacy path)
                 cancellationToken).ConfigureAwait(false);
 
             // STEP 2: Save dump data to output path

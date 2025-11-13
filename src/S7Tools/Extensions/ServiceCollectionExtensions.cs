@@ -257,11 +257,22 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ITaskScheduler, EnhancedTaskScheduler>();
         services.TryAddSingleton<IJobScheduler, Services.Tasking.JobScheduler>();
 
+        // Add Task Logging Services
+        services.TryAddSingleton<ITaskLoggerFactory, Services.Logging.TaskLoggerFactory>();
+
         // Add Resource Coordination Services
         services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
 
         // Add Bootloader Services
-        services.TryAddSingleton<IBootloaderService, Services.Bootloader.BootloaderService>();
+        services.TryAddSingleton<IBootloaderService>(provider =>
+            new Services.Bootloader.BootloaderService(
+                provider.GetRequiredService<ILogger<Services.Bootloader.BootloaderService>>(),
+                provider.GetRequiredService<IPayloadProvider>(),
+                provider.GetRequiredService<ISocatService>(),
+                provider.GetRequiredService<IPowerSupplyService>(),
+                provider.GetRequiredService<ISerialPortService>(),
+                provider.GetRequiredService<Func<JobProfileSet, IPlcClient>>()
+            ));
         services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
 
         // Add Payload Services

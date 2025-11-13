@@ -93,7 +93,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         var fullTemplate = JobProfile.CreateUserProfile("Full Memory Dump", "Complete memory dump template");
         fullTemplate.IsTemplate = true;
         fullTemplate.Id = 3;
-        fullTemplate.MemoryRegion = new MemoryRegionProfile(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.ExtendedDumpSize); // 64KB
+        fullTemplate.MemoryRegionProfileId = 1; // Reference to default memory region profile
         _profiles.Add(fullTemplate);
 
         _logger.LogInformation("Created {Count} job profiles in memory", _profiles.Count);
@@ -291,17 +291,25 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
             errors.Add(new ValidationError("PowerSupplyProfileId", "Unable to validate power supply profile reference"));
         }
 
-        // Validate memory region
-        if (job.MemoryRegion != null)
+        // Validate memory region profile reference
+        if (job.MemoryRegionProfileId <= 0)
         {
-            if (job.MemoryRegion.Start == 0 && job.MemoryRegion.Length == 0)
+            errors.Add(new ValidationError("MemoryRegionProfileId", "Valid memory region profile must be selected"));
+        }
+        else
+        {
+            try
             {
-                errors.Add(new ValidationError("MemoryRegion", "Memory region must have valid start address and length"));
+                var memoryProfile = await _memoryRegionProfileService.GetByIdAsync(job.MemoryRegionProfileId, cancellationToken).ConfigureAwait(false);
+                if (memoryProfile == null)
+                {
+                    errors.Add(new ValidationError("MemoryRegionProfileId", $"Memory region profile with ID {job.MemoryRegionProfileId} not found"));
+                }
             }
-
-            if (job.MemoryRegion.Length > 1024 * 1024) // 1MB limit
+            catch (Exception ex)
             {
-                errors.Add(new ValidationError("MemoryRegion", "Memory region length exceeds maximum allowed size (1MB)"));
+                _logger.LogWarning(ex, "Error validating memory region profile reference");
+                errors.Add(new ValidationError("MemoryRegionProfileId", "Unable to validate memory region profile reference"));
             }
         }
 
@@ -530,27 +538,49 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
                 // Use the first selected segment as base configuration
                 // TODO: Support multiple segments in JobProfileSet
                 MemorySegment firstSegment = selectedSegments.First();
-                uint startAddress = uint.Parse(firstSegment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
-                memoryRegion = new MemoryRegionProfile(startAddress, (uint)firstSegment.Size);
+                memoryRegion = new MemoryRegionProfile(firstSegment.StartAddress, (uint)firstSegment.Size);
             }
             else
             {
                 // No segments selected, use default
                 _logger.LogWarning("Memory region profile '{ProfileName}' (ID: {ProfileId}) has no selected segments, using default configuration",
                     memoryProfile.Name, memoryProfile.Id);
-                memoryRegion = jobProfile.MemoryRegion;
+                memoryRegion = new MemoryRegionProfile($"0x{MemoryConstants.DefaultUserMemoryStart:X8}", MemoryConstants.DefaultDumpSize);
             }
         }
         else
         {
-            // Use the existing memory region configuration as fallback
-            memoryRegion = jobProfile.MemoryRegion;
+            // Use the default memory region configuration as fallback
+            _logger.LogWarning("Memory region profile with ID {ProfileId} not found, using default configuration", jobProfile.MemoryRegionProfileId);
+            memoryRegion = new MemoryRegionProfile($"0x{MemoryConstants.DefaultUserMemoryStart:X8}", MemoryConstants.DefaultDumpSize);
         }
 
-        // Create the job profile set with resolved memory region
-        var serialRef = new SerialProfileRef("", 9600, "None", 8, "One"); // Will be populated from actual profile
-        var socatRef = new SocatProfileRef(0, true); // Will be populated from actual profile
-        var powerRef = new PowerProfileRef("", 0, 0, jobProfile.PowerOffDelayMs / 1000); // Will be populated from actual profile
+        // Fetch full profile objects for complete configuration
+        SerialPortProfile? serialProfile = await _serialProfileService.GetByIdAsync(jobProfile.SerialProfileId);
+        if (serialProfile == null)
+        {
+            _logger.LogError("Serial profile with ID {ProfileId} not found", jobProfile.SerialProfileId);
+            throw new ProfileNotFoundException(jobProfile.SerialProfileId);
+        }
+
+        SocatProfile? socatProfile = await _socatProfileService.GetByIdAsync(jobProfile.SocatProfileId);
+        if (socatProfile == null)
+        {
+            _logger.LogError("Socat profile with ID {ProfileId} not found", jobProfile.SocatProfileId);
+            throw new ProfileNotFoundException(jobProfile.SocatProfileId);
+        }
+
+        PowerSupplyProfile? powerProfile = await _powerSupplyProfileService.GetByIdAsync(jobProfile.PowerSupplyProfileId);
+        if (powerProfile == null)
+        {
+            _logger.LogError("Power supply profile with ID {ProfileId} not found", jobProfile.PowerSupplyProfileId);
+            throw new ProfileNotFoundException(jobProfile.PowerSupplyProfileId);
+        }
+
+        // Create the job profile set with full configuration using factory methods
+        SerialProfileRef serialRef = SerialProfileRef.FromProfile(serialProfile, jobProfile.SerialDevice);
+        SocatProfileRef socatRef = SocatProfileRef.FromProfile(socatProfile, ephemeral: true);
+        PowerProfileRef powerRef = PowerProfileRef.FromProfile(powerProfile, jobProfile.PowerOffDelayMs / 1000);
 
         var profileSet = new JobProfileSet(
             serialRef,
@@ -558,7 +588,10 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
             powerRef,
             memoryRegion,
             jobProfile.Payloads,
-            jobProfile.OutputPath
+            jobProfile.OutputPath,
+            jobProfile.PowerOnTimeMs,
+            jobProfile.PowerOffDelayMs,
+            memoryProfile // Pass full MemoryMappingProfile for segment-based dumping
         );
 
         // Generate resource keys

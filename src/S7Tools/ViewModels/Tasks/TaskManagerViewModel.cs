@@ -457,9 +457,12 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         IObservable<bool> hasFinishedTasks = this.WhenAnyValue(x => x.FinishedTasks.Count)
             .Select(count => count > 0);
 
-        // Create commands with proper async patterns (TaskExecution? parameter for row-level actions)
-        StartTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStartTaskAsync, canStart);
-        StopTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStopTaskAsync, canStop);
+        // Create commands with proper async patterns
+        // For commands that accept TaskExecution? parameter (used from DataGrid buttons),
+        // we don't use CanExecute observables because the validation happens inside the command
+        // based on the passed parameter, not SelectedTask
+        StartTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStartTaskAsync);
+        StopTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStopTaskAsync);
         ScheduleTaskCommand = ReactiveCommand.CreateFromTask(ExecuteScheduleTaskAsync, canSchedule);
         RestartTaskCommand = ReactiveCommand.CreateFromTask(ExecuteRestartTaskAsync, canRestart);
         PauseTaskCommand = ReactiveCommand.CreateFromTask(ExecutePauseTaskAsync, canPause);
@@ -624,10 +627,22 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteStartTaskAsync(TaskExecution? task)
     {
         // Use parameter if provided, otherwise fall back to SelectedTask
-        var targetTask = task ?? SelectedTask;
+        TaskExecution? targetTask = task ?? SelectedTask;
 
         if (targetTask == null)
         {
+            _logger.LogWarning("Start task command called but no task was provided or selected");
+            return;
+        }
+
+        // Validate task state before starting
+        if (targetTask.State != TaskState.Created)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot start task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be Created)";
+            });
+            _logger.LogWarning("Cannot start task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
             return;
         }
 
@@ -640,18 +655,27 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
             if (success)
             {
-                StatusMessage = $"Task '{targetTask.JobName}' started successfully";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Task '{targetTask.JobName}' queued for execution";
+                });
                 _logger.LogInformation("Started task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
             else
             {
-                StatusMessage = $"Failed to start task '{targetTask.JobName}'";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Failed to start task '{targetTask.JobName}'";
+                });
                 _logger.LogWarning("Failed to start task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error starting task: {ex.Message}";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Error starting task: {ex.Message}";
+            });
             _logger.LogError(ex, "Error starting task {TaskId}", targetTask?.TaskId);
         }
         finally
@@ -663,10 +687,22 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteStopTaskAsync(TaskExecution? task)
     {
         // Use parameter if provided, otherwise fall back to SelectedTask
-        var targetTask = task ?? SelectedTask;
+        TaskExecution? targetTask = task ?? SelectedTask;
 
         if (targetTask == null)
         {
+            _logger.LogWarning("Stop task command called but no task was provided or selected");
+            return;
+        }
+
+        // Validate task can be cancelled
+        if (!targetTask.CanCancel)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot stop task '{targetTask.JobName}' - task is in '{targetTask.State}' state";
+            });
+            _logger.LogWarning("Cannot stop task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
             return;
         }
 
@@ -688,18 +724,27 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
             if (success)
             {
-                StatusMessage = $"Task '{targetTask.JobName}' stopped successfully";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Task '{targetTask.JobName}' stopped successfully";
+                });
                 _logger.LogInformation("Stopped task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
             else
             {
-                StatusMessage = $"Failed to stop task '{targetTask.JobName}'";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Failed to stop task '{targetTask.JobName}'";
+                });
                 _logger.LogWarning("Failed to stop task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error stopping task: {ex.Message}";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Error stopping task: {ex.Message}";
+            });
             _logger.LogError(ex, "Error stopping task {TaskId}", targetTask?.TaskId);
         }
         finally

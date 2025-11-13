@@ -81,20 +81,20 @@
         <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="100" />
         <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
         <DataGridTextColumn Header="Elapsed" Binding="{Binding ExecutionTime}" Width="80" />
-        <DataGridTemplateColumn Header="Actions" Width="120">
+        <DataGridTemplateColumn Header="Actions" Width="150">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate>
               <StackPanel Orientation="Horizontal" Spacing="4">
+                <!-- Start button: visible only for Created state tasks -->
                 <Button Content="Start" FontSize="10" Padding="6,2"
-                        Command="{Binding $parent[UserControl].DataContext.StartTaskCommand}"
+                        Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StartTaskCommand}"
                         CommandParameter="{Binding}"
-                        ToolTip.Tip="Start this task"
-                        IsVisible="{Binding State, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static jobs:TaskState.Created}}" />
+                        ToolTip.Tip="Start this task" />
+                <!-- Stop button: always visible, command validates internally -->
                 <Button Content="Stop" FontSize="10" Padding="6,2"
-                        Command="{Binding $parent[UserControl].DataContext.StopTaskCommand}"
+                        Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StopTaskCommand}"
                         CommandParameter="{Binding}"
-                        ToolTip.Tip="Stop this task"
-                        IsVisible="{Binding CanCancel}" />
+                        ToolTip.Tip="Stop this task" />
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>

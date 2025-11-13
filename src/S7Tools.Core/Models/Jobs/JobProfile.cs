@@ -162,19 +162,8 @@ public class JobProfile : IProfileBase
     /// Gets or sets the memory region profile reference for this job.
     /// </summary>
     /// <value>The ID of the memory region profile to use for memory mapping configuration.</value>
-    public int MemoryRegionProfileId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the memory region configuration for this job.
-    /// </summary>
-    /// <value>The memory region parameters for the dump operation.</value>
-    /// <remarks>
-    /// This property is deprecated in favor of MemoryRegionProfileId and will be removed in version 2.0.0.
-    /// See docs/DEPRECATED_PROPERTY_MIGRATION.md for migration guidance.
-    /// </remarks>
-    [Obsolete("Use MemoryRegionProfileId instead. This property will be removed in version 2.0.0. See docs/DEPRECATED_PROPERTY_MIGRATION.md for migration guidance.", false)]
-    [Required(ErrorMessage = "Memory region configuration is required")]
-    public MemoryRegionProfile MemoryRegion { get; set; } = new(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize);
+    [Range(1, int.MaxValue, ErrorMessage = "Memory region profile must be selected")]
+    public int MemoryRegionProfileId { get; set; } = 1;
 
     /// <summary>
     /// Gets or sets the payload configuration for this job.
@@ -229,7 +218,6 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1, // Default socat profile
             PowerSupplyProfileId = 1, // Default power supply profile
             MemoryRegionProfileId = 1, // Default memory region profile
-            MemoryRegion = new MemoryRegionProfile(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize), // Default 4KB dump from start of user memory (deprecated)
             Payloads = new PayloadSetProfile("./bootloader-payloads"), // Default payload configuration
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
@@ -269,7 +257,6 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1,
             PowerSupplyProfileId = 1,
             MemoryRegionProfileId = 1, // Default to first available memory region profile
-            MemoryRegion = new MemoryRegionProfile(MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize),
             Payloads = new PayloadSetProfile("./bootloader-payloads"),
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
@@ -305,7 +292,7 @@ public class JobProfile : IProfileBase
             SerialDevice = SerialDevice,
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
-            MemoryRegion = MemoryRegion,
+            MemoryRegionProfileId = MemoryRegionProfileId,
             Payloads = Payloads,
             OutputPath = OutputPath,
             PowerOnTimeMs = PowerOnTimeMs,
@@ -343,7 +330,6 @@ public class JobProfile : IProfileBase
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegionProfileId = MemoryRegionProfileId,
-            MemoryRegion = MemoryRegion,
             Payloads = Payloads,
             OutputPath = OutputPath,
             PowerOnTimeMs = PowerOnTimeMs,
@@ -378,7 +364,6 @@ public class JobProfile : IProfileBase
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegionProfileId = MemoryRegionProfileId,
-            MemoryRegion = MemoryRegion,
             Payloads = Payloads,
             OutputPath = OutputPath,
             PowerOnTimeMs = PowerOnTimeMs,
@@ -438,15 +423,6 @@ public class JobProfile : IProfileBase
             errors.Add("Valid memory region profile must be selected");
         }
 
-        if (MemoryRegion == null)
-        {
-            errors.Add("Memory region configuration is required");
-        }
-        else if (MemoryRegion.Length == 0)
-        {
-            errors.Add("Memory region length must be greater than 0");
-        }
-
         if (Payloads == null)
         {
             errors.Add("Payload configuration is required");
@@ -476,21 +452,56 @@ public class JobProfile : IProfileBase
 
     /// <summary>
     /// Converts this job profile to the execution Job record format.
+    /// NOTE: This method creates placeholder ProfileRefs with default configurations.
+    /// For production use, prefer JobManager.CreateExecutionJobAsync which fetches full profiles.
     /// </summary>
     /// <returns>A Job record suitable for scheduler execution.</returns>
     public Job ToExecutionJob()
     {
-        var serialRef = new SerialProfileRef("", 9600, "None", 8, "One"); // Will be populated from actual profile
-        var socatRef = new SocatProfileRef(0, true); // Will be populated from actual profile
-        var powerRef = new PowerProfileRef("", 0, 0, PowerOffDelayMs / 1000); // Will be populated from actual profile
+        // Create default configurations for placeholders
+        var defaultSerialConfig = new SerialPortConfiguration
+        {
+            BaudRate = 9600,
+            Parity = ParityMode.None,
+            CharacterSize = 8,
+            StopBits = StopBits.One,
+            RawMode = true,
+            DisableEcho = true
+        };
+
+        var defaultSocatConfig = new SocatConfiguration
+        {
+            TcpPort = 0,
+            Verbose = false,
+            EnableFork = true,
+            EnableReuseAddr = true
+        };
+
+        var defaultPowerConfig = new ModbusTcpConfiguration
+        {
+            Host = "",
+            Port = 0,
+            DeviceId = 1,
+            OnOffCoil = 0,
+            AddressingMode = ModbusAddressingMode.Base0
+        };
+
+        var serialRef = new SerialProfileRef("", 9600, "None", 8, "One", defaultSerialConfig); // Will be populated from actual profile
+        var socatRef = new SocatProfileRef(0, true, defaultSocatConfig); // Will be populated from actual profile
+        var powerRef = new PowerProfileRef("", 0, 0, PowerOffDelayMs / 1000, defaultPowerConfig); // Will be populated from actual profile
+
+        // Create default memory region (will be populated from MemoryRegionProfileId via JobManager)
+        var defaultMemoryRegion = new MemoryRegionProfile($"0x{MemoryConstants.DefaultUserMemoryStart:X8}", MemoryConstants.DefaultDumpSize);
 
         var profileSet = new JobProfileSet(
             serialRef,
             socatRef,
             powerRef,
-            MemoryRegion,
+            defaultMemoryRegion,
             Payloads,
-            OutputPath
+            OutputPath,
+            PowerOnTimeMs,
+            PowerOffDelayMs
         );
 
         // Generate a deterministic ID based on the profile name
@@ -556,7 +567,7 @@ public class JobProfile : IProfileBase
     /// <returns>A string summarizing the profile's configuration.</returns>
     public string GetSummary()
     {
-        string summary = $"{Name}: Memory[{MemoryRegion?.Start:X}-{MemoryRegion?.Start + MemoryRegion?.Length:X}]";
+        string summary = $"{Name}: MemoryRegionProfile[{MemoryRegionProfileId}]";
 
         if (IsTemplate)
         {

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Tasking;
@@ -14,16 +15,43 @@ namespace S7Tools.Core.Tests.Tasking;
 /// </summary>
 public class SchedulerParallelExecutionTests
 {
+    private static SerialPortConfiguration CreateDefaultSerialConfig() => new()
+    {
+        BaudRate = 115200,
+        Parity = ParityMode.None,
+        CharacterSize = 8,
+        StopBits = StopBits.One,
+        RawMode = true,
+        DisableEcho = true
+    };
+
+    private static SocatConfiguration CreateDefaultSocatConfig() => new()
+    {
+        TcpPort = 8080,
+        Verbose = true,
+        EnableFork = true,
+        EnableReuseAddr = true
+    };
+
+    private static PowerSupplyConfiguration CreateDefaultPowerConfig(string host) => new ModbusTcpConfiguration
+    {
+        Host = host,
+        Port = 502,
+        DeviceId = 1,
+        OnOffCoil = 0,
+        AddressingMode = ModbusAddressingMode.Base0
+    };
+
     private static JobProfileSet CreateTestProfileSet(
         string serialDevice,
         int tcpPort,
         string modbusHost = "192.168.1.100")
     {
         return new JobProfileSet(
-            Serial: new SerialProfileRef(serialDevice, 115200, "None", 8, "One"),
-            Socat: new SocatProfileRef(tcpPort, Ephemeral: true),
-            Power: new PowerProfileRef(modbusHost, 502, 0, DelaySeconds: 2),
-            Memory: new MemoryRegionProfile(0x20000000, 0x1000),
+            Serial: new SerialProfileRef(serialDevice, 115200, "None", 8, "One", CreateDefaultSerialConfig()),
+            Socat: new SocatProfileRef(tcpPort, Ephemeral: true, CreateDefaultSocatConfig()),
+            Power: new PowerProfileRef(modbusHost, 502, 0, DelaySeconds: 2, CreateDefaultPowerConfig(modbusHost)),
+            Memory: new MemoryRegionProfile("0x20000000", 0x1000),
             Payloads: new PayloadSetProfile("/tmp/payloads"),
             OutputPath: "/tmp/dumps"
         );
@@ -45,8 +73,9 @@ public class SchedulerParallelExecutionTests
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
             It.IsAny<IProgress<(string stage, double percent)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
             It.IsAny<CancellationToken>()))
-            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, CancellationToken ct) =>
+            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, Microsoft.Extensions.Logging.ILogger? logger, CancellationToken ct) =>
             {
                 await Task.Delay(2000, ct);
                 return new byte[0x1000];
@@ -131,8 +160,9 @@ public class SchedulerParallelExecutionTests
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
             It.IsAny<IProgress<(string stage, double percent)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
             It.IsAny<CancellationToken>()))
-            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, CancellationToken ct) =>
+            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, Microsoft.Extensions.Logging.ILogger? logger, CancellationToken ct) =>
             {
                 await Task.Delay(1000, ct);
                 return new byte[0x1000];
@@ -261,6 +291,7 @@ public class SchedulerParallelExecutionTests
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
             It.IsAny<IProgress<(string stage, double percent)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Simulated bootloader failure"));
 
@@ -324,8 +355,9 @@ public class SchedulerParallelExecutionTests
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
             It.IsAny<IProgress<(string stage, double percent)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
             It.IsAny<CancellationToken>()))
-            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, CancellationToken ct) =>
+            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, Microsoft.Extensions.Logging.ILogger? logger, CancellationToken ct) =>
             {
                 await Task.Delay(2000, ct);
                 return new byte[0x1000];

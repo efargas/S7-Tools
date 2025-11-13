@@ -15,11 +15,13 @@ public interface IBootloaderService
     /// </summary>
     /// <param name="profiles">Job profile set containing all configuration parameters.</param>
     /// <param name="progress">Progress reporter providing stage name and completion percentage.</param>
+    /// <param name="processLogger">Optional logger for capturing socat process stdout/stderr output.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The dumped memory data.</returns>
     Task<byte[]> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent)> progress,
+        Microsoft.Extensions.Logging.ILogger? processLogger = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

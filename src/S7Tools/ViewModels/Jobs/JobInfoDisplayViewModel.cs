@@ -386,37 +386,6 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                     });
                 }
             }
-            else
-            {
-                // Fallback to basic memory region (legacy)
-                basicProperties.Add(new PropertyDisplayItem
-                {
-                    Label = "Configuration",
-                    Value = "Basic Memory Region (Legacy)",
-                    Tooltip = "Using job's basic memory region settings instead of a profile"
-                });
-
-                basicProperties.Add(new PropertyDisplayItem
-                {
-                    Label = "Start Address",
-                    Value = $"0x{job.MemoryRegion.Start:X8}",
-                    Tooltip = "Starting memory address for dump operation"
-                });
-
-                basicProperties.Add(new PropertyDisplayItem
-                {
-                    Label = "Length",
-                    Value = FormatSize(job.MemoryRegion.Length),
-                    Tooltip = $"{job.MemoryRegion.Length} bytes total"
-                });
-
-                basicProperties.Add(new PropertyDisplayItem
-                {
-                    Label = "End Address",
-                    Value = $"0x{job.MemoryRegion.Start + job.MemoryRegion.Length:X8}",
-                    Tooltip = "Ending memory address (exclusive)"
-                });
-            }
 
             MemoryRegionProfileDetails = new ProfileDetailsViewModel(
                 "Memory Region",

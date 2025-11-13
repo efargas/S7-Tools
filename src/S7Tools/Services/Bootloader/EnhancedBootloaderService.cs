@@ -61,6 +61,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
     public async Task<byte[]> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent)> progress,
+        Microsoft.Extensions.Logging.ILogger? processLogger = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profiles);
@@ -68,7 +69,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
         _logger.LogInformation("Starting basic bootloader dump operation for job profiles");
 
-        return await _baseBootloaderService.DumpAsync(profiles, progress, cancellationToken)
+        return await _baseBootloaderService.DumpAsync(profiles, progress, processLogger, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -112,9 +113,12 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
             try
             {
+                // Get process logger from task execution if available
+                Microsoft.Extensions.Logging.ILogger? processLogger = taskExecution.Logger?.ProcessLogger;
+
                 // Execute the memory dump with retry logic
                 byte[] memoryData = await ExecuteWithRetryAsync(
-                    () => _baseBootloaderService.DumpAsync(profiles, progressReporter, cancellationToken),
+                    () => _baseBootloaderService.DumpAsync(profiles, progressReporter, processLogger, cancellationToken),
                     RetryableOperations.All,
                     taskExecution,
                     cancellationToken).ConfigureAwait(false);

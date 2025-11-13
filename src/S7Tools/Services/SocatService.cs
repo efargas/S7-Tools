@@ -209,7 +209,7 @@ public class SocatService : ISocatService, IDisposable
     #region Process Management
 
     /// <inheritdoc />
-    public async Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, CancellationToken cancellationToken = default)
+    public async Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
         if (string.IsNullOrWhiteSpace(serialDevice))
@@ -272,7 +272,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Start socat process
-            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, configuration, serialDevice, null, cancellationToken).ConfigureAwait(false);
+            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, configuration, serialDevice, null, processLogger, cancellationToken).ConfigureAwait(false);
 
             _runningProcesses[processInfo.ProcessId] = processInfo;
 
@@ -291,7 +291,7 @@ public class SocatService : ISocatService, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, CancellationToken cancellationToken = default)
+    public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("🚀🚀🚀 ENTERED StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
             profile?.Name ?? "NULL", serialDevice ?? "NULL");
@@ -384,7 +384,7 @@ public class SocatService : ISocatService, IDisposable
 
             // Start socat process
             _logger.LogInformation("🚀 Calling StartSocatProcessAsync...");
-            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, cancellationToken).ConfigureAwait(false);
+            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, processLogger, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("🎉 StartSocatProcessAsync SUCCESS - ProcessId: {ProcessId}", processInfo.ProcessId);
 
             _logger.LogInformation("📝 Adding process to _runningProcesses...");
@@ -1143,6 +1143,7 @@ public class SocatService : ISocatService, IDisposable
     /// <param name="configuration">The socat configuration.</param>
     /// <param name="serialDevice">The serial device path.</param>
     /// <param name="profile">The profile used (if any).</param>
+    /// <param name="processLogger">Optional logger for capturing process stdout/stderr output.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>Process information for the started socat process.</returns>
     private async Task<SocatProcessInfo> StartSocatProcessAsync(
@@ -1150,6 +1151,7 @@ public class SocatService : ISocatService, IDisposable
         SocatConfiguration configuration,
         string serialDevice,
         SocatProfile? profile,
+        Microsoft.Extensions.Logging.ILogger? processLogger,
         CancellationToken cancellationToken)
     {
         // Get settings from application settings service
@@ -1206,6 +1208,9 @@ public class SocatService : ISocatService, IDisposable
                     {
                         outputBuilder!.AppendLine(e.Data);
                         _logger.LogTrace("Socat output: {Output}", e.Data);
+
+                        // Log to task-specific process logger if provided
+                        processLogger?.LogDebug("socat[{ProcessId}] {Output}", process.Id, e.Data);
                     }
                 };
 
@@ -1215,6 +1220,9 @@ public class SocatService : ISocatService, IDisposable
                     {
                         errorBuilder!.AppendLine(e.Data);
                         _logger.LogWarning("Socat error: {Error}", e.Data);
+
+                        // Log to task-specific process logger if provided
+                        processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", process.Id, e.Data);
                     }
                 };
             }

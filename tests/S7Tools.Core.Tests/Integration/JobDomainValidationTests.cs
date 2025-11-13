@@ -1,4 +1,5 @@
 using FluentAssertions;
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 
 namespace S7Tools.Core.Tests.Integration;
@@ -9,6 +10,32 @@ namespace S7Tools.Core.Tests.Integration;
 /// </summary>
 public class JobDomainValidationTests
 {
+    private static SerialPortConfiguration CreateDefaultSerialConfig() => new()
+    {
+        BaudRate = 115200,
+        Parity = ParityMode.None,
+        CharacterSize = 8,
+        StopBits = StopBits.One,
+        RawMode = true,
+        DisableEcho = true
+    };
+
+    private static SocatConfiguration CreateDefaultSocatConfig() => new()
+    {
+        TcpPort = 8080,
+        Verbose = true,
+        EnableFork = true,
+        EnableReuseAddr = true
+    };
+
+    private static PowerSupplyConfiguration CreateDefaultPowerConfig() => new ModbusTcpConfiguration
+    {
+        Host = "192.168.1.100",
+        Port = 502,
+        DeviceId = 1,
+        OnOffCoil = 0,
+        AddressingMode = ModbusAddressingMode.Base0
+    };
     /// <summary>
     /// T046: Job state transition validation - verifies state machine rules.
     /// Tests: Created → Queued → Running → Completed with timestamps.
@@ -23,10 +50,10 @@ public class JobDomainValidationTests
             Name = "Test Job",
             Description = "Integration test",
             ProfileSet = new JobProfileSet(
-                Serial: new SerialProfileRef("/dev/ttyUSB0", 115200, "None", 8, "One"),
-                Socat: new SocatProfileRef(8080, Ephemeral: true),
-                Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2),
-                Memory: new MemoryRegionProfile(0x20000000, 0x1000),
+                Serial: new SerialProfileRef("/dev/ttyUSB0", 115200, "None", 8, "One", CreateDefaultSerialConfig()),
+                Socat: new SocatProfileRef(8080, Ephemeral: true, CreateDefaultSocatConfig()),
+                Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2, CreateDefaultPowerConfig()),
+                Memory: new MemoryRegionProfile("0x20000000", 0x1000),
                 Payloads: new PayloadSetProfile("/tmp/payloads"),
                 OutputPath: "/tmp/dumps"
             ),
@@ -64,10 +91,10 @@ public class JobDomainValidationTests
             Name = "Resource Test Job",
             Description = "Test resource extraction",
             ProfileSet = new JobProfileSet(
-                Serial: new SerialProfileRef("/dev/ttyUSB0", 115200, "None", 8, "One"),
-                Socat: new SocatProfileRef(8080, Ephemeral: true),
-                Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2),
-                Memory: new MemoryRegionProfile(0x20000000, 0x1000),
+                Serial: new SerialProfileRef("/dev/ttyUSB0", 115200, "None", 8, "One", CreateDefaultSerialConfig()),
+                Socat: new SocatProfileRef(8080, Ephemeral: true, CreateDefaultSocatConfig()),
+                Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2, CreateDefaultPowerConfig()),
+                Memory: new MemoryRegionProfile("0x20000000", 0x1000),
                 Payloads: new PayloadSetProfile("/tmp/payloads"),
                 OutputPath: "/tmp/dumps"
             ),

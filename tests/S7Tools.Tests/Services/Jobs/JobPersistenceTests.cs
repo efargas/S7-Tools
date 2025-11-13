@@ -1,4 +1,5 @@
 using System.Text.Json;
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using Xunit;
 
@@ -9,6 +10,33 @@ namespace S7Tools.Tests.Services.Jobs;
 /// </summary>
 public class JobPersistenceTests
 {
+    private static SerialPortConfiguration CreateDefaultSerialConfig() => new()
+    {
+        BaudRate = 115200,
+        Parity = ParityMode.None,
+        CharacterSize = 8,
+        StopBits = StopBits.One,
+        RawMode = true,
+        DisableEcho = true
+    };
+
+    private static SocatConfiguration CreateDefaultSocatConfig() => new()
+    {
+        TcpPort = 10102,
+        Verbose = true,
+        EnableFork = true,
+        EnableReuseAddr = true
+    };
+
+    private static PowerSupplyConfiguration CreateDefaultPowerConfig() => new ModbusTcpConfiguration
+    {
+        Host = "192.168.1.100",
+        Port = 502,
+        DeviceId = 1,
+        OnOffCoil = 1,
+        AddressingMode = ModbusAddressingMode.Base0
+    };
+
     [Fact]
     public void Job_Profile_Persistence_Should_Save_And_Load_Correctly()
     {
@@ -56,10 +84,10 @@ public class JobPersistenceTests
     private static JobProfileSet CreateTestProfileSet()
     {
         return new JobProfileSet(
-            Serial: new SerialProfileRef("/dev/ttyUSB0", 115200, "None", 8, "One"),
-            Socat: new SocatProfileRef(10102, Ephemeral: false),
-            Power: new PowerProfileRef("192.168.1.100", 502, 1, 5),
-            Memory: new MemoryRegionProfile(0x20000000, 0x10000),
+            Serial: new SerialProfileRef("/dev/ttyUSB0", 115200, "None", 8, "One", CreateDefaultSerialConfig()),
+            Socat: new SocatProfileRef(10102, Ephemeral: false, CreateDefaultSocatConfig()),
+            Power: new PowerProfileRef("192.168.1.100", 502, 1, 5, CreateDefaultPowerConfig()),
+            Memory: new MemoryRegionProfile("0x20000000", 0x10000),
             Payloads: new PayloadSetProfile("/payloads"),
             OutputPath: "/tmp/dumps"
         );

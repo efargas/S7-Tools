@@ -17,11 +17,49 @@ public class BootloaderServiceTests
 
     private static JobProfileSet CreateTestProfiles(int socatPort = 8080, string serialDevice = "/dev/ttyUSB0")
     {
+        // Create full configuration objects for testing
+        var serialConfig = new SerialPortConfiguration
+        {
+            BaudRate = 115200,
+            Parity = ParityMode.None,
+            CharacterSize = 8,
+            StopBits = StopBits.One,
+            RawMode = true,
+            DisableEcho = true,
+            IgnoreBreak = true,
+            DisableCanonicalMode = true,
+            DisableSignalGeneration = true,
+            DisableHardwareFlowControl = true,
+            DisableXonXoffFlowControl = true
+        };
+
+        var socatConfig = new SocatConfiguration
+        {
+            TcpPort = socatPort,
+            Verbose = true,
+            HexDump = false,
+            BlockSize = 4,
+            DebugLevel = 2,
+            EnableFork = true,
+            EnableReuseAddr = true,
+            SerialRawMode = true,
+            SerialDisableEcho = true
+        };
+
+        var powerConfig = new ModbusTcpConfiguration
+        {
+            Host = "192.168.1.100",
+            Port = 502,
+            DeviceId = 1,
+            OnOffCoil = 0,
+            AddressingMode = ModbusAddressingMode.Base0
+        };
+
         return new JobProfileSet(
-            Serial: new SerialProfileRef(serialDevice, 115200, "None", 8, "One"),
-            Socat: new SocatProfileRef(socatPort, Ephemeral: true),
-            Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2),
-            Memory: new MemoryRegionProfile(0x20000000, 0x1000),
+            Serial: new SerialProfileRef(serialDevice, 115200, "None", 8, "One", serialConfig),
+            Socat: new SocatProfileRef(socatPort, Ephemeral: true, socatConfig),
+            Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2, powerConfig),
+            Memory: new MemoryRegionProfile("0x20000000", 0x1000),
             Payloads: new PayloadSetProfile("/tmp/payloads"),
             OutputPath: "/tmp/dumps"
         );
@@ -50,11 +88,13 @@ public class BootloaderServiceTests
             SerialDevice = "/dev/ttyUSB0",
             IsRunning = true
         };
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(socatProcessInfo);
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        power.TurnOnAsync(Arg.Any<CancellationToken>())
             .Returns(true);
         power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(true);
@@ -68,11 +108,15 @@ public class BootloaderServiceTests
 
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -80,7 +124,7 @@ public class BootloaderServiceTests
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        byte[] result = await service.DumpAsync(profiles, progress, CancellationToken.None);
+        byte[] result = await service.DumpAsync(profiles, progress, null, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -91,7 +135,7 @@ public class BootloaderServiceTests
             Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>());
 
         // Verify 7-stage workflow execution order
-        await socatService.Received(1).StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await socatService.Received(1).StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
         await power.Received(1).ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<CancellationToken>());
         await power.Received(1).PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
         await plcClient.Received(1).HandshakeAsync(Arg.Any<CancellationToken>());
@@ -111,8 +155,21 @@ public class BootloaderServiceTests
             .Returns(new byte[] { 0x02 });
 
         ISocatService socatService = Substitute.For<ISocatService>();
+        var socatProcessInfo = new SocatProcessInfo
+        {
+            ProcessId = 1234,
+            TcpPort = 8080,
+            TcpHost = "127.0.0.1",
+            SerialDevice = "/dev/ttyUSB0",
+            IsRunning = true
+        };
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+            .Returns(socatProcessInfo);
+
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.DumpMemoryAsync(
@@ -121,11 +178,15 @@ public class BootloaderServiceTests
 
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -134,7 +195,7 @@ public class BootloaderServiceTests
         JobProfileSet profiles = CreateTestProfiles();
 
         // Act
-        await service.DumpAsync(profiles, progress, CancellationToken.None);
+        await service.DumpAsync(profiles, progress, null, CancellationToken.None);
 
         // Assert
         progressReports.Should().NotBeEmpty("Progress should be reported");
@@ -150,18 +211,22 @@ public class BootloaderServiceTests
     public async Task DumpAsync_WithNullProfiles_ShouldThrowArgumentNullException()
     {
         // Arrange
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             Substitute.For<IPayloadProvider>(),
             Substitute.For<ISocatService>(),
             Substitute.For<IPowerSupplyService>(),
+            serialPort,
             _ => Substitute.For<IPlcClient>()
         );
 
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(null!, progress, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(null!, progress, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
@@ -171,18 +236,22 @@ public class BootloaderServiceTests
     public async Task DumpAsync_WithNullProgress_ShouldThrowArgumentNullException()
     {
         // Arrange
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             Substitute.For<IPayloadProvider>(),
             Substitute.For<ISocatService>(),
             Substitute.For<IPowerSupplyService>(),
+            serialPort,
             _ => Substitute.For<IPlcClient>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, null!, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, null!, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
@@ -206,11 +275,15 @@ public class BootloaderServiceTests
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -218,7 +291,7 @@ public class BootloaderServiceTests
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -232,7 +305,7 @@ public class BootloaderServiceTests
         IPayloadProvider payloads = Substitute.For<IPayloadProvider>();
 
         ISocatService socatService = Substitute.For<ISocatService>();
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns<Task<SocatProcessInfo>>(_ => Task.FromException<SocatProcessInfo>(
                 new InvalidOperationException("Socat failed to start")));
 
@@ -240,11 +313,15 @@ public class BootloaderServiceTests
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -252,7 +329,7 @@ public class BootloaderServiceTests
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -270,6 +347,8 @@ public class BootloaderServiceTests
         ISocatService socatService = Substitute.For<ISocatService>();
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.HandshakeAsync(Arg.Any<CancellationToken>())
@@ -277,11 +356,15 @@ public class BootloaderServiceTests
 
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -289,7 +372,7 @@ public class BootloaderServiceTests
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -307,7 +390,7 @@ public class BootloaderServiceTests
         cts.Cancel(); // Cancel immediately
 
         // Configure socatService to throw when cancellation is detected
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
                 CancellationToken token = callInfo.Arg<CancellationToken>();
@@ -324,11 +407,15 @@ public class BootloaderServiceTests
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -336,7 +423,7 @@ public class BootloaderServiceTests
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, cts.Token);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, cts.Token);
 
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
@@ -353,6 +440,8 @@ public class BootloaderServiceTests
         ISocatService socatService = Substitute.For<ISocatService>();
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.InstallStagerAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>())
@@ -360,11 +449,15 @@ public class BootloaderServiceTests
 
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -372,7 +465,7 @@ public class BootloaderServiceTests
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -392,6 +485,8 @@ public class BootloaderServiceTests
         ISocatService socatService = Substitute.For<ISocatService>();
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.DumpMemoryAsync(Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
@@ -400,11 +495,15 @@ public class BootloaderServiceTests
 
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
+        ISerialPortService serialPort = Substitute.For<ISerialPortService>();
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+
         var service = new BootloaderService(
             NullLogger<BootloaderService>.Instance,
             payloads,
             socatService,
             power,
+            serialPort,
             ClientFactory
         );
 
@@ -412,7 +511,7 @@ public class BootloaderServiceTests
         var progress = new Progress<(string stage, double percent)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()

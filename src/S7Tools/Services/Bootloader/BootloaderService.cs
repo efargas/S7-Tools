@@ -9,7 +9,7 @@ namespace S7Tools.Services.Bootloader;
 
 /// <summary>
 /// Orchestrates the complete bootloader memory dump workflow.
-/// Coordinates socat bridge setup, power cycling, PLC communication, and memory dumping.
+/// Coordinates serial configuration, socat bridge setup, power sequencing, PLC communication, and memory dumping.
 /// </summary>
 public sealed class BootloaderService : IBootloaderService
 {
@@ -17,6 +17,7 @@ public sealed class BootloaderService : IBootloaderService
     private readonly IPayloadProvider _payloads;
     private readonly ISocatService _socat;
     private readonly IPowerSupplyService _power;
+    private readonly ISerialPortService _serialPort;
     private readonly Func<JobProfileSet, IPlcClient> _clientFactory;
 
     /// <summary>
@@ -26,18 +27,21 @@ public sealed class BootloaderService : IBootloaderService
     /// <param name="payloads">Payload provider for stager and dumper files.</param>
     /// <param name="socat">Socat service for serial-to-TCP bridge management.</param>
     /// <param name="power">Power supply service for PLC power control.</param>
+    /// <param name="serialPort">Serial port service for device configuration.</param>
     /// <param name="clientFactory">Factory method for creating PLC client instances.</param>
     public BootloaderService(
         ILogger<BootloaderService> logger,
         IPayloadProvider payloads,
         ISocatService socat,
         IPowerSupplyService power,
+        ISerialPortService serialPort,
         Func<JobProfileSet, IPlcClient> clientFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));
         _socat = socat ?? throw new ArgumentNullException(nameof(socat));
         _power = power ?? throw new ArgumentNullException(nameof(power));
+        _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
         _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
     }
 
@@ -45,6 +49,7 @@ public sealed class BootloaderService : IBootloaderService
     public async Task<byte[]> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent)> progress,
+        Microsoft.Extensions.Logging.ILogger? processLogger = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profiles);
@@ -54,124 +59,238 @@ public sealed class BootloaderService : IBootloaderService
 
         try
         {
+            // Stage 0: Configure serial port (2% progress)
+            progress.Report(("serial_config", 0.02));
+            _logger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
+
+            // Use serial configuration directly from profile
+            bool serialConfigured = await _serialPort.ApplyConfigurationAsync(
+                profiles.Serial.Device,
+                profiles.Serial.Configuration,
+                cancellationToken).ConfigureAwait(false);
+
+            if (!serialConfigured)
+            {
+                throw new InvalidOperationException($"Failed to configure serial port {profiles.Serial.Device}");
+            }
+
+            _logger.LogInformation("Serial port {Device} configured successfully", profiles.Serial.Device);
+            processLogger?.LogInformation("Serial port configured: {Device} @ {Baud} baud",
+                profiles.Serial.Device, profiles.Serial.Baud);
+
             // Stage 1: Setup socat bridge (5% progress)
             progress.Report(("socat_setup", 0.05));
             _logger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
 
-            // Create socat configuration for the bridge
-            var socatConfig = new SocatConfiguration
+            // Use socat configuration directly from profile (must be non-null after Phase 2 changes)
+            if (profiles.Socat.Configuration == null)
             {
-                TcpPort = profiles.Socat.Port,
-                Verbose = true,
-                HexDump = false,
-                BlockSize = 4,
-                DebugLevel = 2,
-                EnableFork = true,
-                EnableReuseAddr = true,
-                SerialRawMode = true,
-                SerialDisableEcho = true
-            };
+                throw new InvalidOperationException("Socat configuration is required but was null. Ensure job profile includes full socat configuration.");
+            }
 
             await _socat.StartSocatAsync(
-                socatConfig,
+                profiles.Socat.Configuration,
                 profiles.Serial.Device,
+                processLogger,
                 cancellationToken).ConfigureAwait(false);
 
-            // Stage 2: Power cycle PLC (10% progress)
-            progress.Report(("power_cycle", 0.10));
-            _logger.LogDebug("Power cycling PLC at {Host}:{Port} coil {Coil}",
+            _logger.LogInformation("Socat bridge started on TCP port {Port}", profiles.Socat.Port);
+            processLogger?.LogInformation("Socat bridge listening on localhost:{Port}", profiles.Socat.Port);
 
-                profiles.Power.Host, profiles.Power.Port, profiles.Power.Coil);
+            // Stage 2: Connect to power supply (8% progress)
+            progress.Report(("power_connect", 0.08));
+            _logger.LogDebug("Connecting to power supply at {Host}:{Port}",
+                profiles.Power.Host, profiles.Power.Port);
 
-            // Use the configuration-based API: Connect -> PowerCycle -> Disconnect
-            var powerConfig = new ModbusTcpConfiguration
+            // Use power configuration directly from profile (must be non-null after Phase 2 changes)
+            if (profiles.Power.Configuration == null)
             {
-                Host = profiles.Power.Host,
-                Port = profiles.Power.Port,
-                DeviceId = 1,
-                OnOffCoil = (ushort)profiles.Power.Coil,
-                AddressingMode = ModbusAddressingMode.Base0
-            };
+                throw new InvalidOperationException("Power supply configuration is required but was null. Ensure job profile includes full power supply configuration.");
+            }
 
-            bool connected = await _power.ConnectAsync(powerConfig, cancellationToken).ConfigureAwait(false);
+            bool connected = await _power.ConnectAsync(profiles.Power.Configuration, cancellationToken).ConfigureAwait(false);
             if (!connected)
             {
                 throw new InvalidOperationException(UIStrings.Exception_FailedToConnectToPowerSupply);
             }
 
+            _logger.LogInformation("Connected to power supply at {Host}:{Port}",
+                profiles.Power.Host, profiles.Power.Port);
+
             try
             {
-                await _power.PowerCycleAsync(profiles.Power.DelaySeconds * 1000, cancellationToken)
+                // Stage 3: Power ON PLC (10% progress)
+                progress.Report(("power_on", 0.10));
+                _logger.LogDebug("Turning PLC power ON");
+
+                bool powerOn = await _power.TurnOnAsync(cancellationToken).ConfigureAwait(false);
+                if (!powerOn)
+                {
+                    throw new InvalidOperationException("Failed to turn PLC power ON");
+                }
+
+                _logger.LogInformation("PLC powered ON");
+                processLogger?.LogInformation("PLC power: ON");
+
+                // Wait for initial power-on stabilization using PowerOnTimeMs from job profile
+                _logger.LogDebug("Waiting {DelayMs}ms for PLC power stabilization", profiles.PowerOnTimeMs);
+                await Task.Delay(profiles.PowerOnTimeMs, cancellationToken).ConfigureAwait(false);
+
+                // Stage 4: Power cycle PLC (12% progress)
+                progress.Report(("power_cycle", 0.12));
+                _logger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
+
+                // Power cycle: OFF → delay → ON (using PowerOffDelayMs from job profile)
+                await _power.PowerCycleAsync(profiles.PowerOffDelayMs, cancellationToken)
                     .ConfigureAwait(false);
+
+                _logger.LogInformation("PLC power cycled successfully");
+                processLogger?.LogInformation("PLC power cycle complete (OFF → {PowerOffDelayMs}ms → ON)",
+                    profiles.PowerOffDelayMs);
+
+                // Stage 5: Create PLC client and connect to socat (15% progress)
+                progress.Report(("plc_connect", 0.15));
+                await using IPlcClient client = _clientFactory(profiles);
+
+                _logger.LogDebug("PLC client created and connecting to socat TCP server");
+                processLogger?.LogInformation("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
+
+                // Stage 6: Perform handshake (20% progress)
+                progress.Report(("handshake", 0.20));
+                _logger.LogDebug("Performing bootloader handshake");
+
+                await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
+
+                string version = await client.GetBootloaderVersionAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                _logger.LogInformation("Connected to bootloader version: {Version}", version);
+                processLogger?.LogInformation("Bootloader version: {Version}", version);
+
+                // Stage 7: Install stager (30% progress)
+                progress.Report(("stager_install", 0.30));
+                _logger.LogDebug("Installing stager payload from {BasePath}", profiles.Payloads.BasePath);
+
+                byte[] stagerPayload = await _payloads.GetStagerAsync(
+                    profiles.Payloads.BasePath,
+                    cancellationToken).ConfigureAwait(false);
+
+                await client.InstallStagerAsync(stagerPayload, cancellationToken)
+                    .ConfigureAwait(false);
+
+                _logger.LogInformation("Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
+                processLogger?.LogInformation("Stager installed: {Size} bytes", stagerPayload.Length);
+
+                // Stage 8: Dump memory (50% - 95% progress)
+                byte[] memoryData;
+
+                if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
+                {
+                    // Multi-segment dump using MemoryMappingProfile
+                    var selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
+                    _logger.LogInformation("Dumping {SegmentCount} selected memory segments from profile '{ProfileName}'",
+                        selectedSegments.Count, profiles.MemoryMapping.Name);
+
+                    var segmentDataList = new List<byte[]>();
+                    long totalBytesRead = 0;
+                    long totalSize = profiles.MemoryMapping.TotalSelectedSize;
+
+                    byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
+                        profiles.Payloads.BasePath,
+                        cancellationToken).ConfigureAwait(false);
+
+                    for (int i = 0; i < selectedSegments.Count; i++)
+                    {
+                        MemorySegment segment = selectedSegments[i];
+                        uint segmentStart = uint.Parse(segment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
+                        uint segmentSize = (uint)segment.Size;
+
+                        progress.Report(("memory_dump", 0.50 + (0.45 * totalBytesRead / totalSize)));
+                        _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",
+                            i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
+
+                        var segmentProgress = new Progress<long>(bytesRead =>
+                        {
+                            double percent = 0.50 + (0.45 * (totalBytesRead + bytesRead) / totalSize);
+                            progress.Report(("memory_dump", percent));
+                        });
+
+                        byte[] segmentData = await client.DumpMemoryAsync(
+                            segmentStart,
+                            segmentSize,
+                            dumperPayload,
+                            segmentProgress,
+                            cancellationToken).ConfigureAwait(false);
+
+                        segmentDataList.Add(segmentData);
+                        totalBytesRead += segmentData.Length;
+
+                        _logger.LogInformation("Segment '{Name}' dumped successfully: {Size} bytes", segment.Name, segmentData.Length);
+                        processLogger?.LogInformation("Segment {Index}/{Total} '{Name}': {Size} bytes from 0x{Start:X8}",
+                            i + 1, selectedSegments.Count, segment.Name, segmentData.Length, segmentStart);
+                    }
+
+                    // Concatenate all segment data
+                    memoryData = segmentDataList.SelectMany(arr => arr).ToArray();
+                    _logger.LogInformation("Multi-segment dump completed: {TotalSegments} segments, {TotalSize} bytes total",
+                        selectedSegments.Count, memoryData.Length);
+                }
+                else
+                {
+                    // Single-region dump using legacy MemoryRegionProfile
+                    progress.Report(("memory_dump", 0.50));
+                    _logger.LogDebug("Dumping memory region 0x{Address:X8} - 0x{EndAddress:X8} ({Length} bytes)",
+                        profiles.Memory.Start,
+                        profiles.Memory.Start + profiles.Memory.Length,
+                        profiles.Memory.Length);
+
+                    byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
+                        profiles.Payloads.BasePath,
+                        cancellationToken).ConfigureAwait(false);
+
+                    var dumpProgress = new Progress<long>(bytesRead =>
+                    {
+                        double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
+                        progress.Report(("memory_dump", percent));
+                    });
+
+                    memoryData = await client.DumpMemoryAsync(
+                        profiles.Memory.Start,
+                        profiles.Memory.Length,
+                        dumperPayload,
+                        dumpProgress,
+                        cancellationToken).ConfigureAwait(false);
+
+                    _logger.LogInformation("Memory dump completed: {Size} bytes from 0x{Start:X8}",
+                        memoryData.Length, profiles.Memory.Start);
+                    processLogger?.LogInformation("Memory dump complete: {Size} bytes from 0x{Start:X8}",
+                        memoryData.Length, profiles.Memory.Start);
+                }
+
+                // Stage 9: Teardown (95% progress)
+                progress.Report(("teardown", 0.95));
+                _logger.LogDebug("Cleaning up resources");
+
+                // Client will be disposed automatically via 'await using'
+
+                // Stage 10: Complete (100% progress)
+                progress.Report(("complete", 1.0));
+                _logger.LogInformation("Bootloader dump operation completed successfully. " +
+                    "Dumped {ByteCount} bytes", memoryData.Length);
+
+                return memoryData;
             }
             finally
             {
+                // Always disconnect from power supply
                 await _power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogDebug("Disconnected from power supply");
             }
-
-            // Stage 3: Create PLC client and perform handshake (20% progress)
-            await using IPlcClient client = _clientFactory(profiles);
-
-            progress.Report(("handshake", 0.20));
-            _logger.LogDebug("Performing bootloader handshake");
-
-            await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
-
-            string version = await client.GetBootloaderVersionAsync(cancellationToken)
-                .ConfigureAwait(false);
-            _logger.LogInformation("Connected to bootloader version: {Version}", version);
-
-            // Stage 4: Install stager (30% progress)
-            progress.Report(("stager_install", 0.30));
-            _logger.LogDebug("Installing stager payload");
-
-            byte[] stagerPayload = await _payloads.GetStagerAsync(
-                profiles.Payloads.BasePath,
-                cancellationToken).ConfigureAwait(false);
-
-            await client.InstallStagerAsync(stagerPayload, cancellationToken)
-                .ConfigureAwait(false);
-
-            // Stage 5: Dump memory (50% - 95% progress)
-            progress.Report(("memory_dump", 0.50));
-            _logger.LogDebug("Dumping memory region 0x{Address:X8} - 0x{EndAddress:X8} ({Length} bytes)",
-                profiles.Memory.Start,
-                profiles.Memory.Start + profiles.Memory.Length,
-                profiles.Memory.Length);
-
-            byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
-                profiles.Payloads.BasePath,
-                cancellationToken).ConfigureAwait(false);
-
-            var dumpProgress = new Progress<long>(bytesRead =>
-            {
-                double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
-                progress.Report(("memory_dump", percent));
-            });
-
-            byte[] memoryData = await client.DumpMemoryAsync(
-                profiles.Memory.Start,
-                profiles.Memory.Length,
-                dumperPayload,
-                dumpProgress,
-                cancellationToken).ConfigureAwait(false);
-
-            // Stage 6: Teardown (95% progress)
-            progress.Report(("teardown", 0.95));
-            _logger.LogDebug("Cleaning up resources");
-
-            // Client will be disposed automatically via 'await using'
-
-            // Stage 7: Complete (100% progress)
-            progress.Report(("complete", 1.0));
-            _logger.LogInformation("Bootloader dump operation completed successfully. " +
-                "Dumped {ByteCount} bytes", memoryData.Length);
-
-            return memoryData;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Bootloader dump operation failed: {ErrorMessage}", ex.Message);
+            processLogger?.LogError("Dump failed: {ErrorMessage}", ex.Message);
             throw;
         }
     }
@@ -292,4 +411,9 @@ public sealed class BootloaderService : IBootloaderService
 
         return TimeSpan.FromSeconds(totalSeconds);
     }
+
+    #region Helper Methods
+
+
+    #endregion
 }

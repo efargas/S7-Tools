@@ -350,6 +350,32 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedMemoryRegion, value);
+
+            // Update MemoryStart and MemoryLength from the first selected segment
+            if (value != null)
+            {
+                MemorySegment? selectedSegment = value.Segments.FirstOrDefault(s => s.IsSelected);
+                if (selectedSegment != null)
+                {
+                    try
+                    {
+                        // Parse hex address string to uint
+                        string addressStr = selectedSegment.StartAddress.Replace("0x", "").Replace("0X", "");
+                        _memoryStart = Convert.ToUInt32(addressStr, 16);
+                        _memoryLength = (uint)selectedSegment.Size;
+
+                        // Raise property changed for dependent properties
+                        this.RaisePropertyChanged(nameof(MemoryStart));
+                        this.RaisePropertyChanged(nameof(MemoryLength));
+                        this.RaisePropertyChanged(nameof(MemoryEndAddress));
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to parse segment address: {Address}", selectedSegment.StartAddress);
+                    }
+                }
+            }
+
             this.RaisePropertyChanged(nameof(MemoryRegionSummary));
             this.RaisePropertyChanged(nameof(SelectedSegmentCount));
             this.RaisePropertyChanged(nameof(TotalSelectedSize));
@@ -716,9 +742,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 existingJob.SocatProfileId = SelectedSocat.Id;
                 existingJob.PowerSupplyProfileId = SelectedPower.Id;
                 existingJob.MemoryRegionProfileId = SelectedMemoryRegion.Id;
-#pragma warning disable CS0618 // Type or member is obsolete
-                existingJob.MemoryRegion = new MemoryRegionProfile(MemoryStart, MemoryLength);
-#pragma warning restore CS0618
+
                 existingJob.Payloads = new PayloadSetProfile(PayloadsBasePath);
                 existingJob.OutputPath = OutputPath;
                 existingJob.PowerOnTimeMs = PowerOnTimeMs;
@@ -738,9 +762,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 job.SocatProfileId = SelectedSocat.Id;
                 job.PowerSupplyProfileId = SelectedPower.Id;
                 job.MemoryRegionProfileId = SelectedMemoryRegion.Id;
-#pragma warning disable CS0618 // Type or member is obsolete
-                job.MemoryRegion = new MemoryRegionProfile(MemoryStart, MemoryLength); // Keep for backward compatibility
-#pragma warning restore CS0618
+
                 job.Payloads = new PayloadSetProfile(PayloadsBasePath);
                 job.OutputPath = OutputPath;
                 job.PowerOnTimeMs = PowerOnTimeMs;
@@ -960,11 +982,27 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 SelectedPower = PowerProfiles.FirstOrDefault(p => p.Id == job.PowerSupplyProfileId);
                 SelectedMemoryRegion = MemoryProfiles.FirstOrDefault(p => p.Id == job.MemoryRegionProfileId);
 
-                // Populate memory settings
-#pragma warning disable CS0618 // Type or member is obsolete (MemoryRegion deprecated but still used during migration)
-                MemoryStart = job.MemoryRegion?.Start ?? MemoryConstants.DefaultUserMemoryStart;
-                MemoryLength = job.MemoryRegion?.Length ?? MemoryConstants.DefaultDumpSize;
-#pragma warning restore CS0618
+                // Populate memory settings from selected profile
+                if (SelectedMemoryRegion != null)
+                {
+                    // Get start and length from first selected segment, or use defaults
+                    MemorySegment? selectedSegment = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.IsSelected);
+                    if (selectedSegment != null)
+                    {
+                        MemoryStart = (uint)MemorySegment.ParseAddress(selectedSegment.StartAddress);
+                        MemoryLength = (uint)selectedSegment.Size;
+                    }
+                    else
+                    {
+                        MemoryStart = MemoryConstants.DefaultUserMemoryStart;
+                        MemoryLength = MemoryConstants.DefaultDumpSize;
+                    }
+                }
+                else
+                {
+                    MemoryStart = MemoryConstants.DefaultUserMemoryStart;
+                    MemoryLength = MemoryConstants.DefaultDumpSize;
+                }
 
                 // Populate timing and paths
                 PowerOnTimeMs = job.PowerOnTimeMs;

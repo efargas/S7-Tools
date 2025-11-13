@@ -100,6 +100,11 @@ public class TaskExecution
     public TaskPriority Priority { get; set; } = TaskPriority.Normal;
 
     /// <summary>
+    /// Gets or sets the task-specific logger information.
+    /// </summary>
+    public TaskLogger? Logger { get; set; }
+
+    /// <summary>
     /// Gets the total execution time if the task has completed.
     /// </summary>
     public TimeSpan? ExecutionTime
