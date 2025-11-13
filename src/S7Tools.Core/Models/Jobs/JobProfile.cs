@@ -135,6 +135,18 @@ public class JobProfile : IProfileBase
     public int SerialProfileId { get; set; }
 
     /// <summary>
+    /// Gets or sets the serial device path for this job.
+    /// </summary>
+    /// <value>The device path (e.g., "/dev/ttyUSB0") to use for serial communication.</value>
+    /// <remarks>
+    /// This is stored separately from the serial profile to enable resource conflict detection
+    /// and parallel execution validation during job scheduling.
+    /// </remarks>
+    [Required(ErrorMessage = "Serial device is required")]
+    [StringLength(255, ErrorMessage = "Serial device path cannot exceed 255 characters")]
+    public string SerialDevice { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the socat profile reference for this job.
     /// </summary>
     /// <value>The ID of the socat profile to use for serial-to-TCP bridging.</value>
@@ -213,6 +225,7 @@ public class JobProfile : IProfileBase
             Name = "S7Tools Default",
             Description = "Default job profile for S7Tools application with standard memory dump settings. This profile cannot be modified or deleted.",
             SerialProfileId = 1, // Default serial profile
+            SerialDevice = "/dev/ttyUSB0", // Default serial device
             SocatProfileId = 1, // Default socat profile
             PowerSupplyProfileId = 1, // Default power supply profile
             MemoryRegionProfileId = 1, // Default memory region profile
@@ -252,6 +265,7 @@ public class JobProfile : IProfileBase
             Name = name,
             Description = description,
             SerialProfileId = 1, // Default to first available profile
+            SerialDevice = "/dev/ttyUSB0", // Default serial device
             SocatProfileId = 1,
             PowerSupplyProfileId = 1,
             MemoryRegionProfileId = 1, // Default to first available memory region profile
@@ -288,6 +302,7 @@ public class JobProfile : IProfileBase
             Name = templateName,
             Description = $"Template based on {Name}",
             SerialProfileId = SerialProfileId,
+            SerialDevice = SerialDevice,
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegion = MemoryRegion,
@@ -324,6 +339,7 @@ public class JobProfile : IProfileBase
             Name = Name,
             Description = Description,
             SerialProfileId = SerialProfileId,
+            SerialDevice = SerialDevice,
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegionProfileId = MemoryRegionProfileId,
@@ -358,6 +374,7 @@ public class JobProfile : IProfileBase
             Name = newName,
             Description = Description,
             SerialProfileId = SerialProfileId,
+            SerialDevice = SerialDevice,
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegionProfileId = MemoryRegionProfileId,

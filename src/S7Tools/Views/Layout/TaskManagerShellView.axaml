@@ -13,8 +13,8 @@
   <!-- Main Content Only - categories handled by sidebar; view resolved via ViewLocator -->
   <ContentControl Content="{Binding SelectedCategoryViewModel}">
     <ContentControl.DataTemplates>
-      <DataTemplate DataType="vmTasks:TaskRunnerViewModel">
-        <views:TaskRunnerView />
+      <DataTemplate DataType="vmTasks:TaskManagerViewModel">
+        <views:TaskManagerView />
       </DataTemplate>
       <DataTemplate DataType="vmTasks:ActiveTasksViewModel">
         <views:ActiveTasksView />

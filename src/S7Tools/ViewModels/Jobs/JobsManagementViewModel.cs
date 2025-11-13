@@ -101,6 +101,8 @@ public class JobsMainContentViewModel : ViewModelBase, IDisposable
     public ReactiveCommand<Unit, Unit> ImportJobCommand => _parent.ImportJobCommand;
     public ReactiveCommand<Unit, Unit> ExportJobCommand => _parent.ExportJobCommand;
     public ReactiveCommand<Unit, Unit> CreateTaskFromJobCommand => _parent.CreateTaskFromJobCommand;
+    public ReactiveCommand<Unit, Unit> ScheduleTaskFromJobCommand => _parent.ScheduleTaskFromJobCommand;
+    public ReactiveCommand<Unit, Unit> EnqueueTaskFromJobCommand => _parent.EnqueueTaskFromJobCommand;
     public ReactiveCommand<Unit, Unit> ValidateJobCommand => _parent.ValidateJobCommand;
 
     public void Dispose()
@@ -145,6 +147,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     private readonly IUnifiedProfileDialogService _unifiedDialogService;
     private readonly IDialogService _dialogService;
     private readonly IViewModelFactory? _viewModelFactory;
+    private readonly ITaskScheduler? _taskScheduler;
     private readonly CompositeDisposable _localDisposables = new();
 
     // Job-specific collections for UI organization
@@ -161,13 +164,15 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <param name="dialogService">The general dialog service for confirmations.</param>
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
     /// <param name="viewModelFactory">The view model factory for creating child ViewModels.</param>
+    /// <param name="taskScheduler">The task scheduler service for creating tasks from jobs.</param>
     public JobsManagementViewModel(
         ILogger<JobsManagementViewModel> logger,
         IJobManager jobManager,
         IUnifiedProfileDialogService profileDialogService,
         IDialogService dialogService,
         IUIThreadService uiThreadService,
-        IViewModelFactory? viewModelFactory = null)
+        IViewModelFactory? viewModelFactory = null,
+        ITaskScheduler? taskScheduler = null)
         : base(logger, profileDialogService, dialogService, uiThreadService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -176,6 +181,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         _unifiedDialogService = profileDialogService ?? throw new ArgumentNullException(nameof(profileDialogService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _viewModelFactory = viewModelFactory;
+        _taskScheduler = taskScheduler;
 
         SetupJobSpecificCommands();
         SetupJobCollections();
@@ -324,6 +330,24 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     public ReactiveCommand<Unit, Unit> CreateTaskFromJobCommand { get; private set; } = null!;
 
     /// <summary>
+    /// Gets the command to schedule a task from the selected job.
+    /// </summary>
+    /// <remarks>
+    /// Creates a scheduled task execution from the selected job profile.
+    /// Allows specifying execution date/time for future job runs.
+    /// </remarks>
+    public ReactiveCommand<Unit, Unit> ScheduleTaskFromJobCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to enqueue a task from the selected job.
+    /// </summary>
+    /// <remarks>
+    /// Creates an enqueued task execution from the selected job profile.
+    /// Task is immediately added to the execution queue with normal priority.
+    /// </remarks>
+    public ReactiveCommand<Unit, Unit> EnqueueTaskFromJobCommand { get; private set; } = null!;
+
+    /// <summary>
     /// Gets the command to validate the selected job configuration.
     /// </summary>
     /// <remarks>
@@ -468,6 +492,8 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
         // Task integration commands
         CreateTaskFromJobCommand = ReactiveCommand.CreateFromTask(ExecuteCreateTaskFromJobAsync, hasSelectedJob);
+        ScheduleTaskFromJobCommand = ReactiveCommand.CreateFromTask(ExecuteScheduleTaskFromJobAsync, hasSelectedJob);
+        EnqueueTaskFromJobCommand = ReactiveCommand.CreateFromTask(ExecuteEnqueueTaskFromJobAsync, hasSelectedJob);
         ValidateJobCommand = ReactiveCommand.CreateFromTask(ExecuteValidateJobAsync, hasSelectedJob);
 
         // Override the Create command to navigate to wizard instead of direct dialog
@@ -602,13 +628,19 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 {
                     JobWizardViewModel wizard = _viewModelFactory.Create<JobWizardViewModel>();
 
-                    // Pre-populate the wizard with selected job data
-                    wizard.PreselectJobName = SelectedProfile.Name + " (Copy)";
-                    wizard.PreselectJobDescription = SelectedProfile.Description;
-                    wizard.PreselectSerialId = SelectedProfile.SerialProfileId;
-                    wizard.PreselectSocatId = SelectedProfile.SocatProfileId;
-                    wizard.PreselectPowerId = SelectedProfile.PowerSupplyProfileId;
-                    wizard.IsEditMode = true;
+                    // Load the selected job into the wizard for editing
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await wizard.LoadJobForEditAsync(SelectedProfile.Id).ConfigureAwait(false);
+                            _logger.LogDebug("Successfully loaded job {JobId} into wizard for editing", SelectedProfile.Id);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Failed to load job {JobId} into wizard", SelectedProfile.Id);
+                        }
+                    });
 
                     _logger.LogDebug("Successfully created JobWizardViewModel for editing job {JobId}", SelectedProfile.Id);
                     return wizard;
@@ -820,17 +852,158 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             IsLoading = true;
             StatusMessage = UIStrings.Status_CreatingTaskFromJob;
 
-            // TODO: Integrate with TaskScheduler to create task
-            // For now, just show a placeholder message
-            StatusMessage = string.Format(UIStrings.Status_TaskCreationFromJobNotImplemented, SelectedProfile.Name);
-            _logger.LogInformation("Task creation requested from job {JobId} ({JobName}) but not yet implemented",
-                SelectedProfile.Id, SelectedProfile.Name);
-            await Task.Yield();
+            // Check if task scheduler is available
+            if (_taskScheduler == null)
+            {
+                StatusMessage = "Task scheduler service not available";
+                _logger.LogError("TaskScheduler service not available - was not injected in constructor");
+                return;
+            }
+
+            // Create task from selected job profile with Normal priority
+            Core.Models.Jobs.TaskExecution createdTask = await _taskScheduler.CreateTaskAsync(
+                SelectedProfile,
+                Core.Models.Jobs.TaskPriority.Normal).ConfigureAwait(false);
+
+            StatusMessage = $"Task created successfully from job '{SelectedProfile.Name}' (Task ID: {createdTask.TaskId})";
+            _logger.LogInformation("Task {TaskId} created from job {JobId} ({JobName})",
+                createdTask.TaskId, SelectedProfile.Id, SelectedProfile.Name);
+
+            // Show confirmation dialog with option to navigate to Task Manager
+            bool navigateToTaskManager = await _dialogService.ShowConfirmationAsync(
+                "Task Created",
+                $"Task has been created successfully from job '{SelectedProfile.Name}'.\n\n" +
+                $"Task ID: {createdTask.TaskId}\n" +
+                $"State: {createdTask.State}\n\n" +
+                $"Would you like to navigate to the Task Manager to view and start the task?").ConfigureAwait(false);
+
+            if (navigateToTaskManager)
+            {
+                // TODO: Implement navigation to Task Manager activity
+                // This will require an INavigationService or IActivityBarService reference
+                _logger.LogInformation("User requested navigation to Task Manager (not yet implemented)");
+                StatusMessage = "Navigation to Task Manager not yet implemented - please use Activity Bar";
+            }
         }
         catch (Exception ex)
         {
             StatusMessage = string.Format(UIStrings.Status_ErrorCreatingTaskFromJob, ex.Message);
             _logger.LogError(ex, "Error creating task from job {JobId}", SelectedProfile?.Id);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ExecuteScheduleTaskFromJobAsync()
+    {
+        if (SelectedProfile == null)
+        {
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Scheduling task from job...";
+
+            // Check if task scheduler is available
+            if (_taskScheduler == null)
+            {
+                StatusMessage = "Task scheduler service not available";
+                _logger.LogError("TaskScheduler service not available - was not injected in constructor");
+                return;
+            }
+
+            // TODO: Add date/time picker dialog to get scheduled execution time
+            // For now, we'll create a task scheduled for 5 minutes from now
+            DateTime scheduledTime = DateTime.Now.AddMinutes(5);
+
+            // Create task from selected job profile with scheduled time
+            Core.Models.Jobs.TaskExecution createdTask = await _taskScheduler.CreateTaskAsync(
+                SelectedProfile,
+                Core.Models.Jobs.TaskPriority.Normal).ConfigureAwait(false);
+
+            // Schedule the task
+            await _taskScheduler.ScheduleTaskAsync(createdTask.TaskId, scheduledTime).ConfigureAwait(false);
+
+            StatusMessage = $"Task scheduled successfully from job '{SelectedProfile.Name}' at {scheduledTime:g}";
+            _logger.LogInformation("Task {TaskId} scheduled from job {JobId} ({JobName}) for {ScheduledTime}",
+                createdTask.TaskId, SelectedProfile.Id, SelectedProfile.Name, scheduledTime);
+
+            // Show confirmation dialog
+            await _dialogService.ShowConfirmationAsync(
+                "Task Scheduled",
+                $"Task has been scheduled successfully from job '{SelectedProfile.Name}'.\n\n" +
+                $"Task ID: {createdTask.TaskId}\n" +
+                $"Scheduled for: {scheduledTime:g}\n\n" +
+                $"The task will run automatically at the scheduled time.").ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error scheduling task from job: {ex.Message}";
+            _logger.LogError(ex, "Error scheduling task from job {JobId}", SelectedProfile?.Id);
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ExecuteEnqueueTaskFromJobAsync()
+    {
+        if (SelectedProfile == null)
+        {
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+            StatusMessage = "Enqueueing task from job...";
+
+            // Check if task scheduler is available
+            if (_taskScheduler == null)
+            {
+                StatusMessage = "Task scheduler service not available";
+                _logger.LogError("TaskScheduler service not available - was not injected in constructor");
+                return;
+            }
+
+            // Create task from selected job profile with Normal priority
+            Core.Models.Jobs.TaskExecution createdTask = await _taskScheduler.CreateTaskAsync(
+                SelectedProfile,
+                Core.Models.Jobs.TaskPriority.Normal).ConfigureAwait(false);
+
+            // Enqueue the task immediately
+            await _taskScheduler.EnqueueTaskAsync(createdTask.TaskId).ConfigureAwait(false);
+
+            StatusMessage = $"Task enqueued successfully from job '{SelectedProfile.Name}' (Task ID: {createdTask.TaskId})";
+            _logger.LogInformation("Task {TaskId} enqueued from job {JobId} ({JobName})",
+                createdTask.TaskId, SelectedProfile.Id, SelectedProfile.Name);
+
+            // Show confirmation dialog with option to navigate to Task Manager
+            bool navigateToTaskManager = await _dialogService.ShowConfirmationAsync(
+                "Task Enqueued",
+                $"Task has been enqueued successfully from job '{SelectedProfile.Name}'.\n\n" +
+                $"Task ID: {createdTask.TaskId}\n" +
+                $"State: {createdTask.State}\n\n" +
+                $"The task is now in the execution queue and will start when resources are available.\n\n" +
+                $"Would you like to navigate to the Task Manager to monitor the task?").ConfigureAwait(false);
+
+            if (navigateToTaskManager)
+            {
+                // TODO: Implement navigation to Task Manager activity
+                // This will require an INavigationService or IActivityBarService reference
+                _logger.LogInformation("User requested navigation to Task Manager (not yet implemented)");
+                StatusMessage = "Navigation to Task Manager not yet implemented - please use Activity Bar";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error enqueueing task from job: {ex.Message}";
+            _logger.LogError(ex, "Error enqueueing task from job {JobId}", SelectedProfile?.Id);
         }
         finally
         {

@@ -62,6 +62,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private string _jobName = string.Empty;
     private string _jobDescription = string.Empty;
     private bool _isEditMode;
+    private int? _editingJobId; // ID of the job being edited (null for create mode)
 
     // Selections
     private SerialPortProfile? _selectedSerial;
@@ -680,7 +681,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            Status = UIStrings.Status_CreatingJob;
+            Status = IsEditMode ? "Updating job..." : UIStrings.Status_CreatingJob;
 
             if (SelectedSerial == null || SelectedSocat == null || SelectedPower == null || SelectedMemoryRegion == null)
             {
@@ -688,28 +689,75 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            string baseName = string.IsNullOrWhiteSpace(JobName) ? "New Job" : JobName.Trim();
-            var job = JobProfile.CreateUserProfile(await _jobManager.EnsureUniqueNameAsync(baseName).ConfigureAwait(false), JobDescription?.Trim() ?? string.Empty);
-            job.SerialProfileId = SelectedSerial.Id;
-            job.SocatProfileId = SelectedSocat.Id;
-            job.PowerSupplyProfileId = SelectedPower.Id;
-            job.MemoryRegionProfileId = SelectedMemoryRegion.Id;
-            job.MemoryRegion = new MemoryRegionProfile(MemoryStart, MemoryLength); // Keep for backward compatibility
-            job.Payloads = new PayloadSetProfile(PayloadsBasePath);
-            job.OutputPath = OutputPath;
-            job.PowerOnTimeMs = PowerOnTimeMs;
-            job.PowerOffDelayMs = PowerOffDelayMs;
+            // Validate serial device selection
+            if (PortScanner.SelectedPort == null || string.IsNullOrWhiteSpace(PortScanner.SelectedPort.PortName))
+            {
+                Status = "Please select a serial device"; // TODO: Add UIStrings.Status_SerialDeviceRequired
+                return;
+            }
 
-            JobProfile created = await _jobManager.CreateAsync(job).ConfigureAwait(false);
-            CreatedJobId = created.Id;
-            Status = UIStrings.Status_JobCreated;
-            _logger.LogInformation("Job created via wizard: {JobId} {JobName}", created.Id, created.Name);
+            JobProfile job;
+
+            if (IsEditMode && _editingJobId.HasValue)
+            {
+                // Edit mode: Load existing job and update it
+                JobProfile? existingJob = await _jobManager.GetByIdAsync(_editingJobId.Value).ConfigureAwait(false);
+                if (existingJob == null)
+                {
+                    Status = $"Job with ID {_editingJobId.Value} not found";
+                    return;
+                }
+
+                // Update job properties
+                existingJob.Name = JobName.Trim();
+                existingJob.Description = JobDescription?.Trim() ?? string.Empty;
+                existingJob.SerialProfileId = SelectedSerial.Id;
+                existingJob.SerialDevice = PortScanner.SelectedPort.PortName;
+                existingJob.SocatProfileId = SelectedSocat.Id;
+                existingJob.PowerSupplyProfileId = SelectedPower.Id;
+                existingJob.MemoryRegionProfileId = SelectedMemoryRegion.Id;
+#pragma warning disable CS0618 // Type or member is obsolete
+                existingJob.MemoryRegion = new MemoryRegionProfile(MemoryStart, MemoryLength);
+#pragma warning restore CS0618
+                existingJob.Payloads = new PayloadSetProfile(PayloadsBasePath);
+                existingJob.OutputPath = OutputPath;
+                existingJob.PowerOnTimeMs = PowerOnTimeMs;
+                existingJob.PowerOffDelayMs = PowerOffDelayMs;
+
+                job = await _jobManager.UpdateAsync(existingJob).ConfigureAwait(false);
+                Status = "Job updated successfully";
+                _logger.LogInformation("Job updated via wizard: {JobId} {JobName}", job.Id, job.Name);
+            }
+            else
+            {
+                // Create mode: Create new job
+                string baseName = string.IsNullOrWhiteSpace(JobName) ? "New Job" : JobName.Trim();
+                job = JobProfile.CreateUserProfile(await _jobManager.EnsureUniqueNameAsync(baseName).ConfigureAwait(false), JobDescription?.Trim() ?? string.Empty);
+                job.SerialProfileId = SelectedSerial.Id;
+                job.SerialDevice = PortScanner.SelectedPort.PortName; // Capture selected serial device
+                job.SocatProfileId = SelectedSocat.Id;
+                job.PowerSupplyProfileId = SelectedPower.Id;
+                job.MemoryRegionProfileId = SelectedMemoryRegion.Id;
+#pragma warning disable CS0618 // Type or member is obsolete
+                job.MemoryRegion = new MemoryRegionProfile(MemoryStart, MemoryLength); // Keep for backward compatibility
+#pragma warning restore CS0618
+                job.Payloads = new PayloadSetProfile(PayloadsBasePath);
+                job.OutputPath = OutputPath;
+                job.PowerOnTimeMs = PowerOnTimeMs;
+                job.PowerOffDelayMs = PowerOffDelayMs;
+
+                job = await _jobManager.CreateAsync(job).ConfigureAwait(false);
+                Status = UIStrings.Status_JobCreated;
+                _logger.LogInformation("Job created via wizard: {JobId} {JobName}", job.Id, job.Name);
+            }
+
+            CreatedJobId = job.Id;
             Completed = true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to create job via wizard");
-            Status = string.Format(UIStrings.Status_ErrorCreatingJob, ex.Message);
+            _logger.LogError(ex, IsEditMode ? "Failed to update job via wizard" : "Failed to create job via wizard");
+            Status = string.Format(IsEditMode ? "Error updating job: {0}" : UIStrings.Status_ErrorCreatingJob, ex.Message);
             Completed = false;
         }
         finally
@@ -876,6 +924,85 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public string PowerDeviceId => SelectedPower?.Configuration is ModbusTcpConfiguration modbusTcp ? modbusTcp.DeviceId.ToString() : NotAvailable;
 
     #endregion
+
+    /// <summary>
+    /// Loads an existing job for editing in the wizard.
+    /// </summary>
+    /// <param name="jobId">The ID of the job to edit.</param>
+    public async Task LoadJobForEditAsync(int jobId)
+    {
+        try
+        {
+            IsBusy = true;
+            Status = "Loading job for editing...";
+
+            // Load the job profile
+            JobProfile? job = await _jobManager.GetByIdAsync(jobId).ConfigureAwait(false);
+            if (job == null)
+            {
+                Status = $"Job with ID {jobId} not found";
+                return;
+            }
+
+            // Set edit mode and store the editing job ID
+            _editingJobId = jobId;
+            IsEditMode = true;
+
+            // Populate wizard fields from the job
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                JobName = job.Name;
+                JobDescription = job.Description ?? string.Empty;
+
+                // Select profiles by ID
+                SelectedSerial = SerialProfiles.FirstOrDefault(p => p.Id == job.SerialProfileId);
+                SelectedSocat = SocatProfiles.FirstOrDefault(p => p.Id == job.SocatProfileId);
+                SelectedPower = PowerProfiles.FirstOrDefault(p => p.Id == job.PowerSupplyProfileId);
+                SelectedMemoryRegion = MemoryProfiles.FirstOrDefault(p => p.Id == job.MemoryRegionProfileId);
+
+                // Populate memory settings
+#pragma warning disable CS0618 // Type or member is obsolete (MemoryRegion deprecated but still used during migration)
+                MemoryStart = job.MemoryRegion?.Start ?? MemoryConstants.DefaultUserMemoryStart;
+                MemoryLength = job.MemoryRegion?.Length ?? MemoryConstants.DefaultDumpSize;
+#pragma warning restore CS0618
+
+                // Populate timing and paths
+                PowerOnTimeMs = job.PowerOnTimeMs;
+                PowerOffDelayMs = job.PowerOffDelayMs;
+                PayloadsBasePath = job.Payloads?.BasePath ?? "./bootloader-payloads";
+                OutputPath = job.OutputPath;
+
+                // Set selected port if serial device is specified
+                if (!string.IsNullOrWhiteSpace(job.SerialDevice))
+                {
+                    // Try to find the port in the discovered ports
+                    Controls.SerialPortInfo? portInfo = PortScanner.DiscoveredPorts.FirstOrDefault(p => p.PortName == job.SerialDevice);
+                    if (portInfo != null)
+                    {
+                        PortScanner.SelectedPort = portInfo;
+                    }
+                    else
+                    {
+                        // Port not discovered yet, but we can still set it if user re-scans
+                        _logger.LogWarning("Serial device {Device} from job not found in discovered ports", job.SerialDevice);
+                    }
+                }
+
+                Status = "Job loaded for editing";
+            }).ConfigureAwait(false);
+
+            _logger.LogInformation("Loaded job {JobId} for editing in wizard", jobId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load job {JobId} for editing", jobId);
+            Status = $"Error loading job: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 
     public void Dispose()
     {

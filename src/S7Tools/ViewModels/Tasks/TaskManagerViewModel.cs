@@ -320,7 +320,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// Moves a created task to the queued state for immediate execution.
     /// Enabled when a task in Created state is selected.
     /// </remarks>
-    public ReactiveCommand<Unit, Unit> StartTaskCommand { get; private set; } = null!;
+    public ReactiveCommand<TaskExecution?, Unit> StartTaskCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to stop the selected running task.
@@ -329,7 +329,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// Cancels a running or queued task, moving it to cancelled state.
     /// Enabled when a task in Running, Queued, or Paused state is selected.
     /// </remarks>
-    public ReactiveCommand<Unit, Unit> StopTaskCommand { get; private set; } = null!;
+    public ReactiveCommand<TaskExecution?, Unit> StopTaskCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to schedule the selected task for future execution.
@@ -437,9 +437,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         IObservable<bool> hasFinishedTasks = this.WhenAnyValue(x => x.FinishedTasks.Count)
             .Select(count => count > 0);
 
-        // Create commands with proper async patterns
-        StartTaskCommand = ReactiveCommand.CreateFromTask(ExecuteStartTaskAsync, canStart);
-        StopTaskCommand = ReactiveCommand.CreateFromTask(ExecuteStopTaskAsync, canStop);
+        // Create commands with proper async patterns (TaskExecution? parameter for row-level actions)
+        StartTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStartTaskAsync, canStart);
+        StopTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStopTaskAsync, canStop);
         ScheduleTaskCommand = ReactiveCommand.CreateFromTask(ExecuteScheduleTaskAsync, canSchedule);
         RestartTaskCommand = ReactiveCommand.CreateFromTask(ExecuteRestartTaskAsync, canRestart);
         PauseTaskCommand = ReactiveCommand.CreateFromTask(ExecutePauseTaskAsync, canPause);
@@ -598,9 +598,12 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
     #region Command Implementations
 
-    private async Task ExecuteStartTaskAsync()
+    private async Task ExecuteStartTaskAsync(TaskExecution? task)
     {
-        if (SelectedTask == null)
+        // Use parameter if provided, otherwise fall back to SelectedTask
+        var targetTask = task ?? SelectedTask;
+
+        if (targetTask == null)
         {
             return;
         }
@@ -610,23 +613,23 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_StartingTask;
 
-            bool success = await _taskScheduler.EnqueueTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
+            bool success = await _taskScheduler.EnqueueTaskAsync(targetTask.TaskId).ConfigureAwait(false);
 
             if (success)
             {
-                StatusMessage = $"Task '{SelectedTask.JobName}' started successfully";
-                _logger.LogInformation("Started task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
+                StatusMessage = $"Task '{targetTask.JobName}' started successfully";
+                _logger.LogInformation("Started task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
             else
             {
-                StatusMessage = $"Failed to start task '{SelectedTask.JobName}'";
-                _logger.LogWarning("Failed to start task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
+                StatusMessage = $"Failed to start task '{targetTask.JobName}'";
+                _logger.LogWarning("Failed to start task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error starting task: {ex.Message}";
-            _logger.LogError(ex, "Error starting task {TaskId}", SelectedTask?.TaskId);
+            _logger.LogError(ex, "Error starting task {TaskId}", targetTask?.TaskId);
         }
         finally
         {
@@ -634,16 +637,19 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task ExecuteStopTaskAsync()
+    private async Task ExecuteStopTaskAsync(TaskExecution? task)
     {
-        if (SelectedTask == null)
+        // Use parameter if provided, otherwise fall back to SelectedTask
+        var targetTask = task ?? SelectedTask;
+
+        if (targetTask == null)
         {
             return;
         }
 
         bool confirmed = await _dialogService.ShowConfirmationAsync(
             "Stop Task",
-            $"Are you sure you want to stop the task '{SelectedTask.JobName}'?").ConfigureAwait(false);
+            $"Are you sure you want to stop the task '{targetTask.JobName}'?").ConfigureAwait(false);
 
         if (!confirmed)
         {
@@ -655,23 +661,23 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_StoppingTask;
 
-            bool success = await _taskScheduler.CancelTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
+            bool success = await _taskScheduler.CancelTaskAsync(targetTask.TaskId).ConfigureAwait(false);
 
             if (success)
             {
-                StatusMessage = $"Task '{SelectedTask.JobName}' stopped successfully";
-                _logger.LogInformation("Stopped task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
+                StatusMessage = $"Task '{targetTask.JobName}' stopped successfully";
+                _logger.LogInformation("Stopped task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
             else
             {
-                StatusMessage = $"Failed to stop task '{SelectedTask.JobName}'";
-                _logger.LogWarning("Failed to stop task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
+                StatusMessage = $"Failed to stop task '{targetTask.JobName}'";
+                _logger.LogWarning("Failed to stop task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error stopping task: {ex.Message}";
-            _logger.LogError(ex, "Error stopping task {TaskId}", SelectedTask?.TaskId);
+            _logger.LogError(ex, "Error stopping task {TaskId}", targetTask?.TaskId);
         }
         finally
         {

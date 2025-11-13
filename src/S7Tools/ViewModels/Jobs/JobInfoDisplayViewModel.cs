@@ -203,6 +203,19 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
             info += $"\nDescription: {job.Description}";
         }
 
+        info += $"\n\n--- Serial Communication ---";
+        info += $"\nSerial Device: {job.SerialDevice}";
+        info += $"\nSerial Profile ID: {job.SerialProfileId}";
+
+        info += $"\n\n--- Timing Configuration ---";
+        info += $"\nPower On Time: {job.PowerOnTimeMs} ms";
+        info += $"\nPower Off Delay: {job.PowerOffDelayMs} ms";
+
+        info += $"\n\n--- Directories ---";
+        info += $"\nPayload Directory: {job.Payloads?.BasePath ?? "Not configured"}";
+        info += $"\nOutput Directory: {job.OutputPath}";
+
+        info += $"\n\n--- Metadata ---";
         info += $"\nCreated: {job.CreatedAt.ToString(DateTimeFormats.ShortDateTime)}";
 
         if (job.ModifiedAt != job.CreatedAt)
@@ -225,6 +238,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
         {
             SerialPortProfile? profile = await _serialService.GetByIdAsync(job.SerialProfileId);
             SerialProfileDetails = _profileDetailsService.CreateProfileDetailsViewModel(profile);
+            // Note: Serial device path is selected at job execution time, not stored in profile
         }
         catch (Exception ex)
         {

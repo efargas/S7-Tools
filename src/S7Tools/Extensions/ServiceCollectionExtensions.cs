@@ -344,7 +344,6 @@ public static class ServiceCollectionExtensions
 
         // Add Task Management ViewModels (Task Manager and Jobs Management)
         services.TryAddSingleton<TaskManagerViewModel>();
-        services.TryAddSingleton<TaskRunnerViewModel>();
         services.TryAddSingleton<ActiveTasksViewModel>();
         services.TryAddSingleton<ScheduledTasksViewModel>();
         services.TryAddSingleton<HistoryTasksViewModel>();

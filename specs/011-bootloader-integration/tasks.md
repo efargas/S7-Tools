@@ -327,14 +327,14 @@ Initial test failures were due to test configuration error (shared modbus resour
 ### Documentation
 
 - [ ] T097 [P] Update architecture documentation in docs/architecture/overview.md - add bootloader integration section describing job scheduler, resource coordinator, adapter pattern
-- [ ] T098 [P] Update system patterns in docs/patterns/system-patterns.md - document Resource Coordination Pattern, Job Scheduling Pattern, Adapter Pattern for reference code integration
-- [ ] T099 [P] Create bootloader integration guide in docs/guides/bootloader-integration-guide.md - step-by-step instructions for creating job profiles, executing dumps, troubleshooting common issues
+- [x] T098 [P] Update system patterns in docs/patterns/system-patterns.md - document Resource Coordination Pattern, Job Scheduling Pattern, Adapter Pattern for reference code integration
+- [x] T099 [P] Create bootloader integration guide in docs/guides/bootloader-integration-guide.md - step-by-step instructions for creating job profiles, executing dumps, troubleshooting common issues
 
 ### Code Quality
 
-- [ ] T100 [P] Run dotnet format on src/S7Tools.sln - ensure code style compliance with EditorConfig
-- [ ] T101 [P] Add XML documentation to all public APIs in IBootloaderService, IJobScheduler, IResourceCoordinator interfaces - document method contracts, exceptions, thread safety guarantees
-- [ ] T102 [P] Review and remove any TODO/HACK comments - address technical debt or create GitHub issues for deferred work
+- [x] T100 [P] Run dotnet format on src/S7Tools.sln - ensure code style compliance with EditorConfig
+- [x] T101 [P] Add XML documentation to all public APIs in IBootloaderService, IJobScheduler, IResourceCoordinator interfaces - document method contracts, exceptions, thread safety guarantees
+- [x] T102 [P] Review and remove any TODO/HACK comments - address technical debt or create GitHub issues for deferred work
 
 ### Performance Validation
 

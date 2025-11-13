@@ -15,7 +15,7 @@ namespace S7Tools.ViewModels.Layout;
 public sealed class TaskManagerShellViewModel : ViewModelBase
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly TaskRunnerViewModel _taskRunnerViewModel;
+    private readonly TaskManagerViewModel _taskManagerViewModel;
     private readonly ActiveTasksViewModel _activeTasksViewModel;
     private readonly ScheduledTasksViewModel _scheduledTasksViewModel;
     private readonly HistoryTasksViewModel _historyTasksViewModel;
@@ -24,7 +24,7 @@ public sealed class TaskManagerShellViewModel : ViewModelBase
     public TaskManagerShellViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _taskRunnerViewModel = _serviceProvider.GetRequiredService<TaskRunnerViewModel>();
+        _taskManagerViewModel = _serviceProvider.GetRequiredService<TaskManagerViewModel>();
         _activeTasksViewModel = _serviceProvider.GetRequiredService<ActiveTasksViewModel>();
         _scheduledTasksViewModel = _serviceProvider.GetRequiredService<ScheduledTasksViewModel>();
         _historyTasksViewModel = _serviceProvider.GetRequiredService<HistoryTasksViewModel>();
@@ -32,7 +32,7 @@ public sealed class TaskManagerShellViewModel : ViewModelBase
 
         Categories = new ObservableCollection<string>(new[]
         {
-            "Task Runner",
+            "Task Manager",
             "Task Creator",
             "Active Tasks",
             "Scheduled",
@@ -80,12 +80,12 @@ public sealed class TaskManagerShellViewModel : ViewModelBase
     {
         return category switch
         {
-            "Task Runner" => _taskRunnerViewModel,
+            "Task Manager" => _taskManagerViewModel,
             "Active Tasks" => _activeTasksViewModel,
             "Scheduled" => _scheduledTasksViewModel,
             "History" => _historyTasksViewModel,
             "Task Creator" => _taskCreatorViewModel,
-            _ => _taskRunnerViewModel
+            _ => _taskManagerViewModel
         };
     }
 }

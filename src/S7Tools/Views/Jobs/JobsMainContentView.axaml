@@ -305,6 +305,148 @@
         </StackPanel>
       </Border>
 
+      <!-- Task Integration Section -->
+      <Border Background="#252526"
+              BorderBrush="#464647"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <!-- Task Integration Title -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+              <icons:Icon Value="fa-solid fa-tasks" Width="20" Height="20" Foreground="#28A745" />
+              <TextBlock Text="Task Integration"
+                         FontSize="18"
+                         FontWeight="SemiBold"
+                         Foreground="#CCCCCC"
+                         VerticalAlignment="Center" />
+            </StackPanel>
+          </Grid>
+
+          <!-- Task Action Buttons -->
+          <StackPanel Spacing="12" IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="Create tasks from selected job profile:"
+                       FontSize="14"
+                       Foreground="#CCCCCC"
+                       Margin="0,0,0,8" />
+
+            <!-- Task Creation Buttons Grid -->
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+              <!-- Create Task Button -->
+              <Button Grid.Column="0"
+                      Height="60"
+                      Background="#28A745"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Command="{Binding CreateTaskFromJobCommand}"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      Padding="12">
+                <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-plus-circle" Width="20" Height="20" />
+                  <TextBlock Text="Create Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
+                  <TextBlock Text="Create with normal priority" FontSize="10" Foreground="#E0E0E0" TextAlignment="Center" />
+                </StackPanel>
+              </Button>
+
+              <!-- Schedule Task Button -->
+              <Button Grid.Column="1"
+                      Height="60"
+                      Background="#0E639C"
+                      Foreground="White"
+                      BorderThickness="0"
+                      Command="{Binding ScheduleTaskFromJobCommand}"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      Padding="12">
+                <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-clock" Width="20" Height="20" />
+                  <TextBlock Text="Schedule Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
+                  <TextBlock Text="Schedule for future execution" FontSize="10" Foreground="#E0E0E0" TextAlignment="Center" />
+                </StackPanel>
+              </Button>
+
+              <!-- Enqueue Task Button -->
+              <Button Grid.Column="2"
+                      Height="60"
+                      Background="#FFC107"
+                      Foreground="#1E1E1E"
+                      BorderThickness="0"
+                      Command="{Binding EnqueueTaskFromJobCommand}"
+                      HorizontalContentAlignment="Stretch"
+                      VerticalContentAlignment="Stretch"
+                      Padding="12">
+                <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-play-circle" Width="20" Height="20" />
+                  <TextBlock Text="Enqueue Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
+                  <TextBlock Text="Add to execution queue" FontSize="10" Foreground="#2E2E2E" TextAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </Grid>
+
+            <!-- Task Info Box -->
+            <Border Background="#1E1E1E"
+                    BorderBrush="#464647"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Padding="12">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                  <icons:Icon Grid.Column="0" Value="fa-solid fa-info-circle" Width="16" Height="16" Foreground="#0E639C" VerticalAlignment="Top" Margin="0,2,0,0" />
+                  <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Text="Task Creation Options:"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="#CCCCCC" />
+                    <TextBlock FontSize="11" Foreground="#858585" TextWrapping="Wrap">
+                      <Run Text="• " />
+                      <Run Text="Create Task" FontWeight="SemiBold" />
+                      <Run Text=": Creates a task that can be started manually from Task Manager" />
+                    </TextBlock>
+                    <TextBlock FontSize="11" Foreground="#858585" TextWrapping="Wrap">
+                      <Run Text="• " />
+                      <Run Text="Schedule Task" FontWeight="SemiBold" />
+                      <Run Text=": Creates a task scheduled for automatic execution at a specific date/time" />
+                    </TextBlock>
+                    <TextBlock FontSize="11" Foreground="#858585" TextWrapping="Wrap">
+                      <Run Text="• " />
+                      <Run Text="Enqueue Task" FontWeight="SemiBold" />
+                      <Run Text=": Creates and immediately queues a task for execution when resources are available" />
+                    </TextBlock>
+                  </StackPanel>
+                </Grid>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <!-- No Selection Message -->
+          <Border Background="#1E1E1E"
+                  BorderBrush="#464647"
+                  BorderThickness="1"
+                  CornerRadius="4"
+                  Padding="16"
+                  IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNull}}">
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+              <icons:Icon Value="fa-solid fa-hand-pointer" Width="32" Height="32" Foreground="#666666" />
+              <TextBlock Text="Select a job profile to create tasks"
+                         Foreground="#858585"
+                         FontStyle="Italic"
+                         HorizontalAlignment="Center" />
+              <TextBlock Text="Tasks execute the selected job configuration on PLC devices"
+                         Foreground="#666666"
+                         FontSize="11"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+
       <!-- Import/Export Section -->
       <Border Background="#252526"
               BorderBrush="#464647"

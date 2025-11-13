@@ -472,6 +472,145 @@ public class MyService
 - Consistent UI behavior
 - Easier maintenance and testing
 
+### 6. Bootloader Integration Architecture
+
+**Problem**: Complex multi-stage PLC memory dumping workflow with resource coordination
+**Solution**: Job Scheduler with Resource Coordinator and Adapter Pattern for bootloader integration
+
+#### Job Scheduler Pattern
+
+```mermaid
+flowchart TD
+    JobProfile[Job Profile] -->|Enqueue| Scheduler[Job Scheduler]
+    Scheduler -->|Check| Coordinator[Resource Coordinator]
+    Coordinator -->|Available?| Execute[Execute Job]
+    Coordinator -->|Conflict| Queue[Queued Jobs]
+    Queue -->|Resources Free| Execute
+    Execute -->|Stages| Bootloader[Bootloader Service]
+    Bootloader -->|Progress| UI[UI Updates]
+```
+
+**Components**:
+
+- **Job Scheduler** (`ITaskScheduler`) - Manages job queue, state transitions, parallel execution
+- **Resource Coordinator** (`IResourceCoordinator`) - Prevents resource conflicts (serial ports, TCP ports, modbus connections)
+- **Bootloader Service** (`IBootloaderService`) - Orchestrates 7-stage memory dump workflow
+- **Job Profile** (`JobProfile`) - Reusable configuration templates for memory dumps
+
+**7-Stage Bootloader Workflow**:
+
+1. **Socat Setup** - Launch TCP/UDP bridge for serial communication
+2. **Power Cycle** - Reset PLC via modbus-controlled power supply
+3. **Handshake** - Establish bootloader connection during boot window
+4. **Stager Install** - Upload first-stage payload
+5. **Dumper Install** - Upload memory dump payload
+6. **Memory Dump** - Extract firmware/bootloader regions
+7. **Teardown** - Clean up resources (socat, power, connections)
+
+**Resource Coordination Pattern**:
+
+```csharp
+// Resource acquisition with conflict detection
+public bool TryAcquire(IEnumerable<ResourceKey> resources)
+{
+    // Atomic check-and-acquire across all resources
+    var availableResources = resources.Where(r => !_lockedResources.ContainsKey(r));
+    if (availableResources.Count() != resources.Count())
+        return false; // Conflict detected
+
+    // Acquire all resources atomically
+    foreach (var resource in resources)
+        _lockedResources[resource] = DateTime.UtcNow;
+
+    return true;
+}
+```
+
+**Snapshot-Based Parallel Execution**:
+
+```csharp
+// Collect ALL jobs that can start
+var jobsToStart = new List<Job>();
+foreach (var job in queuedJobs)
+{
+    if (_resourceCoordinator.TryAcquire(job.Resources))
+        jobsToStart.Add(job);
+}
+
+// Update ALL states synchronously (fires events before async work)
+foreach (var job in jobsToStart)
+{
+    job.State = JobState.Running;
+    JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(job));
+}
+
+// Launch ALL tasks asynchronously in parallel
+foreach (var job in jobsToStart)
+{
+    Task.Run(() => ExecuteJobAsync(job));
+}
+```
+
+**Benefits**:
+
+- **Parallel Execution**: Multiple jobs run simultaneously when resources don't conflict
+- **Resource Safety**: Prevents serial port/TCP port conflicts automatically
+- **Progress Tracking**: Real-time progress updates for all 7 bootloader stages
+- **Error Recovery**: Automatic resource cleanup on failure/cancellation
+- **Reusable Profiles**: Job templates for common memory dump scenarios
+
+#### Adapter Pattern for Reference Code Integration
+
+**Problem**: Integrate existing bootloader reference code (C/Python) without rewriting
+**Solution**: Adapter services wrap serial, socat, power supply, and PLC client operations
+
+**Adapter Services**:
+
+- `ISerialPortService` - Wraps stty configuration and serial port management
+- `ISocatService` - Wraps socat process lifecycle (start, stop, status)
+- `IPowerSupplyService` - Wraps modbus communication for power control
+- `IPlcClient` - Wraps bootloader protocol (handshake, payload upload, memory dump)
+
+**Example Adapter Implementation**:
+
+```csharp
+public class SocatService : ISocatService
+{
+    public async Task<SocatProcessInfo> StartSocatAsync(
+        SocatConfiguration config,
+        string serialDevice,
+        CancellationToken ct)
+    {
+        // Build socat command from configuration
+        string command = BuildSocatCommand(config, serialDevice);
+
+        // Launch process via adapter
+        var process = Process.Start(new ProcessStartInfo
+        {
+            FileName = "/usr/bin/socat",
+            Arguments = command,
+            RedirectStandardOutput = true
+        });
+
+        // Return process info for tracking
+        return new SocatProcessInfo
+        {
+            ProcessId = process.Id,
+            TcpPort = config.Port,
+            SerialDevice = serialDevice,
+            IsRunning = true
+        };
+    }
+}
+```
+
+**Benefits**:
+
+- **Code Reuse**: Leverage existing bootloader reference implementation
+- **Testability**: Mock adapters for unit testing without hardware
+- **Flexibility**: Easy to swap implementations (e.g., native .NET serial instead of stty)
+- **Cross-Platform**: Adapter handles OS-specific differences
+
 ## User Experience Philosophy
 
 ### VSCode-Inspired Design
