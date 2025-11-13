@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels.Tasks"
+             xmlns:jobs="using:S7Tools.Core.Models.Jobs"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Tasks.TaskManagerView"
              x:DataType="vm:TaskManagerViewModel">
@@ -69,14 +70,14 @@
       </Grid>
     </Border>
 
-    <!-- Body: Active tasks list -->
-    <DataGrid Grid.Row="2" ItemsSource="{Binding ActiveTasks}"
+    <!-- Body: All actionable tasks list (Created, Queued, Scheduled, Active) -->
+    <DataGrid Grid.Row="2" ItemsSource="{Binding AllActionableTasks}"
               IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
               GridLinesVisibility="Horizontal" HeadersVisibility="Column" Margin="16,0,16,0">
       <DataGrid.Columns>
         <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
         <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
-        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
+        <DataGridTextColumn Header="State" Binding="{Binding State}" Width="100" />
         <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="100" />
         <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
         <DataGridTextColumn Header="Elapsed" Binding="{Binding ExecutionTime}" Width="80" />
@@ -84,14 +85,16 @@
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate>
               <StackPanel Orientation="Horizontal" Spacing="4">
+                <Button Content="Start" FontSize="10" Padding="6,2"
+                        Command="{Binding $parent[UserControl].DataContext.StartTaskCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="Start this task"
+                        IsVisible="{Binding State, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static jobs:TaskState.Created}}" />
                 <Button Content="Stop" FontSize="10" Padding="6,2"
                         Command="{Binding $parent[UserControl].DataContext.StopTaskCommand}"
                         CommandParameter="{Binding}"
-                        ToolTip.Tip="Stop this task" />
-                <Button Content="Details" FontSize="10" Padding="6,2"
-                        Command="{Binding $parent[UserControl].DataContext.CreateTaskCommand}"
-                        CommandParameter="{Binding}"
-                        ToolTip.Tip="Show task details" />
+                        ToolTip.Tip="Stop this task"
+                        IsVisible="{Binding CanCancel}" />
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>

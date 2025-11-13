@@ -148,6 +148,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     private readonly IDialogService _dialogService;
     private readonly IViewModelFactory? _viewModelFactory;
     private readonly ITaskScheduler? _taskScheduler;
+    private readonly IActivityBarService? _activityBarService;
     private readonly CompositeDisposable _localDisposables = new();
 
     // Job-specific collections for UI organization
@@ -165,6 +166,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
     /// <param name="viewModelFactory">The view model factory for creating child ViewModels.</param>
     /// <param name="taskScheduler">The task scheduler service for creating tasks from jobs.</param>
+    /// <param name="activityBarService">The activity bar service for navigation.</param>
     public JobsManagementViewModel(
         ILogger<JobsManagementViewModel> logger,
         IJobManager jobManager,
@@ -172,7 +174,8 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         IDialogService dialogService,
         IUIThreadService uiThreadService,
         IViewModelFactory? viewModelFactory = null,
-        ITaskScheduler? taskScheduler = null)
+        ITaskScheduler? taskScheduler = null,
+        IActivityBarService? activityBarService = null)
         : base(logger, profileDialogService, dialogService, uiThreadService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -182,6 +185,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _viewModelFactory = viewModelFactory;
         _taskScheduler = taskScheduler;
+        _activityBarService = activityBarService;
 
         SetupJobSpecificCommands();
         SetupJobCollections();
@@ -879,10 +883,29 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             if (navigateToTaskManager)
             {
-                // TODO: Implement navigation to Task Manager activity
-                // This will require an INavigationService or IActivityBarService reference
-                _logger.LogInformation("User requested navigation to Task Manager (not yet implemented)");
-                StatusMessage = "Navigation to Task Manager not yet implemented - please use Activity Bar";
+                // Navigate to Task Manager using IActivityBarService
+                if (_activityBarService != null)
+                {
+                    await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                    {
+                        bool navigationSuccess = _activityBarService.SelectItem("taskmanager");
+                        if (navigationSuccess)
+                        {
+                            _logger.LogInformation("Successfully navigated to Task Manager");
+                            StatusMessage = "Navigated to Task Manager";
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to navigate to Task Manager - activity bar item not found");
+                            StatusMessage = "Task Manager navigation failed - please use Activity Bar";
+                        }
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("Activity bar service not available for navigation");
+                    StatusMessage = "Task Manager navigation not available - please use Activity Bar";
+                }
             }
         }
         catch (Exception ex)

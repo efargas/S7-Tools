@@ -175,6 +175,26 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
+    /// Gets a combined collection of all actionable tasks (Created, Queued, and Active).
+    /// </summary>
+    /// <remarks>
+    /// Provides a unified view of tasks that need user attention or are in progress.
+    /// This includes newly created tasks waiting to start, queued tasks, and actively running tasks.
+    /// Used for the main task grid view to show all tasks that aren't finished.
+    /// </remarks>
+    public IEnumerable<TaskExecution> AllActionableTasks
+    {
+        get
+        {
+            return CreatedTasks
+                .Concat(QueuedTasks)
+                .Concat(ScheduledTasks)
+                .Concat(ActiveTasks)
+                .OrderBy(t => t.CreatedAt);
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the currently selected task across all collections.
     /// </summary>
     /// <remarks>
@@ -592,6 +612,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         // Update resource utilization summary
         int activeResourceCount = ActiveTasks.SelectMany(t => t.LockedResources).Distinct().Count();
         ResourceUtilization = $"{activeResourceCount} resources in use";
+
+        // Notify that AllActionableTasks has changed (since it's computed from multiple collections)
+        this.RaisePropertyChanged(nameof(AllActionableTasks));
     }
 
     #endregion
