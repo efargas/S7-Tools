@@ -15,6 +15,7 @@ public sealed class JobScheduler : IJobScheduler
     private readonly IResourceCoordinator _resources;
     private readonly IBootloaderService _bootloader;
     private readonly ConcurrentDictionary<int, Job> _jobs = new();
+    private readonly ConcurrentDictionary<int, Task> _runningJobs = new();
     private readonly SemaphoreSlim _schedulerLock = new(1, 1);
     private CancellationTokenSource? _schedulerCts;
     private Task? _schedulerTask;
@@ -185,6 +186,23 @@ public sealed class JobScheduler : IJobScheduler
         }
     }
 
+    /// <summary>
+    /// Extracts resource keys from a job's profile set for resource coordination.
+    /// </summary>
+    /// <param name="profileSet">The job profile set containing resource configurations.</param>
+    /// <returns>Array of resource keys for serial port, TCP port, and modbus connection.</returns>
+    private static ResourceKey[] ExtractResources(JobProfileSet profileSet)
+    {
+        ArgumentNullException.ThrowIfNull(profileSet);
+
+        return new[]
+        {
+            new ResourceKey("serial", profileSet.Serial.Device),
+            new ResourceKey("tcp", profileSet.Socat.Port.ToString()),
+            new ResourceKey("modbus", $"{profileSet.Power.Host}:{profileSet.Power.Port}")
+        };
+    }
+
     private async Task ProcessQueueAsync(CancellationToken cancellationToken)
     {
         _logger.LogDebug("Scheduler queue processing started");
@@ -193,10 +211,26 @@ public sealed class JobScheduler : IJobScheduler
         {
             try
             {
-                // Find queued jobs
+                // STEP 1: Clean up completed jobs
+                foreach (var kvp in _runningJobs.ToArray())
+                {
+                    if (kvp.Value.IsCompleted)
+                    {
+                        _runningJobs.TryRemove(kvp.Key, out _);
+                        _logger.LogDebug("Removed completed job {JobId} from running jobs", kvp.Key);
+                    }
+                }
+
+                // STEP 2: Find queued jobs that can start
                 Job[] queuedJobs = _jobs.Values
                     .Where(j => j.State == JobState.Queued)
                     .ToArray();
+
+                _logger.LogDebug("Found {Count} queued jobs, {RunningCount} currently running",
+                    queuedJobs.Length, _runningJobs.Count);
+
+                // STEP 3: Collect ALL jobs that can acquire resources (snapshot approach)
+                var jobsToStart = new List<(Job job, ResourceKey[] resources)>();
 
                 foreach (Job job in queuedJobs)
                 {
@@ -205,17 +239,58 @@ public sealed class JobScheduler : IJobScheduler
                         break;
                     }
 
-                    // Try to acquire resources (stub - needs actual resource extraction)
-                    var resources = new[] { new ResourceKey("serial", "/dev/ttyUSB0") };
+                    if (_runningJobs.ContainsKey(job.Id))
+                    {
+                        continue;
+                    }
 
+                    ResourceKey[] resources = ExtractResources(job.ProfileSet);
+
+                    // Try to acquire - if successful, add to batch
                     if (_resources.TryAcquire(resources))
                     {
-                        // Start execution in background
-                        _ = ExecuteJobAsync(job, resources, cancellationToken);
+                        jobsToStart.Add((job, resources));
+                        _logger.LogDebug("Reserved resources for job {JobId}", job.Id);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Job {JobId} waiting for resources: {Resources}",
+                            job.Id, string.Join(", ", resources.Select(r => $"{r.Kind}:{r.Id}")));
                     }
                 }
 
-                // Wait before next cycle
+                _logger.LogInformation("Starting batch of {Count} jobs simultaneously", jobsToStart.Count);
+
+                // STEP 4: Update ALL states synchronously FIRST
+                foreach (var (job, resources) in jobsToStart)
+                {
+                    Job runningJob = job with
+                    {
+                        State = JobState.Running,
+                        StartedAt = DateTime.UtcNow,
+                        ModifiedAt = DateTime.UtcNow
+                    };
+                    _jobs[job.Id] = runningJob;
+
+                    // Fire event synchronously (CRITICAL for maxConcurrent tracking)
+                    JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+                        job.Id,
+                        JobState.Queued,
+                        JobState.Running,
+                        $"Starting bootloader operation (batch of {jobsToStart.Count})"));
+                }
+
+                // STEP 5: Launch ALL tasks AFTER state changes complete
+                foreach (var (job, resources) in jobsToStart)
+                {
+                    Job runningJob = _jobs[job.Id];  // Get updated job with Running state
+                    Task executionTask = Task.Run(
+                        () => ExecuteJobAsync(runningJob, resources, cancellationToken),
+                        cancellationToken);
+                    _runningJobs.TryAdd(job.Id, executionTask);
+                }
+
+                // STEP 6: Wait before next cycle (500ms polling interval)
                 await Task.Delay(500, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
@@ -228,6 +303,13 @@ public sealed class JobScheduler : IJobScheduler
             }
         }
 
+        // Wait for all running jobs to complete on shutdown
+        if (_runningJobs.Any())
+        {
+            _logger.LogInformation("Waiting for {Count} running jobs to complete", _runningJobs.Count);
+            await Task.WhenAll(_runningJobs.Values).ConfigureAwait(false);
+        }
+
         _logger.LogDebug("Scheduler queue processing stopped");
     }
 
@@ -235,29 +317,57 @@ public sealed class JobScheduler : IJobScheduler
     {
         try
         {
-            // Update to Running
-            Job runningJob = job with
+            // Job is already in Running state (transitioned in ProcessQueueAsync)
+            _logger.LogInformation("Job {JobId} executing bootloader operation", job.Id);
+
+            // STEP 1: Execute actual bootloader operation
+            var progress = new Progress<(string stage, double percent)>(p =>
             {
-                State = JobState.Running,
-                StartedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow
-            };
-            _jobs[job.Id] = runningJob;
+                // Update job progress
+                double percentage = p.percent;
+                string operation = GetUserFriendlyOperationName(p.stage);
 
-            JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
-                job.Id,
-                JobState.Queued,
-                JobState.Running,
-                "Starting bootloader operation"));
+                Job progressJob = _jobs[job.Id] with
+                {
+                    Progress = percentage,
+                    CurrentOperation = operation,
+                    ModifiedAt = DateTime.UtcNow
+                };
+                _jobs[job.Id] = progressJob;
 
-            // Execute (stub implementation for now)
-            await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
+                // Raise progress event
+                JobProgressChanged?.Invoke(this, new JobProgressChangedEventArgs(
+                    job.Id,
+                    percentage,
+                    operation));
 
-            // Complete
-            Job completedJob = runningJob with
+                _logger.LogDebug("Job {JobId} progress: {Stage} ({Percent:F1}%)",
+                    job.Id, operation, percentage);
+            });
+
+            // Execute bootloader dump
+            byte[] dumpData = await _bootloader.DumpAsync(
+                job.ProfileSet,
+                progress,
+                cancellationToken).ConfigureAwait(false);
+
+            // STEP 2: Save dump data to output path
+            string outputPath = job.ProfileSet.OutputPath;
+            string filename = $"dump_{job.Id}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.bin";
+            string fullPath = Path.Combine(outputPath, filename);
+
+            Directory.CreateDirectory(outputPath); // Ensure directory exists
+            await File.WriteAllBytesAsync(fullPath, dumpData, cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Job {JobId} dump saved to {Path} ({Size} bytes)",
+                job.Id, fullPath, dumpData.Length);
+
+            // STEP 3: Transition to Completed state
+            Job completedJob = job with
             {
                 State = JobState.Completed,
                 Progress = 100.0,
+                CurrentOperation = "Complete",
                 CompletedAt = DateTime.UtcNow,
                 ModifiedAt = DateTime.UtcNow
             };
@@ -269,11 +379,33 @@ public sealed class JobScheduler : IJobScheduler
                 JobState.Completed,
                 null));
 
-            _logger.LogInformation("Job {JobId} completed successfully", job.Id);
+            _logger.LogInformation("✅ Job {JobId} completed successfully", job.Id);
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellation is expected - transition to Canceled state
+            Job canceledJob = job with
+            {
+                State = JobState.Canceled,
+                ErrorMessage = "Operation canceled by user",
+                CompletedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            };
+            _jobs[job.Id] = canceledJob;
+
+            JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+                job.Id,
+                JobState.Running,
+                JobState.Canceled,
+                "Operation canceled"));
+
+            _logger.LogWarning("Job {JobId} canceled", job.Id);
+            throw; // Re-throw to propagate cancellation
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Job {JobId} failed", job.Id);
+            // Unexpected error - transition to Failed state
+            _logger.LogError(ex, "❌ Job {JobId} failed: {ErrorMessage}", job.Id, ex.Message);
 
             Job failedJob = job with
             {
@@ -289,10 +421,34 @@ public sealed class JobScheduler : IJobScheduler
                 JobState.Running,
                 JobState.Failed,
                 ex.Message));
+
+            // DO NOT re-throw - error handled, resources will be released in finally
         }
         finally
         {
+            // CRITICAL: Always release resources, even on exception or cancellation
             _resources.Release(resources);
+
+            _logger.LogInformation("Resources released for job {JobId}: {Resources}",
+                job.Id, string.Join(", ", resources.Select(r => $"{r.Kind}:{r.Id}")));
         }
+    }
+
+    /// <summary>
+    /// Converts technical stage names to user-friendly operation descriptions.
+    /// </summary>
+    private static string GetUserFriendlyOperationName(string stage)
+    {
+        return stage switch
+        {
+            "socat_setup" => "Setting up network bridge",
+            "power_cycle" => "Power cycling PLC",
+            "handshake" => "Establishing bootloader connection",
+            "stager_install" => "Installing stager payload",
+            "memory_dump" => "Dumping memory",
+            "teardown" => "Cleaning up resources",
+            "complete" => "Operation complete",
+            _ => stage.Replace("_", " ")
+        };
     }
 }

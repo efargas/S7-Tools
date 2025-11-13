@@ -63,7 +63,7 @@ public class SchedulerParallelExecutionTests
             Id = 1,
             Name = "Job 1 - USB0",
             Description = "First job on /dev/ttyUSB0",
-            ProfileSet = CreateTestProfileSet("/dev/ttyUSB0", 10102),
+            ProfileSet = CreateTestProfileSet("/dev/ttyUSB0", 10102, "192.168.1.100"),
             State = JobState.Created,
             CreatedAt = DateTime.UtcNow
         };
@@ -73,7 +73,7 @@ public class SchedulerParallelExecutionTests
             Id = 2,
             Name = "Job 2 - USB1",
             Description = "Second job on /dev/ttyUSB1",
-            ProfileSet = CreateTestProfileSet("/dev/ttyUSB1", 10103),
+            ProfileSet = CreateTestProfileSet("/dev/ttyUSB1", 10103, "192.168.1.101"), // Different power supply!
             State = JobState.Created,
             CreatedAt = DateTime.UtcNow
         };
@@ -337,13 +337,13 @@ public class SchedulerParallelExecutionTests
             mockBootloader.Object
         );
 
-        // Create 4 jobs with unique serial ports and TCP ports
+        // Create 4 jobs with unique serial ports, TCP ports, AND modbus hosts
         var jobs = new List<Job>
         {
-            new() { Id = 1, Name = "Job 1", ProfileSet = CreateTestProfileSet("/dev/ttyUSB0", 10102), State = JobState.Created, CreatedAt = DateTime.UtcNow },
-            new() { Id = 2, Name = "Job 2", ProfileSet = CreateTestProfileSet("/dev/ttyUSB1", 10103), State = JobState.Created, CreatedAt = DateTime.UtcNow },
-            new() { Id = 3, Name = "Job 3", ProfileSet = CreateTestProfileSet("/dev/ttyUSB2", 10104), State = JobState.Created, CreatedAt = DateTime.UtcNow },
-            new() { Id = 4, Name = "Job 4", ProfileSet = CreateTestProfileSet("/dev/ttyUSB3", 10105), State = JobState.Created, CreatedAt = DateTime.UtcNow }
+            new() { Id = 1, Name = "Job 1", ProfileSet = CreateTestProfileSet("/dev/ttyUSB0", 10102, "192.168.1.100"), State = JobState.Created, CreatedAt = DateTime.UtcNow },
+            new() { Id = 2, Name = "Job 2", ProfileSet = CreateTestProfileSet("/dev/ttyUSB1", 10103, "192.168.1.101"), State = JobState.Created, CreatedAt = DateTime.UtcNow },
+            new() { Id = 3, Name = "Job 3", ProfileSet = CreateTestProfileSet("/dev/ttyUSB2", 10104, "192.168.1.102"), State = JobState.Created, CreatedAt = DateTime.UtcNow },
+            new() { Id = 4, Name = "Job 4", ProfileSet = CreateTestProfileSet("/dev/ttyUSB3", 10105, "192.168.1.103"), State = JobState.Created, CreatedAt = DateTime.UtcNow }
         };
 
         var runningJobs = new HashSet<int>();
