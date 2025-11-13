@@ -181,18 +181,24 @@ S7Tools uses Clean Architecture with categorized MVVM structure:
 
 ### Tests for User Story 2 (REQUIRED - Constitution Article III) ⚠️
 
-- [ ] T060 [P] [US2] Unit test for parallel execution with independent resources in tests/S7Tools.Core.Tests/Tasking/SchedulerTests.cs - test 2 jobs with different serials run concurrently (Arrange: job1 Serial:/dev/ttyUSB0, job2 Serial:/dev/ttyUSB1, mock BootloaderService with 2s delay, Act: enqueue both + start scheduler, wait 3s, Assert: both jobs State=Running or Completed, started within 1s of each other)
-- [ ] T061 [P] [US2] Unit test for sequential execution with conflicting resources in tests/S7Tools.Core.Tests/Tasking/SchedulerTests.cs - test 2 jobs with same serial run sequentially (Arrange: job1 Serial:/dev/ttyUSB0, job2 Serial:/dev/ttyUSB0, Act: enqueue both + start, wait until both complete, Assert: job1 completes before job2 starts)
-- [ ] T062 [P] [US2] Unit test for resource cleanup after job completion in tests/S7Tools.Core.Tests/Tasking/ResourceCoordinatorTests.cs - test resources released after job finishes (Arrange: acquire resources for job, Act: complete job and release, Assert: resources available for new job)
-- [ ] T063 [P] [US2] Unit test for resource cleanup after job failure in tests/S7Tools.Core.Tests/Tasking/SchedulerTests.cs - test resources released when job fails (Arrange: mock BootloaderService throwing exception, enqueue job, Act: wait for failure, Assert: resources released, GetLockedResources empty)
-- [ ] T064 [P] [US2] Integration test for 4 concurrent jobs in tests/S7Tools.Tests/Services/Bootloader/ConcurrencyTests.cs - test SC-002 requirement (Arrange: 4 jobs with unique serials/TCP ports, Act: enqueue all + start, Assert: all 4 running simultaneously)
+- [X] T060 [P] [US2] Unit test for parallel execution with independent resources in tests/S7Tools.Core.Tests/Tasking/SchedulerParallelExecutionTests.cs - test 2 jobs with different serials run concurrently (Arrange: job1 Serial:/dev/ttyUSB0, job2 Serial:/dev/ttyUSB1, mock BootloaderService with 2s delay, Act: enqueue both + start scheduler, wait 3s, Assert: both jobs State=Running or Completed, started within 1s of each other) ✅ CREATED - Failing as expected
+- [X] T061 [P] [US2] Unit test for sequential execution with conflicting resources in tests/S7Tools.Core.Tests/Tasking/SchedulerParallelExecutionTests.cs - test 2 jobs with same serial run sequentially (Arrange: job1 Serial:/dev/ttyUSB0, job2 Serial:/dev/ttyUSB0, Act: enqueue both + start, wait until both complete, Assert: job1 completes before job2 starts) ✅ CREATED - Passing (sequential already working)
+- [X] T062 [P] [US2] Unit test for resource cleanup after job completion in tests/S7Tools.Core.Tests/Tasking/SchedulerParallelExecutionTests.cs - test resources released after job finishes (Arrange: acquire resources for job, Act: complete job and release, Assert: resources available for new job) ✅ CREATED - Passing (cleanup working)
+- [X] T063 [P] [US2] Unit test for resource cleanup after job failure in tests/S7Tools.Core.Tests/Tasking/SchedulerParallelExecutionTests.cs - test resources released when job fails (Arrange: mock BootloaderService throwing exception, enqueue job, Act: wait for failure, Assert: resources released, GetLockedResources empty) ✅ CREATED - Failing as expected
+- [X] T064 [P] [US2] Integration test for 4 concurrent jobs in tests/S7Tools.Core.Tests/Tasking/SchedulerParallelExecutionTests.cs - test SC-002 requirement (Arrange: 4 jobs with unique serials/TCP ports, Act: enqueue all + start, Assert: all 4 running simultaneously) ✅ CREATED - Failing as expected
 
 ### Implementation for User Story 2
 
+**📖 Implementation Plan**: See `PHASE5_IMPLEMENTATION_PLAN.md` for detailed code snippets, before/after comparisons, and step-by-step guidance
+
 - [ ] T065 [US2] Enhance JobScheduler.ProcessQueueAsync in src/S7Tools/Services/Tasking/JobScheduler.cs - iterate entire queue each cycle to find ALL jobs with available resources, launch multiple jobs concurrently via Task.Run when resources don't conflict, track running jobs in ConcurrentDictionary<int, Task> to monitor completion
+  - 📝 **Implementation Notes**: Add `ExtractResources(JobProfileSet)` helper, rewrite ProcessQueueAsync with 4-step pattern (cleanup → scan → launch → wait), fixes T060/T064 tests
 - [ ] T066 [US2] Add automatic retry logic in src/S7Tools/Services/Tasking/JobScheduler.cs - when resource acquisition fails, leave job in Queued state, next queue cycle (500ms) retries acquisition automatically, log retry attempts with job ID and resource identifiers
+  - 📝 **Implementation Notes**: Already works (500ms polling), add retry counter and logging for visibility, see PHASE5_IMPLEMENTATION_PLAN.md T066
 - [ ] T067 [US2] Implement graceful resource cleanup in src/S7Tools/Services/Tasking/JobScheduler.cs - ensure resources released in finally block even on cancellation or exception, add resource release logging with ILogger for debugging
+  - 📝 **Implementation Notes**: Replace Task.Delay stub with actual BootloaderService.DumpAsync, add try-catch-finally with state transitions, fixes T063 test
 - [ ] T068 [US2] Add concurrency metrics to JobScheduler in src/S7Tools/Services/Tasking/JobScheduler.cs - track ActiveJobCount property, MaxConcurrentJobs property, TotalJobsExecuted counter, expose via GetStatisticsAsync() method
+  - 📝 **Implementation Notes**: Add Interlocked counters, create SchedulerStatistics record in Core, see PHASE5_IMPLEMENTATION_PLAN.md T068
 
 **Checkpoint**: User Story 2 complete - parallel execution verified with 4+ concurrent jobs, automatic queuing and retry working
 
