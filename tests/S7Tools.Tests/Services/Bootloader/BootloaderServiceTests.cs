@@ -8,10 +8,10 @@ using S7Tools.Services.Bootloader;
 namespace S7Tools.Tests.Services.Bootloader;
 
 /// <summary>
-/// Integration tests for the BootloaderService.
+/// Integration tests for the EnhancedBootloaderService.
 /// Tests the 7-stage workflow execution and resource failure handling.
 /// </summary>
-public class BootloaderServiceTests
+public class EnhancedBootloaderServiceTests
 {
     #region Test Helpers
 
@@ -111,13 +111,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -181,13 +182,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         var progressReports = new List<(string stage, double percent)>();
@@ -214,13 +216,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             Substitute.For<IPayloadProvider>(),
             Substitute.For<ISocatService>(),
             Substitute.For<IPowerSupplyService>(),
             serialPort,
-            _ => Substitute.For<IPlcClient>()
+            _ => Substitute.For<IPlcClient>(),
+            Substitute.For<IResourceCoordinator>()
         );
 
         var progress = new Progress<(string stage, double percent)>();
@@ -239,13 +242,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             Substitute.For<IPayloadProvider>(),
             Substitute.For<ISocatService>(),
             Substitute.For<IPowerSupplyService>(),
             serialPort,
-            _ => Substitute.For<IPlcClient>()
+            _ => Substitute.For<IPlcClient>(),
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -278,13 +282,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -316,13 +321,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -359,13 +365,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -410,13 +417,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -452,13 +460,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -498,13 +507,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();

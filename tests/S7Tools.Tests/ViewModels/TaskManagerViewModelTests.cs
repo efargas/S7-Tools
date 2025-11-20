@@ -23,6 +23,12 @@ public class TaskManagerViewModelTests
         var jobManager = new Mock<IJobManager>();
         var uiThreadService = new Mock<IUIThreadService>();
         var dialogService = new Mock<IDialogService>();
+        var taskDetailsViewModel = new Mock<TaskDetailsViewModel>(
+            new Mock<ILogger<TaskDetailsViewModel>>().Object,
+            new Mock<ISocatService>().Object,
+            new Mock<IPowerSupplyService>().Object,
+            new Mock<IEnhancedBootloaderService>().Object,
+            new Mock<IUIThreadService>().Object);
 
         // Act
         var viewModel = new TaskManagerViewModel(
@@ -30,7 +36,8 @@ public class TaskManagerViewModelTests
             taskScheduler.Object,
             jobManager.Object,
             uiThreadService.Object,
-            dialogService.Object);
+            dialogService.Object,
+            taskDetailsViewModel.Object);
 
         // Assert - Verify ViewModel was constructed with UIThreadService
         Assert.NotNull(viewModel);
@@ -46,13 +53,20 @@ public class TaskManagerViewModelTests
         var jobManager = new Mock<IJobManager>();
         var uiThreadService = new Mock<IUIThreadService>();
         var dialogService = new Mock<IDialogService>();
+        var taskDetailsViewModel = new Mock<TaskDetailsViewModel>(
+            new Mock<ILogger<TaskDetailsViewModel>>().Object,
+            new Mock<ISocatService>().Object,
+            new Mock<IPowerSupplyService>().Object,
+            new Mock<IEnhancedBootloaderService>().Object,
+            new Mock<IUIThreadService>().Object);
 
         var viewModel = new TaskManagerViewModel(
             logger.Object,
             taskScheduler.Object,
             jobManager.Object,
             uiThreadService.Object,
-            dialogService.Object);
+            dialogService.Object,
+            taskDetailsViewModel.Object);
 
         // Act
         viewModel.StatusMessage = "Test Message";
