@@ -311,7 +311,10 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             }
             finally
             {
-                // Always disconnect from power supply
+                // Always stop socat and disconnect from power supply
+                await _socat.StopSocatAsync(profiles.Socat.Port, cancellationToken).ConfigureAwait(false);
+                _logger.LogDebug("Socat bridge on port {Port} stopped", profiles.Socat.Port);
+
                 await _power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
                 _logger.LogDebug("Disconnected from power supply");
             }
