@@ -1,0 +1,124 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Tasks"
+             xmlns:jobs="using:S7Tools.Core.Models.Jobs"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
+             x:Class="S7Tools.Views.Tasks.TaskDetailsView"
+             x:DataType="vm:TaskDetailsViewModel">
+
+  <Grid RowDefinitions="Auto,Auto,*">
+    <!-- Header with Task Name -->
+    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
+            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="{Binding TaskExecution.JobName, FallbackValue='No Task Selected'}"
+                   FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+          <Border Background="{DynamicResource SystemAccentBrush}" CornerRadius="12" Padding="8,4">
+            <TextBlock Text="{Binding TaskExecution.State, FallbackValue='Unknown'}"
+                       Foreground="{DynamicResource SystemAltHighBrush}" FontSize="12" FontWeight="Medium" />
+          </Border>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Task Info Panel -->
+    <Border Grid.Row="1" Background="#252526" Padding="16" Margin="0,0,0,8">
+      <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="120,*">
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Task ID:" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TaskExecution.TaskId, FallbackValue='-'}" FontSize="12" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Progress:" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+          <TextBlock Text="{Binding TaskExecution.ProgressPercentage, StringFormat='{}{0:F1}%', FallbackValue='0%'}" FontSize="12" />
+          <TextBlock Text="-" FontSize="12" />
+          <TextBlock Text="{Binding TaskExecution.CurrentOperation, FallbackValue='Idle'}" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Started:" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TaskExecution.StartedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+
+        <TextBlock Grid.Row="3" Grid.Column="0" Text="Duration:" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TaskExecution.ExecutionTime, StringFormat='{}{0:mm\\:ss}', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+      </Grid>
+    </Border>
+
+    <!-- Tabs for Logs and Controls -->
+    <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
+      <!-- Main Log Tab -->
+      <TabItem Header="Main Log">
+        <ScrollViewer>
+          <TextBlock Text="{Binding MainLogContent, FallbackValue='No main log data'}"
+                     FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                     FontSize="11" Padding="8" TextWrapping="Wrap" />
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- Process/Socat Log Tab -->
+      <TabItem Header="Socat Log">
+        <ScrollViewer>
+          <TextBlock Text="{Binding ProcessLogContent, FallbackValue='No socat process log data'}"
+                     FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                     FontSize="11" Padding="8" TextWrapping="Wrap" />
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- Protocol Log Tab -->
+      <TabItem Header="Protocol Log">
+        <ScrollViewer>
+          <TextBlock Text="{Binding ProtocolLogContent, FallbackValue='No protocol log data'}"
+                     FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                     FontSize="11" Padding="8" TextWrapping="Wrap" />
+        </ScrollViewer>
+      </TabItem>
+
+      <!-- Manual Controls Tab -->
+      <TabItem Header="Manual Controls">
+        <ScrollViewer>
+          <StackPanel Spacing="12" Margin="16">
+            <TextBlock Text="Socat Server Control" FontWeight="SemiBold" FontSize="14" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Start Socat" Command="{Binding StartSocatCommand}"
+                      IsEnabled="{Binding CanStartSocat}"
+                      ToolTip.Tip="Manually start the socat bridge server" />
+              <Button Content="Stop Socat" Command="{Binding StopSocatCommand}"
+                      IsEnabled="{Binding CanStopSocat}"
+                      ToolTip.Tip="Manually stop the socat bridge server" />
+            </StackPanel>
+
+            <Separator Height="1" Margin="0,8,0,8" />
+
+            <TextBlock Text="Power Supply Control" FontWeight="SemiBold" FontSize="14" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Button Content="Power ON" Command="{Binding PowerOnCommand}"
+                      IsEnabled="{Binding CanControlPower}"
+                      ToolTip.Tip="Turn PLC power ON" />
+              <Button Content="Power OFF" Command="{Binding PowerOffCommand}"
+                      IsEnabled="{Binding CanControlPower}"
+                      ToolTip.Tip="Turn PLC power OFF" />
+              <Button Content="Power Cycle" Command="{Binding PowerCycleCommand}"
+                      IsEnabled="{Binding CanControlPower}"
+                      ToolTip.Tip="Power cycle the PLC (OFF -> ON)" />
+            </StackPanel>
+
+            <Separator Height="1" Margin="0,8,0,8" />
+
+            <TextBlock Text="Verification Results" FontWeight="SemiBold" FontSize="14" />
+            <Border Background="#1E1E1E" CornerRadius="4" Padding="12">
+              <TextBlock Text="{Binding ValidationResultText, FallbackValue='No validation data'}"
+                         FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+                         FontSize="11" TextWrapping="Wrap" />
+            </Border>
+
+            <Button Content="Run Validation" Command="{Binding RunValidationCommand}"
+                    HorizontalAlignment="Left"
+                    ToolTip.Tip="Run validation checks on task configuration" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+  </Grid>
+
+</UserControl>

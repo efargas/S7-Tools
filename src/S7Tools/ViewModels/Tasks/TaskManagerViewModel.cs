@@ -41,6 +41,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private readonly IJobManager _jobManager;
     private readonly IUIThreadService _uiThreadService;
     private readonly IDialogService _dialogService;
+    private readonly TaskDetailsViewModel _taskDetailsViewModel;
     private readonly CompositeDisposable _disposables = new();
 
     // State-based task collections for UI binding
@@ -73,23 +74,31 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// <param name="jobManager">The job manager service for accessing job configurations.</param>
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
     /// <param name="dialogService">The dialog service for user confirmations.</param>
+    /// <param name="taskDetailsViewModel">The task details view model for the details panel.</param>
     public TaskManagerViewModel(
         ILogger<TaskManagerViewModel> logger,
         ITaskScheduler taskScheduler,
         IJobManager jobManager,
         IUIThreadService uiThreadService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        TaskDetailsViewModel taskDetailsViewModel)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _taskDetailsViewModel = taskDetailsViewModel ?? throw new ArgumentNullException(nameof(taskDetailsViewModel));
 
         SetupCommands();
         SetupCollections();
         SetupAutoRefresh();
         SubscribeToTaskEvents();
+
+        // Wire up task selection to update details view
+        this.WhenAnyValue(x => x.SelectedTask)
+            .Subscribe(task => _taskDetailsViewModel.TaskExecution = task)
+            .DisposeWith(_disposables);
 
         // Initialize with current tasks
         _ = Task.Run(async () =>
@@ -108,6 +117,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     }
 
     #region Properties
+
+    /// <summary>
+    /// Gets the task details view model for the details panel.
+    /// </summary>
+    public TaskDetailsViewModel TaskDetailsViewModel => _taskDetailsViewModel;
 
     /// <summary>
     /// Gets the collection of tasks in the Created state.
