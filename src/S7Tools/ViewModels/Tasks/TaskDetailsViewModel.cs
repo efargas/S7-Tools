@@ -203,18 +203,13 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         // Auto-refresh logs every 2 seconds when task is running
         Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(2))
             .Where(_ => TaskExecution != null && TaskExecution.IsRunning)
-            .ObserveOn(RxApp.TaskpoolScheduler)
-            .Subscribe(async _ =>
-            {
-                try
-                {
-                    await RefreshLogsAsync().ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to auto-refresh logs for task {TaskId}", TaskExecution?.TaskId);
-                }
-            })
+            .Select(_ => Observable.FromAsync(() => RefreshLogsAsync()))
+            .Switch() // Ensures only one refresh operation runs at a time
+            .ObserveOn(RxApp.MainThreadScheduler) // Logging should be on a background thread, but this is an example
+            .Subscribe(
+                _ => { }, // Operation completed
+                ex => _logger.LogWarning(ex, "Failed to auto-refresh logs for task {TaskId}", TaskExecution?.TaskId)
+            )
             .DisposeWith(_disposables);
     }
 
