@@ -263,17 +263,12 @@ public static class ServiceCollectionExtensions
         // Add Resource Coordination Services
         services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
 
-        // Add Bootloader Services
+        // Add Consolidated Bootloader Services (EnhancedBootloaderService implements both interfaces)
+        services.TryAddSingleton<Services.Bootloader.EnhancedBootloaderService>();
         services.TryAddSingleton<IBootloaderService>(provider =>
-            new Services.Bootloader.BootloaderService(
-                provider.GetRequiredService<ILogger<Services.Bootloader.BootloaderService>>(),
-                provider.GetRequiredService<IPayloadProvider>(),
-                provider.GetRequiredService<ISocatService>(),
-                provider.GetRequiredService<IPowerSupplyService>(),
-                provider.GetRequiredService<ISerialPortService>(),
-                provider.GetRequiredService<Func<JobProfileSet, IPlcClient>>()
-            ));
-        services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
+            provider.GetRequiredService<Services.Bootloader.EnhancedBootloaderService>());
+        services.TryAddSingleton<IEnhancedBootloaderService>(provider =>
+            provider.GetRequiredService<Services.Bootloader.EnhancedBootloaderService>());
 
         // Add Payload Services
         services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();
