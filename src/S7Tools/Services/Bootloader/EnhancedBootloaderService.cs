@@ -312,11 +312,25 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             finally
             {
                 // Always stop socat and disconnect from power supply
-                await _socat.StopSocatAsync(profiles.Socat.Port, cancellationToken).ConfigureAwait(false);
-                _logger.LogDebug("Socat bridge on port {Port} stopped", profiles.Socat.Port);
+                try
+                {
+                    await _socat.StopSocatAsync(profiles.Socat.Port, cancellationToken).ConfigureAwait(false);
+                    _logger.LogDebug("Socat bridge on port {Port} stopped", profiles.Socat.Port);
+                }
+                catch (Exception teardownEx)
+                {
+                    _logger.LogWarning(teardownEx, "Failed to stop socat on port {Port} during teardown", profiles.Socat.Port);
+                }
 
-                await _power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
-                _logger.LogDebug("Disconnected from power supply");
+                try
+                {
+                    await _power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+                    _logger.LogDebug("Disconnected from power supply");
+                }
+                catch (Exception teardownEx)
+                {
+                    _logger.LogWarning(teardownEx, "Failed to disconnect power supply during teardown");
+                }
             }
         }
         catch (Exception ex)
