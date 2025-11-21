@@ -949,9 +949,6 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             // Refresh and select the imported job
             await LoadProfilesAsync();
             SelectedProfile = Profiles.FirstOrDefault(p => p.Id == addedJob.Id);
-
-            await _dialogService.ShowConfirmationAsync("Import Successful",
-                $"Job '{addedJob.Name}' has been imported successfully.");
         }
         catch (Exception ex)
         {
@@ -1015,9 +1012,6 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             StatusMessage = $"Job '{SelectedProfile.Name}' exported successfully";
             _logger.LogInformation("Job {JobId} ({JobName}) exported to {FilePath}",
                 SelectedProfile.Id, SelectedProfile.Name, filePath);
-
-            await _dialogService.ShowConfirmationAsync("Export Successful",
-                $"Job '{SelectedProfile.Name}' has been exported to:\n{filePath}");
         }
         catch (Exception ex)
         {

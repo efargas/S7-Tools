@@ -770,28 +770,12 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
 
         try
         {
-            // Create formatted port information text
-            string portInfo = $"""
-                Serial Port Information
-                =======================
-                Port Name: {SelectedPort.PortName}
-                Description: {SelectedPort.Description}
-                Manufacturer: {SelectedPort.Manufacturer}
-                """;
-
-            // Note: Full clipboard functionality is handled by a dedicated service,
-            // which is the recommended approach for keeping ViewModels platform-agnostic.
-            if (_clipboardService != null)
-            {
-                await _clipboardService.SetTextAsync(portInfo).ConfigureAwait(false);
-                StatusMessage = UIStrings.Status_PortInformationCopied;
-                _logger.LogInformation("Port information copied to clipboard for: {PortName}", SelectedPort.PortName);
-            }
-            else
-            {
-                _logger.LogWarning("Clipboard service is not available.");
-                StatusMessage = "Clipboard copy not available on this platform.";
-            }
+            // Note: Full clipboard functionality requires proper window/visual context
+            // which is not available in ViewModels. This functionality should be
+            // implemented in the View layer or through a proper clipboard service.
+            // For now, users can export to file as an alternative.
+            _logger.LogDebug("Clipboard copy requested for port: {PortName}", SelectedPort.PortName);
+            StatusMessage = "Clipboard copy not yet implemented - use Export instead";
         }
         catch (Exception ex)
         {
