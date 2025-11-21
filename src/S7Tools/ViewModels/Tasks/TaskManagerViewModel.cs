@@ -788,8 +788,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            // Check if scheduled time is in the past
-            if (scheduledTime < DateTime.Now)
+            // Check if scheduled time is in the past (allow 1-minute tolerance for "now")
+            if (scheduledTime < DateTime.Now.AddMinutes(-1))
             {
                 bool confirmPast = await _dialogService.ShowConfirmationAsync(
                     "Past Time Detected",
