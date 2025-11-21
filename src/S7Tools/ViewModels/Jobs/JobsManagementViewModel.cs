@@ -1146,8 +1146,9 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 return;
             }
 
+            var validationTime = DateTime.Now;
             // Check if scheduled time is in the past (allow 1-minute tolerance for "now")
-            if (scheduledTime < DateTime.Now.AddMinutes(-1))
+            if (scheduledTime < validationTime.AddMinutes(-1))
             {
                 bool confirmPast = await _dialogService.ShowConfirmationAsync(
                     "Past Time Detected",
