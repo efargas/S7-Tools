@@ -780,11 +780,19 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
                 """;
 
             // Note: Full clipboard functionality requires proper window/visual context
-            // which is not available in ViewModels. This functionality should be
-            // implemented in the View layer or through a proper clipboard service.
-            // For now, users can export to file as an alternative.
-            _logger.LogDebug("Clipboard copy requested for port: {PortName}", SelectedPort.PortName);
-            StatusMessage = "Clipboard copy not yet implemented - use Export instead";
+            // which is not available in ViewModels. A dedicated clipboard service is the
+            // recommended approach. For now, we use a scheduler to access the clipboard.
+            if (Avalonia.Application.Current?.Clipboard is { } clipboard)
+            {
+                await clipboard.SetTextAsync(portInfo);
+                StatusMessage = UIStrings.Status_PortInformationCopied;
+                _logger.LogInformation("Port information copied to clipboard for: {PortName}", SelectedPort.PortName);
+            }
+            else
+            {
+                _logger.LogWarning("Clipboard service is not available.");
+                StatusMessage = "Clipboard copy not available on this platform.";
+            }
         }
         catch (Exception ex)
         {
