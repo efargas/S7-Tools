@@ -783,7 +783,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             // which is the recommended approach for keeping ViewModels platform-agnostic.
             if (_clipboardService != null)
             {
-                await _clipboardService.SetTextAsync(portInfo);
+                await _clipboardService.SetTextAsync(portInfo).ConfigureAwait(false);
                 StatusMessage = UIStrings.Status_PortInformationCopied;
                 _logger.LogInformation("Port information copied to clipboard for: {PortName}", SelectedPort.PortName);
             }
