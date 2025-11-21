@@ -778,7 +778,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             }
 
             // Parse the scheduled time
-            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm", 
+            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm",
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None, out DateTime scheduledTime))
             {
@@ -1063,7 +1063,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             // Show job selection dialog
             string jobListText = string.Join("\n", jobList.Select((j, i) => $"{i + 1}. {j.Name}"));
             string message = $"Select a job to create a task from:\n\n{jobListText}";
-            
+
             var inputResult = await _dialogService.ShowInputAsync(
                 "Select Job",
                 message,
@@ -1078,7 +1078,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             }
 
             // Parse job selection
-            if (!int.TryParse(inputResult.Value, out int jobIndex) || 
+            if (!int.TryParse(inputResult.Value, out int jobIndex) ||
                 jobIndex < 1 || jobIndex > jobList.Count)
             {
                 StatusMessage = "Invalid job selection";

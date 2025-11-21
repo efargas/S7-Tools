@@ -723,7 +723,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             if (!JobTemplates.Any())
             {
                 StatusMessage = UIStrings.Status_NoTemplatesAvailable;
-                await _dialogService.ShowErrorAsync("No Templates", 
+                await _dialogService.ShowErrorAsync("No Templates",
                     "No job templates are available. Please save a job as a template first.");
                 return;
             }
@@ -731,7 +731,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             // Show template selection dialog
             string templateListText = string.Join("\n", JobTemplates.Select((t, i) => $"{i + 1}. {t.Name}"));
             string message = $"Select a template number:\n\n{templateListText}";
-            
+
             var inputResult = await _dialogService.ShowInputAsync(
                 "Select Template",
                 message,
@@ -745,11 +745,11 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
 
             // Parse template selection
-            if (!int.TryParse(inputResult.Value, out int templateIndex) || 
+            if (!int.TryParse(inputResult.Value, out int templateIndex) ||
                 templateIndex < 1 || templateIndex > JobTemplates.Count)
             {
                 StatusMessage = "Invalid template selection";
-                await _dialogService.ShowErrorAsync("Invalid Selection", 
+                await _dialogService.ShowErrorAsync("Invalid Selection",
                     $"Please enter a valid template number between 1 and {JobTemplates.Count}");
                 return;
             }
@@ -905,7 +905,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             JobProfile addedJob = await _jobManager.CreateAsync(importedJob);
 
             StatusMessage = $"Job '{addedJob.Name}' imported successfully";
-            _logger.LogInformation("Job imported from {FilePath}: {JobName} (ID: {JobId})", 
+            _logger.LogInformation("Job imported from {FilePath}: {JobName} (ID: {JobId})",
                 filePath, addedJob.Name, addedJob.Id);
 
             // Refresh and select the imported job
@@ -1104,7 +1104,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
 
             // Parse the scheduled time
-            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm", 
+            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm",
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None, out DateTime scheduledTime))
             {

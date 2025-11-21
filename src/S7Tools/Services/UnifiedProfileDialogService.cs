@@ -368,7 +368,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
             // Job profiles are created via the Job Wizard, not a simple dialog
             // Direct the user to use the Job Wizard instead
             _logger.LogInformation("Job creation should be done through Job Wizard");
-            
+
             // Return cancelled to indicate this operation should be done through the wizard
             return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Cancelled();
         }
@@ -389,7 +389,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
             // Job profiles are edited via the Job Wizard, not a simple dialog
             // Direct the user to use the Job Wizard instead
             _logger.LogInformation("Job editing should be done through Job Wizard");
-            
+
             // Return cancelled to indicate this operation should be done through the wizard
             return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Cancelled();
         }
