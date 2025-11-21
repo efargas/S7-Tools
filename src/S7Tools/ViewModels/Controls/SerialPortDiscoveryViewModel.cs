@@ -779,10 +779,12 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
                 Manufacturer: {SelectedPort.Manufacturer}
                 """;
 
-            // Note: Clipboard functionality requires a proper window context
-            // For now, log the information
-            _logger.LogInformation("Port information: {PortInfo}", portInfo);
-            StatusMessage = "Port information logged (clipboard not yet implemented)";
+            // Note: Full clipboard functionality requires proper window/visual context
+            // which is not available in ViewModels. This functionality should be
+            // implemented in the View layer or through a proper clipboard service.
+            // For now, users can export to file as an alternative.
+            _logger.LogDebug("Clipboard copy requested for port: {PortName}", SelectedPort.PortName);
+            StatusMessage = "Clipboard copy not yet implemented - use Export instead";
         }
         catch (Exception ex)
         {

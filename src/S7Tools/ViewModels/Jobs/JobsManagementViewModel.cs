@@ -806,7 +806,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             // Show template name input dialog
             var nameResult = await _dialogService.ShowInputAsync(
                 "Save as Template",
-                $"Save job '{SelectedProfile.Name}' as a template:",
+                $"Enter a name for the template based on job '{SelectedProfile.Name}':",
                 $"{SelectedProfile.Name} Template",
                 "Enter template name").ConfigureAwait(false);
 
@@ -816,22 +816,23 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 return;
             }
 
-            // Update the job name if user changed it
             string templateName = nameResult.Value;
-            if (templateName != SelectedProfile.Name)
-            {
-                // Update name before marking as template
-                SelectedProfile.Name = templateName;
-                await _jobManager.UpdateAsync(SelectedProfile);
-            }
 
+            // Mark the job as a template
             bool success = await _jobManager.SetAsTemplateAsync(SelectedProfile.Id, true);
 
             if (success)
             {
-                StatusMessage = string.Format(UIStrings.Status_JobSavedAsTemplate, SelectedProfile.Name);
-                _logger.LogInformation("Saved job {JobId} ({JobName}) as template",
-                    SelectedProfile.Id, SelectedProfile.Name);
+                // If the user wants a different name, update it after marking as template
+                if (templateName != SelectedProfile.Name)
+                {
+                    SelectedProfile.Name = templateName;
+                    await _jobManager.UpdateAsync(SelectedProfile);
+                }
+
+                StatusMessage = string.Format(UIStrings.Status_JobSavedAsTemplate, templateName);
+                _logger.LogInformation("Saved job {JobId} as template with name: {TemplateName}",
+                    SelectedProfile.Id, templateName);
 
                 // Refresh to update template collections
                 await LoadProfilesAsync();
@@ -886,11 +887,23 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             // Read and deserialize the job profile
             string jsonContent = await System.IO.File.ReadAllTextAsync(filePath);
-            var importedJob = System.Text.Json.JsonSerializer.Deserialize<JobProfile>(jsonContent);
+            JobProfile? importedJob = null;
+            
+            try
+            {
+                importedJob = System.Text.Json.JsonSerializer.Deserialize<JobProfile>(jsonContent);
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                StatusMessage = $"Invalid JSON format: {ex.Message}";
+                await _dialogService.ShowErrorAsync("Import Failed",
+                    $"The selected file contains invalid JSON:\n{ex.Message}");
+                return;
+            }
 
             if (importedJob == null)
             {
-                StatusMessage = "Failed to import job - invalid file format";
+                StatusMessage = "Failed to import job - file contains null or invalid data";
                 await _dialogService.ShowErrorAsync("Import Failed",
                     "The selected file does not contain a valid job profile.");
                 return;
