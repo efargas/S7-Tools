@@ -1157,7 +1157,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             {
                 bool confirmPast = await _dialogService.ShowConfirmationAsync(
                     "Past Time Detected",
-                    $"The specified time ({scheduledTime:yyyy-MM-dd HH:mm}) is more than 1 minute in the past.\n\n" +
+                    $"The specified time ({scheduledTime:yyyy-MM-dd HH:mm}) is in the past.\n\n" +
                     "The task will be queued immediately. Continue?").ConfigureAwait(false);
 
                 if (!confirmPast)
