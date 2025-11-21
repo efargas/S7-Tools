@@ -830,7 +830,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                     await _jobManager.UpdateAsync(SelectedProfile);
                 }
 
-                StatusMessage = string.Format(UIStrings.Status_JobSavedAsTemplate, templateName);
+                StatusMessage = $"{UIStrings.Status_JobSavedAsTemplate} {templateName}";
                 _logger.LogInformation("Saved job {JobId} as template with name: {TemplateName}",
                     SelectedProfile.Id, templateName);
 
