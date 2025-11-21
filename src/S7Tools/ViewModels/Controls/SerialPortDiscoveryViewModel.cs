@@ -27,6 +27,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     private readonly IUIThreadService _uiThreadService;
     private readonly IUIRefreshService _uiRefreshService;
     private readonly ILogger<SerialPortDiscoveryViewModel> _logger;
+    private readonly IFileDialogService? _fileDialogService;
     private readonly CompositeDisposable _disposables = new();
     private readonly Timer _scanTimer;
     private CancellationTokenSource? _scanCancellationTokenSource;
@@ -43,16 +44,19 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="uiRefreshService">The UI refresh service.</param>
     /// <param name="logger">The logger.</param>
+    /// <param name="fileDialogService">The optional file dialog service for export functionality.</param>
     public SerialPortDiscoveryViewModel(
         ISerialPortService portService,
         IUIThreadService uiThreadService,
         IUIRefreshService uiRefreshService,
-        ILogger<SerialPortDiscoveryViewModel> logger)
+        ILogger<SerialPortDiscoveryViewModel> logger,
+        IFileDialogService? fileDialogService = null)
     {
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _uiRefreshService = uiRefreshService ?? throw new ArgumentNullException(nameof(uiRefreshService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _fileDialogService = fileDialogService;
 
         // Initialize collections
         DiscoveredPorts = new ObservableCollection<SerialPortInfo>();
@@ -694,11 +698,58 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         {
             StatusMessage = UIStrings.Status_ExportingScanResults;
 
-            // TODO: Implement file dialog and export functionality
-            await Task.CompletedTask;
+            if (_fileDialogService == null)
+            {
+                _logger.LogWarning("File dialog service not available - cannot export results");
+                StatusMessage = "Export functionality not available - file dialog service not configured";
+                return;
+            }
+
+            // Show save file dialog
+            string defaultFileName = $"SerialPortScan_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            string? filePath = await _fileDialogService.ShowSaveFileDialogAsync(
+                "Export Scan Results",
+                "JSON files (*.json)|*.json|Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                null,
+                defaultFileName).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                StatusMessage = "Export cancelled";
+                return;
+            }
+
+            // Prepare export data
+            var exportData = new
+            {
+                ExportDate = DateTime.Now,
+                TotalPortsFound = DiscoveredPorts.Count,
+                Ports = DiscoveredPorts.Select(p => new
+                {
+                    p.PortName,
+                    p.Description,
+                    p.Manufacturer
+                }).ToList(),
+                ScanHistory = ScanHistory.Select(s => new
+                {
+                    s.ScanTime,
+                    s.PortsFound,
+                    s.Duration
+                }).ToList()
+            };
+
+            // Serialize and save
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+
+            string jsonContent = System.Text.Json.JsonSerializer.Serialize(exportData, jsonOptions);
+            await System.IO.File.WriteAllTextAsync(filePath, jsonContent);
 
             StatusMessage = UIStrings.Status_ScanResultsExported;
-            _logger.LogInformation("Scan results exported");
+            _logger.LogInformation("Scan results exported to: {FilePath}", filePath);
         }
         catch (Exception ex)
         {
@@ -719,16 +770,17 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
 
         try
         {
-            // TODO: Implement clipboard functionality
-            await Task.CompletedTask;
-
-            StatusMessage = UIStrings.Status_PortInformationCopied;
-            _logger.LogInformation("Port information copied to clipboard for: {PortName}", SelectedPort.PortName);
+            // Note: Full clipboard functionality requires proper window/visual context
+            // which is not available in ViewModels. This functionality should be
+            // implemented in the View layer or through a proper clipboard service.
+            // For now, users can export to file as an alternative.
+            _logger.LogDebug("Clipboard copy requested for port: {PortName}", SelectedPort.PortName);
+            StatusMessage = "Clipboard copy not yet implemented - use Export instead";
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error copying port information");
-            StatusMessage = UIStrings.Status_ErrorCopyingPortInformation;
+            StatusMessage = "Error copying to clipboard";
         }
     }
 
