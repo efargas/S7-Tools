@@ -762,9 +762,46 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            // TODO: Show schedule dialog to get date/time
-            // For now, schedule for 5 minutes from now as a placeholder
-            DateTime scheduledTime = DateTime.Now.AddMinutes(5);
+            // Show schedule dialog to get date/time
+            string currentTime = DateTime.Now.AddMinutes(5).ToString("yyyy-MM-dd HH:mm");
+            var inputResult = await _dialogService.ShowInputAsync(
+                "Schedule Task",
+                $"Enter the scheduled execution time for task '{SelectedTask.JobName}':\n\nFormat: yyyy-MM-dd HH:mm (24-hour format)",
+                currentTime,
+                "yyyy-MM-dd HH:mm").ConfigureAwait(false);
+
+            if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
+                StatusMessage = "Operation cancelled";
+                _logger.LogInformation("Task scheduling cancelled by user");
+                return;
+            }
+
+            // Parse the scheduled time
+            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm", 
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime scheduledTime))
+            {
+                StatusMessage = "Invalid date/time format";
+                await _dialogService.ShowErrorAsync("Invalid Format",
+                    "Please enter the date and time in the format: yyyy-MM-dd HH:mm\nExample: 2025-11-21 14:30");
+                return;
+            }
+
+            // Check if scheduled time is in the past
+            if (scheduledTime < DateTime.Now)
+            {
+                bool confirmPast = await _dialogService.ShowConfirmationAsync(
+                    "Past Time Detected",
+                    $"The specified time ({scheduledTime:yyyy-MM-dd HH:mm}) is in the past.\n\n" +
+                    "The task will be queued immediately. Continue?").ConfigureAwait(false);
+
+                if (!confirmPast)
+                {
+                    StatusMessage = "Operation cancelled";
+                    return;
+                }
+            }
 
             IsLoading = true;
             StatusMessage = UIStrings.Status_SchedulingTask;
@@ -1011,22 +1048,52 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_CreatingNewTask;
 
-            // TODO: Show job selection dialog
-            // For now, create from the first available job as a placeholder
+            // Get all available jobs
             IEnumerable<JobProfile> jobs = await _jobManager.GetAllAsync().ConfigureAwait(false);
-            JobProfile? firstJob = jobs.FirstOrDefault();
+            var jobList = jobs.ToList();
 
-            if (firstJob == null)
+            if (!jobList.Any())
             {
                 StatusMessage = UIStrings.Status_NoJobProfilesAvailable;
+                await _dialogService.ShowErrorAsync("No Jobs Available",
+                    "No job profiles are available. Please create a job profile first.");
                 return;
             }
 
-            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(firstJob).ConfigureAwait(false);
+            // Show job selection dialog
+            string jobListText = string.Join("\n", jobList.Select((j, i) => $"{i + 1}. {j.Name}"));
+            string message = $"Select a job to create a task from:\n\n{jobListText}";
+            
+            var inputResult = await _dialogService.ShowInputAsync(
+                "Select Job",
+                message,
+                "1",
+                "Enter job number").ConfigureAwait(false);
 
-            StatusMessage = $"Created new task '{newTask.JobName}' from job '{firstJob.Name}'";
+            if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
+                StatusMessage = "Operation cancelled";
+                _logger.LogInformation("Task creation cancelled by user");
+                return;
+            }
+
+            // Parse job selection
+            if (!int.TryParse(inputResult.Value, out int jobIndex) || 
+                jobIndex < 1 || jobIndex > jobList.Count)
+            {
+                StatusMessage = "Invalid job selection";
+                await _dialogService.ShowErrorAsync("Invalid Selection",
+                    $"Please enter a valid job number between 1 and {jobList.Count}");
+                return;
+            }
+
+            JobProfile selectedJob = jobList[jobIndex - 1];
+
+            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(selectedJob).ConfigureAwait(false);
+
+            StatusMessage = $"Created new task '{newTask.JobName}' from job '{selectedJob.Name}'";
             _logger.LogInformation("Created new task {TaskId} from job {JobId} ({JobName})",
-                newTask.TaskId, firstJob.Id, firstJob.Name);
+                newTask.TaskId, selectedJob.Id, selectedJob.Name);
 
             // Select the new task
             SelectedTask = newTask;

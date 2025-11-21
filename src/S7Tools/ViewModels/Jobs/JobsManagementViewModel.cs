@@ -149,6 +149,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     private readonly IViewModelFactory? _viewModelFactory;
     private readonly ITaskScheduler? _taskScheduler;
     private readonly IActivityBarService? _activityBarService;
+    private readonly IFileDialogService? _fileDialogService;
     private readonly CompositeDisposable _localDisposables = new();
 
     // Job-specific collections for UI organization
@@ -167,6 +168,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <param name="viewModelFactory">The view model factory for creating child ViewModels.</param>
     /// <param name="taskScheduler">The task scheduler service for creating tasks from jobs.</param>
     /// <param name="activityBarService">The activity bar service for navigation.</param>
+    /// <param name="fileDialogService">The file dialog service for import/export operations.</param>
     public JobsManagementViewModel(
         ILogger<JobsManagementViewModel> logger,
         IJobManager jobManager,
@@ -175,7 +177,8 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         IUIThreadService uiThreadService,
         IViewModelFactory? viewModelFactory = null,
         ITaskScheduler? taskScheduler = null,
-        IActivityBarService? activityBarService = null)
+        IActivityBarService? activityBarService = null,
+        IFileDialogService? fileDialogService = null)
         : base(logger, profileDialogService, dialogService, uiThreadService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -186,6 +189,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         _viewModelFactory = viewModelFactory;
         _taskScheduler = taskScheduler;
         _activityBarService = activityBarService;
+        _fileDialogService = fileDialogService;
 
         SetupJobSpecificCommands();
         SetupJobCollections();
@@ -715,16 +719,57 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             IsLoading = true;
             StatusMessage = UIStrings.Status_CreatingJobFromTemplate;
 
-            // TODO: Show template selection dialog
-            // For now, use the first available template
-            JobProfile? template = JobTemplates.FirstOrDefault();
-            if (template == null)
+            // Check if templates are available
+            if (!JobTemplates.Any())
             {
                 StatusMessage = UIStrings.Status_NoTemplatesAvailable;
+                await _dialogService.ShowErrorAsync("No Templates", 
+                    "No job templates are available. Please save a job as a template first.");
                 return;
             }
 
-            string newName = $"Job from {template.Name}";
+            // Show template selection dialog
+            string templateListText = string.Join("\n", JobTemplates.Select((t, i) => $"{i + 1}. {t.Name}"));
+            string message = $"Select a template number:\n\n{templateListText}";
+            
+            var inputResult = await _dialogService.ShowInputAsync(
+                "Select Template",
+                message,
+                "1",
+                "Enter template number").ConfigureAwait(false);
+
+            if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
+                StatusMessage = "Operation cancelled";
+                return;
+            }
+
+            // Parse template selection
+            if (!int.TryParse(inputResult.Value, out int templateIndex) || 
+                templateIndex < 1 || templateIndex > JobTemplates.Count)
+            {
+                StatusMessage = "Invalid template selection";
+                await _dialogService.ShowErrorAsync("Invalid Selection", 
+                    $"Please enter a valid template number between 1 and {JobTemplates.Count}");
+                return;
+            }
+
+            JobProfile template = JobTemplates[templateIndex - 1];
+
+            // Ask for new job name
+            var nameResult = await _dialogService.ShowInputAsync(
+                "New Job Name",
+                $"Enter a name for the job created from template '{template.Name}':",
+                $"Job from {template.Name}",
+                "Enter job name").ConfigureAwait(false);
+
+            if (nameResult.IsCancelled || string.IsNullOrWhiteSpace(nameResult.Value))
+            {
+                StatusMessage = "Operation cancelled";
+                return;
+            }
+
+            string newName = nameResult.Value;
             JobProfile newJob = await _jobManager.CreateFromTemplateAsync(template.Id, newName);
 
             StatusMessage = string.Format(UIStrings.Status_CreatedJobFromTemplate, newJob.Name, template.Name);
@@ -758,8 +803,27 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             IsLoading = true;
             StatusMessage = UIStrings.Status_SavingJobAsTemplate;
 
-            // TODO: Show template name input dialog
-            string templateName = $"{SelectedProfile.Name} Template";
+            // Show template name input dialog
+            var nameResult = await _dialogService.ShowInputAsync(
+                "Save as Template",
+                $"Save job '{SelectedProfile.Name}' as a template:",
+                $"{SelectedProfile.Name} Template",
+                "Enter template name").ConfigureAwait(false);
+
+            if (nameResult.IsCancelled || string.IsNullOrWhiteSpace(nameResult.Value))
+            {
+                StatusMessage = "Operation cancelled";
+                return;
+            }
+
+            // Update the job name if user changed it
+            string templateName = nameResult.Value;
+            if (templateName != SelectedProfile.Name)
+            {
+                // Update name before marking as template
+                SelectedProfile.Name = templateName;
+                await _jobManager.UpdateAsync(SelectedProfile);
+            }
 
             bool success = await _jobManager.SetAsTemplateAsync(SelectedProfile.Id, true);
 
@@ -797,16 +861,65 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             IsLoading = true;
             StatusMessage = UIStrings.Status_ImportingJobs;
 
-            // TODO: Implement job import functionality
-            // For now, just show a placeholder message
-            StatusMessage = UIStrings.Status_JobImportNotImplemented;
-            _logger.LogInformation("Job import requested but not yet implemented");
-            await Task.Yield();
+            // Check if file dialog service is available
+            if (_fileDialogService == null)
+            {
+                StatusMessage = "File dialog service not available";
+                await _dialogService.ShowErrorAsync("Service Unavailable",
+                    "File import functionality requires the file dialog service.");
+                _logger.LogError("FileDialogService not available - was not injected in constructor");
+                return;
+            }
+
+            // Show open file dialog
+            string? filePath = await _fileDialogService.ShowOpenFileDialogAsync(
+                "Import Job Profile",
+                "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                null).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                StatusMessage = "Operation cancelled";
+                _logger.LogInformation("Job import cancelled by user");
+                return;
+            }
+
+            // Read and deserialize the job profile
+            string jsonContent = await System.IO.File.ReadAllTextAsync(filePath);
+            var importedJob = System.Text.Json.JsonSerializer.Deserialize<JobProfile>(jsonContent);
+
+            if (importedJob == null)
+            {
+                StatusMessage = "Failed to import job - invalid file format";
+                await _dialogService.ShowErrorAsync("Import Failed",
+                    "The selected file does not contain a valid job profile.");
+                return;
+            }
+
+            // Reset ID for import (will be assigned new ID)
+            importedJob.Id = 0;
+            importedJob.CreatedAt = DateTime.UtcNow;
+            importedJob.ModifiedAt = DateTime.UtcNow;
+
+            // Add the imported job
+            JobProfile addedJob = await _jobManager.CreateAsync(importedJob);
+
+            StatusMessage = $"Job '{addedJob.Name}' imported successfully";
+            _logger.LogInformation("Job imported from {FilePath}: {JobName} (ID: {JobId})", 
+                filePath, addedJob.Name, addedJob.Id);
+
+            // Refresh and select the imported job
+            await LoadProfilesAsync();
+            SelectedProfile = Profiles.FirstOrDefault(p => p.Id == addedJob.Id);
+
+            await _dialogService.ShowConfirmationAsync("Import Successful",
+                $"Job '{addedJob.Name}' has been imported successfully.");
         }
         catch (Exception ex)
         {
             StatusMessage = string.Format(UIStrings.Status_ErrorImportingJobs, ex.Message);
-            _logger.LogError(ex, "Error importing jobs");
+            _logger.LogError(ex, "Error importing job");
+            await _dialogService.ShowErrorAsync("Import Error", $"Failed to import job: {ex.Message}");
         }
         finally
         {
@@ -826,17 +939,53 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             IsLoading = true;
             StatusMessage = UIStrings.Status_ExportingJob;
 
-            // TODO: Implement job export functionality
-            // For now, just show a placeholder message
-            StatusMessage = string.Format(UIStrings.Status_ExportJobNotImplemented, SelectedProfile.Name);
-            _logger.LogInformation("Job export requested for {JobId} ({JobName}) but not yet implemented",
-                SelectedProfile.Id, SelectedProfile.Name);
-            await Task.Yield();
+            // Check if file dialog service is available
+            if (_fileDialogService == null)
+            {
+                StatusMessage = "File dialog service not available";
+                await _dialogService.ShowErrorAsync("Service Unavailable",
+                    "File export functionality requires the file dialog service.");
+                _logger.LogError("FileDialogService not available - was not injected in constructor");
+                return;
+            }
+
+            // Show save file dialog
+            string defaultFileName = $"{SelectedProfile.Name.Replace(" ", "_")}.json";
+            string? filePath = await _fileDialogService.ShowSaveFileDialogAsync(
+                "Export Job Profile",
+                "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                null,
+                defaultFileName).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                StatusMessage = "Operation cancelled";
+                _logger.LogInformation("Job export cancelled by user");
+                return;
+            }
+
+            // Serialize and save the job profile
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+            };
+
+            string jsonContent = System.Text.Json.JsonSerializer.Serialize(SelectedProfile, jsonOptions);
+            await System.IO.File.WriteAllTextAsync(filePath, jsonContent);
+
+            StatusMessage = $"Job '{SelectedProfile.Name}' exported successfully";
+            _logger.LogInformation("Job {JobId} ({JobName}) exported to {FilePath}",
+                SelectedProfile.Id, SelectedProfile.Name, filePath);
+
+            await _dialogService.ShowConfirmationAsync("Export Successful",
+                $"Job '{SelectedProfile.Name}' has been exported to:\n{filePath}");
         }
         catch (Exception ex)
         {
             StatusMessage = string.Format(UIStrings.Status_ErrorExportingJob, ex.Message);
             _logger.LogError(ex, "Error exporting job {JobId}", SelectedProfile?.Id);
+            await _dialogService.ShowErrorAsync("Export Error", $"Failed to export job: {ex.Message}");
         }
         finally
         {
@@ -939,9 +1088,46 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 return;
             }
 
-            // TODO: Add date/time picker dialog to get scheduled execution time
-            // For now, we'll create a task scheduled for 5 minutes from now
-            DateTime scheduledTime = DateTime.Now.AddMinutes(5);
+            // Show date/time picker dialog using input dialog
+            string currentTime = DateTime.Now.AddMinutes(5).ToString("yyyy-MM-dd HH:mm");
+            var inputResult = await _dialogService.ShowInputAsync(
+                "Schedule Task",
+                $"Enter the scheduled execution time for job '{SelectedProfile.Name}':\n\nFormat: yyyy-MM-dd HH:mm (24-hour format)",
+                currentTime,
+                "yyyy-MM-dd HH:mm").ConfigureAwait(false);
+
+            if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
+                StatusMessage = "Operation cancelled";
+                _logger.LogInformation("Task scheduling cancelled by user");
+                return;
+            }
+
+            // Parse the scheduled time
+            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm", 
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out DateTime scheduledTime))
+            {
+                StatusMessage = "Invalid date/time format";
+                await _dialogService.ShowErrorAsync("Invalid Format",
+                    "Please enter the date and time in the format: yyyy-MM-dd HH:mm\nExample: 2025-11-21 14:30");
+                return;
+            }
+
+            // Check if scheduled time is in the past
+            if (scheduledTime < DateTime.Now)
+            {
+                bool confirmPast = await _dialogService.ShowConfirmationAsync(
+                    "Past Time Detected",
+                    $"The specified time ({scheduledTime:yyyy-MM-dd HH:mm}) is in the past.\n\n" +
+                    "The task will be queued immediately. Continue?").ConfigureAwait(false);
+
+                if (!confirmPast)
+                {
+                    StatusMessage = "Operation cancelled";
+                    return;
+                }
+            }
 
             // Create task from selected job profile with scheduled time
             Core.Models.Jobs.TaskExecution createdTask = await _taskScheduler.CreateTaskAsync(
@@ -1017,10 +1203,18 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             if (navigateToTaskManager)
             {
-                // TODO: Implement navigation to Task Manager activity
-                // This will require an INavigationService or IActivityBarService reference
-                _logger.LogInformation("User requested navigation to Task Manager (not yet implemented)");
-                StatusMessage = "Navigation to Task Manager not yet implemented - please use Activity Bar";
+                // Navigate to Task Manager using activity bar service
+                if (_activityBarService != null)
+                {
+                    _activityBarService.SelectItem("TaskManager");
+                    _logger.LogInformation("Navigated to Task Manager activity");
+                    StatusMessage = "Navigated to Task Manager";
+                }
+                else
+                {
+                    _logger.LogWarning("ActivityBarService not available - cannot navigate to Task Manager");
+                    StatusMessage = "Activity bar service not available - please use Activity Bar manually";
+                }
             }
         }
         catch (Exception ex)
