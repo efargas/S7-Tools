@@ -886,18 +886,43 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
 
             // Read and deserialize the job profile
-            string jsonContent = await System.IO.File.ReadAllTextAsync(filePath);
             JobProfile? importedJob = null;
-            
+            string jsonContent = string.Empty;
             try
             {
+                jsonContent = await System.IO.File.ReadAllTextAsync(filePath);
                 importedJob = System.Text.Json.JsonSerializer.Deserialize<JobProfile>(jsonContent);
+            }
+            catch (System.IO.FileNotFoundException ex)
+            {
+                StatusMessage = "File not found";
+                await _dialogService.ShowErrorAsync("Import Failed",
+                    $"The selected file could not be found:\n{ex.Message}");
+                _logger.LogWarning(ex, "File not found during job import: {FilePath}", filePath);
+                return;
+            }
+            catch (System.UnauthorizedAccessException ex)
+            {
+                StatusMessage = "Access denied";
+                await _dialogService.ShowErrorAsync("Import Failed",
+                    $"Access to the selected file was denied:\n{ex.Message}");
+                _logger.LogWarning(ex, "Unauthorized access during job import: {FilePath}", filePath);
+                return;
+            }
+            catch (System.IO.IOException ex)
+            {
+                StatusMessage = "File I/O error";
+                await _dialogService.ShowErrorAsync("Import Failed",
+                    $"An error occurred while reading the file:\n{ex.Message}");
+                _logger.LogWarning(ex, "I/O error during job import: {FilePath}", filePath);
+                return;
             }
             catch (System.Text.Json.JsonException ex)
             {
                 StatusMessage = $"Invalid JSON format: {ex.Message}";
                 await _dialogService.ShowErrorAsync("Import Failed",
                     $"The selected file contains invalid JSON:\n{ex.Message}");
+                _logger.LogWarning(ex, "JSON deserialization error during job import: {FilePath}", filePath);
                 return;
             }
 
