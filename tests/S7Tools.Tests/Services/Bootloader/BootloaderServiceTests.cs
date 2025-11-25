@@ -8,10 +8,10 @@ using S7Tools.Services.Bootloader;
 namespace S7Tools.Tests.Services.Bootloader;
 
 /// <summary>
-/// Integration tests for the BootloaderService.
+/// Integration tests for the EnhancedBootloaderService.
 /// Tests the 7-stage workflow execution and resource failure handling.
 /// </summary>
-public class BootloaderServiceTests
+public class EnhancedBootloaderServiceTests
 {
     #region Test Helpers
 
@@ -60,7 +60,7 @@ public class BootloaderServiceTests
             Socat: new SocatProfileRef(socatPort, Ephemeral: true, socatConfig),
             Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2, powerConfig),
             Memory: new MemoryRegionProfile("0x20000000", 0x1000),
-            Payloads: new PayloadSetProfile { BasePath = "/tmp/payloads" },
+            Payloads: new PayloadSetProfile("/tmp/payloads"),
             OutputPath: "/tmp/dumps"
         );
     }
@@ -111,13 +111,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -181,13 +182,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         var progressReports = new List<(string stage, double percent)>();
@@ -214,13 +216,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             Substitute.For<IPayloadProvider>(),
             Substitute.For<ISocatService>(),
             Substitute.For<IPowerSupplyService>(),
             serialPort,
-            _ => Substitute.For<IPlcClient>()
+            _ => Substitute.For<IPlcClient>(),
+            Substitute.For<IResourceCoordinator>()
         );
 
         var progress = new Progress<(string stage, double percent)>();
@@ -239,13 +242,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             Substitute.For<IPayloadProvider>(),
             Substitute.For<ISocatService>(),
             Substitute.For<IPowerSupplyService>(),
             serialPort,
-            _ => Substitute.For<IPlcClient>()
+            _ => Substitute.For<IPlcClient>(),
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -267,6 +271,8 @@ public class BootloaderServiceTests
         // Arrange
         IPayloadProvider payloads = Substitute.For<IPayloadProvider>();
         ISocatService socatService = Substitute.For<ISocatService>();
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+            .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>())
@@ -278,13 +284,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -316,13 +323,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -345,6 +353,9 @@ public class BootloaderServiceTests
             .Returns(new byte[] { 0x01 });
 
         ISocatService socatService = Substitute.For<ISocatService>();
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+            .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
+
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
         power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
@@ -359,13 +370,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -410,13 +422,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -438,12 +451,17 @@ public class BootloaderServiceTests
             .Returns(new byte[] { 0x01 });
 
         ISocatService socatService = Substitute.For<ISocatService>();
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+            .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
+
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
         power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
         power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
+        plcClient.HandshakeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        plcClient.GetBootloaderVersionAsync(Arg.Any<CancellationToken>()).Returns("1.0.0");
         plcClient.InstallStagerAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException(new InvalidOperationException("Stager installation failed")));
 
@@ -452,13 +470,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
@@ -483,12 +502,18 @@ public class BootloaderServiceTests
             .Returns(new byte[] { 0x02 });
 
         ISocatService socatService = Substitute.For<ISocatService>();
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+            .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
+
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
         power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
         power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
         power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
+        plcClient.HandshakeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        plcClient.GetBootloaderVersionAsync(Arg.Any<CancellationToken>()).Returns("1.0.0");
+        plcClient.InstallStagerAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
         plcClient.DumpMemoryAsync(Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
             .Returns<Task<byte[]>>(_ => Task.FromException<byte[]>(
                 new InvalidOperationException("Memory dump read timeout")));
@@ -498,13 +523,14 @@ public class BootloaderServiceTests
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
         serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
 
-        var service = new BootloaderService(
-            NullLogger<BootloaderService>.Instance,
+        var service = new EnhancedBootloaderService(
+            NullLogger<EnhancedBootloaderService>.Instance,
             payloads,
             socatService,
             power,
             serialPort,
-            ClientFactory
+            ClientFactory,
+            Substitute.For<IResourceCoordinator>()
         );
 
         JobProfileSet profiles = CreateTestProfiles();
