@@ -367,12 +367,18 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            StatusMessage = "Connecting to power supply...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Connecting to power supply...";
+            });
             _logger.LogInformation("Manual power ON command executed");
 
             await EnsurePowerSupplyConnectedAsync().ConfigureAwait(false);
 
-            StatusMessage = "Turning power ON...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Turning power ON...";
+            });
             bool success = await _powerSupplyService.TurnOnAsync().ConfigureAwait(false);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
