@@ -200,12 +200,15 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
     private void SetupLogRefresh()
     {
-        // Auto-refresh logs every 2 seconds when task is running
-        Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(2))
-            .Where(_ => TaskExecution != null && TaskExecution.IsRunning)
+        // Auto-refresh logs every 2 seconds, but only when a task is selected and running.
+        this.WhenAnyValue(x => x.TaskExecution)
+            .Select(task => task != null && task.IsRunning
+                ? Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(2))
+                : Observable.Empty<long>())
+            .Switch()
             .Select(_ => Observable.FromAsync(() => RefreshLogsAsync()))
             .Switch() // Ensures only one refresh operation runs at a time
-            .ObserveOn(RxApp.MainThreadScheduler) // Logging should be on a background thread, but this is an example
+            .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(
                 _ => { }, // Operation completed
                 ex => _logger.LogWarning(ex, "Failed to auto-refresh logs for task {TaskId}", TaskExecution?.TaskId)
