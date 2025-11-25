@@ -817,11 +817,8 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         {
             checked
             {
-                uint endAddress = profiles.Memory.Start + profiles.Memory.Length;
-                if (endAddress < profiles.Memory.Start)
-                {
-                    errors.Add($"Memory region overflow: start=0x{profiles.Memory.Start:X8}, length=0x{profiles.Memory.Length:X8}");
-                }
+                // This will throw OverflowException if Start + Length > uint.MaxValue
+                _ = profiles.Memory.Start + profiles.Memory.Length;
             }
         }
         catch (OverflowException)
