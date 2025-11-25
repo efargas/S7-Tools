@@ -86,6 +86,9 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
         _logger.LogInformation("Starting bootloader dump operation");
 
+        SocatProcessInfo? socatProcess = null;
+        bool isPowerConnected = false;
+
         try
         {
             // Stage 0: Configure serial port (2% progress)
@@ -117,7 +120,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 throw new InvalidOperationException("Socat configuration is required but was null. Ensure job profile includes full socat configuration.");
             }
 
-            SocatProcessInfo socatProcess = await _socat.StartSocatAsync(
+            socatProcess = await _socat.StartSocatAsync(
                 profiles.Socat.Configuration,
                 profiles.Serial.Device,
                 processLogger,
@@ -143,21 +146,20 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             {
                 throw new InvalidOperationException(UIStrings.Exception_FailedToConnectToPowerSupply);
             }
+            isPowerConnected = true;
 
             _logger.LogInformation("Connected to power supply at {Host}:{Port}",
                 profiles.Power.Host, profiles.Power.Port);
 
-            try
-            {
-                // Stage 3: Power ON PLC (10% progress)
-                progress.Report(("power_on", 0.10));
-                _logger.LogDebug("Turning PLC power ON");
+            // Stage 3: Power ON PLC (10% progress)
+            progress.Report(("power_on", 0.10));
+            _logger.LogDebug("Turning PLC power ON");
 
-                bool powerOn = await _power.TurnOnAsync(cancellationToken).ConfigureAwait(false);
-                if (!powerOn)
-                {
-                    throw new InvalidOperationException("Failed to turn PLC power ON");
-                }
+            bool powerOn = await _power.TurnOnAsync(cancellationToken).ConfigureAwait(false);
+            if (!powerOn)
+            {
+                throw new InvalidOperationException("Failed to turn PLC power ON");
+            }
 
                 _logger.LogInformation("PLC powered ON");
                 processLogger?.LogInformation("PLC power: ON");
@@ -309,10 +311,18 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     "Dumped {ByteCount} bytes", memoryData.Length);
 
                 return memoryData;
-            }
-            finally
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Bootloader dump operation failed: {ErrorMessage}", ex.Message);
+            processLogger?.LogError("Dump failed: {ErrorMessage}", ex.Message);
+            throw;
+        }
+        finally
+        {
+            // Always stop socat and disconnect from power supply
+            if (socatProcess != null)
             {
-                // Always stop socat and disconnect from power supply
                 try
                 {
                     await _socat.StopSocatAsync(socatProcess, cancellationToken).ConfigureAwait(false);
@@ -324,7 +334,10 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     _logger.LogWarning(teardownEx, "Failed to stop socat (PID: {ProcessId}) during teardown", 
                         socatProcess.ProcessId);
                 }
+            }
 
+            if (isPowerConnected)
+            {
                 try
                 {
                     await _power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
@@ -335,12 +348,6 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     _logger.LogWarning(teardownEx, "Failed to disconnect power supply during teardown");
                 }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Bootloader dump operation failed: {ErrorMessage}", ex.Message);
-            processLogger?.LogError("Dump failed: {ErrorMessage}", ex.Message);
-            throw;
         }
     }
 

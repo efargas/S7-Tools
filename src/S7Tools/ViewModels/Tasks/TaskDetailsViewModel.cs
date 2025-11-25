@@ -28,6 +28,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly IJobManager _jobManager;
     private readonly IPowerSupplyProfileService _powerSupplyProfileService;
     private readonly CompositeDisposable _disposables = new();
+    private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
 
     private TaskExecution? _taskExecution;
     private string _mainLogContent = "No main log data";
@@ -362,20 +363,18 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
     private async Task ExecutePowerOnAsync()
     {
-        if (IsBusy) return;
+        if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+            return; // Already busy
 
         try
         {
-            IsBusy = true;
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
                 StatusMessage = "Connecting to power supply...";
             });
             _logger.LogInformation("Manual power ON command executed");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = "Turning power ON...";
-            });
+
             await EnsurePowerSupplyConnectedAsync().ConfigureAwait(false);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -401,23 +400,31 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
         finally
         {
-            IsBusy = false;
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
+            _operationSemaphore.Release();
         }
     }
 
     private async Task ExecutePowerOffAsync()
     {
-        if (IsBusy) return;
+        if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+            return; // Already busy
 
         try
         {
-            IsBusy = true;
-            StatusMessage = "Connecting to power supply...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Connecting to power supply...";
+            });
             _logger.LogInformation("Manual power OFF command executed");
 
             await EnsurePowerSupplyConnectedAsync().ConfigureAwait(false);
 
-            StatusMessage = "Turning power OFF...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Turning power OFF...";
+            });
             bool success = await _powerSupplyService.TurnOffAsync().ConfigureAwait(false);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -437,26 +444,36 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
         finally
         {
-            IsBusy = false;
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
+            _operationSemaphore.Release();
         }
     }
 
     private async Task ExecutePowerCycleAsync()
     {
-        if (IsBusy) return;
+        if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+            return; // Already busy
 
         try
         {
-            IsBusy = true;
-            JobProfile? jobProfile = await GetCurrentJobProfileAsync().ConfigureAwait(false);
-            int delay = jobProfile?.PowerOffDelayMs ?? 5000;
-            bool success = await _powerSupplyService.PowerCycleAsync(delay).ConfigureAwait(false);
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Connecting to power supply...";
+            });
             _logger.LogInformation("Manual power cycle command executed");
 
             await EnsurePowerSupplyConnectedAsync().ConfigureAwait(false);
 
-            StatusMessage = "Power cycling (OFF → delay → ON)...";
-            bool success = await _powerSupplyService.PowerCycleAsync(5000).ConfigureAwait(false);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Power cycling (OFF → delay → ON)...";
+            });
+
+            // Get the power off delay from the job profile or use a default
+            JobProfile? jobProfile = await GetCurrentJobProfileAsync().ConfigureAwait(false);
+            int delay = jobProfile?.PowerOffDelayMs ?? 5000;
+            bool success = await _powerSupplyService.PowerCycleAsync(delay).ConfigureAwait(false);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
@@ -475,18 +492,23 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
         finally
         {
-            IsBusy = false;
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
+            _operationSemaphore.Release();
         }
     }
 
     private async Task ExecuteRunValidationAsync()
     {
-        if (IsBusy) return;
+        if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+            return; // Already busy
 
         try
         {
-            IsBusy = true;
-            StatusMessage = "Running validation...";
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Running validation...";
+            });
             _logger.LogInformation("Run validation command executed");
 
             JobProfile? jobProfile = await GetCurrentJobProfileAsync().ConfigureAwait(false);
@@ -528,7 +550,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
         finally
         {
-            IsBusy = false;
+            await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = false);
+            _operationSemaphore.Release();
         }
     }
 
@@ -552,6 +575,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         if (disposing)
         {
             _disposables?.Dispose();
+            _operationSemaphore?.Dispose();
         }
     }
 
