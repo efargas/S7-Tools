@@ -10,7 +10,6 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
@@ -42,6 +41,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private readonly IJobManager _jobManager;
     private readonly IUIThreadService _uiThreadService;
     private readonly IDialogService _dialogService;
+    private readonly TaskDetailsViewModel _taskDetailsViewModel;
     private readonly CompositeDisposable _disposables = new();
 
     // State-based task collections for UI binding
@@ -74,23 +74,31 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// <param name="jobManager">The job manager service for accessing job configurations.</param>
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
     /// <param name="dialogService">The dialog service for user confirmations.</param>
+    /// <param name="taskDetailsViewModel">The task details view model for the details panel.</param>
     public TaskManagerViewModel(
         ILogger<TaskManagerViewModel> logger,
         ITaskScheduler taskScheduler,
         IJobManager jobManager,
         IUIThreadService uiThreadService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        TaskDetailsViewModel taskDetailsViewModel)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        _taskDetailsViewModel = taskDetailsViewModel ?? throw new ArgumentNullException(nameof(taskDetailsViewModel));
 
         SetupCommands();
         SetupCollections();
         SetupAutoRefresh();
         SubscribeToTaskEvents();
+
+        // Wire up task selection to update details view
+        this.WhenAnyValue(x => x.SelectedTask)
+            .Subscribe(task => _taskDetailsViewModel.TaskExecution = task)
+            .DisposeWith(_disposables);
 
         // Initialize with current tasks
         _ = Task.Run(async () =>
@@ -109,6 +117,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     }
 
     #region Properties
+
+    /// <summary>
+    /// Gets the task details view model for the details panel.
+    /// </summary>
+    public TaskDetailsViewModel TaskDetailsViewModel => _taskDetailsViewModel;
 
     /// <summary>
     /// Gets the collection of tasks in the Created state.
@@ -763,46 +776,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            // Show schedule dialog to get date/time
-            string currentTime = DateTime.Now.AddMinutes(5).ToString("yyyy-MM-dd HH:mm");
-            InputResult inputResult = await _dialogService.ShowInputAsync(
-                "Schedule Task",
-                $"Enter the scheduled execution time for task '{SelectedTask.JobName}':\n\nFormat: yyyy-MM-dd HH:mm (24-hour format)",
-                currentTime,
-                "yyyy-MM-dd HH:mm").ConfigureAwait(false);
-
-            if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
-            {
-                StatusMessage = "Operation cancelled";
-                _logger.LogInformation("Task scheduling cancelled by user");
-                return;
-            }
-
-            // Parse the scheduled time
-            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm",
-                System.Globalization.CultureInfo.InvariantCulture,
-                System.Globalization.DateTimeStyles.None, out DateTime scheduledTime))
-            {
-                StatusMessage = "Invalid date/time format";
-                await _dialogService.ShowErrorAsync("Invalid Format",
-                    "Please enter the date and time in the format: yyyy-MM-dd HH:mm\nExample: 2025-11-21 14:30");
-                return;
-            }
-
-            // Check if scheduled time is in the past (allow 1-minute tolerance for "now")
-            if (scheduledTime < DateTime.Now.AddMinutes(-1))
-            {
-                bool confirmPast = await _dialogService.ShowConfirmationAsync(
-                    "Past Time Detected",
-                    $"The specified time ({scheduledTime:yyyy-MM-dd HH:mm}) is in the past.\n\n" +
-                    "The task will be queued immediately. Continue?").ConfigureAwait(false);
-
-                if (!confirmPast)
-                {
-                    StatusMessage = "Operation cancelled";
-                    return;
-                }
-            }
+            // TODO: Show schedule dialog to get date/time
+            // For now, schedule for 5 minutes from now as a placeholder
+            DateTime scheduledTime = DateTime.Now.AddMinutes(5);
 
             IsLoading = true;
             StatusMessage = UIStrings.Status_SchedulingTask;
@@ -1049,52 +1025,22 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_CreatingNewTask;
 
-            // Get all available jobs
+            // TODO: Show job selection dialog
+            // For now, create from the first available job as a placeholder
             IEnumerable<JobProfile> jobs = await _jobManager.GetAllAsync().ConfigureAwait(false);
-            var jobList = jobs.ToList();
+            JobProfile? firstJob = jobs.FirstOrDefault();
 
-            if (!jobList.Any())
+            if (firstJob == null)
             {
                 StatusMessage = UIStrings.Status_NoJobProfilesAvailable;
-                await _dialogService.ShowErrorAsync("No Jobs Available",
-                    "No job profiles are available. Please create a job profile first.");
                 return;
             }
 
-            // Show job selection dialog
-            string jobListText = string.Join("\n", jobList.Select((j, i) => $"{i + 1}. {j.Name}"));
-            string message = $"Select a job to create a task from:\n\n{jobListText}";
+            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(firstJob).ConfigureAwait(false);
 
-            InputResult inputResult = await _dialogService.ShowInputAsync(
-                "Select Job",
-                message,
-                "1",
-                "Enter job number").ConfigureAwait(false);
-
-            if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
-            {
-                StatusMessage = "Operation cancelled";
-                _logger.LogInformation("Task creation cancelled by user");
-                return;
-            }
-
-            // Parse job selection
-            if (!int.TryParse(inputResult.Value, out int jobIndex) ||
-                jobIndex < 1 || jobIndex > jobList.Count)
-            {
-                StatusMessage = "Invalid job selection";
-                await _dialogService.ShowErrorAsync("Invalid Selection",
-                    $"Please enter a valid job number between 1 and {jobList.Count}");
-                return;
-            }
-
-            JobProfile selectedJob = jobList[jobIndex - 1];
-
-            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(selectedJob).ConfigureAwait(false);
-
-            StatusMessage = $"Created new task '{newTask.JobName}' from job '{selectedJob.Name}'";
+            StatusMessage = $"Created new task '{newTask.JobName}' from job '{firstJob.Name}'";
             _logger.LogInformation("Created new task {TaskId} from job {JobId} ({JobName})",
-                newTask.TaskId, selectedJob.Id, selectedJob.Name);
+                newTask.TaskId, firstJob.Id, firstJob.Name);
 
             // Select the new task
             SelectedTask = newTask;
