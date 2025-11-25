@@ -445,7 +445,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         try
         {
             IsBusy = true;
-            StatusMessage = "Connecting to power supply...";
+            JobProfile? jobProfile = await GetCurrentJobProfileAsync().ConfigureAwait(false);
+            int delay = jobProfile?.PowerOffDelayMs ?? 5000;
+            bool success = await _powerSupplyService.PowerCycleAsync(delay).ConfigureAwait(false);
             _logger.LogInformation("Manual power cycle command executed");
 
             await EnsurePowerSupplyConnectedAsync().ConfigureAwait(false);
