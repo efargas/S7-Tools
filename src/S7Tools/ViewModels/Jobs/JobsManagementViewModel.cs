@@ -732,7 +732,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             string templateListText = string.Join("\n", JobTemplates.Select((t, i) => $"{i + 1}. {t.Name}"));
             string message = $"Select a template number:\n\n{templateListText}";
 
-            var inputResult = await _dialogService.ShowInputAsync(
+            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Select Template",
                 message,
                 "1",
@@ -757,7 +757,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             JobProfile template = JobTemplates[templateIndex - 1];
 
             // Ask for new job name
-            var nameResult = await _dialogService.ShowInputAsync(
+            Models.InputResult nameResult = await _dialogService.ShowInputAsync(
                 "New Job Name",
                 $"Enter a name for the job created from template '{template.Name}':",
                 $"Job from {template.Name}",
@@ -804,7 +804,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             StatusMessage = UIStrings.Status_SavingJobAsTemplate;
 
             // Show template name input dialog
-            var nameResult = await _dialogService.ShowInputAsync(
+            Models.InputResult nameResult = await _dialogService.ShowInputAsync(
                 "Save as Template",
                 $"Enter a name for the template based on job '{SelectedProfile.Name}':",
                 $"{SelectedProfile.Name} Template",
@@ -1122,7 +1122,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             // Show date/time picker dialog using input dialog
             string currentTime = DateTime.Now.AddMinutes(5).ToString("yyyy-MM-dd HH:mm");
-            var inputResult = await _dialogService.ShowInputAsync(
+            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Schedule Task",
                 $"Enter the scheduled execution time for job '{SelectedProfile.Name}':\n\nFormat: yyyy-MM-dd HH:mm (24-hour format)",
                 currentTime,
@@ -1146,7 +1146,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 return;
             }
 
-            var validationTime = DateTime.Now;
+            DateTime validationTime = DateTime.Now;
             // Check if scheduled time is in the past (allow 1-minute tolerance for "now")
             if (scheduledTime < validationTime.AddMinutes(-1))
             {

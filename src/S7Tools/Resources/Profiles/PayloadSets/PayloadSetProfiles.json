@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "Default Payloads",
+    "description": "Default bootloader payloads from repository",
+    "basePath": "bootloader-payloads/payloads",
+    "isDefault": true,
+    "isReadOnly": false,
+    "options": "",
+    "flags": "",
+    "createdAt": "2025-11-21T00:00:00Z",
+    "modifiedAt": "2025-11-21T00:00:00Z",
+    "version": "1.0",
+    "metadata": null
+  }
+]

@@ -52,7 +52,7 @@ public class SchedulerParallelExecutionTests
             Socat: new SocatProfileRef(tcpPort, Ephemeral: true, CreateDefaultSocatConfig()),
             Power: new PowerProfileRef(modbusHost, 502, 0, DelaySeconds: 2, CreateDefaultPowerConfig(modbusHost)),
             Memory: new MemoryRegionProfile("0x20000000", 0x1000),
-            Payloads: new PayloadSetProfile("/tmp/payloads"),
+            Payloads: new PayloadSetProfile { BasePath = "/tmp/payloads" },
             OutputPath: "/tmp/dumps"
         );
     }

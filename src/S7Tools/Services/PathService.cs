@@ -99,6 +99,15 @@ namespace S7Tools.Services
             ResourcePaths.MemoryRegionsFolder));
 
         /// <summary>
+        /// Gets the path to Resources/Profiles/PayloadSets/PayloadSetProfiles.json
+        /// </summary>
+        public string PayloadSetProfilesPath => ResolvePath(Path.Combine(
+            ResourcePaths.ResourcesFolder,
+            ResourcePaths.ProfilesFolder,
+            "PayloadSets",
+            "PayloadSetProfiles.json"));
+
+        /// <summary>
         /// Gets the path to Resources/Logs directory
         /// </summary>
         public string LogsDirectory => ResolvePath(Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.LogsFolder));

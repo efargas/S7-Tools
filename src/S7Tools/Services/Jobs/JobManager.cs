@@ -28,6 +28,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     private readonly ISocatProfileService _socatProfileService;
     private readonly IPowerSupplyProfileService _powerSupplyProfileService;
     private readonly IMemoryRegionProfileService _memoryRegionProfileService;
+    private readonly IPayloadSetProfileService _payloadSetProfileService;
 
     #endregion
 
@@ -43,6 +44,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <param name="socatProfileService">The socat profile service for validation.</param>
     /// <param name="powerSupplyProfileService">The power supply profile service for validation.</param>
     /// <param name="memoryRegionProfileService">The memory region profile service for profile resolution.</param>
+    /// <param name="payloadSetProfileService">The payload set profile service for payload resolution.</param>
     public JobManager(
         Microsoft.Extensions.Options.IOptions<S7Tools.Core.Models.Jobs.JobManagerOptions> options,
         ILogger<JobManager> logger,
@@ -50,7 +52,8 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         ISerialPortProfileService serialProfileService,
         ISocatProfileService socatProfileService,
         IPowerSupplyProfileService powerSupplyProfileService,
-        IMemoryRegionProfileService memoryRegionProfileService)
+        IMemoryRegionProfileService memoryRegionProfileService,
+        IPayloadSetProfileService payloadSetProfileService)
         : base(options.Value.ProfilesPath, logger)
     {
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
@@ -58,6 +61,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
         _powerSupplyProfileService = powerSupplyProfileService ?? throw new ArgumentNullException(nameof(powerSupplyProfileService));
         _memoryRegionProfileService = memoryRegionProfileService ?? throw new ArgumentNullException(nameof(memoryRegionProfileService));
+        _payloadSetProfileService = payloadSetProfileService ?? throw new ArgumentNullException(nameof(payloadSetProfileService));
     }
 
     #endregion
@@ -300,7 +304,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         {
             try
             {
-                var memoryProfile = await _memoryRegionProfileService.GetByIdAsync(job.MemoryRegionProfileId, cancellationToken).ConfigureAwait(false);
+                MemoryMappingProfile? memoryProfile = await _memoryRegionProfileService.GetByIdAsync(job.MemoryRegionProfileId, cancellationToken).ConfigureAwait(false);
                 if (memoryProfile == null)
                 {
                     errors.Add(new ValidationError("MemoryRegionProfileId", $"Memory region profile with ID {job.MemoryRegionProfileId} not found"));

@@ -96,7 +96,7 @@ public class JobManagerTests
             Socat: new SocatProfileRef(10102, Ephemeral: false, CreateDefaultSocatConfig()),
             Power: new PowerProfileRef("192.168.1.100", 502, 1, 5, CreateDefaultPowerConfig()),
             Memory: new MemoryRegionProfile("0x20000000", 0x10000),
-            Payloads: new PayloadSetProfile("/payloads"),
+            Payloads: new PayloadSetProfile { BasePath = "/payloads" },
             OutputPath: "/tmp/dumps"
         );
     }

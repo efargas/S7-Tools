@@ -170,7 +170,7 @@ public class JobProfile : IProfileBase
     /// </summary>
     /// <value>The payload files and configuration for the bootloader operation.</value>
     [Required(ErrorMessage = "Payload configuration is required")]
-    public PayloadSetProfile Payloads { get; set; } = new("./bootloader-payloads");
+    public PayloadSetProfile Payloads { get; set; } = PayloadSetProfile.CreateDefault();
 
     /// <summary>
     /// Gets or sets the output path for dump files.
@@ -218,7 +218,7 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1, // Default socat profile
             PowerSupplyProfileId = 1, // Default power supply profile
             MemoryRegionProfileId = 1, // Default memory region profile
-            Payloads = new PayloadSetProfile("./bootloader-payloads"), // Default payload configuration
+            Payloads = PayloadSetProfile.CreateDefault(), // Default payload configuration
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
             PowerOffDelayMs = 2000,
@@ -257,7 +257,7 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1,
             PowerSupplyProfileId = 1,
             MemoryRegionProfileId = 1, // Default to first available memory region profile
-            Payloads = new PayloadSetProfile("./bootloader-payloads"),
+            Payloads = PayloadSetProfile.CreateDefault(),
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
             PowerOffDelayMs = 2000,

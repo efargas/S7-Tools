@@ -54,7 +54,7 @@ public class JobDomainValidationTests
                 Socat: new SocatProfileRef(8080, Ephemeral: true, CreateDefaultSocatConfig()),
                 Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2, CreateDefaultPowerConfig()),
                 Memory: new MemoryRegionProfile("0x20000000", 0x1000),
-                Payloads: new PayloadSetProfile("/tmp/payloads"),
+                Payloads: new PayloadSetProfile { BasePath = "/tmp/payloads" },
                 OutputPath: "/tmp/dumps"
             ),
             State = JobState.Created,
@@ -95,7 +95,7 @@ public class JobDomainValidationTests
                 Socat: new SocatProfileRef(8080, Ephemeral: true, CreateDefaultSocatConfig()),
                 Power: new PowerProfileRef("192.168.1.100", 502, 0, DelaySeconds: 2, CreateDefaultPowerConfig()),
                 Memory: new MemoryRegionProfile("0x20000000", 0x1000),
-                Payloads: new PayloadSetProfile("/tmp/payloads"),
+                Payloads: new PayloadSetProfile { BasePath = "/tmp/payloads" },
                 OutputPath: "/tmp/dumps"
             ),
             State = JobState.Created,

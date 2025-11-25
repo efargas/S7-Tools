@@ -409,7 +409,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
                 request.SourceProfileId, request.SuggestedName);
 
             // Show input dialog to get new name for duplicated job
-            var result = await ShowNameInputDialogAsync(
+            ProfileDialogResult<string> result = await ShowNameInputDialogAsync(
                 "Duplicate Job",
                 "Enter a name for the duplicated job:",
                 request.SuggestedName).ConfigureAwait(false);

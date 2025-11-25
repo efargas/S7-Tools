@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
@@ -764,7 +765,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         {
             // Show schedule dialog to get date/time
             string currentTime = DateTime.Now.AddMinutes(5).ToString("yyyy-MM-dd HH:mm");
-            var inputResult = await _dialogService.ShowInputAsync(
+            InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Schedule Task",
                 $"Enter the scheduled execution time for task '{SelectedTask.JobName}':\n\nFormat: yyyy-MM-dd HH:mm (24-hour format)",
                 currentTime,
@@ -1064,7 +1065,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             string jobListText = string.Join("\n", jobList.Select((j, i) => $"{i + 1}. {j.Name}"));
             string message = $"Select a job to create a task from:\n\n{jobListText}";
 
-            var inputResult = await _dialogService.ShowInputAsync(
+            InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Select Job",
                 message,
                 "1",

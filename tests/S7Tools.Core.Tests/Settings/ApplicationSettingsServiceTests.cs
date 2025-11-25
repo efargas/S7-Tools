@@ -143,6 +143,7 @@ namespace S7Tools.Core.Tests.Settings
             public string SocatProfilesPath => Path.Combine(ProfilesDirectory, "Socat", "SocatProfiles.json");
             public string PowerSupplyProfilesPath => Path.Combine(ProfilesDirectory, "PowerSupply", "PowerSupplyProfiles.json");
             public string MemoryRegionProfilesPath => Path.Combine(ProfilesDirectory, "MemoryRegions", "MemoryRegionProfiles.json");
+            public string PayloadSetProfilesPath => Path.Combine(ProfilesDirectory, "PayloadSets", "PayloadSetProfiles.json");
             public string MemoryRegionsDirectory => Path.Combine(ResourcesDirectory, "MemoryRegions");
             public string LogsDirectory => Path.Combine(ResourcesDirectory, "Logs");
             public string MainLogsDirectory => Path.Combine(LogsDirectory, "Main");

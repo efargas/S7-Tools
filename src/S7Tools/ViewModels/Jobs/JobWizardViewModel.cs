@@ -743,7 +743,10 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 existingJob.PowerSupplyProfileId = SelectedPower.Id;
                 existingJob.MemoryRegionProfileId = SelectedMemoryRegion.Id;
 
-                existingJob.Payloads = new PayloadSetProfile(PayloadsBasePath);
+                existingJob.Payloads = new PayloadSetProfile
+                {
+                    BasePath = PayloadsBasePath
+                };
                 existingJob.OutputPath = OutputPath;
                 existingJob.PowerOnTimeMs = PowerOnTimeMs;
                 existingJob.PowerOffDelayMs = PowerOffDelayMs;
@@ -763,7 +766,10 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 job.PowerSupplyProfileId = SelectedPower.Id;
                 job.MemoryRegionProfileId = SelectedMemoryRegion.Id;
 
-                job.Payloads = new PayloadSetProfile(PayloadsBasePath);
+                job.Payloads = new PayloadSetProfile
+                {
+                    BasePath = PayloadsBasePath
+                };
                 job.OutputPath = OutputPath;
                 job.PowerOnTimeMs = PowerOnTimeMs;
                 job.PowerOffDelayMs = PowerOffDelayMs;

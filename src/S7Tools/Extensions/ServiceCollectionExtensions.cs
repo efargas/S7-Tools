@@ -142,6 +142,9 @@ public static class ServiceCollectionExtensions
         // Add Memory Region Profile Service (Memory region profiling and mapping)
         services.TryAddSingleton<IMemoryRegionProfileService, MemoryRegionProfileService>();
 
+        // Add Payload Set Profile Service (Bootloader payload management)
+        services.TryAddSingleton<IPayloadSetProfileService, PayloadSetProfileService>();
+
         return services;
     }
 
@@ -243,6 +246,7 @@ public static class ServiceCollectionExtensions
             ISocatProfileService socatProfileService = serviceProvider.GetRequiredService<ISocatProfileService>();
             IPowerSupplyProfileService powerSupplyProfileService = serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
             IMemoryRegionProfileService memoryRegionProfileService = serviceProvider.GetRequiredService<IMemoryRegionProfileService>();
+            IPayloadSetProfileService payloadSetProfileService = serviceProvider.GetRequiredService<IPayloadSetProfileService>();
 
             // Create options with dynamically resolved path
             IOptions<JobManagerOptions> options = Microsoft.Extensions.Options.Options.Create(new S7Tools.Core.Models.Jobs.JobManagerOptions
@@ -250,8 +254,11 @@ public static class ServiceCollectionExtensions
                 ProfilesPath = pathService.JobsPath
             });
 
-            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService, memoryRegionProfileService);
+            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService, memoryRegionProfileService, payloadSetProfileService);
         });
+
+        // Add JobProfileSetFactory for creating JobProfileSet from profile IDs
+        services.TryAddSingleton<Services.Jobs.IJobProfileSetFactory, Services.Jobs.JobProfileSetFactory>();
 
         // Add Task Scheduling Services
         services.TryAddSingleton<ITaskScheduler, EnhancedTaskScheduler>();
