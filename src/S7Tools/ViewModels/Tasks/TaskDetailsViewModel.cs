@@ -372,7 +372,10 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 StatusMessage = "Connecting to power supply...";
             });
             _logger.LogInformation("Manual power ON command executed");
-
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = "Turning power ON...";
+            });
             await EnsurePowerSupplyConnectedAsync().ConfigureAwait(false);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
