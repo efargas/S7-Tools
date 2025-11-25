@@ -14,16 +14,9 @@ namespace S7Tools.Tests.ViewModels;
 /// </summary>
 public class TaskManagerViewModelTests
 {
-    [Fact]
-    public void T088_TaskManagerViewModel_Should_Use_UIThreadService_For_Updates()
+    private static Mock<TaskDetailsViewModel> CreateMockTaskDetailsViewModel()
     {
-        // Arrange
-        var logger = new Mock<ILogger<TaskManagerViewModel>>();
-        var taskScheduler = new Mock<ITaskScheduler>();
-        var jobManager = new Mock<IJobManager>();
-        var uiThreadService = new Mock<IUIThreadService>();
-        var dialogService = new Mock<IDialogService>();
-        var taskDetailsViewModel = new Mock<TaskDetailsViewModel>(
+        return new Mock<TaskDetailsViewModel>(
             new Mock<ILogger<TaskDetailsViewModel>>().Object,
             new Mock<ISocatService>().Object,
             new Mock<IPowerSupplyService>().Object,
@@ -31,15 +24,31 @@ public class TaskManagerViewModelTests
             new Mock<IUIThreadService>().Object,
             new Mock<IJobManager>().Object,
             new Mock<IPowerSupplyProfileService>().Object);
+    }
 
-        // Act
-        var viewModel = new TaskManagerViewModel(
+    private static TaskManagerViewModel CreateViewModel(
+        Mock<IUIThreadService>? uiThreadService = null,
+        Mock<TaskDetailsViewModel>? taskDetailsViewModel = null)
+    {
+        var logger = new Mock<ILogger<TaskManagerViewModel>>();
+        var taskScheduler = new Mock<ITaskScheduler>();
+        var jobManager = new Mock<IJobManager>();
+        var dialogService = new Mock<IDialogService>();
+
+        return new TaskManagerViewModel(
             logger.Object,
             taskScheduler.Object,
             jobManager.Object,
-            uiThreadService.Object,
+            (uiThreadService ?? new Mock<IUIThreadService>()).Object,
             dialogService.Object,
-            taskDetailsViewModel.Object);
+            (taskDetailsViewModel ?? CreateMockTaskDetailsViewModel()).Object);
+    }
+
+    [Fact]
+    public void T088_TaskManagerViewModel_Should_Use_UIThreadService_For_Updates()
+    {
+        // Arrange & Act
+        var viewModel = CreateViewModel();
 
         // Assert - Verify ViewModel was constructed with UIThreadService
         Assert.NotNull(viewModel);
@@ -50,27 +59,7 @@ public class TaskManagerViewModelTests
     public void StatusMessage_Should_Be_Settable()
     {
         // Arrange
-        var logger = new Mock<ILogger<TaskManagerViewModel>>();
-        var taskScheduler = new Mock<ITaskScheduler>();
-        var jobManager = new Mock<IJobManager>();
-        var uiThreadService = new Mock<IUIThreadService>();
-        var dialogService = new Mock<IDialogService>();
-        var taskDetailsViewModel = new Mock<TaskDetailsViewModel>(
-            new Mock<ILogger<TaskDetailsViewModel>>().Object,
-            new Mock<ISocatService>().Object,
-            new Mock<IPowerSupplyService>().Object,
-            new Mock<IEnhancedBootloaderService>().Object,
-            new Mock<IUIThreadService>().Object,
-            new Mock<IJobManager>().Object,
-            new Mock<IPowerSupplyProfileService>().Object);
-
-        var viewModel = new TaskManagerViewModel(
-            logger.Object,
-            taskScheduler.Object,
-            jobManager.Object,
-            uiThreadService.Object,
-            dialogService.Object,
-            taskDetailsViewModel.Object);
+        var viewModel = CreateViewModel();
 
         // Act
         viewModel.StatusMessage = "Test Message";
