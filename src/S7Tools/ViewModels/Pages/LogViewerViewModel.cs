@@ -586,12 +586,19 @@ internal class DesignTimeDialogService : IDialogService
     public Interaction<ConfirmationRequest, bool> ShowConfirmation { get; } = new();
     public Interaction<ConfirmationRequest, Unit> ShowError { get; } = new();
     public Interaction<InputRequest, InputResult> ShowInput { get; } = new();
+    public Interaction<JobSelectionRequest, Core.Models.Jobs.JobProfile?> ShowJobSelection { get; } = new();
 
     public Task<bool> ShowConfirmationAsync(string title, string message) => Task.FromResult(false);
     public Task ShowErrorAsync(string title, string message) => Task.CompletedTask;
     public Task<InputResult> ShowInputAsync(string title, string message, string? defaultValue = null, string? placeholder = null)
-        => Task.FromResult(InputResult.Cancelled());
-}
+    {
+        return Task.FromResult(InputResult.Cancelled());
+    }
 
+    public Task<Core.Models.Jobs.JobProfile?> ShowJobSelectionAsync()
+    {
+        return Task.FromResult<Core.Models.Jobs.JobProfile?>(null);
+    }
+}
 
 #endregion

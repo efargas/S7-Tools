@@ -65,6 +65,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private TimeSpan _averageExecutionTime;
     private string _resourceUtilization = string.Empty;
     private int _selectedTabIndex;
+    private bool _isTaskDetailsPanelExpanded = true;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskManagerViewModel"/> class.
@@ -100,13 +101,25 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             .Subscribe(task => _taskDetailsViewModel.TaskExecution = task)
             .DisposeWith(_disposables);
 
-        // Initialize with current tasks
+        // Initialize with current tasks - with retry logic for reliability
         _ = Task.Run(async () =>
         {
             try
             {
+                // Small delay to ensure scheduler is fully initialized
+                await Task.Delay(100).ConfigureAwait(false);
+
                 await LoadTasksAsync().ConfigureAwait(false);
                 _logger.LogInformation("Task Manager initialized with {TaskCount} tasks", TotalTasksCount);
+
+                // If no tasks loaded, try one more time after a longer delay
+                // This handles cases where the scheduler is still initializing
+                if (TotalTasksCount == 0)
+                {
+                    await Task.Delay(500).ConfigureAwait(false);
+                    await LoadTasksAsync().ConfigureAwait(false);
+                    _logger.LogInformation("Task Manager retry load completed with {TaskCount} tasks", TotalTasksCount);
+                }
             }
             catch (Exception ex)
             {
@@ -341,6 +354,19 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         get => _lastUpdated;
         private set => this.RaiseAndSetIfChanged(ref _lastUpdated, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the task details panel is expanded.
+    /// </summary>
+    /// <remarks>
+    /// Controls the visibility state of the collapsible task details panel.
+    /// Defaults to true (expanded) for immediate visibility of task information.
+    /// </remarks>
+    public bool IsTaskDetailsPanelExpanded
+    {
+        get => _isTaskDetailsPanelExpanded;
+        set => this.RaiseAndSetIfChanged(ref _isTaskDetailsPanelExpanded, value);
     }
 
     #endregion
@@ -1025,30 +1051,40 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_CreatingNewTask;
 
-            // TODO: Show job selection dialog
-            // For now, create from the first available job as a placeholder
-            IEnumerable<JobProfile> jobs = await _jobManager.GetAllAsync().ConfigureAwait(false);
-            JobProfile? firstJob = jobs.FirstOrDefault();
+            // Show job selection dialog
+            JobProfile? selectedJob = await _dialogService.ShowJobSelectionAsync().ConfigureAwait(false);
 
-            if (firstJob == null)
+            if (selectedJob == null)
             {
-                StatusMessage = UIStrings.Status_NoJobProfilesAvailable;
+                // User cancelled the dialog
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = "Task creation cancelled";
+                });
+                _logger.LogInformation("Task creation cancelled by user");
                 return;
             }
 
-            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(firstJob).ConfigureAwait(false);
+            // Create task from selected job
+            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(selectedJob).ConfigureAwait(false);
 
-            StatusMessage = $"Created new task '{newTask.JobName}' from job '{firstJob.Name}'";
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Created new task '{newTask.JobName}' from job '{selectedJob.Name}'";
+                // Select the new task
+                SelectedTask = newTask;
+            });
+
             _logger.LogInformation("Created new task {TaskId} from job {JobId} ({JobName})",
-                newTask.TaskId, firstJob.Id, firstJob.Name);
-
-            // Select the new task
-            SelectedTask = newTask;
+                newTask.TaskId, selectedJob.Id, selectedJob.Name);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error creating task: {ex.Message}";
-            _logger.LogError(ex, "Error creating new task in Task Manager");
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Error creating task: {ex.Message}";
+            });
+            _logger.LogError(ex, "Error creating task in Task Manager");
         }
         finally
         {

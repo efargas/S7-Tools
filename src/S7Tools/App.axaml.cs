@@ -111,6 +111,26 @@ public partial class App : Application
                             {
                                 logger.LogError(schedulerEx, "❌ Failed to start JobScheduler");
                             }
+
+                            // Start the TaskScheduler (EnhancedTaskScheduler) for task execution
+                            try
+                            {
+                                logger.LogInformation("🚀 Starting TaskScheduler...");
+                                Core.Services.Interfaces.ITaskScheduler? taskScheduler = _serviceProvider.GetService<Core.Services.Interfaces.ITaskScheduler>();
+                                if (taskScheduler != null)
+                                {
+                                    await taskScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);
+                                    logger.LogInformation("✅ TaskScheduler started successfully");
+                                }
+                                else
+                                {
+                                    logger.LogWarning("⚠️ TaskScheduler service not found in DI container");
+                                }
+                            }
+                            catch (Exception taskSchedulerEx)
+                            {
+                                logger.LogError(taskSchedulerEx, "❌ Failed to start TaskScheduler");
+                            }
                         }
                         catch (Exception profileEx)
                         {
@@ -311,6 +331,68 @@ public partial class App : Application
                     await ShowCriticalErrorNotificationAsync(
                         "Critical Input Dialog Error",
                         $"A critical error occurred while showing an input dialog: {ex.Message}",
+                        logger);
+                }
+            });
+
+            // Handle job selection dialogs
+            dialogService.ShowJobSelection.RegisterHandler(async interaction =>
+            {
+                try
+                {
+                    logger.LogDebug("Showing job selection dialog");
+
+                    // Get job manager to fetch available jobs
+                    var jobManager = _serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IJobManager>();
+                    if (jobManager == null)
+                    {
+                        logger.LogError("IJobManager service not available for job selection dialog");
+                        interaction.SetOutput(null);
+                        return;
+                    }
+
+                    // Fetch available jobs
+                    var jobs = await jobManager.GetAllAsync();
+                    var jobList = new System.Collections.ObjectModel.ObservableCollection<Core.Models.Jobs.JobProfile>(jobs);
+
+                    // Create the view model
+                    var viewModel = new JobSelectionDialogViewModel(jobList);
+
+                    DialogResult<Core.Models.Jobs.JobProfile?> result = await ShowDialogAsync<Core.Models.Jobs.JobProfile?>(
+                        () => new JobSelectionDialog
+                        {
+                            DataContext = viewModel
+                        },
+                        logger,
+                        "job selection dialog");
+
+                    if (result.IsSuccess)
+                    {
+                        interaction.SetOutput(result.Value);
+                        logger.LogDebug("Job selection dialog result: {JobName}",
+                            result.Value?.Name ?? "Cancelled");
+                    }
+                    else
+                    {
+                        logger.LogWarning("Job selection dialog failed, returning null");
+                        interaction.SetOutput(null);
+
+                        // Notify user of critical dialog failure
+                        await ShowCriticalErrorNotificationAsync(
+                            "Job Selection Dialog Error",
+                            "Failed to show job selection dialog. The operation has been cancelled.",
+                            logger);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error showing job selection dialog");
+                    interaction.SetOutput(null);
+
+                    // Notify user of critical dialog failure
+                    await ShowCriticalErrorNotificationAsync(
+                        "Critical Job Selection Dialog Error",
+                        $"A critical error occurred while showing the job selection dialog: {ex.Message}",
                         logger);
                 }
             });

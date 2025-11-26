@@ -365,6 +365,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
             _logger.LogDebug("Showing job create dialog with title: {Title}, default name: {DefaultName}",
                 request.Title, request.DefaultName);
 
+            await Task.CompletedTask;
+
+
             // Job profiles are created via the Job Wizard, not a simple dialog
             // Direct the user to use the Job Wizard instead
             _logger.LogInformation("Job creation should be done through Job Wizard");
@@ -385,6 +388,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             _logger.LogDebug("Showing job edit dialog for profile ID: {ProfileId}", request.ProfileId);
+
+            await Task.CompletedTask;
+
 
             // Job profiles are edited via the Job Wizard, not a simple dialog
             // Direct the user to use the Job Wizard instead

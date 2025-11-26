@@ -1,0 +1,104 @@
+<Window xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:S7Tools.ViewModels.Dialogs"
+    xmlns:jobs="using:S7Tools.Core.Models.Jobs"
+    mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="500"
+    x:Class="S7Tools.Views.Dialogs.JobSelectionDialog"
+    x:DataType="vm:JobSelectionDialogViewModel"
+    Title="Create Task from Job Profile"
+    Width="600" Height="500"
+    WindowStartupLocation="CenterOwner"
+    CanResize="True">
+
+    <Design.DataContext>
+        <vm:JobSelectionDialogViewModel />
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
+            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1"
+            Padding="16,12" Margin="-16,-16,-16,0">
+            <TextBlock Text="Create Task from Job Profile" FontWeight="SemiBold" FontSize="18" />
+        </Border>
+
+        <!-- Search Box -->
+        <Border Grid.Row="1" Padding="0,16,0,8">
+            <TextBox Text="{Binding SearchText}" Watermark="Search job profiles..." />
+        </Border>
+
+        <!-- Job List -->
+        <Border Grid.Row="2" Background="{DynamicResource SystemRegionBrush}"
+            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="1" CornerRadius="4">
+            <ListBox ItemsSource="{Binding FilteredJobs}"
+                SelectedItem="{Binding SelectedJob}"
+                Background="Transparent"
+                BorderThickness="0">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="jobs:JobProfile">
+                        <Border Padding="12,8" Background="Transparent">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                <!-- Job Name -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Name}"
+                                    FontWeight="SemiBold" FontSize="14" />
+
+                                <!-- Badges -->
+                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal"
+                                    Spacing="4">
+                                    <Border Background="{DynamicResource SystemAccentBrush}"
+                                        CornerRadius="8" Padding="6,2"
+                                        IsVisible="{Binding IsDefault}">
+                                        <TextBlock Text="Default" FontSize="10"
+                                            Foreground="{DynamicResource SystemAltHighBrush}" />
+                                    </Border>
+                                    <Border Background="#4CAF50" CornerRadius="8" Padding="6,2"
+                                        IsVisible="{Binding IsTemplate}">
+                                        <TextBlock Text="Template" FontSize="10" Foreground="White" />
+                                    </Border>
+                                    <Border Background="#FF9800" CornerRadius="8" Padding="6,2"
+                                        IsVisible="{Binding IsReadOnly}">
+                                        <TextBlock Text="Read-Only" FontSize="10" Foreground="White" />
+                                    </Border>
+                                </StackPanel>
+
+                                <!-- Description -->
+                                <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                    Text="{Binding Description}"
+                                    FontSize="12"
+                                    Foreground="{DynamicResource SystemBaseMediumBrush}"
+                                    TextWrapping="Wrap" Margin="0,4,0,0"
+                                    IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+                                <!-- Additional Info -->
+                                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                    Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+                                    <TextBlock FontSize="11"
+                                        Foreground="{DynamicResource SystemBaseMediumBrush}">
+                                        <Run Text="Device: " />
+                                        <Run Text="{Binding SerialDevice}" FontWeight="Medium" />
+                                    </TextBlock>
+                                    <TextBlock FontSize="11"
+                                        Foreground="{DynamicResource SystemBaseMediumBrush}">
+                                        <Run Text="Output: " />
+                                        <Run Text="{Binding OutputPath}" FontWeight="Medium" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8"
+            Margin="0,16,0,0">
+            <Button Content="Cancel" Command="{Binding CancelCommand}" Width="100" />
+            <Button Content="Create Task" Command="{Binding ConfirmCommand}" Width="120"
+                Classes="accent" IsDefault="True" />
+        </StackPanel>
+    </Grid>
+
+</Window>

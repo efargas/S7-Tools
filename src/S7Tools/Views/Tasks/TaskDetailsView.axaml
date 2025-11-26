@@ -1,24 +1,25 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:S7Tools.ViewModels.Tasks"
-             xmlns:jobs="using:S7Tools.Core.Models.Jobs"
-             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
-             x:Class="S7Tools.Views.Tasks.TaskDetailsView"
-             x:DataType="vm:TaskDetailsViewModel">
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:vm="using:S7Tools.ViewModels.Tasks"
+  xmlns:jobs="using:S7Tools.Core.Models.Jobs"
+  mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
+  x:Class="S7Tools.Views.Tasks.TaskDetailsView"
+  x:DataType="vm:TaskDetailsViewModel">
 
   <Grid RowDefinitions="Auto,Auto,*">
     <!-- Header with Task Name -->
     <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
-            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
       <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" Text="{Binding TaskExecution.JobName, FallbackValue='No Task Selected'}"
-                   FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="0"
+          Text="{Binding TaskExecution.JobName, FallbackValue='No Task Selected'}"
+          FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
           <Border Background="{DynamicResource SystemAccentBrush}" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding TaskExecution.State, FallbackValue='Unknown'}"
-                       Foreground="{DynamicResource SystemAltHighBrush}" FontSize="12" FontWeight="Medium" />
+              Foreground="{DynamicResource SystemAltHighBrush}" FontSize="12" FontWeight="Medium" />
           </Border>
         </StackPanel>
       </Grid>
@@ -31,29 +32,38 @@
         <Grid RowDefinitions="Auto,Auto">
           <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
             <TextBlock Text="Task Progress:" FontSize="12" FontWeight="SemiBold" />
-            <TextBlock Text="{Binding TaskExecution.ProgressPercentage, StringFormat='{}{0:F1}%', FallbackValue='0%'}" 
-                       FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentBrush}" />
+            <TextBlock
+              Text="{Binding TaskExecution.ProgressPercentage, StringFormat='{}{0:F1}%', FallbackValue='0%'}"
+              FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentBrush}" />
           </StackPanel>
-          <ProgressBar Grid.Row="1" Minimum="0" Maximum="100" 
-                       Value="{Binding TaskExecution.ProgressPercentage, FallbackValue=0}" 
-                       Height="8" Margin="0,4,0,0" />
+          <ProgressBar Grid.Row="1" Minimum="0" Maximum="100"
+            Value="{Binding TaskExecution.ProgressPercentage, FallbackValue=0}"
+            Height="8" Margin="0,4,0,0" />
         </Grid>
-        
+
         <!-- Current Operation -->
-        <TextBlock Text="{Binding TaskExecution.CurrentOperation, FallbackValue='Idle'}" 
-                   FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" 
-                   FontStyle="Italic" />
-        
+        <TextBlock Text="{Binding TaskExecution.CurrentOperation, FallbackValue='Idle'}"
+          FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}"
+          FontStyle="Italic" />
+
         <!-- Task Details Grid -->
         <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="120,*" Margin="0,8,0,0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Task ID:" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
-          <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TaskExecution.TaskId, FallbackValue='-'}" FontSize="12" />
+          <TextBlock Grid.Row="0" Grid.Column="0" Text="Task ID:" FontSize="12"
+            Foreground="{DynamicResource SystemBaseMediumBrush}" />
+          <TextBlock Grid.Row="0" Grid.Column="1"
+            Text="{Binding TaskExecution.TaskId, FallbackValue='-'}" FontSize="12" />
 
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Started:" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TaskExecution.StartedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+          <TextBlock Grid.Row="1" Grid.Column="0" Text="Started:" FontSize="12"
+            Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
+          <TextBlock Grid.Row="1" Grid.Column="1"
+            Text="{Binding TaskExecution.StartedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}"
+            FontSize="12" Margin="0,4,0,0" />
 
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Duration:" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-          <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TaskExecution.ExecutionTime, StringFormat='{}{0:mm\\:ss}', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+          <TextBlock Grid.Row="2" Grid.Column="0" Text="Duration:" FontSize="12"
+            Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
+          <TextBlock Grid.Row="2" Grid.Column="1"
+            Text="{Binding TaskExecution.ExecutionTime, StringFormat='{}{0:mm\\:ss}', FallbackValue='-'}"
+            FontSize="12" Margin="0,4,0,0" />
         </Grid>
       </StackPanel>
     </Border>
@@ -64,8 +74,8 @@
       <TabItem Header="Main Log">
         <ScrollViewer>
           <TextBlock Text="{Binding MainLogContent, FallbackValue='No main log data'}"
-                     FontFamily="Cascadia Code,Consolas,Courier New,monospace"
-                     FontSize="11" Padding="8" TextWrapping="Wrap" />
+            FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+            FontSize="11" Padding="8" TextWrapping="Wrap" />
         </ScrollViewer>
       </TabItem>
 
@@ -73,8 +83,8 @@
       <TabItem Header="Socat Log">
         <ScrollViewer>
           <TextBlock Text="{Binding ProcessLogContent, FallbackValue='No socat process log data'}"
-                     FontFamily="Cascadia Code,Consolas,Courier New,monospace"
-                     FontSize="11" Padding="8" TextWrapping="Wrap" />
+            FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+            FontSize="11" Padding="8" TextWrapping="Wrap" />
         </ScrollViewer>
       </TabItem>
 
@@ -82,8 +92,8 @@
       <TabItem Header="Protocol Log">
         <ScrollViewer>
           <TextBlock Text="{Binding ProtocolLogContent, FallbackValue='No protocol log data'}"
-                     FontFamily="Cascadia Code,Consolas,Courier New,monospace"
-                     FontSize="11" Padding="8" TextWrapping="Wrap" />
+            FontFamily="Cascadia Code,Consolas,Courier New,monospace"
+            FontSize="11" Padding="8" TextWrapping="Wrap" />
         </ScrollViewer>
       </TabItem>
 
@@ -92,62 +102,179 @@
         <ScrollViewer>
           <StackPanel Spacing="12" Margin="16">
             <!-- Status Message -->
-            <Border Background="#1E1E1E" CornerRadius="4" Padding="8" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <Border Background="#1E1E1E" CornerRadius="4" Padding="8"
+              IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
               <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
-                <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{DynamicResource SystemAccentBrush}" />
+                <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="12"
+                  Foreground="{DynamicResource SystemBaseMediumBrush}" />
+                <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                  Foreground="{DynamicResource SystemAccentBrush}" />
               </StackPanel>
             </Border>
-            
+
             <!-- Socat Server Control -->
             <TextBlock Text="Socat Server Control" FontWeight="SemiBold" FontSize="14" />
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <Button Content="Start Socat" Command="{Binding StartSocatCommand}"
-                      IsEnabled="{Binding CanStartSocat}"
-                      ToolTip.Tip="Manually start the socat bridge server" />
-              <Button Content="Stop Socat" Command="{Binding StopSocatCommand}"
-                      IsEnabled="{Binding CanStopSocat}"
-                      ToolTip.Tip="Manually stop the socat bridge server" />
-            </StackPanel>
-
-            <Separator Height="1" Margin="0,8,0,8" />
-
-            <!-- Power Supply Control -->
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <TextBlock Text="Power Supply Control" FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
-              <Border CornerRadius="8" Padding="6,2" Background="#4CAF50" IsVisible="{Binding IsPowerConnected}">
-                <TextBlock Text="Connected" FontSize="10" Foreground="White" />
-              </Border>
-              <Border CornerRadius="8" Padding="6,2" Background="#F44336" IsVisible="{Binding !IsPowerConnected}">
-                <TextBlock Text="Disconnected" FontSize="10" Foreground="White" />
-              </Border>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <Button Content="Power ON" Command="{Binding PowerOnCommand}"
-                      IsEnabled="{Binding !IsBusy}"
-                      ToolTip.Tip="Turn PLC power ON" />
-              <Button Content="Power OFF" Command="{Binding PowerOffCommand}"
-                      IsEnabled="{Binding !IsBusy}"
-                      ToolTip.Tip="Turn PLC power OFF" />
-              <Button Content="Power Cycle" Command="{Binding PowerCycleCommand}"
-                      IsEnabled="{Binding !IsBusy}"
-                      ToolTip.Tip="Power cycle the PLC (OFF -> ON)" />
-            </StackPanel>
-
-            <Separator Height="1" Margin="0,8,0,8" />
-
-            <!-- Verification -->
-            <TextBlock Text="Verification Results" FontWeight="SemiBold" FontSize="14" />
-            <Border Background="#1E1E1E" CornerRadius="4" Padding="12">
-              <TextBlock Text="{Binding ValidationResultText, FallbackValue='No validation data'}"
-                         FontFamily="Cascadia Code,Consolas,Courier New,monospace"
-                         FontSize="11" TextWrapping="Wrap" />
+            <!-- Serial Port Configuration Section -->
+            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
+              Padding="12">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Grid.Column="0" Text="Serial Port Configuration" FontWeight="SemiBold"
+                    FontSize="14" />
+                  <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding IsSerialPortConnected}">
+                      <TextBlock Text="Connected" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding !IsSerialPortConnected}">
+                      <TextBlock Text="Disconnected" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                  </StackPanel>
+                </Grid>
+                <TextBlock Text="Apply serial port configuration from task's job profile"
+                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                <Button Content="Apply Serial Configuration"
+                  Command="{Binding ApplySerialConfigCommand}"
+                  HorizontalAlignment="Left" />
+              </StackPanel>
             </Border>
 
-            <Button Content="Run Validation" Command="{Binding RunValidationCommand}"
-                    IsEnabled="{Binding !IsBusy}"
-                    HorizontalAlignment="Left"
-                    ToolTip.Tip="Run validation checks on task configuration" />
+            <!-- Socat Server Controls Section -->
+            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
+              Padding="12">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto,Auto">
+                  <TextBlock Grid.Column="0" Text="Socat Server Controls" FontWeight="SemiBold"
+                    FontSize="14" />
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,0">
+                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding CanStopSocat}">
+                      <TextBlock Text="Running" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding !CanStopSocat}">
+                      <TextBlock Text="Stopped" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" Orientation="Horizontal">
+                    <Border Background="#2196F3" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding IsSocatClientConnected}">
+                      <TextBlock Text="Client Connected" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding !IsSocatClientConnected}">
+                      <TextBlock Text="Client Disconnected" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                  </StackPanel>
+                </Grid>
+                <TextBlock Text="Manage socat TCP bridge server and client connection"
+                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                <WrapPanel>
+                  <Button Content="Start Server" Command="{Binding StartSocatCommand}"
+                    Margin="0,0,8,0" />
+                  <Button Content="Stop Server" Command="{Binding StopSocatCommand}"
+                    Margin="0,0,8,0" />
+                  <Button Content="Kill Server" Command="{Binding KillSocatCommand}"
+                    Margin="0,0,8,0" />
+                  <Button Content="Connect Client" Command="{Binding ConnectSocatClientCommand}"
+                    Margin="0,0,8,0" />
+                  <Button Content="Disconnect Client"
+                    Command="{Binding DisconnectSocatClientCommand}" />
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+
+            <!-- Power Supply Controls Section -->
+            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
+              Padding="12">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Grid.Column="0" Text="Power Supply Controls" FontWeight="SemiBold"
+                    FontSize="14" />
+                  <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding IsPowerConnected}">
+                      <TextBlock Text="Connected" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding !IsPowerConnected}">
+                      <TextBlock Text="Disconnected" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                  </StackPanel>
+                </Grid>
+                <TextBlock Text="Connect to power supply and control PLC power state"
+                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                <WrapPanel>
+                  <Button Content="Connect" Command="{Binding ConnectPowerSupplyCommand}"
+                    Margin="0,0,8,0" />
+                  <Button Content="Disconnect" Command="{Binding DisconnectPowerSupplyCommand}"
+                    Margin="0,0,8,0" />
+                  <Button Content="Power ON" Command="{Binding PowerOnCommand}" Margin="0,0,8,0" />
+                  <Button Content="Power OFF" Command="{Binding PowerOffCommand}" Margin="0,0,8,0" />
+                  <Button Content="Power Cycle" Command="{Binding PowerCycleCommand}" />
+                </WrapPanel>
+              </StackPanel>
+            </Border>
+
+            <!-- Manual Process Section -->
+            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
+              Padding="12">
+              <StackPanel Spacing="8">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Grid.Column="0" Text="Manual Process (Steps 5-11)"
+                    FontWeight="SemiBold" FontSize="14" />
+                  <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding CanStartManualProcess}">
+                      <TextBlock Text="Ready" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                    <Border Background="#FF9800" CornerRadius="10" Padding="8,3"
+                      IsVisible="{Binding !CanStartManualProcess}">
+                      <TextBlock Text="Not Ready" FontSize="11" FontWeight="Medium" />
+                    </Border>
+                  </StackPanel>
+                </Grid>
+                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#AAAAAA">
+                  <Run
+                    Text="Complete steps 1-4 manually (Serial Config, Socat Setup, Power Connect, Power ON), then click Start to automate steps 5-11 (Power Cycle → Memory Dump → Complete)." />
+                </TextBlock>
+
+                <!-- Progress Section -->
+                <StackPanel Spacing="4">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="{Binding CurrentProcessStep}" FontSize="12"
+                      FontWeight="Medium" />
+                    <TextBlock Grid.Column="1"
+                      Text="{Binding ManualProcessProgress, StringFormat='{}{0:F1}%'}"
+                      FontSize="12" FontWeight="SemiBold" Foreground="#2196F3" />
+                  </Grid>
+                  <ProgressBar Minimum="0" Maximum="100" Value="{Binding ManualProcessProgress}"
+                    Height="6" />
+                  <TextBlock
+                    Text="{Binding EstimatedTimeRemaining, StringFormat='Estimated time remaining: {0:mm\\:ss}'}"
+                    FontSize="11" Foreground="#AAAAAA" />
+                </StackPanel>
+
+                <Button Content="Start Manual Process"
+                  Command="{Binding StartManualProcessCommand}"
+                  HorizontalAlignment="Left" />
+              </StackPanel>
+            </Border>
+
+            <!-- Validation Section -->
+            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
+              Padding="12">
+              <StackPanel Spacing="8">
+                <TextBlock Text="Validation" FontWeight="SemiBold" FontSize="14" />
+                <TextBlock Text="Run validation checks on task configuration"
+                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                <Button Content="Run Validation"
+                  Command="{Binding RunValidationCommand}"
+                  HorizontalAlignment="Left" />
+              </StackPanel>
+            </Border>
+
           </StackPanel>
         </ScrollViewer>
       </TabItem>

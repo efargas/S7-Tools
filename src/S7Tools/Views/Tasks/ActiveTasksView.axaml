@@ -37,7 +37,6 @@
                         ToolTip.Tip="Stop this task" />
                 <Button Content="Details" FontSize="10" Padding="6,2"
                         Command="{Binding $parent[UserControl].DataContext.Manager.CreateTaskCommand}"
-                        CommandParameter="{Binding}"
                         ToolTip.Tip="Show task details" />
               </StackPanel>
             </DataTemplate>

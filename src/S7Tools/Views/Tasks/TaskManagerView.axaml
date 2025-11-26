@@ -1,49 +1,52 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="using:S7Tools.ViewModels.Tasks"
-             xmlns:views="using:S7Tools.Views.Tasks"
-             xmlns:jobs="using:S7Tools.Core.Models.Jobs"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="S7Tools.Views.Tasks.TaskManagerView"
-             x:DataType="vm:TaskManagerViewModel">
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:vm="using:S7Tools.ViewModels.Tasks"
+  xmlns:views="using:S7Tools.Views.Tasks"
+  xmlns:jobs="using:S7Tools.Core.Models.Jobs"
+  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+  x:Class="S7Tools.Views.Tasks.TaskManagerView"
+  x:DataType="vm:TaskManagerViewModel">
 
   <Grid RowDefinitions="Auto,Auto,*,Auto">
     <!-- Header Section with Statistics -->
     <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
-            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
       <Grid ColumnDefinitions="*,Auto,Auto,Auto">
         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
-          <TextBlock Text="Task Manager" FontWeight="SemiBold" FontSize="18" VerticalAlignment="Center" />
+          <TextBlock Text="Task Manager" FontWeight="SemiBold" FontSize="18"
+            VerticalAlignment="Center" />
           <Border Background="{DynamicResource SystemAccentBrush}" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding RunningTasksCount, StringFormat='Active: {0}'}"
-                       Foreground="{DynamicResource SystemAltHighBrush}" FontSize="12" FontWeight="Medium" />
+              Foreground="{DynamicResource SystemAltHighBrush}" FontSize="12" FontWeight="Medium" />
           </Border>
           <Border Background="{DynamicResource SystemBaseLowBrush}" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding TotalTasksCount, StringFormat='Total: {0}'}"
-                       Foreground="{DynamicResource SystemBaseHighBrush}" FontSize="12" />
+              Foreground="{DynamicResource SystemBaseHighBrush}" FontSize="12" />
           </Border>
           <Border Background="#D32F2F" CornerRadius="12" Padding="8,4"
-                  IsVisible="{Binding FailedTasksCount, Converter={x:Static ObjectConverters.IsNotNull}}">
+            IsVisible="{Binding FailedTasksCount, Converter={x:Static ObjectConverters.IsNotNull}}">
             <TextBlock Text="{Binding FailedTasksCount, StringFormat='Failed: {0}'}"
-                       Foreground="White" FontSize="12" />
+              Foreground="White" FontSize="12" />
           </Border>
         </StackPanel>
 
         <Button Grid.Column="1" Content="Create Task" Command="{Binding CreateTaskCommand}"
-                Margin="0,0,16,0" ToolTip.Tip="Create a new task from a job profile" />
+          Margin="0,0,16,0" ToolTip.Tip="Create a new task from a job profile" />
 
-        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,16,0">
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+          Margin="0,0,16,0">
           <TextBlock Text="Auto-refresh:" VerticalAlignment="Center" FontSize="12" />
-          <ToggleButton IsChecked="{Binding IsAutoRefreshEnabled}" ToolTip.Tip="Toggle automatic task list refresh" />
+          <ToggleButton IsChecked="{Binding IsAutoRefreshEnabled}"
+            ToolTip.Tip="Toggle automatic task list refresh" />
         </StackPanel>
 
         <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
           <Button Content="Refresh" Command="{Binding RefreshTasksCommand}"
-                  ToolTip.Tip="Manually refresh task list" />
+            ToolTip.Tip="Manually refresh task list" />
           <Button Content="Clear History" Command="{Binding ClearFinishedTasksCommand}"
-                  ToolTip.Tip="Clear completed and failed tasks" />
+            ToolTip.Tip="Clear completed and failed tasks" />
         </StackPanel>
       </Grid>
     </Border>
@@ -52,70 +55,85 @@
     <Border Grid.Row="1" Background="#252526" Padding="16,12" Margin="16,16,16,0">
       <Grid ColumnDefinitions="*,*,*,*">
         <StackPanel Grid.Column="0" Spacing="4">
-          <TextBlock Text="Created" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+          <TextBlock Text="Created" FontSize="12"
+            Foreground="{DynamicResource SystemBaseMediumBrush}" />
           <TextBlock Text="{Binding CreatedTasks.Count}" FontSize="24" FontWeight="SemiBold" />
         </StackPanel>
         <StackPanel Grid.Column="1" Spacing="4">
-          <TextBlock Text="Queued" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+          <TextBlock Text="Queued" FontSize="12"
+            Foreground="{DynamicResource SystemBaseMediumBrush}" />
           <TextBlock Text="{Binding QueuedTasks.Count}" FontSize="24" FontWeight="SemiBold" />
         </StackPanel>
         <StackPanel Grid.Column="2" Spacing="4">
-          <TextBlock Text="Scheduled" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+          <TextBlock Text="Scheduled" FontSize="12"
+            Foreground="{DynamicResource SystemBaseMediumBrush}" />
           <TextBlock Text="{Binding ScheduledTasks.Count}" FontSize="24" FontWeight="SemiBold" />
         </StackPanel>
         <StackPanel Grid.Column="3" Spacing="4">
-          <TextBlock Text="Avg. Time" FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+          <TextBlock Text="Avg. Time" FontSize="12"
+            Foreground="{DynamicResource SystemBaseMediumBrush}" />
           <TextBlock Text="{Binding AverageExecutionTime, StringFormat='{}{0:mm\\:ss}'}"
-                     FontSize="24" FontWeight="SemiBold" />
+            FontSize="24" FontWeight="SemiBold" />
         </StackPanel>
       </Grid>
     </Border>
 
-    <!-- Body: Split view with task list and details panel -->
-    <Grid Grid.Row="2" ColumnDefinitions="*,300" Margin="16,0,16,0">
-      <!-- Task List -->
-      <DataGrid Grid.Column="0" ItemsSource="{Binding AllActionableTasks}"
-                SelectedItem="{Binding SelectedTask}"
-                IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
-                GridLinesVisibility="Horizontal" HeadersVisibility="Column" Margin="0,0,8,0">
-        <DataGrid.Columns>
-          <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="150" />
-          <DataGridTextColumn Header="State" Binding="{Binding State}" Width="80" />
-          <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="80" />
-          <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
-          <DataGridTemplateColumn Header="Actions" Width="120">
-            <DataGridTemplateColumn.CellTemplate>
-              <DataTemplate>
-                <StackPanel Orientation="Horizontal" Spacing="4">
-                  <Button Content="Start" FontSize="10" Padding="6,2"
-                          Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StartTaskCommand}"
-                          CommandParameter="{Binding}"
-                          ToolTip.Tip="Start this task" />
-                  <Button Content="Stop" FontSize="10" Padding="6,2"
-                          Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StopTaskCommand}"
-                          CommandParameter="{Binding}"
-                          ToolTip.Tip="Stop this task" />
-                </StackPanel>
-              </DataTemplate>
-            </DataGridTemplateColumn.CellTemplate>
-          </DataGridTemplateColumn>
-        </DataGrid.Columns>
-      </DataGrid>
+    <!-- Body: Task list and details panel in vertical layout (Scrollable) -->
+    <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled"
+      VerticalScrollBarVisibility="Auto">
+      <Grid RowDefinitions="*,Auto" Margin="16,0,16,16">
+        <!-- Task List -->
+        <DataGrid Grid.Row="0" ItemsSource="{Binding AllActionableTasks}"
+          SelectedItem="{Binding SelectedTask}"
+          IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
+          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Margin="0,0,0,8"
+          MinHeight="200">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="150" />
+            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="80" />
+            <DataGridTextColumn Header="Progress"
+              Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="80" />
+            <DataGridTextColumn Header="Started"
+              Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
+            <DataGridTemplateColumn Header="Actions" Width="120">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button Content="Start" FontSize="10" Padding="6,2"
+                      Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StartTaskCommand}"
+                      CommandParameter="{Binding}"
+                      ToolTip.Tip="Start this task" />
+                    <Button Content="Stop" FontSize="10" Padding="6,2"
+                      Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StopTaskCommand}"
+                      CommandParameter="{Binding}"
+                      ToolTip.Tip="Stop this task" />
+                  </StackPanel>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+          </DataGrid.Columns>
+        </DataGrid>
 
-      <!-- Task Details Panel -->
-      <Border Grid.Column="1" Background="#252526" CornerRadius="4" Padding="0" Margin="8,0,0,0">
-        <views:TaskDetailsView DataContext="{Binding TaskDetailsViewModel}" />
-      </Border>
-    </Grid>
+        <!-- Task Details Panel (Collapsible) -->
+        <Expander Grid.Row="1" Header="Task Details"
+          IsExpanded="{Binding IsTaskDetailsPanelExpanded}"
+          Margin="0,8,0,0">
+          <Border Background="#252526" CornerRadius="4" Padding="0" Margin="0,4,0,0">
+            <views:TaskDetailsView DataContext="{Binding TaskDetailsViewModel}" />
+          </Border>
+        </Expander>
+      </Grid>
+    </ScrollViewer>
 
     <!-- Status Bar -->
     <Border Grid.Row="3" Background="{DynamicResource SystemRegionBrush}"
-            BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,1,0,0" Padding="16,8">
+      BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,1,0,0" Padding="16,8">
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock Grid.Column="0" Text="{Binding StatusMessage}"
-                   Foreground="{DynamicResource SystemBaseMediumBrush}" FontSize="12" />
-        <TextBlock Grid.Column="1" Text="{Binding LastUpdated, StringFormat='Last updated: {0:HH:mm:ss}'}"
-                   Foreground="{DynamicResource SystemBaseMediumBrush}" FontSize="12" />
+          Foreground="{DynamicResource SystemBaseMediumBrush}" FontSize="12" />
+        <TextBlock Grid.Column="1"
+          Text="{Binding LastUpdated, StringFormat='Last updated: {0:HH:mm:ss}'}"
+          Foreground="{DynamicResource SystemBaseMediumBrush}" FontSize="12" />
       </Grid>
     </Border>
   </Grid>

@@ -1,6 +1,7 @@
 using System.Reactive;
 using System.Threading.Tasks;
 using ReactiveUI;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Models;
 
 namespace S7Tools.Services.Interfaces;
@@ -24,6 +25,11 @@ public interface IDialogService
     /// Gets the interaction for showing input dialogs.
     /// </summary>
     Interaction<InputRequest, InputResult> ShowInput { get; }
+
+    /// <summary>
+    /// Gets the interaction for showing job selection dialogs.
+    /// </summary>
+    Interaction<JobSelectionRequest, JobProfile?> ShowJobSelection { get; }
 
     /// <summary>
     /// Shows a confirmation dialog.
@@ -50,4 +56,10 @@ public interface IDialogService
     /// <param name="placeholder">The placeholder text for the input field.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the input result.</returns>
     Task<InputResult> ShowInputAsync(string title, string message, string? defaultValue = null, string? placeholder = null);
+
+    /// <summary>
+    /// Shows a job selection dialog.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the selected job profile, or null if cancelled.</returns>
+    Task<JobProfile?> ShowJobSelectionAsync();
 }

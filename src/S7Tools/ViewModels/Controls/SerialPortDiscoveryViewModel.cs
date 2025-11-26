@@ -775,6 +775,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             // implemented in the View layer or through a proper clipboard service.
             // For now, users can export to file as an alternative.
             _logger.LogDebug("Clipboard copy requested for port: {PortName}", SelectedPort.PortName);
+            await Task.CompletedTask;
             StatusMessage = "Clipboard copy not yet implemented - use Export instead";
         }
         catch (Exception ex)

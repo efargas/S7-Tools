@@ -6,15 +6,11 @@
     "configurations": [
         {
             "name": "C#: S7Tools Debug",
-            "type": "dotnet",
+            "type": "coreclr",
             "request": "launch",
-            "projectPath": "${workspaceFolder}/src/S7Tools/S7Tools.csproj",
-            "program": "dotnet",
-            "args": [
-              "run",
-              "--project",
-              "${workspaceFolder}/src/S7Tools/S7Tools.csproj"
-            ],
+            "preLaunchTask": "dotnet: 2-build",
+            "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net8.0/S7Tools.dll",
+            "args": [],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "stopAtEntry": false
@@ -23,23 +19,15 @@
             "name": ".NET Meteor Debugger",
             "type": "dotnet-meteor.debugger",
             "request": "launch",
-            "preLaunchTask": "dotnet-meteor: Build",
+            "preLaunchTask": "dotnet-meteor: 2-Build",
             "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net8.0/S7Tools.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "console": "internalConsole",
-            "stopAtEntry": false
         },
         {
             "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "dotnet: build",
+            "preLaunchTask": "dotnet: 2-build",
             "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net8.0/S7Tools.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}",
-            "console": "internalConsole",
-            "stopAtEntry": false
         }
     ]
 }
