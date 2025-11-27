@@ -1029,6 +1029,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             StatusMessage = $"Cleared {clearedCount} finished tasks";
             _logger.LogInformation("Cleared {ClearedCount} finished tasks from Task Manager", clearedCount);
 
+            // Refresh the task list to update the UI
+            await LoadTasksAsync().ConfigureAwait(false);
+
             if (SelectedTask?.IsTerminal == true)
             {
                 SelectedTask = null;

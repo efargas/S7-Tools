@@ -118,6 +118,9 @@ public static class ServiceCollectionExtensions
 
         // Serial Port Profile Service (Communication - Serial profiles)
         services.TryAddSingleton<ISerialPortProfileService, SerialPortProfileService>();
+        // Register as IProfileManager<SerialPortProfile> for generic dependency injection
+        services.TryAddSingleton<IProfileManager<Core.Models.SerialPortProfile>>(provider =>
+            provider.GetRequiredService<ISerialPortProfileService>());
         services.TryAddSingleton<ISerialPortService>(provider =>
             new SerialPortService(
                 provider.GetRequiredService<ILogger<SerialPortService>>(),
@@ -127,6 +130,9 @@ public static class ServiceCollectionExtensions
 
         // Socat Profile Service (Servers Settings - socat configuration)
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();
+        // Register as IProfileManager<SocatProfile> for generic dependency injection
+        services.TryAddSingleton<IProfileManager<Core.Models.SocatProfile>>(provider =>
+            provider.GetRequiredService<ISocatProfileService>());
         services.TryAddSingleton<ISocatService>(provider =>
             new SocatService(
                 provider.GetRequiredService<ILogger<SocatService>>(),
@@ -137,13 +143,22 @@ public static class ServiceCollectionExtensions
 
         // Add Power Supply Profile Service (Power Supply Control - Modbus TCP)
         services.TryAddSingleton<IPowerSupplyProfileService, PowerSupplyProfileService>();
+        // Register as IProfileManager<PowerSupplyProfile> for generic dependency injection
+        services.TryAddSingleton<IProfileManager<Core.Models.PowerSupplyProfile>>(provider =>
+            provider.GetRequiredService<IPowerSupplyProfileService>());
         services.TryAddSingleton<IPowerSupplyService, PowerSupplyService>();
 
         // Add Memory Region Profile Service (Memory region profiling and mapping)
         services.TryAddSingleton<IMemoryRegionProfileService, MemoryRegionProfileService>();
+        // Register as IProfileManager<MemoryMappingProfile> for generic dependency injection
+        services.TryAddSingleton<IProfileManager<Core.Models.MemoryMappingProfile>>(provider =>
+            provider.GetRequiredService<IMemoryRegionProfileService>());
 
         // Add Payload Set Profile Service (Bootloader payload management)
         services.TryAddSingleton<IPayloadSetProfileService, PayloadSetProfileService>();
+        // Register as IProfileManager<PayloadSetProfile> for generic dependency injection
+        services.TryAddSingleton<IProfileManager<Core.Models.Jobs.PayloadSetProfile>>(provider =>
+            provider.GetRequiredService<IPayloadSetProfileService>());
 
         return services;
     }

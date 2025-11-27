@@ -217,6 +217,15 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public string? PreselectJobName { get; set; }
     public string? PreselectJobDescription { get; set; }
 
+    /// <summary>
+    /// Sets the job to be edited. Call this before showing the wizard.
+    /// </summary>
+    public void SetJobToEdit(int jobId)
+    {
+        _editingJobId = jobId;
+        IsEditMode = true;
+    }
+
     public ObservableCollection<SerialPortProfile> SerialProfiles { get; }
     public ObservableCollection<SocatProfile> SocatProfiles { get; }
     public ObservableCollection<PowerSupplyProfile> PowerProfiles { get; }
@@ -689,6 +698,12 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 }
             }).ConfigureAwait(false);
 
+            // If in edit mode and we have an ID, load the job details
+            if (IsEditMode && _editingJobId.HasValue)
+            {
+                await InitializeFromJobIdAsync(_editingJobId.Value).ConfigureAwait(false);
+            }
+
             Status = "";
         }
         catch (Exception ex)
@@ -792,6 +807,82 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         {
             IsBusy = false;
         }
+    }
+
+    private async Task InitializeFromJobIdAsync(int jobId)
+    {
+        try
+        {
+            Status = "Loading job details...";
+            JobProfile? job = await _jobManager.GetByIdAsync(jobId).ConfigureAwait(false);
+
+            if (job == null)
+            {
+                _logger.LogWarning("Job with ID {JobId} not found for editing", jobId);
+                Status = $"Job with ID {jobId} not found";
+                return;
+            }
+
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                InitializeFromJob(job);
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load job details for editing");
+            Status = $"Error loading job: {ex.Message}";
+        }
+    }
+
+    public void InitializeFromJob(JobProfile job)
+    {
+        if (job == null)
+        {
+            return;
+        }
+
+        _logger.LogInformation("Initializing wizard from job: {JobId} {JobName}", job.Id, job.Name);
+
+        // Basic info
+        JobName = job.Name;
+        JobDescription = job.Description;
+        _editingJobId = job.Id;
+        IsEditMode = true;
+
+        // Profile selections
+        SelectedSerial = SerialProfiles.FirstOrDefault(p => p.Id == job.SerialProfileId);
+        SelectedSocat = SocatProfiles.FirstOrDefault(p => p.Id == job.SocatProfileId);
+        SelectedPower = PowerProfiles.FirstOrDefault(p => p.Id == job.PowerSupplyProfileId);
+        SelectedMemoryRegion = MemoryProfiles.FirstOrDefault(p => p.Id == job.MemoryRegionProfileId);
+
+        // Port selection (if device is available)
+        if (!string.IsNullOrEmpty(job.SerialDevice))
+        {
+            // If the port is in the available list, select it
+            if (AvailablePorts.Contains(job.SerialDevice))
+            {
+                SelectedPort = job.SerialDevice;
+            }
+            // Also update the scanner's selection
+            PortScanner.SelectedPort = new S7Tools.ViewModels.Controls.SerialPortInfo
+            {
+                PortName = job.SerialDevice,
+                DisplayName = job.SerialDevice
+            };
+        }
+
+        // Timing & Output
+        OutputPath = job.OutputPath;
+        if (job.Payloads != null)
+        {
+            PayloadsBasePath = job.Payloads.BasePath;
+        }
+        PowerOnTimeMs = job.PowerOnTimeMs;
+        PowerOffDelayMs = job.PowerOffDelayMs;
+
+        // Force validation update
+        this.RaisePropertyChanged(nameof(CurrentStep));
     }
 
     private async Task<string?> BrowseFolderAsync(string title, string? initial)
