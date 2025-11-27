@@ -22,8 +22,10 @@
     <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
         <value>[base64 mime encoded serialized .NET Framework object]</value>
     </data>
-    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing"
+  mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework
+  object]</value>
     </data>
 
     There are any number of "resheader" rows that contain simple
@@ -54,7 +56,8 @@
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
-  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
@@ -107,10 +110,12 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0,
+      Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0,
+      Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
   <!-- Application Title and General -->
@@ -213,6 +218,14 @@
   <data name="Status_Loading" xml:space="preserve">
     <value>Loading...</value>
     <comment>Loading status message</comment>
+  </data>
+  <data name="Status_AllRequiredProfilesNeeded" xml:space="preserve">
+    <value>Please select all required profiles</value>
+    <comment>Status message when not all required profiles are selected in job wizard</comment>
+  </data>
+  <data name="Status_SerialDeviceRequired" xml:space="preserve">
+    <value>Please select a serial device</value>
+    <comment>Status message when serial device is not selected in job wizard</comment>
   </data>
 
   <!-- Log Viewer -->
@@ -340,7 +353,7 @@
     <value>Unknown error occurred</value>
     <comment>Generic error message for unknown errors</comment>
   </data>
-<!-- Aliases for CamelCase keys used by S7Tools.Resources.UIStrings -->
+  <!-- Aliases for CamelCase keys used by S7Tools.Resources.UIStrings -->
   <!-- Menus (camelcase versions) -->
   <data name="MenuFile" xml:space="preserve">
     <value>File</value>

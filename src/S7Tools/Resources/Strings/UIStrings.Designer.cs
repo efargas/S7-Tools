@@ -8,7 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace S7Tools.Resources.Strings {
+namespace S7Tools.Resources.Strings
+{
     using System;
 
 
@@ -22,23 +23,28 @@ namespace S7Tools.Resources.Strings {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    public class UIStrings {
+    public class UIStrings
+    {
 
         private static global::System.Resources.ResourceManager resourceMan;
 
         private static global::System.Globalization.CultureInfo resourceCulture;
 
         [global::System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal UIStrings() {
+        internal UIStrings()
+        {
         }
 
         /// <summary>
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Resources.ResourceManager ResourceManager {
-            get {
-                if (object.ReferenceEquals(resourceMan, null)) {
+        public static global::System.Resources.ResourceManager ResourceManager
+        {
+            get
+            {
+                if (object.ReferenceEquals(resourceMan, null))
+                {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("S7Tools.Resources.Strings.UIStrings", typeof(UIStrings).Assembly);
                     resourceMan = temp;
                 }
@@ -51,11 +57,14 @@ namespace S7Tools.Resources.Strings {
         ///   resource lookups using this strongly-typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        public static global::System.Globalization.CultureInfo Culture {
-            get {
+        public static global::System.Globalization.CultureInfo Culture
+        {
+            get
+            {
                 return resourceCulture;
             }
-            set {
+            set
+            {
                 resourceCulture = value;
             }
         }
@@ -63,8 +72,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Clear.
         /// </summary>
-        public static string Action_Clear {
-            get {
+        public static string Action_Clear
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Clear", resourceCulture);
             }
         }
@@ -72,8 +83,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
-        public static string Action_Close {
-            get {
+        public static string Action_Close
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Close", resourceCulture);
             }
         }
@@ -81,8 +94,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Connect.
         /// </summary>
-        public static string Action_Connect {
-            get {
+        public static string Action_Connect
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Connect", resourceCulture);
             }
         }
@@ -90,8 +105,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Disconnect.
         /// </summary>
-        public static string Action_Disconnect {
-            get {
+        public static string Action_Disconnect
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Disconnect", resourceCulture);
             }
         }
@@ -99,8 +116,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Exit.
         /// </summary>
-        public static string Action_Exit {
-            get {
+        public static string Action_Exit
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Exit", resourceCulture);
             }
         }
@@ -108,8 +127,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Export.
         /// </summary>
-        public static string Action_Export {
-            get {
+        public static string Action_Export
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Export", resourceCulture);
             }
         }
@@ -117,8 +138,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Open.
         /// </summary>
-        public static string Action_Open {
-            get {
+        public static string Action_Open
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Open", resourceCulture);
             }
         }
@@ -126,8 +149,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Save.
         /// </summary>
-        public static string Action_Save {
-            get {
+        public static string Action_Save
+        {
+            get
+            {
                 return ResourceManager.GetString("Action_Save", resourceCulture);
             }
         }
@@ -135,8 +160,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Connections.
         /// </summary>
-        public static string ActivityBar_Connections {
-            get {
+        public static string ActivityBar_Connections
+        {
+            get
+            {
                 return ResourceManager.GetString("ActivityBar_Connections", resourceCulture);
             }
         }
@@ -144,8 +171,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Explorer.
         /// </summary>
-        public static string ActivityBar_Explorer {
-            get {
+        public static string ActivityBar_Explorer
+        {
+            get
+            {
                 return ResourceManager.GetString("ActivityBar_Explorer", resourceCulture);
             }
         }
@@ -153,8 +182,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Log Viewer.
         /// </summary>
-        public static string ActivityBar_LogViewer {
-            get {
+        public static string ActivityBar_LogViewer
+        {
+            get
+            {
                 return ResourceManager.GetString("ActivityBar_LogViewer", resourceCulture);
             }
         }
@@ -162,8 +193,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Settings.
         /// </summary>
-        public static string ActivityBar_Settings {
-            get {
+        public static string ActivityBar_Settings
+        {
+            get
+            {
                 return ResourceManager.GetString("ActivityBar_Settings", resourceCulture);
             }
         }
@@ -171,8 +204,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Siemens S7 PLC Tools with Integrated LogViewer.
         /// </summary>
-        public static string ApplicationDescription {
-            get {
+        public static string ApplicationDescription
+        {
+            get
+            {
                 return ResourceManager.GetString("ApplicationDescription", resourceCulture);
             }
         }
@@ -180,8 +215,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to S7Tools.
         /// </summary>
-        public static string ApplicationTitle {
-            get {
+        public static string ApplicationTitle
+        {
+            get
+            {
                 return ResourceManager.GetString("ApplicationTitle", resourceCulture);
             }
         }
@@ -189,8 +226,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to clear all logs?.
         /// </summary>
-        public static string Confirm_ClearLogs {
-            get {
+        public static string Confirm_ClearLogs
+        {
+            get
+            {
                 return ResourceManager.GetString("Confirm_ClearLogs", resourceCulture);
             }
         }
@@ -198,8 +237,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to exit?.
         /// </summary>
-        public static string Confirm_Exit {
-            get {
+        public static string Confirm_Exit
+        {
+            get
+            {
                 return ResourceManager.GetString("Confirm_Exit", resourceCulture);
             }
         }
@@ -207,8 +248,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Connection failed. Please check your settings and try again..
         /// </summary>
-        public static string Error_ConnectionFailed {
-            get {
+        public static string Error_ConnectionFailed
+        {
+            get
+            {
                 return ResourceManager.GetString("Error_ConnectionFailed", resourceCulture);
             }
         }
@@ -216,8 +259,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to File not found. Please check the file path and try again..
         /// </summary>
-        public static string Error_FileNotFound {
-            get {
+        public static string Error_FileNotFound
+        {
+            get
+            {
                 return ResourceManager.GetString("Error_FileNotFound", resourceCulture);
             }
         }
@@ -225,8 +270,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Invalid configuration. Please check your settings..
         /// </summary>
-        public static string Error_InvalidConfiguration {
-            get {
+        public static string Error_InvalidConfiguration
+        {
+            get
+            {
                 return ResourceManager.GetString("Error_InvalidConfiguration", resourceCulture);
             }
         }
@@ -234,8 +281,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Category.
         /// </summary>
-        public static string LogViewer_Category {
-            get {
+        public static string LogViewer_Category
+        {
+            get
+            {
                 return ResourceManager.GetString("LogViewer_Category", resourceCulture);
             }
         }
@@ -243,8 +292,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Filter.
         /// </summary>
-        public static string LogViewer_Filter {
-            get {
+        public static string LogViewer_Filter
+        {
+            get
+            {
                 return ResourceManager.GetString("LogViewer_Filter", resourceCulture);
             }
         }
@@ -252,8 +303,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Level.
         /// </summary>
-        public static string LogViewer_Level {
-            get {
+        public static string LogViewer_Level
+        {
+            get
+            {
                 return ResourceManager.GetString("LogViewer_Level", resourceCulture);
             }
         }
@@ -261,8 +314,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Message.
         /// </summary>
-        public static string LogViewer_Message {
-            get {
+        public static string LogViewer_Message
+        {
+            get
+            {
                 return ResourceManager.GetString("LogViewer_Message", resourceCulture);
             }
         }
@@ -270,8 +325,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Search logs....
         /// </summary>
-        public static string LogViewer_Search {
-            get {
+        public static string LogViewer_Search
+        {
+            get
+            {
                 return ResourceManager.GetString("LogViewer_Search", resourceCulture);
             }
         }
@@ -279,8 +336,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Timestamp.
         /// </summary>
-        public static string LogViewer_Timestamp {
-            get {
+        public static string LogViewer_Timestamp
+        {
+            get
+            {
                 return ResourceManager.GetString("LogViewer_Timestamp", resourceCulture);
             }
         }
@@ -288,8 +347,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Log Viewer.
         /// </summary>
-        public static string LogViewer_Title {
-            get {
+        public static string LogViewer_Title
+        {
+            get
+            {
                 return ResourceManager.GetString("LogViewer_Title", resourceCulture);
             }
         }
@@ -297,8 +358,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Edit.
         /// </summary>
-        public static string Menu_Edit {
-            get {
+        public static string Menu_Edit
+        {
+            get
+            {
                 return ResourceManager.GetString("Menu_Edit", resourceCulture);
             }
         }
@@ -306,8 +369,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to File.
         /// </summary>
-        public static string Menu_File {
-            get {
+        public static string Menu_File
+        {
+            get
+            {
                 return ResourceManager.GetString("Menu_File", resourceCulture);
             }
         }
@@ -315,8 +380,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Help.
         /// </summary>
-        public static string Menu_Help {
-            get {
+        public static string Menu_Help
+        {
+            get
+            {
                 return ResourceManager.GetString("Menu_Help", resourceCulture);
             }
         }
@@ -324,8 +391,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Tools.
         /// </summary>
-        public static string Menu_Tools {
-            get {
+        public static string Menu_Tools
+        {
+            get
+            {
                 return ResourceManager.GetString("Menu_Tools", resourceCulture);
             }
         }
@@ -333,8 +402,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to View.
         /// </summary>
-        public static string Menu_View {
-            get {
+        public static string Menu_View
+        {
+            get
+            {
                 return ResourceManager.GetString("Menu_View", resourceCulture);
             }
         }
@@ -342,8 +413,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Connected.
         /// </summary>
-        public static string Status_Connected {
-            get {
+        public static string Status_Connected
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_Connected", resourceCulture);
             }
         }
@@ -351,8 +424,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Disconnected.
         /// </summary>
-        public static string Status_Disconnected {
-            get {
+        public static string Status_Disconnected
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_Disconnected", resourceCulture);
             }
         }
@@ -360,17 +435,43 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Loading....
         /// </summary>
-        public static string Status_Loading {
-            get {
+        public static string Status_Loading
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_Loading", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Please select all required profiles.
+        /// </summary>
+        public static string Status_AllRequiredProfilesNeeded
+        {
+            get
+            {
+                return ResourceManager.GetString("Status_AllRequiredProfilesNeeded", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a serial device.
+        /// </summary>
+        public static string Status_SerialDeviceRequired
+        {
+            get
+            {
+                return ResourceManager.GetString("Status_SerialDeviceRequired", resourceCulture);
             }
         }
 
         /// <summary>
         ///   Looks up a localized string similar to Ready.
         /// </summary>
-        public static string Status_Ready {
-            get {
+        public static string Status_Ready
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_Ready", resourceCulture);
             }
         }
@@ -378,8 +479,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Loading memory region profiles....
         /// </summary>
-        public static string Status_LoadingMemoryRegionProfiles {
-            get {
+        public static string Status_LoadingMemoryRegionProfiles
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_LoadingMemoryRegionProfiles", resourceCulture);
             }
         }
@@ -387,8 +490,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to No profiles available.
         /// </summary>
-        public static string Status_NoProfilesAvailable {
-            get {
+        public static string Status_NoProfilesAvailable
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_NoProfilesAvailable", resourceCulture);
             }
         }
@@ -396,8 +501,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Creating job....
         /// </summary>
-        public static string Status_CreatingJob {
-            get {
+        public static string Status_CreatingJob
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_CreatingJob", resourceCulture);
             }
         }
@@ -405,8 +512,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Job created.
         /// </summary>
-        public static string Status_JobCreated {
-            get {
+        public static string Status_JobCreated
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_JobCreated", resourceCulture);
             }
         }
@@ -414,8 +523,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Unknown.
         /// </summary>
-        public static string Status_PowerUnknown {
-            get {
+        public static string Status_PowerUnknown
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerUnknown", resourceCulture);
             }
         }
@@ -423,8 +534,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Error loading profiles: {0}.
         /// </summary>
-        public static string Status_ErrorLoadingProfiles {
-            get {
+        public static string Status_ErrorLoadingProfiles
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ErrorLoadingProfiles", resourceCulture);
             }
         }
@@ -432,8 +545,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Error: {0}.
         /// </summary>
-        public static string Status_ErrorCreatingJob {
-            get {
+        public static string Status_ErrorCreatingJob
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ErrorCreatingJob", resourceCulture);
             }
         }
@@ -441,8 +556,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Error scanning ports: {0}.
         /// </summary>
-        public static string Status_ErrorScanningPorts {
-            get {
+        public static string Status_ErrorScanningPorts
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ErrorScanningPorts", resourceCulture);
             }
         }
@@ -450,8 +567,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Logs exported to clipboard.
         /// </summary>
-        public static string Status_LogsExportedToClipboard {
-            get {
+        public static string Status_LogsExportedToClipboard
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_LogsExportedToClipboard", resourceCulture);
             }
         }
@@ -459,8 +578,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Loading profiles....
         /// </summary>
-        public static string Status_LoadingProfiles {
-            get {
+        public static string Status_LoadingProfiles
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_LoadingProfiles", resourceCulture);
             }
         }
@@ -468,8 +589,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Scanning for ports....
         /// </summary>
-        public static string Status_ScanningForPorts {
-            get {
+        public static string Status_ScanningForPorts
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ScanningForPorts", resourceCulture);
             }
         }
@@ -477,8 +600,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile name is required.
         /// </summary>
-        public static string Validation_ProfileNameRequired {
-            get {
+        public static string Validation_ProfileNameRequired
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_ProfileNameRequired", resourceCulture);
             }
         }
@@ -486,8 +611,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile name already exists.
         /// </summary>
-        public static string Validation_ProfileNameExists {
-            get {
+        public static string Validation_ProfileNameExists
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_ProfileNameExists", resourceCulture);
             }
         }
@@ -495,8 +622,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Please select a memory region profile.
         /// </summary>
-        public static string Validation_SelectMemoryRegionProfile {
-            get {
+        public static string Validation_SelectMemoryRegionProfile
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_SelectMemoryRegionProfile", resourceCulture);
             }
         }
@@ -504,8 +633,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Job name is required.
         /// </summary>
-        public static string Validation_JobNameRequired {
-            get {
+        public static string Validation_JobNameRequired
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_JobNameRequired", resourceCulture);
             }
         }
@@ -513,8 +644,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Base address must be a valid hexadecimal value.
         /// </summary>
-        public static string Validation_BaseAddressHex {
-            get {
+        public static string Validation_BaseAddressHex
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_BaseAddressHex", resourceCulture);
             }
         }
@@ -522,8 +655,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Size must be greater than zero.
         /// </summary>
-        public static string Validation_SizeGreaterThanZero {
-            get {
+        public static string Validation_SizeGreaterThanZero
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_SizeGreaterThanZero", resourceCulture);
             }
         }
@@ -531,8 +666,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Auto.
         /// </summary>
-        public static string Theme_Auto {
-            get {
+        public static string Theme_Auto
+        {
+            get
+            {
                 return ResourceManager.GetString("Theme_Auto", resourceCulture);
             }
         }
@@ -540,8 +677,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Dark.
         /// </summary>
-        public static string Theme_Dark {
-            get {
+        public static string Theme_Dark
+        {
+            get
+            {
                 return ResourceManager.GetString("Theme_Dark", resourceCulture);
             }
         }
@@ -549,8 +688,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Light.
         /// </summary>
-        public static string Theme_Light {
-            get {
+        public static string Theme_Light
+        {
+            get
+            {
                 return ResourceManager.GetString("Theme_Light", resourceCulture);
             }
         }
@@ -558,8 +699,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Switch Theme.
         /// </summary>
-        public static string Tooltip_SwitchTheme {
-            get {
+        public static string Tooltip_SwitchTheme
+        {
+            get
+            {
                 return ResourceManager.GetString("Tooltip_SwitchTheme", resourceCulture);
             }
         }
@@ -567,8 +710,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Toggle Bottom Panel.
         /// </summary>
-        public static string Tooltip_ToggleBottomPanel {
-            get {
+        public static string Tooltip_ToggleBottomPanel
+        {
+            get
+            {
                 return ResourceManager.GetString("Tooltip_ToggleBottomPanel", resourceCulture);
             }
         }
@@ -576,8 +721,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Toggle Sidebar.
         /// </summary>
-        public static string Tooltip_ToggleSidebar {
-            get {
+        public static string Tooltip_ToggleSidebar
+        {
+            get
+            {
                 return ResourceManager.GetString("Tooltip_ToggleSidebar", resourceCulture);
             }
         }
@@ -585,8 +732,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Memory region profile must be selected.
         /// </summary>
-        public static string Validation_MemoryRegionProfileRequired {
-            get {
+        public static string Validation_MemoryRegionProfileRequired
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_MemoryRegionProfileRequired", resourceCulture);
             }
         }
@@ -594,8 +743,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Exactly one segment must be selected for dumping.
         /// </summary>
-        public static string Validation_ExactlyOneSegmentRequired {
-            get {
+        public static string Validation_ExactlyOneSegmentRequired
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_ExactlyOneSegmentRequired", resourceCulture);
             }
         }
@@ -603,8 +754,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Only one segment can be selected per job.
         /// </summary>
-        public static string Validation_OnlyOneSegmentAllowed {
-            get {
+        public static string Validation_OnlyOneSegmentAllowed
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_OnlyOneSegmentAllowed", resourceCulture);
             }
         }
@@ -612,8 +765,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to A profile with this name already exists.
         /// </summary>
-        public static string Validation_ProfileNameAlreadyExists {
-            get {
+        public static string Validation_ProfileNameAlreadyExists
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_ProfileNameAlreadyExists", resourceCulture);
             }
         }
@@ -621,8 +776,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Error validating profile name.
         /// </summary>
-        public static string Validation_ErrorValidatingProfileName {
-            get {
+        public static string Validation_ErrorValidatingProfileName
+        {
+            get
+            {
                 return ResourceManager.GetString("Validation_ErrorValidatingProfileName", resourceCulture);
             }
         }
@@ -630,8 +787,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Test clipboard text.
         /// </summary>
-        public static string TestClipboardText {
-            get {
+        public static string TestClipboardText
+        {
+            get
+            {
                 return ResourceManager.GetString("TestClipboardText", resourceCulture);
             }
         }
@@ -639,8 +798,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Text cut to clipboard.
         /// </summary>
-        public static string ClipboardTextCut {
-            get {
+        public static string ClipboardTextCut
+        {
+            get
+            {
                 return ResourceManager.GetString("ClipboardTextCut", resourceCulture);
             }
         }
@@ -648,8 +809,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Text copied to clipboard.
         /// </summary>
-        public static string ClipboardTextCopied {
-            get {
+        public static string ClipboardTextCopied
+        {
+            get
+            {
                 return ResourceManager.GetString("ClipboardTextCopied", resourceCulture);
             }
         }
@@ -657,8 +820,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Text pasted from clipboard.
         /// </summary>
-        public static string ClipboardTextPasted {
-            get {
+        public static string ClipboardTextPasted
+        {
+            get
+            {
                 return ResourceManager.GetString("ClipboardTextPasted", resourceCulture);
             }
         }
@@ -666,8 +831,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Ready.
         /// </summary>
-        public static string StatusReady {
-            get {
+        public static string StatusReady
+        {
+            get
+            {
                 return ResourceManager.GetString("StatusReady", resourceCulture);
             }
         }
@@ -675,8 +842,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile selected: {0}.
         /// </summary>
-        public static string Status_ProfileSelected {
-            get {
+        public static string Status_ProfileSelected
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileSelected", resourceCulture);
             }
         }
@@ -684,8 +853,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile '{0}' deleted successfully.
         /// </summary>
-        public static string Status_ProfileDeletedSuccessfully {
-            get {
+        public static string Status_ProfileDeletedSuccessfully
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileDeletedSuccessfully", resourceCulture);
             }
         }
@@ -693,8 +864,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile duplicated: {0}.
         /// </summary>
-        public static string Status_ProfileDuplicated {
-            get {
+        public static string Status_ProfileDuplicated
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileDuplicated", resourceCulture);
             }
         }
@@ -702,8 +875,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile '{0}' set as default.
         /// </summary>
-        public static string Status_ProfileSetAsDefault {
-            get {
+        public static string Status_ProfileSetAsDefault
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileSetAsDefault", resourceCulture);
             }
         }
@@ -711,8 +886,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Error refreshing profiles.
         /// </summary>
-        public static string Status_ErrorRefreshingProfiles {
-            get {
+        public static string Status_ErrorRefreshingProfiles
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ErrorRefreshingProfiles", resourceCulture);
             }
         }
@@ -720,8 +897,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profiles refreshed.
         /// </summary>
-        public static string Status_ProfilesRefreshed {
-            get {
+        public static string Status_ProfilesRefreshed
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfilesRefreshed", resourceCulture);
             }
         }
@@ -729,8 +908,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to No profile selected.
         /// </summary>
-        public static string Status_NoProfileSelected {
-            get {
+        public static string Status_NoProfileSelected
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_NoProfileSelected", resourceCulture);
             }
         }
@@ -738,8 +919,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Selected profile has no configuration.
         /// </summary>
-        public static string Status_SelectedProfileHasNoConfiguration {
-            get {
+        public static string Status_SelectedProfileHasNoConfiguration
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_SelectedProfileHasNoConfiguration", resourceCulture);
             }
         }
@@ -747,8 +930,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile validation failed: {0}.
         /// </summary>
-        public static string Status_ProfileValidationFailed {
-            get {
+        public static string Status_ProfileValidationFailed
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileValidationFailed", resourceCulture);
             }
         }
@@ -756,8 +941,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile name cannot be empty.
         /// </summary>
-        public static string Status_ProfileNameCannotBeEmpty {
-            get {
+        public static string Status_ProfileNameCannotBeEmpty
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileNameCannotBeEmpty", resourceCulture);
             }
         }
@@ -765,8 +952,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile name is too long.
         /// </summary>
-        public static string Status_ProfileNameTooLong {
-            get {
+        public static string Status_ProfileNameTooLong
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileNameTooLong", resourceCulture);
             }
         }
@@ -774,8 +963,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profile name '{0}' is already in use.
         /// </summary>
-        public static string Status_ProfileNameAlreadyInUse {
-            get {
+        public static string Status_ProfileNameAlreadyInUse
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfileNameAlreadyInUse", resourceCulture);
             }
         }
@@ -783,8 +974,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to File dialog service not available.
         /// </summary>
-        public static string Status_FileDialogServiceNotAvailable {
-            get {
+        public static string Status_FileDialogServiceNotAvailable
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FileDialogServiceNotAvailable", resourceCulture);
             }
         }
@@ -792,8 +985,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to {0} profile(s) exported to {1}.
         /// </summary>
-        public static string Status_ProfilesExportedToFile {
-            get {
+        public static string Status_ProfilesExportedToFile
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfilesExportedToFile", resourceCulture);
             }
         }
@@ -801,8 +996,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Export failed: Access denied.
         /// </summary>
-        public static string Status_ExportFailedAccessDenied {
-            get {
+        public static string Status_ExportFailedAccessDenied
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ExportFailedAccessDenied", resourceCulture);
             }
         }
@@ -810,8 +1007,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Export failed: {0}.
         /// </summary>
-        public static string Status_ExportFailed {
-            get {
+        public static string Status_ExportFailed
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ExportFailed", resourceCulture);
             }
         }
@@ -819,8 +1018,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Import failed: No valid profiles found in file.
         /// </summary>
-        public static string Status_ImportFailedNoValidProfiles {
-            get {
+        public static string Status_ImportFailedNoValidProfiles
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ImportFailedNoValidProfiles", resourceCulture);
             }
         }
@@ -828,8 +1029,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to {0} profile(s) imported from {1}.
         /// </summary>
-        public static string Status_ProfilesImportedFromFile {
-            get {
+        public static string Status_ProfilesImportedFromFile
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfilesImportedFromFile", resourceCulture);
             }
         }
@@ -837,8 +1040,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Import failed: File not found.
         /// </summary>
-        public static string Status_ImportFailedFileNotFound {
-            get {
+        public static string Status_ImportFailedFileNotFound
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ImportFailedFileNotFound", resourceCulture);
             }
         }
@@ -846,8 +1051,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Import failed: Invalid file format.
         /// </summary>
-        public static string Status_ImportFailedInvalidFormat {
-            get {
+        public static string Status_ImportFailedInvalidFormat
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ImportFailedInvalidFormat", resourceCulture);
             }
         }
@@ -855,8 +1062,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Import failed: Access denied.
         /// </summary>
-        public static string Status_ImportFailedAccessDenied {
-            get {
+        public static string Status_ImportFailedAccessDenied
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ImportFailedAccessDenied", resourceCulture);
             }
         }
@@ -864,8 +1073,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Import failed: {0}.
         /// </summary>
-        public static string Status_ImportFailed {
-            get {
+        public static string Status_ImportFailed
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ImportFailed", resourceCulture);
             }
         }
@@ -873,8 +1084,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Connected to {0}.
         /// </summary>
-        public static string Status_ConnectedToProfile {
-            get {
+        public static string Status_ConnectedToProfile
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ConnectedToProfile", resourceCulture);
             }
         }
@@ -882,8 +1095,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Turning power ON....
         /// </summary>
-        public static string Status_TurningPowerOn {
-            get {
+        public static string Status_TurningPowerOn
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_TurningPowerOn", resourceCulture);
             }
         }
@@ -891,8 +1106,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power turned ON.
         /// </summary>
-        public static string Status_PowerTurnedOn {
-            get {
+        public static string Status_PowerTurnedOn
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerTurnedOn", resourceCulture);
             }
         }
@@ -900,8 +1117,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Failed to turn power ON.
         /// </summary>
-        public static string Status_FailedToTurnPowerOn {
-            get {
+        public static string Status_FailedToTurnPowerOn
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FailedToTurnPowerOn", resourceCulture);
             }
         }
@@ -909,8 +1128,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Turning power OFF....
         /// </summary>
-        public static string Status_TurningPowerOff {
-            get {
+        public static string Status_TurningPowerOff
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_TurningPowerOff", resourceCulture);
             }
         }
@@ -918,8 +1139,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power turned OFF.
         /// </summary>
-        public static string Status_PowerTurnedOff {
-            get {
+        public static string Status_PowerTurnedOff
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerTurnedOff", resourceCulture);
             }
         }
@@ -927,8 +1150,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Failed to turn power OFF.
         /// </summary>
-        public static string Status_FailedToTurnPowerOff {
-            get {
+        public static string Status_FailedToTurnPowerOff
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FailedToTurnPowerOff", resourceCulture);
             }
         }
@@ -936,8 +1161,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Reading power state....
         /// </summary>
-        public static string Status_ReadingPowerState {
-            get {
+        public static string Status_ReadingPowerState
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ReadingPowerState", resourceCulture);
             }
         }
@@ -945,8 +1172,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power state: {0}.
         /// </summary>
-        public static string Status_PowerStateOnOff {
-            get {
+        public static string Status_PowerStateOnOff
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerStateOnOff", resourceCulture);
             }
         }
@@ -954,8 +1183,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Error reading state: {0}.
         /// </summary>
-        public static string Status_ReadStateError {
-            get {
+        public static string Status_ReadStateError
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ReadStateError", resourceCulture);
             }
         }
@@ -963,8 +1194,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Not connected to power supply.
         /// </summary>
-        public static string Status_NotConnectedToPowerSupply {
-            get {
+        public static string Status_NotConnectedToPowerSupply
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_NotConnectedToPowerSupply", resourceCulture);
             }
         }
@@ -972,8 +1205,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power cycle: Turning OFF....
         /// </summary>
-        public static string Status_PowerCycleTurningOff {
-            get {
+        public static string Status_PowerCycleTurningOff
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerCycleTurningOff", resourceCulture);
             }
         }
@@ -981,8 +1216,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power cycle failed: Could not turn OFF.
         /// </summary>
-        public static string Status_PowerCycleFailedCouldNotTurnOff {
-            get {
+        public static string Status_PowerCycleFailedCouldNotTurnOff
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerCycleFailedCouldNotTurnOff", resourceCulture);
             }
         }
@@ -990,8 +1227,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power cycle: Waiting {0}ms before turning ON....
         /// </summary>
-        public static string Status_PowerCycleWaitingBeforeTurningOn {
-            get {
+        public static string Status_PowerCycleWaitingBeforeTurningOn
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerCycleWaitingBeforeTurningOn", resourceCulture);
             }
         }
@@ -999,8 +1238,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power cycle: Turning ON....
         /// </summary>
-        public static string Status_PowerCycleTurningOn {
-            get {
+        public static string Status_PowerCycleTurningOn
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerCycleTurningOn", resourceCulture);
             }
         }
@@ -1008,8 +1249,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power cycle failed: Could not turn ON.
         /// </summary>
-        public static string Status_PowerCycleFailedCouldNotTurnOn {
-            get {
+        public static string Status_PowerCycleFailedCouldNotTurnOn
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerCycleFailedCouldNotTurnOn", resourceCulture);
             }
         }
@@ -1017,8 +1260,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Power cycle: Waiting {0}ms to stabilize....
         /// </summary>
-        public static string Status_PowerCycleWaitingToStabilize {
-            get {
+        public static string Status_PowerCycleWaitingToStabilize
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_PowerCycleWaitingToStabilize", resourceCulture);
             }
         }
@@ -1026,8 +1271,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profiles path set to: {0}.
         /// </summary>
-        public static string Status_ProfilesPathSetTo {
-            get {
+        public static string Status_ProfilesPathSetTo
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfilesPathSetTo", resourceCulture);
             }
         }
@@ -1035,8 +1282,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Failed to set profiles path: Access denied.
         /// </summary>
-        public static string Status_FailedToSetProfilesPathAccessDenied {
-            get {
+        public static string Status_FailedToSetProfilesPathAccessDenied
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FailedToSetProfilesPathAccessDenied", resourceCulture);
             }
         }
@@ -1044,8 +1293,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Failed to set profiles path: {0}.
         /// </summary>
-        public static string Status_FailedToSetProfilesPath {
-            get {
+        public static string Status_FailedToSetProfilesPath
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FailedToSetProfilesPath", resourceCulture);
             }
         }
@@ -1053,8 +1304,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Opening profiles folder....
         /// </summary>
-        public static string Status_OpeningProfilesFolder {
-            get {
+        public static string Status_OpeningProfilesFolder
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_OpeningProfilesFolder", resourceCulture);
             }
         }
@@ -1062,8 +1315,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profiles path not configured.
         /// </summary>
-        public static string Status_ProfilesPathNotConfigured {
-            get {
+        public static string Status_ProfilesPathNotConfigured
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfilesPathNotConfigured", resourceCulture);
             }
         }
@@ -1071,8 +1326,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Creating profiles folder....
         /// </summary>
-        public static string Status_CreatingProfilesFolder {
-            get {
+        public static string Status_CreatingProfilesFolder
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_CreatingProfilesFolder", resourceCulture);
             }
         }
@@ -1080,8 +1337,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profiles folder opened.
         /// </summary>
-        public static string Status_ProfilesFolderOpened {
-            get {
+        public static string Status_ProfilesFolderOpened
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfilesFolderOpened", resourceCulture);
             }
         }
@@ -1089,8 +1348,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Failed to open folder: Access denied.
         /// </summary>
-        public static string Status_FailedToOpenFolderAccessDenied {
-            get {
+        public static string Status_FailedToOpenFolderAccessDenied
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FailedToOpenFolderAccessDenied", resourceCulture);
             }
         }
@@ -1098,8 +1359,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Failed to open folder: {0}.
         /// </summary>
-        public static string Status_FailedToOpenFolder {
-            get {
+        public static string Status_FailedToOpenFolder
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FailedToOpenFolder", resourceCulture);
             }
         }
@@ -1107,8 +1370,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Profiles path reset to default.
         /// </summary>
-        public static string Status_ProfilesPathReset {
-            get {
+        public static string Status_ProfilesPathReset
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ProfilesPathReset", resourceCulture);
             }
         }
@@ -1116,8 +1381,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Failed to reset profiles path: {0}.
         /// </summary>
-        public static string Status_FailedToResetProfilesPath {
-            get {
+        public static string Status_FailedToResetProfilesPath
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_FailedToResetProfilesPath", resourceCulture);
             }
         }
@@ -1125,8 +1392,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Warning: Failed to load settings.
         /// </summary>
-        public static string Status_WarningFailedToLoadSettings {
-            get {
+        public static string Status_WarningFailedToLoadSettings
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_WarningFailedToLoadSettings", resourceCulture);
             }
         }
@@ -1134,8 +1403,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to Error during {0}: {1}.
         /// </summary>
-        public static string Status_ErrorOperation {
-            get {
+        public static string Status_ErrorOperation
+        {
+            get
+            {
                 return ResourceManager.GetString("Status_ErrorOperation", resourceCulture);
             }
         }
@@ -1143,8 +1414,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to ON.
         /// </summary>
-        public static string Value_PowerOn {
-            get {
+        public static string Value_PowerOn
+        {
+            get
+            {
                 return ResourceManager.GetString("Value_PowerOn", resourceCulture);
             }
         }
@@ -1152,8 +1425,10 @@ namespace S7Tools.Resources.Strings {
         /// <summary>
         ///   Looks up a localized string similar to OFF.
         /// </summary>
-        public static string Value_PowerOff {
-            get {
+        public static string Value_PowerOff
+        {
+            get
+            {
                 return ResourceManager.GetString("Value_PowerOff", resourceCulture);
             }
         }

@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -13,6 +14,7 @@ using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
 using S7Tools.Services.Interfaces;
+using S7Tools.Services.Jobs;
 
 namespace S7Tools.ViewModels.Tasks;
 
@@ -32,6 +34,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortService _serialPortService;
     private readonly ISerialPortProfileService _serialPortProfileService;
     private readonly ISocatProfileService _socatProfileService;
+    private readonly IJobProfileSetFactory _jobProfileSetFactory;
     private readonly CompositeDisposable _disposables = new();
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
 
@@ -53,6 +56,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private string _currentProcessStep = string.Empty;
     private TimeSpan? _estimatedTimeRemaining;
     private bool _canStartManualProcess;
+    private SocatProcessInfo? _currentSocatProcess;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskDetailsViewModel"/> class.
@@ -64,6 +68,10 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     /// <param name="uiThreadService">UI thread service for cross-thread updates.</param>
     /// <param name="jobManager">Job manager for accessing job profiles.</param>
     /// <param name="powerSupplyProfileService">Power supply profile service for accessing power supply configurations.</param>
+    /// <param name="serialPortService">Serial port service for manual serial port configuration.</param>
+    /// <param name="serialPortProfileService">Serial port profile service for accessing serial port profiles.</param>
+    /// <param name="socatProfileService">Socat profile service for accessing socat profiles.</param>
+    /// <param name="jobProfileSetFactory">Job profile set factory for creating profile sets.</param>
     public TaskDetailsViewModel(
         ILogger<TaskDetailsViewModel> logger,
         ISocatService socatService,
@@ -74,7 +82,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         IPowerSupplyProfileService powerSupplyProfileService,
         ISerialPortService serialPortService,
         ISerialPortProfileService serialPortProfileService,
-        ISocatProfileService socatProfileService)
+        ISocatProfileService socatProfileService,
+        IJobProfileSetFactory jobProfileSetFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
@@ -86,6 +95,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
         _serialPortProfileService = serialPortProfileService ?? throw new ArgumentNullException(nameof(serialPortProfileService));
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
+        _jobProfileSetFactory = jobProfileSetFactory ?? throw new ArgumentNullException(nameof(jobProfileSetFactory));
 
         SetupCommands();
         SetupLogRefresh();
@@ -488,18 +498,95 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         await _uiThreadService.InvokeOnUIThreadAsync(UpdatePowerConnectionState);
     }
 
-    private Task ExecuteStartSocatAsync()
+    private async Task ExecuteStartSocatAsync()
     {
-        _logger.LogInformation("Manual start socat command executed");
-        StatusMessage = "Socat start not yet implemented - use automated task execution";
-        return Task.CompletedTask;
+        await _operationSemaphore.WaitAsync();
+        try
+        {
+            IsBusy = true;
+            StatusMessage = "Starting socat server...";
+
+            JobProfile? jobProfile = await GetCurrentJobProfileAsync();
+            if (jobProfile == null)
+            {
+                StatusMessage = "Error: Job profile not found";
+                return;
+            }
+
+            // Get socat profile
+            SocatProfile? socatProfile = await _socatProfileService.GetByIdAsync(jobProfile.SocatProfileId);
+            if (socatProfile == null)
+            {
+                StatusMessage = "Error: Socat profile not found";
+                return;
+            }
+
+            // Get serial device path from job profile
+            string serialDevice = jobProfile.SerialDevice;
+
+            // Start socat server
+            _currentSocatProcess = await _socatService.StartSocatWithProfileAsync(
+                socatProfile,
+                serialDevice,
+                null, // processLogger - could be TaskExecution.Logger if needed
+                CancellationToken.None);
+
+            CanStopSocat = true;
+            StatusMessage = $"Socat server started on port {socatProfile.Configuration.TcpPort}";
+            UpdateCanStartManualProcess();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start socat server");
+            StatusMessage = $"Error starting socat: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+            _operationSemaphore.Release();
+        }
     }
 
-    private Task ExecuteStopSocatAsync()
+    private async Task ExecuteStopSocatAsync()
     {
-        _logger.LogInformation("Manual stop socat command executed");
-        StatusMessage = "Socat stop not yet implemented - use automated task execution";
-        return Task.CompletedTask;
+        await _operationSemaphore.WaitAsync();
+        try
+        {
+            IsBusy = true;
+            StatusMessage = "Stopping socat server...";
+
+            if (_currentSocatProcess != null)
+            {
+                bool success = await _socatService.StopSocatAsync(_currentSocatProcess);
+
+                if (success)
+                {
+                    _currentSocatProcess = null;
+                    CanStopSocat = false;
+                    StatusMessage = "Socat server stopped successfully";
+                }
+                else
+                {
+                    StatusMessage = "Failed to stop socat server gracefully";
+                }
+            }
+            else
+            {
+                StatusMessage = "No socat server process to stop";
+            }
+
+            UpdateCanStartManualProcess();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to stop socat server");
+            StatusMessage = $"Error stopping socat: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+            _operationSemaphore.Release();
+        }
     }
 
     private async Task ExecutePowerOnAsync()
@@ -724,9 +811,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            // Get serial device path from job profile (assuming it's stored in metadata or similar)
-            // For now, we'll use a default path - in a real implementation, this should come from the job profile
-            string serialDevice = "/dev/ttyUSB0"; // TODO: Get from job profile
+            // Get serial device path from job profile
+            string serialDevice = jobProfile.SerialDevice;
 
             // Apply serial port configuration
             bool success = await _serialPortService.ApplyProfileAsync(serialDevice, serialProfile);
@@ -920,7 +1006,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             CurrentProcessStep = "Starting manual process from step 5...";
             StatusMessage = "Manual process started";
 
-            // Get job profile to pass to bootloader service
+            // Get job profile to create profile set
             JobProfile? jobProfile = await GetCurrentJobProfileAsync();
             if (jobProfile == null)
             {
@@ -928,33 +1014,43 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            // TODO: Implement manual process execution from step 5
-            // This would involve calling the bootloader service with a flag to skip steps 1-4
-            // For now, this is a placeholder that shows progress
+            // Create JobProfileSet from the job profile's profile IDs
+            JobProfileSet profileSet = await _jobProfileSetFactory.CreateFromProfileIdsAsync(
+                jobProfile.SerialProfileId,
+                jobProfile.SocatProfileId,
+                jobProfile.PowerSupplyProfileId,
+                jobProfile.MemoryRegionProfileId,
+                jobProfile.Payloads.Id, // Use the ID from the embedded PayloadSetProfile
+                jobProfile.OutputPath,
+                jobProfile.PowerOnTimeMs,
+                jobProfile.PowerOffDelayMs,
+                CancellationToken.None);
 
-            // Simulate progress through steps 5-11
-            string[] steps = {
-                "Step 5: Power cycling PLC...",
-                "Step 6: Connecting PLC client...",
-                "Step 7: Performing handshake...",
-                "Step 8: Installing stager...",
-                "Step 9: Dumping memory...",
-                "Step 10: Teardown...",
-                "Step 11: Complete"
-            };
+            // Execute the bootloader dump operation with task tracking
+            // This will automatically update TaskExecution with progress and state changes
+            // The bootloader service will handle steps 5-11:
+            // 5. Power cycle (enter bootloader mode)
+            // 6. Connect PLC client
+            // 7. Perform handshake
+            // 8. Install stager
+            // 9. Dump memory
+            // 10. Teardown
+            // 11. Complete
+            byte[] dumpedData = await _bootloaderService.DumpWithTaskTrackingAsync(
+                TaskExecution,
+                profileSet,
+                CancellationToken.None);
 
-            for (int i = 0; i < steps.Length; i++)
-            {
-                CurrentProcessStep = steps[i];
-                ManualProcessProgress = ((i + 1) / (double)steps.Length) * 100;
-                EstimatedTimeRemaining = TimeSpan.FromSeconds((steps.Length - i - 1) * 10);
-                await Task.Delay(1000); // Simulate work
-            }
+            // Save the dumped data to the output file
+            string outputFile = Path.Combine(jobProfile.OutputPath, $"dump_{DateTime.Now:yyyyMMdd_HHmmss}.bin");
+            await File.WriteAllBytesAsync(outputFile, dumpedData);
 
             ManualProcessProgress = 100;
             CurrentProcessStep = "Manual process completed";
             EstimatedTimeRemaining = null;
-            StatusMessage = "Manual process completed successfully";
+            StatusMessage = $"Manual process completed successfully. Output: {outputFile}";
+
+            _logger.LogInformation("Manual process completed. Dumped {ByteCount} bytes to {OutputFile}", dumpedData.Length, outputFile);
         }
         catch (Exception ex)
         {

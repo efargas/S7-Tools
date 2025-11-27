@@ -711,14 +711,14 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
 
             if (SelectedSerial == null || SelectedSocat == null || SelectedPower == null || SelectedMemoryRegion == null)
             {
-                Status = "Please select all required profiles"; // TODO: Add UIStrings.Status_AllRequiredProfilesNeeded
+                Status = UIStrings.Status_AllRequiredProfilesNeeded;
                 return;
             }
 
             // Validate serial device selection
             if (PortScanner.SelectedPort == null || string.IsNullOrWhiteSpace(PortScanner.SelectedPort.PortName))
             {
-                Status = "Please select a serial device"; // TODO: Add UIStrings.Status_SerialDeviceRequired
+                Status = UIStrings.Status_SerialDeviceRequired;
                 return;
             }
 
