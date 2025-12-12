@@ -47,7 +47,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private int _selectedTabIndex;
     private bool _canStartSocat = true;
     private bool _canStopSocat;
-    private bool _canControlPower = true;
     private bool _isPowerConnected;
     private bool _isBusy;
     private bool _isSerialPortConnected;
@@ -57,6 +56,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private TimeSpan? _estimatedTimeRemaining;
     private bool _canStartManualProcess;
     private SocatProcessInfo? _currentSocatProcess;
+    private System.Net.Sockets.TcpClient? _socatTcpClient;
+    private IDisposable? _taskStateSubscription;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskDetailsViewModel"/> class.
@@ -100,6 +101,61 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         SetupCommands();
         SetupLogRefresh();
         UpdatePowerConnectionState();
+
+        // Subscribe to task state changes for auto-disconnect
+        this.WhenAnyValue(x => x.TaskExecution)
+            .Subscribe(task =>
+            {
+                _taskStateSubscription?.Dispose();
+
+                if (task != null)
+                {
+                    _taskStateSubscription = task.WhenAnyValue(x => x.State)
+                        .Subscribe(state =>
+                        {
+                            if (state == TaskState.Completed || state == TaskState.Cancelled || state == TaskState.Failed)
+                            {
+                                _ = Task.Run(async () =>
+                                {
+                                    try
+                                    {
+                                        // Auto-disconnect power supply when task finishes
+                                        if (_powerSupplyService.IsConnected)
+                                        {
+                                            await _powerSupplyService.DisconnectAsync();
+                                            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                                            {
+                                                IsPowerConnected = false;
+                                            });
+                                        }
+
+                                        // Auto-disconnect socat client when task finishes
+                                        if (_socatTcpClient != null)
+                                        {
+                                            _socatTcpClient.Close();
+                                            _socatTcpClient.Dispose();
+                                            _socatTcpClient = null;
+                                            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                                            {
+                                                IsSocatClientConnected = false;
+                                            });
+                                        }
+
+                                        await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                                        {
+                                            StatusMessage = "Connections auto-closed (task finished)";
+                                        });
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Failed to auto-disconnect connections");
+                                    }
+                                });
+                            }
+                        });
+                }
+            })
+            .DisposeWith(_disposables);
     }
 
     #region Properties
@@ -181,15 +237,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         get => _canStopSocat;
         private set => this.RaiseAndSetIfChanged(ref _canStopSocat, value);
-    }
-
-    /// <summary>
-    /// Gets or sets whether power control is available.
-    /// </summary>
-    public bool CanControlPower
-    {
-        get => _canControlPower;
-        private set => this.RaiseAndSetIfChanged(ref _canControlPower, value);
     }
 
     /// <summary>
@@ -350,9 +397,11 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         StartSocatCommand = ReactiveCommand.CreateFromTask(ExecuteStartSocatAsync);
         StopSocatCommand = ReactiveCommand.CreateFromTask(ExecuteStopSocatAsync);
-        PowerOnCommand = ReactiveCommand.CreateFromTask(ExecutePowerOnAsync);
-        PowerOffCommand = ReactiveCommand.CreateFromTask(ExecutePowerOffAsync);
-        PowerCycleCommand = ReactiveCommand.CreateFromTask(ExecutePowerCycleAsync);
+
+        var canExecutePowerCommands = this.WhenAnyValue(x => x.IsPowerConnected);
+        PowerOnCommand = ReactiveCommand.CreateFromTask(ExecutePowerOnAsync, canExecutePowerCommands);
+        PowerOffCommand = ReactiveCommand.CreateFromTask(ExecutePowerOffAsync, canExecutePowerCommands);
+        PowerCycleCommand = ReactiveCommand.CreateFromTask(ExecutePowerCycleAsync, canExecutePowerCommands);
         RunValidationCommand = ReactiveCommand.CreateFromTask(
             ExecuteRunValidationAsync,
             this.WhenAnyValue(x => x.TaskExecution).Select(t => t != null));
@@ -367,7 +416,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
         ConnectSocatClientCommand = ReactiveCommand.CreateFromTask(
             ExecuteConnectSocatClientAsync,
-            this.WhenAnyValue(x => x.TaskExecution).Select(t => t != null));
+            this.WhenAnyValue(x => x.CanStopSocat));
 
         DisconnectSocatClientCommand = ReactiveCommand.CreateFromTask(
             ExecuteDisconnectSocatClientAsync,
@@ -375,8 +424,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
         ConnectPowerSupplyCommand = ReactiveCommand.CreateFromTask(
             ExecuteConnectPowerSupplyAsync,
-            this.WhenAnyValue(x => x.CanControlPower, x => x.IsPowerConnected)
-                .Select(tuple => tuple.Item1 && !tuple.Item2));
+            this.WhenAnyValue(x => x.TaskExecution, x => x.IsPowerConnected)
+                .Select(tuple => tuple.Item1 != null && !tuple.Item2));
 
         DisconnectPowerSupplyCommand = ReactiveCommand.CreateFromTask(
             ExecuteDisconnectPowerSupplyAsync,
@@ -444,7 +493,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private void UpdatePowerConnectionState()
     {
         IsPowerConnected = _powerSupplyService.IsConnected;
-        CanControlPower = IsPowerConnected;
     }
 
     private async Task<JobProfile?> GetCurrentJobProfileAsync()
@@ -843,11 +891,32 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             IsBusy = true;
             StatusMessage = "Killing socat server...";
 
-            // Kill all socat processes
-            int stoppedCount = await _socatService.StopAllSocatProcessesAsync();
+            if (_currentSocatProcess != null)
+            {
+                // Kill only this task's socat process by PID
+                bool success = await _socatService.StopSocatByIdAsync(_currentSocatProcess.ProcessId);
 
-            CanStopSocat = false;
-            StatusMessage = $"Killed {stoppedCount} socat server process(es)";
+                if (success)
+                {
+                    StatusMessage = $"Killed socat server (PID: {_currentSocatProcess.ProcessId})";
+                    _currentSocatProcess = null;
+                    CanStopSocat = false;
+                    IsSocatClientConnected = false;
+
+                    // Clean up TCP connection if it exists
+                    _socatTcpClient?.Dispose();
+                    _socatTcpClient = null;
+                }
+                else
+                {
+                    StatusMessage = $"Failed to kill socat server (PID: {_currentSocatProcess.ProcessId})";
+                }
+            }
+            else
+            {
+                StatusMessage = "No socat server process to kill";
+            }
+
             UpdateCanStartManualProcess();
         }
         catch (Exception ex)
@@ -870,17 +939,34 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             IsBusy = true;
             StatusMessage = "Connecting to socat server...";
 
-            // Note: Socat client connection is handled by the bootloader service
-            // This is just a status update - actual connection happens during bootloader handshake
-            // For manual control, we just mark it as ready
+            if (_currentSocatProcess == null)
+            {
+                StatusMessage = "Error: No socat server process running";
+                return;
+            }
+
+            // Establish persistent TCP connection to socat server
+            _socatTcpClient = new System.Net.Sockets.TcpClient();
+            await _socatTcpClient.ConnectAsync(
+                _currentSocatProcess.TcpHost,
+                _currentSocatProcess.TcpPort);
+
             IsSocatClientConnected = true;
-            StatusMessage = "Socat client ready for connection";
+            StatusMessage = $"Connected to socat server on {_currentSocatProcess.TcpHost}:{_currentSocatProcess.TcpPort}";
+            _logger.LogInformation(
+                "Established persistent TCP connection to socat server on port {Port}",
+                _currentSocatProcess.TcpPort);
             UpdateCanStartManualProcess();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to connect to socat server");
             StatusMessage = $"Error connecting to socat: {ex.Message}";
+            IsSocatClientConnected = false;
+
+            // Clean up failed connection
+            _socatTcpClient?.Dispose();
+            _socatTcpClient = null;
         }
         finally
         {
@@ -897,8 +983,15 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             IsBusy = true;
             StatusMessage = "Disconnecting from socat server...";
 
-            // Note: Socat client disconnection is handled by the bootloader service
-            // This is just a status update
+            // Close and dispose persistent TCP connection
+            if (_socatTcpClient != null)
+            {
+                _socatTcpClient.Close();
+                _socatTcpClient.Dispose();
+                _socatTcpClient = null;
+                _logger.LogInformation("Closed persistent TCP connection to socat server");
+            }
+
             IsSocatClientConnected = false;
             StatusMessage = "Socat client disconnected";
             UpdateCanStartManualProcess();
@@ -1094,6 +1187,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
+            _socatTcpClient?.Dispose();
+            _taskStateSubscription?.Dispose();
             _disposables?.Dispose();
             _operationSemaphore?.Dispose();
         }

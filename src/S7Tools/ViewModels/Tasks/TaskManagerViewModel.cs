@@ -209,17 +209,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// This includes newly created tasks waiting to start, queued tasks, and actively running tasks.
     /// Used for the main task grid view to show all tasks that aren't finished.
     /// </remarks>
-    public IEnumerable<TaskExecution> AllActionableTasks
-    {
-        get
-        {
-            return CreatedTasks
-                .Concat(QueuedTasks)
-                .Concat(ScheduledTasks)
-                .Concat(ActiveTasks)
-                .OrderBy(t => t.CreatedAt);
-        }
-    }
+    public IEnumerable<TaskExecution> AllActionableTasks => CreatedTasks
+        .Concat(QueuedTasks)
+        .Concat(ScheduledTasks)
+        .Concat(ActiveTasks)
+        .OrderBy(t => t.CreatedAt);
 
     /// <summary>
     /// Gets or sets the currently selected task across all collections.
