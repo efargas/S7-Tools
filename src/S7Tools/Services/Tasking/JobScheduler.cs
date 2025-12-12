@@ -9,7 +9,7 @@ namespace S7Tools.Services.Tasking;
 /// Manages job scheduling, execution, and resource coordination.
 /// Executes jobs in parallel when resources allow, queuing conflicting jobs.
 /// </summary>
-public sealed class JobScheduler : IJobScheduler
+public sealed class JobScheduler : IJobScheduler, IDisposable
 {
     private readonly ILogger<JobScheduler> _logger;
     private readonly IResourceCoordinator _resources;
@@ -19,6 +19,7 @@ public sealed class JobScheduler : IJobScheduler
     private readonly SemaphoreSlim _schedulerLock = new(1, 1);
     private CancellationTokenSource? _schedulerCts;
     private Task? _schedulerTask;
+    private bool _disposed;
 
     /// <inheritdoc />
     public event EventHandler<JobStateChangedEventArgs>? JobStateChanged;
@@ -459,5 +460,20 @@ public sealed class JobScheduler : IJobScheduler
             "complete" => "Operation complete",
             _ => stage.Replace("_", " ")
         };
+    }
+
+    /// <summary>
+    /// Disposes the JobScheduler and releases managed resources.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _schedulerLock.Dispose();
+        _schedulerCts?.Dispose();
+        _disposed = true;
     }
 }

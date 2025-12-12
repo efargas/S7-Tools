@@ -401,7 +401,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// Creates a new task execution from a failed or cancelled task configuration.
     /// Enabled when a task in Failed or Cancelled state is selected.
     /// </remarks>
-    public ReactiveCommand<Unit, Unit> RestartTaskCommand { get; private set; } = null!;
+    public ReactiveCommand<TaskExecution?, Unit> RestartTaskCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to pause the selected running task.
@@ -498,7 +498,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         StartTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStartTaskAsync);
         StopTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteStopTaskAsync);
         ScheduleTaskCommand = ReactiveCommand.CreateFromTask(ExecuteScheduleTaskAsync, canSchedule);
-        RestartTaskCommand = ReactiveCommand.CreateFromTask(ExecuteRestartTaskAsync, canRestart);
+        RestartTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteRestartTaskAsync);
         PauseTaskCommand = ReactiveCommand.CreateFromTask(ExecutePauseTaskAsync, canPause);
         ResumeTaskCommand = ReactiveCommand.CreateFromTask(ExecuteResumeTaskAsync, canResume);
         DeleteTaskCommand = ReactiveCommand.CreateFromTask(ExecuteDeleteTaskAsync, canDelete);
@@ -828,10 +828,25 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task ExecuteRestartTaskAsync()
+    private async Task ExecuteRestartTaskAsync(TaskExecution? task)
     {
-        if (SelectedTask == null)
+        // Use parameter if provided, otherwise fall back to SelectedTask
+        TaskExecution? targetTask = task ?? SelectedTask;
+
+        if (targetTask == null)
         {
+            _logger.LogWarning("Restart task command called but no task was provided or selected");
+            return;
+        }
+
+        // Validate task can be restarted
+        if (!targetTask.CanRestart)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot restart task '{targetTask.JobName}' - task is in '{targetTask.State}' state";
+            });
+            _logger.LogWarning("Cannot restart task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
             return;
         }
 
@@ -840,27 +855,39 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_RestartingTask;
 
-            TaskExecution? restartedTask = await _taskScheduler.RestartTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
+            TaskExecution? restartedTask = await _taskScheduler.RestartTaskAsync(targetTask.TaskId).ConfigureAwait(false);
 
             if (restartedTask != null)
             {
-                StatusMessage = $"Task '{SelectedTask.JobName}' restarted successfully";
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Task '{targetTask.JobName}' restarted successfully";
+                });
                 _logger.LogInformation("Restarted task {TaskId} ({JobName}) as {NewTaskId}",
-                    SelectedTask.TaskId, SelectedTask.JobName, restartedTask.TaskId);
+                    targetTask.TaskId, targetTask.JobName, restartedTask.TaskId);
 
                 // Select the new task
-                SelectedTask = restartedTask;
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    SelectedTask = restartedTask;
+                });
             }
             else
             {
-                StatusMessage = $"Failed to restart task '{SelectedTask.JobName}'";
-                _logger.LogWarning("Failed to restart task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    StatusMessage = $"Failed to restart task '{targetTask.JobName}'";
+                });
+                _logger.LogWarning("Failed to restart task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error restarting task: {ex.Message}";
-            _logger.LogError(ex, "Error restarting task {TaskId}", SelectedTask?.TaskId);
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Error restarting task: {ex.Message}";
+            });
+            _logger.LogError(ex, "Error restarting task {TaskId}", targetTask?.TaskId);
         }
         finally
         {

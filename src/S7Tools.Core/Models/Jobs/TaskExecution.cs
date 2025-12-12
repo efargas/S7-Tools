@@ -70,6 +70,11 @@ public class TaskExecution
     public string? ErrorDetails { get; set; }
 
     /// <summary>
+    /// Gets or sets the step name where the task failed (e.g., "Power Cycle", "Memory Dump").
+    /// </summary>
+    public string? FailedStep { get; set; }
+
+    /// <summary>
     /// Gets or sets the output file path if the task completed successfully.
     /// </summary>
     public string? OutputFilePath { get; set; }

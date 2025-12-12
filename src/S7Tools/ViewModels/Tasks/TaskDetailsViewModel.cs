@@ -1,4 +1,5 @@
 using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reactive;
@@ -13,6 +14,8 @@ using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
+using S7Tools.Models;
+using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
 
@@ -35,6 +38,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortProfileService _serialPortProfileService;
     private readonly ISocatProfileService _socatProfileService;
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
+    private readonly LogParserService _logParserService;
     private readonly CompositeDisposable _disposables = new();
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
 
@@ -97,6 +101,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _serialPortProfileService = serialPortProfileService ?? throw new ArgumentNullException(nameof(serialPortProfileService));
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
         _jobProfileSetFactory = jobProfileSetFactory ?? throw new ArgumentNullException(nameof(jobProfileSetFactory));
+        _logParserService = new LogParserService();
+
+        // Initialize log entry collections
+        MainLogEntries = new ObservableCollection<LogEntry>();
+        ProcessLogEntries = new ObservableCollection<LogEntry>();
+        ProtocolLogEntries = new ObservableCollection<LogEntry>();
 
         SetupCommands();
         SetupLogRefresh();
@@ -169,6 +179,10 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         set
         {
             this.RaiseAndSetIfChanged(ref _taskExecution, value);
+
+            // Clear old logs when switching tasks
+            ClearLogs();
+
             if (value != null)
             {
                 _ = RefreshLogsAsync();
@@ -202,6 +216,21 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         get => _protocolLogContent;
         private set => this.RaiseAndSetIfChanged(ref _protocolLogContent, value);
     }
+
+    /// <summary>
+    /// Gets the collection of parsed main log entries.
+    /// </summary>
+    public ObservableCollection<LogEntry> MainLogEntries { get; }
+
+    /// <summary>
+    /// Gets the collection of parsed process/socat log entries.
+    /// </summary>
+    public ObservableCollection<LogEntry> ProcessLogEntries { get; }
+
+    /// <summary>
+    /// Gets the collection of parsed protocol log entries.
+    /// </summary>
+    public ObservableCollection<LogEntry> ProtocolLogEntries { get; }
 
     /// <summary>
     /// Gets or sets the validation result text.
@@ -398,7 +427,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         StartSocatCommand = ReactiveCommand.CreateFromTask(ExecuteStartSocatAsync);
         StopSocatCommand = ReactiveCommand.CreateFromTask(ExecuteStopSocatAsync);
 
-        var canExecutePowerCommands = this.WhenAnyValue(x => x.IsPowerConnected);
+        IObservable<bool> canExecutePowerCommands = this.WhenAnyValue(x => x.IsPowerConnected);
         PowerOnCommand = ReactiveCommand.CreateFromTask(ExecutePowerOnAsync, canExecutePowerCommands);
         PowerOffCommand = ReactiveCommand.CreateFromTask(ExecutePowerOffAsync, canExecutePowerCommands);
         PowerCycleCommand = ReactiveCommand.CreateFromTask(ExecutePowerCycleAsync, canExecutePowerCommands);
@@ -454,10 +483,21 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
     }
 
+    private void ClearLogs()
+    {
+        MainLogContent = "No main log data";
+        ProcessLogContent = "No socat process log data";
+        ProtocolLogContent = "No protocol log data";
+        MainLogEntries.Clear();
+        ProcessLogEntries.Clear();
+        ProtocolLogEntries.Clear();
+    }
+
     private async Task RefreshLogsAsync()
     {
         if (TaskExecution?.Logger == null)
         {
+            ClearLogs();
             return;
         }
 
@@ -467,21 +507,72 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             if (!string.IsNullOrEmpty(TaskExecution.Logger.MainLogFilePath) && File.Exists(TaskExecution.Logger.MainLogFilePath))
             {
                 string content = await File.ReadAllTextAsync(TaskExecution.Logger.MainLogFilePath);
-                await _uiThreadService.InvokeOnUIThreadAsync(() => MainLogContent = content);
+                List<LogEntry> entries = _logParserService.ParseLogContent(content);
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    MainLogContent = content;
+                    MainLogEntries.Clear();
+                    foreach (LogEntry entry in entries)
+                    {
+                        MainLogEntries.Add(entry);
+                    }
+                });
+            }
+            else
+            {
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    MainLogContent = "No main log data";
+                    MainLogEntries.Clear();
+                });
             }
 
             // Read socat/process log
             if (!string.IsNullOrEmpty(TaskExecution.Logger.ProcessLogFilePath) && File.Exists(TaskExecution.Logger.ProcessLogFilePath))
             {
                 string content = await File.ReadAllTextAsync(TaskExecution.Logger.ProcessLogFilePath);
-                await _uiThreadService.InvokeOnUIThreadAsync(() => ProcessLogContent = content);
+                List<LogEntry> entries = _logParserService.ParseLogContent(content);
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    ProcessLogContent = content;
+                    ProcessLogEntries.Clear();
+                    foreach (LogEntry entry in entries)
+                    {
+                        ProcessLogEntries.Add(entry);
+                    }
+                });
+            }
+            else
+            {
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    ProcessLogContent = "No socat process log data";
+                    ProcessLogEntries.Clear();
+                });
             }
 
             // Read protocol log
             if (!string.IsNullOrEmpty(TaskExecution.Logger.ProtocolLogFilePath) && File.Exists(TaskExecution.Logger.ProtocolLogFilePath))
             {
                 string content = await File.ReadAllTextAsync(TaskExecution.Logger.ProtocolLogFilePath);
-                await _uiThreadService.InvokeOnUIThreadAsync(() => ProtocolLogContent = content);
+                List<LogEntry> entries = _logParserService.ParseLogContent(content);
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    ProtocolLogContent = content;
+                    ProtocolLogEntries.Clear();
+                    foreach (LogEntry entry in entries)
+                    {
+                        ProtocolLogEntries.Add(entry);
+                    }
+                });
+            }
+            else
+            {
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    ProtocolLogContent = "No protocol log data";
+                    ProtocolLogEntries.Clear();
+                });
             }
         }
         catch (Exception ex)
@@ -527,7 +618,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
 
         // Get power supply profile from the job's PowerSupplyProfileId
-        var powerSupplyProfile = await _powerSupplyProfileService.GetByIdAsync(jobProfile.PowerSupplyProfileId, cancellationToken)
+        PowerSupplyProfile? powerSupplyProfile = await _powerSupplyProfileService.GetByIdAsync(jobProfile.PowerSupplyProfileId, cancellationToken)
             .ConfigureAwait(false);
 
         if (powerSupplyProfile?.Configuration == null)
