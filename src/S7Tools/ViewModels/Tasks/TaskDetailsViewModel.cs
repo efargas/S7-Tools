@@ -1038,8 +1038,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
             // Establish persistent TCP connection to socat server
             _socatTcpClient = new System.Net.Sockets.TcpClient();
+            string host = string.IsNullOrEmpty(_currentSocatProcess.TcpHost)
+                ? "127.0.0.1"
+                : _currentSocatProcess.TcpHost;
+
             await _socatTcpClient.ConnectAsync(
-                _currentSocatProcess.TcpHost,
+                host,
                 _currentSocatProcess.TcpPort);
 
             IsSocatClientConnected = true;

@@ -398,6 +398,11 @@ public class JobProfile : IProfileBase
             errors.Add("Job name cannot exceed 100 characters");
         }
 
+        if (string.IsNullOrWhiteSpace(SerialDevice))
+        {
+            errors.Add("Serial device is required");
+        }
+
         if (!string.IsNullOrEmpty(Description) && Description.Length > 500)
         {
             errors.Add("Job description cannot exceed 500 characters");

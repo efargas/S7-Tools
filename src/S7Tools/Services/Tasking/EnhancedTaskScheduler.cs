@@ -830,7 +830,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
             // Execute the job
             taskLogger.MainLogger?.LogInformation("Starting bootloader execution");
-            Job executionJob = jobProfile.ToExecutionJob();
+            Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile.Id, CancellationToken.None).ConfigureAwait(false);
             byte[] dumpData = await _bootloaderService.DumpAsync(
                 executionJob.ProfileSet,
                 progress,
