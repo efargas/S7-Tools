@@ -49,4 +49,11 @@ public interface IPlcTransport : IAsyncDisposable
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Configures the transport connection parameters.
+    /// </summary>
+    /// <param name="host">The host address.</param>
+    /// <param name="port">The port number.</param>
+    void Configure(string host, int port);
 }

@@ -1282,8 +1282,8 @@ public class SocatService : ISocatService, IDisposable
             var processInfo = new SocatProcessInfo
             {
                 ProcessId = process.Id,
+                TcpHost = string.IsNullOrEmpty(configuration.TcpHost) ? "127.0.0.1" : configuration.TcpHost,
                 TcpPort = configuration.TcpPort,
-                TcpHost = configuration.TcpHost,
                 SerialDevice = serialDevice,
                 Configuration = configuration.Clone(),
                 Profile = profile?.Clone(),

@@ -46,4 +46,18 @@ public interface IPlcProtocol
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The number of bytes actually read.</returns>
     Task<int> RawReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Configures the protocol connection parameters.
+    /// </summary>
+    /// <param name="host">The host address.</param>
+    /// <param name="port">The port number.</param>
+    void Configure(string host, int port);
+
+    /// <summary>
+    /// Establishes the connection to the PLC.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task ConnectAsync(CancellationToken cancellationToken = default);
 }

@@ -1,75 +1,100 @@
+using System;
+using System.IO;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Services.Interfaces;
 
-namespace S7Tools.Services.Adapters;
-
-/// <summary>
-/// Adapter for PLC transport layer communication.
-/// Wraps the reference ICommunicationChannel with S7Tools' IPlcTransport interface.
-/// </summary>
-/// <remarks>
-/// This is a stub implementation. Will be replaced with actual adapter
-/// wrapping SiemensS7-Bootloader reference implementation.
-/// </remarks>
-public sealed class PlcTransportAdapter : IPlcTransport
+namespace S7Tools.Services.Adapters
 {
-    private readonly ILogger<PlcTransportAdapter> _logger;
-    private bool _disposed;
-    private bool _isConnected;
-
-    public PlcTransportAdapter(ILogger<PlcTransportAdapter> logger)
+    /// <summary>
+    /// Real implementation of PlcTransportAdapter using TcpClient.
+    /// Wraps socket communication logic instead of referencing an external Transport implementation.
+    /// </summary>
+    public sealed class PlcTransportAdapter : IPlcTransport
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+        private readonly ILogger<PlcTransportAdapter> _logger;
+        private TcpClient _client;
+        private NetworkStream? _stream;
+        private string _host = string.Empty;
+        private int _port;
 
-    /// <inheritdoc />
-    public bool IsConnected => _isConnected;
-
-    /// <inheritdoc />
-    public bool DataAvailable => false; // Stub: Always false
-
-    /// <inheritdoc />
-    public Task ConnectAsync(CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("PlcTransportAdapter.ConnectAsync (STUB)");
-        _isConnected = true;
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public Task DisconnectAsync(CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation("PlcTransportAdapter.DisconnectAsync (STUB)");
-        _isConnected = false;
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
-    {
-        _logger.LogDebug("PlcTransportAdapter.ReadAsync: offset={Offset}, count={Count} (STUB)", offset, count);
-        // Stub: Return 0 bytes read
-        return Task.FromResult(0);
-    }
-
-    /// <inheritdoc />
-    public Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
-    {
-        _logger.LogDebug("PlcTransportAdapter.WriteAsync: offset={Offset}, count={Count} (STUB)", offset, count);
-        // Stub: No-op write
-        return Task.CompletedTask;
-    }
-
-    /// <inheritdoc />
-    public ValueTask DisposeAsync()
-    {
-        if (_disposed)
+        public PlcTransportAdapter(ILogger<PlcTransportAdapter> logger)
         {
-            return ValueTask.CompletedTask;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _client = new TcpClient();
         }
 
-        _logger.LogInformation("PlcTransportAdapter.DisposeAsync (STUB)");
-        _disposed = true;
-        return ValueTask.CompletedTask;
+        public bool IsConnected => _client?.Connected ?? false;
+
+        public bool DataAvailable => _stream?.DataAvailable ?? false;
+
+        public void Configure(string host, int port)
+        {
+            _host = host;
+            _port = port;
+        }
+
+        public async Task ConnectAsync(CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrEmpty(_host) || _port == 0)
+                throw new InvalidOperationException("Transport not configured. Call Configure() first.");
+
+            _logger.LogInformation("Connecting to PLC via Socat at {Host}:{Port}...", _host, _port);
+
+            // Re-create TcpClient if disposed or previously used
+            if (_client == null || _client.Client == null || !_client.Connected && _client.Client.Connected)
+            {
+                _client?.Dispose();
+                _client = new TcpClient();
+            }
+            // Handle case where client is already connected or in weird state
+            if (_client.Connected)
+                return;
+
+            try
+            {
+                await _client.ConnectAsync(_host, _port, cancellationToken);
+                _stream = _client.GetStream();
+                _logger.LogInformation("Connected successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to connect to PLC transport.");
+                throw;
+            }
+        }
+
+        public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Disconnecting transport...");
+            _stream?.Close();
+            _client?.Close();
+            _client = new TcpClient(); // Reset for next use
+            await Task.CompletedTask;
+        }
+
+        public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
+        {
+            if (_stream == null)
+                throw new InvalidOperationException("Transport not connected.");
+            return await _stream.ReadAsync(buffer, offset, count, cancellationToken);
+        }
+
+        public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
+        {
+            if (_stream == null)
+                throw new InvalidOperationException("Transport not connected.");
+            await _stream.WriteAsync(buffer, offset, count, cancellationToken);
+            await _stream.FlushAsync(cancellationToken);
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            _stream?.Dispose();
+            _client?.Dispose();
+            return ValueTask.CompletedTask;
+        }
     }
 }

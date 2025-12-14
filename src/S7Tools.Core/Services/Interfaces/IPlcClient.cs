@@ -43,4 +43,11 @@ public interface IPlcClient : IAsyncDisposable
         byte[] dumpPayload,
         IProgress<long> progress,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Configures the client connection parameters.
+    /// </summary>
+    /// <param name="host">The host address.</param>
+    /// <param name="port">The port number.</param>
+    void Configure(string host, int port);
 }

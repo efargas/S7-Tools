@@ -310,9 +310,14 @@ public static class ServiceCollectionExtensions
         {
             return profiles =>
             {
-                // This would be implemented based on the profile configuration
-                // For now, return a stub implementation that logs calls
-                return provider.GetRequiredService<IPlcClient>();
+                var client = provider.GetRequiredService<IPlcClient>();
+                // Usage: Access TcpHost from nested Configuration object, default to 127.0.0.1 if empty/null
+                var host = string.IsNullOrEmpty(profiles.Socat.Configuration?.TcpHost)
+                    ? "127.0.0.1"
+                    : profiles.Socat.Configuration.TcpHost;
+
+                client.Configure(host, profiles.Socat.Port);
+                return client;
             };
         });
 
