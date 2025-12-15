@@ -39,7 +39,9 @@ namespace S7Tools.Services.Adapters
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(_host) || _port == 0)
+            {
                 throw new InvalidOperationException("Transport not configured. Call Configure() first.");
+            }
 
             _logger.LogInformation("Connecting to PLC via Socat at {Host}:{Port}...", _host, _port);
 
@@ -51,11 +53,15 @@ namespace S7Tools.Services.Adapters
             }
             // Handle case where client is already connected or in weird state
             if (_client.Connected)
+            {
                 return;
+            }
 
             try
             {
+                _client.NoDelay = true;
                 await _client.ConnectAsync(_host, _port, cancellationToken);
+                _logger.LogInformation("TcpClient.NoDelay set to: {Value}", _client.NoDelay);
                 _stream = _client.GetStream();
                 _logger.LogInformation("Connected successfully.");
             }
@@ -78,16 +84,20 @@ namespace S7Tools.Services.Adapters
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             if (_stream == null)
+            {
                 throw new InvalidOperationException("Transport not connected.");
+            }
             return await _stream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             if (_stream == null)
+            {
                 throw new InvalidOperationException("Transport not connected.");
+            }
             await _stream.WriteAsync(buffer, offset, count, cancellationToken);
-            await _stream.FlushAsync(cancellationToken);
+            // await _stream.FlushAsync(cancellationToken); // Removed to prevent packet fragmentation logic interference
         }
 
         public ValueTask DisposeAsync()

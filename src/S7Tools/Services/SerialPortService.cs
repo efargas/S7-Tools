@@ -878,6 +878,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         try
         {
             using var process = new Process();
+            _logger.LogInformation("Executing: {Command}", command);
             process.StartInfo.FileName = "/bin/bash";
             process.StartInfo.Arguments = $"-c \"{command}\"";
             process.StartInfo.UseShellExecute = false;

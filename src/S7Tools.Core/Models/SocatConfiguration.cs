@@ -84,6 +84,14 @@ public class SocatConfiguration
     #region Serial Device Settings
 
     /// <summary>
+    /// Gets or sets the baud rate for the serial device.
+    /// </summary>
+    /// <value>The baud rate (e.g., 9600, 38400, 115200). Default is 9600.</value>
+    [Display(Name = "Baud Rate", Order = 9)]
+    [Range(300, 4000000, ErrorMessage = "Baud rate must be between 300 and 4000000")]
+    public int BaudRate { get; set; } = 9600;
+
+    /// <summary>
     /// Gets or sets whether to enable raw mode for the serial device.
     /// </summary>
     /// <value>True to enable raw mode, false otherwise. Default is true.</value>
@@ -91,14 +99,14 @@ public class SocatConfiguration
     /// Raw mode disables all input and output processing, making the serial device behave like a simple I/O channel.
     /// This is essential for binary data transmission and precise control over serial communication.
     /// </remarks>
-    [Display(Name = "Serial Raw Mode", Order = 9)]
+    [Display(Name = "Serial Raw Mode", Order = 10)]
     public bool SerialRawMode { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether to disable echo on the serial device.
     /// </summary>
     /// <value>True to disable echo (echo=0), false to enable. Default is true.</value>
-    [Display(Name = "Disable Serial Echo", Order = 10)]
+    [Display(Name = "Disable Serial Echo", Order = 11)]
     public bool SerialDisableEcho { get; set; } = true;
 
     #endregion
@@ -271,6 +279,7 @@ public class SocatConfiguration
             DebugLevel = DebugLevel,
 
             // Serial device settings
+            BaudRate = BaudRate,
             SerialRawMode = SerialRawMode,
             SerialDisableEcho = SerialDisableEcho,
 
@@ -331,6 +340,8 @@ public class SocatConfiguration
         {
             tcpOptions.Add("reuseaddr");
         }
+        // Force nodelay to prevent Delayed ACKs and fragmentation issues (critical for handshake)
+        tcpOptions.Add("nodelay");
 
         string tcpPart = $"TCP-LISTEN:{TcpPort}";
         if (tcpOptions.Count > 0)
@@ -356,6 +367,9 @@ public class SocatConfiguration
         {
             serialPart += "," + string.Join(",", serialOptions);
         }
+
+        // Always append baud rate to ensure correct speed
+        serialPart += $",b{BaudRate}";
 
         command.Append($" {serialPart}");
 

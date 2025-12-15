@@ -57,6 +57,8 @@ public sealed class BootloaderService : IBootloaderService
 
         _logger.LogInformation("Starting bootloader dump operation");
 
+        SocatProcessInfo? socatProcess = null;
+
         try
         {
             // Stage 0: Configure serial port (2% progress)
@@ -88,7 +90,10 @@ public sealed class BootloaderService : IBootloaderService
                 throw new InvalidOperationException("Socat configuration is required but was null. Ensure job profile includes full socat configuration.");
             }
 
-            await _socat.StartSocatAsync(
+            // Sync baud rate from serial profile to socat configuration to ensure correct speed
+            profiles.Socat.Configuration.BaudRate = profiles.Serial.Baud;
+
+            socatProcess = await _socat.StartSocatAsync(
                 profiles.Socat.Configuration,
                 profiles.Serial.Device,
                 processLogger,
@@ -136,29 +141,36 @@ public sealed class BootloaderService : IBootloaderService
                 _logger.LogDebug("Waiting {DelayMs}ms for PLC power stabilization", profiles.PowerOnTimeMs);
                 await Task.Delay(profiles.PowerOnTimeMs, cancellationToken).ConfigureAwait(false);
 
-                // Stage 4: Power cycle PLC (12% progress)
-                progress.Report(("power_cycle", 0.12));
+                // Stage 4: Create PLC client and CONNECT to socat (12% progress)
+                // We connect BEFORE power cycling to ensure the serial port is open and ready.
+                // This eliminates the ~1-2s latency of socat/forking that causes us to miss the 500ms handshake window.
+                progress.Report(("plc_connect", 0.12));
+                await using IPlcClient client = _clientFactory(profiles);
+
+                _logger.LogDebug("PLC client created. Establishing connection to socat TCP server...");
+                processLogger?.LogInformation("Connecting PLC client to localhost:{Port}...", profiles.Socat.Port);
+
+                await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
+                _logger.LogInformation("PLC client connected to socat (Ready for Handshake)");
+
+                // Stage 5: Power cycle PLC (15% progress)
+                progress.Report(("power_cycle", 0.15));
                 _logger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
 
                 // Power cycle: OFF → delay → ON (using PowerOffDelayMs from job profile)
                 await _power.PowerCycleAsync(profiles.PowerOffDelayMs, cancellationToken)
                     .ConfigureAwait(false);
 
-                _logger.LogInformation("PLC power cycled successfully");
+                _logger.LogInformation("PLC power cycled successfully (Client already connected)");
                 processLogger?.LogInformation("PLC power cycle complete (OFF → {PowerOffDelayMs}ms → ON)",
                     profiles.PowerOffDelayMs);
 
-                // Stage 5: Create PLC client and connect to socat (15% progress)
-                progress.Report(("plc_connect", 0.15));
-                await using IPlcClient client = _clientFactory(profiles);
-
-                _logger.LogDebug("PLC client created and connecting to socat TCP server");
-                processLogger?.LogInformation("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
 
                 // Stage 6: Perform handshake (20% progress)
                 progress.Report(("handshake", 0.20));
                 _logger.LogDebug("Performing bootloader handshake");
 
+                // client is already connected; HandshakeAsync will just perform the protocol handshake immediately.
                 await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
 
                 string version = await client.GetBootloaderVersionAsync(cancellationToken)
@@ -292,6 +304,14 @@ public sealed class BootloaderService : IBootloaderService
             _logger.LogError(ex, "Bootloader dump operation failed: {ErrorMessage}", ex.Message);
             processLogger?.LogError("Dump failed: {ErrorMessage}", ex.Message);
             throw;
+        }
+        finally
+        {
+            if (socatProcess != null)
+            {
+                await _socat.StopSocatAsync(socatProcess, cancellationToken).ConfigureAwait(false);
+                _logger.LogDebug("Stopped socat process {PID}", socatProcess.ProcessId);
+            }
         }
     }
 

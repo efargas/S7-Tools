@@ -48,11 +48,14 @@ namespace S7Tools.Services.Adapters
 
         #region Handshake
 
-        public async Task HandshakeAsync(CancellationToken cancellationToken = default)
+        public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Connecting to PLC via Protocol...");
             await _protocol.ConnectAsync(cancellationToken);
+        }
 
+        public async Task HandshakeAsync(CancellationToken cancellationToken = default)
+        {
             _logger.LogInformation("Starting handshake...");
             await _protocolHandler.PerformHandshakeAsync(cancellationToken);
             _logger.LogInformation("Handshake successful!");

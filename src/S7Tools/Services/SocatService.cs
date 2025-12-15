@@ -1035,9 +1035,10 @@ public class SocatService : ISocatService, IDisposable
 
             // For socat, we typically want the device in raw mode
             // We can create a default serial port configuration for socat use
+            // Use configuration from the profile
             var serialConfig = new SerialPortConfiguration
             {
-                BaudRate = 9600, // Default, will be overridden by socat raw mode
+                BaudRate = configuration.BaudRate, // Use configured baud rate
                 CharacterSize = 8,
                 Parity = ParityMode.None,
                 StopBits = StopBits.One,
@@ -1189,11 +1190,14 @@ public class SocatService : ISocatService, IDisposable
             };
 
             // Create process but DON'T use 'using' - we need to keep it alive!
+            _logger.LogInformation("Executing: {Command}", command);
             var process = new Process
             {
                 StartInfo = processStartInfo,
                 EnableRaisingEvents = true // Enable events for proper lifecycle management
             };
+
+            int processId = 0;
 
             StringBuilder? outputBuilder = null;
             StringBuilder? errorBuilder = null;
@@ -1210,7 +1214,7 @@ public class SocatService : ISocatService, IDisposable
                         _logger.LogTrace("Socat output: {Output}", e.Data);
 
                         // Log to task-specific process logger if provided
-                        processLogger?.LogDebug("socat[{ProcessId}] {Output}", process.Id, e.Data);
+                        processLogger?.LogDebug("socat[{ProcessId}] {Output}", processId, e.Data);
                     }
                 };
 
@@ -1222,7 +1226,7 @@ public class SocatService : ISocatService, IDisposable
                         _logger.LogWarning("Socat error: {Error}", e.Data);
 
                         // Log to task-specific process logger if provided
-                        processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", process.Id, e.Data);
+                        processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
                     }
                 };
             }
@@ -1260,6 +1264,7 @@ public class SocatService : ISocatService, IDisposable
             };
 
             process.Start();
+            processId = process.Id;
 
             if (captureProcessOutput)
             {

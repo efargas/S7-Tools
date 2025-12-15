@@ -50,4 +50,11 @@ public interface IPlcClient : IAsyncDisposable
     /// <param name="host">The host address.</param>
     /// <param name="port">The port number.</param>
     void Configure(string host, int port);
+
+    /// <summary>
+    /// Establishes the connection to the PLC (via Socat).
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task ConnectAsync(CancellationToken cancellationToken = default);
 }
