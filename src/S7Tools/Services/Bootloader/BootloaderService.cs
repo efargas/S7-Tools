@@ -65,8 +65,12 @@ public sealed class BootloaderService : IBootloaderService
         effectiveTaskLogger.LogInformation("Serial: {Device} @ {Baud} baud", profiles.Serial.Device, profiles.Serial.Baud);
         effectiveTaskLogger.LogInformation("Socat: TCP port {Port}", profiles.Socat.Port);
         effectiveTaskLogger.LogInformation("Power: {Host}:{Port}", profiles.Power.Host, profiles.Power.Port);
+        ulong start = profiles.Memory.Start;
+        ulong length = (ulong)profiles.Memory.Length;
+        ulong endExclusive = start + length;
+
         effectiveTaskLogger.LogInformation("Memory: 0x{Start:X8} - 0x{End:X8} ({Length} bytes)",
-            profiles.Memory.Start, profiles.Memory.Start + profiles.Memory.Length, profiles.Memory.Length);
+            start, endExclusive, profiles.Memory.Length);
 
         SocatProcessInfo? socatProcess = null;
 
