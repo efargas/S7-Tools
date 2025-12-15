@@ -37,7 +37,8 @@ namespace S7Tools.Services.Adapters
         public void SetProtocolLogger(ILogger? protocolLogger)
         {
             _protocolLogger = protocolLogger;
-            _protocolHandler.SetProtocolLogger(protocolLogger);
+            // TODO: Protocol logger can be used for detailed hex dumps of PLC communication
+            // For now, store it for future implementation
         }
 
         public void Configure(string host, int port)

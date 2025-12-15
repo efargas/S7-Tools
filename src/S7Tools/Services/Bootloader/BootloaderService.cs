@@ -343,7 +343,6 @@ public sealed class BootloaderService : IBootloaderService
 
                     effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
 
-                    var dumpProgress = new Progress<long>(bytesRead =>
                     bool logged25 = false, logged50 = false, logged75 = false;
 
                     var dumpProgress = new Progress<long>(bytesRead =>
@@ -370,6 +369,7 @@ public sealed class BootloaderService : IBootloaderService
                         {
                             logged75 = true;
                             effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
+                                bytesRead, profiles.Memory.Length, dumpPercent);
                         }
                     });
 
