@@ -73,22 +73,24 @@ public interface ISerialPortService
     /// </summary>
     /// <param name="portPath">The path to the serial port to configure.</param>
     /// <param name="configuration">The configuration to apply to the port.</param>
+    /// <param name="taskLogger">Optional logger for task-specific logging.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result indicates whether the configuration was applied successfully.</returns>
     /// <exception cref="ArgumentException">Thrown when portPath is null/empty or configuration is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the port is not accessible or stty command fails.</exception>
-    Task<bool> ApplyConfigurationAsync(string portPath, SerialPortConfiguration configuration, CancellationToken cancellationToken = default);
+    Task<bool> ApplyConfigurationAsync(string portPath, SerialPortConfiguration configuration, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Applies a profile to a serial port.
     /// </summary>
     /// <param name="portPath">The path to the serial port to configure.</param>
     /// <param name="profile">The profile to apply to the port.</param>
+    /// <param name="taskLogger">Optional logger for task-specific logging.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result indicates whether the profile was applied successfully.</returns>
     /// <exception cref="ArgumentException">Thrown when portPath is null/empty or profile is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the port is not accessible or stty command fails.</exception>
-    Task<bool> ApplyProfileAsync(string portPath, SerialPortProfile profile, CancellationToken cancellationToken = default);
+    Task<bool> ApplyProfileAsync(string portPath, SerialPortProfile profile, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a backup of the current port configuration before applying changes.

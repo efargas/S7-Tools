@@ -17,11 +17,12 @@ public interface IPowerSupplyService
     /// Connects to the power supply device using the specified configuration.
     /// </summary>
     /// <param name="configuration">The power supply configuration containing connection parameters.</param>
+    /// <param name="taskLogger">Optional logger for task-specific logging.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A task representing the asynchronous operation. The task result indicates whether the connection was successful.</returns>
     /// <exception cref="ArgumentNullException">Thrown when configuration is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when already connected or connection fails.</exception>
-    Task<bool> ConnectAsync(PowerSupplyConfiguration configuration, CancellationToken cancellationToken = default);
+    Task<bool> ConnectAsync(PowerSupplyConfiguration configuration, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Disconnects from the currently connected power supply device.
@@ -56,18 +57,20 @@ public interface IPowerSupplyService
     /// <summary>
     /// Turns the power supply on.
     /// </summary>
+    /// <param name="taskLogger">Optional logger for task-specific logging.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A task representing the asynchronous operation. The task result indicates whether the operation was successful.</returns>
     /// <exception cref="InvalidOperationException">Thrown when not connected to a power supply device.</exception>
-    Task<bool> TurnOnAsync(CancellationToken cancellationToken = default);
+    Task<bool> TurnOnAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Turns the power supply off.
     /// </summary>
+    /// <param name="taskLogger">Optional logger for task-specific logging.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A task representing the asynchronous operation. The task result indicates whether the operation was successful.</returns>
     /// <exception cref="InvalidOperationException">Thrown when not connected to a power supply device.</exception>
-    Task<bool> TurnOffAsync(CancellationToken cancellationToken = default);
+    Task<bool> TurnOffAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Reads the current power state from the power supply device.
@@ -81,10 +84,11 @@ public interface IPowerSupplyService
     /// Performs a power cycle operation (turn off, wait, turn on).
     /// </summary>
     /// <param name="delayMs">The delay in milliseconds between power off and power on. Default is 5000ms (5 seconds).</param>
+    /// <param name="taskLogger">Optional logger for task-specific logging.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A task representing the asynchronous operation. The task result indicates whether the operation was successful.</returns>
     /// <exception cref="InvalidOperationException">Thrown when not connected to a power supply device.</exception>
-    Task<bool> PowerCycleAsync(int delayMs = 5000, CancellationToken cancellationToken = default);
+    Task<bool> PowerCycleAsync(int delayMs = 5000, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default);
 
     #endregion
 
