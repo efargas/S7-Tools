@@ -239,21 +239,21 @@ public sealed class JobProfilePropagationTests : IDisposable
         Assert.Equal(originalPowerOffDelay, jobProfile.PowerOffDelayMs);
     }
 
+    private readonly string _testDirectory;
+    // ... inside constructor
+    // _testDirectory = Path.Combine(Path.GetTempPath(), $"s7tools_test_{Guid.NewGuid():N}");
+    // Directory.CreateDirectory(_testDirectory);
+    // _testProfilesPath = Path.Combine(_testDirectory, "job_profiles.json");
+
     public void Dispose()
     {
         _jobManager?.Dispose();
 
         try
         {
-            if (File.Exists(_testProfilesPath))
+            if (Directory.Exists(_testDirectory))
             {
-                File.Delete(_testProfilesPath);
-            }
-
-            string? directory = Path.GetDirectoryName(_testProfilesPath);
-            if (directory != null && Directory.Exists(directory))
-            {
-                Directory.Delete(directory, true);
+                Directory.Delete(_testDirectory, true);
             }
         }
         catch
