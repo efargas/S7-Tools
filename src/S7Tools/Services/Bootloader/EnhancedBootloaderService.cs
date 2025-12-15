@@ -268,10 +268,26 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",
                         i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
 
+                    // Create progress tracker for detailed metrics
+                    var progressTracker = new Services.Adapters.Plc.DumpProgressTracker(segmentSize);
+                    
                     var segmentProgress = new Progress<long>(bytesRead =>
                     {
+                        progressTracker.Update(bytesRead);
                         double percent = 0.50 + (0.45 * (totalBytesRead + bytesRead) / totalSize);
                         progress.Report(("memory_dump", percent));
+                        
+                        // Log detailed progress to task logger
+                        effectiveTaskLogger?.LogInformation(
+                            "Segment '{SegmentName}' ({Index}/{Total}): {Progress} | Speed: {Speed} | ETA: {ETA}",
+                            segment.Name,
+                            i + 1,
+                            selectedSegments.Count,
+                            $"{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(bytesRead)}/{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(segmentSize)} ({progressTracker.ProgressPercentage:F1}%)",
+                            progressTracker.FormatSpeed(),
+                            progressTracker.EstimatedTimeRemaining.HasValue 
+                                ? Services.Adapters.Plc.DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
+                                : "calculating...");
                     });
 
                     byte[] segmentData = await client.DumpMemoryAsync(
@@ -307,10 +323,23 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     profiles.Payloads.BasePath,
                     cancellationToken).ConfigureAwait(false);
 
+                // Create progress tracker for detailed metrics
+                var progressTracker = new Services.Adapters.Plc.DumpProgressTracker(profiles.Memory.Length);
+                
                 var dumpProgress = new Progress<long>(bytesRead =>
                 {
+                    progressTracker.Update(bytesRead);
                     double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
                     progress.Report(("memory_dump", percent));
+                    
+                    // Log detailed progress to task logger
+                    effectiveTaskLogger?.LogInformation(
+                        "Dumping memory: {Progress} | Speed: {Speed} | ETA: {ETA}",
+                        $"{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(bytesRead)}/{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(profiles.Memory.Length)} ({progressTracker.ProgressPercentage:F1}%)",
+                        progressTracker.FormatSpeed(),
+                        progressTracker.EstimatedTimeRemaining.HasValue 
+                            ? Services.Adapters.Plc.DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
+                            : "calculating...");
                 });
 
                 memoryData = await client.DumpMemoryAsync(

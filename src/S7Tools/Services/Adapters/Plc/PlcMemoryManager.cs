@@ -82,12 +82,12 @@ namespace S7Tools.Services.Adapters.Plc
                 throw new Exception("Dumper invocation failed.");
             }
 
-            // 3. Receive Data
-            var data = await ReceiveManyAsync(progress, cancellationToken);
+            // 3. Receive Data with progress tracking
+            var data = await ReceiveManyAsync(length, progress, cancellationToken);
             return data;
         }
 
-        public async Task<byte[]> ReceiveManyAsync(IProgress<long> progress, CancellationToken cancellationToken)
+        public async Task<byte[]> ReceiveManyAsync(uint expectedLength, IProgress<long> progress, CancellationToken cancellationToken)
         {
             using var ms = new MemoryStream();
             while (true)

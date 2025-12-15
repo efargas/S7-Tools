@@ -1243,10 +1243,16 @@ public class SocatService : ISocatService, IDisposable
                     if (e.Data != null)
                     {
                         outputBuilder!.AppendLine(e.Data);
-                        _logger.LogTrace("Socat output: {Output}", e.Data);
-
-                        // Log to task-specific process logger if provided
-                        processLogger?.LogDebug("socat[{ProcessId}] {Output}", processId, e.Data);
+                        
+                        // Log to task-specific process logger if provided, otherwise use application logger
+                        if (processLogger != null)
+                        {
+                            processLogger.LogDebug("socat[{ProcessId}] {Output}", processId, e.Data);
+                        }
+                        else
+                        {
+                            _logger.LogTrace("Socat output: {Output}", e.Data);
+                        }
                     }
                 };
 
@@ -1263,14 +1269,20 @@ public class SocatService : ISocatService, IDisposable
                         
                         if (isHexDumpLine && protocolLogger != null)
                         {
-                            // Route hex dump output to protocol logger
+                            // Route hex dump output to protocol logger only
                             protocolLogger.LogTrace("socat[{ProcessId}] {HexData}", processId, e.Data);
                         }
                         else
                         {
-                            // Regular error output
-                            _logger.LogWarning("Socat error: {Error}", e.Data);
-                            processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
+                            // Regular error output - log to task logger if provided, otherwise use application logger
+                            if (processLogger != null)
+                            {
+                                processLogger.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Socat error: {Error}", e.Data);
+                            }
                         }
                     }
                 };
