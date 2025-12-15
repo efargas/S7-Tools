@@ -227,6 +227,11 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 long totalBytesRead = 0;
                 long totalSize = profiles.MemoryMapping.TotalSelectedSize;
 
+                if (totalSize <= 0)
+                {
+                    throw new InvalidOperationException("Selected memory segments have a total size of 0 bytes.");
+                }
+
                 byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
                     profiles.Payloads.BasePath,
                     cancellationToken).ConfigureAwait(false);
