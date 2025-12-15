@@ -74,7 +74,9 @@ namespace S7Tools.Services.Adapters.Plc
                 // Ack
                 var ack = await _protocol.ReceivePacketAsync(cancellationToken);
                 if (ack == null || ack.Length != 1)
+                {
                     throw new Exception("Stager ACK fail");
+                }
             }
             // End Packet
             await _protocol.SendPacketAsync(PlcInternalHelpers.EncodeWithXor(Array.Empty<byte>()), null, cancellationToken: cancellationToken);
