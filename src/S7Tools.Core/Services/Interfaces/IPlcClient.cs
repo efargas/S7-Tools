@@ -7,6 +7,12 @@ namespace S7Tools.Core.Services.Interfaces;
 public interface IPlcClient : IAsyncDisposable
 {
     /// <summary>
+    /// Sets the protocol logger for detailed communication logging.
+    /// </summary>
+    /// <param name="protocolLogger">Logger for protocol-level communication.</param>
+    void SetProtocolLogger(Microsoft.Extensions.Logging.ILogger? protocolLogger);
+
+    /// <summary>
     /// Performs the initial handshake with the PLC bootloader.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>

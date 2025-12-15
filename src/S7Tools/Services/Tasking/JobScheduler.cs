@@ -358,7 +358,9 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
             byte[] dumpData = await _bootloader.DumpAsync(
                 job.ProfileSet,
                 progress,
+                null, // No task logger in JobScheduler (legacy path)
                 null, // No process logger in JobScheduler (legacy path)
+                null, // No protocol logger in JobScheduler (legacy path)
                 cancellationToken).ConfigureAwait(false);
 
             // STEP 2: Save dump data to output path

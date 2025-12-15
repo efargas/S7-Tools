@@ -209,7 +209,7 @@ public class SocatService : ISocatService, IDisposable
     #region Process Management
 
     /// <inheritdoc />
-    public async Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default)
+    public async Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
         if (string.IsNullOrWhiteSpace(serialDevice))
@@ -263,6 +263,21 @@ public class SocatService : ISocatService, IDisposable
                 }
             }
 
+            // Enable hex dump and increased debug level if protocol logger is provided
+            if (protocolLogger != null)
+            {
+                if (!configuration.HexDump)
+                {
+                    _logger.LogDebug("Enabling hex dump for protocol logging");
+                    configuration.HexDump = true;
+                }
+                if (configuration.DebugLevel < 2)
+                {
+                    _logger.LogDebug("Increasing debug level to 2 for protocol logging");
+                    configuration.DebugLevel = 2;
+                }
+            }
+
             // Generate and validate command
             string command = GenerateSocatCommand(configuration, serialDevice);
             SocatCommandValidationResult validation = ValidateSocatCommand(command);
@@ -272,7 +287,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Start socat process
-            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, configuration, serialDevice, null, processLogger, cancellationToken).ConfigureAwait(false);
+            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, configuration, serialDevice, null, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
 
             _runningProcesses[processInfo.ProcessId] = processInfo;
 
@@ -291,7 +306,7 @@ public class SocatService : ISocatService, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default)
+    public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("🚀🚀🚀 ENTERED StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
             profile?.Name ?? "NULL", serialDevice ?? "NULL");
@@ -368,6 +383,21 @@ public class SocatService : ISocatService, IDisposable
                     autoConfigureSerialDevice, profile.Configuration.AutoConfigureSerial);
             }
 
+            // Enable hex dump and increased debug level if protocol logger is provided
+            if (protocolLogger != null)
+            {
+                if (!profile.Configuration.HexDump)
+                {
+                    _logger.LogDebug("Enabling hex dump for protocol logging");
+                    profile.Configuration.HexDump = true;
+                }
+                if (profile.Configuration.DebugLevel < 2)
+                {
+                    _logger.LogDebug("Increasing debug level to 2 for protocol logging");
+                    profile.Configuration.DebugLevel = 2;
+                }
+            }
+
             // Generate and validate command
             _logger.LogInformation("📝 Generating socat command...");
             string command = GenerateSocatCommandForProfile(profile, serialDevice);
@@ -384,7 +414,7 @@ public class SocatService : ISocatService, IDisposable
 
             // Start socat process
             _logger.LogInformation("🚀 Calling StartSocatProcessAsync...");
-            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, processLogger, cancellationToken).ConfigureAwait(false);
+            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("🎉 StartSocatProcessAsync SUCCESS - ProcessId: {ProcessId}", processInfo.ProcessId);
 
             _logger.LogInformation("📝 Adding process to _runningProcesses...");
@@ -1047,7 +1077,7 @@ public class SocatService : ISocatService, IDisposable
             };
 
             // Apply the configuration using the serial port service
-            bool applied = await _serialPortService.ApplyConfigurationAsync(serialDevice, serialConfig, cancellationToken).ConfigureAwait(false);
+            bool applied = await _serialPortService.ApplyConfigurationAsync(serialDevice, serialConfig, null, cancellationToken).ConfigureAwait(false);
 
             if (applied)
             {
@@ -1144,6 +1174,7 @@ public class SocatService : ISocatService, IDisposable
     /// <param name="configuration">The socat configuration.</param>
     /// <param name="serialDevice">The serial device path.</param>
     /// <param name="profile">The profile used (if any).</param>
+    /// <param name="protocolLogger">Optional logger for capturing protocol-level communication logs.</param>
     /// <param name="processLogger">Optional logger for capturing process stdout/stderr output.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>Process information for the started socat process.</returns>
@@ -1152,6 +1183,7 @@ public class SocatService : ISocatService, IDisposable
         SocatConfiguration configuration,
         string serialDevice,
         SocatProfile? profile,
+        Microsoft.Extensions.Logging.ILogger? protocolLogger,
         Microsoft.Extensions.Logging.ILogger? processLogger,
         CancellationToken cancellationToken)
     {
@@ -1223,10 +1255,23 @@ public class SocatService : ISocatService, IDisposable
                     if (e.Data != null)
                     {
                         errorBuilder!.AppendLine(e.Data);
-                        _logger.LogWarning("Socat error: {Error}", e.Data);
-
-                        // Log to task-specific process logger if provided
-                        processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
+                        
+                        // Check if this is a hex dump line (socat outputs hex dumps to stderr when -x flag is used)
+                        // Hex dump lines typically start with timestamp and contain hex data
+                        bool isHexDumpLine = e.Data.Contains("< ") || e.Data.Contains("> ") || 
+                                            (e.Data.Contains("0x") && e.Data.Length > 20);
+                        
+                        if (isHexDumpLine && protocolLogger != null)
+                        {
+                            // Route hex dump output to protocol logger
+                            protocolLogger.LogTrace("socat[{ProcessId}] {HexData}", processId, e.Data);
+                        }
+                        else
+                        {
+                            // Regular error output
+                            _logger.LogWarning("Socat error: {Error}", e.Data);
+                            processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
+                        }
                     }
                 };
             }

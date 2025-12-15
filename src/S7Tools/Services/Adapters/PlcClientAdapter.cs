@@ -15,6 +15,7 @@ namespace S7Tools.Services.Adapters
     public sealed class PlcClientAdapter : IPlcClient
     {
         private readonly ILogger<PlcClientAdapter> _logger;
+        private ILogger? _protocolLogger;
         private readonly IPlcProtocol _protocol;
 
         // Components
@@ -31,6 +32,13 @@ namespace S7Tools.Services.Adapters
             _protocolHandler = new PlcProtocolHandler(protocol);
             _memoryManager = new PlcMemoryManager(_protocolHandler);
             _stagerManager = new PlcStagerManager(_protocolHandler, _memoryManager);
+        }
+
+        public void SetProtocolLogger(ILogger? protocolLogger)
+        {
+            _protocolLogger = protocolLogger;
+            // TODO: Protocol logger can be used for detailed hex dumps of PLC communication
+            // For now, store it for future implementation
         }
 
         public void Configure(string host, int port)

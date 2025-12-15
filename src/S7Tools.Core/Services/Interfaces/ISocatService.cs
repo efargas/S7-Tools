@@ -56,12 +56,13 @@ public interface ISocatService
     /// <param name="configuration">The socat configuration to use.</param>
     /// <param name="serialDevice">The serial device path to bridge.</param>
     /// <param name="processLogger">Optional logger for capturing socat process stdout/stderr output.</param>
+    /// <param name="protocolLogger">Optional logger for capturing protocol-level communication logs.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains information about the started process.</returns>
     /// <exception cref="ArgumentNullException">Thrown when configuration is null.</exception>
     /// <exception cref="ArgumentException">Thrown when serialDevice is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the process cannot be started or port is already in use.</exception>
-    Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default);
+    Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Starts a socat process with the specified profile.
@@ -69,12 +70,13 @@ public interface ISocatService
     /// <param name="profile">The socat profile to use.</param>
     /// <param name="serialDevice">The serial device path to bridge.</param>
     /// <param name="processLogger">Optional logger for capturing socat process stdout/stderr output.</param>
+    /// <param name="protocolLogger">Optional logger for capturing protocol-level communication logs.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains information about the started process.</returns>
     /// <exception cref="ArgumentNullException">Thrown when profile is null.</exception>
     /// <exception cref="ArgumentException">Thrown when serialDevice is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when the process cannot be started or port is already in use.</exception>
-    Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default);
+    Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Stops a running socat process.
