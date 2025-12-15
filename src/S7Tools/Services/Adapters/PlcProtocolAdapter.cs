@@ -119,7 +119,13 @@ namespace S7Tools.Services.Adapters
         public async Task<byte[]> ReceivePacketAsync(CancellationToken cancellationToken = default)
         {
             var lengthByte = new byte[1];
-            await _transport.ReadAsync(lengthByte, 0, 1, cancellationToken).ConfigureAwait(false);
+            int lengthBytesRead = await _transport.ReadAsync(lengthByte, 0, 1, cancellationToken).ConfigureAwait(false);
+
+            if (lengthBytesRead == 0)
+            {
+                throw new InvalidOperationException("Transport stream reached EOF while reading packet length");
+            }
+
             int bytesToRead = lengthByte[0];
 
             if (bytesToRead == 0)
@@ -134,7 +140,14 @@ namespace S7Tools.Services.Adapters
             while (bytesRead < bytesToRead)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                bytesRead += await _transport.ReadAsync(fullPacket, 1 + bytesRead, bytesToRead - bytesRead, cancellationToken).ConfigureAwait(false);
+                int currentBytesRead = await _transport.ReadAsync(fullPacket, 1 + bytesRead, bytesToRead - bytesRead, cancellationToken).ConfigureAwait(false);
+
+                if (currentBytesRead == 0)
+                {
+                    throw new InvalidOperationException($"Transport stream reached EOF while reading packet data. Expected {bytesToRead} bytes, got {bytesRead} bytes");
+                }
+
+                bytesRead += currentBytesRead;
             }
 
             _logger.LogTrace("<- RECV: {Hex}", BitConverter.ToString(fullPacket).Replace("-", ""));

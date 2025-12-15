@@ -246,17 +246,22 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                         start = start[2..];
                     }
 
-                    if (!uint.TryParse(start, System.Globalization.NumberStyles.HexNumber, null, out uint segmentStart))
+                    if (!uint.TryParse(
+                            start,
+                            System.Globalization.NumberStyles.HexNumber,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out uint segmentStart))
                     {
                         throw new InvalidOperationException($"Invalid memory segment start address '{segment.StartAddress}'.");
                     }
 
-                    if (segment.Size <= 0)
+                    if (segment.Size <= 0 || segment.Size > uint.MaxValue)
                     {
-                        throw new InvalidOperationException($"Invalid memory segment size '{segment.Size}' for segment '{segment.Name}'.");
+                        throw new InvalidOperationException(
+                            $"Invalid memory segment size '{segment.Size}' for segment '{segment.Name}'. Must be in range 1..{uint.MaxValue}.");
                     }
 
-                    uint segmentSize = checked((uint)segment.Size);
+                    uint segmentSize = (uint)segment.Size;
 
                     progress.Report(("memory_dump", 0.50 + (0.45 * totalBytesRead / totalSize)));
                     _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",

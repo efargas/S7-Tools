@@ -16,6 +16,7 @@ namespace S7Tools.Tests.Services.Jobs;
 /// </summary>
 public sealed class JobProfilePropagationTests : IDisposable
 {
+    private readonly string _testDirectory;
     private readonly string _testProfilesPath;
     private readonly JobManager _jobManager;
     private readonly ISerialPortProfileService _serialProfileService;
@@ -26,7 +27,9 @@ public sealed class JobProfilePropagationTests : IDisposable
 
     public JobProfilePropagationTests()
     {
-        _testProfilesPath = Path.Combine(Path.GetTempPath(), $"s7tools_test_{Guid.NewGuid():N}", "job_profiles.json");
+        _testDirectory = Path.Combine(Path.GetTempPath(), $"s7tools_test_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(_testDirectory);
+        _testProfilesPath = Path.Combine(_testDirectory, "job_profiles.json");
 
         // Create mock services with test profiles
         _serialProfileService = CreateMockSerialProfileService();
@@ -238,13 +241,6 @@ public sealed class JobProfilePropagationTests : IDisposable
         Assert.Equal(originalPowerOnTime, jobProfile.PowerOnTimeMs);
         Assert.Equal(originalPowerOffDelay, jobProfile.PowerOffDelayMs);
     }
-
-    private readonly string _testDirectory;
-
-    // In constructor (ensure this replaces the current _testProfilesPath assignment)
-    _testDirectory = Path.Combine(Path.GetTempPath(), $"s7tools_test_{Guid.NewGuid():N}");
-    Directory.CreateDirectory(_testDirectory);
-    _testProfilesPath = Path.Combine(_testDirectory, "job_profiles.json");
 
     public void Dispose()
     {
