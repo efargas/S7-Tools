@@ -282,9 +282,8 @@ public sealed class BootloaderService : IBootloaderService
                             if (!logged25 && segmentPercent >= 25.0)
                             {
                                 logged25 = true;
-                                var segmentDuration = DateTime.UtcNow - segmentStartTime;
-                                double seconds = Math.Max(segmentDuration.TotalSeconds, 0.001);
-                                var transferRate = segmentData.Length / seconds;
+                                effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
+                                    bytesRead, segmentSize, segmentPercent);
                             }
                             else if (!logged50 && segmentPercent >= 50.0)
                             {
