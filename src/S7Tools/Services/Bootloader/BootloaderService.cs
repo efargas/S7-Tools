@@ -344,16 +344,32 @@ public sealed class BootloaderService : IBootloaderService
                     effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
 
                     var dumpProgress = new Progress<long>(bytesRead =>
+                    bool logged25 = false, logged50 = false, logged75 = false;
+
+                    var dumpProgress = new Progress<long>(bytesRead =>
                     {
                         double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
                         progress.Report(("memory_dump", percent));
-                        
-                        // Log progress at 25%, 50%, 75% intervals
+    
+                        // Log progress at 25%, 50%, 75% milestones (once each)
                         double dumpPercent = (double)bytesRead / profiles.Memory.Length * 100;
-                        if (dumpPercent >= 25 && dumpPercent < 26 || dumpPercent >= 50 && dumpPercent < 51 || dumpPercent >= 75 && dumpPercent < 76)
+    
+                        if (!logged25 && dumpPercent >= 25.0)
                         {
+                            logged25 = true;
                             effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
                                 bytesRead, profiles.Memory.Length, dumpPercent);
+                        }
+                        else if (!logged50 && dumpPercent >= 50.0)
+                        {
+                            logged50 = true;
+                            effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
+                                bytesRead, profiles.Memory.Length, dumpPercent);
+                        }
+                        else if (!logged75 && dumpPercent >= 75.0)
+                        {
+                            logged75 = true;
+                            effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
                         }
                     });
 
