@@ -731,7 +731,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private async Task ExecutePowerOnAsync()
     {
         if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+        {
             return; // Already busy
+        }
 
         try
         {
@@ -775,7 +777,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private async Task ExecutePowerOffAsync()
     {
         if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+        {
             return; // Already busy
+        }
 
         try
         {
@@ -819,7 +823,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private async Task ExecutePowerCycleAsync()
     {
         if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+        {
             return; // Already busy
+        }
 
         try
         {
@@ -867,7 +873,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private async Task ExecuteRunValidationAsync()
     {
         if (!await _operationSemaphore.WaitAsync(0).ConfigureAwait(false))
+        {
             return; // Already busy
+        }
 
         try
         {

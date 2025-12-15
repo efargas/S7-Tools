@@ -21,7 +21,9 @@ namespace S7Tools.Services.Adapters.Plc
             // Payload: [Magic for IRAM (Big Endian)]
             var magicBytes = BitConverter.GetBytes(PlcConstants.SUBPROT_80_MODE_MAGICS[PlcConstants.SUBPROT_80_MODE_IRAM]);
             if (BitConverter.IsLittleEndian)
+            {
                 Array.Reverse(magicBytes);
+            }
 
             await _protocol.InvokePrimaryHandlerAsync(0x80, magicBytes, true, cancellationToken);
 

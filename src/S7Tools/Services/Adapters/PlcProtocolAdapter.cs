@@ -54,7 +54,9 @@ namespace S7Tools.Services.Adapters
         private static byte[] EncodePacket(byte[] contents)
         {
             if (contents.Length > 254)
+            {
                 throw new ArgumentException("Packet contents too large. Max size is 254 bytes.", nameof(contents));
+            }
 
             var packet = new byte[contents.Length + 2];
             packet[0] = (byte)(contents.Length + 1);
@@ -66,11 +68,15 @@ namespace S7Tools.Services.Adapters
         private static byte[] DecodePacket(byte[] packet)
         {
             if (packet.Length < 2)
+            {
                 throw new ArgumentException("Invalid packet length.");
+            }
 
             var lengthByte = packet[0];
             if (lengthByte != packet.Length - 1)
+            {
                 throw new ArgumentException("Packet length mismatch.");
+            }
 
             byte receivedChecksum = packet.Last();
             byte calculatedChecksum = CalculateChecksum(packet, 0, packet.Length - 1);
@@ -117,7 +123,9 @@ namespace S7Tools.Services.Adapters
             int bytesToRead = lengthByte[0];
 
             if (bytesToRead == 0)
+            {
                 return Array.Empty<byte>();
+            }
 
             var fullPacket = new byte[bytesToRead + 1];
             fullPacket[0] = lengthByte[0];
