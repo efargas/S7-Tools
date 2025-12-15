@@ -347,6 +347,12 @@ public sealed class BootloaderService : IBootloaderService
 
                     var dumpProgress = new Progress<long>(bytesRead =>
                     {
+                        if (profiles.Memory.Length == 0)
+                        {
+                            progress.Report(("memory_dump", 0.95)); // Report near-completion for zero-length dump
+                            return;
+                        }
+
                         double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
                         progress.Report(("memory_dump", percent));
     

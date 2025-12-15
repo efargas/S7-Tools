@@ -263,6 +263,21 @@ public class SocatService : ISocatService, IDisposable
                 }
             }
 
+            // Enable hex dump and increased debug level if protocol logger is provided
+            if (protocolLogger != null)
+            {
+                if (!configuration.HexDump)
+                {
+                    _logger.LogDebug("Enabling hex dump for protocol logging");
+                    configuration.HexDump = true;
+                }
+                if (configuration.DebugLevel < 2)
+                {
+                    _logger.LogDebug("Increasing debug level to 2 for protocol logging");
+                    configuration.DebugLevel = 2;
+                }
+            }
+
             // Generate and validate command
             string command = GenerateSocatCommand(configuration, serialDevice);
             SocatCommandValidationResult validation = ValidateSocatCommand(command);
@@ -366,6 +381,21 @@ public class SocatService : ISocatService, IDisposable
             {
                 _logger.LogInformation("⏭️ Skipping serial device preparation (AutoConfigure={Auto}, ProfileAuto={ProfileAuto})",
                     autoConfigureSerialDevice, profile.Configuration.AutoConfigureSerial);
+            }
+
+            // Enable hex dump and increased debug level if protocol logger is provided
+            if (protocolLogger != null)
+            {
+                if (!profile.Configuration.HexDump)
+                {
+                    _logger.LogDebug("Enabling hex dump for protocol logging");
+                    profile.Configuration.HexDump = true;
+                }
+                if (profile.Configuration.DebugLevel < 2)
+                {
+                    _logger.LogDebug("Increasing debug level to 2 for protocol logging");
+                    profile.Configuration.DebugLevel = 2;
+                }
             }
 
             // Generate and validate command
@@ -1225,10 +1255,23 @@ public class SocatService : ISocatService, IDisposable
                     if (e.Data != null)
                     {
                         errorBuilder!.AppendLine(e.Data);
-                        _logger.LogWarning("Socat error: {Error}", e.Data);
-
-                        // Log to task-specific process logger if provided
-                        processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
+                        
+                        // Check if this is a hex dump line (socat outputs hex dumps to stderr when -x flag is used)
+                        // Hex dump lines typically start with timestamp and contain hex data
+                        bool isHexDumpLine = e.Data.Contains("< ") || e.Data.Contains("> ") || 
+                                            (e.Data.Contains("0x") && e.Data.Length > 20);
+                        
+                        if (isHexDumpLine && protocolLogger != null)
+                        {
+                            // Route hex dump output to protocol logger
+                            protocolLogger.LogTrace("socat[{ProcessId}] {HexData}", processId, e.Data);
+                        }
+                        else
+                        {
+                            // Regular error output
+                            _logger.LogWarning("Socat error: {Error}", e.Data);
+                            processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
+                        }
                     }
                 };
             }
