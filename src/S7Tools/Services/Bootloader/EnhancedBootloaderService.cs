@@ -7,6 +7,7 @@ using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Resources;
+using DumpProgressTracker = S7Tools.Services.Adapters.Plc.DumpProgressTracker;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -269,7 +270,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                         i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
 
                     // Create progress tracker for detailed metrics
-                    var progressTracker = new Services.Adapters.Plc.DumpProgressTracker(segmentSize);
+                    var progressTracker = new DumpProgressTracker(segmentSize);
                     
                     var segmentProgress = new Progress<long>(bytesRead =>
                     {
@@ -283,10 +284,10 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                             segment.Name,
                             i + 1,
                             selectedSegments.Count,
-                            $"{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(bytesRead)}/{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(segmentSize)} ({progressTracker.ProgressPercentage:F1}%)",
+                            $"{DumpProgressTracker.FormatBytes(bytesRead)}/{DumpProgressTracker.FormatBytes(segmentSize)} ({progressTracker.ProgressPercentage:F1}%)",
                             progressTracker.FormatSpeed(),
                             progressTracker.EstimatedTimeRemaining.HasValue 
-                                ? Services.Adapters.Plc.DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
+                                ? DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
                                 : "calculating...");
                     });
 
@@ -324,7 +325,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     cancellationToken).ConfigureAwait(false);
 
                 // Create progress tracker for detailed metrics
-                var progressTracker = new Services.Adapters.Plc.DumpProgressTracker(profiles.Memory.Length);
+                var progressTracker = new DumpProgressTracker(profiles.Memory.Length);
                 
                 var dumpProgress = new Progress<long>(bytesRead =>
                 {
@@ -335,10 +336,10 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     // Log detailed progress to task logger
                     effectiveTaskLogger?.LogInformation(
                         "Dumping memory: {Progress} | Speed: {Speed} | ETA: {ETA}",
-                        $"{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(bytesRead)}/{Services.Adapters.Plc.DumpProgressTracker.FormatBytes(profiles.Memory.Length)} ({progressTracker.ProgressPercentage:F1}%)",
+                        $"{DumpProgressTracker.FormatBytes(bytesRead)}/{DumpProgressTracker.FormatBytes(profiles.Memory.Length)} ({progressTracker.ProgressPercentage:F1}%)",
                         progressTracker.FormatSpeed(),
                         progressTracker.EstimatedTimeRemaining.HasValue 
-                            ? Services.Adapters.Plc.DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
+                            ? DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
                             : "calculating...");
                 });
 

@@ -83,11 +83,11 @@ namespace S7Tools.Services.Adapters.Plc
             }
 
             // 3. Receive Data with progress tracking
-            var data = await ReceiveManyAsync(length, progress, cancellationToken);
+            var data = await ReceiveManyAsync(progress, cancellationToken);
             return data;
         }
 
-        public async Task<byte[]> ReceiveManyAsync(uint expectedLength, IProgress<long> progress, CancellationToken cancellationToken)
+        public async Task<byte[]> ReceiveManyAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             using var ms = new MemoryStream();
             while (true)

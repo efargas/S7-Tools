@@ -27,10 +27,11 @@ namespace S7Tools.Services.Adapters.Plc
         private readonly long _totalBytes;
         private readonly Stopwatch _stopwatch;
         private long _bytesReceived;
-        private DateTime _startTime;
+        private readonly DateTime _startTime;
         private DateTime _lastUpdateTime;
         private long _lastBytesReceived;
         private double _currentSpeed; // bytes per second
+        private readonly object _updateLock = new object();
 
         /// <summary>
         /// Initializes a new instance of the DumpProgressTracker class.
@@ -69,13 +70,33 @@ namespace S7Tools.Services.Adapters.Plc
 
         /// <summary>
         /// Gets the current progress percentage (0-100).
+        /// Thread-safe: Can be accessed from multiple threads.
         /// </summary>
-        public double ProgressPercentage => _totalBytes > 0 ? (_bytesReceived * 100.0) / _totalBytes : 0;
+        public double ProgressPercentage
+        {
+            get
+            {
+                lock (_updateLock)
+                {
+                    return _totalBytes > 0 ? (_bytesReceived * 100.0) / _totalBytes : 0;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the current dump speed in bytes per second.
+        /// Thread-safe: Can be accessed from multiple threads.
         /// </summary>
-        public double SpeedBytesPerSecond => _currentSpeed;
+        public double SpeedBytesPerSecond
+        {
+            get
+            {
+                lock (_updateLock)
+                {
+                    return _currentSpeed;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the elapsed time since the dump started.
@@ -85,61 +106,66 @@ namespace S7Tools.Services.Adapters.Plc
         /// <summary>
         /// Gets the estimated time remaining to complete the dump.
         /// Returns null if speed is zero or cannot be calculated.
+        /// Thread-safe: Can be accessed from multiple threads.
         /// </summary>
         public TimeSpan? EstimatedTimeRemaining
         {
             get
             {
-                if (_currentSpeed <= 0 || _bytesReceived <= 0)
+                lock (_updateLock)
                 {
-                    return null;
-                }
+                    const double epsilon = 1e-6;
+                    if (Math.Abs(_currentSpeed) < epsilon || _bytesReceived <= 0)
+                    {
+                        return null;
+                    }
 
-                long bytesRemaining = BytesRemaining;
-                if (bytesRemaining <= 0)
-                {
-                    return TimeSpan.Zero;
-                }
+                    long bytesRemaining = BytesRemaining;
+                    if (bytesRemaining <= 0)
+                    {
+                        return TimeSpan.Zero;
+                    }
 
-                double secondsRemaining = bytesRemaining / _currentSpeed;
-                return TimeSpan.FromSeconds(secondsRemaining);
+                    double secondsRemaining = bytesRemaining / _currentSpeed;
+                    return TimeSpan.FromSeconds(secondsRemaining);
+                }
             }
         }
 
         /// <summary>
         /// Updates the progress tracker with new bytes received.
+        /// Thread-safe: This method can be called from multiple threads.
         /// </summary>
         /// <param name="bytesReceived">The total number of bytes received so far.</param>
         public void Update(long bytesReceived)
         {
-            if (bytesReceived < _bytesReceived)
+            lock (_updateLock)
             {
-                throw new ArgumentException("Bytes received cannot decrease", nameof(bytesReceived));
-            }
-
-            _bytesReceived = bytesReceived;
-            DateTime now = DateTime.UtcNow;
-            TimeSpan timeSinceLastUpdate = now - _lastUpdateTime;
-
-            // Calculate speed using moving average (only update if enough time has passed)
-            if (timeSinceLastUpdate.TotalSeconds >= 0.1) // Update speed every 100ms
-            {
-                long bytesSinceLastUpdate = _bytesReceived - _lastBytesReceived;
-                double instantSpeed = bytesSinceLastUpdate / timeSinceLastUpdate.TotalSeconds;
-
-                // Use exponential moving average for smoother speed calculation
-                // Weight: 30% new value, 70% previous value
-                if (_currentSpeed == 0)
+                if (bytesReceived < _bytesReceived)
                 {
-                    _currentSpeed = instantSpeed;
-                }
-                else
-                {
-                    _currentSpeed = (0.3 * instantSpeed) + (0.7 * _currentSpeed);
+                    throw new ArgumentException("Bytes received cannot decrease", nameof(bytesReceived));
                 }
 
-                _lastUpdateTime = now;
-                _lastBytesReceived = _bytesReceived;
+                _bytesReceived = bytesReceived;
+                DateTime now = DateTime.UtcNow;
+                TimeSpan timeSinceLastUpdate = now - _lastUpdateTime;
+
+                // Calculate speed using moving average (only update if enough time has passed)
+                if (timeSinceLastUpdate.TotalSeconds >= 0.1) // Update speed every 100ms
+                {
+                    long bytesSinceLastUpdate = _bytesReceived - _lastBytesReceived;
+                    double instantSpeed = bytesSinceLastUpdate / timeSinceLastUpdate.TotalSeconds;
+
+                    // Use exponential moving average for smoother speed calculation
+                    // Weight: 30% new value, 70% previous value
+                    const double epsilon = 1e-6;
+                    _currentSpeed = Math.Abs(_currentSpeed) < epsilon
+                        ? instantSpeed
+                        : (0.3 * instantSpeed) + (0.7 * _currentSpeed);
+
+                    _lastUpdateTime = now;
+                    _lastBytesReceived = _bytesReceived;
+                }
             }
         }
 
