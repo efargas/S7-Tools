@@ -240,10 +240,11 @@ public sealed class JobProfilePropagationTests : IDisposable
     }
 
     private readonly string _testDirectory;
-    // ... inside constructor
-    // _testDirectory = Path.Combine(Path.GetTempPath(), $"s7tools_test_{Guid.NewGuid():N}");
-    // Directory.CreateDirectory(_testDirectory);
-    // _testProfilesPath = Path.Combine(_testDirectory, "job_profiles.json");
+
+    // In constructor (ensure this replaces the current _testProfilesPath assignment)
+    _testDirectory = Path.Combine(Path.GetTempPath(), $"s7tools_test_{Guid.NewGuid():N}");
+    Directory.CreateDirectory(_testDirectory);
+    _testProfilesPath = Path.Combine(_testDirectory, "job_profiles.json");
 
     public void Dispose()
     {
