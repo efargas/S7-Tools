@@ -37,6 +37,7 @@ namespace S7Tools.Services.Adapters
         public void SetProtocolLogger(ILogger? protocolLogger)
         {
             _protocolLogger = protocolLogger;
+            _protocolHandler.SetProtocolLogger(protocolLogger);
         }
 
         public void Configure(string host, int port)
