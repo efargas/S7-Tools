@@ -5,6 +5,22 @@ namespace S7Tools.Services.Adapters.Plc
 {
     /// <summary>
     /// Tracks detailed progress metrics for memory dump operations including speed and ETA calculations.
+    /// Provides real-time feedback during long-running dump operations with human-readable formatting.
+    /// 
+    /// Features:
+    /// - Speed calculation using exponential moving average (smooth, responsive)
+    /// - ETA estimation based on current speed
+    /// - Human-readable formatting for bytes (GB, MB, KB, B)
+    /// - Human-readable formatting for time spans
+    /// - Progress percentage tracking
+    /// 
+    /// Usage:
+    /// <code>
+    /// var tracker = new DumpProgressTracker(totalBytes);
+    /// // In progress callback:
+    /// tracker.Update(bytesReceived);
+    /// logger.LogInformation("Progress: {Summary}", tracker.GetSummary());
+    /// </code>
     /// </summary>
     internal class DumpProgressTracker
     {

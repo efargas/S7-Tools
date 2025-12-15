@@ -1244,7 +1244,10 @@ public class SocatService : ISocatService, IDisposable
                     {
                         outputBuilder!.AppendLine(e.Data);
                         
-                        // Log to task-specific process logger if provided, otherwise use application logger
+                        // IMPORTANT: Log separation pattern for task execution
+                        // - When processLogger is provided (task execution context): log ONLY to processLogger
+                        // - When no processLogger (standalone usage): log to application logger
+                        // This prevents task-specific logs from polluting the main application log
                         if (processLogger != null)
                         {
                             processLogger.LogDebug("socat[{ProcessId}] {Output}", processId, e.Data);
@@ -1269,12 +1272,15 @@ public class SocatService : ISocatService, IDisposable
                         
                         if (isHexDumpLine && protocolLogger != null)
                         {
-                            // Route hex dump output to protocol logger only
+                            // Protocol data goes exclusively to protocol logger for detailed analysis
                             protocolLogger.LogTrace("socat[{ProcessId}] {HexData}", processId, e.Data);
                         }
                         else
                         {
-                            // Regular error output - log to task logger if provided, otherwise use application logger
+                            // IMPORTANT: Log separation pattern for task execution
+                            // Regular error output follows the same pattern as stdout:
+                            // - When processLogger is provided: log ONLY to processLogger
+                            // - When no processLogger: log to application logger
                             if (processLogger != null)
                             {
                                 processLogger.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
