@@ -60,13 +60,33 @@ namespace S7Tools.Services.Adapters.Plc
 
         /// <summary>
         /// Gets the number of bytes received so far.
+        /// Thread-safe: Can be accessed from multiple threads.
         /// </summary>
-        public long BytesReceived => _bytesReceived;
+        public long BytesReceived
+        {
+            get
+            {
+                lock (_updateLock)
+                {
+                    return _bytesReceived;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the number of bytes remaining to be received.
+        /// Thread-safe: Can be accessed from multiple threads.
         /// </summary>
-        public long BytesRemaining => _totalBytes - _bytesReceived;
+        public long BytesRemaining
+        {
+            get
+            {
+                lock (_updateLock)
+                {
+                    return _totalBytes - _bytesReceived;
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the current progress percentage (0-100).
@@ -120,7 +140,7 @@ namespace S7Tools.Services.Adapters.Plc
                         return null;
                     }
 
-                    long bytesRemaining = BytesRemaining;
+                    long bytesRemaining = _totalBytes - _bytesReceived;
                     if (bytesRemaining <= 0)
                     {
                         return TimeSpan.Zero;
@@ -171,30 +191,34 @@ namespace S7Tools.Services.Adapters.Plc
 
         /// <summary>
         /// Formats the current speed as a human-readable string.
+        /// Thread-safe: Can be called from multiple threads.
         /// </summary>
         /// <returns>Formatted speed string (e.g., "1.5 MB/s", "245 KB/s").</returns>
         public string FormatSpeed()
         {
-            if (_currentSpeed <= 0)
+            lock (_updateLock)
             {
-                return "0 B/s";
-            }
+                if (_currentSpeed <= 0)
+                {
+                    return "0 B/s";
+                }
 
-            if (_currentSpeed >= 1024 * 1024 * 1024) // GB/s
-            {
-                return $"{_currentSpeed / (1024 * 1024 * 1024):F2} GB/s";
-            }
-            else if (_currentSpeed >= 1024 * 1024) // MB/s
-            {
-                return $"{_currentSpeed / (1024 * 1024):F2} MB/s";
-            }
-            else if (_currentSpeed >= 1024) // KB/s
-            {
-                return $"{_currentSpeed / 1024:F2} KB/s";
-            }
-            else // B/s
-            {
-                return $"{_currentSpeed:F0} B/s";
+                if (_currentSpeed >= 1024 * 1024 * 1024) // GB/s
+                {
+                    return $"{_currentSpeed / (1024 * 1024 * 1024):F2} GB/s";
+                }
+                else if (_currentSpeed >= 1024 * 1024) // MB/s
+                {
+                    return $"{_currentSpeed / (1024 * 1024):F2} MB/s";
+                }
+                else if (_currentSpeed >= 1024) // KB/s
+                {
+                    return $"{_currentSpeed / 1024:F2} KB/s";
+                }
+                else // B/s
+                {
+                    return $"{_currentSpeed:F0} B/s";
+                }
             }
         }
 
@@ -246,15 +270,59 @@ namespace S7Tools.Services.Adapters.Plc
 
         /// <summary>
         /// Gets a summary of the current progress.
+        /// Thread-safe: Can be called from multiple threads.
         /// </summary>
         /// <returns>Formatted summary string.</returns>
         public string GetSummary()
         {
-            string progress = $"{FormatBytes(_bytesReceived)} / {FormatBytes(_totalBytes)} ({ProgressPercentage:F1}%)";
-            string speed = FormatSpeed();
-            string eta = EstimatedTimeRemaining.HasValue ? FormatTimeSpan(EstimatedTimeRemaining.Value) : "calculating...";
-            
-            return $"{progress} | {speed} | ETA: {eta}";
+            lock (_updateLock)
+            {
+                string progress = $"{FormatBytes(_bytesReceived)} / {FormatBytes(_totalBytes)} ({(_totalBytes > 0 ? (_bytesReceived * 100.0) / _totalBytes : 0):F1}%)";
+                double currentSpeed = _currentSpeed;
+                long bytesRemaining = _totalBytes - _bytesReceived;
+                
+                // Format speed
+                string speed;
+                if (currentSpeed <= 0)
+                {
+                    speed = "0 B/s";
+                }
+                else if (currentSpeed >= 1024 * 1024 * 1024) // GB/s
+                {
+                    speed = $"{currentSpeed / (1024 * 1024 * 1024):F2} GB/s";
+                }
+                else if (currentSpeed >= 1024 * 1024) // MB/s
+                {
+                    speed = $"{currentSpeed / (1024 * 1024):F2} MB/s";
+                }
+                else if (currentSpeed >= 1024) // KB/s
+                {
+                    speed = $"{currentSpeed / 1024:F2} KB/s";
+                }
+                else // B/s
+                {
+                    speed = $"{currentSpeed:F0} B/s";
+                }
+                
+                // Calculate ETA
+                string eta;
+                const double epsilon = 1e-6;
+                if (Math.Abs(currentSpeed) < epsilon || _bytesReceived <= 0)
+                {
+                    eta = "calculating...";
+                }
+                else if (bytesRemaining <= 0)
+                {
+                    eta = FormatTimeSpan(TimeSpan.Zero);
+                }
+                else
+                {
+                    double secondsRemaining = bytesRemaining / currentSpeed;
+                    eta = FormatTimeSpan(TimeSpan.FromSeconds(secondsRemaining));
+                }
+                
+                return $"{progress} | {speed} | ETA: {eta}";
+            }
         }
     }
 }
