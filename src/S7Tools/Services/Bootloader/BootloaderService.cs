@@ -260,15 +260,36 @@ public sealed class BootloaderService : IBootloaderService
                         effectiveTaskLogger.LogDebug("  Address: 0x{Address:X8}, Size: {Size:N0} bytes ({SizeKB:F2} KB)",
                             segmentStart, segmentSize, segmentSize / 1024.0);
 
+                        bool logged25 = false, logged50 = false, logged75 = false;
+
                         var segmentProgress = new Progress<long>(bytesRead =>
                         {
                             double percent = 0.50 + (0.45 * (totalBytesRead + bytesRead) / totalSize);
                             progress.Report(("memory_dump", percent));
-                            
-                            // Log progress at 25%, 50%, 75% intervals
-                            double segmentPercent = (double)bytesRead / segmentSize * 100;
-                            if (segmentPercent >= 25 && segmentPercent < 26 || segmentPercent >= 50 && segmentPercent < 51 || segmentPercent >= 75 && segmentPercent < 76)
+
+                            if (segmentSize == 0)
                             {
+                                return;
+                            }
+
+                            // Log progress at 25%, 50%, 75% milestones (once each)
+                            double segmentPercent = (double)bytesRead / segmentSize * 100.0;
+
+                            if (!logged25 && segmentPercent >= 25.0)
+                            {
+                                logged25 = true;
+                                effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
+                                    bytesRead, segmentSize, segmentPercent);
+                            }
+                            else if (!logged50 && segmentPercent >= 50.0)
+                            {
+                                logged50 = true;
+                                effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
+                                    bytesRead, segmentSize, segmentPercent);
+                            }
+                            else if (!logged75 && segmentPercent >= 75.0)
+                            {
+                                logged75 = true;
                                 effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
                                     bytesRead, segmentSize, segmentPercent);
                             }
