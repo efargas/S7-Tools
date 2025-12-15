@@ -78,13 +78,17 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
     public async Task<byte[]> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent)> progress,
+        Microsoft.Extensions.Logging.ILogger? taskLogger = null,
         Microsoft.Extensions.Logging.ILogger? processLogger = null,
+        Microsoft.Extensions.Logging.ILogger? protocolLogger = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(progress);
 
-        _logger.LogInformation("Starting bootloader dump operation");
+        var effectiveTaskLogger = taskLogger ?? _logger;
+
+        effectiveTaskLogger.LogInformation("Starting enhanced bootloader dump operation");
 
         SocatProcessInfo? socatProcess = null;
         bool isPowerConnected = false;
@@ -93,12 +97,13 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         {
             // Stage 0: Configure serial port (2% progress)
             progress.Report(("serial_config", 0.02));
-            _logger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
+            effectiveTaskLogger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
 
             // Use serial configuration directly from profile
             bool serialConfigured = await _serialPort.ApplyConfigurationAsync(
                 profiles.Serial.Device,
                 profiles.Serial.Configuration,
+                effectiveTaskLogger,
                 cancellationToken).ConfigureAwait(false);
 
             if (!serialConfigured)
@@ -106,13 +111,11 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 throw new InvalidOperationException($"Failed to configure serial port {profiles.Serial.Device}");
             }
 
-            _logger.LogInformation("Serial port {Device} configured successfully", profiles.Serial.Device);
-            processLogger?.LogInformation("Serial port configured: {Device} @ {Baud} baud",
-                profiles.Serial.Device, profiles.Serial.Baud);
+            effectiveTaskLogger.LogInformation("Serial port {Device} configured successfully", profiles.Serial.Device);
 
             // Stage 1: Setup socat bridge (5% progress)
             progress.Report(("socat_setup", 0.05));
-            _logger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
+            effectiveTaskLogger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
 
             // Use socat configuration directly from profile (must be non-null after Phase 2 changes)
             if (profiles.Socat.Configuration == null)
@@ -124,11 +127,11 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 profiles.Socat.Configuration,
                 profiles.Serial.Device,
                 processLogger,
+                protocolLogger,
                 cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Socat bridge started on TCP port {Port} (PID: {ProcessId})",
+            effectiveTaskLogger.LogInformation("Socat bridge started on TCP port {Port} (PID: {ProcessId})",
                 profiles.Socat.Port, socatProcess.ProcessId);
-            processLogger?.LogInformation("Socat bridge listening on localhost:{Port}", profiles.Socat.Port);
 
             // Stage 2: Connect to power supply (8% progress)
             progress.Report(("power_connect", 0.08));
@@ -141,21 +144,21 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 throw new InvalidOperationException("Power supply configuration is required but was null. Ensure job profile includes full power supply configuration.");
             }
 
-            bool connected = await _power.ConnectAsync(profiles.Power.Configuration, cancellationToken).ConfigureAwait(false);
+            bool connected = await _power.ConnectAsync(profiles.Power.Configuration, effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
             if (!connected)
             {
                 throw new InvalidOperationException(UIStrings.Exception_FailedToConnectToPowerSupply);
             }
             isPowerConnected = true;
 
-            _logger.LogInformation("Connected to power supply at {Host}:{Port}",
+            effectiveTaskLogger.LogInformation("Connected to power supply at {Host}:{Port}",
                 profiles.Power.Host, profiles.Power.Port);
 
             // Stage 3: Power ON PLC (10% progress)
             progress.Report(("power_on", 0.10));
-            _logger.LogDebug("Turning PLC power ON");
+            effectiveTaskLogger.LogDebug("Turning PLC power ON");
 
-            bool powerOn = await _power.TurnOnAsync(cancellationToken).ConfigureAwait(false);
+            bool powerOn = await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
             if (!powerOn)
             {
                 throw new InvalidOperationException("Failed to turn PLC power ON");
@@ -170,15 +173,13 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
             // Stage 4: Power cycle PLC (12% progress)
             progress.Report(("power_cycle", 0.12));
-            _logger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
+            effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
 
             // Power cycle: OFF → delay → ON (using PowerOffDelayMs from job profile)
-            await _power.PowerCycleAsync(profiles.PowerOffDelayMs, cancellationToken)
+            await _power.PowerCycleAsync(profiles.PowerOffDelayMs, effectiveTaskLogger, cancellationToken)
                 .ConfigureAwait(false);
 
-            _logger.LogInformation("PLC power cycled successfully");
-            processLogger?.LogInformation("PLC power cycle complete (OFF → {PowerOffDelayMs}ms → ON)",
-                profiles.PowerOffDelayMs);
+            effectiveTaskLogger.LogInformation("PLC power cycled successfully");
 
             // Stage 5: Create PLC client and connect to socat (15% progress)
             progress.Report(("plc_connect", 0.15));
@@ -418,11 +419,13 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             try
             {
                 // Get process logger from task execution if available
+                Microsoft.Extensions.Logging.ILogger? taskLogger = taskExecution.Logger?.MainLogger;
                 Microsoft.Extensions.Logging.ILogger? processLogger = taskExecution.Logger?.ProcessLogger;
+                Microsoft.Extensions.Logging.ILogger? protocolLogger = taskExecution.Logger?.ProtocolLogger;
 
                 // Execute the memory dump with retry logic
                 byte[] memoryData = await ExecuteWithRetryAsync(
-                    () => DumpAsync(profiles, progressReporter, processLogger, cancellationToken),
+                    () => DumpAsync(profiles, progressReporter, taskLogger, processLogger, protocolLogger, cancellationToken),
                     RetryableOperations.All,
                     taskExecution,
                     cancellationToken).ConfigureAwait(false);

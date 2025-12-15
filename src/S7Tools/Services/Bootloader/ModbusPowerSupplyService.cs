@@ -35,10 +35,11 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     public PowerSupplyConfiguration? CurrentConfiguration => _currentConfiguration;
 
     /// <inheritdoc />
-    public Task<bool> ConnectAsync(PowerSupplyConfiguration configuration, CancellationToken cancellationToken = default)
+    public Task<bool> ConnectAsync(PowerSupplyConfiguration configuration, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
+        var effectiveLogger = taskLogger ?? _logger;
         ArgumentNullException.ThrowIfNull(configuration);
-        _logger.LogInformation("Connecting to power supply with configuration: {Config}", configuration.GenerateConnectionString());
+        effectiveLogger.LogInformation("Connecting to power supply with configuration: {Config}", configuration.GenerateConnectionString());
         _currentConfiguration = configuration;
         _isConnected = true;
         return Task.FromResult(true);
@@ -61,26 +62,28 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     }
 
     /// <inheritdoc />
-    public Task<bool> TurnOnAsync(CancellationToken cancellationToken = default)
+    public Task<bool> TurnOnAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
+        var effectiveLogger = taskLogger ?? _logger;
         if (!_isConnected)
         {
             throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
         }
 
-        _logger.LogInformation("Turning power ON");
+        effectiveLogger.LogInformation("Turning power ON");
         return Task.FromResult(true);
     }
 
     /// <inheritdoc />
-    public Task<bool> TurnOffAsync(CancellationToken cancellationToken = default)
+    public Task<bool> TurnOffAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
+        var effectiveLogger = taskLogger ?? _logger;
         if (!_isConnected)
         {
             throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
         }
 
-        _logger.LogInformation("Turning power OFF");
+        effectiveLogger.LogInformation("Turning power OFF");
         return Task.FromResult(true);
     }
 
@@ -97,20 +100,21 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     }
 
     /// <inheritdoc />
-    public async Task<bool> PowerCycleAsync(int delayMs = 5000, CancellationToken cancellationToken = default)
+    public async Task<bool> PowerCycleAsync(int delayMs = 5000, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
+        var effectiveLogger = taskLogger ?? _logger;
         if (!_isConnected)
         {
             throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
         }
 
-        _logger.LogInformation("Starting power cycle with {Delay}ms delay", delayMs);
+        effectiveLogger.LogInformation("Starting power cycle with {Delay}ms delay", delayMs);
 
-        await TurnOffAsync(cancellationToken).ConfigureAwait(false);
+        await TurnOffAsync(taskLogger, cancellationToken).ConfigureAwait(false);
         await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
-        await TurnOnAsync(cancellationToken).ConfigureAwait(false);
+        await TurnOnAsync(taskLogger, cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation("Power cycle complete");
+        effectiveLogger.LogInformation("Power cycle complete");
         return true;
     }
 

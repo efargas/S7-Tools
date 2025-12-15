@@ -834,7 +834,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             byte[] dumpData = await _bootloaderService.DumpAsync(
                 executionJob.ProfileSet,
                 progress,
+                taskLogger.MainLogger,
                 taskLogger.ProcessLogger,
+                taskLogger.ProtocolLogger,
                 CancellationToken.None)
                 .ConfigureAwait(false);
 

@@ -344,7 +344,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task<bool> ApplyConfigurationAsync(string portPath, SerialPortConfiguration configuration, CancellationToken cancellationToken = default)
+    public async Task<bool> ApplyConfigurationAsync(string portPath, SerialPortConfiguration configuration, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(portPath))
         {
@@ -352,6 +352,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         }
 
         ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
+
+        var effectiveLogger = taskLogger ?? _logger;
 
         try
         {
@@ -364,6 +366,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             }
 
             string command = GenerateSttyCommand(portPath, configuration);
+            effectiveLogger.LogDebug("Executing stty command: {Command}", command);
+            
             SttyCommandValidationResult validationResult = ValidateSttyCommand(command);
 
             if (!validationResult.IsValid)
@@ -375,24 +379,24 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
             if (result.Success)
             {
-                _logger.LogInformation("Applied configuration to port {PortPath}", portPath);
+                effectiveLogger.LogDebug("Applied configuration to port {PortPath}", portPath);
                 return true;
             }
             else
             {
-                _logger.LogError("Failed to apply configuration to port {PortPath}: {Error}", portPath, result.StandardError);
+                effectiveLogger.LogError("Failed to apply configuration to port {PortPath}: {Error}", portPath, result.StandardError);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to apply configuration to port {PortPath}", portPath);
+            effectiveLogger.LogError(ex, "Failed to apply configuration to port {PortPath}", portPath);
             throw;
         }
     }
 
     /// <inheritdoc />
-    public async Task<bool> ApplyProfileAsync(string portPath, SerialPortProfile profile, CancellationToken cancellationToken = default)
+    public async Task<bool> ApplyProfileAsync(string portPath, SerialPortProfile profile, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(portPath))
         {
@@ -401,7 +405,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         ArgumentNullException.ThrowIfNull(profile, nameof(profile));
 
-        return await ApplyConfigurationAsync(portPath, profile.Configuration, cancellationToken).ConfigureAwait(false);
+        return await ApplyConfigurationAsync(portPath, profile.Configuration, taskLogger, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -440,7 +444,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         try
         {
-            bool success = await ApplyConfigurationAsync(portPath, backupConfiguration, cancellationToken).ConfigureAwait(false);
+            bool success = await ApplyConfigurationAsync(portPath, backupConfiguration, null, cancellationToken).ConfigureAwait(false);
             if (success)
             {
                 _logger.LogInformation("Restored configuration for port {PortPath}", portPath);

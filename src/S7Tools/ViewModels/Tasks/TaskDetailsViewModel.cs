@@ -626,7 +626,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             throw new InvalidOperationException("No power supply configuration available for this task");
         }
 
-        bool connected = await _powerSupplyService.ConnectAsync(powerSupplyProfile.Configuration, cancellationToken)
+        bool connected = await _powerSupplyService.ConnectAsync(powerSupplyProfile.Configuration, null, cancellationToken)
             .ConfigureAwait(false);
 
         if (!connected)
@@ -668,6 +668,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 socatProfile,
                 serialDevice,
                 null, // processLogger - could be TaskExecution.Logger if needed
+                null, // protocolLogger
                 CancellationToken.None);
 
             CanStopSocat = true;
