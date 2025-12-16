@@ -53,4 +53,12 @@ public sealed class LogDataStoreOptions
     /// Default is 100ms.
     /// </summary>
     public int BatchIntervalMs { get; set; } = 100;
+
+    /// <summary>
+    /// Gets or sets the minimum interval between PropertyChanged/CollectionChanged event notifications in milliseconds.
+    /// This throttles events during high-frequency logging to prevent UI overload.
+    /// Default is 250ms (4 events per second max).
+    /// Set to 0 to disable throttling (not recommended for high-frequency logging scenarios).
+    /// </summary>
+    public double EventThrottleMs { get; set; } = 250.0;
 }

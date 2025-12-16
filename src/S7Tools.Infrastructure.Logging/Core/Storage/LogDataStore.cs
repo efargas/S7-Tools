@@ -42,7 +42,6 @@ public sealed class LogDataStore : ILogDataStore
     
     // Event throttling to prevent UI overload during high-frequency logging
     private DateTime _lastEventTime = DateTime.MinValue;
-    private const double EVENT_THROTTLE_SECONDS = 0.25; // Fire events at most 4 times per second
 
     /// <summary>
     /// Initializes a new instance of the LogDataStore class.
@@ -148,9 +147,10 @@ public sealed class LogDataStore : ILogDataStore
         {
             // Throttle event notifications to prevent UI overload during high-frequency logging.
             // During intensive operations (e.g., memory dumps), logs can be added 1000s of times/second.
-            // Firing events on every addition overwhelms the UI thread. Throttle to max 4 events/second.
+            // Firing events on every addition overwhelms the UI thread. Throttle using configurable interval.
             DateTime now = DateTime.UtcNow;
-            bool shouldNotify = (now - _lastEventTime).TotalSeconds >= EVENT_THROTTLE_SECONDS;
+            double throttleSeconds = _options.EventThrottleMs / 1000.0;
+            bool shouldNotify = throttleSeconds <= 0 || (now - _lastEventTime).TotalSeconds >= throttleSeconds;
             
             if (shouldNotify)
             {
@@ -204,7 +204,8 @@ public sealed class LogDataStore : ILogDataStore
 
             // Throttle event notifications (same as AddEntry)
             DateTime now = DateTime.UtcNow;
-            bool shouldNotify = (now - _lastEventTime).TotalSeconds >= EVENT_THROTTLE_SECONDS;
+            double throttleSeconds = _options.EventThrottleMs / 1000.0;
+            bool shouldNotify = throttleSeconds <= 0 || (now - _lastEventTime).TotalSeconds >= throttleSeconds;
             
             if (shouldNotify && addedEntries.Count > 0)
             {

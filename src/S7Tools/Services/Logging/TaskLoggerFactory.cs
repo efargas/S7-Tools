@@ -167,6 +167,12 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
             // DEFERRED FILE WRITE: Export all logs from DataStores to files now (task completion).
             // This is the ONLY time logs are written to disk, preventing real-time I/O overhead.
             
+            // Ensure log directory exists (defensive check)
+            if (!string.IsNullOrEmpty(context.LogDirectory))
+            {
+                Directory.CreateDirectory(context.LogDirectory);
+            }
+            
             // Export main logs
             if (context.MainDataStore != null && !string.IsNullOrEmpty(context.TaskLogger.MainLogFilePath))
             {
