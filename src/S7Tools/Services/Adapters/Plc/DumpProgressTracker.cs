@@ -257,16 +257,14 @@ namespace S7Tools.Services.Adapters.Plc
         {
             lock (_updateLock)
             {
-                // Use existing properties and methods to avoid duplication
-                double progressPercentage = _totalBytes > 0 ? (_bytesReceived * 100.0) / _totalBytes : 0;
-                string progress = $"{FormatBytes(_bytesReceived)} / {FormatBytes(_totalBytes)} ({progressPercentage:F1}%)";
-                
-                // Reuse FormatSpeed logic by capturing current speed within lock
-                string speed = FormatSpeedInternal(_currentSpeed);
-                
-                // Reuse ETA calculation logic
-                string eta = FormatEtaInternal(_currentSpeed, _totalBytes - _bytesReceived, _bytesReceived);
-                
+                // Use existing properties to avoid logic duplication
+                string progress = $"{FormatBytes(BytesReceived)} / {FormatBytes(TotalBytes)} ({ProgressPercentage:F1}%)";
+        
+                string speed = FormatSpeed();
+        
+                TimeSpan? etaTimeSpan = EstimatedTimeRemaining;
+                string eta = etaTimeSpan.HasValue ? FormatTimeSpan(etaTimeSpan.Value) : "calculating...";
+        
                 return $"{progress} | {speed} | ETA: {eta}";
             }
         }
