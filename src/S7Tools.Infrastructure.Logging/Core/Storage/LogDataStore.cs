@@ -39,6 +39,10 @@ public sealed class LogDataStore : ILogDataStore
     private int _head;
     private int _count;
     private bool _disposed;
+    
+    // Event throttling to prevent UI overload during high-frequency logging
+    private DateTime _lastEventTime = DateTime.MinValue;
+    private const double EVENT_THROTTLE_SECONDS = 0.25; // Fire events at most 4 times per second
 
     /// <summary>
     /// Initializes a new instance of the LogDataStore class.
@@ -142,22 +146,24 @@ public sealed class LogDataStore : ILogDataStore
 
         if (wasAdded)
         {
-            // Notify outside of lock to prevent deadlocks
-            OnPropertyChanged(nameof(Count));
-            OnPropertyChanged(nameof(IsFull));
-            OnPropertyChanged(nameof(Entries));
+            // Throttle event notifications to prevent UI overload during high-frequency logging.
+            // During intensive operations (e.g., memory dumps), logs can be added 1000s of times/second.
+            // Firing events on every addition overwhelms the UI thread. Throttle to max 4 events/second.
+            DateTime now = DateTime.UtcNow;
+            bool shouldNotify = (now - _lastEventTime).TotalSeconds >= EVENT_THROTTLE_SECONDS;
+            
+            if (shouldNotify)
+            {
+                _lastEventTime = now;
+                
+                // Notify outside of lock to prevent deadlocks
+                OnPropertyChanged(nameof(Count));
+                OnPropertyChanged(nameof(IsFull));
+                OnPropertyChanged(nameof(Entries));
 
-            if (removedEntry != null)
-            {
-                // Item was replaced
+                // Always fire Reset action for throttled updates (simpler for UI to handle)
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Replace, logEntry, removedEntry, _count - 1));
-            }
-            else
-            {
-                // Item was added
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Add, logEntry, _count - 1));
+                    NotifyCollectionChangedAction.Reset));
             }
         }
     }
@@ -196,16 +202,22 @@ public sealed class LogDataStore : ILogDataStore
                 }
             }
 
-            // Notify outside of lock
-            OnPropertyChanged(nameof(Count));
-            OnPropertyChanged(nameof(IsFull));
-            OnPropertyChanged(nameof(Entries));
-
-            // Use Add action for better UI performance instead of Reset
-            if (addedEntries.Count > 0)
+            // Throttle event notifications (same as AddEntry)
+            DateTime now = DateTime.UtcNow;
+            bool shouldNotify = (now - _lastEventTime).TotalSeconds >= EVENT_THROTTLE_SECONDS;
+            
+            if (shouldNotify && addedEntries.Count > 0)
             {
+                _lastEventTime = now;
+                
+                // Notify outside of lock
+                OnPropertyChanged(nameof(Count));
+                OnPropertyChanged(nameof(IsFull));
+                OnPropertyChanged(nameof(Entries));
+
+                // Use Reset for throttled updates (simpler, consistent with AddEntry)
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Add, addedEntries, startIndex));
+                    NotifyCollectionChangedAction.Reset));
             }
         }
     }
