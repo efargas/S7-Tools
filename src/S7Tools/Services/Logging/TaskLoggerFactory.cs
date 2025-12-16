@@ -415,9 +415,12 @@ internal class FileLogger : ILogger, IDisposable
     {
         _filePath = filePath;
         _minLevel = minLevel;
+        // CRITICAL PERFORMANCE FIX: Remove AutoFlush to prevent disk I/O on every log call.
+        // Logs are buffered in memory (LogDataStore) and flushed to disk only when task completes.
+        // This prevents UI freezes and massive file growth during high-frequency logging (e.g., progress updates).
         _writer = new StreamWriter(filePath, append: true, System.Text.Encoding.UTF8)
         {
-            AutoFlush = true
+            AutoFlush = false  // Changed from true - logs buffered in memory, flushed on Dispose
         };
     }
 
@@ -473,6 +476,7 @@ internal class FileLogger : ILogger, IDisposable
         _semaphore.Wait();
         try
         {
+            // Flush buffered logs to disk when task completes
             _writer?.Flush();
             _writer?.Dispose();
         }
