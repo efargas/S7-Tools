@@ -198,27 +198,7 @@ namespace S7Tools.Services.Adapters.Plc
         {
             lock (_updateLock)
             {
-                if (_currentSpeed <= 0)
-                {
-                    return "0 B/s";
-                }
-
-                if (_currentSpeed >= 1024 * 1024 * 1024) // GB/s
-                {
-                    return $"{_currentSpeed / (1024 * 1024 * 1024):F2} GB/s";
-                }
-                else if (_currentSpeed >= 1024 * 1024) // MB/s
-                {
-                    return $"{_currentSpeed / (1024 * 1024):F2} MB/s";
-                }
-                else if (_currentSpeed >= 1024) // KB/s
-                {
-                    return $"{_currentSpeed / 1024:F2} KB/s";
-                }
-                else // B/s
-                {
-                    return $"{_currentSpeed:F0} B/s";
-                }
+                return FormatSpeedInternal(_currentSpeed);
             }
         }
 
@@ -277,51 +257,66 @@ namespace S7Tools.Services.Adapters.Plc
         {
             lock (_updateLock)
             {
-                string progress = $"{FormatBytes(_bytesReceived)} / {FormatBytes(_totalBytes)} ({(_totalBytes > 0 ? (_bytesReceived * 100.0) / _totalBytes : 0):F1}%)";
-                double currentSpeed = _currentSpeed;
-                long bytesRemaining = _totalBytes - _bytesReceived;
+                // Use existing properties and methods to avoid duplication
+                double progressPercentage = _totalBytes > 0 ? (_bytesReceived * 100.0) / _totalBytes : 0;
+                string progress = $"{FormatBytes(_bytesReceived)} / {FormatBytes(_totalBytes)} ({progressPercentage:F1}%)";
                 
-                // Format speed
-                string speed;
-                if (currentSpeed <= 0)
-                {
-                    speed = "0 B/s";
-                }
-                else if (currentSpeed >= 1024 * 1024 * 1024) // GB/s
-                {
-                    speed = $"{currentSpeed / (1024 * 1024 * 1024):F2} GB/s";
-                }
-                else if (currentSpeed >= 1024 * 1024) // MB/s
-                {
-                    speed = $"{currentSpeed / (1024 * 1024):F2} MB/s";
-                }
-                else if (currentSpeed >= 1024) // KB/s
-                {
-                    speed = $"{currentSpeed / 1024:F2} KB/s";
-                }
-                else // B/s
-                {
-                    speed = $"{currentSpeed:F0} B/s";
-                }
+                // Reuse FormatSpeed logic by capturing current speed within lock
+                string speed = FormatSpeedInternal(_currentSpeed);
                 
-                // Calculate ETA
-                string eta;
-                const double epsilon = 1e-6;
-                if (Math.Abs(currentSpeed) < epsilon || _bytesReceived <= 0)
-                {
-                    eta = "calculating...";
-                }
-                else if (bytesRemaining <= 0)
-                {
-                    eta = FormatTimeSpan(TimeSpan.Zero);
-                }
-                else
-                {
-                    double secondsRemaining = bytesRemaining / currentSpeed;
-                    eta = FormatTimeSpan(TimeSpan.FromSeconds(secondsRemaining));
-                }
+                // Reuse ETA calculation logic
+                string eta = FormatEtaInternal(_currentSpeed, _totalBytes - _bytesReceived, _bytesReceived);
                 
                 return $"{progress} | {speed} | ETA: {eta}";
+            }
+        }
+
+        /// <summary>
+        /// Formats speed value as human-readable string (internal helper, assumes lock is held).
+        /// </summary>
+        private static string FormatSpeedInternal(double speed)
+        {
+            if (speed <= 0)
+            {
+                return "0 B/s";
+            }
+
+            if (speed >= 1024 * 1024 * 1024) // GB/s
+            {
+                return $"{speed / (1024 * 1024 * 1024):F2} GB/s";
+            }
+            else if (speed >= 1024 * 1024) // MB/s
+            {
+                return $"{speed / (1024 * 1024):F2} MB/s";
+            }
+            else if (speed >= 1024) // KB/s
+            {
+                return $"{speed / 1024:F2} KB/s";
+            }
+            else // B/s
+            {
+                return $"{speed:F0} B/s";
+            }
+        }
+
+        /// <summary>
+        /// Formats ETA as human-readable string (internal helper, assumes lock is held).
+        /// </summary>
+        private static string FormatEtaInternal(double currentSpeed, long bytesRemaining, long bytesReceived)
+        {
+            const double epsilon = 1e-6;
+            if (Math.Abs(currentSpeed) < epsilon || bytesReceived <= 0)
+            {
+                return "calculating...";
+            }
+            else if (bytesRemaining <= 0)
+            {
+                return FormatTimeSpan(TimeSpan.Zero);
+            }
+            else
+            {
+                double secondsRemaining = bytesRemaining / currentSpeed;
+                return FormatTimeSpan(TimeSpan.FromSeconds(secondsRemaining));
             }
         }
     }
