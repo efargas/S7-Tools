@@ -285,15 +285,11 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                         {
                             lastLogTime = now;
                             effectiveTaskLogger?.LogInformation(
-                                "Segment '{SegmentName}' ({Index}/{Total}): {Progress} | Speed: {Speed} | ETA: {ETA}",
+                                "Segment '{SegmentName}' ({Index}/{Total}): {Summary}",
                                 segment.Name,
                                 i + 1,
                                 selectedSegments.Count,
-                                $"{DumpProgressTracker.FormatBytes(bytesRead)}/{DumpProgressTracker.FormatBytes(segmentSize)} ({progressTracker.ProgressPercentage:F1}%)",
-                                progressTracker.FormatSpeed(),
-                                progressTracker.EstimatedTimeRemaining.HasValue 
-                                    ? DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
-                                    : "calculating...");
+                                progressTracker.GetSummary());
                         }
                     });
 
