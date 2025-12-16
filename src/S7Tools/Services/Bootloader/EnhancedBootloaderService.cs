@@ -271,6 +271,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
                     // Create progress tracker for detailed metrics
                     var progressTracker = new DumpProgressTracker(segmentSize);
+                    DateTime lastLogTime = DateTime.MinValue;
                     
                     var segmentProgress = new Progress<long>(bytesRead =>
                     {
@@ -278,17 +279,22 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                         double percent = 0.50 + (0.45 * (totalBytesRead + bytesRead) / totalSize);
                         progress.Report(("memory_dump", percent));
                         
-                        // Log detailed progress to task logger
-                        effectiveTaskLogger?.LogInformation(
-                            "Segment '{SegmentName}' ({Index}/{Total}): {Progress} | Speed: {Speed} | ETA: {ETA}",
-                            segment.Name,
-                            i + 1,
-                            selectedSegments.Count,
-                            $"{DumpProgressTracker.FormatBytes(bytesRead)}/{DumpProgressTracker.FormatBytes(segmentSize)} ({progressTracker.ProgressPercentage:F1}%)",
-                            progressTracker.FormatSpeed(),
-                            progressTracker.EstimatedTimeRemaining.HasValue 
-                                ? DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
-                                : "calculating...");
+                        // Throttle logging to once per second to prevent UI freezing and excessive log growth
+                        DateTime now = DateTime.UtcNow;
+                        if ((now - lastLogTime).TotalSeconds >= 1.0)
+                        {
+                            lastLogTime = now;
+                            effectiveTaskLogger?.LogInformation(
+                                "Segment '{SegmentName}' ({Index}/{Total}): {Progress} | Speed: {Speed} | ETA: {ETA}",
+                                segment.Name,
+                                i + 1,
+                                selectedSegments.Count,
+                                $"{DumpProgressTracker.FormatBytes(bytesRead)}/{DumpProgressTracker.FormatBytes(segmentSize)} ({progressTracker.ProgressPercentage:F1}%)",
+                                progressTracker.FormatSpeed(),
+                                progressTracker.EstimatedTimeRemaining.HasValue 
+                                    ? DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
+                                    : "calculating...");
+                        }
                     });
 
                     byte[] segmentData = await client.DumpMemoryAsync(
@@ -326,6 +332,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
                 // Create progress tracker for detailed metrics
                 var progressTracker = new DumpProgressTracker(profiles.Memory.Length);
+                DateTime lastLogTime = DateTime.MinValue;
                 
                 var dumpProgress = new Progress<long>(bytesRead =>
                 {
@@ -333,14 +340,19 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                     double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
                     progress.Report(("memory_dump", percent));
                     
-                    // Log detailed progress to task logger
-                    effectiveTaskLogger?.LogInformation(
-                        "Dumping memory: {Progress} | Speed: {Speed} | ETA: {ETA}",
-                        $"{DumpProgressTracker.FormatBytes(bytesRead)}/{DumpProgressTracker.FormatBytes(profiles.Memory.Length)} ({progressTracker.ProgressPercentage:F1}%)",
-                        progressTracker.FormatSpeed(),
-                        progressTracker.EstimatedTimeRemaining.HasValue 
-                            ? DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
-                            : "calculating...");
+                    // Throttle logging to once per second to prevent UI freezing and excessive log growth
+                    DateTime now = DateTime.UtcNow;
+                    if ((now - lastLogTime).TotalSeconds >= 1.0)
+                    {
+                        lastLogTime = now;
+                        effectiveTaskLogger?.LogInformation(
+                            "Dumping memory: {Progress} | Speed: {Speed} | ETA: {ETA}",
+                            $"{DumpProgressTracker.FormatBytes(bytesRead)}/{DumpProgressTracker.FormatBytes(profiles.Memory.Length)} ({progressTracker.ProgressPercentage:F1}%)",
+                            progressTracker.FormatSpeed(),
+                            progressTracker.EstimatedTimeRemaining.HasValue 
+                                ? DumpProgressTracker.FormatTimeSpan(progressTracker.EstimatedTimeRemaining.Value) 
+                                : "calculating...");
+                    }
                 });
 
                 memoryData = await client.DumpMemoryAsync(
