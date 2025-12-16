@@ -467,20 +467,20 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
     private void SetupLogRefresh()
     {
-        // Auto-refresh logs every 2 seconds, but only when a task is selected and running.
-        this.WhenAnyValue(x => x.TaskExecution)
-            .Select(task => task != null && task.IsRunning
-                ? Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(2))
-                : Observable.Empty<long>())
-            .Switch()
-            .Select(_ => Observable.FromAsync(() => RefreshLogsAsync()))
-            .Switch() // Ensures only one refresh operation runs at a time
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(
-                _ => { }, // Operation completed
-                ex => _logger.LogWarning(ex, "Failed to auto-refresh logs for task {TaskId}", TaskExecution?.TaskId)
-            )
-            .DisposeWith(_disposables);
+        // DISABLED: Auto-refresh timer removed - logs now update via events.
+        // LogDataStore fires PropertyChanged/CollectionChanged events (throttled to 4/sec) when entries are added.
+        // UI updates reactively via these events instead of polling every 2 seconds.
+        // This eliminates:
+        // - Unnecessary CPU usage from timer callbacks
+        // - Redundant file/DataStore reads
+        // - UI thread blocking from refresh operations
+        // Benefits:
+        // - Event-driven updates are more efficient (only when data changes)
+        // - Throttled events (250ms) provide smooth UI updates without overload
+        // - No polling overhead when no logs are being added
+        
+        // Note: UI still gets updates via LogDataStore events, just not on a timer.
+        // Future enhancement: If manual refresh is needed, user can trigger via button/command.
     }
 
     private void ClearLogs()
