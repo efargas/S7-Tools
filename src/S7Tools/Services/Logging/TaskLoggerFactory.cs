@@ -90,43 +90,20 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
                 ? new DataStoreLoggerProvider(processDataStore, mainConfig)
                 : null;
 
-            // Create file logger providers
-            ILogger mainFileLogger = await CreateFileLoggerAsync(
-                Path.Combine(taskLogDir, "main.log"),
-                LogLevel.Debug,
-                cancellationToken).ConfigureAwait(false);
+            // ARCHITECTURAL CHANGE: No file loggers during task execution.
+            // Logs are stored ONLY in DataStore (in-memory) during task execution.
+            // Files are written ONLY in FinalizeTaskLoggerAsync() when task completes.
+            // This prevents real-time disk I/O that causes UI freezes and massive file growth.
+            
+            // Create loggers (DataStore only - no file I/O during execution)
+            var mainLogger = mainProvider.CreateLogger($"Task.{taskName}");
 
-            ILogger? protocolFileLogger = captureProtocol
-                ? await CreateFileLoggerAsync(
-                    Path.Combine(taskLogDir, "protocol.log"),
-                    LogLevel.Trace,
-                    cancellationToken).ConfigureAwait(false)
+            ILogger? protocolLogger = captureProtocol
+                ? protocolProvider?.CreateLogger($"Task.{taskName}.Protocol")
                 : null;
 
-            ILogger? processFileLogger = captureProcessOutput
-                ? await CreateFileLoggerAsync(
-                    Path.Combine(taskLogDir, "process.log"),
-                    LogLevel.Debug,
-                    cancellationToken).ConfigureAwait(false)
-                : null;
-
-            // Create composite loggers
-            var mainLogger = new CompositeLogger(
-                $"Task.{taskName}",
-                new[] { mainProvider.CreateLogger($"Task.{taskName}"), mainFileLogger }.Where(l => l != null).ToArray()!);
-
-            CompositeLogger? protocolLogger = captureProtocol
-                ? new CompositeLogger(
-                    $"Task.{taskName}.Protocol",
-                    new[] { protocolProvider?.CreateLogger($"Task.{taskName}.Protocol"), protocolFileLogger }
-                        .Where(l => l != null).ToArray()!)
-                : null;
-
-            CompositeLogger? processLogger = captureProcessOutput
-                ? new CompositeLogger(
-                    $"Task.{taskName}.Process",
-                    new[] { processProvider?.CreateLogger($"Task.{taskName}.Process"), processFileLogger }
-                        .Where(l => l != null).ToArray()!)
+            ILogger? processLogger = captureProcessOutput
+                ? processProvider?.CreateLogger($"Task.{taskName}.Process")
                 : null;
 
             // Create TaskLogger metadata
@@ -157,9 +134,8 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
                 MainProvider = mainProvider,
                 ProtocolProvider = protocolProvider,
                 ProcessProvider = processProvider,
-                FileLoggers = new[] { mainFileLogger, protocolFileLogger, processFileLogger }
-                    .Where(l => l != null).ToList()!,
                 LogDirectory = taskLogDir
+                // Note: No FileLoggers - logs written only on finalization
             };
 
             _activeLoggers[taskId] = context;
@@ -188,14 +164,39 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
                 return;
             }
 
-            // Export final logs to files
-            if (context.MainDataStore != null)
+            // DEFERRED FILE WRITE: Export all logs from DataStores to files now (task completion).
+            // This is the ONLY time logs are written to disk, preventing real-time I/O overhead.
+            
+            // Export main logs
+            if (context.MainDataStore != null && !string.IsNullOrEmpty(context.TaskLogger.MainLogFilePath))
             {
                 string exportText = await context.MainDataStore.ExportAsync(LogDataStore.ExportFormats.Text)
                     .ConfigureAwait(false);
-                await File.AppendAllTextAsync(
-                    context.TaskLogger.MainLogFilePath!,
-                    "\n=== Final Export ===\n" + exportText,
+                await File.WriteAllTextAsync(
+                    context.TaskLogger.MainLogFilePath,
+                    exportText,
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            // Export protocol logs
+            if (context.ProtocolDataStore != null && !string.IsNullOrEmpty(context.TaskLogger.ProtocolLogFilePath))
+            {
+                string exportText = await context.ProtocolDataStore.ExportAsync(LogDataStore.ExportFormats.Text)
+                    .ConfigureAwait(false);
+                await File.WriteAllTextAsync(
+                    context.TaskLogger.ProtocolLogFilePath,
+                    exportText,
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            // Export process logs
+            if (context.ProcessDataStore != null && !string.IsNullOrEmpty(context.TaskLogger.ProcessLogFilePath))
+            {
+                string exportText = await context.ProcessDataStore.ExportAsync(LogDataStore.ExportFormats.Text)
+                    .ConfigureAwait(false);
+                await File.WriteAllTextAsync(
+                    context.TaskLogger.ProcessLogFilePath,
+                    exportText,
                     cancellationToken).ConfigureAwait(false);
             }
 
@@ -211,21 +212,15 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
             context.TaskLogger.TotalLogEntries = context.MainDataStore?.Count ?? 0;
             context.TaskLogger.FinalizedAt = DateTime.UtcNow;
 
-            // Cleanup
+            // Cleanup DataStores and providers
             context.MainProvider?.Dispose();
             context.ProtocolProvider?.Dispose();
             context.ProcessProvider?.Dispose();
             context.MainDataStore?.Dispose();
             context.ProtocolDataStore?.Dispose();
             context.ProcessDataStore?.Dispose();
-
-            foreach (ILogger? fileLogger in context.FileLoggers)
-            {
-                if (fileLogger is IDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
-            }
+            
+            // No FileLoggers to dispose - logs written only on finalization
 
             _logger.LogInformation(
                 "Finalized task logger for {TaskId}. Total size: {Size} bytes, Entries: {Entries}",
@@ -262,24 +257,8 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
         };
     }
 
-    private static async Task<ILogger> CreateFileLoggerAsync(
-        string filePath,
-        LogLevel minLevel,
-        CancellationToken cancellationToken)
-    {
-        // Create directory if needed
-        string? directory = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        // Create a simple file logger using a StreamWriter
-        var fileLogger = new FileLogger(filePath, minLevel);
-        await Task.CompletedTask; // For async pattern consistency
-
-        return fileLogger;
-    }
+    // CreateFileLoggerAsync removed - no longer needed.
+    // Logs are stored in-memory (DataStore) and written to files only on finalization.
 
     private static string SanitizeFileName(string fileName)
     {
@@ -310,14 +289,7 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
                 context.MainDataStore?.Dispose();
                 context.ProtocolDataStore?.Dispose();
                 context.ProcessDataStore?.Dispose();
-
-                foreach (ILogger? fileLogger in context.FileLoggers)
-                {
-                    if (fileLogger is IDisposable disposable)
-                    {
-                        disposable.Dispose();
-                    }
-                }
+                // No FileLoggers to dispose - logs written only on finalization
             }
 
             _activeLoggers.Clear();
@@ -327,6 +299,9 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
         _disposed = true;
     }
 
+    /// <summary>
+    /// Context for tracking active task loggers and their associated DataStores.
+    /// </summary>
     private class TaskLoggerContext
     {
         public TaskLogger TaskLogger { get; set; } = null!;
@@ -336,156 +311,12 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
         public DataStoreLoggerProvider? MainProvider { get; set; }
         public DataStoreLoggerProvider? ProtocolProvider { get; set; }
         public DataStoreLoggerProvider? ProcessProvider { get; set; }
-        public List<ILogger> FileLoggers { get; set; } = new();
         public string LogDirectory { get; set; } = string.Empty;
+        // Note: No FileLoggers - logs written to files only on finalization
     }
 }
 
-/// <summary>
-/// Composite logger that writes to multiple logger instances.
-/// </summary>
-internal class CompositeLogger : ILogger
-{
-    private readonly string _categoryName;
-    private readonly ILogger[] _loggers;
-
-    public CompositeLogger(string categoryName, ILogger[] loggers)
-    {
-        _categoryName = categoryName;
-        _loggers = loggers ?? Array.Empty<ILogger>();
-    }
-
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
-    {
-        return new CompositeScope(_loggers.Select(l => l.BeginScope(state)).ToArray());
-    }
-
-    public bool IsEnabled(LogLevel logLevel)
-    {
-        return _loggers.Any(l => l.IsEnabled(logLevel));
-    }
-
-    public void Log<TState>(
-        LogLevel logLevel,
-        EventId eventId,
-        TState state,
-        Exception? exception,
-        Func<TState, Exception?, string> formatter)
-    {
-        foreach (ILogger logger in _loggers)
-        {
-            if (logger.IsEnabled(logLevel))
-            {
-                logger.Log(logLevel, eventId, state, exception, formatter);
-            }
-        }
-    }
-
-    private class CompositeScope : IDisposable
-    {
-        private readonly IDisposable?[] _scopes;
-
-        public CompositeScope(IDisposable?[] scopes)
-        {
-            _scopes = scopes;
-        }
-
-        public void Dispose()
-        {
-            foreach (IDisposable? scope in _scopes)
-            {
-                scope?.Dispose();
-            }
-        }
-    }
-}
-
-/// <summary>
-/// Simple file logger implementation.
-/// </summary>
-internal class FileLogger : ILogger, IDisposable
-{
-    private readonly string _filePath;
-    private readonly LogLevel _minLevel;
-    private readonly StreamWriter _writer;
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private bool _disposed;
-
-    public FileLogger(string filePath, LogLevel minLevel)
-    {
-        _filePath = filePath;
-        _minLevel = minLevel;
-        // CRITICAL PERFORMANCE FIX: Remove AutoFlush to prevent disk I/O on every log call.
-        // Logs are buffered in memory (LogDataStore) and flushed to disk only when task completes.
-        // This prevents UI freezes and massive file growth during high-frequency logging (e.g., progress updates).
-        _writer = new StreamWriter(filePath, append: true, System.Text.Encoding.UTF8)
-        {
-            AutoFlush = false  // Changed from true - logs buffered in memory, flushed on Dispose
-        };
-    }
-
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull
-    {
-        return null; // Simple implementation without scope support
-    }
-
-    public bool IsEnabled(LogLevel logLevel)
-    {
-        return logLevel >= _minLevel;
-    }
-
-    public void Log<TState>(
-        LogLevel logLevel,
-        EventId eventId,
-        TState state,
-        Exception? exception,
-        Func<TState, Exception?, string> formatter)
-    {
-        if (!IsEnabled(logLevel) || _disposed)
-        {
-            return;
-        }
-
-        string message = formatter(state, exception);
-        string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
-        string logLine = $"[{timestamp}] [{logLevel}] {message}";
-
-        if (exception != null)
-        {
-            logLine += Environment.NewLine + exception.ToString();
-        }
-
-        _semaphore.Wait();
-        try
-        {
-            _writer.WriteLine(logLine);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _semaphore.Wait();
-        try
-        {
-            // Flush buffered logs to disk when task completes
-            _writer?.Flush();
-            _writer?.Dispose();
-        }
-        finally
-        {
-            _semaphore.Release();
-            _semaphore.Dispose();
-        }
-
-        _disposed = true;
-    }
-}
+// Note: CompositeLogger and FileLogger classes removed.
+// Logs are now stored ONLY in DataStore (in-memory) during task execution.
+// Files are written ONLY in FinalizeTaskLoggerAsync() when task completes.
+// This eliminates real-time disk I/O that caused UI freezes and massive file growth.
