@@ -47,8 +47,8 @@ public sealed class UnifiedFileLoggerProvider : ILoggerProvider
         _logQueue.CompleteAdding();
         try
         {
-            // Wait for the processing task to drain remaining items
-            _processingTask.Wait();
+            // Wait up to 5 seconds for the processing task to finish draining
+            _processingTask.Wait(TimeSpan.FromSeconds(5));
         }
         catch (AggregateException) { /* swallow to avoid throwing from Dispose */ }
         _logQueue.Dispose();

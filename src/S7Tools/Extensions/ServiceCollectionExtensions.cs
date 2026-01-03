@@ -238,6 +238,7 @@ public static class ServiceCollectionExtensions
         // Add DataStore logging services
         services.AddDataStoreLogging(configureDataStore);
 
+        services.TryAddSingleton<ICentralizedTaskLogService, CentralizedTaskLogService>();
         services.TryAddSingleton<ITaskLogDataStoreFactory, TaskLogDataStoreFactory>();
         services.Configure<S7Tools.Infrastructure.Logging.Core.Configuration.TaskLogDataStoreOptions>(options =>
         {

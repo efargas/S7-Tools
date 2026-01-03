@@ -14,9 +14,9 @@ public class CombinedFileLoggerConfiguration : IFileLogConfiguration
 
     public string GetFilePathForCategory(string category)
     {
-        if (!string.IsNullOrEmpty(category) && category.StartsWith("Task", StringComparison.OrdinalIgnoreCase))
+        var parts = category?.Split('.') ?? Array.Empty<string>();
+        if (parts.Length > 0 && parts[0].Equals("Task", StringComparison.OrdinalIgnoreCase))
         {
-            var parts = category.Split('.');
             var lastPart = parts.LastOrDefault();
             return lastPart?.Equals("Process", System.StringComparison.OrdinalIgnoreCase) == true
                 ? TaskProcessLogPath

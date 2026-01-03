@@ -39,20 +39,18 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortProfileService _serialPortProfileService;
     private readonly ISocatProfileService _socatProfileService;
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
+    private readonly ICentralizedTaskLogService _centralizedTaskLogService;
     private readonly CompositeDisposable _disposables = new();
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
     private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
-    private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _mainLogDataStore;
-    private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _processLogDataStore;
-    private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _protocolLogDataStore;
+    private S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _mainLogDataStore;
+    private S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _processLogDataStore;
+    private S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _protocolLogDataStore;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _mainHandler;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _protocolHandler;
 
     private TaskExecution? _taskExecution;
-    private string _mainLogContent = "No main log data";
-    private string _processLogContent = "No socat process log data";
-    private string _protocolLogContent = "No protocol log data";
     private string _validationResultText = "No validation data";
     private string _statusMessage = string.Empty;
     private int _selectedTabIndex;
@@ -84,7 +82,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     /// <param name="serialPortProfileService">Serial port profile service for accessing serial port profiles.</param>
     /// <param name="socatProfileService">Socat profile service for accessing socat profiles.</param>
     /// <param name="jobProfileSetFactory">Job profile set factory for creating profile sets.</param>
-    /// <param name="taskLogDataStoreFactory">Factory for creating task-specific log data stores.</param>
+    /// <param name="centralizedTaskLogService">The centralized task log service.</param>
     public TaskDetailsViewModel(
         ILogger<TaskDetailsViewModel> logger,
         ISocatService socatService,
@@ -97,7 +95,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         ISerialPortProfileService serialPortProfileService,
         ISocatProfileService socatProfileService,
         IJobProfileSetFactory jobProfileSetFactory,
-        ITaskLogDataStoreFactory taskLogDataStoreFactory)
+        ICentralizedTaskLogService centralizedTaskLogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
@@ -110,9 +108,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _serialPortProfileService = serialPortProfileService ?? throw new ArgumentNullException(nameof(serialPortProfileService));
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
         _jobProfileSetFactory = jobProfileSetFactory ?? throw new ArgumentNullException(nameof(jobProfileSetFactory));
+        _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
 
         // Initialize log entry collections
-        (_mainLogDataStore, _processLogDataStore, _protocolLogDataStore) = taskLogDataStoreFactory.CreateLogDataStores();
         MainLogEntries = new ObservableCollection<LogEntry>();
         ProcessLogEntries = new ObservableCollection<LogEntry>();
         ProtocolLogEntries = new ObservableCollection<LogEntry>();
@@ -212,39 +210,32 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         get => _taskExecution;
         set
         {
+            if (_taskExecution != null)
+            {
+                // Detach from old task's log stores
+                _mainLogDataStore.CollectionChanged -= _mainHandler;
+                _processLogDataStore.CollectionChanged -= _processHandler;
+                _protocolLogDataStore.CollectionChanged -= _protocolHandler;
+            }
+
             this.RaiseAndSetIfChanged(ref _taskExecution, value);
 
-            // Clear old logs when switching tasks
+            if (value != null)
+            {
+                // Get persistent stores for the new task
+                (_mainLogDataStore, _processLogDataStore, _protocolLogDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(value.TaskId);
+
+                // Attach to new task's log stores
+                _mainLogDataStore.CollectionChanged += _mainHandler;
+                _processLogDataStore.CollectionChanged += _processHandler;
+                _protocolLogDataStore.CollectionChanged += _protocolHandler;
+            }
+
+            // Clear and repopulate logs
             ClearLogs();
         }
     }
 
-    /// <summary>
-    /// Gets or sets the main log content.
-    /// </summary>
-    public string MainLogContent
-    {
-        get => _mainLogContent;
-        private set => this.RaiseAndSetIfChanged(ref _mainLogContent, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the process/socat log content.
-    /// </summary>
-    public string ProcessLogContent
-    {
-        get => _processLogContent;
-        private set => this.RaiseAndSetIfChanged(ref _processLogContent, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the protocol log content.
-    /// </summary>
-    public string ProtocolLogContent
-    {
-        get => _protocolLogContent;
-        private set => this.RaiseAndSetIfChanged(ref _protocolLogContent, value);
-    }
 
     /// <summary>
     /// Gets the collection of parsed main log entries.
@@ -497,9 +488,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
     private void ClearLogs()
     {
-        MainLogContent = "No main log data";
-        ProcessLogContent = "No socat process log data";
-        ProtocolLogContent = "No protocol log data";
         MainLogEntries.Clear();
         ProcessLogEntries.Clear();
         ProtocolLogEntries.Clear();
@@ -1196,16 +1184,23 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
             }
         }
-        else
+        else if (sender is S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore dataStore)
         {
-            // For Reset or any other action, clear the corresponding collection on the UI thread.
+            // For Reset or any other action, clear and repopulate the corresponding collection on the UI thread.
             _uiThreadService.InvokeOnUIThread(() =>
             {
+                ObservableCollection<LogEntry> collection;
                 switch (logType)
                 {
-                    case "Main": MainLogEntries.Clear(); break;
-                    case "Process": ProcessLogEntries.Clear(); break;
-                    case "Protocol": ProtocolLogEntries.Clear(); break;
+                    case "Main": collection = MainLogEntries; break;
+                    case "Process": collection = ProcessLogEntries; break;
+                    case "Protocol": collection = ProtocolLogEntries; break;
+                    default: return;
+                }
+                collection.Clear();
+                foreach (var item in dataStore.Entries)
+                {
+                    collection.Add(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
                 }
             });
         }

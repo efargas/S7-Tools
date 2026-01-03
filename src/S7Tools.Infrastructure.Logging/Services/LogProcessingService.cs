@@ -15,6 +15,7 @@ public static class LogProcessingService
 
     public static async Task ProcessLogQueue(BlockingCollection<LogItem> messages, string logsDirectory)
     {
+        Directory.CreateDirectory(logsDirectory);
         while (!messages.IsCompleted)
         {
             try

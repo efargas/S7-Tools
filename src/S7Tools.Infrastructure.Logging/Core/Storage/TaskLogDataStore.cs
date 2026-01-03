@@ -44,8 +44,10 @@ public sealed class TaskLogDataStore : ILogDataStore
     /// <inheritdoc />
     public void AddEntry(LogModel logEntry)
     {
+        bool wasFull = false;
         lock (_syncRoot)
         {
+            wasFull = _logEntries.Count >= _maxEntries && _maxEntries > 0;
             _logEntries.Enqueue(logEntry);
             while (_logEntries.Count > _maxEntries && _maxEntries > 0)
             {
@@ -55,7 +57,14 @@ public sealed class TaskLogDataStore : ILogDataStore
                 }
             }
         }
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, logEntry));
+        if (wasFull)
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+        else
+        {
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, logEntry));
+        }
     }
 
     /// <inheritdoc />

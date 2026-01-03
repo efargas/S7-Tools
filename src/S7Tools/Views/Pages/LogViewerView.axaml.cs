@@ -81,12 +81,12 @@ public partial class LogViewerView : UserControl
             bool isAtBottom = _logScrollViewer.Offset.Y >= _logScrollViewer.ScrollBarMaximum.Y - 1.0;
 
             // If user scrolls up from the bottom, we disable auto-scrolling.
-            if (!isAtBottom)
+            if (e.OffsetDelta.Y < 0 && !isAtBottom)
             {
                 _isUserScrolling = true;
             }
             // If user scrolls back to the bottom, we re-enable auto-scrolling.
-            else
+            else if (e.OffsetDelta.Y > 0 && isAtBottom)
             {
                 _isUserScrolling = false;
             }
