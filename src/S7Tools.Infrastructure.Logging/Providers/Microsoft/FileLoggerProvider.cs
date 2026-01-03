@@ -42,36 +42,9 @@ public sealed class FileLoggerProvider : ILoggerProvider
         }
     }
 
-    private async Task ProcessLogQueue()
+    private Task ProcessLogQueue()
     {
-        var messages = new List<string>();
-        while (!_logMessages.IsCompleted)
-        {
-            messages.Clear();
-            try
-            {
-                // Block until a message is available
-                messages.Add(_logMessages.Take());
-                // Add any other messages that are immediately available
-                while (_logMessages.TryTake(out var message))
-                {
-                    messages.Add(message);
-                }
-
-                if (messages.Any())
-                {
-                    await File.AppendAllLinesAsync(_config.Value.FilePath, messages);
-                }
-            }
-            catch (InvalidOperationException)
-            {
-                // The collection was completed while waiting, which is expected.
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error writing to log file: {ex.Message}");
-            }
-        }
+        return S7Tools.Infrastructure.Logging.Services.LogProcessingService.ProcessLogQueue(_logMessages, _config.Value.FilePath);
     }
 
     /// <inheritdoc />
