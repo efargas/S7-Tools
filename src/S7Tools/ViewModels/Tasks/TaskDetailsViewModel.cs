@@ -1196,6 +1196,24 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
             }
         }
+        else if (args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+        {
+            _uiThreadService.InvokeOnUIThread(() =>
+            {
+                switch (logType)
+                {
+                    case "Main":
+                        MainLogEntries.Clear();
+                        break;
+                    case "Process":
+                        ProcessLogEntries.Clear();
+                        break;
+                    case "Protocol":
+                        ProtocolLogEntries.Clear();
+                        break;
+                }
+            });
+        }
     }
 
     private void UpdateCanStartManualProcess()
