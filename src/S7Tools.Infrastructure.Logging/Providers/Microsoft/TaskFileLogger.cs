@@ -34,16 +34,15 @@ public sealed class TaskFileLogger : ILogger
     {
         if (!IsEnabled(logLevel)) return;
 
-        var logEntry = new
-        {
-            Timestamp = DateTime.UtcNow.ToString("o"), // ISO 8601 format
-            LogLevel = logLevel.ToString(),
-            Category = _categoryName,
-            Message = formatter(state, exception),
-            Exception = exception?.ToString()
-        };
+        var logEntry = new LogEntry(
+            DateTime.UtcNow,
+            logLevel,
+            _categoryName,
+            formatter(state, exception),
+            exception?.ToString()
+        );
 
-        var message = System.Text.Json.JsonSerializer.Serialize(logEntry);
+        var message = System.Text.Json.JsonSerializer.Serialize(logEntry, LogJsonContext.Default.LogEntry);
 
         var logType = "Main";
         var parts = _categoryName.Split('.');
