@@ -72,7 +72,7 @@ public partial class LogViewerView : UserControl
     /// </summary>
     private void OnScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
-        if (_logScrollViewer == null) return;
+        if (_logScrollViewer == null || _logScrollViewer.ScrollBarMaximum.Y == 0) return;
 
         // User scrolled manually
         if (e.OffsetDelta.Y != 0)
