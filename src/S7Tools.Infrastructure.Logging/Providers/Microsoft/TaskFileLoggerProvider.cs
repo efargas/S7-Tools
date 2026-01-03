@@ -14,12 +14,8 @@ namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 public sealed class TaskFileLoggerProvider : ILoggerProvider
 {
     internal readonly IOptions<TaskFileLoggerConfiguration> _config;
-    private readonly BlockingCollection<string> _mainLogMessages = new(10000);
-    private readonly BlockingCollection<string> _processLogMessages = new(10000);
-    private readonly BlockingCollection<string> _protocolLogMessages = new(10000);
-    private readonly Task _mainProcessTask;
-    private readonly Task _processProcessTask;
-    private readonly Task _protocolProcessTask;
+    private readonly BlockingCollection<(string LogType, string Message)> _logQueue = new(10000);
+    private readonly Task _processingTask;
     private readonly S7Tools.Core.Interfaces.Services.IPathService _pathService;
 
     /// <summary>
@@ -31,9 +27,7 @@ public sealed class TaskFileLoggerProvider : ILoggerProvider
     {
         _config = config;
         _pathService = pathService;
-        _mainProcessTask = Task.Run(() => LogProcessingService.ProcessLogQueue(_mainLogMessages, _config.Value, _pathService.LogsDirectory, _config.Value.MainLogFilePath));
-        _processProcessTask = Task.Run(() => LogProcessingService.ProcessLogQueue(_processLogMessages, _config.Value, _pathService.LogsDirectory, _config.Value.ProcessLogFilePath));
-        _protocolProcessTask = Task.Run(() => LogProcessingService.ProcessLogQueue(_protocolLogMessages, _config.Value, _pathService.LogsDirectory, _config.Value.ProtocolLogFilePath));
+        _processingTask = Task.Run(ProcessLogQueue);
     }
 
     /// <inheritdoc />
@@ -44,44 +38,76 @@ public sealed class TaskFileLoggerProvider : ILoggerProvider
 
     internal void AddLogMessage(string message, string logType)
     {
-        var collection = logType switch
+        if (!_logQueue.IsAddingCompleted)
         {
-            "Main" => _mainLogMessages,
-            "Process" => _processLogMessages,
-            "Protocol" => _protocolLogMessages,
-            _ => null
-        };
-
-        if (collection != null && !collection.IsAddingCompleted)
-        {
-            collection.Add(message);
+            _logQueue.Add((logType, message));
         }
     }
 
-    private Task ProcessLogQueue(BlockingCollection<string> messages, string filePath)
+    private async Task ProcessLogQueue()
     {
-        return S7Tools.Infrastructure.Logging.Services.LogProcessingService.ProcessLogQueue(messages, filePath);
+        var writers = new Dictionary<string, StreamWriter>();
+        try
+        {
+            foreach (var (logType, message) in _logQueue.GetConsumingEnumerable())
+            {
+                try
+                {
+                    if (!writers.TryGetValue(logType, out var writer))
+                    {
+                        var filePath = logType switch
+                        {
+                            "Main" => _config.Value.MainLogFilePath,
+                            "Process" => _config.Value.ProcessLogFilePath,
+                            "Protocol" => _config.Value.ProtocolLogFilePath,
+                            _ => null
+                        };
+
+                        if (filePath != null)
+                        {
+                            var fullPath = Path.Combine(_pathService.LogsDirectory, filePath);
+                            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+                            writer = new StreamWriter(fullPath, append: true, System.Text.Encoding.UTF8, 65536);
+                            writers[logType] = writer;
+                        }
+                    }
+
+                    if (writer != null)
+                    {
+                        await writer.WriteLineAsync(message);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error writing to log file: {ex.Message}");
+                }
+            }
+        }
+        finally
+        {
+            foreach (var writer in writers.Values)
+            {
+                await writer.FlushAsync();
+                writer.Dispose();
+            }
+        }
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _mainLogMessages.CompleteAdding();
-        _processLogMessages.CompleteAdding();
-        _protocolLogMessages.CompleteAdding();
+        _logQueue.CompleteAdding();
         try
         {
-            if (!Task.WaitAll(new[] { _mainProcessTask, _processProcessTask, _protocolProcessTask }, 5000))
+            if (!_processingTask.Wait(5000))
             {
-                Console.WriteLine("Log processing tasks did not complete within the timeout period.");
+                Console.WriteLine("Log processing task did not complete within the timeout period.");
             }
         }
         catch (AggregateException ex)
         {
             ex.Handle(e => e is TaskCanceledException);
         }
-        _mainLogMessages.Dispose();
-        _processLogMessages.Dispose();
-        _protocolLogMessages.Dispose();
+        _logQueue.Dispose();
     }
 }

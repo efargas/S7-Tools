@@ -28,7 +28,10 @@ public sealed class FileLoggerProvider : ILoggerProvider
     {
         _config = config;
         _pathService = pathService;
-        _processTask = Task.Run(() => LogProcessingService.ProcessLogQueue(_logMessages, _config.Value, _pathService.LogsDirectory));
+        _processTask = Task.Run(() => LogProcessingService.ProcessLogQueue(
+            _logMessages,
+            System.IO.Path.Combine(_pathService.LogsDirectory, _config.Value.FilePath),
+            _pathService.LogsDirectory));
     }
 
     /// <inheritdoc />

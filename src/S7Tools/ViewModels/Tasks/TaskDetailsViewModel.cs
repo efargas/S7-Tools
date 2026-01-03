@@ -41,9 +41,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
     private readonly CompositeDisposable _disposables = new();
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
-    private readonly S7Tools.Services.BufferedCollectionUpdater<LogEntry> _mainLogUpdater;
-    private readonly S7Tools.Services.BufferedCollectionUpdater<LogEntry> _processLogUpdater;
-    private readonly S7Tools.Services.BufferedCollectionUpdater<LogEntry> _protocolLogUpdater;
+    private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
     private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _mainLogDataStore;
     private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _processLogDataStore;
     private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _protocolLogDataStore;
@@ -119,37 +117,28 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         ProcessLogEntries = new ObservableCollection<LogEntry>();
         ProtocolLogEntries = new ObservableCollection<LogEntry>();
 
-        _mainLogUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogEntry>(items =>
+        _logUpdater = new S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)>(items =>
         {
-            foreach (var item in items) MainLogEntries.Add(item);
-        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
-        _processLogUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogEntry>(items =>
-        {
-            foreach (var item in items) ProcessLogEntries.Add(item);
-        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
-        _protocolLogUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogEntry>(items =>
-        {
-            foreach (var item in items) ProtocolLogEntries.Add(item);
+            foreach (var (logType, entry) in items)
+            {
+                switch (logType)
+                {
+                    case "Main":
+                        MainLogEntries.Add(entry);
+                        break;
+                    case "Process":
+                        ProcessLogEntries.Add(entry);
+                        break;
+                    case "Protocol":
+                        ProtocolLogEntries.Add(entry);
+                        break;
+                }
+            }
         }, TimeSpan.FromMilliseconds(500), _uiThreadService);
 
-        _mainHandler = (sender, args) =>
-        {
-            if (args.NewItems != null)
-                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
-                    _mainLogUpdater.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
-        };
-        _processHandler = (sender, args) =>
-        {
-            if (args.NewItems != null)
-                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
-                    _processLogUpdater.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
-        };
-        _protocolHandler = (sender, args) =>
-        {
-            if (args.NewItems != null)
-                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
-                    _protocolLogUpdater.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
-        };
+        _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
+        _processHandler = (s, e) => HandleLogCollectionChanged(s, e, "Process");
+        _protocolHandler = (s, e) => HandleLogCollectionChanged(s, e, "Protocol");
         _mainLogDataStore.CollectionChanged += _mainHandler;
         _processLogDataStore.CollectionChanged += _processHandler;
         _protocolLogDataStore.CollectionChanged += _protocolHandler;
@@ -1198,6 +1187,17 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    private void HandleLogCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs args, string logType)
+    {
+        if (args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && args.NewItems != null)
+        {
+            foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
+            {
+                _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
+            }
+        }
+    }
+
     private void UpdateCanStartManualProcess()
     {
         // Manual process can start when steps 1-4 are complete:
@@ -1219,25 +1219,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void ProcessLogBuffers(object? state)
-    {
-        _uiThreadService.InvokeOnUIThread(() =>
-        {
-            while (_mainLogBuffer.TryDequeue(out var entry))
-            {
-                MainLogEntries.Add(entry);
-            }
-            while (_processLogBuffer.TryDequeue(out var entry))
-            {
-                ProcessLogEntries.Add(entry);
-            }
-            while (_protocolLogBuffer.TryDequeue(out var entry))
-            {
-                ProtocolLogEntries.Add(entry);
-            }
-        });
-    }
-
     /// <summary>
     /// Releases resources used by the ViewModel.
     /// </summary>
@@ -1246,9 +1227,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
-            _mainLogUpdater?.Dispose();
-            _processLogUpdater?.Dispose();
-            _protocolLogUpdater?.Dispose();
+            _logUpdater?.Dispose();
             _mainLogDataStore.CollectionChanged -= _mainHandler;
             _processLogDataStore.CollectionChanged -= _processHandler;
             _protocolLogDataStore.CollectionChanged -= _protocolHandler;

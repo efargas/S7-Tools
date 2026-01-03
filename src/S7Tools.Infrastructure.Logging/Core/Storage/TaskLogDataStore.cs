@@ -29,7 +29,7 @@ public sealed class TaskLogDataStore : ILogDataStore
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<LogModel> Entries => _logEntries.ToList();
+    public IEnumerable<LogModel> Entries => _logEntries;
 
     /// <inheritdoc />
     public int Count => _logEntries.Count;
@@ -43,11 +43,14 @@ public sealed class TaskLogDataStore : ILogDataStore
     /// <inheritdoc />
     public void AddEntry(LogModel logEntry)
     {
-        if (_logEntries.Count >= _maxEntries)
-        {
-            _logEntries.TryDequeue(out _);
-        }
         _logEntries.Enqueue(logEntry);
+        while (_logEntries.Count > _maxEntries)
+        {
+            if (!_logEntries.TryDequeue(out _))
+            {
+                break; // Another thread might have dequeued, so we stop.
+            }
+        }
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, logEntry));
     }
 
