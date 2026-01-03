@@ -165,13 +165,12 @@
         <!-- Display Options removed, context menu will be used instead -->
 
         <!-- Log Entries DataGrid -->
-        <ScrollViewer Grid.Row="2"
-                      Name="LogScrollViewer"
-                      VerticalScrollBarVisibility="Auto"
-                      HorizontalScrollBarVisibility="Auto">
-            <DataGrid Name="LogDataGrid"
-                      ItemsSource="{Binding FilteredLogEntries}"
-                      Background="#1E1E1E"
+        <DataGrid Grid.Row="2"
+                  Name="LogDataGrid"
+                  ItemsSource="{Binding FilteredLogEntries}"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Auto"
+                  Background="#1E1E1E"
                       Foreground="#CCCCCC"
                       GridLinesVisibility="Horizontal"
                       HeadersVisibility="Column"
@@ -278,7 +277,6 @@
                     </ContextMenu>
                 </DataGrid.ContextMenu>
             </DataGrid>
-        </ScrollViewer>
 
             </Grid>
 </UserControl>

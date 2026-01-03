@@ -5,7 +5,7 @@ namespace S7Tools.Infrastructure.Logging.Core.Configuration;
 /// <summary>
 /// Configuration for the Task File logger provider.
 /// </summary>
-public class TaskFileLoggerConfiguration
+public class TaskFileLoggerConfiguration : IFileLogConfiguration
 {
     /// <summary>
     /// Gets or sets the minimum log level to capture.
@@ -27,4 +27,16 @@ public class TaskFileLoggerConfiguration
     /// Gets or sets the file path for the protocol log file.
     /// </summary>
     public string ProtocolLogFilePath { get; set; } = "task-protocol.log";
+
+    public string GetFilePathForCategory(string category)
+    {
+        var parts = category.Split('.');
+        var lastPart = parts.LastOrDefault();
+        return lastPart switch
+        {
+            "Process" => ProcessLogFilePath,
+            "Protocol" => ProtocolLogFilePath,
+            _ => MainLogFilePath
+        };
+    }
 }

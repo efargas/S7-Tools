@@ -5,7 +5,7 @@ namespace S7Tools.Infrastructure.Logging.Core.Configuration;
 /// <summary>
 /// Configuration for the File logger provider.
 /// </summary>
-public class FileLoggerConfiguration
+public class FileLoggerConfiguration : IFileLogConfiguration
 {
     /// <summary>
     /// Gets or sets the minimum log level to capture.
@@ -18,4 +18,6 @@ public class FileLoggerConfiguration
     /// Default is "s7tools.log".
     /// </summary>
     public string FilePath { get; set; } = "s7tools.log";
+
+    public string GetFilePathForCategory(string category) => FilePath;
 }

@@ -238,6 +238,26 @@ public static class ServiceCollectionExtensions
         // Add DataStore logging services
         services.AddDataStoreLogging(configureDataStore);
 
+        services.TryAddSingleton<ITaskLogDataStoreFactory, TaskLogDataStoreFactory>();
+        services.Configure<S7Tools.Infrastructure.Logging.Core.Configuration.TaskLogDataStoreOptions>(options =>
+        {
+            options.MaxEntries = 2000;
+        });
+
+        services.AddLogging(builder =>
+        {
+            builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.FileLoggerConfiguration>(options =>
+            {
+                options.FilePath = "s7tools.log";
+            });
+            builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.TaskFileLoggerConfiguration>(options =>
+            {
+                options.MainLogFilePath = "task-main.log";
+                options.ProcessLogFilePath = "task-process.log";
+                options.ProtocolLogFilePath = "task-protocol.log";
+            });
+        });
+
         return services;
     }
 
@@ -418,7 +438,6 @@ public static class ServiceCollectionExtensions
 
         // Add logging services
         services.AddS7ToolsLogging(configureDataStore);
-        services.AddS7ToolsTaskLogging();
 
         // Add task manager and jobs services
         services.AddS7ToolsTaskManagerServices();
@@ -481,29 +500,6 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddS7ToolsTaskLogging(this IServiceCollection services)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-
-        services.TryAddSingleton<ITaskLogDataStoreFactory, TaskLogDataStoreFactory>();
-        services.Configure<S7Tools.Infrastructure.Logging.Core.Configuration.TaskLogDataStoreOptions>(options =>
-        {
-            options.MaxEntries = 2000;
-        });
-
-        services.AddLogging(builder =>
-        {
-            builder.AddTaskFileLogger((serviceProvider, options) =>
-            {
-                var pathService = serviceProvider.GetRequiredService<IPathService>();
-                options.MainLogFilePath = System.IO.Path.Combine(pathService.LogsDirectory, "task-main.log");
-                options.ProcessLogFilePath = System.IO.Path.Combine(pathService.LogsDirectory, "task-process.log");
-                options.ProtocolLogFilePath = System.IO.Path.Combine(pathService.LogsDirectory, "task-protocol.log");
-            });
-        });
-
-        return services;
-    }
 
     /// <summary>
     /// Initializes S7Tools services that require initialization after the service provider is built.

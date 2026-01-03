@@ -17,16 +17,32 @@ public static class LogProcessingService
     /// </summary>
     public static async Task ProcessLogQueue(BlockingCollection<string> messages, string filePath, string logsDirectory)
     {
-        var logItems = new BlockingCollection<LogItem>();
-        _ = Task.Run(() =>
+        if (!IsPathSafe(filePath, logsDirectory))
         {
-            foreach (var message in messages.GetConsumingEnumerable())
+            Console.WriteLine($"Error: Log file path '{filePath}' is not in the expected directory '{logsDirectory}'.");
+            // Drain the queue to prevent the provider from blocking on shutdown
+            foreach (var _ in messages.GetConsumingEnumerable()) { }
+            return;
+        }
+
+        while (!messages.IsCompleted)
+        {
+            try
             {
-                logItems.Add(new LogItem(filePath, message));
+                var batch = new System.Collections.Generic.List<string> { messages.Take() };
+                while (messages.TryTake(out var message))
+                {
+                    batch.Add(message);
+                }
+
+                await File.AppendAllLinesAsync(filePath, batch);
             }
-            logItems.CompleteAdding();
-        });
-        await ProcessLogQueue(logItems, logsDirectory);
+            catch (InvalidOperationException) { } // Collection completed.
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error writing to log file: {ex.Message}");
+            }
+        }
     }
 
     public static async Task ProcessLogQueue(BlockingCollection<LogItem> messages, string logsDirectory)
