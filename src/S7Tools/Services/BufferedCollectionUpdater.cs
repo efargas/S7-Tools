@@ -32,7 +32,17 @@ public class BufferedCollectionUpdater<T> : IDisposable
         }
         if (items.Count > 0)
         {
-            _uiThreadService.InvokeOnUIThread(() => _updateAction(items));
+            _uiThreadService.InvokeOnUIThread(() =>
+            {
+                try
+                {
+                    _updateAction(items);
+                }
+                catch (Exception ex)
+                {
+                    // Optionally log or swallow to keep timer alive
+                }
+            });
         }
     }
 

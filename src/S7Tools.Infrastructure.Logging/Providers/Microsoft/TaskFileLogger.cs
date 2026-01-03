@@ -9,12 +9,12 @@ namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 public sealed class TaskFileLogger : ILogger
 {
     private readonly string _categoryName;
-    private readonly TaskFileLoggerProvider _provider;
+    private readonly UnifiedFileLoggerProvider _provider;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskFileLogger"/> class.
     /// </summary>
-    public TaskFileLogger(string categoryName, TaskFileLoggerProvider provider)
+    public TaskFileLogger(string categoryName, UnifiedFileLoggerProvider provider)
     {
         _categoryName = categoryName;
         _provider = provider;
@@ -26,7 +26,7 @@ public sealed class TaskFileLogger : ILogger
     /// <inheritdoc />
     public bool IsEnabled(LogLevel logLevel)
     {
-        return logLevel >= _provider._config.Value.LogLevel;
+        return logLevel >= _provider._config.LogLevel;
     }
 
     /// <inheritdoc />
@@ -34,16 +34,15 @@ public sealed class TaskFileLogger : ILogger
     {
         if (!IsEnabled(logLevel)) return;
 
-        var logEntry = new
-        {
-            Timestamp = DateTime.UtcNow.ToString("o"), // ISO 8601 format
-            LogLevel = logLevel.ToString(),
-            Category = _categoryName,
-            Message = formatter(state, exception),
-            Exception = exception?.ToString()
-        };
+        var logEntry = new TaskLogEntry(
+            DateTime.UtcNow,
+            logLevel,
+            _categoryName,
+            formatter(state, exception),
+            exception?.ToString()
+        );
 
-        var message = System.Text.Json.JsonSerializer.Serialize(logEntry);
+        var message = System.Text.Json.JsonSerializer.Serialize(logEntry, TaskLogJsonContext.Default.TaskLogEntry);
 
         var logType = "Main";
         var parts = _categoryName.Split('.');

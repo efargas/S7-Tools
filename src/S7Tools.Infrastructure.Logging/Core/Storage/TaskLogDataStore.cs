@@ -70,7 +70,10 @@ public sealed class TaskLogDataStore : ILogDataStore
     /// <inheritdoc />
     public void Clear()
     {
-        _logEntries.Clear();
+        lock (_syncRoot)
+        {
+            _logEntries.Clear();
+        }
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 

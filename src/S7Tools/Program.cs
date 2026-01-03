@@ -184,11 +184,6 @@ sealed class Program
                 config.MaxMessageLength = 10000;
             });
 
-            builder.AddFileLogger(config =>
-            {
-                config.LogLevel = LogLevel.Debug;
-                config.FilePath = "s7tools.log";
-            });
         });
 
         // Add S7Tools services using the extension method
