@@ -45,10 +45,12 @@ public sealed class UnifiedFileLoggerProvider : ILoggerProvider
     public void Dispose()
     {
         _logQueue.CompleteAdding();
-        // The background task will continue to process the queue and exit when it's empty.
-        // We don't wait for it here to avoid blocking on dispose.
-        // The task is fire-and-forget, but its unhandled exceptions are logged by the TPL.
-        // A more robust solution might involve a dedicated shutdown signal and async disposal if the framework allows.
+        try
+        {
+            // Wait for the processing task to drain remaining items
+            _processingTask.Wait();
+        }
+        catch (AggregateException) { /* swallow to avoid throwing from Dispose */ }
         _logQueue.Dispose();
     }
 }
