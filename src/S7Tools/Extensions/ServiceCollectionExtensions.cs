@@ -246,15 +246,12 @@ public static class ServiceCollectionExtensions
 
         services.AddLogging(builder =>
         {
-            builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.FileLoggerConfiguration>(options =>
+            builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.CombinedFileLoggerConfiguration>(options =>
             {
-                options.FilePath = "s7tools.log";
-            });
-            builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.TaskFileLoggerConfiguration>(options =>
-            {
-                options.MainLogFilePath = "task-main.log";
-                options.ProcessLogFilePath = "task-process.log";
-                options.ProtocolLogFilePath = "task-protocol.log";
+                options.DefaultLogPath = "s7tools.log";
+                options.TaskMainLogPath = "task-main.log";
+                options.TaskProcessLogPath = "task-process.log";
+                options.TaskProtocolLogPath = "task-protocol.log";
             });
         });
 

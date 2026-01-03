@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 using S7Tools.ViewModels.Pages;
 
 namespace S7Tools.Views.Pages;
@@ -28,7 +29,12 @@ public partial class LogViewerView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        _logScrollViewer = this.FindControl<ScrollViewer>("LogScrollViewer");
+        var dataGrid = this.FindControl<DataGrid>("LogDataGrid");
+        if (dataGrid != null)
+        {
+            // The ScrollViewer is in the DataGrid's template, so we need to get it after it's applied.
+            _logScrollViewer = dataGrid.FindDescendantOfType<ScrollViewer>();
+        }
 
         if (DataContext is LogViewerViewModel viewModel && _logScrollViewer != null)
         {

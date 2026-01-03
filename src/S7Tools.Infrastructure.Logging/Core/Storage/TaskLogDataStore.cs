@@ -12,6 +12,7 @@ public sealed class TaskLogDataStore : ILogDataStore
 {
     private readonly ConcurrentQueue<LogModel> _logEntries = new();
     private readonly int _maxEntries;
+    private readonly object _syncRoot = new();
 
     /// <inheritdoc />
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -43,12 +44,15 @@ public sealed class TaskLogDataStore : ILogDataStore
     /// <inheritdoc />
     public void AddEntry(LogModel logEntry)
     {
-        _logEntries.Enqueue(logEntry);
-        while (_logEntries.Count > _maxEntries)
+        lock (_syncRoot)
         {
-            if (!_logEntries.TryDequeue(out _))
+            _logEntries.Enqueue(logEntry);
+            while (_logEntries.Count > _maxEntries && _maxEntries > 0)
             {
-                break; // Another thread might have dequeued, so we stop.
+                if (!_logEntries.TryDequeue(out _))
+                {
+                    break; // Should not happen inside a lock on a non-empty queue
+                }
             }
         }
         OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, logEntry));
