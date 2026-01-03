@@ -51,7 +51,9 @@ public sealed class TaskLogDataStore : ILogDataStore
                 break; // Another thread might have dequeued, so we stop.
             }
         }
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, logEntry));
+        // A Reset is the safest way to notify UI of a circular buffer change,
+        // as it forces a full refresh, preventing data inconsistencies.
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 
     /// <inheritdoc />
