@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using S7Tools.Infrastructure.Logging.Models;
 
 namespace S7Tools.Infrastructure.Logging.Services;
 
@@ -15,27 +17,43 @@ public static class LogProcessingService
     /// </summary>
     public static async Task ProcessLogQueue(BlockingCollection<string> messages, string filePath, string logsDirectory)
     {
-        if (!IsPathSafe(filePath, logsDirectory))
+        var logItems = new BlockingCollection<LogItem>();
+        _ = Task.Run(() =>
         {
-            Console.WriteLine($"Error: Log file path '{filePath}' is not in the expected directory '{logsDirectory}'.");
-            return;
-        }
+            foreach (var message in messages.GetConsumingEnumerable())
+            {
+                logItems.Add(new LogItem(filePath, message));
+            }
+            logItems.CompleteAdding();
+        });
+        await ProcessLogQueue(logItems, logsDirectory);
+    }
 
-        var logMessages = new System.Collections.Generic.List<string>();
+    public static async Task ProcessLogQueue(BlockingCollection<LogItem> messages, string logsDirectory)
+    {
         while (!messages.IsCompleted)
         {
-            logMessages.Clear();
             try
             {
-                logMessages.Add(messages.Take());
+                var batch = new System.Collections.Generic.List<LogItem> { messages.Take() };
                 while (messages.TryTake(out var message))
                 {
-                    logMessages.Add(message);
+                    batch.Add(message);
                 }
 
-                if (logMessages.Count > 0)
+                var groupedMessages = batch.GroupBy(item => item.FilePath);
+
+                foreach (var group in groupedMessages)
                 {
-                    await File.AppendAllLinesAsync(filePath, logMessages);
+                    var filePath = group.Key;
+                    if (IsPathSafe(filePath, logsDirectory))
+                    {
+                        await File.AppendAllLinesAsync(filePath, group.Select(item => item.Message));
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error: Log file path '{filePath}' is not in the expected directory '{logsDirectory}'.");
+                    }
                 }
             }
             catch (InvalidOperationException) { } // Collection completed.

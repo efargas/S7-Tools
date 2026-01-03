@@ -44,7 +44,7 @@ public sealed class FileLoggerProvider : ILoggerProvider
     {
         if (!_logMessages.IsAddingCompleted)
         {
-            _logMessages.Add(message);
+            _logMessages.TryAdd(message);
         }
     }
 

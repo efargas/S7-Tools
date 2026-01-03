@@ -14,7 +14,7 @@ namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 public sealed class TaskFileLoggerProvider : ILoggerProvider
 {
     internal readonly IOptions<TaskFileLoggerConfiguration> _config;
-    private readonly BlockingCollection<(string LogType, string Message)> _logQueue = new(10000);
+    private readonly BlockingCollection<S7Tools.Infrastructure.Logging.Models.LogItem> _logQueue = new(10000);
     private readonly Task _processingTask;
     private readonly S7Tools.Core.Interfaces.Services.IPathService _pathService;
 
@@ -27,7 +27,7 @@ public sealed class TaskFileLoggerProvider : ILoggerProvider
     {
         _config = config;
         _pathService = pathService;
-        _processingTask = Task.Run(ProcessLogQueue);
+        _processingTask = Task.Run(() => S7Tools.Infrastructure.Logging.Services.LogProcessingService.ProcessLogQueue(_logQueue, _pathService.LogsDirectory));
     }
 
     /// <inheritdoc />
@@ -40,55 +40,18 @@ public sealed class TaskFileLoggerProvider : ILoggerProvider
     {
         if (!_logQueue.IsAddingCompleted)
         {
-            _logQueue.Add((logType, message));
-        }
-    }
-
-    private async Task ProcessLogQueue()
-    {
-        var writers = new Dictionary<string, StreamWriter>();
-        try
-        {
-            foreach (var (logType, message) in _logQueue.GetConsumingEnumerable())
+            var filePath = logType switch
             {
-                try
-                {
-                    if (!writers.TryGetValue(logType, out var writer))
-                    {
-                        var filePath = logType switch
-                        {
-                            "Main" => _config.Value.MainLogFilePath,
-                            "Process" => _config.Value.ProcessLogFilePath,
-                            "Protocol" => _config.Value.ProtocolLogFilePath,
-                            _ => null
-                        };
+                "Main" => _config.Value.MainLogFilePath,
+                "Process" => _config.Value.ProcessLogFilePath,
+                "Protocol" => _config.Value.ProtocolLogFilePath,
+                _ => null
+            };
 
-                        if (filePath != null)
-                        {
-                            var fullPath = Path.Combine(_pathService.LogsDirectory, filePath);
-                            Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
-                            writer = new StreamWriter(fullPath, append: true, System.Text.Encoding.UTF8, 65536);
-                            writers[logType] = writer;
-                        }
-                    }
-
-                    if (writer != null)
-                    {
-                        await writer.WriteLineAsync(message);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error writing to log file: {ex.Message}");
-                }
-            }
-        }
-        finally
-        {
-            foreach (var writer in writers.Values)
+            if (filePath != null)
             {
-                await writer.FlushAsync();
-                writer.Dispose();
+                var fullPath = Path.Combine(_pathService.LogsDirectory, filePath);
+                _logQueue.TryAdd(new S7Tools.Infrastructure.Logging.Models.LogItem(fullPath, message));
             }
         }
     }
