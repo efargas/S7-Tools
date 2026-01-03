@@ -27,8 +27,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     private readonly IDialogService _dialogService;
     private readonly ILogExportService? _logExportService;
     private bool _disposed;
-    private readonly ConcurrentQueue<LogModel> _logBuffer = new();
-    private readonly Timer _updateTimer;
+    private readonly S7Tools.Services.BufferedCollectionUpdater<LogModel> _bufferedUpdater;
 
     /// <summary>
     /// Initializes a new instance of the LogViewerViewModel class for design-time use.
@@ -79,11 +78,16 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         _filteredLogEntries = new ObservableCollection<LogModel>();
 
         InitializeCommands();
+        _bufferedUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogModel>(items =>
+        {
+            foreach (var item in items)
+            {
+                LogEntries.Add(item);
+            }
+            ApplyFiltersInternal();
+        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
         InitializeLogStore();
         ApplyFilters();
-
-        // Timer to process log buffer in batches
-        _updateTimer = new Timer(ProcessLogBuffer, null, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500));
     }
 
     /// <summary>
@@ -393,63 +397,18 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     /// </summary>
     private void OnLogDataStoreCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        switch (e.Action)
+        if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                if (e.NewItems != null)
-                {
-                    foreach (LogModel newItem in e.NewItems)
-                    {
-                        _logBuffer.Enqueue(newItem);
-                    }
-                }
-                break;
-
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                _logBuffer.Clear();
-                _uiThreadService.InvokeOnUIThread(() =>
-                {
-                    LogEntries.Clear();
-                    ApplyFiltersInternal();
-                });
-                break;
-
-            // Replace is complex, a full reload is simpler and safer here
-            case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
-                _uiThreadService.InvokeOnUIThread(() =>
-                {
-                    LoadLogEntries();
-                    ApplyFiltersInternal();
-                });
-                break;
+            foreach (LogModel newItem in e.NewItems)
+            {
+                _bufferedUpdater.Enqueue(newItem);
+            }
         }
-    }
-
-    /// <summary>
-    /// Processes the log buffer and updates the UI in batches.
-    /// </summary>
-    private void ProcessLogBuffer(object? state)
-    {
-        if (_logBuffer.IsEmpty)
-        {
-            return;
-        }
-
-        var entriesToProcess = new List<LogModel>();
-        while (_logBuffer.TryDequeue(out LogModel? entry))
-        {
-            entriesToProcess.Add(entry);
-        }
-
-        if (entriesToProcess.Count > 0)
+        else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
         {
             _uiThreadService.InvokeOnUIThread(() =>
             {
-                foreach (var entry in entriesToProcess)
-                {
-                    LogEntries.Add(entry);
-                }
-                // A single ApplyFilters call after adding all new entries
+                LogEntries.Clear();
                 ApplyFiltersInternal();
             });
         }
@@ -518,7 +477,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        _updateTimer?.Dispose();
+        _bufferedUpdater?.Dispose();
         _logDataStore.CollectionChanged -= OnLogDataStoreCollectionChanged;
 
         _disposed = true;

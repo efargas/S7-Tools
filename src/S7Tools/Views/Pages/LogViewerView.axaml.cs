@@ -68,17 +68,18 @@ public partial class LogViewerView : UserControl
     {
         if (_logScrollViewer == null) return;
 
-        // A small tolerance is needed for comparing double values
-        bool isAtBottom = _logScrollViewer.Offset.Y >= _logScrollViewer.ScrollBarMaximum.Y - 1.0;
-
-        if (e.ExtentDelta.Y != 0)
+        // User scrolled manually
+        if (e.OffsetDelta.Y != 0)
         {
-            // If the user scrolls up, disable auto-scroll
+            // A small tolerance is needed for comparing double values
+            bool isAtBottom = _logScrollViewer.Offset.Y >= _logScrollViewer.ScrollBarMaximum.Y - 1.0;
+
+            // If user scrolls up from the bottom, we disable auto-scrolling.
             if (!isAtBottom)
             {
                 _isUserScrolling = true;
             }
-            // If the user scrolls back to the bottom, re-enable auto-scroll
+            // If user scrolls back to the bottom, we re-enable auto-scrolling.
             else
             {
                 _isUserScrolling = false;

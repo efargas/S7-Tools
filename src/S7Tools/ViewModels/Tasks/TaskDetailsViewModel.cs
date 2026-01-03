@@ -41,10 +41,15 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
     private readonly CompositeDisposable _disposables = new();
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
-    private readonly ConcurrentQueue<LogEntry> _mainLogBuffer = new();
-    private readonly ConcurrentQueue<LogEntry> _processLogBuffer = new();
-    private readonly ConcurrentQueue<LogEntry> _protocolLogBuffer = new();
-    private readonly Timer _logUpdateTimer;
+    private readonly S7Tools.Services.BufferedCollectionUpdater<LogEntry> _mainLogUpdater;
+    private readonly S7Tools.Services.BufferedCollectionUpdater<LogEntry> _processLogUpdater;
+    private readonly S7Tools.Services.BufferedCollectionUpdater<LogEntry> _protocolLogUpdater;
+    private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _mainLogDataStore;
+    private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _processLogDataStore;
+    private readonly S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _protocolLogDataStore;
+    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _mainHandler;
+    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
+    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _protocolHandler;
 
     private TaskExecution? _taskExecution;
     private string _mainLogContent = "No main log data";
@@ -109,31 +114,45 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _jobProfileSetFactory = jobProfileSetFactory ?? throw new ArgumentNullException(nameof(jobProfileSetFactory));
 
         // Initialize log entry collections
-        var(main, process, protocol) = taskLogDataStoreFactory.CreateLogDataStores();
+        (_mainLogDataStore, _processLogDataStore, _protocolLogDataStore) = taskLogDataStoreFactory.CreateLogDataStores();
         MainLogEntries = new ObservableCollection<LogEntry>();
         ProcessLogEntries = new ObservableCollection<LogEntry>();
         ProtocolLogEntries = new ObservableCollection<LogEntry>();
 
-        main.CollectionChanged += (sender, args) =>
+        _mainLogUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogEntry>(items =>
         {
-            if (args.NewItems != null)
-                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
-                    _mainLogBuffer.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
-        };
-        process.CollectionChanged += (sender, args) =>
+            foreach (var item in items) MainLogEntries.Add(item);
+        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
+        _processLogUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogEntry>(items =>
         {
-            if (args.NewItems != null)
-                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
-                    _processLogBuffer.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
-        };
-        protocol.CollectionChanged += (sender, args) =>
+            foreach (var item in items) ProcessLogEntries.Add(item);
+        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
+        _protocolLogUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogEntry>(items =>
         {
-            if (args.NewItems != null)
-                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
-                    _protocolLogBuffer.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
-        };
+            foreach (var item in items) ProtocolLogEntries.Add(item);
+        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
 
-        _logUpdateTimer = new Timer(ProcessLogBuffers, null, TimeSpan.FromMilliseconds(500), TimeSpan.FromMilliseconds(500));
+        _mainHandler = (sender, args) =>
+        {
+            if (args.NewItems != null)
+                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
+                    _mainLogUpdater.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
+        };
+        _processHandler = (sender, args) =>
+        {
+            if (args.NewItems != null)
+                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
+                    _processLogUpdater.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
+        };
+        _protocolHandler = (sender, args) =>
+        {
+            if (args.NewItems != null)
+                foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
+                    _protocolLogUpdater.Enqueue(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
+        };
+        _mainLogDataStore.CollectionChanged += _mainHandler;
+        _processLogDataStore.CollectionChanged += _processHandler;
+        _protocolLogDataStore.CollectionChanged += _protocolHandler;
 
         SetupCommands();
         UpdatePowerConnectionState();
@@ -1227,7 +1246,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
-            _logUpdateTimer?.Dispose();
+            _mainLogUpdater?.Dispose();
+            _processLogUpdater?.Dispose();
+            _protocolLogUpdater?.Dispose();
+            _mainLogDataStore.CollectionChanged -= _mainHandler;
+            _processLogDataStore.CollectionChanged -= _processHandler;
+            _protocolLogDataStore.CollectionChanged -= _protocolHandler;
             _socatTcpClient?.Dispose();
             _taskStateSubscription?.Dispose();
             _disposables?.Dispose();

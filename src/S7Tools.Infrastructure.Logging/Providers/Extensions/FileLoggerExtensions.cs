@@ -18,7 +18,12 @@ public static class FileLoggerExtensions
     /// <returns>The <see cref="ILoggingBuilder"/> so that additional calls can be chained.</returns>
     public static ILoggingBuilder AddFileLogger(this ILoggingBuilder builder, Action<FileLoggerConfiguration> configure)
     {
-        builder.Services.AddSingleton<ILoggerProvider, FileLoggerProvider>();
+        builder.Services.AddSingleton<ILoggerProvider>(serviceProvider =>
+        {
+            var config = serviceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<FileLoggerConfiguration>>();
+            var pathService = serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
+            return new FileLoggerProvider(config, pathService);
+        });
         builder.Services.Configure(configure);
         return builder;
     }

@@ -20,7 +20,8 @@ public static class TaskFileLoggerExtensions
         {
             var options = new S7Tools.Infrastructure.Logging.Core.Configuration.TaskFileLoggerConfiguration();
             configure(serviceProvider, options);
-            return new TaskFileLoggerProvider(Options.Create(options));
+            var pathService = serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
+            return new TaskFileLoggerProvider(Options.Create(options), pathService);
         });
         return builder;
     }

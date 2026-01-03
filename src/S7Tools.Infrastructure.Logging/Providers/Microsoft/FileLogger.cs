@@ -39,11 +39,16 @@ public sealed class FileLogger : ILogger
             return;
         }
 
-        var message = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{logLevel}] [{_categoryName}] {formatter(state, exception)}";
-        if (exception != null)
+        var logEntry = new
         {
-            message += Environment.NewLine + exception;
-        }
+            Timestamp = DateTime.UtcNow.ToString("o"), // ISO 8601 format
+            LogLevel = logLevel.ToString(),
+            Category = _categoryName,
+            Message = formatter(state, exception),
+            Exception = exception?.ToString()
+        };
+
+        var message = System.Text.Json.JsonSerializer.Serialize(logEntry);
         _provider.AddLogMessage(message);
     }
 }

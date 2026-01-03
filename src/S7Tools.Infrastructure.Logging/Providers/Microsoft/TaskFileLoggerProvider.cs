@@ -14,23 +14,26 @@ namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 public sealed class TaskFileLoggerProvider : ILoggerProvider
 {
     internal readonly IOptions<TaskFileLoggerConfiguration> _config;
-    private readonly BlockingCollection<string> _mainLogMessages = new();
-    private readonly BlockingCollection<string> _processLogMessages = new();
-    private readonly BlockingCollection<string> _protocolLogMessages = new();
+    private readonly BlockingCollection<string> _mainLogMessages = new(10000);
+    private readonly BlockingCollection<string> _processLogMessages = new(10000);
+    private readonly BlockingCollection<string> _protocolLogMessages = new(10000);
     private readonly Task _mainProcessTask;
     private readonly Task _processProcessTask;
     private readonly Task _protocolProcessTask;
+    private readonly S7Tools.Core.Interfaces.Services.IPathService _pathService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskFileLoggerProvider"/> class.
     /// </summary>
     /// <param name="config">The configuration for the file logger.</param>
-    public TaskFileLoggerProvider(IOptions<TaskFileLoggerConfiguration> config)
+    /// <param name="pathService">The path service.</param>
+    public TaskFileLoggerProvider(IOptions<TaskFileLoggerConfiguration> config, S7Tools.Core.Interfaces.Services.IPathService pathService)
     {
         _config = config;
-        _mainProcessTask = Task.Run(() => ProcessLogQueue(_mainLogMessages, _config.Value.MainLogFilePath));
-        _processProcessTask = Task.Run(() => ProcessLogQueue(_processLogMessages, _config.Value.ProcessLogFilePath));
-        _protocolProcessTask = Task.Run(() => ProcessLogQueue(_protocolLogMessages, _config.Value.ProtocolLogFilePath));
+        _pathService = pathService;
+        _mainProcessTask = Task.Run(() => LogProcessingService.ProcessLogQueue(_mainLogMessages, _config.Value, _pathService.LogsDirectory, _config.Value.MainLogFilePath));
+        _processProcessTask = Task.Run(() => LogProcessingService.ProcessLogQueue(_processLogMessages, _config.Value, _pathService.LogsDirectory, _config.Value.ProcessLogFilePath));
+        _protocolProcessTask = Task.Run(() => LogProcessingService.ProcessLogQueue(_protocolLogMessages, _config.Value, _pathService.LogsDirectory, _config.Value.ProtocolLogFilePath));
     }
 
     /// <inheritdoc />
@@ -66,7 +69,17 @@ public sealed class TaskFileLoggerProvider : ILoggerProvider
         _mainLogMessages.CompleteAdding();
         _processLogMessages.CompleteAdding();
         _protocolLogMessages.CompleteAdding();
-        Task.WaitAll(_mainProcessTask, _processProcessTask, _protocolProcessTask);
+        try
+        {
+            if (!Task.WaitAll(new[] { _mainProcessTask, _processProcessTask, _protocolProcessTask }, 5000))
+            {
+                Console.WriteLine("Log processing tasks did not complete within the timeout period.");
+            }
+        }
+        catch (AggregateException ex)
+        {
+            ex.Handle(e => e is TaskCanceledException);
+        }
         _mainLogMessages.Dispose();
         _processLogMessages.Dispose();
         _protocolLogMessages.Dispose();
