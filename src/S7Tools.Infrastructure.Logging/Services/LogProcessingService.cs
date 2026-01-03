@@ -83,7 +83,12 @@ public static class LogProcessingService
     private static bool IsPathSafe(string filePath, string expectedDirectory)
     {
         var fullPath = Path.GetFullPath(filePath);
-        var fullExpectedDirectory = Path.GetFullPath(expectedDirectory);
-        return fullPath.StartsWith(fullExpectedDirectory, StringComparison.OrdinalIgnoreCase);
+        // Ensure the expected directory ends with a separator
+        var root = Path.GetFullPath(expectedDirectory)
+                      .TrimEnd(Path.DirectorySeparatorChar)
+                   + Path.DirectorySeparatorChar;
+        var relative = Path.GetRelativePath(root, fullPath);
+        // If it starts with ".." then it's outside the directory
+        return !relative.StartsWith("..", StringComparison.Ordinal);
     }
 }

@@ -21,7 +21,8 @@ public sealed class TaskFileLogger : ILogger
     }
 
     /// <inheritdoc />
-    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull
+        => Microsoft.Extensions.Logging.Abstractions.NullScope.Instance;
 
     /// <inheritdoc />
     public bool IsEnabled(LogLevel logLevel)
@@ -34,7 +35,7 @@ public sealed class TaskFileLogger : ILogger
     {
         if (!IsEnabled(logLevel)) return;
 
-        var logEntry = new TaskLogEntry(
+        var logEntry = new LogEntry(
             DateTime.UtcNow,
             logLevel,
             _categoryName,
@@ -42,14 +43,15 @@ public sealed class TaskFileLogger : ILogger
             exception?.ToString()
         );
 
-        var message = System.Text.Json.JsonSerializer.Serialize(logEntry, TaskLogJsonContext.Default.TaskLogEntry);
+        var message = System.Text.Json.JsonSerializer.Serialize(logEntry, LogJsonContext.Default.LogEntry);
 
         var logType = "Main";
         var parts = _categoryName.Split('.');
         if (parts.Length > 0)
         {
             var lastPart = parts.Last();
-            if (lastPart == "Process" || lastPart == "Protocol")
+            if (lastPart.Equals("Process", StringComparison.OrdinalIgnoreCase) ||
+                lastPart.Equals("Protocol", StringComparison.OrdinalIgnoreCase))
             {
                 logType = lastPart;
             }

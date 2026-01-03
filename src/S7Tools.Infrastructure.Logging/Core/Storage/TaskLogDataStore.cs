@@ -61,10 +61,22 @@ public sealed class TaskLogDataStore : ILogDataStore
     /// <inheritdoc />
     public void AddEntries(IEnumerable<LogModel> logEntries)
     {
-        foreach (var logEntry in logEntries)
+        lock (_syncRoot)
         {
-            AddEntry(logEntry);
+            foreach (var logEntry in logEntries)
+            {
+                _logEntries.Enqueue(logEntry);
+            }
+
+            while (_logEntries.Count > _maxEntries && _maxEntries > 0)
+            {
+                if (!_logEntries.TryDequeue(out _))
+                {
+                    break; // Should not happen inside a lock on a non-empty queue
+                }
+            }
         }
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
     }
 
     /// <inheritdoc />

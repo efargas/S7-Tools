@@ -45,17 +45,10 @@ public sealed class UnifiedFileLoggerProvider : ILoggerProvider
     public void Dispose()
     {
         _logQueue.CompleteAdding();
-        try
-        {
-            if (!_processingTask.Wait(5000))
-            {
-                Console.WriteLine("Log processing task did not complete within the timeout period.");
-            }
-        }
-        catch (AggregateException ex)
-        {
-            ex.Handle(e => e is TaskCanceledException);
-        }
+        // The background task will continue to process the queue and exit when it's empty.
+        // We don't wait for it here to avoid blocking on dispose.
+        // The task is fire-and-forget, but its unhandled exceptions are logged by the TPL.
+        // A more robust solution might involve a dedicated shutdown signal and async disposal if the framework allows.
         _logQueue.Dispose();
     }
 }

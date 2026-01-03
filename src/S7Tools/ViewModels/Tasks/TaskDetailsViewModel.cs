@@ -1196,8 +1196,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
             }
         }
-        else if (args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+        else
         {
+            // For Reset or any other action, clear the corresponding collection on the UI thread.
             _uiThreadService.InvokeOnUIThread(() =>
             {
                 switch (logType)
