@@ -1,7 +1,7 @@
+using System.Collections.Specialized;
+using System.ComponentModel;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using S7Tools.Infrastructure.Logging.Core.Models;
-using S7Tools.ViewModels;
 using S7Tools.ViewModels.Pages;
 
 namespace S7Tools.Views.Pages;
@@ -11,6 +11,9 @@ namespace S7Tools.Views.Pages;
 /// </summary>
 public partial class LogViewerView : UserControl
 {
+    private ScrollViewer? _logScrollViewer;
+    private bool _isUserScrolling;
+
     /// <summary>
     /// Initializes a new instance of the LogViewerView class.
     /// </summary>
@@ -22,54 +25,63 @@ public partial class LogViewerView : UserControl
     /// <summary>
     /// Handles the loaded event to set up auto-scroll behavior.
     /// </summary>
-    /// <param name="sender">The sender.</param>
-    /// <param name="e">The event arguments.</param>
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+        _logScrollViewer = this.FindControl<ScrollViewer>("LogScrollViewer");
 
-        // Set up auto-scroll behavior if needed
-        if (DataContext is LogViewerViewModel viewModel)
+        if (DataContext is LogViewerViewModel viewModel && _logScrollViewer != null)
         {
-            // Subscribe to property changes to handle auto-scroll
-            viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            viewModel.FilteredLogEntries.CollectionChanged += OnLogEntriesChanged;
+            _logScrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
         }
     }
 
     /// <summary>
     /// Handles the unloaded event to clean up subscriptions.
     /// </summary>
-    /// <param name="sender">The sender.</param>
-    /// <param name="e">The event arguments.</param>
     protected override void OnUnloaded(RoutedEventArgs e)
     {
-        if (DataContext is LogViewerViewModel viewModel)
+        if (DataContext is LogViewerViewModel viewModel && _logScrollViewer != null)
         {
-            viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            viewModel.FilteredLogEntries.CollectionChanged -= OnLogEntriesChanged;
+            _logScrollViewer.ScrollChanged -= OnScrollViewerScrollChanged;
         }
-
         base.OnUnloaded(e);
     }
 
     /// <summary>
-    /// Handles property changes from the view model.
+    /// Handles changes to the log entries collection to trigger auto-scroll.
     /// </summary>
-    /// <param name="sender">The sender.</param>
-    /// <param name="e">The event arguments.</param>
-    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (sender is LogViewerViewModel viewModel && e.PropertyName == nameof(LogViewerViewModel.FilteredLogEntries))
+        if (DataContext is LogViewerViewModel { AutoScroll: true } && !_isUserScrolling)
         {
-            // Handle auto-scroll if enabled
-            if (viewModel.AutoScroll && viewModel.FilteredLogEntries.Count > 0)
+            _logScrollViewer?.ScrollToEnd();
+        }
+    }
+
+    /// <summary>
+    /// Manages the auto-scroll behavior when the user manually scrolls.
+    /// </summary>
+    private void OnScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
+    {
+        if (_logScrollViewer == null) return;
+
+        // A small tolerance is needed for comparing double values
+        bool isAtBottom = _logScrollViewer.Offset.Y >= _logScrollViewer.ScrollBarMaximum.Y - 1.0;
+
+        if (e.ExtentDelta.Y != 0)
+        {
+            // If the user scrolls up, disable auto-scroll
+            if (!isAtBottom)
             {
-                // Find the DataGrid and scroll to the last item
-                DataGrid? dataGrid = this.FindControl<DataGrid>("LogDataGrid");
-                if (dataGrid != null && viewModel.FilteredLogEntries.Count > 0)
-                {
-                    LogModel lastItem = viewModel.FilteredLogEntries[^1];
-                    dataGrid.ScrollIntoView(lastItem, null);
-                }
+                _isUserScrolling = true;
+            }
+            // If the user scrolls back to the bottom, re-enable auto-scroll
+            else
+            {
+                _isUserScrolling = false;
             }
         }
     }
