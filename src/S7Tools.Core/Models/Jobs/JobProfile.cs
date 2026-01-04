@@ -166,6 +166,12 @@ public class JobProfile : IProfileBase
     public int MemoryRegionProfileId { get; set; } = 1;
 
     /// <summary>
+    /// Gets or sets the name of the selected memory segment within the memory region profile.
+    /// </summary>
+    /// <value>The name of the segment to be dumped (e.g., ".text", ".bss").</value>
+    public string SelectedMemorySegment { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the payload configuration for this job.
     /// </summary>
     /// <value>The payload files and configuration for the bootloader operation.</value>
