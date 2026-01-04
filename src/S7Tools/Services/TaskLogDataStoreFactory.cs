@@ -5,6 +5,8 @@ using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
+using S7Tools.Core.Services.Interfaces;
+
 public class TaskLogDataStoreFactory : ITaskLogDataStoreFactory
 {
     private readonly IOptions<TaskLogDataStoreOptions> _options;
@@ -14,7 +16,7 @@ public class TaskLogDataStoreFactory : ITaskLogDataStoreFactory
         _options = options;
     }
 
-    public (TaskLogDataStore main, TaskLogDataStore process, TaskLogDataStore protocol) CreateLogDataStores()
+    public (ITaskLogDataStore main, ITaskLogDataStore process, ITaskLogDataStore protocol) CreateLogDataStores()
     {
         return (new TaskLogDataStore(_options.Value.MaxEntries), new TaskLogDataStore(_options.Value.MaxEntries), new TaskLogDataStore(_options.Value.MaxEntries));
     }

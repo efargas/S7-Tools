@@ -1,14 +1,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using S7Tools.Infrastructure.Logging.Core.Models;
+using S7Tools.Core.Models;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;
 
 /// <summary>
 /// A dedicated, in-memory circular buffer for task logs.
 /// </summary>
-public sealed class TaskLogDataStore : ILogDataStore
+public sealed class TaskLogDataStore : ILogDataStore, ITaskLogDataStore
 {
     private readonly ConcurrentQueue<LogModel> _logEntries = new();
     private readonly int _maxEntries;
@@ -30,7 +31,7 @@ public sealed class TaskLogDataStore : ILogDataStore
     }
 
     /// <inheritdoc />
-    public IEnumerable<LogModel> Entries => _logEntries;
+    public IReadOnlyList<LogModel> Entries => _logEntries.ToList().AsReadOnly();
 
     /// <inheritdoc />
     public int Count => _logEntries.Count;

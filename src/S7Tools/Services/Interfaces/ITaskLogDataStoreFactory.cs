@@ -1,8 +1,8 @@
-using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Services.Interfaces;
 
 public interface ITaskLogDataStoreFactory
 {
-    (TaskLogDataStore main, TaskLogDataStore process, TaskLogDataStore protocol) CreateLogDataStores();
+    (ITaskLogDataStore main, ITaskLogDataStore process, ITaskLogDataStore protocol) CreateLogDataStores();
 }

@@ -43,9 +43,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly CompositeDisposable _disposables = new();
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
     private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
-    private S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _mainLogDataStore;
-    private S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _processLogDataStore;
-    private S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore _protocolLogDataStore;
+    private ITaskLogDataStore _mainLogDataStore;
+    private ITaskLogDataStore _processLogDataStore;
+    private ITaskLogDataStore _protocolLogDataStore;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _mainHandler;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _protocolHandler;
@@ -137,9 +137,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
         _processHandler = (s, e) => HandleLogCollectionChanged(s, e, "Process");
         _protocolHandler = (s, e) => HandleLogCollectionChanged(s, e, "Protocol");
-        _mainLogDataStore.CollectionChanged += _mainHandler;
-        _processLogDataStore.CollectionChanged += _processHandler;
-        _protocolLogDataStore.CollectionChanged += _protocolHandler;
 
         SetupCommands();
         UpdatePowerConnectionState();
@@ -1179,7 +1176,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         if (args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && args.NewItems != null)
         {
-            foreach (S7Tools.Infrastructure.Logging.Core.Models.LogModel item in args.NewItems)
+            foreach (S7Tools.Core.Models.LogModel item in args.NewItems)
             {
                 _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
             }
@@ -1236,9 +1233,23 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         if (disposing)
         {
             _logUpdater?.Dispose();
-            _mainLogDataStore.CollectionChanged -= _mainHandler;
-            _processLogDataStore.CollectionChanged -= _processHandler;
-            _protocolLogDataStore.CollectionChanged -= _protocolHandler;
+
+            // Perform null checks before unsubscribing
+            if (_mainLogDataStore != null)
+            {
+                _mainLogDataStore.CollectionChanged -= _mainHandler;
+            }
+
+            if (_processLogDataStore != null)
+            {
+                _processLogDataStore.CollectionChanged -= _processHandler;
+            }
+
+            if (_protocolLogDataStore != null)
+            {
+                _protocolLogDataStore.CollectionChanged -= _protocolHandler;
+            }
+
             _socatTcpClient?.Dispose();
             _taskStateSubscription?.Dispose();
             _disposables?.Dispose();
