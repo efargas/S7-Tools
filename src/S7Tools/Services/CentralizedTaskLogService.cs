@@ -16,7 +16,7 @@ public class CentralizedTaskLogService : ICentralizedTaskLogService
         _taskLogDataStoreFactory = taskLogDataStoreFactory;
     }
 
-    public (ITaskLogDataStore main, ITaskLogDataStore process, ITaskLogDataStore protocol) GetOrCreateStoresForTask(Guid taskId)
+    public (ITaskLogDataStore MainLog, ITaskLogDataStore ProcessLog, ITaskLogDataStore ProtocolLog) GetOrCreateStoresForTask(Guid taskId)
     {
         return _taskLogs.GetOrAdd(taskId, id => _taskLogDataStoreFactory.CreateLogDataStores());
     }

@@ -644,7 +644,7 @@ public class MemoryMappingProfile : IProfileBase
             Id = Id,
             Name = Name,
             Description = Description,
-            Segments = new List<MemorySegment>(Segments),
+            Segments = Segments.Select(s => s.Clone()).ToList(),
             IsDefault = IsDefault,
             IsReadOnly = IsReadOnly,
             IsActive = IsActive,
@@ -669,7 +669,7 @@ public class MemoryMappingProfile : IProfileBase
             Id = 0, // Will be assigned by the service
             Name = newName,
             Description = Description,
-            Segments = new List<MemorySegment>(Segments),
+            Segments = Segments.Select(s => s.Clone()).ToList(),
             IsDefault = false, // Duplicates are never default
             IsReadOnly = false, // Duplicates are never read-only
             IsActive = false, // Duplicates start inactive
@@ -693,7 +693,7 @@ public class MemoryMappingProfile : IProfileBase
             Id = 0, // Will be assigned by the service
             Name = Name,
             Description = Description,
-            Segments = new List<MemorySegment>(Segments),
+            Segments = Segments.Select(s => s.Clone()).ToList(),
             IsDefault = IsDefault,
             IsReadOnly = IsReadOnly,
             IsActive = IsActive,

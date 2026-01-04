@@ -1,6 +1,9 @@
+using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.ComponentModel;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 
@@ -9,14 +12,9 @@ namespace S7Tools.Infrastructure.Logging.Core.Storage;
 /// <summary>
 /// A dedicated, in-memory circular buffer for task logs.
 /// </summary>
-public sealed class TaskLogDataStore : ILogDataStore, ITaskLogDataStore
+public class TaskLogDataStore : ITaskLogDataStore
 {
-    private readonly ConcurrentQueue<LogModel> _logEntries = new();
-    private readonly int _maxEntries;
-    private readonly object _syncRoot = new();
-
-    /// <inheritdoc />
-    public event PropertyChangedEventHandler? PropertyChanged;
+    private readonly ObservableCollection<LogModel> _logs = new();
 
     /// <inheritdoc />
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
@@ -24,108 +22,38 @@ public sealed class TaskLogDataStore : ILogDataStore, ITaskLogDataStore
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskLogDataStore"/> class.
     /// </summary>
-    /// <param name="maxEntries">The maximum number of entries to store.</param>
-    public TaskLogDataStore(int maxEntries)
+    /// <param name="maxEntries">The maximum number of entries to store (optional).</param>
+    public TaskLogDataStore(int maxEntries = 1000)
     {
-        _maxEntries = maxEntries;
+        _logs.CollectionChanged += (s, e) => CollectionChanged?.Invoke(s, e);
     }
 
-    /// <inheritdoc />
-    public IReadOnlyList<LogModel> Entries => _logEntries.ToList().AsReadOnly();
-
-    /// <inheritdoc />
-    public int Count => _logEntries.Count;
-
-    /// <inheritdoc />
-    public int MaxEntries => _maxEntries;
-
-    /// <inheritdoc />
-    public bool IsFull => _logEntries.Count >= _maxEntries;
-
-    /// <inheritdoc />
-    public void AddEntry(LogModel logEntry)
+    /// <summary>
+    /// Adds a new log entry to the store.
+    /// </summary>
+    /// <param name="entry">The log entry to add.</param>
+    public void AddEntry(LogModel entry)
     {
-        bool wasFull = false;
-        lock (_syncRoot)
-        {
-            wasFull = _logEntries.Count >= _maxEntries && _maxEntries > 0;
-            _logEntries.Enqueue(logEntry);
-            while (_logEntries.Count > _maxEntries && _maxEntries > 0)
-            {
-                if (!_logEntries.TryDequeue(out _))
-                {
-                    break; // Should not happen inside a lock on a non-empty queue
-                }
-            }
-        }
-        if (wasFull)
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
-        else
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, logEntry));
-        }
+        _logs.Add(entry);
     }
 
-    /// <inheritdoc />
-    public void AddEntries(IEnumerable<LogModel> logEntries)
-    {
-        lock (_syncRoot)
-        {
-            foreach (var logEntry in logEntries)
-            {
-                _logEntries.Enqueue(logEntry);
-            }
-
-            while (_logEntries.Count > _maxEntries && _maxEntries > 0)
-            {
-                if (!_logEntries.TryDequeue(out _))
-                {
-                    break; // Should not happen inside a lock on a non-empty queue
-                }
-            }
-        }
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-    }
-
-    /// <inheritdoc />
+    /// <summary>
+    /// Clears all log entries from the store.
+    /// </summary>
     public void Clear()
     {
-        lock (_syncRoot)
-        {
-            _logEntries.Clear();
-        }
-        OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-    }
-
-    private void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
-    {
-        CollectionChanged?.Invoke(this, args);
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Count)));
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Entries)));
+        _logs.Clear();
     }
 
     /// <inheritdoc />
-    public void Dispose() { }
-
-    /// <inheritdoc />
-    public IEnumerable<LogModel> GetFilteredEntries(Func<LogModel, bool> filter) => Entries.Where(filter);
-
-    /// <inheritdoc />
-    public IEnumerable<LogModel> GetEntriesInTimeRange(DateTimeOffset startTime, DateTimeOffset endTime)
+    public IEnumerator<LogModel> GetEnumerator()
     {
-        return Entries.Where(e => e.Timestamp >= startTime && e.Timestamp <= endTime);
+        return _logs.GetEnumerator();
     }
 
     /// <inheritdoc />
-    public Task<string> ExportAsync(string format = "txt")
+    IEnumerator IEnumerable.GetEnumerator()
     {
-        var sb = new System.Text.StringBuilder();
-        foreach (var entry in Entries)
-        {
-            sb.AppendLine($"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.Level}] {entry.Category}: {entry.Message}");
-        }
-        return Task.FromResult(sb.ToString());
+        return _logs.GetEnumerator();
     }
 }

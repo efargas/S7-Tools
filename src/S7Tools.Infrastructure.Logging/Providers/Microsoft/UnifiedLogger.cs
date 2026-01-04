@@ -5,45 +5,56 @@ using S7Tools.Infrastructure.Logging.Sinks;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 
-public sealed class UnifiedLogger : ILogger
+/// <summary>
+/// A logger implementation that delegates log entries to multiple sinks.
+/// </summary>
+public class UnifiedLogger : ILogger
 {
     private readonly string _categoryName;
     private readonly IEnumerable<ILogSink> _sinks;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnifiedLogger"/> class.
+    /// </summary>
+    /// <param name="categoryName">The name of the logger category.</param>
+    /// <param name="sinks">The list of sinks to write logs to.</param>
     public UnifiedLogger(string categoryName, IEnumerable<ILogSink> sinks)
     {
         _categoryName = categoryName;
         _sinks = sinks;
     }
 
-    public IDisposable BeginScope<TState>(TState state) where TState : notnull => new DisposableScope();
+    /// <inheritdoc />
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => default!;
 
+    /// <inheritdoc />
     public bool IsEnabled(LogLevel logLevel) => true;
 
-    private sealed class DisposableScope : IDisposable
-    {
-        public void Dispose()
-        {
-        }
-    }
-
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    /// <inheritdoc />
+    public void Log<TState>(
+        LogLevel logLevel,
+        EventId eventId,
+        TState state,
+        Exception? exception,
+        Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel))
         {
             return;
         }
 
+        var message = formatter(state, exception);
         var logEntry = new LogEntry(
-            DateTime.UtcNow,
+            DateTime.Now,
             logLevel,
             _categoryName,
-            formatter(state, exception),
-            exception?.ToString()
-        );
+            message,
+            exception);
 
         foreach (var sink in _sinks)
         {
+            // Each sink decides if it wants to handle this entry
+            // (e.g. based on category regex, loglevel, etc.)
             sink.Write(logEntry);
         }
     }

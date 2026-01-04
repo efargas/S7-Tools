@@ -4,9 +4,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Subjects;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
@@ -37,6 +39,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     private bool _isValid = true;
     private string _validationMessage = string.Empty;
     private bool _hasChanges;
+    private readonly Subject<Unit> _segmentsChanged = new();
 
     #endregion
 
@@ -51,10 +54,10 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
         MemoryMappingProfile profile,
         ILogger<EditMemoryRegionProfileDialogViewModel> logger)
     {
-        _originalProfile = profile ?? throw new ArgumentNullException(nameof(profile));
+        _originalProfile = profile.ClonePreserveId() ?? throw new ArgumentNullException(nameof(profile));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        LoadProfile(profile);
+        LoadProfile(profile.ClonePreserveId());
         InitializeCommands();
         InitializeValidation();
 
@@ -189,10 +192,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     /// </summary>
     public ReactiveCommand<Unit, Unit> RemoveSegmentCommand { get; private set; } = null!;
 
-    /// <summary>
-    /// Gets the command to edit segment details.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> EditSegmentCommand { get; private set; } = null!;
+
 
     /// <summary>
     /// Gets the command to duplicate a segment.
@@ -236,7 +236,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 return null;
             }
 
-            MemoryMappingProfile updatedProfile = _originalProfile.Clone();
+            MemoryMappingProfile updatedProfile = _originalProfile.ClonePreserveId();
             updatedProfile.Name = ProfileName.Trim();
             updatedProfile.Description = Description.Trim();
             updatedProfile.Segments = Segments.Select(es => es.Segment).ToList();
@@ -310,21 +310,20 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
         RemoveSegmentCommand = ReactiveCommand.Create(ExecuteRemoveSegment, canModifySegment)
             .DisposeWith(_disposables);
 
-        EditSegmentCommand = ReactiveCommand.Create(ExecuteEditSegment, canModifySegment)
-            .DisposeWith(_disposables);
+
 
         DuplicateSegmentCommand = ReactiveCommand.Create(ExecuteDuplicateSegment, canModifySegment)
             .DisposeWith(_disposables);
 
-        IObservable<bool> canMoveUp = this.WhenAnyValue(
-            x => x.SelectedSegment,
-            x => x.Segments.Count,
-            (selected, count) => selected != null && CanModify && Segments.IndexOf(selected) > 0);
+        IObservable<bool> canMoveUp = Observable.Merge(
+                this.WhenAnyValue(x => x.SelectedSegment).Select(_ => Unit.Default),
+                _segmentsChanged)
+            .Select(_ => SelectedSegment != null && CanModify && Segments.IndexOf(SelectedSegment) > 0);
 
-        IObservable<bool> canMoveDown = this.WhenAnyValue(
-            x => x.SelectedSegment,
-            x => x.Segments.Count,
-            (selected, count) => selected != null && CanModify && Segments.IndexOf(selected) < count - 1);
+        IObservable<bool> canMoveDown = Observable.Merge(
+                this.WhenAnyValue(x => x.SelectedSegment).Select(_ => Unit.Default),
+                _segmentsChanged)
+            .Select(_ => SelectedSegment != null && CanModify && Segments.IndexOf(SelectedSegment) < Segments.Count - 1);
 
         MoveUpCommand = ReactiveCommand.Create(ExecuteMoveUp, canMoveUp)
             .DisposeWith(_disposables);
@@ -349,11 +348,10 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
 
         // Changes detection
-        IObservable<bool> changesObservable = this.WhenAnyValue(
-            x => x.ProfileName,
-            x => x.Description,
-            x => x.Segments.Count,
-            DetectChanges);
+        IObservable<bool> changesObservable = Observable.Merge(
+                this.WhenAnyValue(x => x.ProfileName, x => x.Description, x => x.Segments.Count).Select(_ => Unit.Default),
+                _segmentsChanged)
+            .Select(_ => DetectChanges(ProfileName, Description, Segments.Count));
 
         changesObservable
             .Subscribe(hasChanges => HasChanges = hasChanges)
@@ -365,15 +363,33 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
 
         // Update computed properties when segments change
-        Segments.CollectionChanged += (_, _) =>
-        {
-            this.RaisePropertyChanged(nameof(SelectedSegmentCount));
-            this.RaisePropertyChanged(nameof(TotalSelectedSize));
-            SubscribeToSegmentChanges();
-        };
+        // Monitor Segments collection changes (handle replacement and content changes)
+        this.WhenAnyValue(x => x.Segments)
+            .Subscribe(segments =>
+            {
+                if (segments != null)
+                {
+                    // Subscribe to the collection changed event of the new list
+                    segments.CollectionChanged += (_, _) =>
+                    {
+                        this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+                        this.RaisePropertyChanged(nameof(TotalSelectedSize));
+                        SubscribeToSegmentChanges();
+                        _segmentsChanged.OnNext(Unit.Default);
+                    };
 
-        // Subscribe to existing segments
-        SubscribeToSegmentChanges();
+                    // Subscribe to property changes of all items in the new list
+                    SubscribeToSegmentChanges();
+
+                    // Trigger initial update for the new list
+                    this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+                    this.RaisePropertyChanged(nameof(TotalSelectedSize));
+                    _segmentsChanged.OnNext(Unit.Default);
+                }
+            })
+            .DisposeWith(_disposables);
+
+
 
         // React to segment selection changes
         this.WhenAnyValue(x => x.SelectedSegment)
@@ -447,8 +463,10 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     {
         foreach (EditableMemorySegment editableSegment in Segments)
         {
-            editableSegment.Segment.PropertyChanged -= OnSegmentPropertyChanged;
-            editableSegment.Segment.PropertyChanged += OnSegmentPropertyChanged;
+            // Subscribe to wrapper property changes instead of model properties
+            // because MemorySegment auto-properties don't raise notifications
+            editableSegment.PropertyChanged -= OnSegmentPropertyChanged;
+            editableSegment.PropertyChanged += OnSegmentPropertyChanged;
         }
     }
 
@@ -462,6 +480,9 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
             this.RaisePropertyChanged(nameof(SelectedSegmentCount));
             this.RaisePropertyChanged(nameof(TotalSelectedSize));
         }
+
+        // Notify that something changed in the segments to re-evaluate HasChanges and Commands
+        _segmentsChanged.OnNext(Unit.Default);
     }
 
     /// <summary>
@@ -698,24 +719,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
         }
     }
 
-    /// <summary>
-    /// Executes the edit segment command.
-    /// </summary>
-    private void ExecuteEditSegment()
-    {
-        try
-        {
-            if (SelectedSegment != null)
-            {
-                // TODO: Open segment edit dialog when available
-                _logger.LogDebug("ExecuteEditSegment: Edit segment requested for '{SegmentName}'", SelectedSegment.Name);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error editing segment");
-        }
-    }
+
 
     /// <summary>
     /// Executes the duplicate segment command.
@@ -766,14 +770,30 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
 
                 if (index > 0)
                 {
-                    EditableMemorySegment segment = SelectedSegment;
-                    Segments.Move(index, index - 1);
-                    SelectedSegment = segment; // Re-select after move
+                    // Copy Strategy:
+                    // 1. Capture current selection (object reference)
+                    var selectedItem = SelectedSegment;
 
-                    // Force UI refresh
-                    this.RaisePropertyChanged(nameof(Segments));
+                    // 2. Create COPY of collection
+                    var newSegments = new ObservableCollection<EditableMemorySegment>(Segments);
 
-                    _logger.LogInformation("Moved segment '{Name}' up successfully", segment.Name);
+                    // 3. Move item in new collection
+                    newSegments.Move(index, index - 1);
+
+                    // 4. Swap collection (Forces DataGrid refresh)
+                    Segments = newSegments;
+
+                    // 5. Schedule selection restoration
+                    //    We use Dispatcher.UIThread.Post to let the binding engine process the 
+                    //    null selection caused by collection swap, THEN we set it back.
+                    Dispatcher.UIThread.Post(() =>
+                    {
+                        SelectedSegment = selectedItem;
+                        // Force notification mainly to be safe, though setter does it too
+                        _segmentsChanged.OnNext(Unit.Default);
+                    }, DispatcherPriority.Input);
+
+                    _logger.LogInformation("Moved segment '{Name}' up successfully", selectedItem?.Name);
                 }
             }
         }
@@ -798,14 +818,27 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
 
                 if (index < Segments.Count - 1)
                 {
-                    EditableMemorySegment segment = SelectedSegment;
-                    Segments.Move(index, index + 1);
-                    SelectedSegment = segment; // Re-select after move
+                    // Copy Strategy:
+                    // 1. Capture current selection (object reference)
+                    var selectedItem = SelectedSegment;
 
-                    // Force UI refresh
-                    this.RaisePropertyChanged(nameof(Segments));
+                    // 2. Create COPY of collection
+                    var newSegments = new ObservableCollection<EditableMemorySegment>(Segments);
 
-                    _logger.LogInformation("Moved segment '{Name}' down successfully", segment.Name);
+                    // 3. Move item in new collection
+                    newSegments.Move(index, index + 1);
+
+                    // 4. Swap collection (Forces DataGrid refresh)
+                    Segments = newSegments;
+
+                    // 5. Schedule selection restoration
+                    Dispatcher.UIThread.Post(() =>
+                   {
+                       SelectedSegment = selectedItem;
+                       _segmentsChanged.OnNext(Unit.Default);
+                   }, DispatcherPriority.Input);
+
+                    _logger.LogInformation("Moved segment '{Name}' down successfully", selectedItem?.Name);
                 }
             }
         }
@@ -834,6 +867,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
+            _segmentsChanged?.Dispose();
             _disposables?.Dispose();
             _logger.LogDebug("EditMemoryRegionProfileDialogViewModel disposed");
         }

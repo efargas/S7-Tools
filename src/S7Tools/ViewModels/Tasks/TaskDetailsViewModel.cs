@@ -115,6 +115,10 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         ProcessLogEntries = new ObservableCollection<LogEntry>();
         ProtocolLogEntries = new ObservableCollection<LogEntry>();
 
+        _mainLogDataStore = null!;
+        _processLogDataStore = null!;
+        _protocolLogDataStore = null!;
+
         _logUpdater = new S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)>(items =>
         {
             foreach (var (logType, entry) in items)
@@ -217,7 +221,13 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
             this.RaiseAndSetIfChanged(ref _taskExecution, value);
 
-            if (value != null)
+            if (value == null)
+            {
+                _mainLogDataStore = null!;
+                _processLogDataStore = null!;
+                _protocolLogDataStore = null!;
+            }
+            else
             {
                 // Get persistent stores for the new task
                 (_mainLogDataStore, _processLogDataStore, _protocolLogDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(value.TaskId);
@@ -562,7 +572,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            // Get socat profile
+            // Initialized when a task is set
+            _mainLogDataStore = null!;
+            _processLogDataStore = null!;
+            _protocolLogDataStore = null!;
+
+            // View creation helperofile
             SocatProfile? socatProfile = await _socatProfileService.GetByIdAsync(jobProfile.SocatProfileId);
             if (socatProfile == null)
             {
@@ -582,7 +597,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 CancellationToken.None);
 
             CanStopSocat = true;
-            StatusMessage = $"Socat server started on port {socatProfile.Configuration.TcpPort}";
+            StatusMessage = $"Socat server started on port {socatProfile.Configuration?.TcpPort}";
             UpdateCanStartManualProcess();
         }
         catch (Exception ex)
@@ -1189,15 +1204,22 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 ObservableCollection<LogEntry> collection;
                 switch (logType)
                 {
-                    case "Main": collection = MainLogEntries; break;
-                    case "Process": collection = ProcessLogEntries; break;
-                    case "Protocol": collection = ProtocolLogEntries; break;
-                    default: return;
+                    case "Main":
+                        collection = MainLogEntries;
+                        break;
+                    case "Process":
+                        collection = ProcessLogEntries;
+                        break;
+                    case "Protocol":
+                        collection = ProtocolLogEntries;
+                        break;
+                    default:
+                        return;
                 }
                 collection.Clear();
-                foreach (var item in dataStore.Entries)
+                foreach (var item in dataStore)
                 {
-                    collection.Add(new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
+                    collection.Add(new S7Tools.Models.LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
                 }
             });
         }

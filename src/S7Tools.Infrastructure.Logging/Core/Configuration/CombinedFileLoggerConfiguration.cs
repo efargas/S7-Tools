@@ -3,18 +3,38 @@ using Microsoft.Extensions.Logging;
 
 namespace S7Tools.Infrastructure.Logging.Core.Configuration;
 
+/// <summary>
+/// Configuration for the combined file logger, specifying paths for different log categories.
+/// </summary>
 public class CombinedFileLoggerConfiguration : IFileLogConfiguration
 {
+    /// <inheritdoc />
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
 
-    public string DefaultLogPath { get; set; } = "s7tools.log";
-    public string TaskMainLogPath { get; set; } = "task-main.log";
-    public string TaskProcessLogPath { get; set; } = "task-process.log";
-    public string TaskProtocolLogPath { get; set; } = "task-protocol.log";
+    /// <summary>
+    /// Default path for logs that do not match specific categories.
+    /// </summary>
+    public string DefaultLogPath { get; set; } = "Logs/app.log";
 
-    public string GetFilePathForCategory(string category)
+    /// <summary>
+    /// Path for main task logs.
+    /// </summary>
+    public string TaskMainLogPath { get; set; } = "Logs/Main/main.log";
+
+    /// <summary>
+    /// Path for process-related logs.
+    /// </summary>
+    public string TaskProcessLogPath { get; set; } = "Logs/Process/process.log";
+
+    /// <summary>
+    /// Path for protocol communication logs.
+    /// </summary>
+    public string TaskProtocolLogPath { get; set; } = "Logs/Protocol/protocol.log";
+
+    /// <inheritdoc />
+    public string GetFilePathForCategory(string categoryName)
     {
-        var parts = category?.Split('.') ?? Array.Empty<string>();
+        var parts = categoryName?.Split('.') ?? Array.Empty<string>();
         if (parts.Length > 0 && parts[0].Equals("Task", StringComparison.OrdinalIgnoreCase))
         {
             var lastPart = parts.LastOrDefault();

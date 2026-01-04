@@ -1,12 +1,23 @@
 using System;
 using System.Collections.Specialized;
 using S7Tools.Core.Models;
+using System.Collections.Generic; // Added for IEnumerable<LogModel>
 
 namespace S7Tools.Core.Services.Interfaces;
 
-public interface ITaskLogDataStore
+/// <summary>
+/// Defines a data store for task logs, supporting collection change notifications and log entry management.
+/// </summary>
+public interface ITaskLogDataStore : INotifyCollectionChanged, IEnumerable<LogModel>
 {
-    event NotifyCollectionChangedEventHandler CollectionChanged;
-    void AddEntry(LogModel logModel);
+    /// <summary>
+    /// Adds a new log entry to the store.
+    /// </summary>
+    /// <param name="entry">The log entry to add.</param>
+    void AddEntry(LogModel entry);
+
+    /// <summary>
+    /// Clears all log entries from the store.
+    /// </summary>
     void Clear();
 }
