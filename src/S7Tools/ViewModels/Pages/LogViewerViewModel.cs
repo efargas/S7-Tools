@@ -1,7 +1,9 @@
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
@@ -25,6 +27,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     private readonly IDialogService _dialogService;
     private readonly ILogExportService? _logExportService;
     private bool _disposed;
+    private readonly S7Tools.Services.BufferedCollectionUpdater<LogModel> _bufferedUpdater;
 
     /// <summary>
     /// Initializes a new instance of the LogViewerViewModel class for design-time use.
@@ -75,6 +78,14 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         _filteredLogEntries = new ObservableCollection<LogModel>();
 
         InitializeCommands();
+        _bufferedUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogModel>(items =>
+        {
+            foreach (var item in items)
+            {
+                LogEntries.Add(item);
+            }
+            ApplyFiltersInternal();
+        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
         InitializeLogStore();
         ApplyFilters();
     }
@@ -358,7 +369,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         LoadLogEntries();
 
         // Subscribe to log store changes for real-time updates
-        _logDataStore.PropertyChanged += OnLogDataStorePropertyChanged;
+        // Note: We removed the PropertyChanged subscription as CollectionChanged is sufficient and more performant.
         _logDataStore.CollectionChanged += OnLogDataStoreCollectionChanged;
     }
 
@@ -382,108 +393,79 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Handles property changes from the log data store.
+    /// Handles collection changes from the log data store by adding them to a buffer.
     /// </summary>
-    private void OnLogDataStorePropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnLogDataStoreCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ILogDataStore.Entries))
+        if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
-            LoadLogEntries();
-            ApplyFilters();
+            foreach (LogModel newItem in e.NewItems)
+            {
+                _bufferedUpdater.Enqueue(newItem);
+            }
         }
-        else if (e.PropertyName == nameof(ILogDataStore.Count))
+        else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
         {
             _uiThreadService.InvokeOnUIThread(() =>
             {
-                TotalLogCount = _logDataStore.Count;
+                LogEntries.Clear();
+                ApplyFiltersInternal();
             });
         }
     }
 
     /// <summary>
-    /// Handles collection changes from the log data store.
+    /// Applies the current filters to the log entries. This should be called on the UI thread.
     /// </summary>
-    private void OnLogDataStoreCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void ApplyFiltersInternal()
     {
-        _uiThreadService.InvokeOnUIThread(() =>
+        IEnumerable<LogModel> filtered = LogEntries.AsEnumerable();
+
+        // Apply log level filter
+        filtered = filtered.Where(entry => entry.Level >= SelectedLogLevel);
+
+        // Apply search text filter
+        if (!string.IsNullOrWhiteSpace(SearchText))
         {
-            switch (e.Action)
-            {
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Add:
-                    if (e.NewItems != null)
-                    {
-                        foreach (LogModel newItem in e.NewItems)
-                        {
-                            LogEntries.Add(newItem);
-                        }
-                    }
-                    break;
+            string term = SearchText;
+            filtered = filtered.Where(entry =>
+                (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
+            );
+        }
 
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Reset:
-                    LogEntries.Clear();
-                    break;
+        // Apply date range filter
+        if (StartDate.HasValue)
+        {
+            filtered = filtered.Where(entry => entry.Timestamp >= StartDate.Value);
+        }
 
-                case System.Collections.Specialized.NotifyCollectionChangedAction.Replace:
-                    if (e.NewItems != null && e.OldItems != null)
-                    {
-                        // For replace operations, we'll just refresh the entire collection
-                        LoadLogEntries();
-                        return; // Skip the ApplyFilters call at the end since LoadLogEntries will handle it
-                    }
-                    break;
-            }
+        if (EndDate.HasValue)
+        {
+            DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
+            filtered = filtered.Where(entry => entry.Timestamp <= endDateOffset);
+        }
 
-            TotalLogCount = LogEntries.Count;
-            ApplyFilters();
-        });
+        // Update filtered collection
+        var filteredList = filtered.OrderBy(e => e.Timestamp).ToList();
+        FilteredLogEntries.Clear();
+        foreach (LogModel? entry in filteredList)
+        {
+            FilteredLogEntries.Add(entry);
+        }
+
+        FilteredLogCount = FilteredLogEntries.Count;
+        TotalLogCount = LogEntries.Count;
     }
 
     /// <summary>
-    /// Applies the current filters to the log entries.
+    /// Applies the current filters on the UI thread.
     /// </summary>
     private void ApplyFilters()
     {
-        _uiThreadService.InvokeOnUIThread(() =>
-        {
-            IEnumerable<LogModel> filtered = LogEntries.AsEnumerable();
-
-            // Apply log level filter
-            filtered = filtered.Where(entry => entry.Level >= SelectedLogLevel);
-
-            // Apply search text filter
-            if (!string.IsNullOrWhiteSpace(SearchText))
-            {
-                string term = SearchText;
-                filtered = filtered.Where(entry =>
-                    (!string.IsNullOrEmpty(entry.Message) && entry.Message.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(entry.Category) && entry.Category.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(entry.Exception?.ToString()) && entry.Exception!.ToString().Contains(term, StringComparison.OrdinalIgnoreCase))
-                );
-            }
-
-            // Apply date range filter
-            if (StartDate.HasValue)
-            {
-                filtered = filtered.Where(entry => entry.Timestamp >= StartDate.Value);
-            }
-
-            if (EndDate.HasValue)
-            {
-                DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
-                filtered = filtered.Where(entry => entry.Timestamp <= endDateOffset);
-            }
-
-            // Update filtered collection
-            FilteredLogEntries.Clear();
-            foreach (LogModel? entry in filtered.OrderBy(e => e.Timestamp))
-            {
-                FilteredLogEntries.Add(entry);
-            }
-
-            FilteredLogCount = FilteredLogEntries.Count;
-        });
+        _uiThreadService.InvokeOnUIThread(ApplyFiltersInternal);
     }
-
 
     /// <summary>
     /// Disposes the view model and releases resources.
@@ -495,7 +477,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        _logDataStore.PropertyChanged -= OnLogDataStorePropertyChanged;
+        _bufferedUpdater?.Dispose();
         _logDataStore.CollectionChanged -= OnLogDataStoreCollectionChanged;
 
         _disposed = true;

@@ -165,6 +165,9 @@ public class JobProfile : IProfileBase
     [Range(1, int.MaxValue, ErrorMessage = "Memory region profile must be selected")]
     public int MemoryRegionProfileId { get; set; } = 1;
 
+    [StringLength(50, ErrorMessage = "Selected memory segment name cannot exceed 50 characters")]
+    public string SelectedMemorySegment { get; set; } = string.Empty;
+
     /// <summary>
     /// Gets or sets the payload configuration for this job.
     /// </summary>

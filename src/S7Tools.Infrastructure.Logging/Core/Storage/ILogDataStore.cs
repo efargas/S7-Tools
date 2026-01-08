@@ -1,6 +1,6 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
-using S7Tools.Infrastructure.Logging.Core.Models;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;
 

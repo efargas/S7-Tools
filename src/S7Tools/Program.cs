@@ -183,6 +183,7 @@ sealed class Program
                 config.CaptureStackTrace = true;
                 config.MaxMessageLength = 10000;
             });
+
         });
 
         // Add S7Tools services using the extension method

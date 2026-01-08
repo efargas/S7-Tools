@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -38,14 +39,18 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortProfileService _serialPortProfileService;
     private readonly ISocatProfileService _socatProfileService;
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
-    private readonly LogParserService _logParserService;
+    private readonly ICentralizedTaskLogService _centralizedTaskLogService;
     private readonly CompositeDisposable _disposables = new();
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
+    private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
+    private ITaskLogDataStore _mainLogDataStore;
+    private ITaskLogDataStore _processLogDataStore;
+    private ITaskLogDataStore _protocolLogDataStore;
+    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _mainHandler;
+    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
+    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _protocolHandler;
 
     private TaskExecution? _taskExecution;
-    private string _mainLogContent = "No main log data";
-    private string _processLogContent = "No socat process log data";
-    private string _protocolLogContent = "No protocol log data";
     private string _validationResultText = "No validation data";
     private string _statusMessage = string.Empty;
     private int _selectedTabIndex;
@@ -77,6 +82,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     /// <param name="serialPortProfileService">Serial port profile service for accessing serial port profiles.</param>
     /// <param name="socatProfileService">Socat profile service for accessing socat profiles.</param>
     /// <param name="jobProfileSetFactory">Job profile set factory for creating profile sets.</param>
+    /// <param name="centralizedTaskLogService">The centralized task log service.</param>
     public TaskDetailsViewModel(
         ILogger<TaskDetailsViewModel> logger,
         ISocatService socatService,
@@ -88,7 +94,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         ISerialPortService serialPortService,
         ISerialPortProfileService serialPortProfileService,
         ISocatProfileService socatProfileService,
-        IJobProfileSetFactory jobProfileSetFactory)
+        IJobProfileSetFactory jobProfileSetFactory,
+        ICentralizedTaskLogService centralizedTaskLogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
@@ -101,15 +108,41 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _serialPortProfileService = serialPortProfileService ?? throw new ArgumentNullException(nameof(serialPortProfileService));
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
         _jobProfileSetFactory = jobProfileSetFactory ?? throw new ArgumentNullException(nameof(jobProfileSetFactory));
-        _logParserService = new LogParserService();
+        _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
 
         // Initialize log entry collections
         MainLogEntries = new ObservableCollection<LogEntry>();
         ProcessLogEntries = new ObservableCollection<LogEntry>();
         ProtocolLogEntries = new ObservableCollection<LogEntry>();
 
+        _mainLogDataStore = null!;
+        _processLogDataStore = null!;
+        _protocolLogDataStore = null!;
+
+        _logUpdater = new S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)>(items =>
+        {
+            foreach (var (logType, entry) in items)
+            {
+                switch (logType)
+                {
+                    case "Main":
+                        MainLogEntries.Add(entry);
+                        break;
+                    case "Process":
+                        ProcessLogEntries.Add(entry);
+                        break;
+                    case "Protocol":
+                        ProtocolLogEntries.Add(entry);
+                        break;
+                }
+            }
+        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
+
+        _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
+        _processHandler = (s, e) => HandleLogCollectionChanged(s, e, "Process");
+        _protocolHandler = (s, e) => HandleLogCollectionChanged(s, e, "Protocol");
+
         SetupCommands();
-        SetupLogRefresh();
         UpdatePowerConnectionState();
 
         // Subscribe to task state changes for auto-disconnect
@@ -178,44 +211,38 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         get => _taskExecution;
         set
         {
+            if (_taskExecution != null)
+            {
+                // Detach from old task's log stores
+                _mainLogDataStore.CollectionChanged -= _mainHandler;
+                _processLogDataStore.CollectionChanged -= _processHandler;
+                _protocolLogDataStore.CollectionChanged -= _protocolHandler;
+            }
+
             this.RaiseAndSetIfChanged(ref _taskExecution, value);
 
-            // Clear old logs when switching tasks
-            ClearLogs();
-
-            if (value != null)
+            if (value == null)
             {
-                _ = RefreshLogsAsync();
+                _mainLogDataStore = null!;
+                _processLogDataStore = null!;
+                _protocolLogDataStore = null!;
             }
+            else
+            {
+                // Get persistent stores for the new task
+                (_mainLogDataStore, _processLogDataStore, _protocolLogDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(value.TaskId);
+
+                // Attach to new task's log stores
+                _mainLogDataStore.CollectionChanged += _mainHandler;
+                _processLogDataStore.CollectionChanged += _processHandler;
+                _protocolLogDataStore.CollectionChanged += _protocolHandler;
+            }
+
+            // Clear and repopulate logs
+            ClearLogs();
         }
     }
 
-    /// <summary>
-    /// Gets or sets the main log content.
-    /// </summary>
-    public string MainLogContent
-    {
-        get => _mainLogContent;
-        private set => this.RaiseAndSetIfChanged(ref _mainLogContent, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the process/socat log content.
-    /// </summary>
-    public string ProcessLogContent
-    {
-        get => _processLogContent;
-        private set => this.RaiseAndSetIfChanged(ref _processLogContent, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the protocol log content.
-    /// </summary>
-    public string ProtocolLogContent
-    {
-        get => _protocolLogContent;
-        private set => this.RaiseAndSetIfChanged(ref _protocolLogContent, value);
-    }
 
     /// <summary>
     /// Gets the collection of parsed main log entries.
@@ -465,121 +492,14 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             this.WhenAnyValue(x => x.CanStartManualProcess));
     }
 
-    private void SetupLogRefresh()
-    {
-        // Auto-refresh logs every 2 seconds, but only when a task is selected and running.
-        this.WhenAnyValue(x => x.TaskExecution)
-            .Select(task => task != null && task.IsRunning
-                ? Observable.Timer(TimeSpan.Zero, TimeSpan.FromSeconds(2))
-                : Observable.Empty<long>())
-            .Switch()
-            .Select(_ => Observable.FromAsync(() => RefreshLogsAsync()))
-            .Switch() // Ensures only one refresh operation runs at a time
-            .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(
-                _ => { }, // Operation completed
-                ex => _logger.LogWarning(ex, "Failed to auto-refresh logs for task {TaskId}", TaskExecution?.TaskId)
-            )
-            .DisposeWith(_disposables);
-    }
 
     private void ClearLogs()
     {
-        MainLogContent = "No main log data";
-        ProcessLogContent = "No socat process log data";
-        ProtocolLogContent = "No protocol log data";
         MainLogEntries.Clear();
         ProcessLogEntries.Clear();
         ProtocolLogEntries.Clear();
     }
 
-    private async Task RefreshLogsAsync()
-    {
-        if (TaskExecution?.Logger == null)
-        {
-            ClearLogs();
-            return;
-        }
-
-        try
-        {
-            // Read main log
-            if (!string.IsNullOrEmpty(TaskExecution.Logger.MainLogFilePath) && File.Exists(TaskExecution.Logger.MainLogFilePath))
-            {
-                string content = await File.ReadAllTextAsync(TaskExecution.Logger.MainLogFilePath);
-                List<LogEntry> entries = _logParserService.ParseLogContent(content);
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    MainLogContent = content;
-                    MainLogEntries.Clear();
-                    foreach (LogEntry entry in entries)
-                    {
-                        MainLogEntries.Add(entry);
-                    }
-                });
-            }
-            else
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    MainLogContent = "No main log data";
-                    MainLogEntries.Clear();
-                });
-            }
-
-            // Read socat/process log
-            if (!string.IsNullOrEmpty(TaskExecution.Logger.ProcessLogFilePath) && File.Exists(TaskExecution.Logger.ProcessLogFilePath))
-            {
-                string content = await File.ReadAllTextAsync(TaskExecution.Logger.ProcessLogFilePath);
-                List<LogEntry> entries = _logParserService.ParseLogContent(content);
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    ProcessLogContent = content;
-                    ProcessLogEntries.Clear();
-                    foreach (LogEntry entry in entries)
-                    {
-                        ProcessLogEntries.Add(entry);
-                    }
-                });
-            }
-            else
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    ProcessLogContent = "No socat process log data";
-                    ProcessLogEntries.Clear();
-                });
-            }
-
-            // Read protocol log
-            if (!string.IsNullOrEmpty(TaskExecution.Logger.ProtocolLogFilePath) && File.Exists(TaskExecution.Logger.ProtocolLogFilePath))
-            {
-                string content = await File.ReadAllTextAsync(TaskExecution.Logger.ProtocolLogFilePath);
-                List<LogEntry> entries = _logParserService.ParseLogContent(content);
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    ProtocolLogContent = content;
-                    ProtocolLogEntries.Clear();
-                    foreach (LogEntry entry in entries)
-                    {
-                        ProtocolLogEntries.Add(entry);
-                    }
-                });
-            }
-            else
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    ProtocolLogContent = "No protocol log data";
-                    ProtocolLogEntries.Clear();
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to refresh logs");
-        }
-    }
 
     private void UpdatePowerConnectionState()
     {
@@ -652,7 +572,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            // Get socat profile
+            // Initialized when a task is set
+            _mainLogDataStore = null!;
+            _processLogDataStore = null!;
+            _protocolLogDataStore = null!;
+
+            // View creation helperofile
             SocatProfile? socatProfile = await _socatProfileService.GetByIdAsync(jobProfile.SocatProfileId);
             if (socatProfile == null)
             {
@@ -672,7 +597,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 CancellationToken.None);
 
             CanStopSocat = true;
-            StatusMessage = $"Socat server started on port {socatProfile.Configuration.TcpPort}";
+            StatusMessage = $"Socat server started on port {socatProfile.Configuration?.TcpPort}";
             UpdateCanStartManualProcess();
         }
         catch (Exception ex)
@@ -1262,6 +1187,44 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
     }
 
+    private void HandleLogCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs args, string logType)
+    {
+        if (args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && args.NewItems != null)
+        {
+            foreach (S7Tools.Core.Models.LogModel item in args.NewItems)
+            {
+                _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
+            }
+        }
+        else if (sender is S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore dataStore)
+        {
+            // For Reset or any other action, clear and repopulate the corresponding collection on the UI thread.
+            _uiThreadService.InvokeOnUIThread(() =>
+            {
+                ObservableCollection<LogEntry> collection;
+                switch (logType)
+                {
+                    case "Main":
+                        collection = MainLogEntries;
+                        break;
+                    case "Process":
+                        collection = ProcessLogEntries;
+                        break;
+                    case "Protocol":
+                        collection = ProtocolLogEntries;
+                        break;
+                    default:
+                        return;
+                }
+                collection.Clear();
+                foreach (var item in dataStore)
+                {
+                    collection.Add(new S7Tools.Models.LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
+                }
+            });
+        }
+    }
+
     private void UpdateCanStartManualProcess()
     {
         // Manual process can start when steps 1-4 are complete:
@@ -1291,6 +1254,24 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
+            _logUpdater?.Dispose();
+
+            // Perform null checks before unsubscribing
+            if (_mainLogDataStore != null)
+            {
+                _mainLogDataStore.CollectionChanged -= _mainHandler;
+            }
+
+            if (_processLogDataStore != null)
+            {
+                _processLogDataStore.CollectionChanged -= _processHandler;
+            }
+
+            if (_protocolLogDataStore != null)
+            {
+                _protocolLogDataStore.CollectionChanged -= _protocolHandler;
+            }
+
             _socatTcpClient?.Dispose();
             _taskStateSubscription?.Dispose();
             _disposables?.Dispose();

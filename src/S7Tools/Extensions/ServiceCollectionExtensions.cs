@@ -238,6 +238,24 @@ public static class ServiceCollectionExtensions
         // Add DataStore logging services
         services.AddDataStoreLogging(configureDataStore);
 
+        services.TryAddSingleton<ICentralizedTaskLogService, CentralizedTaskLogService>();
+        services.TryAddSingleton<ITaskLogDataStoreFactory, TaskLogDataStoreFactory>();
+        services.Configure<S7Tools.Infrastructure.Logging.Core.Configuration.TaskLogDataStoreOptions>(options =>
+        {
+            options.MaxEntries = 2000;
+        });
+
+        services.AddLogging(builder =>
+        {
+            builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.CombinedFileLoggerConfiguration>(options =>
+            {
+                options.DefaultLogPath = "s7tools.log";
+                options.TaskMainLogPath = "task-main.log";
+                options.TaskProcessLogPath = "task-process.log";
+                options.TaskProtocolLogPath = "task-protocol.log";
+            });
+        });
+
         return services;
     }
 
@@ -479,6 +497,7 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
 
     /// <summary>
     /// Initializes S7Tools services that require initialization after the service provider is built.

@@ -340,8 +340,7 @@ public class SocatConfiguration
         {
             tcpOptions.Add("reuseaddr");
         }
-        // Force nodelay to prevent Delayed ACKs and fragmentation issues (critical for handshake)
-        tcpOptions.Add("nodelay");
+        // tcpOptions.Add("nodelay"); // Removed to match reference implementation
 
         string tcpPart = $"TCP-LISTEN:{TcpPort}";
         if (tcpOptions.Count > 0)
@@ -368,8 +367,8 @@ public class SocatConfiguration
             serialPart += "," + string.Join(",", serialOptions);
         }
 
-        // Always append baud rate to ensure correct speed
-        serialPart += $",b{BaudRate}";
+        // Removed forced baud rate to defer to stty settings (prevent 8N1 override)
+        // serialPart += $",b{BaudRate}";
 
         command.Append($" {serialPart}");
 

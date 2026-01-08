@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace S7Tools.Infrastructure.Logging.Core.Models;
+namespace S7Tools.Core.Models;
 
 /// <summary>
 /// Represents a log entry with all necessary information for display and processing.

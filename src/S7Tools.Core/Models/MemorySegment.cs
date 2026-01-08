@@ -329,5 +329,22 @@ public class MemorySegment : INotifyPropertyChanged
             Type);
     }
 
+    /// <summary>
+    /// Creates a deep copy of this memory segment.
+    /// </summary>
+    /// <returns>A new MemorySegment instance with the same values.</returns>
+    public MemorySegment Clone()
+    {
+        return new MemorySegment
+        {
+            Name = Name,
+            StartAddress = StartAddress,
+            Size = Size,
+            Type = Type,
+            IsSelected = IsSelected,
+            Description = Description
+        };
+    }
+
     #endregion
 }

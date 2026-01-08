@@ -758,6 +758,10 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 existingJob.PowerSupplyProfileId = SelectedPower.Id;
                 existingJob.MemoryRegionProfileId = SelectedMemoryRegion.Id;
 
+                // Save selected segment name
+                var selectedSegment = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.IsSelected);
+                existingJob.SelectedMemorySegment = selectedSegment?.Name ?? string.Empty;
+
                 existingJob.Payloads = new PayloadSetProfile
                 {
                     BasePath = PayloadsBasePath
@@ -780,6 +784,10 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 job.SocatProfileId = SelectedSocat.Id;
                 job.PowerSupplyProfileId = SelectedPower.Id;
                 job.MemoryRegionProfileId = SelectedMemoryRegion.Id;
+
+                // Save selected segment name
+                var selectedSegment = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.IsSelected);
+                job.SelectedMemorySegment = selectedSegment?.Name ?? string.Empty;
 
                 job.Payloads = new PayloadSetProfile
                 {
@@ -855,6 +863,26 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         SelectedSocat = SocatProfiles.FirstOrDefault(p => p.Id == job.SocatProfileId);
         SelectedPower = PowerProfiles.FirstOrDefault(p => p.Id == job.PowerSupplyProfileId);
         SelectedMemoryRegion = MemoryProfiles.FirstOrDefault(p => p.Id == job.MemoryRegionProfileId);
+
+        // Restore selected segment if possible
+        if (SelectedMemoryRegion != null && !string.IsNullOrEmpty(job.SelectedMemorySegment))
+        {
+            var segmentToSelect = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.Name == job.SelectedMemorySegment);
+            if (segmentToSelect != null)
+            {
+                // First deselect all to be safe
+                foreach (var seg in SelectedMemoryRegion.Segments)
+                {
+                    if (seg.Name != job.SelectedMemorySegment)
+                    {
+                        seg.IsSelected = false;
+                    }
+                }
+
+                // Select the correct one
+                segmentToSelect.IsSelected = true;
+            }
+        }
 
         // Port selection (if device is available)
         if (!string.IsNullOrEmpty(job.SerialDevice))
