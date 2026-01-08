@@ -360,7 +360,7 @@ public sealed class BootloaderService(
                         }
                     });
 
-                    DateTime dumpStartTime = DateTime.Now;
+                    DateTime dumpStartTime = DateTime.UtcNow;
                     memoryData = await client.DumpMemoryAsync(
                         profiles.Memory.Start,
                         profiles.Memory.Length,
@@ -368,8 +368,8 @@ public sealed class BootloaderService(
                         dumpProgress,
                         cancellationToken).ConfigureAwait(false);
 
-                    TimeSpan dumpDuration = DateTime.Now - dumpStartTime;
-                    double transferRate = memoryData.Length / dumpDuration.TotalSeconds;
+                    TimeSpan dumpDuration = DateTime.UtcNow - dumpStartTime;
+                    double transferRate = memoryData.Length > 0 && dumpDuration.TotalSeconds > 0 ? memoryData.Length / dumpDuration.TotalSeconds : 0;
 
                     effectiveTaskLogger.LogInformation("✓ Memory dump completed: {Size:N0} bytes from 0x{Start:X8}",
                         memoryData.Length, profiles.Memory.Start);
