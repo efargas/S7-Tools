@@ -538,7 +538,7 @@ public class JobProfile : IProfileBase
     /// Generates resource keys for this job configuration.
     /// </summary>
     /// <returns>A list of resource keys required by this job.</returns>
-    private List<ResourceKey> GenerateResourceKeys()
+    private IReadOnlyList<ResourceKey> GenerateResourceKeys()
     {
         var resources = new List<ResourceKey>
         {
