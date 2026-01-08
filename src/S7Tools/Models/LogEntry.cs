@@ -10,7 +10,7 @@ public class LogEntry
     /// <summary>
     /// Gets or sets the timestamp (Local Time) when the log entry was created.
     /// </summary>
-    public DateTime Timestamp { get; set; } = DateTime.Now;
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the log level (Trace, Debug, Information, Warning, Error, Critical).

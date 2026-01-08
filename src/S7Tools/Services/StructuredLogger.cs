@@ -43,7 +43,7 @@ public class StructuredLogger(ILogger baseLogger, string categoryName) : IStruct
         Dictionary<string, object> enrichedProperties = new(properties)
         {
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTime.Now,
+            ["Timestamp"] = DateTime.UtcNow,
             ["LogType"] = "Structured"
         };
 
@@ -62,7 +62,7 @@ public class StructuredLogger(ILogger baseLogger, string categoryName) : IStruct
         Dictionary<string, object> enrichedProperties = new(properties)
         {
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTime.Now,
+            ["Timestamp"] = DateTime.UtcNow,
             ["LogType"] = "Structured",
             ["ExceptionType"] = exception.GetType().Name,
             ["ExceptionMessage"] = exception.Message
@@ -92,7 +92,7 @@ public class StructuredLogger(ILogger baseLogger, string categoryName) : IStruct
             ["MetricValue"] = value,
             ["MetricUnit"] = unit,
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTime.Now,
+            ["Timestamp"] = DateTime.UtcNow,
             ["LogType"] = "Metric"
         };
 
@@ -120,7 +120,7 @@ public class StructuredLogger(ILogger baseLogger, string categoryName) : IStruct
         {
             ["EventName"] = eventName,
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTime.Now,
+            ["Timestamp"] = DateTime.UtcNow,
             ["LogType"] = "Event"
         };
 
@@ -151,7 +151,7 @@ public class StructuredLogger(ILogger baseLogger, string categoryName) : IStruct
             ["ExceptionMessage"] = exception.Message,
             ["StackTrace"] = exception.StackTrace ?? string.Empty,
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTime.Now,
+            ["Timestamp"] = DateTime.UtcNow,
             ["LogType"] = "Error"
         };
 
@@ -265,7 +265,7 @@ internal class OperationContext : IOperationContext
         {
             ["OperationName"] = OperationName,
             ["StartTime"] = StartTime,
-            ["EndTime"] = DateTime.Now,
+            ["EndTime"] = DateTime.UtcNow,
             ["Duration"] = _stopwatch.Elapsed.TotalMilliseconds,
             ["DurationUnit"] = "milliseconds",
             ["Success"] = _error == null,

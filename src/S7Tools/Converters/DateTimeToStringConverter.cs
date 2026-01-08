@@ -31,8 +31,8 @@ public class DateTimeToStringConverter : IValueConverter
         {
             return value switch
             {
-                DateTime dateTime => dateTime.ToString(format, culture),
-                DateTimeOffset dateTimeOffset => dateTimeOffset.ToString(format, culture),
+                DateTime dateTime => dateTime.ToLocalTime().ToString(format, culture),
+                DateTimeOffset dateTimeOffset => dateTimeOffset.LocalDateTime.ToString(format, culture),
                 _ => value?.ToString() ?? string.Empty
             };
         }

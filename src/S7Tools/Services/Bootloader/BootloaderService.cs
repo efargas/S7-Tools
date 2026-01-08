@@ -232,7 +232,7 @@ public sealed class BootloaderService(
 
                     effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
 
-                    DateTime dumpStartTime = DateTime.Now;
+                    DateTime dumpStartTime = DateTime.UtcNow;
 
                     for (int i = 0; i < selectedSegments.Count; i++)
                     {
@@ -280,7 +280,7 @@ public sealed class BootloaderService(
                             }
                         });
 
-                        DateTime segmentStartTime = DateTime.Now;
+                        DateTime segmentStartTime = DateTime.UtcNow;
                         byte[] segmentData = await client.DumpMemoryAsync(
                             segmentStart,
                             segmentSize,
@@ -288,7 +288,7 @@ public sealed class BootloaderService(
                             segmentProgress,
                             cancellationToken).ConfigureAwait(false);
 
-                        TimeSpan segmentDuration = DateTime.Now - segmentStartTime;
+                        TimeSpan segmentDuration = DateTime.UtcNow - segmentStartTime;
                         double transferRate = segmentData.Length / segmentDuration.TotalSeconds;
 
                         segmentDataList.Add(segmentData);
@@ -300,7 +300,7 @@ public sealed class BootloaderService(
 
                     // Concatenate all segment data
                     memoryData = [.. segmentDataList.SelectMany(arr => arr)];
-                    TimeSpan totalDuration = DateTime.Now - dumpStartTime;
+                    TimeSpan totalDuration = DateTime.UtcNow - dumpStartTime;
                     double overallRate = memoryData.Length / totalDuration.TotalSeconds;
 
                     effectiveTaskLogger.LogInformation("✓ Multi-segment dump completed: {TotalSegments} segments, {TotalSize:N0} bytes",

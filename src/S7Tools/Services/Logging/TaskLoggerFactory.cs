@@ -39,7 +39,7 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
 
             // Create log directory for this task
             string sanitizedTaskName = SanitizeFileName(taskName);
-            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string timestamp = DateTime.UtcNow.ToLocalTime().ToString("yyyyMMdd_HHmmss");
             string taskLogDir = Path.Combine(
                 _pathService.LogsDirectory,
                 "Tasks",
@@ -128,7 +128,7 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
                 ProcessLogFilePath = captureProcessOutput ? Path.Combine(taskLogDir, "process.log") : null,
                 CaptureProtocol = captureProtocol,
                 CaptureProcessOutput = captureProcessOutput,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
 
             // Store context for cleanup
@@ -193,7 +193,7 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
 
             context.TaskLogger.TotalLogFilesSize = totalSize;
             context.TaskLogger.TotalLogEntries = context.MainDataStore?.Count ?? 0;
-            context.TaskLogger.FinalizedAt = DateTime.Now;
+            context.TaskLogger.FinalizedAt = DateTime.UtcNow;
 
             // Cleanup
             context.MainProvider?.Dispose();
@@ -415,7 +415,7 @@ internal class FileLogger : ILogger, IDisposable
         }
 
         string message = formatter(state, exception);
-        string timestamp = DateTime.Now.ToString(S7Tools.Constants.AppConstants.StandardDateFormat);
+        string timestamp = DateTime.UtcNow.ToLocalTime().ToString(S7Tools.Constants.AppConstants.StandardDateFormat);
         string logLine = $"[{timestamp}] [{logLevel}] {message}";
 
         if (exception != null)

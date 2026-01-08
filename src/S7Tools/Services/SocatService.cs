@@ -1333,7 +1333,7 @@ public partial class SocatService : ISocatService, IDisposable
                 Configuration = configuration.Clone(),
                 Profile = profile?.Clone(),
                 CommandLine = $"{fileName} {arguments}",
-                StartTime = DateTime.Now,
+                StartTime = DateTime.UtcNow,
                 IsRunning = true,
                 Status = SocatProcessStatus.Running,
                 ActiveConnections = 0,
@@ -1343,10 +1343,10 @@ public partial class SocatService : ISocatService, IDisposable
                     BytesTcpToSerial = 0,
                     TotalConnections = 0,
                     ActiveConnections = 0,
-                    LastUpdated = DateTime.Now,
+                    LastUpdated = DateTime.UtcNow,
                     Uptime = TimeSpan.Zero
                 },
-                LastUpdated = DateTime.Now
+                LastUpdated = DateTime.UtcNow
             };
 
             // Store the actual Process object to keep it alive

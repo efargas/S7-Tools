@@ -39,7 +39,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private bool _isRunning;
     private bool _disposed;
     private int _maxConcurrentTasks = Environment.ProcessorCount;
-    private readonly DateTime _startTime = DateTime.Now;
+    private readonly DateTime _startTime = DateTime.UtcNow;
 
     // Statistics
     private long _totalTasksProcessed;

@@ -32,7 +32,7 @@ public class TaskExecution
     /// <summary>
     /// Gets or sets the time when the task was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets or sets the time when the task was queued for execution.
