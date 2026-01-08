@@ -24,7 +24,7 @@ namespace S7Tools.ViewModels.Jobs;
 public class JobsMainContentViewModel : ViewModelBase, IDisposable
 {
     private readonly JobsManagementViewModel _parent;
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private bool _disposed;
 
     public JobsMainContentViewModel(JobsManagementViewModel parent)
@@ -34,17 +34,11 @@ public class JobsMainContentViewModel : ViewModelBase, IDisposable
         // Subscribe to parent property changes and re-raise them
         // Use proper property change forwarding to ensure UI updates
         _parent.WhenAnyValue(x => x.SelectedProfile)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(SelectedProfile));
-            })
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(SelectedProfile)))
             .DisposeWith(_disposables);
 
         _parent.WhenAnyValue(x => x.Profiles)
-            .Subscribe(_ =>
-            {
-                this.RaisePropertyChanged(nameof(Profiles));
-            })
+            .Subscribe(_ => this.RaisePropertyChanged(nameof(Profiles)))
             .DisposeWith(_disposables);
 
         _parent.WhenAnyValue(x => x.StatusMessage)
@@ -150,12 +144,17 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     private readonly ITaskScheduler? _taskScheduler;
     private readonly IActivityBarService? _activityBarService;
     private readonly IFileDialogService? _fileDialogService;
-    private readonly CompositeDisposable _localDisposables = new();
+    private readonly CompositeDisposable _localDisposables = [];
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+    };
 
     // Job-specific collections for UI organization
-    private ObservableCollection<JobProfile> _allJobs = new();
-    private ObservableCollection<JobProfile> _jobTemplates = new();
-    private ObservableCollection<JobProfile> _userJobs = new();
+    private ObservableCollection<JobProfile> _allJobs = [];
+    private ObservableCollection<JobProfile> _jobTemplates = [];
+    private ObservableCollection<JobProfile> _userJobs = [];
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JobsManagementViewModel"/> class.
@@ -192,7 +191,6 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         _fileDialogService = fileDialogService;
 
         SetupJobSpecificCommands();
-        SetupJobCollections();
         SetupSideMenuItems();
 
         // Subscribe to profile changes to update job-specific collections
@@ -201,10 +199,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             .DisposeWith(_localDisposables);
 
         // Load initial data
-        _ = Task.Run(async () =>
-        {
-            await base.InitializeAsync();
-        });
+        _ = Task.Run(async () => await base.InitializeAsync());
     }
 
     #region Job-Specific Properties
@@ -255,7 +250,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// <summary>
     /// Gets the collection of sidebar menu items for navigation.
     /// </summary>
-    public ObservableCollection<string> SideMenuItems { get; } = new();
+    public ObservableCollection<string> SideMenuItems { get; } = [];
 
     private string? _selectedSideMenuItem = "Main View";
     /// <summary>
@@ -275,18 +270,12 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
     /// Gets the selected content ViewModel for the main area based on sidebar selection.
     /// This follows the same pattern as SettingsViewModel.SelectedCategoryViewModel.
     /// </summary>
-    public object? SelectedContentViewModel
+    public object? SelectedContentViewModel => SelectedSideMenuItem switch
     {
-        get
-        {
-            return SelectedSideMenuItem switch
-            {
-                "Create (Wizard)" => CreateWizardViewModel(),
-                "Edit (Wizard)" => CreateWizardViewModelFromSelected(),
-                _ => CreateMainJobsContentViewModel() // Main View uses a dedicated ViewModel
-            };
-        }
-    }
+        "Create (Wizard)" => CreateWizardViewModel(),
+        "Edit (Wizard)" => CreateWizardViewModelFromSelected(),
+        _ => CreateMainJobsContentViewModel() // Main View uses a dedicated ViewModel
+    };
 
     #endregion
 
@@ -515,11 +504,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         CreateWizardCommand.Subscribe(_ => _logger.LogDebug("Create wizard command executed")).DisposeWith(_localDisposables);
     }
 
-    private void SetupJobCollections()
-    {
-        // Job collections are updated automatically when Profiles collection changes
-        // No additional reactive subscriptions needed for filtering
-    }
+
 
     private void UpdateJobCollections()
     {
@@ -670,7 +655,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         }
     }
 
-    private object CreateMainJobsContentViewModel()
+    private JobsMainContentViewModel CreateMainJobsContentViewModel()
     {
         try
         {
@@ -936,8 +921,8 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             // Reset ID for import (will be assigned new ID)
             importedJob.Id = 0;
-            importedJob.CreatedAt = DateTime.UtcNow;
-            importedJob.ModifiedAt = DateTime.UtcNow;
+            importedJob.CreatedAt = DateTime.Now;
+            importedJob.ModifiedAt = DateTime.Now;
 
             // Add the imported job
             JobProfile addedJob = await _jobManager.CreateAsync(importedJob);
@@ -999,14 +984,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 return;
             }
 
-            // Serialize and save the job profile
-            var jsonOptions = new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-            };
-
-            string jsonContent = System.Text.Json.JsonSerializer.Serialize(SelectedProfile, jsonOptions);
+            string jsonContent = System.Text.Json.JsonSerializer.Serialize(SelectedProfile, JsonOptions);
             await System.IO.File.WriteAllTextAsync(filePath, jsonContent);
 
             StatusMessage = $"Job '{SelectedProfile.Name}' exported successfully";
@@ -1121,12 +1099,12 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
 
             // Show date/time picker dialog using input dialog
-            string currentTime = DateTime.Now.AddMinutes(5).ToString("yyyy-MM-dd HH:mm");
+            string currentTime = DateTime.Now.AddMinutes(5).ToString(S7Tools.Constants.AppConstants.StandardUserInputDateFormat);
             Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Schedule Task",
-                $"Enter the scheduled execution time for job '{SelectedProfile.Name}':\n\nFormat: yyyy-MM-dd HH:mm (24-hour format)",
+                $"Enter the scheduled execution time for job '{SelectedProfile.Name}':\n\nFormat: {S7Tools.Constants.AppConstants.StandardUserInputDateFormat} (24-hour format)",
                 currentTime,
-                "yyyy-MM-dd HH:mm").ConfigureAwait(false);
+                S7Tools.Constants.AppConstants.StandardUserInputDateFormat).ConfigureAwait(false);
 
             if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
             {
@@ -1136,13 +1114,13 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
 
             // Parse the scheduled time
-            if (!DateTime.TryParseExact(inputResult.Value, "yyyy-MM-dd HH:mm",
+            if (!DateTime.TryParseExact(inputResult.Value, S7Tools.Constants.AppConstants.StandardUserInputDateFormat,
                 System.Globalization.CultureInfo.InvariantCulture,
                 System.Globalization.DateTimeStyles.None, out DateTime scheduledTime))
             {
                 StatusMessage = "Invalid date/time format";
                 await _dialogService.ShowErrorAsync("Invalid Format",
-                    "Please enter the date and time in the format: yyyy-MM-dd HH:mm\nExample: 2025-11-21 14:30");
+                    $"Please enter the date and time in the format: {S7Tools.Constants.AppConstants.StandardUserInputDateFormat}\nExample: 2025-11-21 14:30");
                 return;
             }
 

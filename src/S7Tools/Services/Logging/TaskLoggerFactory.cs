@@ -12,24 +12,13 @@ namespace S7Tools.Services.Logging;
 /// <summary>
 /// Factory for creating task-specific loggers with dedicated DataStores and file outputs.
 /// </summary>
-public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
+public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger) : ITaskLoggerFactory, IDisposable
 {
-    private readonly IPathService _pathService;
-    private readonly ILogger<TaskLoggerFactory> _logger;
+    private readonly IPathService _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
+    private readonly ILogger<TaskLoggerFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly ConcurrentDictionary<Guid, TaskLoggerContext> _activeLoggers = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the TaskLoggerFactory class.
-    /// </summary>
-    /// <param name="pathService">The path service for log file locations.</param>
-    /// <param name="logger">The logger for this factory.</param>
-    public TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger)
-    {
-        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
 
     /// <inheritdoc />
     public async Task<TaskLogger> CreateTaskLoggerAsync(
@@ -42,15 +31,15 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            if (_activeLoggers.ContainsKey(taskId))
+            if (_activeLoggers.TryGetValue(taskId, out TaskLoggerContext? existingLogger))
             {
                 _logger.LogWarning("Task logger already exists for task {TaskId}. Returning existing logger.", taskId);
-                return _activeLoggers[taskId].TaskLogger;
+                return existingLogger.TaskLogger;
             }
 
             // Create log directory for this task
             string sanitizedTaskName = SanitizeFileName(taskName);
-            string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             string taskLogDir = Path.Combine(
                 _pathService.LogsDirectory,
                 "Tasks",
@@ -93,38 +82,33 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
             // Create file logger providers
             ILogger mainFileLogger = await CreateFileLoggerAsync(
                 Path.Combine(taskLogDir, "main.log"),
-                LogLevel.Debug,
-                cancellationToken).ConfigureAwait(false);
+                LogLevel.Debug).ConfigureAwait(false);
 
             ILogger? protocolFileLogger = captureProtocol
                 ? await CreateFileLoggerAsync(
                     Path.Combine(taskLogDir, "protocol.log"),
-                    LogLevel.Trace,
-                    cancellationToken).ConfigureAwait(false)
+                    LogLevel.Trace).ConfigureAwait(false)
                 : null;
 
             ILogger? processFileLogger = captureProcessOutput
                 ? await CreateFileLoggerAsync(
                     Path.Combine(taskLogDir, "process.log"),
-                    LogLevel.Debug,
-                    cancellationToken).ConfigureAwait(false)
+                    LogLevel.Debug).ConfigureAwait(false)
                 : null;
 
             // Create composite loggers
+            // Create composite loggers
             var mainLogger = new CompositeLogger(
-                $"Task.{taskName}",
-                new[] { mainProvider.CreateLogger($"Task.{taskName}"), mainFileLogger }.Where(l => l != null).ToArray()!);
+                [.. new[] { mainProvider.CreateLogger($"Task.{taskName}"), mainFileLogger }.Where(l => l != null)]);
 
             CompositeLogger? protocolLogger = captureProtocol
                 ? new CompositeLogger(
-                    $"Task.{taskName}.Protocol",
                     new[] { protocolProvider?.CreateLogger($"Task.{taskName}.Protocol"), protocolFileLogger }
                         .Where(l => l != null).ToArray()!)
                 : null;
 
             CompositeLogger? processLogger = captureProcessOutput
                 ? new CompositeLogger(
-                    $"Task.{taskName}.Process",
                     new[] { processProvider?.CreateLogger($"Task.{taskName}.Process"), processFileLogger }
                         .Where(l => l != null).ToArray()!)
                 : null;
@@ -144,7 +128,7 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
                 ProcessLogFilePath = captureProcessOutput ? Path.Combine(taskLogDir, "process.log") : null,
                 CaptureProtocol = captureProtocol,
                 CaptureProcessOutput = captureProcessOutput,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             // Store context for cleanup
@@ -209,7 +193,7 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
 
             context.TaskLogger.TotalLogFilesSize = totalSize;
             context.TaskLogger.TotalLogEntries = context.MainDataStore?.Count ?? 0;
-            context.TaskLogger.FinalizedAt = DateTime.UtcNow;
+            context.TaskLogger.FinalizedAt = DateTime.Now;
 
             // Cleanup
             context.MainProvider?.Dispose();
@@ -264,8 +248,7 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
 
     private static async Task<ILogger> CreateFileLoggerAsync(
         string filePath,
-        LogLevel minLevel,
-        CancellationToken cancellationToken)
+        LogLevel minLevel)
     {
         // Create directory if needed
         string? directory = Path.GetDirectoryName(filePath);
@@ -336,7 +319,7 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
         public DataStoreLoggerProvider? MainProvider { get; set; }
         public DataStoreLoggerProvider? ProtocolProvider { get; set; }
         public DataStoreLoggerProvider? ProcessProvider { get; set; }
-        public List<ILogger> FileLoggers { get; set; } = new();
+        public List<ILogger> FileLoggers { get; set; } = [];
         public string LogDirectory { get; set; } = string.Empty;
     }
 }
@@ -344,20 +327,13 @@ public class TaskLoggerFactory : ITaskLoggerFactory, IDisposable
 /// <summary>
 /// Composite logger that writes to multiple logger instances.
 /// </summary>
-internal class CompositeLogger : ILogger
+internal class CompositeLogger(ILogger[] loggers) : ILogger
 {
-    private readonly string _categoryName;
-    private readonly ILogger[] _loggers;
-
-    public CompositeLogger(string categoryName, ILogger[] loggers)
-    {
-        _categoryName = categoryName;
-        _loggers = loggers ?? Array.Empty<ILogger>();
-    }
+    private readonly ILogger[] _loggers = loggers ?? [];
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
     {
-        return new CompositeScope(_loggers.Select(l => l.BeginScope(state)).ToArray());
+        return new CompositeScope([.. _loggers.Select(l => l.BeginScope(state))]);
     }
 
     public bool IsEnabled(LogLevel logLevel)
@@ -381,14 +357,9 @@ internal class CompositeLogger : ILogger
         }
     }
 
-    private class CompositeScope : IDisposable
+    private class CompositeScope(IDisposable?[] scopes) : IDisposable
     {
-        private readonly IDisposable?[] _scopes;
-
-        public CompositeScope(IDisposable?[] scopes)
-        {
-            _scopes = scopes;
-        }
+        private readonly IDisposable?[] _scopes = scopes;
 
         public void Dispose()
         {
@@ -444,7 +415,7 @@ internal class FileLogger : ILogger, IDisposable
         }
 
         string message = formatter(state, exception);
-        string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        string timestamp = DateTime.Now.ToString(S7Tools.Constants.AppConstants.StandardDateFormat);
         string logLine = $"[{timestamp}] [{logLevel}] {message}";
 
         if (exception != null)

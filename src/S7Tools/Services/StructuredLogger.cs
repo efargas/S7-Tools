@@ -9,21 +9,10 @@ namespace S7Tools.Services;
 /// <summary>
 /// Implementation of structured logger with enhanced logging capabilities.
 /// </summary>
-public class StructuredLogger : IStructuredLogger
+public class StructuredLogger(ILogger baseLogger, string categoryName) : IStructuredLogger
 {
-    private readonly ILogger _baseLogger;
-    private readonly string _categoryName;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="StructuredLogger"/> class.
-    /// </summary>
-    /// <param name="baseLogger">The base logger to wrap.</param>
-    /// <param name="categoryName">The category name for the logger.</param>
-    public StructuredLogger(ILogger baseLogger, string categoryName)
-    {
-        _baseLogger = baseLogger ?? throw new ArgumentNullException(nameof(baseLogger));
-        _categoryName = categoryName ?? throw new ArgumentNullException(nameof(categoryName));
-    }
+    private readonly ILogger _baseLogger = baseLogger ?? throw new ArgumentNullException(nameof(baseLogger));
+    private readonly string _categoryName = categoryName ?? throw new ArgumentNullException(nameof(categoryName));
 
     /// <inheritdoc/>
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
@@ -51,10 +40,10 @@ public class StructuredLogger : IStructuredLogger
             return;
         }
 
-        var enrichedProperties = new Dictionary<string, object>(properties)
+        Dictionary<string, object> enrichedProperties = new(properties)
         {
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTimeOffset.UtcNow,
+            ["Timestamp"] = DateTime.Now,
             ["LogType"] = "Structured"
         };
 
@@ -70,10 +59,10 @@ public class StructuredLogger : IStructuredLogger
             return;
         }
 
-        var enrichedProperties = new Dictionary<string, object>(properties)
+        Dictionary<string, object> enrichedProperties = new(properties)
         {
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTimeOffset.UtcNow,
+            ["Timestamp"] = DateTime.Now,
             ["LogType"] = "Structured",
             ["ExceptionType"] = exception.GetType().Name,
             ["ExceptionMessage"] = exception.Message
@@ -97,13 +86,13 @@ public class StructuredLogger : IStructuredLogger
             return;
         }
 
-        var metricProperties = new Dictionary<string, object>
+        Dictionary<string, object> metricProperties = new()
         {
             ["MetricName"] = metricName,
             ["MetricValue"] = value,
             ["MetricUnit"] = unit,
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTimeOffset.UtcNow,
+            ["Timestamp"] = DateTime.Now,
             ["LogType"] = "Metric"
         };
 
@@ -127,11 +116,11 @@ public class StructuredLogger : IStructuredLogger
             return;
         }
 
-        var eventProperties = new Dictionary<string, object>
+        Dictionary<string, object> eventProperties = new()
         {
             ["EventName"] = eventName,
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTimeOffset.UtcNow,
+            ["Timestamp"] = DateTime.Now,
             ["LogType"] = "Event"
         };
 
@@ -155,14 +144,14 @@ public class StructuredLogger : IStructuredLogger
             return;
         }
 
-        var errorProperties = new Dictionary<string, object>
+        Dictionary<string, object> errorProperties = new()
         {
             ["Context"] = context,
             ["ExceptionType"] = exception.GetType().Name,
             ["ExceptionMessage"] = exception.Message,
             ["StackTrace"] = exception.StackTrace ?? string.Empty,
             ["Category"] = _categoryName,
-            ["Timestamp"] = DateTimeOffset.UtcNow,
+            ["Timestamp"] = DateTime.Now,
             ["LogType"] = "Error"
         };
 
@@ -203,11 +192,11 @@ internal class OperationContext : IOperationContext
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         OperationName = operationName ?? throw new ArgumentNullException(nameof(operationName));
         Properties = new Dictionary<string, object>(properties);
-        StartTime = DateTimeOffset.UtcNow;
+        StartTime = DateTime.Now;
         _stopwatch = Stopwatch.StartNew();
 
         // Log operation start
-        var startProperties = new Dictionary<string, object>(Properties)
+        Dictionary<string, object> startProperties = new(Properties)
         {
             ["OperationName"] = OperationName,
             ["OperationId"] = Guid.NewGuid().ToString(),
@@ -255,10 +244,7 @@ internal class OperationContext : IOperationContext
     /// <inheritdoc/>
     public void AddProperty(string key, object value)
     {
-        if (key == null)
-        {
-            throw new ArgumentNullException(nameof(key));
-        }
+        ArgumentNullException.ThrowIfNull(key);
 
         Properties[key] = value;
     }
@@ -275,11 +261,11 @@ internal class OperationContext : IOperationContext
         _stopwatch.Stop();
 
         // Log operation completion
-        var endProperties = new Dictionary<string, object>(Properties)
+        Dictionary<string, object> endProperties = new(Properties)
         {
             ["OperationName"] = OperationName,
             ["StartTime"] = StartTime,
-            ["EndTime"] = DateTimeOffset.UtcNow,
+            ["EndTime"] = DateTime.Now,
             ["Duration"] = _stopwatch.Elapsed.TotalMilliseconds,
             ["DurationUnit"] = "milliseconds",
             ["Success"] = _error == null,
@@ -321,18 +307,9 @@ internal class OperationContext : IOperationContext
 /// <summary>
 /// Factory for creating structured loggers.
 /// </summary>
-public class StructuredLoggerFactory : IStructuredLoggerFactory
+public class StructuredLoggerFactory(ILoggerFactory loggerFactory) : IStructuredLoggerFactory
 {
-    private readonly ILoggerFactory _loggerFactory;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="StructuredLoggerFactory"/> class.
-    /// </summary>
-    /// <param name="loggerFactory">The base logger factory.</param>
-    public StructuredLoggerFactory(ILoggerFactory loggerFactory)
-    {
-        _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
-    }
+    private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
     /// <inheritdoc/>
     public IStructuredLogger CreateLogger(string categoryName)

@@ -39,14 +39,15 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private bool _isRunning;
     private bool _disposed;
     private int _maxConcurrentTasks = Environment.ProcessorCount;
-    private readonly DateTime _startTime = DateTime.UtcNow;
+    private readonly DateTime _startTime = DateTime.Now;
 
     // Statistics
     private long _totalTasksProcessed;
     private long _successfulTasks;
     private long _failedTasks;
     private long _cancelledTasks;
-    private readonly List<TimeSpan> _executionTimes = new();
+    private readonly List<TimeSpan> _executionTimes = [];
+    private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     #endregion
 
@@ -142,13 +143,13 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             State = TaskState.Created,
             Priority = priority,
             LockedResources = executionJob.Resources,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now
         };
 
         _tasks[taskExecution.TaskId] = taskExecution;
 
         TaskStateChanged?.Invoke(taskExecution);
-        _ = Task.Run(() => SaveTasksAsync()); // Persist task creation
+        _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist task creation
 
         _logger.LogInformation("Created task {TaskId} for job '{JobName}' with {ResourceCount} resources",
             taskExecution.TaskId, jobProfile.Name, executionJob.Resources.Count);
@@ -189,7 +190,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        if (task.State != TaskState.Created && task.State != TaskState.Queued)
+        if (task.State is not (TaskState.Created or TaskState.Queued))
         {
             _logger.LogWarning("Task {TaskId} is in state {State}, cannot schedule", taskId, task.State);
             return Task.FromResult(false);
@@ -347,7 +348,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetAllTasksAsync(CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>([.. _tasks.Values]);
     }
 
     /// <inheritdoc/>
@@ -360,37 +361,39 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetTasksByStateAsync(TaskState state, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.State == state).ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>([.. _tasks.Values.Where(t => t.State == state)]);
     }
 
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetTasksByPriorityAsync(TaskPriority priority, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.Priority == priority).ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>([.. _tasks.Values.Where(t => t.Priority == priority)]);
     }
 
     /// <inheritdoc/>
     public Task<IReadOnlyCollection<TaskExecution>> GetTasksByJobProfileAsync(int jobProfileId, CancellationToken cancellationToken = default)
     {
-        return Task.FromResult<IReadOnlyCollection<TaskExecution>>(_tasks.Values.Where(t => t.JobProfileId == jobProfileId).ToList());
+        return Task.FromResult<IReadOnlyCollection<TaskExecution>>([.. _tasks.Values.Where(t => t.JobProfileId == jobProfileId)]);
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyCollection<TaskExecution>> GetQueuedTasksAsync(CancellationToken cancellationToken = default)
     {
         await Task.Yield();
-        return _tasks.Values
-            .Where(t => t.State == TaskState.Queued)
-            .OrderByDescending(t => t.Priority)
-            .ThenBy(t => t.CreatedAt)
-            .ToList();
+        return
+        [
+            .. _tasks.Values
+                .Where(t => t.State == TaskState.Queued)
+                .OrderByDescending(t => t.Priority)
+                .ThenBy(t => t.CreatedAt)
+        ];
     }
 
     /// <inheritdoc/>
     public async Task<IReadOnlyCollection<TaskExecution>> GetRunningTasksAsync(CancellationToken cancellationToken = default)
     {
         await Task.Yield();
-        return _tasks.Values.Where(t => t.State == TaskState.Running).ToList();
+        return [.. _tasks.Values.Where(t => t.State == TaskState.Running)];
     }
 
     #endregion
@@ -463,7 +466,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         Job executionJob = jobProfile.ToExecutionJob();
         foreach (ResourceKey resource in executionJob.Resources)
         {
-            if (!_resourceCoordinator.TryAcquire(new[] { resource }))
+            if (!_resourceCoordinator.TryAcquire([resource]))
             {
                 // Resource is locked - find which task is using it
                 TaskExecution? lockingTask = _tasks.Values.FirstOrDefault(t =>
@@ -511,7 +514,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             else
             {
                 // Release immediately - we were just testing
-                _resourceCoordinator.Release(new[] { resource });
+                _resourceCoordinator.Release([resource]);
             }
         }
 
@@ -545,7 +548,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             int queuePosition = queuedTasks.TakeWhile(t => t.TaskId != taskId).Count();
             var estimatedWaitTime = TimeSpan.FromMinutes(queuePosition * 5); // Rough estimate
 
-            return DateTime.UtcNow.Add(estimatedWaitTime);
+            return DateTime.Now.Add(estimatedWaitTime);
         }
 
         return null;
@@ -601,7 +604,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Waiting for {Count} running tasks to complete", runningTasks.Count);
 
-            while (runningTasks.Any())
+            while (runningTasks.Count > 0)
             {
                 await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
                 runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
@@ -632,7 +635,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
-        DateTime cutoffTime = DateTime.UtcNow - maxAge;
+        DateTime cutoffTime = DateTime.Now - maxAge;
         var oldTasks = _tasks.Values
             .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
             .ToList();
@@ -667,7 +670,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             CancelledTasks = _cancelledTasks,
             AverageExecutionTime = averageExecutionTime,
             TasksByState = tasksByState,
-            Uptime = DateTime.UtcNow - _startTime
+            Uptime = DateTime.Now - _startTime
         };
     }
 
@@ -708,10 +711,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         try
         {
             // Promote due scheduled tasks
-            if (_scheduledTasks.Count > 0)
+            if (!_scheduledTasks.IsEmpty)
             {
                 DateTime nowLocal = DateTime.Now;
-                var dueTaskIds = _scheduledTasks.Where(kvp => kvp.Value <= nowLocal).Select(kvp => kvp.Key).ToList();
+                List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowLocal).Select(kvp => kvp.Key)];
                 foreach (Guid dueId in dueTaskIds)
                 {
                     if (_tasks.TryGetValue(dueId, out TaskExecution? scheduledTask) && scheduledTask.State == TaskState.Scheduled)
@@ -808,11 +811,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 task.JobName, taskId, DateTime.UtcNow);
 
             // Get the job profile
-            JobProfile? jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false);
-            if (jobProfile == null)
-            {
-                throw new InvalidOperationException($"Job profile {task.JobProfileId} not found");
-            }
+            JobProfile jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false)
+                ?? throw new InvalidOperationException($"Job profile {task.JobProfileId} not found");
 
             taskLogger.MainLogger?.LogInformation("Job profile loaded: {ProfileName}", jobProfile.Name);
 
@@ -981,10 +981,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         try
         {
             var tasksToSave = _tasks.Values.ToList();
-            string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, JsonOptions);
 
             await File.WriteAllTextAsync(_tasksFilePath, json).ConfigureAwait(false);
             _logger.LogDebug("Saved {Count} tasks to {Path}", tasksToSave.Count, _tasksFilePath);

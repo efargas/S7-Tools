@@ -165,6 +165,10 @@ public class JobProfile : IProfileBase
     [Range(1, int.MaxValue, ErrorMessage = "Memory region profile must be selected")]
     public int MemoryRegionProfileId { get; set; } = 1;
 
+    /// <summary>
+    /// Gets or sets the name of the selected memory segment.
+    /// </summary>
+    /// <value>The name of the memory segment to use.</value>
     [StringLength(50, ErrorMessage = "Selected memory segment name cannot exceed 50 characters")]
     public string SelectedMemorySegment { get; set; } = string.Empty;
 
@@ -534,7 +538,7 @@ public class JobProfile : IProfileBase
     /// Generates resource keys for this job configuration.
     /// </summary>
     /// <returns>A list of resource keys required by this job.</returns>
-    private IReadOnlyList<ResourceKey> GenerateResourceKeys()
+    private List<ResourceKey> GenerateResourceKeys()
     {
         var resources = new List<ResourceKey>
         {

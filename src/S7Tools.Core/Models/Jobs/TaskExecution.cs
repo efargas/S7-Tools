@@ -32,7 +32,7 @@ public class TaskExecution
     /// <summary>
     /// Gets or sets the time when the task was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     /// <summary>
     /// Gets or sets the time when the task was queued for execution.
@@ -87,12 +87,12 @@ public class TaskExecution
     /// <summary>
     /// Gets or sets additional progress data as key-value pairs.
     /// </summary>
-    public Dictionary<string, object> ProgressData { get; set; } = new();
+    public Dictionary<string, object> ProgressData { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the resource keys that were locked for this task.
     /// </summary>
-    public IReadOnlyList<ResourceKey> LockedResources { get; set; } = new List<ResourceKey>();
+    public IReadOnlyList<ResourceKey> LockedResources { get; set; } = [];
 
     /// <summary>
     /// Gets or sets the estimated time remaining for task completion.
@@ -127,7 +127,7 @@ public class TaskExecution
     /// <summary>
     /// Gets the total time since the task was created.
     /// </summary>
-    public TimeSpan TotalTime => DateTime.UtcNow - CreatedAt;
+    public TimeSpan TotalTime => DateTime.Now - CreatedAt;
 
     /// <summary>
     /// Gets a value indicating whether the task is in a terminal state.
@@ -161,15 +161,15 @@ public class TaskExecution
         switch (newState)
         {
             case TaskState.Queued:
-                QueuedAt = DateTime.UtcNow;
+                QueuedAt = DateTime.Now;
                 break;
             case TaskState.Running:
-                StartedAt = DateTime.UtcNow;
+                StartedAt = DateTime.Now;
                 break;
             case TaskState.Completed:
             case TaskState.Failed:
             case TaskState.Cancelled:
-                CompletedAt = DateTime.UtcNow;
+                CompletedAt = DateTime.Now;
                 break;
         }
 

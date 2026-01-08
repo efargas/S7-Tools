@@ -25,7 +25,7 @@ public class DateTimeToStringConverter : IValueConverter
             return string.Empty;
         }
 
-        string format = parameter as string ?? "yyyy-MM-dd HH:mm";
+        string format = parameter as string ?? S7Tools.Constants.AppConstants.StandardDateFormat;
 
         try
         {

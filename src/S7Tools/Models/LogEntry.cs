@@ -8,9 +8,9 @@ namespace S7Tools.Models;
 public class LogEntry
 {
     /// <summary>
-    /// Gets or sets the timestamp when the log entry was created.
+    /// Gets or sets the timestamp (Local Time) when the log entry was created.
     /// </summary>
-    public DateTime Timestamp { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.Now;
 
     /// <summary>
     /// Gets or sets the log level (Trace, Debug, Information, Warning, Error, Critical).

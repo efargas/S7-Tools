@@ -28,7 +28,7 @@ public class DateTimeOffsetToDateTimeConverter : IValueConverter
 
             if (value is DateTimeOffset dateTimeOffset)
             {
-                return dateTimeOffset.DateTime;
+                return dateTimeOffset.LocalDateTime;
             }
 
             if (value is DateTime dateTime)
@@ -40,7 +40,7 @@ public class DateTimeOffsetToDateTimeConverter : IValueConverter
             if (value.GetType() == typeof(DateTimeOffset?))
             {
                 var nullableDateTimeOffset = (DateTimeOffset?)value;
-                return nullableDateTimeOffset?.DateTime;
+                return nullableDateTimeOffset?.LocalDateTime;
             }
 
             if (value.GetType() == typeof(DateTime?))
@@ -114,7 +114,7 @@ public class NullableDateTimeConverter : IValueConverter
             return value switch
             {
                 DateTime dateTime => dateTime,
-                DateTimeOffset dateTimeOffset => dateTimeOffset.DateTime,
+                DateTimeOffset dateTimeOffset => dateTimeOffset.LocalDateTime,
                 null => null,
                 string dateString when DateTime.TryParse(dateString, culture, DateTimeStyles.None, out DateTime parsedDate) => parsedDate,
                 _ => null
@@ -142,7 +142,7 @@ public class NullableDateTimeConverter : IValueConverter
             return value switch
             {
                 DateTime dateTime => dateTime,
-                DateTimeOffset dateTimeOffset => dateTimeOffset.DateTime,
+                DateTimeOffset dateTimeOffset => dateTimeOffset.LocalDateTime,
                 null => null,
                 string dateString when DateTime.TryParse(dateString, culture, DateTimeStyles.None, out DateTime parsedDate) => parsedDate,
                 _ => null

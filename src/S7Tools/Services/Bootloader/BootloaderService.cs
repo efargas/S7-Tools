@@ -11,39 +11,20 @@ namespace S7Tools.Services.Bootloader;
 /// Orchestrates the complete bootloader memory dump workflow.
 /// Coordinates serial configuration, socat bridge setup, power sequencing, PLC communication, and memory dumping.
 /// </summary>
-public sealed class BootloaderService : IBootloaderService
+public sealed class BootloaderService(
+    ILogger<BootloaderService> logger,
+    IPayloadProvider payloads,
+    ISocatService socat,
+    IPowerSupplyService power,
+    ISerialPortService serialPort,
+    Func<JobProfileSet, IPlcClient> clientFactory) : IBootloaderService
 {
-    private readonly ILogger<BootloaderService> _logger;
-    private readonly IPayloadProvider _payloads;
-    private readonly ISocatService _socat;
-    private readonly IPowerSupplyService _power;
-    private readonly ISerialPortService _serialPort;
-    private readonly Func<JobProfileSet, IPlcClient> _clientFactory;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BootloaderService"/> class.
-    /// </summary>
-    /// <param name="logger">Logger instance for diagnostics.</param>
-    /// <param name="payloads">Payload provider for stager and dumper files.</param>
-    /// <param name="socat">Socat service for serial-to-TCP bridge management.</param>
-    /// <param name="power">Power supply service for PLC power control.</param>
-    /// <param name="serialPort">Serial port service for device configuration.</param>
-    /// <param name="clientFactory">Factory method for creating PLC client instances.</param>
-    public BootloaderService(
-        ILogger<BootloaderService> logger,
-        IPayloadProvider payloads,
-        ISocatService socat,
-        IPowerSupplyService power,
-        ISerialPortService serialPort,
-        Func<JobProfileSet, IPlcClient> clientFactory)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));
-        _socat = socat ?? throw new ArgumentNullException(nameof(socat));
-        _power = power ?? throw new ArgumentNullException(nameof(power));
-        _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
-        _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
-    }
+    private readonly ILogger<BootloaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IPayloadProvider _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));
+    private readonly ISocatService _socat = socat ?? throw new ArgumentNullException(nameof(socat));
+    private readonly IPowerSupplyService _power = power ?? throw new ArgumentNullException(nameof(power));
+    private readonly ISerialPortService _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
+    private readonly Func<JobProfileSet, IPlcClient> _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
 
     /// <inheritdoc />
     public async Task<byte[]> DumpAsync(
@@ -58,8 +39,8 @@ public sealed class BootloaderService : IBootloaderService
         ArgumentNullException.ThrowIfNull(progress);
 
         // Use taskLogger for task-level operations, fallback to main logger
-        var effectiveTaskLogger = taskLogger ?? _logger;
-        
+        Microsoft.Extensions.Logging.ILogger effectiveTaskLogger = taskLogger ?? _logger;
+
         _logger.LogInformation("Starting bootloader dump operation");
         effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION STARTED ===");
         effectiveTaskLogger.LogInformation("Serial: {Device} @ {Baud} baud", profiles.Serial.Device, profiles.Serial.Baud);
@@ -241,7 +222,7 @@ public sealed class BootloaderService : IBootloaderService
                     effectiveTaskLogger.LogInformation("Total size: {TotalSize:N0} bytes ({TotalSizeKB:F2} KB)",
                         profiles.MemoryMapping.TotalSelectedSize, profiles.MemoryMapping.TotalSelectedSize / 1024.0);
 
-                    var segmentDataList = new List<byte[]>();
+                    List<byte[]> segmentDataList = [];
                     long totalBytesRead = 0;
                     long totalSize = profiles.MemoryMapping.TotalSelectedSize;
 
@@ -251,7 +232,7 @@ public sealed class BootloaderService : IBootloaderService
 
                     effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
 
-                    var dumpStartTime = DateTime.UtcNow;
+                    DateTime dumpStartTime = DateTime.Now;
 
                     for (int i = 0; i < selectedSegments.Count; i++)
                     {
@@ -299,7 +280,7 @@ public sealed class BootloaderService : IBootloaderService
                             }
                         });
 
-                        var segmentStartTime = DateTime.UtcNow;
+                        DateTime segmentStartTime = DateTime.Now;
                         byte[] segmentData = await client.DumpMemoryAsync(
                             segmentStart,
                             segmentSize,
@@ -307,8 +288,8 @@ public sealed class BootloaderService : IBootloaderService
                             segmentProgress,
                             cancellationToken).ConfigureAwait(false);
 
-                        var segmentDuration = DateTime.UtcNow - segmentStartTime;
-                        var transferRate = segmentData.Length / segmentDuration.TotalSeconds;
+                        TimeSpan segmentDuration = DateTime.Now - segmentStartTime;
+                        double transferRate = segmentData.Length / segmentDuration.TotalSeconds;
 
                         segmentDataList.Add(segmentData);
                         totalBytesRead += segmentData.Length;
@@ -318,10 +299,10 @@ public sealed class BootloaderService : IBootloaderService
                     }
 
                     // Concatenate all segment data
-                    memoryData = segmentDataList.SelectMany(arr => arr).ToArray();
-                    var totalDuration = DateTime.UtcNow - dumpStartTime;
-                    var overallRate = memoryData.Length / totalDuration.TotalSeconds;
-                    
+                    memoryData = [.. segmentDataList.SelectMany(arr => arr)];
+                    TimeSpan totalDuration = DateTime.Now - dumpStartTime;
+                    double overallRate = memoryData.Length / totalDuration.TotalSeconds;
+
                     effectiveTaskLogger.LogInformation("✓ Multi-segment dump completed: {TotalSegments} segments, {TotalSize:N0} bytes",
                         selectedSegments.Count, memoryData.Length);
                     effectiveTaskLogger.LogInformation("  Duration: {Duration:F1}s, Average rate: {Rate:F1} bytes/s ({RateKB:F1} KB/s)",
@@ -355,10 +336,10 @@ public sealed class BootloaderService : IBootloaderService
 
                         double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
                         progress.Report(("memory_dump", percent));
-    
+
                         // Log progress at 25%, 50%, 75% milestones (once each)
                         double dumpPercent = (double)bytesRead / profiles.Memory.Length * 100;
-    
+
                         if (!logged25 && dumpPercent >= 25.0)
                         {
                             logged25 = true;
@@ -379,7 +360,7 @@ public sealed class BootloaderService : IBootloaderService
                         }
                     });
 
-                    var dumpStartTime = DateTime.UtcNow;
+                    DateTime dumpStartTime = DateTime.Now;
                     memoryData = await client.DumpMemoryAsync(
                         profiles.Memory.Start,
                         profiles.Memory.Length,
@@ -387,8 +368,8 @@ public sealed class BootloaderService : IBootloaderService
                         dumpProgress,
                         cancellationToken).ConfigureAwait(false);
 
-                    var dumpDuration = DateTime.UtcNow - dumpStartTime;
-                    var transferRate = memoryData.Length / dumpDuration.TotalSeconds;
+                    TimeSpan dumpDuration = DateTime.Now - dumpStartTime;
+                    double transferRate = memoryData.Length / dumpDuration.TotalSeconds;
 
                     effectiveTaskLogger.LogInformation("✓ Memory dump completed: {Size:N0} bytes from 0x{Start:X8}",
                         memoryData.Length, profiles.Memory.Start);
@@ -532,7 +513,7 @@ public sealed class BootloaderService : IBootloaderService
 
         return errors.Count == 0
             ? ValidationResult.Success()
-            : ValidationResult.Failure(errors.Select(e => new ValidationError("ProfileSet", e)).ToArray());
+            : ValidationResult.Failure([.. errors.Select(e => new ValidationError("ProfileSet", e))]);
     }
 
     /// <inheritdoc />
@@ -542,11 +523,11 @@ public sealed class BootloaderService : IBootloaderService
 
         // Base overhead: 15 seconds
         // Transfer rate: 256 bytes/sec (conservative estimate)
-        const double baseOverheadSeconds = 15.0;
-        const double bytesPerSecond = 256.0;
+        const double BaseOverheadSeconds = 15.0;
+        const double BytesPerSecond = 256.0;
 
-        double transferTime = memoryRegion.Length / bytesPerSecond;
-        double totalSeconds = baseOverheadSeconds + transferTime;
+        double transferTime = memoryRegion.Length / BytesPerSecond;
+        double totalSeconds = BaseOverheadSeconds + transferTime;
 
         // Clamp to 5-300s range per SC-001
         totalSeconds = Math.Clamp(totalSeconds, 5.0, 300.0);

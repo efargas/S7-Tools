@@ -76,7 +76,7 @@ public class TaskLogger
     /// <summary>
     /// Gets or sets the time when logging was initialized.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     /// <summary>
     /// Gets or sets the time when logging was finalized.
