@@ -36,6 +36,8 @@ public sealed class EnhancedBootloaderService(
     private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
     private bool _disposed;
 
+    private const int InitialPowerOffWaitMs = 10000;
+
     /// <inheritdoc />
     public RetryConfiguration RetryConfiguration => _retryConfiguration;
 
@@ -134,8 +136,29 @@ public sealed class EnhancedBootloaderService(
             effectiveTaskLogger.LogInformation("Connected to power supply at {Host}:{Port}",
                 profiles.Power.Host, profiles.Power.Port);
 
-            // Stage 3: Power ON PLC (10% progress)
-            progress.Report(("power_on", 10.0, null, null));
+            // Stage 3: Power OFF PLC and wait (8% -> 9% progress)
+            progress.Report(("power_off_initial", 9.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 3: Initial Power OFF ---");
+            _logger.LogDebug("Turning PLC power OFF and waiting {WaitMs}ms", InitialPowerOffWaitMs);
+
+            bool powerOff = await _power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+            if (!powerOff)
+            {
+                throw new InvalidOperationException("Failed to turn PLC power OFF");
+            }
+
+            await WaitWithProgressAsync(
+                InitialPowerOffWaitMs,
+                progress,
+                9.0, 15.0,
+                "power_off_initial",
+                cancellationToken).ConfigureAwait(false);
+
+            effectiveTaskLogger.LogInformation("PLC powered OFF and wait time completed");
+
+            // Stage 4: Power ON PLC (15% progress)
+            progress.Report(("power_on", 15.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 4: Power ON PLC ---");
             effectiveTaskLogger.LogDebug("Turning PLC power ON");
 
             bool powerOn = await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
@@ -144,35 +167,48 @@ public sealed class EnhancedBootloaderService(
                 throw new InvalidOperationException("Failed to turn PLC power ON");
             }
 
-            _logger.LogInformation("PLC powered ON");
+            effectiveTaskLogger.LogInformation("PLC powered ON");
             processLogger?.LogInformation("PLC power: ON");
 
-            // Wait for initial power-on stabilization using PowerOnTimeMs from job profile
-            _logger.LogDebug("Waiting {DelayMs}ms for PLC power stabilization", profiles.PowerOnTimeMs);
+            // Stage 5: Wait for PLC to fully power on (15% -> 20%)
+            effectiveTaskLogger.LogDebug("Waiting {DelayMs}ms for PLC to power on", profiles.PowerOnTimeMs);
+
+            // Critical timing: Use Task.Delay for cleaner wait
             await Task.Delay(profiles.PowerOnTimeMs, cancellationToken).ConfigureAwait(false);
 
-            // Stage 4: Power cycle PLC (12% progress)
-            progress.Report(("power_cycle", 12.0, null, null));
-            effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
+            // Manual progress report after wait
+            progress.Report(("power_on_wait", 20.0, null, null));
 
-            // Power cycle: OFF → delay → ON (using PowerOffDelayMs from job profile)
-            await _power.PowerCycleAsync(profiles.PowerOffDelayMs, effectiveTaskLogger, cancellationToken)
-                .ConfigureAwait(false);
-
-            effectiveTaskLogger.LogInformation("PLC power cycled successfully");
-
-            // Stage 5: Create PLC client and connect to socat (15% progress)
-            progress.Report(("plc_connect", 15.0, null, null));
+            // Stage 6: Create PLC client and connect to socat (20% progress)
+            // Reordered: Must connect BEFORE power cycle to catch the bootloader handshake window
+            progress.Report(("plc_connect", 20.0, null, null));
             await using IPlcClient client = _clientFactory(profiles);
 
             _logger.LogDebug("PLC client created and connecting to socat TCP server");
             processLogger?.LogInformation("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
+            await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            // Stage 6: Perform handshake (20% progress)
-            progress.Report(("handshake", 20.0, null, null));
-            _logger.LogDebug("Performing bootloader handshake");
+            // Stage 7: Power cycle PLC (22% -> 27% progress)
+            progress.Report(("power_cycle", 22.0, null, null));
+            effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
 
+            // Decomposed Power Cycle for progress reporting
+            await _power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+
+            // Critical timing: Use Task.Delay for cleaner wait
+            await Task.Delay(profiles.PowerOffDelayMs, cancellationToken).ConfigureAwait(false);
+
+            // Manual progress report after wait
+            progress.Report(("power_cycle", 27.0, null, null));
+
+            await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+
+            // Critical timing: Perform handshake immediately after power on
             await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
+
+            effectiveTaskLogger.LogInformation("PLC power cycled successfully");
+            progress.Report(("handshake", 28.0, null, null));
+            _logger.LogDebug("Performing bootloader handshake");
 
             string version = await client.GetBootloaderVersionAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -180,21 +216,41 @@ public sealed class EnhancedBootloaderService(
             _logger.LogInformation("Connected to bootloader version: {Version}", version);
             processLogger?.LogInformation("Bootloader version: {Version}", version);
 
-            // Stage 7: Install stager (30% progress)
-            progress.Report(("stager_install", 30.0, null, null));
+            // Stage 9: Install stager (30% -> 50% progress)
+            // Stager installation progress simulation based on baud rate
             _logger.LogDebug("Installing stager payload from {BasePath}", profiles.Payloads.BasePath);
-
             byte[] stagerPayload = await _payloads.GetStagerAsync(
                 profiles.Payloads.BasePath,
                 cancellationToken).ConfigureAwait(false);
 
-            await client.InstallStagerAsync(stagerPayload, cancellationToken)
-                .ConfigureAwait(false);
+            int baudRate = profiles.Serial.Configuration.BaudRate;
+            using var stagerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            Task stagerProgressTask = SimulateProgressAsync(
+                stagerPayload.Length,
+                baudRate,
+                progress,
+                30.0, 50.0,
+                "stager_install",
+                stagerCts.Token);
+
+            try
+            {
+                await client.InstallStagerAsync(stagerPayload, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                stagerCts.Cancel();
+                try
+                { await stagerProgressTask.ConfigureAwait(false); }
+                catch (OperationCanceledException) { }
+            }
 
             _logger.LogInformation("Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
             processLogger?.LogInformation("Stager installed: {Size} bytes", stagerPayload.Length);
 
-            // Stage 8: Dump memory (50% - 95% progress)
+            // Stage 10: Dump memory (50% - 95% progress)
             byte[] memoryData;
 
             if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
@@ -243,23 +299,68 @@ public sealed class EnhancedBootloaderService(
                     }
 
                     uint segmentSize = (uint)segment.Size;
+                    int segmentBaudRate = profiles.Serial.Configuration.BaudRate;
 
-                    progress.Report(("memory_dump", 50.0 + (45.0 * totalBytesRead / totalSize), totalBytesRead, totalSize));
+                    // Calculate progress ranges for this segment
+                    // Total available range for this segment in the overall progress (50% - 95%)
+                    double segmentTotalRange = 45.0 * segmentSize / totalSize;
+                    double segmentBasePercent = 50.0 + (45.0 * totalBytesRead / totalSize);
+
+                    // Allocated 10% of this segment's range for Dumper Upload, 90% for Memory Read
+                    double uploadRange = segmentTotalRange * 0.1;
+                    double readRange = segmentTotalRange * 0.9;
+
+                    double uploadStart = segmentBasePercent;
+                    double uploadEnd = segmentBasePercent + uploadRange;
+                    double readEnd = segmentBasePercent + segmentTotalRange;
+
                     _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",
                         i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
 
+                    using var uploadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    bool isReading = false;
+
+                    // Start dumper upload simulation
+                    Task uploadProgressTask = SimulateProgressAsync(
+                        dumperPayload.Length,
+                        segmentBaudRate,
+                        progress,
+                        uploadStart, uploadEnd,
+                        "memory_dump",
+                        uploadCts.Token);
+
                     var segmentProgress = new Progress<long>(bytesRead =>
                     {
-                        double percent = 50.0 + (45.0 * (totalBytesRead + bytesRead) / totalSize);
+                        if (!isReading)
+                        {
+                            isReading = true;
+                            uploadCts.Cancel();
+                        }
+
+                        double percent = uploadEnd + (readRange * bytesRead / segmentSize);
                         progress.Report(("memory_dump", percent, totalBytesRead + bytesRead, totalSize));
                     });
 
-                    byte[] segmentData = await client.DumpMemoryAsync(
-                        segmentStart,
-                        segmentSize,
-                        dumperPayload,
-                        segmentProgress,
-                        cancellationToken).ConfigureAwait(false);
+                    byte[] segmentData;
+                    try
+                    {
+                        segmentData = await client.DumpMemoryAsync(
+                            segmentStart,
+                            segmentSize,
+                            dumperPayload,
+                            segmentProgress,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        if (!isReading)
+                        {
+                            uploadCts.Cancel(); // Ensure cancelled if exception occurs before reading
+                        }
+                        try
+                        { await uploadProgressTask.ConfigureAwait(false); }
+                        catch (OperationCanceledException) { }
+                    }
 
                     segmentDataList.Add(segmentData);
                     totalBytesRead += segmentData.Length;
@@ -287,18 +388,55 @@ public sealed class EnhancedBootloaderService(
                     profiles.Payloads.BasePath,
                     cancellationToken).ConfigureAwait(false);
 
+                int dumperBaudRate = profiles.Serial.Configuration.BaudRate;
+                using var uploadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                bool isReading = false;
+
+                // Split progress: 10% for upload (50.0 -> 54.5), 90% for reading (54.5 -> 95.0)
+                double uploadStart = 50.0;
+                double uploadEnd = 54.5;
+                double readRange = 40.5;
+
+                // Start dumper upload simulation
+                Task uploadProgressTask = SimulateProgressAsync(
+                    dumperPayload.Length,
+                    dumperBaudRate,
+                    progress,
+                    uploadStart, uploadEnd,
+                    "memory_dump",
+                    uploadCts.Token);
+
                 var dumpProgress = new Progress<long>(bytesRead =>
                 {
-                    double percent = 50.0 + (45.0 * bytesRead / profiles.Memory.Length);
+                    if (!isReading)
+                    {
+                        isReading = true;
+                        uploadCts.Cancel();
+                    }
+
+                    double percent = uploadEnd + (readRange * bytesRead / profiles.Memory.Length);
                     progress.Report(("memory_dump", percent, bytesRead, (long)profiles.Memory.Length));
                 });
 
-                memoryData = await client.DumpMemoryAsync(
-                    profiles.Memory.Start,
-                    profiles.Memory.Length,
-                    dumperPayload,
-                    dumpProgress,
-                    cancellationToken).ConfigureAwait(false);
+                try
+                {
+                    memoryData = await client.DumpMemoryAsync(
+                        profiles.Memory.Start,
+                        profiles.Memory.Length,
+                        dumperPayload,
+                        dumpProgress,
+                        cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (!isReading)
+                    {
+                        uploadCts.Cancel();
+                    }
+                    try
+                    { await uploadProgressTask.ConfigureAwait(false); }
+                    catch (OperationCanceledException) { }
+                }
 
                 _logger.LogInformation("Memory dump completed: {Size} bytes from 0x{Start:X8}",
                     memoryData.Length, profiles.Memory.Start);
@@ -306,13 +444,13 @@ public sealed class EnhancedBootloaderService(
                     memoryData.Length, profiles.Memory.Start);
             }
 
-            // Stage 9: Teardown (95% progress)
+            // Stage 11: Teardown (95% progress)
             progress.Report(("teardown", 95.0, null, null));
             _logger.LogDebug("Cleaning up resources");
 
             // Client will be disposed automatically via 'await using'
 
-            // Stage 10: Complete (100% progress)
+            // Stage 12: Complete (100% progress)
             progress.Report(("complete", 100.0, null, null));
             _logger.LogInformation("Bootloader dump operation completed successfully. " +
                 "Dumped {ByteCount} bytes", memoryData.Length);
@@ -375,6 +513,7 @@ public sealed class EnhancedBootloaderService(
             taskExecution.UpdateState(TaskState.Running, "Initializing bootloader operation");
 
             // Create a progress reporter that updates the TaskExecution
+            double lastLoggedPercent = -1.0;
             var progressReporter = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>(progress =>
             {
                 (string? stage, double percent, long? bytesRead, long? totalBytes) = progress;
@@ -390,15 +529,20 @@ public sealed class EnhancedBootloaderService(
 
                 taskExecution.UpdateProgress(percent, operation, extraData);
 
-                if (bytesRead.HasValue && totalBytes.HasValue)
+                // Throttle logging to avoid spam (log every 1% change or if bytes are involved/important stages)
+                if (Math.Abs(percent - lastLoggedPercent) >= 1.0 || percent >= 100.0 || percent <= 0.0)
                 {
-                    _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation} ({BytesRead}/{TotalBytes} bytes)",
-                        taskExecution.TaskId, percent, operation, bytesRead, totalBytes);
-                }
-                else
-                {
-                    _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation}",
-                        taskExecution.TaskId, percent, operation);
+                    lastLoggedPercent = percent;
+                    if (bytesRead.HasValue && totalBytes.HasValue)
+                    {
+                        _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation} ({BytesRead}/{TotalBytes} bytes)",
+                            taskExecution.TaskId, percent, operation, bytesRead, totalBytes);
+                    }
+                    else
+                    {
+                        _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation}",
+                            taskExecution.TaskId, percent, operation);
+                    }
                 }
             });
 
@@ -697,6 +841,7 @@ public sealed class EnhancedBootloaderService(
         return stage switch
         {
             "socat_setup" => "Setting up network bridge",
+            "power_off_initial" => "Initial Power OFF",
             "power_cycle" => "Power cycling PLC",
             "handshake" => "Establishing bootloader connection",
             "stager_install" => "Installing bootloader stager",
@@ -762,6 +907,74 @@ public sealed class EnhancedBootloaderService(
                 _operationSemaphore?.Dispose();
             }
             _disposed = true;
+        }
+    }
+
+    private async Task SimulateProgressAsync(
+        long payloadSize,
+        int baudRate,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        double startPercent,
+        double targetPercent,
+        string stage,
+        CancellationToken cancellationToken)
+    {
+        // 10 bits per byte (8 data + 1 start + 1 stop). Baud rate is bits/sec.
+        // Duration in seconds = (size * 10) / baudRate
+        // Ensure double arithmetic
+        double durationSeconds = ((double)payloadSize * 10.0) / (double)baudRate;
+        int delayMs = (int)(durationSeconds * 1000);
+
+        // Add 10% buffering for overhead
+        delayMs = (int)(delayMs * 1.1);
+
+        // Force a minimum delay of 1 second to ensure the progress bar animation is visible to the user,
+        // even for small payloads or high baud rates.
+        if (delayMs < 1000)
+        {
+            delayMs = 1000;
+        }
+
+        await WaitWithProgressAsync(
+            delayMs,
+            progress,
+            startPercent,
+            targetPercent,
+            stage,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task WaitWithProgressAsync(
+        int delayMs,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        double startPercent,
+        double targetPercent,
+        string stage,
+        CancellationToken cancellationToken)
+    {
+        if (delayMs <= 0)
+        {
+            return;
+        }
+
+        // Update every 100ms for smoother progress
+        int steps = delayMs / 100;
+        if (steps <= 0)
+        {
+            steps = 1;
+        }
+
+        double increment = (targetPercent - startPercent) / steps;
+
+        for (int i = 0; i < steps; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+
+            double currentPercent = startPercent + (increment * (i + 1));
+            // Round to 1 decimal place to match UI display resolution and reduce noise
+            currentPercent = Math.Round(currentPercent, 1);
+            progress.Report((stage, currentPercent, null, null));
         }
     }
 

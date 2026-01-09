@@ -61,7 +61,7 @@ namespace S7Tools.Services.Adapters.Plc
             Array.Copy(padding, 0, handshakePayload, 0, padding.Length);
             Array.Copy(magic, 0, handshakePayload, padding.Length, magic.Length);
 
-            for (int attempt = 0; attempt < 100; attempt++)
+            for (int attempt = 0; attempt < 50; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await _protocol.RawWriteAsync(handshakePayload, 0, handshakePayload.Length, cancellationToken);

@@ -78,6 +78,19 @@ public class LoggingSettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _minimumLogLevel, value);
     }
 
+    /// <summary>
+    /// Gets the available log levels for the ComboBox.
+    /// </summary>
+    public List<string> LogLevels { get; } = new()
+    {
+        "Trace",
+        "Debug",
+        "Information",
+        "Warning",
+        "Error",
+        "Critical"
+    };
+
     private bool _autoScrollLogs = true;
     public bool AutoScrollLogs
     {

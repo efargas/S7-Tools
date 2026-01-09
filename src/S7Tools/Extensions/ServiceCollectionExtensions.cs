@@ -298,16 +298,11 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
 
         // Add Bootloader Services
-        services.TryAddSingleton<IBootloaderService>(provider =>
-            new Services.Bootloader.BootloaderService(
-                provider.GetRequiredService<ILogger<Services.Bootloader.BootloaderService>>(),
-                provider.GetRequiredService<IPayloadProvider>(),
-                provider.GetRequiredService<ISocatService>(),
-                provider.GetRequiredService<IPowerSupplyService>(),
-                provider.GetRequiredService<ISerialPortService>(),
-                provider.GetRequiredService<Func<JobProfileSet, IPlcClient>>()
-            ));
+        // Add Bootloader Services
+        // Use EnhancedBootloaderService as the implementation for IBootloaderService
         services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
+        services.TryAddSingleton<IBootloaderService>(provider =>
+            provider.GetRequiredService<IEnhancedBootloaderService>());
 
         // Add Payload Services
         services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();

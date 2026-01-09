@@ -4,10 +4,16 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:vm="using:S7Tools.ViewModels.Tasks"
   xmlns:views="using:S7Tools.Views.Tasks"
+  xmlns:converters="using:S7Tools.Converters"
   xmlns:jobs="using:S7Tools.Core.Models.Jobs"
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
   x:Class="S7Tools.Views.Tasks.TaskManagerView"
   x:DataType="vm:TaskManagerViewModel">
+
+  <UserControl.Resources>
+    <converters:ProgressByteSizeConverter x:Key="ProgressByteSizeConverter" />
+    <converters:ByteSpeedConverter x:Key="ByteSpeedConverter" />
+  </UserControl.Resources>
 
   <Grid RowDefinitions="Auto,Auto,*,Auto">
     <!-- Header Section with Statistics -->
@@ -102,7 +108,7 @@
                       Maximum="100"
                       Height="10" VerticalAlignment="Center" Margin="0,0,8,0" />
                     <TextBlock Grid.Column="1"
-                      Text="{Binding ProgressPercentage, StringFormat='{}{0:F0}%'}"
+                      Text="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}"
                       FontSize="11" VerticalAlignment="Center" Width="30" TextAlignment="Right" />
                   </Grid>
                 </DataTemplate>
@@ -119,11 +125,11 @@
                       Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
                       IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}" />
                     <TextBlock Grid.Column="1" FontSize="11"
-                      Foreground="{DynamicResource SystemBaseMediumBrush}"
+                      Foreground="White"
                       VerticalAlignment="Center" TextAlignment="Right"
                       IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}">
                       <TextBlock.Text>
-                        <MultiBinding StringFormat="{}{0:N0} / {1:N0} B">
+                        <MultiBinding Converter="{StaticResource ProgressByteSizeConverter}">
                           <Binding Path="BytesRead" FallbackValue="0" />
                           <Binding Path="TotalBytes" FallbackValue="0" />
                         </MultiBinding>
@@ -133,6 +139,16 @@
                 </DataTemplate>
               </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>
+
+            <!-- Speed Column -->
+            <DataGridTextColumn Header="Speed"
+              Binding="{Binding Speed, Converter={StaticResource ByteSpeedConverter}}"
+              Width="100" />
+
+            <!-- ETC Column -->
+            <DataGridTextColumn Header="ETC"
+              Binding="{Binding EstimatedTimeRemaining, StringFormat='{}{0:hh\\:mm\\:ss}'}"
+              Width="100" />
 
             <DataGridTextColumn Header="Started"
               Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="120" />

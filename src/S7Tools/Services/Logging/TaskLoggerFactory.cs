@@ -59,8 +59,11 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             LogDataStore? protocolLogDataStore = captureProtocol ? (LogDataStore?)protocolDataStore : null;
 
             // Create logger providers with DataStores
-            // Get configured log level (default to Information if not set or invalid)
-            string logLevelString = _applicationSettingsService.GetSetting("logging.level", "Information");
+            // Get configured log level from application settings (default to Information if not set or invalid)
+            string logLevelString = _applicationSettingsService.GetSetting<string>("logging.level", "Information");
+
+
+
             if (!Enum.TryParse(logLevelString, true, out LogLevel configuredLogLevel))
             {
                 configuredLogLevel = LogLevel.Information;
@@ -381,7 +384,7 @@ internal class FileLogger : ILogger, IDisposable
         _minLevel = minLevel;
         _writer = new StreamWriter(filePath, append: true, System.Text.Encoding.UTF8)
         {
-            AutoFlush = true
+            AutoFlush = false // Prevent blocking I/O on every log call
         };
     }
 

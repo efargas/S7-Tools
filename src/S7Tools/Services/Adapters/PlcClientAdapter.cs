@@ -23,10 +23,11 @@ namespace S7Tools.Services.Adapters
         private readonly PlcMemoryManager _memoryManager;
         private readonly PlcStagerManager _stagerManager;
 
-        public PlcClientAdapter(IPlcProtocol protocol, ILogger<PlcClientAdapter> logger)
+        public PlcClientAdapter(IPlcProtocol protocol, ILogger<PlcClientAdapter> logger, ILoggerFactory loggerFactory)
         {
             _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(loggerFactory);
 
             // Initialize SOLID components
             _protocolHandler = new PlcProtocolHandler(protocol);

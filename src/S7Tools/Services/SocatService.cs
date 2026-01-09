@@ -1046,7 +1046,7 @@ public partial class SocatService : ISocatService, IDisposable
             {
                 BaudRate = configuration.BaudRate, // Use configured baud rate
                 CharacterSize = 8,
-                Parity = ParityMode.None,
+                Parity = ParityMode.Even,
                 StopBits = StopBits.One,
                 DisableHardwareFlowControl = true,
                 RawMode = true

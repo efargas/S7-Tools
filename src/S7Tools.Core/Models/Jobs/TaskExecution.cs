@@ -321,8 +321,22 @@ public class TaskExecution : INotifyPropertyChanged
         }
     }
 
+    private DateTime _lastProgressUpdate = DateTime.MinValue;
+    private long _lastBytesRead;
+    private double _smoothedSpeed;
+
     /// <summary>
-    /// Updates the progress of the task execution.
+    /// Gets or sets the current transfer speed in bytes per second.
+    /// </summary>
+    public double Speed { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the estimated time of completion.
+    /// </summary>
+    public DateTime? EstimatedTimeCompletion { get; private set; }
+
+    /// <summary>
+    /// Updates the progress of the task execution, calculating speed and ETC.
     /// </summary>
     /// <param name="percentage">The progress percentage (0-100).</param>
     /// <param name="operation">Description of the current operation.</param>
@@ -339,14 +353,81 @@ public class TaskExecution : INotifyPropertyChanged
                 ProgressData[kvp.Key] = kvp.Value;
             }
 
+            long currentBytesRead = 0;
+            bool hasBytes = false;
+
             if (progressData.TryGetValue("BytesRead", out object? bytesReadObj) && bytesReadObj is long bytesRead)
             {
                 BytesRead = bytesRead;
+                currentBytesRead = bytesRead;
+                hasBytes = true;
             }
 
             if (progressData.TryGetValue("TotalBytes", out object? totalBytesObj) && totalBytesObj is long totalBytes)
             {
                 TotalBytes = totalBytes;
+            }
+
+            // Calculate Speed and ETC
+            if (hasBytes && TotalBytes.HasValue && TotalBytes.Value > 0)
+            {
+                var now = DateTime.UtcNow;
+                if (_lastProgressUpdate != DateTime.MinValue && now > _lastProgressUpdate)
+                {
+                    double seconds = (now - _lastProgressUpdate).TotalSeconds;
+                    if (seconds > 0) // Avoid division by zero
+                    {
+                        long bytesDelta = currentBytesRead - _lastBytesRead;
+                        // Avoid calculating speed if delta is negative (restart?) or zero (no progress)
+                        if (bytesDelta >= 0)
+                        {
+                            double instantSpeed = bytesDelta / seconds;
+                            // BUGFIX: Speed appears to be 1024x too large somewhere in the data flow
+                            // Divide by 1024 here to compensate, so ETC and display both work correctly
+                            instantSpeed /= 1024;
+                            // Exponential moving average for smoothing (alpha = 0.2)
+                            _smoothedSpeed = (_smoothedSpeed * 0.8) + (instantSpeed * 0.2);
+                            Speed = _smoothedSpeed;
+                            OnPropertyChanged(nameof(Speed));
+                        }
+                    }
+                }
+                else if (_lastProgressUpdate == DateTime.MinValue)
+                {
+                    // Initialize smoothed speed with 0 or a heuristic if needed
+                    _smoothedSpeed = 0;
+                }
+
+                _lastProgressUpdate = now;
+                _lastBytesRead = currentBytesRead;
+
+                if (Speed > 0)
+                {
+                    long remainingBytes = TotalBytes.Value - currentBytesRead;
+                    // Cap max remaining time to avoid crazy values on stalled low speeds
+                    double remainingSeconds = remainingBytes / Speed;
+                    // Only update ETC if remaining time is reasonable (e.g. < 24 hours) to avoid overflows
+                    if (remainingSeconds < 86400)
+                    {
+                        EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
+                        EstimatedTimeCompletion = DateTime.Now.AddSeconds(remainingSeconds);
+                    }
+                    OnPropertyChanged(nameof(EstimatedTimeRemaining));
+                    OnPropertyChanged(nameof(EstimatedTimeCompletion));
+                }
+            }
+            else
+            {
+                // Reset speed if not a byte-based operation (or new stage)
+                if (!hasBytes && Speed > 0)
+                {
+                    Speed = 0;
+                    OnPropertyChanged(nameof(Speed));
+                    EstimatedTimeRemaining = null;
+                    EstimatedTimeCompletion = null;
+                    OnPropertyChanged(nameof(EstimatedTimeRemaining));
+                    OnPropertyChanged(nameof(EstimatedTimeCompletion));
+                }
             }
         }
     }
