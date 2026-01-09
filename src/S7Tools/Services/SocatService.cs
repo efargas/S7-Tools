@@ -309,79 +309,69 @@ public partial class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("🚀🚀🚀 ENTERED StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
+        _logger.LogDebug("Entering StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
             profile?.Name ?? "NULL", serialDevice ?? "NULL");
 
         ArgumentNullException.ThrowIfNull(profile, nameof(profile));
         if (string.IsNullOrWhiteSpace(serialDevice))
         {
-            _logger.LogError("❌ Serial device is null or empty");
+            _logger.LogError("Serial device is null or empty");
             throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
         }
 
-        _logger.LogInformation("📋 Getting settings...");
+        _logger.LogDebug("Getting socat settings - MaxConcurrentInstances query");
         // Get settings from application settings service
         int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
         bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
-        _logger.LogInformation("📋 Settings obtained - MaxConcurrentInstances: {Max}", maxConcurrentInstances);
 
         // Check concurrent instances limit
-        _logger.LogInformation("🔒 Waiting for semaphore...");
+        _logger.LogDebug("Acquiring semaphore for socat start operation");
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("🔓 Semaphore acquired");
         try
         {
-            _logger.LogInformation("📊 Checking concurrent instances: Current={Current}, Max={Max}",
+            _logger.LogDebug("Checking concurrent instances: Current={Current}, Max={Max}",
                 _runningProcesses.Count, maxConcurrentInstances);
             if (_runningProcesses.Count >= maxConcurrentInstances)
             {
-                _logger.LogError("❌ Too many concurrent instances");
+                _logger.LogError("Too many concurrent socat instances");
                 throw new ConfigurationException(
                     "MaxConcurrentInstances",
                     $"Maximum number of socat instances ({maxConcurrentInstances}) already running");
             }
 
             // Validate serial device exists before starting socat
-            _logger.LogInformation("🔍 Checking if serial device exists: {Device}", serialDevice);
+            _logger.LogDebug("Checking if serial device exists: {Device}", serialDevice);
             if (!File.Exists(serialDevice))
             {
-                _logger.LogError("❌ Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
+                _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
                 throw new ValidationException(
                     "SerialDevice",
                     $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
             }
-            _logger.LogInformation("✅ Serial device exists");
 
             // Check if TCP port is already in use (internal check - semaphore already held)
-            _logger.LogInformation("🌐 Checking if TCP port {Port} is available...", profile.Configuration.TcpPort);
+            _logger.LogDebug("Checking if TCP port {Port} is available", profile.Configuration.TcpPort);
             if (await IsPortInUseInternalAsync(profile.Configuration.TcpPort).ConfigureAwait(false))
             {
-                _logger.LogError("❌ TCP port {Port} is already in use", profile.Configuration.TcpPort);
+                _logger.LogError("TCP port {Port} is already in use", profile.Configuration.TcpPort);
                 throw new ConnectionException(
                     $"0.0.0.0:{profile.Configuration.TcpPort}",
                     "TCP",
                     $"TCP port {profile.Configuration.TcpPort} is already in use");
             }
-            _logger.LogInformation("✅ TCP port {Port} is available", profile.Configuration.TcpPort);
 
             // Prepare serial device if configured
             if (autoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
             {
-                _logger.LogInformation("🔧 Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
+                _logger.LogDebug("Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
                 bool prepared = await PrepareSerialDeviceAsync(serialDevice, profile.Configuration, cancellationToken).ConfigureAwait(false);
                 if (!prepared)
                 {
-                    _logger.LogError("❌ Failed to prepare serial device {Device}", serialDevice);
+                    _logger.LogError("Failed to prepare serial device {Device}", serialDevice);
                     throw new ValidationException(
                         "SerialDevice",
                         $"Failed to prepare serial device {serialDevice}");
                 }
-                _logger.LogInformation("✅ Serial device prepared");
-            }
-            else
-            {
-                _logger.LogInformation("⏭️ Skipping serial device preparation (AutoConfigure={Auto}, ProfileAuto={ProfileAuto})",
-                    autoConfigureSerialDevice, profile.Configuration.AutoConfigureSerial);
             }
 
             // Enable hex dump and increased debug level if protocol logger is provided
@@ -400,49 +390,40 @@ public partial class SocatService : ISocatService, IDisposable
             }
 
             // Generate and validate command
-            _logger.LogInformation("📝 Generating socat command...");
+            _logger.LogDebug("Generating socat command");
             string command = GenerateSocatCommandForProfile(profile, serialDevice);
-            _logger.LogInformation("📝 Generated command: {Command}", command);
 
-            _logger.LogInformation("✅ Validating command...");
+            _logger.LogDebug("Validating socat command");
             SocatCommandValidationResult validation = ValidateSocatCommand(command);
             if (!validation.IsValid)
             {
-                _logger.LogError("❌ Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
+                _logger.LogError("Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
                 throw new ValidationException(validation.Errors);
             }
-            _logger.LogInformation("✅ Command validation passed");
 
             // Start socat process
-            _logger.LogInformation("🚀 Calling StartSocatProcessAsync...");
+            _logger.LogDebug("Starting socat process with profile '{Profile}'", profile.Name);
             SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("🎉 StartSocatProcessAsync SUCCESS - ProcessId: {ProcessId}", processInfo.ProcessId);
 
-            _logger.LogInformation("📝 Adding process to _runningProcesses...");
             _runningProcesses[processInfo.ProcessId] = processInfo;
-            _logger.LogInformation("📝 Process added. Total running processes: {Count}", _runningProcesses.Count);
 
-            _logger.LogInformation("🎉 Started socat process {ProcessId} with profile '{Profile}' for device {Device} on TCP port {Port}",
+            _logger.LogInformation("Started socat process {ProcessId} with profile '{Profile}' for device {Device} on TCP port {Port}",
                 processInfo.ProcessId, profile.Name, serialDevice, profile.Configuration.TcpPort);
 
             // Raise event
-            _logger.LogInformation("📢 Raising ProcessStarted event...");
             ProcessStarted?.Invoke(this, new SocatProcessEventArgs(processInfo));
-            _logger.LogInformation("📢 ProcessStarted event raised");
 
-            _logger.LogInformation("🏁 StartSocatWithProfileAsync SUCCESSFUL EXIT");
             return processInfo;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "💥 EXCEPTION in StartSocatWithProfileAsync: {Message}", ex.Message);
+            _logger.LogError(ex, "Exception in StartSocatWithProfileAsync: {Message}", ex.Message);
             throw;
         }
         finally
         {
-            _logger.LogInformation("🔓 Releasing semaphore...");
+            _logger.LogDebug("Releasing semaphore");
             _semaphore.Release();
-            _logger.LogInformation("🔓 Semaphore released");
         }
     }
 
