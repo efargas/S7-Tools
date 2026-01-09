@@ -594,42 +594,22 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        // Process all pending updates in a single UI batch
-        foreach (System.Collections.Generic.KeyValuePair<Guid, (double Percentage, string Operation, Dictionary<string, object>? ExtraData)> kvp in _pendingProgressUpdates)
+        // Atomically drain the dictionary to prevent lost updates.
+        // We iterate through the keys and try to remove each item.
+        // If an item is removed successfully, we process it.
+        foreach (var key in _pendingProgressUpdates.Keys)
         {
-            Guid taskId = kvp.Key;
-            (double percentage, string operation, Dictionary<string, object>? extraData) = kvp.Value;
+            if (_pendingProgressUpdates.TryRemove(key, out var update))
+            {
+                (double percentage, string operation, Dictionary<string, object>? extraData) = update;
 
-            // Find the task in ActiveTasks (most likely) or other collections
-            TaskExecution? task = ActiveTasks.FirstOrDefault(t => t.TaskId == taskId) ??
-                       AllActionableTasks.FirstOrDefault(t => t.TaskId == taskId);
+                // Find the task in ActiveTasks (most likely) or other collections
+                TaskExecution? task = ActiveTasks.FirstOrDefault(t => t.TaskId == key) ??
+                           AllActionableTasks.FirstOrDefault(t => t.TaskId == key);
 
-            // Update properties directly
-            task?.UpdateProgress(percentage, operation, extraData);
-        }
-
-        // Note: We don't verify if key was removed by another thread because we ARE on the UI thread here 
-        // (via ObserveOn) and this is the only consumer. 
-        // Ideally we would swap the dictionary or use a queue, but for progress updates, 
-        // "last write wins" is the correct behavior, so processing the current state of the 
-        // generic Dictionary (even if not atomic snapshot) is fine.
-        // To be cleaner, we can clear the ones we processed if we want, 
-        // but given it's "last state", keeping it in the dictionary until overwritten is harmless 
-        // EXCEPT that we might re-apply the same state if we don't remove it.
-        // So we should remove.
-
-        // Better approach: Snapshot keys, try remove and update
-        System.Collections.Generic.KeyValuePair<Guid, (double Percentage, string Operation, Dictionary<string, object>? ExtraData)>[] snapshot = [.. _pendingProgressUpdates];
-        _pendingProgressUpdates.Clear(); // Clear all, if new ones come in they are new updates
-
-        foreach (System.Collections.Generic.KeyValuePair<Guid, (double Percentage, string Operation, Dictionary<string, object>? ExtraData)> kvp in snapshot)
-        {
-            Guid taskId = kvp.Key;
-            (double percentage, string operation, Dictionary<string, object>? extraData) = kvp.Value;
-            TaskExecution? task = ActiveTasks.FirstOrDefault(t => t.TaskId == taskId) ??
-                      AllActionableTasks.FirstOrDefault(t => t.TaskId == taskId);
-
-            task?.UpdateProgress(percentage, operation, extraData);
+                // Update properties directly
+                task?.UpdateProgress(percentage, operation, extraData);
+            }
         }
     }
 
