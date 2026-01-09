@@ -807,7 +807,6 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 // Clean up tracking when task completes
                 _ = executionTask.ContinueWith(t => _activeExecutions.TryRemove(taskId, out _), TaskScheduler.Default);
             }
-            await Task.CompletedTask;
         });
     }
 
@@ -916,9 +915,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 lock (_executionTimes)
                 {
                     _executionTimes.Enqueue(task.ExecutionTime.Value);
+                    // M-3: Enforce max count to prevent unbounded growth
                     while (_executionTimes.Count > MaxExecutionTimesCount)
                     {
-                        _executionTimes.Dequeue(); // O(1) instead of List.RemoveAt(0) which is O(n)
+                        _executionTimes.Dequeue(); // O(1) operation
                     }
                 }
             }

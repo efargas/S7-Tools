@@ -649,7 +649,7 @@ public partial class SocatService : ISocatService, IDisposable
 
             // Update process status before returning
             _logger.LogDebug("Calling UpdateProcessStatusesAsync...");
-            await UpdateProcessStatusesAsync().ConfigureAwait(false);
+            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogDebug("UpdateProcessStatusesAsync completed");
 
             _logger.LogDebug("Final running processes count: {Count}", _runningProcesses.Count);
@@ -788,7 +788,7 @@ public partial class SocatService : ISocatService, IDisposable
 
         return await _semaphore.ExecuteAsync(async () =>
         {
-            await UpdateProcessStatusesAsync().ConfigureAwait(false);
+            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
             return _runningProcesses.Values.FirstOrDefault(p => p.TcpPort == tcpPort && p.IsRunning);
         }, cancellationToken);
     }
@@ -1506,7 +1506,7 @@ public partial class SocatService : ISocatService, IDisposable
     /// Updates the status of all running processes.
     /// </summary>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    private async Task UpdateProcessStatusesAsync()
+    private async Task UpdateProcessStatusesAsync(CancellationToken cancellationToken = default)
     {
         var processIds = _runningProcesses.Keys.ToList();
 
