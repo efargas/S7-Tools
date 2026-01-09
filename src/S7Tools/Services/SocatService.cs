@@ -480,18 +480,21 @@ public partial class SocatService : ISocatService, IDisposable
             }
             int timeoutMs = processShutdownTimeoutSeconds * 1000;
 
+            Process? processToDispose = null; // Track process for disposal if created via GetProcessById
             try
             {
-                if (_activeProcesses.TryGetValue(processId, out Process? process))
+                Process? process = null;
+                if (_activeProcesses.TryGetValue(processId, out Process? storedProcess))
                 {
-                    // Use our stored process reference
+                    // Use our stored process reference (will be disposed in finally block)
+                    process = storedProcess;
                 }
                 else
                 {
                     // Fallback to system process lookup if not in our dictionary
                     try
                     {
-                        process = Process.GetProcessById(processId);
+                        process = processToDispose = Process.GetProcessById(processId);
                     }
                     catch (ArgumentException)
                     {
@@ -561,6 +564,19 @@ public partial class SocatService : ISocatService, IDisposable
             }
             finally
             {
+                // Dispose fallback process if it was created
+                if (processToDispose != null)
+                {
+                    try
+                    {
+                        processToDispose.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error disposing fallback process {ProcessId}", processId);
+                    }
+                }
+
                 _runningProcesses.Remove(processId);
                 // Clean up the stored process reference and dispose it
                 if (_activeProcesses.TryGetValue(processId, out Process? storedProcess))
