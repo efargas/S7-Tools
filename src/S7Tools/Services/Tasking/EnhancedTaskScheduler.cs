@@ -604,14 +604,31 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         if (graceful)
         {
-            // Wait for running tasks to complete
+            // Wait for running tasks to complete with a timeout
             IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Waiting for {Count} running tasks to complete", runningTasks.Count);
+            _logger.LogInformation("Waiting for {Count} running tasks to complete (max 30 seconds)", runningTasks.Count);
+
+            // Add 30-second timeout to prevent infinite wait
+            const int maxWaitSeconds = 30;
+            DateTime startTime = DateTime.UtcNow;
 
             while (runningTasks.Count > 0)
             {
+                // Check if timeout elapsed
+                if ((DateTime.UtcNow - startTime).TotalSeconds >= maxWaitSeconds)
+                {
+                    _logger.LogWarning("Graceful shutdown timeout reached after {Seconds} seconds with {Count} tasks still running",
+                        maxWaitSeconds, runningTasks.Count);
+                    break;
+                }
+
                 await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
                 runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            if (runningTasks.Count == 0)
+            {
+                _logger.LogInformation("All running tasks completed before shutdown");
             }
         }
 
