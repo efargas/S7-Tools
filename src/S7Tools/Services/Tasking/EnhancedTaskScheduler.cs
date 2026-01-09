@@ -143,7 +143,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             State = TaskState.Created,
             Priority = priority,
             LockedResources = executionJob.Resources,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         _tasks[taskExecution.TaskId] = taskExecution;
@@ -214,7 +214,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskId, task.JobName, localTime);
 
         // If time already passed or is now, promote to queue immediately
-        if (localTime <= DateTime.Now)
+        if (localTime <= DateTime.UtcNow)
         {
             _scheduledTasks.TryRemove(taskId, out _);
             task.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
@@ -548,7 +548,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             int queuePosition = queuedTasks.TakeWhile(t => t.TaskId != taskId).Count();
             var estimatedWaitTime = TimeSpan.FromMinutes(queuePosition * 5); // Rough estimate
 
-            return DateTime.Now.Add(estimatedWaitTime);
+            return DateTime.UtcNow.Add(estimatedWaitTime);
         }
 
         return null;
@@ -635,7 +635,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
-        DateTime cutoffTime = DateTime.Now - maxAge;
+        DateTime cutoffTime = DateTime.UtcNow - maxAge;
         var oldTasks = _tasks.Values
             .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
             .ToList();
@@ -670,7 +670,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             CancelledTasks = _cancelledTasks,
             AverageExecutionTime = averageExecutionTime,
             TasksByState = tasksByState,
-            Uptime = DateTime.Now - _startTime
+            Uptime = DateTime.UtcNow - _startTime
         };
     }
 
@@ -713,8 +713,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Promote due scheduled tasks
             if (!_scheduledTasks.IsEmpty)
             {
-                DateTime nowLocal = DateTime.Now;
-                List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowLocal).Select(kvp => kvp.Key)];
+                DateTime nowUtc = DateTime.UtcNow;
+                List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowUtc).Select(kvp => kvp.Key)];
                 foreach (Guid dueId in dueTaskIds)
                 {
                     if (_tasks.TryGetValue(dueId, out TaskExecution? scheduledTask) && scheduledTask.State == TaskState.Scheduled)
