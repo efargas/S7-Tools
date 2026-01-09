@@ -512,9 +512,4 @@ public sealed class BootloaderService(
 
         return TimeSpan.FromSeconds(totalSeconds);
     }
-
-    #region Helper Methods
-
-
-    #endregion
 }
