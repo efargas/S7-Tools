@@ -403,10 +403,8 @@ public class TaskExecution : INotifyPropertyChanged
 
                 if (Speed > 0)
                 {
-                    long remainingBytes = TotalBytes.Value - currentBytesRead;
-                    // Cap max remaining time to avoid crazy values on stalled low speeds
+                    long remainingBytes = Math.Max(0, TotalBytes.Value - currentBytesRead);
                     double remainingSeconds = remainingBytes / Speed;
-                    // Only update ETC if remaining time is reasonable (e.g. < 24 hours) to avoid overflows
                     if (remainingSeconds < 86400)
                     {
                         EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
