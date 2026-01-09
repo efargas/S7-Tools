@@ -86,10 +86,10 @@ public class SocatConfiguration
     /// <summary>
     /// Gets or sets the baud rate for the serial device.
     /// </summary>
-    /// <value>The baud rate (e.g., 9600, 38400, 115200). Default is 9600.</value>
+    /// <value>The baud rate (e.g., 9600, 38400, 115200). Default is 38400.</value>
     [Display(Name = "Baud Rate", Order = 9)]
     [Range(300, 4000000, ErrorMessage = "Baud rate must be between 300 and 4000000")]
-    public int BaudRate { get; set; } = 9600;
+    public int BaudRate { get; set; } = 38400;
 
     /// <summary>
     /// Gets or sets whether to enable raw mode for the serial device.
@@ -198,6 +198,7 @@ public class SocatConfiguration
             DebugLevel = 2, // -d -d
 
             // Serial device settings
+            BaudRate = 38400, // Match reference implementation
             SerialRawMode = true, // raw
             SerialDisableEcho = true, // echo=0
 

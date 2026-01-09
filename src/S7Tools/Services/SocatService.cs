@@ -13,6 +13,8 @@ using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using System.Net.Sockets;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services;
 
@@ -20,15 +22,15 @@ namespace S7Tools.Services;
 /// Service for socat (Serial-to-TCP Proxy) operations including process management, command generation, and status monitoring.
 /// This service provides comprehensive socat management capabilities for serial-to-TCP bridge functionality.
 /// </summary>
-public class SocatService : ISocatService, IDisposable
+public partial class SocatService : ISocatService, IDisposable
 {
 #pragma warning disable CS0067 // Events may be declared for external subscriptions; not used in this assembly
     private readonly ILogger<SocatService> _logger;
     private readonly IApplicationSettingsService _settingsService;
     private readonly ISerialPortService _serialPortService;
-    private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = new();
-    private readonly Dictionary<int, Process> _activeProcesses = new(); // Keep actual Process objects alive
-    private readonly Dictionary<int, Timer> _processMonitors = new();
+    private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = [];
+    private readonly Dictionary<int, Process> _activeProcesses = []; // Keep actual Process objects alive
+    private readonly Dictionary<int, Timer> _processMonitors = [];
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
 
@@ -137,7 +139,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Check for required TCP-LISTEN part
-            Match tcpListenMatch = Regex.Match(command, @"TCP-LISTEN:(\d+)", RegexOptions.IgnoreCase);
+            Match tcpListenMatch = TcpListenRegex().Match(command);
             if (!tcpListenMatch.Success)
             {
                 result.Errors.Add("Command must contain TCP-LISTEN:port specification");
@@ -160,7 +162,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Check for serial device specification
-            Match deviceMatch = Regex.Match(command, @"(/dev/[^\s,]+)");
+            Match deviceMatch = SerialDeviceRegex().Match(command);
             if (!deviceMatch.Success)
             {
                 result.Errors.Add("Command must contain a serial device path (/dev/...)");
@@ -185,7 +187,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // If no errors, command is valid
-            if (!result.Errors.Any())
+            if (result.Errors.Count == 0)
             {
                 result.IsValid = true;
             }
@@ -222,8 +224,8 @@ public class SocatService : ISocatService, IDisposable
         bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
 
         // Check concurrent instances limit
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        // Check concurrent instances limit
+        return await _semaphore.ExecuteAsync(async () =>
         {
             if (_runningProcesses.Count >= maxConcurrentInstances)
             {
@@ -242,7 +244,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Check if TCP port is already in use (internal check - semaphore already held)
-            if (await IsPortInUseInternalAsync(configuration.TcpPort, cancellationToken).ConfigureAwait(false))
+            if (await IsPortInUseInternalAsync(configuration.TcpPort).ConfigureAwait(false))
             {
                 throw new ConnectionException(
                     $"0.0.0.0:{configuration.TcpPort}",
@@ -298,151 +300,128 @@ public class SocatService : ISocatService, IDisposable
             ProcessStarted?.Invoke(this, new SocatProcessEventArgs(processInfo));
 
             return processInfo;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("🚀🚀🚀 ENTERED StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
+        _logger.LogDebug("Entering StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
             profile?.Name ?? "NULL", serialDevice ?? "NULL");
 
         ArgumentNullException.ThrowIfNull(profile, nameof(profile));
         if (string.IsNullOrWhiteSpace(serialDevice))
         {
-            _logger.LogError("❌ Serial device is null or empty");
+            _logger.LogError("Serial device is null or empty");
             throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
         }
 
-        _logger.LogInformation("📋 Getting settings...");
+        _logger.LogDebug("Getting socat settings - MaxConcurrentInstances query");
         // Get settings from application settings service
         int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
         bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
-        _logger.LogInformation("📋 Settings obtained - MaxConcurrentInstances: {Max}", maxConcurrentInstances);
 
-        // Check concurrent instances limit
-        _logger.LogInformation("🔒 Waiting for semaphore...");
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("🔓 Semaphore acquired");
-        try
+        // PERFORM VALIDATIONS BEFORE ACQUIRING SEMAPHORE to reduce lock duration
+        // Validate serial device exists before starting socat
+        _logger.LogDebug("Checking if serial device exists: {Device}", serialDevice);
+        if (!File.Exists(serialDevice))
         {
-            _logger.LogInformation("📊 Checking concurrent instances: Current={Current}, Max={Max}",
+            _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
+            throw new ValidationException(
+                "SerialDevice",
+                $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
+        }
+
+        // Prepare serial device if configured (before semaphore to reduce critical section)
+        if (autoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
+        {
+            _logger.LogDebug("Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
+            bool prepared = await PrepareSerialDeviceAsync(serialDevice, profile.Configuration, cancellationToken).ConfigureAwait(false);
+            if (!prepared)
+            {
+                _logger.LogError("Failed to prepare serial device {Device}", serialDevice);
+                throw new ValidationException(
+                    "SerialDevice",
+                    $"Failed to prepare serial device {serialDevice}");
+            }
+        }
+
+        // Enable hex dump and increased debug level if protocol logger is provided
+        if (protocolLogger != null)
+        {
+            if (!profile.Configuration.HexDump)
+            {
+                _logger.LogDebug("Enabling hex dump for protocol logging");
+                profile.Configuration.HexDump = true;
+            }
+            if (profile.Configuration.DebugLevel < 2)
+            {
+                _logger.LogDebug("Increasing debug level to 2 for protocol logging");
+                profile.Configuration.DebugLevel = 2;
+            }
+        }
+
+        // Generate and validate command (before semaphore)
+        _logger.LogDebug("Generating socat command");
+        string command = GenerateSocatCommandForProfile(profile, serialDevice);
+
+        _logger.LogDebug("Validating socat command");
+        SocatCommandValidationResult validation = ValidateSocatCommand(command);
+        if (!validation.IsValid)
+        {
+            _logger.LogError("Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
+            throw new ValidationException(validation.Errors);
+        }
+
+        // NOW ACQUIRE SEMAPHORE - only protect shared state access
+        _logger.LogDebug("Acquiring semaphore for socat start operation");
+        // NOW ACQUIRE SEMAPHORE - only protect shared state access
+        _logger.LogDebug("Acquiring semaphore for socat start operation");
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            _logger.LogDebug("Checking concurrent instances: Current={Current}, Max={Max}",
                 _runningProcesses.Count, maxConcurrentInstances);
             if (_runningProcesses.Count >= maxConcurrentInstances)
             {
-                _logger.LogError("❌ Too many concurrent instances");
+                _logger.LogError("Too many concurrent socat instances");
                 throw new ConfigurationException(
                     "MaxConcurrentInstances",
                     $"Maximum number of socat instances ({maxConcurrentInstances}) already running");
             }
 
-            // Validate serial device exists before starting socat
-            _logger.LogInformation("🔍 Checking if serial device exists: {Device}", serialDevice);
-            if (!File.Exists(serialDevice))
+            // Check if TCP port is already in use (must be inside semaphore to avoid race)
+            _logger.LogDebug("Checking if TCP port {Port} is available", profile.Configuration.TcpPort);
+            if (await IsPortInUseInternalAsync(profile.Configuration.TcpPort).ConfigureAwait(false))
             {
-                _logger.LogError("❌ Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
-                throw new ValidationException(
-                    "SerialDevice",
-                    $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
-            }
-            _logger.LogInformation("✅ Serial device exists");
-
-            // Check if TCP port is already in use (internal check - semaphore already held)
-            _logger.LogInformation("🌐 Checking if TCP port {Port} is available...", profile.Configuration.TcpPort);
-            if (await IsPortInUseInternalAsync(profile.Configuration.TcpPort, cancellationToken).ConfigureAwait(false))
-            {
-                _logger.LogError("❌ TCP port {Port} is already in use", profile.Configuration.TcpPort);
+                _logger.LogError("TCP port {Port} is already in use", profile.Configuration.TcpPort);
                 throw new ConnectionException(
                     $"0.0.0.0:{profile.Configuration.TcpPort}",
                     "TCP",
                     $"TCP port {profile.Configuration.TcpPort} is already in use");
             }
-            _logger.LogInformation("✅ TCP port {Port} is available", profile.Configuration.TcpPort);
 
-            // Prepare serial device if configured
-            if (autoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
+            // Start socat process (now all validation is done, minimize time in lock)
+            _logger.LogDebug("Starting socat process with profile '{Profile}'", profile.Name);
+            try
             {
-                _logger.LogInformation("🔧 Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
-                bool prepared = await PrepareSerialDeviceAsync(serialDevice, profile.Configuration, cancellationToken).ConfigureAwait(false);
-                if (!prepared)
-                {
-                    _logger.LogError("❌ Failed to prepare serial device {Device}", serialDevice);
-                    throw new ValidationException(
-                        "SerialDevice",
-                        $"Failed to prepare serial device {serialDevice}");
-                }
-                _logger.LogInformation("✅ Serial device prepared");
+                SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
+
+                _runningProcesses[processInfo.ProcessId] = processInfo;
+
+                _logger.LogInformation("Started socat process {ProcessId} with profile '{Profile}' for device {Device} on TCP port {Port}",
+                    processInfo.ProcessId, profile.Name, serialDevice, profile.Configuration.TcpPort);
+
+                // Raise event
+                ProcessStarted?.Invoke(this, new SocatProcessEventArgs(processInfo));
+
+                return processInfo;
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogInformation("⏭️ Skipping serial device preparation (AutoConfigure={Auto}, ProfileAuto={ProfileAuto})",
-                    autoConfigureSerialDevice, profile.Configuration.AutoConfigureSerial);
+                _logger.LogError(ex, "Exception in StartSocatWithProfileAsync: {Message}", ex.Message);
+                throw;
             }
-
-            // Enable hex dump and increased debug level if protocol logger is provided
-            if (protocolLogger != null)
-            {
-                if (!profile.Configuration.HexDump)
-                {
-                    _logger.LogDebug("Enabling hex dump for protocol logging");
-                    profile.Configuration.HexDump = true;
-                }
-                if (profile.Configuration.DebugLevel < 2)
-                {
-                    _logger.LogDebug("Increasing debug level to 2 for protocol logging");
-                    profile.Configuration.DebugLevel = 2;
-                }
-            }
-
-            // Generate and validate command
-            _logger.LogInformation("📝 Generating socat command...");
-            string command = GenerateSocatCommandForProfile(profile, serialDevice);
-            _logger.LogInformation("📝 Generated command: {Command}", command);
-
-            _logger.LogInformation("✅ Validating command...");
-            SocatCommandValidationResult validation = ValidateSocatCommand(command);
-            if (!validation.IsValid)
-            {
-                _logger.LogError("❌ Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
-                throw new ValidationException(validation.Errors);
-            }
-            _logger.LogInformation("✅ Command validation passed");
-
-            // Start socat process
-            _logger.LogInformation("🚀 Calling StartSocatProcessAsync...");
-            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("🎉 StartSocatProcessAsync SUCCESS - ProcessId: {ProcessId}", processInfo.ProcessId);
-
-            _logger.LogInformation("📝 Adding process to _runningProcesses...");
-            _runningProcesses[processInfo.ProcessId] = processInfo;
-            _logger.LogInformation("📝 Process added. Total running processes: {Count}", _runningProcesses.Count);
-
-            _logger.LogInformation("🎉 Started socat process {ProcessId} with profile '{Profile}' for device {Device} on TCP port {Port}",
-                processInfo.ProcessId, profile.Name, serialDevice, profile.Configuration.TcpPort);
-
-            // Raise event
-            _logger.LogInformation("📢 Raising ProcessStarted event...");
-            ProcessStarted?.Invoke(this, new SocatProcessEventArgs(processInfo));
-            _logger.LogInformation("📢 ProcessStarted event raised");
-
-            _logger.LogInformation("🏁 StartSocatWithProfileAsync SUCCESSFUL EXIT");
-            return processInfo;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "💥 EXCEPTION in StartSocatWithProfileAsync: {Message}", ex.Message);
-            throw;
-        }
-        finally
-        {
-            _logger.LogInformation("🔓 Releasing semaphore...");
-            _semaphore.Release();
-            _logger.LogInformation("🔓 Semaphore released");
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -461,8 +440,7 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Process ID must be greater than zero", nameof(processId));
         }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             if (!_runningProcesses.TryGetValue(processId, out SocatProcessInfo? processInfo))
             {
@@ -479,21 +457,21 @@ public class SocatService : ISocatService, IDisposable
             }
             int timeoutMs = processShutdownTimeoutSeconds * 1000;
 
+            Process? processToDispose = null; // Track process for disposal if created via GetProcessById
             try
             {
                 Process? process = null;
-
-                // Try to get the process from our stored references first
-                if (_activeProcesses.TryGetValue(processId, out process))
+                if (_activeProcesses.TryGetValue(processId, out Process? storedProcess))
                 {
-                    // Use our stored process reference
+                    // Use our stored process reference (will be disposed in finally block)
+                    process = storedProcess;
                 }
                 else
                 {
                     // Fallback to system process lookup if not in our dictionary
                     try
                     {
-                        process = Process.GetProcessById(processId);
+                        process = processToDispose = Process.GetProcessById(processId);
                     }
                     catch (ArgumentException)
                     {
@@ -506,6 +484,14 @@ public class SocatService : ISocatService, IDisposable
                 }
 
                 bool exited = false;
+
+                // Retrieve child processes (e.g., forked connections) BEFORE killing parent
+                List<int> childPids = await GetChildProcessesAsync(processId, cancellationToken).ConfigureAwait(false);
+                if (childPids.Count > 0)
+                {
+                    _logger.LogDebug("Found {Count} child processes for socat {ProcessId}: {Children}",
+                        childPids.Count, processId, string.Join(", ", childPids));
+                }
 
                 // Try SIGTERM on Unix-like systems
                 if (!process.HasExited)
@@ -541,6 +527,28 @@ public class SocatService : ISocatService, IDisposable
                     await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
                 }
 
+                // Clean up child processes if they are still running
+                if (childPids.Count > 0 && (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+                {
+                    foreach (int childPid in childPids)
+                    {
+                        try
+                        {
+                            // Quickly check if child is still alive
+                            (bool success, int _, string _, string _) = await ExecuteCommandAsync($"kill -0 {childPid}", 500, cancellationToken).ConfigureAwait(false);
+                            if (success)
+                            {
+                                _logger.LogInformation("Cleaning up child process {ChildPid} for socat {ProcessId}", childPid, processId);
+                                await ExecuteCommandAsync($"kill -9 {childPid}", 500, cancellationToken).ConfigureAwait(false);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to cleanup child process {ChildPid}", childPid);
+                        }
+                    }
+                }
+
                 processInfo.Status = SocatProcessStatus.Stopped;
                 processInfo.IsRunning = false;
 
@@ -563,6 +571,19 @@ public class SocatService : ISocatService, IDisposable
             }
             finally
             {
+                // Dispose fallback process if it was created
+                if (processToDispose != null)
+                {
+                    try
+                    {
+                        processToDispose.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error disposing fallback process {ProcessId}", processId);
+                    }
+                }
+
                 _runningProcesses.Remove(processId);
                 // Clean up the stored process reference and dispose it
                 if (_activeProcesses.TryGetValue(processId, out Process? storedProcess))
@@ -583,11 +604,7 @@ public class SocatService : ISocatService, IDisposable
                     _processMonitors.Remove(processId);
                 }
             }
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -596,16 +613,8 @@ public class SocatService : ISocatService, IDisposable
         // Discover external socat processes first
         await DiscoverExternalSocatProcessesAsync(cancellationToken).ConfigureAwait(false);
 
-        List<int> processIds;
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            processIds = _runningProcesses.Keys.ToList();
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        List<int> processIds = await _semaphore.ExecuteAsync(() =>
+            Task.FromResult<List<int>>([.. _runningProcesses.Keys]), cancellationToken);
 
         int stoppedCount = 0;
         IEnumerable<Task> tasks = processIds.Select(async processId =>
@@ -634,30 +643,26 @@ public class SocatService : ISocatService, IDisposable
         await DiscoverExternalSocatProcessesAsync(cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("🔒 Waiting for semaphore...");
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        _logger.LogInformation("🔓 Semaphore acquired");
 
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
+            _logger.LogInformation("🔓 Semaphore acquired");
+
             _logger.LogInformation("📊 Current _runningProcesses count before update: {Count}", _runningProcesses.Count);
 
             // Update process status before returning
             _logger.LogInformation("🔄 Calling UpdateProcessStatusesAsync...");
-            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
+            await UpdateProcessStatusesAsync().ConfigureAwait(false);
             _logger.LogInformation("✅ UpdateProcessStatusesAsync completed");
 
             _logger.LogInformation("📊 Final _runningProcesses count: {Count}", _runningProcesses.Count);
             var result = _runningProcesses.Values.ToList();
             _logger.LogInformation("📊 Returning {Count} processes", result.Count);
 
-            return result;
-        }
-        finally
-        {
-            _logger.LogInformation("🔓 Releasing semaphore...");
-            _semaphore.Release();
+            _logger.LogInformation("🔓 Releasing semaphore (auto)...");
             _logger.LogInformation("🏁 GetRunningProcessesAsync EXIT");
-        }
+            return (IEnumerable<SocatProcessInfo>)result;
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -668,21 +673,16 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Process ID must be greater than zero", nameof(processId));
         }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             if (_runningProcesses.TryGetValue(processId, out SocatProcessInfo? processInfo))
             {
-                await UpdateProcessStatusAsync(processInfo, cancellationToken).ConfigureAwait(false);
+                await UpdateProcessStatusAsync(processInfo).ConfigureAwait(false);
                 return processInfo;
             }
 
             return null;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -690,7 +690,7 @@ public class SocatService : ISocatService, IDisposable
     /// Internal port check method that doesn't acquire semaphore (assumes already held).
     /// Used when semaphore is already acquired to avoid deadlock.
     /// </summary>
-    private Task<bool> IsPortInUseInternalAsync(int tcpPort, CancellationToken cancellationToken = default)
+    private Task<bool> IsPortInUseInternalAsync(int tcpPort)
     {
         if (!NetworkConstants.IsValidPort(tcpPort))
         {
@@ -747,18 +747,17 @@ public class SocatService : ISocatService, IDisposable
         try
         {
             // First, check our managed processes under lock
-            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try
+            // First, check our managed processes under lock
+            bool isManaged = await _semaphore.ExecuteAsync(async () =>
             {
+                await Task.CompletedTask;
                 SocatProcessInfo? managedProcess = _runningProcesses.Values.FirstOrDefault(p => p.TcpPort == tcpPort && p.IsRunning);
-                if (managedProcess != null)
-                {
-                    return true;
-                }
-            }
-            finally
+                return managedProcess != null;
+            }, cancellationToken);
+
+            if (isManaged)
             {
-                _semaphore.Release();
+                return true;
             }
 
             // Then, attempt to bind to the port to detect external usage
@@ -790,17 +789,11 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
         }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
-            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
-
+            await UpdateProcessStatusesAsync().ConfigureAwait(false);
             return _runningProcesses.Values.FirstOrDefault(p => p.TcpPort == tcpPort && p.IsRunning);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -808,8 +801,7 @@ public class SocatService : ISocatService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(processInfo, nameof(processInfo));
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await _semaphore.ExecuteAsync(async () =>
         {
             // Stop existing monitoring for this process
             if (_processMonitors.TryGetValue(processInfo.ProcessId, out Timer? existingMonitor))
@@ -842,7 +834,7 @@ public class SocatService : ISocatService, IDisposable
 
                 try
                 {
-                    await UpdateProcessStatusAsync(processInfo, CancellationToken.None).ConfigureAwait(false);
+                    await UpdateProcessStatusAsync(processInfo).ConfigureAwait(false);
 
                     // Re-read the setting to get the latest value for dynamic updates
                     int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
@@ -889,11 +881,8 @@ public class SocatService : ISocatService, IDisposable
             _processMonitors[processInfo.ProcessId] = monitor;
 
             _logger.LogDebug("Started monitoring socat process {ProcessId}", processInfo.ProcessId);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            await Task.CompletedTask;
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -904,8 +893,7 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Process ID must be greater than zero", nameof(processId));
         }
 
-        await _semaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _semaphore.ExecuteAsync(async () =>
         {
             if (_processMonitors.TryGetValue(processId, out Timer? monitor))
             {
@@ -913,11 +901,8 @@ public class SocatService : ISocatService, IDisposable
                 _processMonitors.Remove(processId);
                 _logger.LogDebug("Stopped monitoring socat process {ProcessId}", processId);
             }
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            await Task.CompletedTask;
+        });
     }
 
     #endregion
@@ -934,12 +919,12 @@ public class SocatService : ISocatService, IDisposable
 
         try
         {
-            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try
+            return await _semaphore.ExecuteAsync(async () =>
             {
+                await Task.CompletedTask; // Added this line
                 if (!_runningProcesses.TryGetValue(processId, out SocatProcessInfo? processInfo))
                 {
-                    return Enumerable.Empty<SocatConnectionInfo>();
+                    return [];
                 }
 
                 // Use netstat to get connections for this TCP port
@@ -948,7 +933,7 @@ public class SocatService : ISocatService, IDisposable
 
                 if (!success || string.IsNullOrWhiteSpace(output))
                 {
-                    return Enumerable.Empty<SocatConnectionInfo>();
+                    return [];
                 }
 
                 var connections = new List<SocatConnectionInfo>();
@@ -963,17 +948,13 @@ public class SocatService : ISocatService, IDisposable
                     }
                 }
 
-                return connections;
-            }
-            finally
-            {
-                _semaphore.Release();
-            }
+                return (IEnumerable<SocatConnectionInfo>)connections;
+            }, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get active connections for process {ProcessId}", processId);
-            return Enumerable.Empty<SocatConnectionInfo>();
+            return [];
         }
     }
 
@@ -1019,8 +1000,7 @@ public class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Process ID must be greater than zero", nameof(processId));
         }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             if (!_runningProcesses.TryGetValue(processId, out SocatProcessInfo? processInfo))
             {
@@ -1028,14 +1008,10 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // Update transfer statistics from process monitoring
-            await UpdateProcessStatusAsync(processInfo, cancellationToken).ConfigureAwait(false);
+            await UpdateProcessStatusAsync(processInfo).ConfigureAwait(false);
 
             return processInfo.TransferStats;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     #endregion
@@ -1070,7 +1046,7 @@ public class SocatService : ISocatService, IDisposable
             {
                 BaudRate = configuration.BaudRate, // Use configured baud rate
                 CharacterSize = 8,
-                Parity = ParityMode.None,
+                Parity = ParityMode.Even,
                 StopBits = StopBits.One,
                 DisableHardwareFlowControl = true,
                 RawMode = true
@@ -1146,7 +1122,7 @@ public class SocatService : ISocatService, IDisposable
             }
 
             // If we reach here with no errors, the device is valid
-            if (!result.Errors.Any())
+            if (result.Errors.Count == 0)
             {
                 result.IsValid = true;
             }
@@ -1198,7 +1174,7 @@ public class SocatService : ISocatService, IDisposable
             string trimmed = command.Trim();
             if (trimmed.StartsWith("socat ", StringComparison.OrdinalIgnoreCase))
             {
-                arguments = trimmed.Substring(5).TrimStart();
+                arguments = trimmed[5..].TrimStart();
             }
             else if (string.Equals(trimmed, "socat", StringComparison.OrdinalIgnoreCase))
             {
@@ -1255,58 +1231,65 @@ public class SocatService : ISocatService, IDisposable
                     if (e.Data != null)
                     {
                         errorBuilder!.AppendLine(e.Data);
-                        
+
                         // Check if this is a hex dump line (socat outputs hex dumps to stderr when -x flag is used)
-                        // Hex dump lines typically start with timestamp and contain hex data
-                        bool isHexDumpLine = e.Data.Contains("< ") || e.Data.Contains("> ") || 
-                                            (e.Data.Contains("0x") && e.Data.Length > 20);
-                        
+                        // Heuristic:
+                        // 1. Existing checks for < > (less reliable if timestamps are gone/changed)
+                        // 2. Explicit hex content "0x..."
+                        // 3. Separator line "--"
+                        // 4. Line starting with a specific pattern of hex digits (e.g. " 41 41 " or " 05 2d ")
+                        // 5. Short lines that look like partial hex dump
+                        string trimmedData = e.Data.TrimEnd();
+                        bool isHexDumpLine =
+                            trimmedData.Contains("< ") ||
+                            trimmedData.Contains("> ") ||
+                            (trimmedData.Contains("0x") && trimmedData.Length > 15) ||
+                            trimmedData.Trim() == "--" ||
+                            HexDumpRegex().IsMatch(trimmedData);
+
                         if (isHexDumpLine && protocolLogger != null)
                         {
                             // Route hex dump output to protocol logger
-                            protocolLogger.LogTrace("socat[{ProcessId}] {HexData}", processId, e.Data);
+                            // Also need to clean timestamp if present
+                            string cleanOutput = SocatLogTimestampRegex().Replace(e.Data, string.Empty);
+                            protocolLogger.LogDebug("{HexData}", cleanOutput);
                         }
                         else
                         {
                             // Regular error output
-                            _logger.LogWarning("Socat error: {Error}", e.Data);
-                            processLogger?.LogWarning("socat[{ProcessId}] ERROR: {Error}", processId, e.Data);
+                            // Clean up the log message by removing the timestamp if present
+                            // Format: 2026/01/09 03:05:33 socat[113280] N ...
+                            string cleanMessage = SocatLogTimestampRegex().Replace(e.Data, string.Empty);
+
+                            // Only log to the task-specific logger, NOT the main application logger
+                            processLogger?.LogInformation("socat[{ProcessId}] {Message}", processId, cleanMessage);
                         }
                     }
                 };
             }
 
             // Set up process exit handler before starting
-            process.Exited += (sender, args) =>
+            // Set up process exit handler before starting
+            process.Exited += (sender, args) => Task.Run(async () => await _semaphore.ExecuteAsync(async () =>
             {
-                Task.Run(async () =>
+                if (_runningProcesses.TryGetValue(process.Id, out SocatProcessInfo? processInfo))
                 {
-                    await _semaphore.WaitAsync().ConfigureAwait(false);
-                    try
-                    {
-                        if (_runningProcesses.TryGetValue(process.Id, out SocatProcessInfo? processInfo))
-                        {
-                            processInfo.IsRunning = false;
-                            processInfo.Status = SocatProcessStatus.Stopped;
-                            _logger.LogInformation("Socat process {ProcessId} exited with code {ExitCode}",
-                                process.Id, process.ExitCode);
+                    processInfo.IsRunning = false;
+                    processInfo.Status = SocatProcessStatus.Stopped;
+                    _logger.LogInformation("Socat process {ProcessId} exited with code {ExitCode}",
+                        process.Id, process.ExitCode);
 
-                            ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
-                        }
+                    ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
+                }
 
-                        // Clean up references
-                        _runningProcesses.Remove(process.Id);
-                        _activeProcesses.Remove(process.Id);
+                // Clean up references
+                _runningProcesses.Remove(process.Id);
+                _activeProcesses.Remove(process.Id);
 
-                        // Dispose the process now that it's finished
-                        process.Dispose();
-                    }
-                    finally
-                    {
-                        _semaphore.Release();
-                    }
-                });
-            };
+                // Dispose the process now that it's finished
+                process.Dispose();
+                await Task.CompletedTask;
+            }));
 
             process.Start();
             processId = process.Id;
@@ -1448,13 +1431,63 @@ public class SocatService : ISocatService, IDisposable
     }
 
     /// <summary>
+    /// Retrieves a list of child process IDs for a given parent process.
+    /// </summary>
+    /// <param name="parentId">The parent process ID.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>A list of child process IDs.</returns>
+    private async Task<List<int>> GetChildProcessesAsync(int parentId, CancellationToken cancellationToken)
+    {
+        if (parentId <= 0 || !(OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+        {
+            return [];
+        }
+
+        try
+        {
+            // Use pgrep to find child processes (portable enough on modern Linux/macOS)
+            // -P matches Parent Process ID
+            (bool success, int _, string stdout, string _) = await ExecuteCommandAsync($"pgrep -P {parentId}", 1000, cancellationToken).ConfigureAwait(false);
+
+            if (!success || string.IsNullOrWhiteSpace(stdout))
+            {
+                // Fallback to ps if pgrep fails or returns distinct exit code for "no matches"
+                (success, _, stdout, _) = await ExecuteCommandAsync($"ps -o pid --ppid {parentId} --no-headers", 1000, cancellationToken).ConfigureAwait(false);
+
+                if (!success || string.IsNullOrWhiteSpace(stdout))
+                {
+                    return [];
+                }
+            }
+
+            var childPids = new List<int>();
+            string[] lines = stdout.Split(NewLines, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (string line in lines)
+            {
+                if (int.TryParse(line.Trim(), out int pid))
+                {
+                    childPids.Add(pid);
+                }
+            }
+
+            return childPids;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get child processes for PID {ParentId}", parentId);
+            return [];
+        }
+    }
+
+    /// <summary>
     /// Waits for a process to exit with a timeout.
     /// </summary>
     /// <param name="process">The process to wait for.</param>
     /// <param name="timeoutMs">The timeout in milliseconds.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>True if the process exited within the timeout, false otherwise.</returns>
-    private async Task<bool> WaitForProcessExitAsync(Process process, int timeoutMs, CancellationToken cancellationToken)
+    private static async Task<bool> WaitForProcessExitAsync(Process process, int timeoutMs, CancellationToken cancellationToken)
     {
         try
         {
@@ -1474,7 +1507,7 @@ public class SocatService : ISocatService, IDisposable
     /// Updates the status of all running processes.
     /// </summary>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    private async Task UpdateProcessStatusesAsync(CancellationToken cancellationToken)
+    private async Task UpdateProcessStatusesAsync()
     {
         var processIds = _runningProcesses.Keys.ToList();
 
@@ -1482,7 +1515,7 @@ public class SocatService : ISocatService, IDisposable
         {
             if (_runningProcesses.TryGetValue(processId, out SocatProcessInfo? processInfo))
             {
-                await UpdateProcessStatusAsync(processInfo, cancellationToken).ConfigureAwait(false);
+                await UpdateProcessStatusAsync(processInfo).ConfigureAwait(false);
             }
         }
     }
@@ -1506,11 +1539,8 @@ public class SocatService : ISocatService, IDisposable
             }
 
             string[] lines = stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            var regexPort = new Regex(@"TCP-LISTEN:(\d+)", RegexOptions.IgnoreCase);
-            var regexDevice = new Regex(@"(/dev/[^\s,]+)");
 
-            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            try
+            await _semaphore.ExecuteAsync(async () =>
             {
                 foreach (string line in lines)
                 {
@@ -1541,12 +1571,12 @@ public class SocatService : ISocatService, IDisposable
                     string host = "0.0.0.0";
                     string device = string.Empty;
 
-                    Match m = regexPort.Match(cmd);
+                    Match m = TcpListenRegex().Match(cmd);
                     if (m.Success && int.TryParse(m.Groups[1].Value, out int parsed))
                     {
                         port = parsed;
                     }
-                    Match d = regexDevice.Match(cmd);
+                    Match d = SerialDeviceRegex().Match(cmd);
                     if (d.Success)
                     {
                         device = d.Groups[1].Value;
@@ -1561,21 +1591,18 @@ public class SocatService : ISocatService, IDisposable
                         Configuration = new SocatConfiguration { TcpPort = port, TcpHost = host },
                         Profile = null,
                         CommandLine = cmd,
-                        StartTime = DateTime.UtcNow,
+                        StartTime = DateTime.Now,
                         IsRunning = true,
                         Status = SocatProcessStatus.Running,
                         ActiveConnections = 0,
                         TransferStats = new SocatTransferStats(),
-                        LastUpdated = DateTime.UtcNow
+                        LastUpdated = DateTime.Now
                     };
 
                     _runningProcesses[pid] = info;
                 }
-            }
-            finally
-            {
-                _semaphore.Release();
-            }
+                await Task.CompletedTask;
+            }, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -1588,7 +1615,7 @@ public class SocatService : ISocatService, IDisposable
     /// </summary>
     /// <param name="processInfo">The process information to update.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    private Task UpdateProcessStatusAsync(SocatProcessInfo processInfo, CancellationToken cancellationToken)
+    private Task UpdateProcessStatusAsync(SocatProcessInfo processInfo)
     {
         try
         {
@@ -1653,7 +1680,7 @@ public class SocatService : ISocatService, IDisposable
         try
         {
             // Parse netstat line format: Proto Recv-Q Send-Q Local-Address Foreign-Address State
-            string[] parts = netstatLine.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = netstatLine.Split(NetstatSeparators, StringSplitOptions.RemoveEmptyEntries);
 
             if (parts.Length < 6 || !parts[0].StartsWith("tcp", StringComparison.OrdinalIgnoreCase))
             {
@@ -1713,6 +1740,18 @@ public class SocatService : ISocatService, IDisposable
             return null;
         }
     }
+
+    [GeneratedRegex("TCP-LISTEN:(\\d+)", RegexOptions.IgnoreCase)]
+    private static partial Regex TcpListenRegex();
+
+    [GeneratedRegex("(/dev/[^\\s,]+)")]
+    private static partial Regex SerialDeviceRegex();
+
+    [GeneratedRegex(@"^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ")]
+    private static partial Regex SocatLogTimestampRegex();
+
+    private static readonly char[] NetstatSeparators = [' ', '\t'];
+    private static readonly char[] NewLines = ['\n', '\r'];
 
     #endregion
 
@@ -1775,4 +1814,7 @@ public class SocatService : ISocatService, IDisposable
     }
 
     #endregion
+
+    [GeneratedRegex(@"^\s+([0-9a-fA-F]{2}\s+)+")]
+    private static partial Regex HexDumpRegex();
 }

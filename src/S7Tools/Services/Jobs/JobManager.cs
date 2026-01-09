@@ -11,6 +11,7 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
+using S7Tools.Extensions;
 using S7Tools.Services;
 
 namespace S7Tools.Services.Jobs;
@@ -19,52 +20,28 @@ namespace S7Tools.Services.Jobs;
 /// Standard implementation of IJobManager providing unified job management functionality.
 /// Extends StandardProfileManager to provide job-specific operations including templates and execution validation.
 /// </summary>
-public class JobManager : StandardProfileManager<JobProfile>, IJobManager
+public class JobManager(
+    Microsoft.Extensions.Options.IOptions<S7Tools.Core.Models.Jobs.JobManagerOptions> options,
+    ILogger<JobManager> logger,
+    IResourceCoordinator resourceCoordinator,
+    ISerialPortProfileService serialProfileService,
+    ISocatProfileService socatProfileService,
+    IPowerSupplyProfileService powerSupplyProfileService,
+    IMemoryRegionProfileService memoryRegionProfileService)
+    : StandardProfileManager<JobProfile>(options.Value.ProfilesPath, logger), IJobManager
 {
     #region Private Fields
 
-    private readonly IResourceCoordinator _resourceCoordinator;
-    private readonly ISerialPortProfileService _serialProfileService;
-    private readonly ISocatProfileService _socatProfileService;
-    private readonly IPowerSupplyProfileService _powerSupplyProfileService;
-    private readonly IMemoryRegionProfileService _memoryRegionProfileService;
-    private readonly IPayloadSetProfileService _payloadSetProfileService;
+    private readonly IResourceCoordinator _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
+    private readonly ISerialPortProfileService _serialProfileService = serialProfileService ?? throw new ArgumentNullException(nameof(serialProfileService));
+    private readonly ISocatProfileService _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
+    private readonly IPowerSupplyProfileService _powerSupplyProfileService = powerSupplyProfileService ?? throw new ArgumentNullException(nameof(powerSupplyProfileService));
+    private readonly IMemoryRegionProfileService _memoryRegionProfileService = memoryRegionProfileService ?? throw new ArgumentNullException(nameof(memoryRegionProfileService));
+
 
     #endregion
 
-    #region Constructor
 
-    /// <summary>
-    /// Initializes a new instance of the JobManager class using options pattern.
-    /// </summary>
-    /// <param name="options">The options containing the profiles path.</param>
-    /// <param name="logger">The logger instance for this manager.</param>
-    /// <param name="resourceCoordinator">The resource coordinator for checking resource availability.</param>
-    /// <param name="serialProfileService">The serial profile service for validation.</param>
-    /// <param name="socatProfileService">The socat profile service for validation.</param>
-    /// <param name="powerSupplyProfileService">The power supply profile service for validation.</param>
-    /// <param name="memoryRegionProfileService">The memory region profile service for profile resolution.</param>
-    /// <param name="payloadSetProfileService">The payload set profile service for payload resolution.</param>
-    public JobManager(
-        Microsoft.Extensions.Options.IOptions<S7Tools.Core.Models.Jobs.JobManagerOptions> options,
-        ILogger<JobManager> logger,
-        IResourceCoordinator resourceCoordinator,
-        ISerialPortProfileService serialProfileService,
-        ISocatProfileService socatProfileService,
-        IPowerSupplyProfileService powerSupplyProfileService,
-        IMemoryRegionProfileService memoryRegionProfileService,
-        IPayloadSetProfileService payloadSetProfileService)
-        : base(options.Value.ProfilesPath, logger)
-    {
-        _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
-        _serialProfileService = serialProfileService ?? throw new ArgumentNullException(nameof(serialProfileService));
-        _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
-        _powerSupplyProfileService = powerSupplyProfileService ?? throw new ArgumentNullException(nameof(powerSupplyProfileService));
-        _memoryRegionProfileService = memoryRegionProfileService ?? throw new ArgumentNullException(nameof(memoryRegionProfileService));
-        _payloadSetProfileService = payloadSetProfileService ?? throw new ArgumentNullException(nameof(payloadSetProfileService));
-    }
-
-    #endregion
 
     #region StandardProfileManager Implementation
 
@@ -114,7 +91,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         try
         {
             _logger.LogDebug("About to save profiles to: {Path}", _profilesPath);
-            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+            await SaveProfilesAsync().ConfigureAwait(false);
             _logger.LogInformation("Successfully created and saved {Count} default job profiles to: {Path}", _profiles.Count, _profilesPath);
         }
         catch (Exception ex)
@@ -136,8 +113,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
 
         _logger.LogInformation("Creating job from template ID {TemplateId} with name '{NewName}'", templateId, newName);
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -166,17 +142,43 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
             _profiles.Add(newJob);
             _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
 
-            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+            await SaveProfilesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Successfully created job '{JobName}' (ID: {JobId}) from template '{TemplateName}' (ID: {TemplateId})",
                 newJob.Name, newJob.Id, template.Name, templateId);
 
             return CloneProfile(newJob);
-        }
-        finally
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<JobProfile> AddJobAsync(JobProfile job, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(job);
+
+        return await _semaphore.ExecuteAsync(async () =>
         {
-            _semaphore.Release();
-        }
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+            // Validate uniqueness
+            if (_profiles.Any(p => string.Equals(p.Name, job.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new DuplicateProfileNameException(job.Name);
+            }
+
+            // Assign ID and add to collection
+            job.Id = GetNextAvailableIdCore();
+            job.CreatedAt = DateTime.UtcNow;
+            job.ModifiedAt = DateTime.UtcNow;
+
+            _profiles.Add(job);
+            _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
+
+            await SaveProfilesAsync().ConfigureAwait(false);
+            _logger.LogInformation("Added job '{JobName}' (ID: {JobId})", job.Name, job.Id);
+
+            return CloneProfile(job);
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -184,20 +186,15 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     {
         _logger.LogDebug("Getting all job templates");
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
             var templates = _profiles.Where(p => p.IsTemplate).ToList();
             _logger.LogDebug("Found {Count} job templates", templates.Count);
 
-            return templates.Select(CloneProfile).ToList();
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            return (IEnumerable<JobProfile>)[.. templates.Select(CloneProfile)];
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -205,8 +202,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     {
         _logger.LogInformation("Setting job ID {JobId} template status to {IsTemplate}", jobId, isTemplate);
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -226,17 +222,13 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
             job.IsTemplate = isTemplate;
             job.Touch();
 
-            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+            await SaveProfilesAsync().ConfigureAwait(false);
 
             _logger.LogInformation("Successfully set job '{JobName}' (ID: {JobId}) template status to {IsTemplate}",
                 job.Name, jobId, isTemplate);
 
             return true;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -335,7 +327,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
             }
         }
 
-        ValidationResult result = errors.Count > 0 ? ValidationResult.Failure(errors.ToArray()) : ValidationResult.Success();
+        ValidationResult result = errors.Count > 0 ? ValidationResult.Failure([.. errors]) : ValidationResult.Success();
 
         _logger.LogDebug("Job validation completed for '{JobName}' with {ErrorCount} errors", job.Name, errors.Count);
 
@@ -399,7 +391,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// </summary>
     /// <param name="source">The source job profile to clone.</param>
     /// <returns>A deep clone of the job profile.</returns>
-    protected JobProfile CloneProfile(JobProfile source)
+    protected static JobProfile CloneProfile(JobProfile source)
     {
         return source.ClonePreserveId();
     }
@@ -423,14 +415,14 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// Clears all default flags from existing profiles.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    private async Task ClearAllDefaultFlagsAsync(CancellationToken cancellationToken)
+    private async Task ClearAllDefaultFlagsAsync()
     {
         foreach (JobProfile? profile in _profiles.Where(p => p.IsDefault))
         {
             profile.IsDefault = false;
             profile.Touch();
         }
-        await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+        await SaveProfilesAsync().ConfigureAwait(false);
         await Task.Yield();
     }
 
@@ -438,7 +430,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// Saves all profiles to the persistent storage.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    private async Task SaveProfilesAsync(CancellationToken cancellationToken)
+    private async Task SaveProfilesAsync()
     {
         // This method should be implemented by the base class
         // For now, just log that saving would happen
@@ -485,7 +477,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         {
             JobProfile defaultProfile = CreateSystemDefault();
             _profiles.Add(defaultProfile);
-            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+            await SaveProfilesAsync().ConfigureAwait(false);
         }
 
         _isLoaded = true;
@@ -501,11 +493,7 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
     /// <exception cref="ProfileNotFoundException">Thrown when job profile is not found.</exception>
     public async Task<Job> CreateExecutionJobAsync(int jobId, CancellationToken cancellationToken = default)
     {
-        JobProfile? jobProfile = await GetByIdAsync(jobId, cancellationToken);
-        if (jobProfile == null)
-        {
-            throw new ProfileNotFoundException(jobId);
-        }
+        JobProfile jobProfile = await GetByIdAsync(jobId, cancellationToken) ?? throw new ProfileNotFoundException(jobId);
         return await CreateExecutionJobAsync(jobProfile);
     }
 
@@ -559,6 +547,48 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
             memoryRegion = new MemoryRegionProfile($"0x{MemoryConstants.DefaultUserMemoryStart:X8}", MemoryConstants.DefaultDumpSize);
         }
 
+        // Apply JobProfile override for SelectedMemorySegment
+        if (!string.IsNullOrEmpty(jobProfile.SelectedMemorySegment) && memoryProfile != null)
+        {
+            MemorySegment? selectedSegment = memoryProfile.Segments
+                .FirstOrDefault(s => s.Name == jobProfile.SelectedMemorySegment);
+
+            if (selectedSegment != null)
+            {
+                // Create a filtered MemoryMappingProfile with ONLY this segment selected
+                var filteredSegment = new MemorySegment
+                {
+                    Name = selectedSegment.Name,
+                    StartAddress = selectedSegment.StartAddress,
+                    Size = selectedSegment.Size,
+                    Type = selectedSegment.Type,
+                    IsSelected = true,
+                    Description = selectedSegment.Description
+                };
+
+                memoryProfile = new MemoryMappingProfile
+                {
+                    Id = memoryProfile.Id,
+                    Name = memoryProfile.Name,
+                    Description = $"{memoryProfile.Description} (Segment: {jobProfile.SelectedMemorySegment})",
+                    Segments = [filteredSegment]
+                };
+
+                // Also update the legacy MemoryRegionProfile to match
+                memoryRegion = new MemoryRegionProfile(
+                    selectedSegment.StartAddress ?? "0x20000000",
+                    (uint)selectedSegment.Size);
+
+                _logger.LogDebug("Job '{JobName}' filtered memory profile to segment: {SegmentName}",
+                    jobProfile.Name, jobProfile.SelectedMemorySegment);
+            }
+            else
+            {
+                _logger.LogWarning("Job '{JobName}' specifies SelectedMemorySegment '{SegmentName}' but it was not found in profile '{ProfileName}'",
+                    jobProfile.Name, jobProfile.SelectedMemorySegment, memoryProfile.Name);
+            }
+        }
+
         // Fetch full profile objects for complete configuration
         SerialPortProfile? serialProfile = await _serialProfileService.GetByIdAsync(jobProfile.SerialProfileId);
         if (serialProfile == null)
@@ -582,9 +612,9 @@ public class JobManager : StandardProfileManager<JobProfile>, IJobManager
         }
 
         // Create the job profile set with full configuration using factory methods
-        SerialProfileRef serialRef = SerialProfileRef.FromProfile(serialProfile, jobProfile.SerialDevice);
-        SocatProfileRef socatRef = SocatProfileRef.FromProfile(socatProfile, ephemeral: true);
-        PowerProfileRef powerRef = PowerProfileRef.FromProfile(powerProfile, jobProfile.PowerOffDelayMs / 1000);
+        var serialRef = SerialProfileRef.FromProfile(serialProfile, jobProfile.SerialDevice);
+        var socatRef = SocatProfileRef.FromProfile(socatProfile, ephemeral: true);
+        var powerRef = PowerProfileRef.FromProfile(powerProfile, jobProfile.PowerOffDelayMs / 1000);
 
         var profileSet = new JobProfileSet(
             serialRef,

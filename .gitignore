@@ -523,3 +523,4 @@ coverage.xml
 # Validation output folders
 json/validation*.md
 json/validation*.json
+reference_repo

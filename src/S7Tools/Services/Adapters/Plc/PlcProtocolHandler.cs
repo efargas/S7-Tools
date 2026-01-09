@@ -5,18 +5,13 @@ using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Services.Adapters.Plc
 {
-    internal class PlcProtocolHandler
+    internal class PlcProtocolHandler(IPlcProtocol protocol)
     {
-        private readonly IPlcProtocol _protocol;
-
-        public PlcProtocolHandler(IPlcProtocol protocol)
-        {
-            _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
-        }
+        private readonly IPlcProtocol _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
 
         public async Task<byte[]?> InvokePrimaryHandlerAsync(byte handlerIndex, byte[] args, bool awaitResponse, CancellationToken cancellationToken)
         {
-            var payload = new byte[1 + args.Length];
+            byte[] payload = new byte[1 + args.Length];
             payload[0] = handlerIndex;
             Array.Copy(args, 0, payload, 1, args.Length);
             await _protocol.SendPacketAsync(payload, cancellationToken: cancellationToken);
@@ -30,7 +25,7 @@ namespace S7Tools.Services.Adapters.Plc
 
         public async Task<byte[]?> InvokeAddHookAsync(int hookNo, byte[] args, bool awaitResponse, CancellationToken cancellationToken)
         {
-            var payload = new byte[1 + args.Length];
+            byte[] payload = new byte[1 + args.Length];
             payload[0] = (byte)hookNo;
             Array.Copy(args, 0, payload, 1, args.Length);
             return await InvokePrimaryHandlerAsync(0x1C, payload, awaitResponse, cancellationToken);
@@ -62,11 +57,11 @@ namespace S7Tools.Services.Adapters.Plc
         {
             byte[] magic = System.Text.Encoding.ASCII.GetBytes("MFGT1");
             byte[] padding = System.Text.Encoding.ASCII.GetBytes("AAAA");
-            var handshakePayload = new byte[padding.Length + magic.Length];
+            byte[] handshakePayload = new byte[padding.Length + magic.Length];
             Array.Copy(padding, 0, handshakePayload, 0, padding.Length);
             Array.Copy(magic, 0, handshakePayload, padding.Length, magic.Length);
 
-            for (int attempt = 0; attempt < 100; attempt++)
+            for (int attempt = 0; attempt < 50; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await _protocol.RawWriteAsync(handshakePayload, 0, handshakePayload.Length, cancellationToken);
@@ -78,12 +73,12 @@ namespace S7Tools.Services.Adapters.Plc
                 {
                     if (_protocol.DataAvailable)
                     {
-                        var tmpBuf = new byte[1024];
+                        byte[] tmpBuf = new byte[1024];
                         int bytesRead = await _protocol.RawReadAsync(tmpBuf, 0, tmpBuf.Length, cancellationToken);
                         if (bytesRead > 0)
                         {
                             responseBuffer.AddRange(System.Linq.Enumerable.Take(tmpBuf, bytesRead));
-                            var ascii = System.Text.Encoding.ASCII.GetString(responseBuffer.ToArray());
+                            string ascii = System.Text.Encoding.ASCII.GetString([.. responseBuffer]);
                             if (ascii.Contains("-CPU"))
                             {
                                 return;
@@ -97,19 +92,11 @@ namespace S7Tools.Services.Adapters.Plc
             throw new Exception("Handshake failed after 100 attempts");
         }
 
-        public async Task<string> GetVersionAsync(CancellationToken cancellationToken)
+        public async Task<byte[]> GetVersionAsync(CancellationToken cancellationToken)
         {
             // Handler 0x00 = Get Info
-            var response = await InvokePrimaryHandlerAsync(0x00, Array.Empty<byte>(), true, cancellationToken);
-            if (response == null)
-            {
-                return "Unknown";
-            }
-
-            // Simple parsing
-            var ascii = System.Text.Encoding.ASCII.GetString(response);
-            // Return cleaned string
-            return ascii.Replace("\0", "").Trim();
+            byte[]? response = await InvokePrimaryHandlerAsync(0x00, [], true, cancellationToken);
+            return response ?? [];
         }
     }
 }

@@ -240,21 +240,15 @@ public static class ServiceCollectionExtensions
 
         services.TryAddSingleton<ICentralizedTaskLogService, CentralizedTaskLogService>();
         services.TryAddSingleton<ITaskLogDataStoreFactory, TaskLogDataStoreFactory>();
-        services.Configure<S7Tools.Infrastructure.Logging.Core.Configuration.TaskLogDataStoreOptions>(options =>
-        {
-            options.MaxEntries = 2000;
-        });
+        services.Configure<S7Tools.Infrastructure.Logging.Core.Configuration.TaskLogDataStoreOptions>(options => options.MaxEntries = 2000);
 
-        services.AddLogging(builder =>
+        services.AddLogging(builder => builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.CombinedFileLoggerConfiguration>(options =>
         {
-            builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.CombinedFileLoggerConfiguration>(options =>
-            {
-                options.DefaultLogPath = "s7tools.log";
-                options.TaskMainLogPath = "task-main.log";
-                options.TaskProcessLogPath = "task-process.log";
-                options.TaskProtocolLogPath = "task-protocol.log";
-            });
-        });
+            options.DefaultLogPath = "s7tools.log";
+            options.TaskMainLogPath = "task-main.log";
+            options.TaskProcessLogPath = "task-process.log";
+            options.TaskProtocolLogPath = "task-protocol.log";
+        }));
 
         return services;
     }
@@ -279,7 +273,7 @@ public static class ServiceCollectionExtensions
             ISocatProfileService socatProfileService = serviceProvider.GetRequiredService<ISocatProfileService>();
             IPowerSupplyProfileService powerSupplyProfileService = serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
             IMemoryRegionProfileService memoryRegionProfileService = serviceProvider.GetRequiredService<IMemoryRegionProfileService>();
-            IPayloadSetProfileService payloadSetProfileService = serviceProvider.GetRequiredService<IPayloadSetProfileService>();
+
 
             // Create options with dynamically resolved path
             IOptions<JobManagerOptions> options = Microsoft.Extensions.Options.Options.Create(new S7Tools.Core.Models.Jobs.JobManagerOptions
@@ -287,7 +281,7 @@ public static class ServiceCollectionExtensions
                 ProfilesPath = pathService.JobsPath
             });
 
-            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService, memoryRegionProfileService, payloadSetProfileService);
+            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService, memoryRegionProfileService);
         });
 
         // Add JobProfileSetFactory for creating JobProfileSet from profile IDs
@@ -304,16 +298,11 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
 
         // Add Bootloader Services
-        services.TryAddSingleton<IBootloaderService>(provider =>
-            new Services.Bootloader.BootloaderService(
-                provider.GetRequiredService<ILogger<Services.Bootloader.BootloaderService>>(),
-                provider.GetRequiredService<IPayloadProvider>(),
-                provider.GetRequiredService<ISocatService>(),
-                provider.GetRequiredService<IPowerSupplyService>(),
-                provider.GetRequiredService<ISerialPortService>(),
-                provider.GetRequiredService<Func<JobProfileSet, IPlcClient>>()
-            ));
+        // Add Bootloader Services
+        // Use EnhancedBootloaderService as the implementation for IBootloaderService
         services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
+        services.TryAddSingleton<IBootloaderService>(provider =>
+            provider.GetRequiredService<IEnhancedBootloaderService>());
 
         // Add Payload Services
         services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();
@@ -324,19 +313,16 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<IPlcClient, Services.Adapters.PlcClientAdapter>();
 
         // Add PLC Client Factory
-        services.TryAddTransient<Func<JobProfileSet, IPlcClient>>(provider =>
+        services.TryAddTransient<Func<JobProfileSet, IPlcClient>>(provider => profiles =>
         {
-            return profiles =>
-            {
-                var client = provider.GetRequiredService<IPlcClient>();
-                // Usage: Access TcpHost from nested Configuration object, default to 127.0.0.1 if empty/null
-                var host = string.IsNullOrEmpty(profiles.Socat.Configuration?.TcpHost)
-                    ? "127.0.0.1"
-                    : profiles.Socat.Configuration.TcpHost;
+            IPlcClient client = provider.GetRequiredService<IPlcClient>();
+            // Usage: Access TcpHost from nested Configuration object, default to 127.0.0.1 if empty/null
+            string host = string.IsNullOrEmpty(profiles.Socat.Configuration?.TcpHost)
+                ? "127.0.0.1"
+                : profiles.Socat.Configuration.TcpHost;
 
-                client.Configure(host, profiles.Socat.Port);
-                return client;
-            };
+            client.Configure(host, profiles.Socat.Port);
+            return client;
         });
 
         return services;
@@ -701,8 +687,8 @@ public static class ServiceCollectionExtensions
     private static async Task DisposeServicesAsync(IServiceProvider serviceProvider, ILogger? logger)
     {
         // List of service types to dispose in specific order (critical services first)
-        Type[] serviceTypes = new[]
-        {
+        Type[] serviceTypes =
+        [
             // Critical infrastructure services
             typeof(ITaskScheduler),
             typeof(IS7ConnectionProvider),
@@ -719,7 +705,7 @@ public static class ServiceCollectionExtensions
             typeof(IUIRefreshService),
             typeof(FileLogWriter),
             typeof(S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore)
-        };
+        ];
 
         foreach (Type serviceType in serviceTypes)
         {

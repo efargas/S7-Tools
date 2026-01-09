@@ -356,7 +356,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
                 AvailableProfiles.Clear();
                 foreach (MemoryMappingProfile profile in profiles)
                 {
-                    AvailableProfiles.Add(profile);
+                    AvailableProfiles.Add(profile.ClonePreserveId());
                 }
 
                 _logger.LogDebug("Loaded {Count} profiles to AvailableProfiles collection", AvailableProfiles.Count);

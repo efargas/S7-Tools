@@ -25,14 +25,14 @@ public class DateTimeToStringConverter : IValueConverter
             return string.Empty;
         }
 
-        string format = parameter as string ?? "yyyy-MM-dd HH:mm";
+        string format = parameter as string ?? S7Tools.Constants.AppConstants.StandardDateFormat;
 
         try
         {
             return value switch
             {
-                DateTime dateTime => dateTime.ToString(format, culture),
-                DateTimeOffset dateTimeOffset => dateTimeOffset.ToString(format, culture),
+                DateTime dateTime => dateTime.ToLocalTime().ToString(format, culture),
+                DateTimeOffset dateTimeOffset => dateTimeOffset.LocalDateTime.ToString(format, culture),
                 _ => value?.ToString() ?? string.Empty
             };
         }

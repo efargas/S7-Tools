@@ -4,5 +4,5 @@ namespace S7Tools.Services.Interfaces;
 
 public interface ITaskLogDataStoreFactory
 {
-    (ITaskLogDataStore main, ITaskLogDataStore process, ITaskLogDataStore protocol) CreateLogDataStores();
+    (ITaskLogDataStore MainLog, ITaskLogDataStore ProcessLog, ITaskLogDataStore ProtocolLog) CreateLogDataStores();
 }

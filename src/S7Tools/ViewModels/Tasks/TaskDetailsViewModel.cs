@@ -40,7 +40,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ISocatProfileService _socatProfileService;
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
     private readonly ICentralizedTaskLogService _centralizedTaskLogService;
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
     private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
     private ITaskLogDataStore _mainLogDataStore;
@@ -111,9 +111,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
 
         // Initialize log entry collections
-        MainLogEntries = new ObservableCollection<LogEntry>();
-        ProcessLogEntries = new ObservableCollection<LogEntry>();
-        ProtocolLogEntries = new ObservableCollection<LogEntry>();
+        MainLogEntries = [];
+        ProcessLogEntries = [];
+        ProtocolLogEntries = [];
 
         _mainLogDataStore = null!;
         _processLogDataStore = null!;
@@ -121,7 +121,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
 
         _logUpdater = new S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)>(items =>
         {
-            foreach (var (logType, entry) in items)
+            foreach ((string logType, LogEntry entry) in items)
             {
                 switch (logType)
                 {
@@ -156,7 +156,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                     _taskStateSubscription = task.WhenAnyValue(x => x.State)
                         .Subscribe(state =>
                         {
-                            if (state == TaskState.Completed || state == TaskState.Cancelled || state == TaskState.Failed)
+                            if (state is TaskState.Completed or TaskState.Cancelled or TaskState.Failed)
                             {
                                 _ = Task.Run(async () =>
                                 {
@@ -238,8 +238,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 _protocolLogDataStore.CollectionChanged += _protocolHandler;
             }
 
-            // Clear and repopulate logs
-            ClearLogs();
+            // Clear and repopulate logs from DataStore
+            ClearAndRepopulateLogs();
         }
     }
 
@@ -493,11 +493,54 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     }
 
 
-    private void ClearLogs()
+    private void ClearAndRepopulateLogs()
     {
         MainLogEntries.Clear();
         ProcessLogEntries.Clear();
         ProtocolLogEntries.Clear();
+
+        // Repopulate from existing DataStore entries
+        if (_mainLogDataStore != null)
+        {
+            foreach (S7Tools.Core.Models.LogModel logModel in _mainLogDataStore)
+            {
+                MainLogEntries.Add(new LogEntry
+                {
+                    Timestamp = logModel.Timestamp,
+                    Level = logModel.Level.ToString(),
+                    Category = logModel.Category,
+                    Message = logModel.Message
+                });
+            }
+        }
+
+        if (_processLogDataStore != null)
+        {
+            foreach (S7Tools.Core.Models.LogModel logModel in _processLogDataStore)
+            {
+                ProcessLogEntries.Add(new LogEntry
+                {
+                    Timestamp = logModel.Timestamp,
+                    Level = logModel.Level.ToString(),
+                    Category = logModel.Category,
+                    Message = logModel.Message
+                });
+            }
+        }
+
+        if (_protocolLogDataStore != null)
+        {
+            foreach (S7Tools.Core.Models.LogModel logModel in _protocolLogDataStore)
+            {
+                ProtocolLogEntries.Add(new LogEntry
+                {
+                    Timestamp = logModel.Timestamp,
+                    Level = logModel.Level.ToString(),
+                    Category = logModel.Category,
+                    Message = logModel.Message
+                });
+            }
+        }
     }
 
 
@@ -532,10 +575,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
 
         JobProfile? jobProfile = await GetCurrentJobProfileAsync().ConfigureAwait(false);
-        if (jobProfile == null)
-        {
-            throw new InvalidOperationException("No job profile available for this task");
-        }
+        ArgumentNullException.ThrowIfNull(jobProfile, "No job profile available for this task");
 
         // Get power supply profile from the job's PowerSupplyProfileId
         PowerSupplyProfile? powerSupplyProfile = await _powerSupplyProfileService.GetByIdAsync(jobProfile.PowerSupplyProfileId, cancellationToken)
@@ -836,7 +876,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 {
                     string errors = string.Join("\n", result.Errors.Select(e => $"• {e.ErrorMessage}"));
                     ValidationResultText = $"✗ Validation failed:\n{errors}";
-                    StatusMessage = $"Validation failed with {result.Errors.Count()} error(s)";
+                    StatusMessage = $"Validation failed with {result.Errors.Count} error(s)";
                 }
             });
         }
@@ -1146,6 +1186,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 jobProfile.OutputPath,
                 jobProfile.PowerOnTimeMs,
                 jobProfile.PowerOffDelayMs,
+                jobProfile.SelectedMemorySegment, // Pass selected memory segment for filtering
                 CancellationToken.None);
 
             // Execute the bootloader dump operation with task tracking
@@ -1217,7 +1258,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                         return;
                 }
                 collection.Clear();
-                foreach (var item in dataStore)
+                foreach (LogModel item in dataStore)
                 {
                     collection.Add(new S7Tools.Models.LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
                 }

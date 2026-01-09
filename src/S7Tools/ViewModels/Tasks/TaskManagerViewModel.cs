@@ -42,14 +42,14 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private readonly IUIThreadService _uiThreadService;
     private readonly IDialogService _dialogService;
     private readonly TaskDetailsViewModel _taskDetailsViewModel;
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
 
     // State-based task collections for UI binding
-    private ObservableCollection<TaskExecution> _createdTasks = new();
-    private ObservableCollection<TaskExecution> _queuedTasks = new();
-    private ObservableCollection<TaskExecution> _scheduledTasks = new();
-    private ObservableCollection<TaskExecution> _activeTasks = new();
-    private ObservableCollection<TaskExecution> _finishedTasks = new();
+    private ObservableCollection<TaskExecution> _createdTasks = [];
+    private ObservableCollection<TaskExecution> _queuedTasks = [];
+    private ObservableCollection<TaskExecution> _scheduledTasks = [];
+    private ObservableCollection<TaskExecution> _activeTasks = [];
+    private ObservableCollection<TaskExecution> _finishedTasks = [];
 
     // Current selection and UI state
     private TaskExecution? _selectedTask;
@@ -544,10 +544,22 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
     }
 
+    // Throttling for progress updates
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, (double Percentage, string Operation, Dictionary<string, object>? ExtraData)> _pendingProgressUpdates = new();
+    private IDisposable? _progressUpdateTimer;
+
     private void SubscribeToTaskEvents()
     {
         // Subscribe to task state changes from the scheduler for real-time updates
         _taskScheduler.TaskStateChanged += OnTaskStateChanged;
+        // Subscribe to progress updates
+        _taskScheduler.TaskProgressUpdated += OnTaskProgressUpdated;
+
+        // Setup throttling timer (update UI every 250ms max)
+        _progressUpdateTimer = Observable.Interval(TimeSpan.FromMilliseconds(250))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ => ProcessPendingProgressUpdates())
+            .DisposeWith(_disposables);
     }
 
     private void OnTaskStateChanged(TaskExecution taskExecution)
@@ -569,6 +581,38 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         });
     }
 
+    private void OnTaskProgressUpdated(Guid taskId, double percentage, string operation, Dictionary<string, object>? extraData = null)
+    {
+        // Buffer the update instead of pushing to UI immediately
+        _pendingProgressUpdates[taskId] = (percentage, operation, extraData);
+    }
+
+    private void ProcessPendingProgressUpdates()
+    {
+        if (_pendingProgressUpdates.IsEmpty)
+        {
+            return;
+        }
+
+        // Atomically drain the dictionary to prevent lost updates.
+        // We iterate through the keys and try to remove each item.
+        // If an item is removed successfully, we process it.
+        foreach (var key in _pendingProgressUpdates.Keys)
+        {
+            if (_pendingProgressUpdates.TryRemove(key, out var update))
+            {
+                (double percentage, string operation, Dictionary<string, object>? extraData) = update;
+
+                // Find the task in ActiveTasks (most likely) or other collections
+                TaskExecution? task = ActiveTasks.FirstOrDefault(t => t.TaskId == key) ??
+                           AllActionableTasks.FirstOrDefault(t => t.TaskId == key);
+
+                // Update properties directly
+                task?.UpdateProgress(percentage, operation, extraData);
+            }
+        }
+    }
+
     private void OnTaskCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         // Update statistics when collections change
@@ -588,13 +632,14 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             // Update collections on UI thread
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                UpdateCollection(CreatedTasks, tasksByState[TaskDisplayState.Created].SelectMany(x => x));
-                UpdateCollection(QueuedTasks, tasksByState[TaskDisplayState.Queued].SelectMany(x => x));
-                UpdateCollection(ScheduledTasks, tasksByState[TaskDisplayState.Scheduled].SelectMany(x => x));
-                UpdateCollection(ActiveTasks, tasksByState[TaskDisplayState.Active].SelectMany(x => x));
-                UpdateCollection(FinishedTasks, tasksByState[TaskDisplayState.Finished].SelectMany(x => x));
+                MergeCollection(CreatedTasks, tasksByState[TaskDisplayState.Created].SelectMany(x => x));
+                MergeCollection(QueuedTasks, tasksByState[TaskDisplayState.Queued].SelectMany(x => x));
+                MergeCollection(ScheduledTasks, tasksByState[TaskDisplayState.Scheduled].SelectMany(x => x));
+                MergeCollection(ActiveTasks, tasksByState[TaskDisplayState.Active].SelectMany(x => x));
+                MergeCollection(FinishedTasks, tasksByState[TaskDisplayState.Finished].SelectMany(x => x));
 
                 UpdateStatistics();
+                LastUpdated = DateTime.Now;
             });
         }
         catch (Exception ex)
@@ -617,13 +662,61 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         };
     }
 
-    private static void UpdateCollection(ObservableCollection<TaskExecution> collection, IEnumerable<TaskExecution> newItems)
+    /// <summary>
+    /// Merges new items into an existing collection, preserving existing instances where possible.
+    /// This prevents selection loss and reduces UI flickering.
+    /// </summary>
+    private static void MergeCollection(ObservableCollection<TaskExecution> collection, IEnumerable<TaskExecution> newItems)
     {
-        // Clear and repopulate collection to ensure proper synchronization
-        collection.Clear();
-        foreach (TaskExecution? item in newItems.OrderByDescending(t => t.CreatedAt))
+        var newItemsList = newItems.OrderByDescending(t => t.CreatedAt).ToList();
+        var newIds = newItemsList.Select(x => x.TaskId).ToHashSet();
+
+        // 1. Remove items that are no longer in the list
+        for (int i = collection.Count - 1; i >= 0; i--)
         {
-            collection.Add(item);
+            if (!newIds.Contains(collection[i].TaskId))
+            {
+                collection.RemoveAt(i);
+            }
+        }
+
+        // 2. Add or Update items
+        for (int i = 0; i < newItemsList.Count; i++)
+        {
+            TaskExecution newItem = newItemsList[i];
+
+            // detailed check for matching ID at current position could be optimized, 
+            // but simple lookup is safer for now
+            TaskExecution? existingItem = collection.FirstOrDefault(x => x.TaskId == newItem.TaskId);
+
+            if (existingItem != null)
+            {
+                // Update properties of existing item
+                if (existingItem.State != newItem.State)
+                {
+                    existingItem.State = newItem.State;
+                }
+                if (existingItem.ProgressPercentage != newItem.ProgressPercentage)
+                {
+                    existingItem.ProgressPercentage = newItem.ProgressPercentage;
+                }
+                if (existingItem.CurrentOperation != newItem.CurrentOperation)
+                {
+                    existingItem.CurrentOperation = newItem.CurrentOperation;
+                }
+
+                // Ensure correct order (move if needed)
+                int currentIdx = collection.IndexOf(existingItem);
+                if (currentIdx != i)
+                {
+                    collection.Move(currentIdx, i);
+                }
+            }
+            else
+            {
+                // New item, insert at correct position
+                collection.Insert(i, newItem);
+            }
         }
     }
 
@@ -1137,7 +1230,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
+            _progressUpdateTimer?.Dispose();
             _taskScheduler.TaskStateChanged -= OnTaskStateChanged;
+            _taskScheduler.TaskProgressUpdated -= OnTaskProgressUpdated;
 
             CreatedTasks.CollectionChanged -= OnTaskCollectionChanged;
             QueuedTasks.CollectionChanged -= OnTaskCollectionChanged;

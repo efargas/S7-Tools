@@ -17,6 +17,12 @@ namespace S7Tools.Services
         private ApplicationSettings? _currentSettings;
         private readonly object _settingsLock = new();
 
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
         /// <summary>
         /// Event fired when settings are reloaded or changed
         /// </summary>
@@ -88,10 +94,7 @@ namespace S7Tools.Services
         /// <param name="userSettings">Settings to save</param>
         public async Task SaveUserSettingsAsync(Dictionary<string, object> userSettings)
         {
-            if (userSettings == null)
-            {
-                throw new ArgumentNullException(nameof(userSettings));
-            }
+            ArgumentNullException.ThrowIfNull(userSettings);
 
             _logger.LogInformation("Saving user settings with {SettingCount} entries", userSettings.Count);
 
@@ -314,7 +317,7 @@ namespace S7Tools.Services
                         throw new InvalidOperationException(UIStrings.Error_SettingsNotLoaded);
                     }
 
-                    resetKeys = _currentSettings.UserSettings.Keys.ToList();
+                    resetKeys = [.. _currentSettings.UserSettings.Keys];
                     _currentSettings.UserSettings.Clear();
                     _currentSettings.ComputeEffectiveSettings();
                 }
@@ -353,8 +356,8 @@ namespace S7Tools.Services
 
             try
             {
-                List<string> restoredKeys = new();
-                var eventsToFire = new List<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>();
+                List<string> restoredKeys = [];
+                List<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs> eventsToFire = [];
 
                 lock (_settingsLock)
                 {
@@ -429,10 +432,9 @@ namespace S7Tools.Services
 
                 // Try to parse as new structured format first
                 Dictionary<string, JsonElement>? structuredSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonContent);
-                if (structuredSettings != null && structuredSettings.ContainsKey("userSettings"))
+                if (structuredSettings != null && structuredSettings.TryGetValue("userSettings", out JsonElement userSettingsElement))
                 {
                     // New format with structured sections
-                    JsonElement userSettingsElement = structuredSettings["userSettings"];
                     Dictionary<string, JsonElement>? userSettings = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(userSettingsElement.GetRawText());
 
                     if (userSettings != null)
@@ -521,13 +523,7 @@ namespace S7Tools.Services
                 };
 
                 // Serialize with proper formatting
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                };
-
-                string jsonContent = JsonSerializer.Serialize(appSettingsFileContent, options);
+                string jsonContent = JsonSerializer.Serialize(appSettingsFileContent, JsonOptions);
 
                 // Atomic write with safe fallbacks
                 string tempFilePath = settingsFilePath + ".tmp";
