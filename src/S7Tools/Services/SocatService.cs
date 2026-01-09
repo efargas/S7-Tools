@@ -324,7 +324,59 @@ public partial class SocatService : ISocatService, IDisposable
         int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
         bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
 
-        // Check concurrent instances limit
+        // PERFORM VALIDATIONS BEFORE ACQUIRING SEMAPHORE to reduce lock duration
+        // Validate serial device exists before starting socat
+        _logger.LogDebug("Checking if serial device exists: {Device}", serialDevice);
+        if (!File.Exists(serialDevice))
+        {
+            _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
+            throw new ValidationException(
+                "SerialDevice",
+                $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
+        }
+
+        // Prepare serial device if configured (before semaphore to reduce critical section)
+        if (autoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
+        {
+            _logger.LogDebug("Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
+            bool prepared = await PrepareSerialDeviceAsync(serialDevice, profile.Configuration, cancellationToken).ConfigureAwait(false);
+            if (!prepared)
+            {
+                _logger.LogError("Failed to prepare serial device {Device}", serialDevice);
+                throw new ValidationException(
+                    "SerialDevice",
+                    $"Failed to prepare serial device {serialDevice}");
+            }
+        }
+
+        // Enable hex dump and increased debug level if protocol logger is provided
+        if (protocolLogger != null)
+        {
+            if (!profile.Configuration.HexDump)
+            {
+                _logger.LogDebug("Enabling hex dump for protocol logging");
+                profile.Configuration.HexDump = true;
+            }
+            if (profile.Configuration.DebugLevel < 2)
+            {
+                _logger.LogDebug("Increasing debug level to 2 for protocol logging");
+                profile.Configuration.DebugLevel = 2;
+            }
+        }
+
+        // Generate and validate command (before semaphore)
+        _logger.LogDebug("Generating socat command");
+        string command = GenerateSocatCommandForProfile(profile, serialDevice);
+
+        _logger.LogDebug("Validating socat command");
+        SocatCommandValidationResult validation = ValidateSocatCommand(command);
+        if (!validation.IsValid)
+        {
+            _logger.LogError("Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
+            throw new ValidationException(validation.Errors);
+        }
+
+        // NOW ACQUIRE SEMAPHORE - only protect shared state access
         _logger.LogDebug("Acquiring semaphore for socat start operation");
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -339,17 +391,7 @@ public partial class SocatService : ISocatService, IDisposable
                     $"Maximum number of socat instances ({maxConcurrentInstances}) already running");
             }
 
-            // Validate serial device exists before starting socat
-            _logger.LogDebug("Checking if serial device exists: {Device}", serialDevice);
-            if (!File.Exists(serialDevice))
-            {
-                _logger.LogError("Serial device {Device} does not exist. Please verify the device path and ensure it is connected.", serialDevice);
-                throw new ValidationException(
-                    "SerialDevice",
-                    $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
-            }
-
-            // Check if TCP port is already in use (internal check - semaphore already held)
+            // Check if TCP port is already in use (must be inside semaphore to avoid race)
             _logger.LogDebug("Checking if TCP port {Port} is available", profile.Configuration.TcpPort);
             if (await IsPortInUseInternalAsync(profile.Configuration.TcpPort).ConfigureAwait(false))
             {
@@ -360,48 +402,7 @@ public partial class SocatService : ISocatService, IDisposable
                     $"TCP port {profile.Configuration.TcpPort} is already in use");
             }
 
-            // Prepare serial device if configured
-            if (autoConfigureSerialDevice && profile.Configuration.AutoConfigureSerial)
-            {
-                _logger.LogDebug("Preparing serial device {Device} for socat profile '{Profile}'", serialDevice, profile.Name);
-                bool prepared = await PrepareSerialDeviceAsync(serialDevice, profile.Configuration, cancellationToken).ConfigureAwait(false);
-                if (!prepared)
-                {
-                    _logger.LogError("Failed to prepare serial device {Device}", serialDevice);
-                    throw new ValidationException(
-                        "SerialDevice",
-                        $"Failed to prepare serial device {serialDevice}");
-                }
-            }
-
-            // Enable hex dump and increased debug level if protocol logger is provided
-            if (protocolLogger != null)
-            {
-                if (!profile.Configuration.HexDump)
-                {
-                    _logger.LogDebug("Enabling hex dump for protocol logging");
-                    profile.Configuration.HexDump = true;
-                }
-                if (profile.Configuration.DebugLevel < 2)
-                {
-                    _logger.LogDebug("Increasing debug level to 2 for protocol logging");
-                    profile.Configuration.DebugLevel = 2;
-                }
-            }
-
-            // Generate and validate command
-            _logger.LogDebug("Generating socat command");
-            string command = GenerateSocatCommandForProfile(profile, serialDevice);
-
-            _logger.LogDebug("Validating socat command");
-            SocatCommandValidationResult validation = ValidateSocatCommand(command);
-            if (!validation.IsValid)
-            {
-                _logger.LogError("Invalid socat command: {Errors}", string.Join(", ", validation.Errors));
-                throw new ValidationException(validation.Errors);
-            }
-
-            // Start socat process
+            // Start socat process (now all validation is done, minimize time in lock)
             _logger.LogDebug("Starting socat process with profile '{Profile}'", profile.Name);
             SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
 
