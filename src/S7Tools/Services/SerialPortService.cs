@@ -12,6 +12,7 @@ using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services;
 
@@ -19,12 +20,12 @@ namespace S7Tools.Services;
 /// Service for serial port operations including port discovery, configuration management, and Linux stty command integration.
 /// This service provides comprehensive serial port management capabilities optimized for Linux systems.
 /// </summary>
-public sealed class SerialPortService : ISerialPortService, IDisposable
+public sealed partial class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
     private readonly IApplicationSettingsService _settingsService;
-    private Timer? _monitoringTimer;
-    private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = new();
+    private readonly Timer _monitoringTimer;
+    private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = [];
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isMonitoring;
     private int _monitoringCallbackRunning;
@@ -128,21 +129,21 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             // Scan USB ports
             if (includeUsbPorts)
             {
-                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", SerialPortType.Usb, maxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", maxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(usbPorts);
             }
 
             // Scan ACM ports
             if (includeAcmPorts)
             {
-                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", SerialPortType.Acm, maxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", maxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(acmPorts);
             }
 
             // Scan standard ports
             if (includeStandardPorts)
             {
-                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", SerialPortType.Standard, maxScanPorts, cancellationToken).ConfigureAwait(false);
+                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", maxScanPorts, cancellationToken).ConfigureAwait(false);
                 ports.AddRange(standardPorts);
             }
 
@@ -191,12 +192,12 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
                 PortType = portType,
                 IsAccessible = isAccessible,
                 IsInUse = await IsPortInUseAsync(portPath, cancellationToken).ConfigureAwait(false),
-                Description = GetPortDescription(portPath, portType),
+                Description = GetPortDescription(portType),
                 LastUpdated = DateTime.UtcNow
             };
 
             // Get USB device info if it's a USB port
-            if (portType == SerialPortType.Usb || portType == SerialPortType.Acm)
+            if (portType is SerialPortType.Usb or SerialPortType.Acm)
             {
                 portInfo.UsbInfo = await GetUsbDeviceInfoAsync(portPath, cancellationToken).ConfigureAwait(false);
             }
@@ -227,9 +228,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
             // Test accessibility by trying to read port status with stty
             string command = $"stty -F {portPath} -a";
-            (bool Success, int ExitCode, string StandardOutput, string StandardError) result = await ExecuteCommandAsync(command, timeoutMs, cancellationToken).ConfigureAwait(false);
-
-            return result.Success;
+            var (success, _, _, _) = await ExecuteCommandAsync(command, timeoutMs, cancellationToken).ConfigureAwait(false);
+            return success;
         }
         catch (Exception ex)
         {
@@ -241,8 +241,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// <inheritdoc />
     public async Task StartPortMonitoringAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await _semaphore.ExecuteAsync(async () =>
         {
             if (_isMonitoring)
             {
@@ -271,18 +270,13 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             _monitoringTimer!.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
 
             _logger.LogInformation("Started port monitoring with {Interval}s interval (dynamic updates enabled)", scanIntervalSeconds);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task StopPortMonitoringAsync()
     {
-        await _semaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _semaphore.ExecuteAsync(async () =>
         {
             if (!_isMonitoring)
             {
@@ -295,11 +289,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             _lastKnownPorts.Clear();
 
             _logger.LogInformation("Stopped port monitoring");
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            await Task.CompletedTask;
+        });
     }
 
     #endregion
@@ -353,7 +344,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
 
-        var effectiveLogger = taskLogger ?? _logger;
+        Microsoft.Extensions.Logging.ILogger effectiveLogger = taskLogger ?? _logger;
 
         try
         {
@@ -367,7 +358,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
             string command = GenerateSttyCommand(portPath, configuration);
             effectiveLogger.LogDebug("Executing stty command: {Command}", command);
-            
+
             SttyCommandValidationResult validationResult = ValidateSttyCommand(command);
 
             if (!validationResult.IsValid)
@@ -541,15 +532,15 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
 
         try
         {
-            (bool Success, int ExitCode, string StandardOutput, string StandardError) result = await ExecuteCommandAsync(command, 5000, cancellationToken).ConfigureAwait(false);
+            var (success, exitCode, standardOutput, standardError) = await ExecuteCommandAsync(command, 5000, cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
 
             return new SttyCommandResult
             {
-                Success = result.Success,
-                ExitCode = result.ExitCode,
-                StandardOutput = result.StandardOutput,
-                StandardError = result.StandardError,
+                Success = success,
+                ExitCode = exitCode,
+                StandardOutput = standardOutput,
+                StandardError = standardError,
                 ExecutionTime = stopwatch.Elapsed,
                 Command = command
             };
@@ -592,12 +583,12 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         }
 
         // Check for dangerous commands
-        string[] dangerousPatterns = new[]
-        {
+        string[] dangerousPatterns =
+        [
             @"rm\s+", @"del\s+", @"format\s+", @"mkfs\s+",
             @";\s*dd\s+", @"&&\s*dd\s+", @"\|\s*dd\s+", @"^\s*dd\s+",  // Only dangerous dd usage (standalone dd command)
             @">\s*/dev/", @";\s*rm\s+", @"&&\s*rm\s+", @"\|\s*rm\s+"
-        };
+        ];
 
         foreach (string? pattern in dangerousPatterns)
         {
@@ -608,12 +599,12 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         }
 
         // Check for required -F flag
-        if (!Regex.IsMatch(command, @"-F\s+/dev/tty", RegexOptions.IgnoreCase))
+        if (!DeviceFlagRegex().IsMatch(command))
         {
             result.Warnings.Add("Command should specify a device with -F flag");
         }
 
-        result.IsValid = !result.Errors.Any();
+        result.IsValid = result.Errors.Count == 0;
         return result;
     }
 
@@ -703,7 +694,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// <param name="maxPorts">The maximum number of ports to scan.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>A collection of found ports.</returns>
-    private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(string basePattern, SerialPortType portType, int maxPorts, CancellationToken cancellationToken)
+    private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(string basePattern, int maxPorts, CancellationToken cancellationToken)
     {
         var ports = new List<SerialPortInfo>();
 
@@ -788,8 +779,8 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         {
             // Try to use lsof to check if port is in use
             string command = $"lsof {portPath}";
-            (bool Success, int ExitCode, string StandardOutput, string StandardError) result = await ExecuteCommandAsync(command, 2000, cancellationToken).ConfigureAwait(false);
-            return result.Success && !string.IsNullOrWhiteSpace(result.StandardOutput);
+            var (success, _, standardOutput, _) = await ExecuteCommandAsync(command, 2000, cancellationToken).ConfigureAwait(false);
+            return success && !string.IsNullOrWhiteSpace(standardOutput);
         }
         catch
         {
@@ -803,7 +794,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// <param name="portPath">The path to the port.</param>
     /// <param name="portType">The type of the port.</param>
     /// <returns>A description of the port.</returns>
-    private static string GetPortDescription(string portPath, SerialPortType portType)
+    private static string GetPortDescription(SerialPortType portType)
     {
         return portType switch
         {
@@ -827,14 +818,14 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         try
         {
             // Parse baud rate
-            Match baudMatch = Regex.Match(sttyOutput, @"speed (\d+) baud");
+            Match baudMatch = BaudRateRegex().Match(sttyOutput);
             if (baudMatch.Success && int.TryParse(baudMatch.Groups[1].Value, out int baud))
             {
                 config.BaudRate = baud;
             }
 
             // Parse character size
-            Match csMatch = Regex.Match(sttyOutput, @"cs(\d)");
+            Match csMatch = CharacterSizeRegex().Match(sttyOutput);
             if (csMatch.Success && int.TryParse(csMatch.Groups[1].Value, out int cs))
             {
                 config.CharacterSize = cs;
@@ -932,7 +923,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// <param name="filePath">The path to the sysfs file.</param>
     /// <param name="setValue">The action to apply the read value.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    private async Task TryReadSysfsFileAsync(string filePath, Action<string> setValue, CancellationToken cancellationToken)
+    private static async Task TryReadSysfsFileAsync(string filePath, Action<string> setValue, CancellationToken cancellationToken)
     {
         try
         {
@@ -947,6 +938,19 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
             // Ignore errors reading sysfs files
         }
     }
+
+    #region Regex Generation
+
+    [GeneratedRegex(@"-F\s+/dev/tty", RegexOptions.IgnoreCase)]
+    private static partial Regex DeviceFlagRegex();
+
+    [GeneratedRegex(@"speed (\d+) baud")]
+    private static partial Regex BaudRateRegex();
+
+    [GeneratedRegex(@"cs(\d)")]
+    private static partial Regex CharacterSizeRegex();
+
+    #endregion
 
     #endregion
 

@@ -29,7 +29,7 @@ public sealed class BootloaderService(
     /// <inheritdoc />
     public async Task<byte[]> DumpAsync(
         JobProfileSet profiles,
-        IProgress<(string stage, double percent)> progress,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
         Microsoft.Extensions.Logging.ILogger? processLogger = null,
         Microsoft.Extensions.Logging.ILogger? protocolLogger = null,
@@ -58,7 +58,7 @@ public sealed class BootloaderService(
         try
         {
             // Stage 0: Configure serial port (2% progress)
-            progress.Report(("serial_config", 2.0));
+            progress.Report(("serial_config", 2.0, null, null));
             effectiveTaskLogger.LogInformation("--- Stage 0: Serial Port Configuration ---");
             effectiveTaskLogger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
             effectiveTaskLogger.LogDebug("Configuration: {Baud} baud, {Parity}, {DataBits}-{StopBits}",
@@ -82,7 +82,7 @@ public sealed class BootloaderService(
             effectiveTaskLogger.LogInformation("✓ Serial port {Device} configured successfully", profiles.Serial.Device);
 
             // Stage 1: Setup socat bridge (5% progress)
-            progress.Report(("socat_setup", 5.0));
+            progress.Report(("socat_setup", 5.0, null, null));
             effectiveTaskLogger.LogInformation("--- Stage 1: Socat Bridge Setup ---");
             effectiveTaskLogger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
 
@@ -111,7 +111,7 @@ public sealed class BootloaderService(
                 profiles.Socat.Port, socatProcess.ProcessId);
 
             // Stage 2: Connect to power supply (8% progress)
-            progress.Report(("power_connect", 8.0));
+            progress.Report(("power_connect", 8.0, null, null));
             effectiveTaskLogger.LogInformation("--- Stage 2: Power Supply Connection ---");
             effectiveTaskLogger.LogDebug("Connecting to power supply at {Host}:{Port}",
                 profiles.Power.Host, profiles.Power.Port);
@@ -134,7 +134,7 @@ public sealed class BootloaderService(
             try
             {
                 // Stage 3: Power ON PLC (10% progress)
-                progress.Report(("power_on", 10.0));
+                progress.Report(("power_on", 10.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 3: Power ON PLC ---");
                 effectiveTaskLogger.LogDebug("Turning PLC power ON");
 
@@ -154,7 +154,7 @@ public sealed class BootloaderService(
                 // Stage 4: Create PLC client and CONNECT to socat (12% progress)
                 // We connect BEFORE power cycling to ensure the serial port is open and ready.
                 // This eliminates the ~1-2s latency of socat/forking that causes us to miss the 500ms handshake window.
-                progress.Report(("plc_connect", 12.0));
+                progress.Report(("plc_connect", 12.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 4: PLC Client Connection ---");
                 await using IPlcClient client = _clientFactory(profiles);
 
@@ -168,7 +168,7 @@ public sealed class BootloaderService(
                 effectiveTaskLogger.LogInformation("✓ PLC client connected to socat (Ready for Handshake)");
 
                 // Stage 5: Power cycle PLC (15% progress)
-                progress.Report(("power_cycle", 15.0));
+                progress.Report(("power_cycle", 15.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 5: Power Cycle PLC ---");
                 effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
 
@@ -180,7 +180,7 @@ public sealed class BootloaderService(
 
 
                 // Stage 6: Perform handshake (20% progress)
-                progress.Report(("handshake", 20.0));
+                progress.Report(("handshake", 20.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 6: Bootloader Handshake ---");
                 effectiveTaskLogger.LogDebug("Performing bootloader handshake");
 
@@ -193,7 +193,7 @@ public sealed class BootloaderService(
                 effectiveTaskLogger.LogInformation("✓ Connected to bootloader version: {Version}", version);
 
                 // Stage 7: Install stager (30% progress)
-                progress.Report(("stager_install", 30.0));
+                progress.Report(("stager_install", 30.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 7: Install Stager Payload ---");
                 effectiveTaskLogger.LogDebug("Loading stager payload from {BasePath}", profiles.Payloads.BasePath);
 
@@ -239,18 +239,25 @@ public sealed class BootloaderService(
                         MemorySegment segment = selectedSegments[i];
                         uint segmentStart = uint.Parse(segment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
                         uint segmentSize = (uint)segment.Size;
-
-                        progress.Report(("memory_dump", 50.0 + (45.0 * totalBytesRead / totalSize)));
+                        progress.Report(("memory_dump", 50.0 + (45.0 * totalBytesRead / totalSize), totalBytesRead, totalSize));
                         effectiveTaskLogger.LogInformation("Dumping segment {Index}/{Total}: '{Name}'", i + 1, selectedSegments.Count, segment.Name);
                         effectiveTaskLogger.LogDebug("  Address: 0x{Address:X8}, Size: {Size:N0} bytes ({SizeKB:F2} KB)",
                             segmentStart, segmentSize, segmentSize / 1024.0);
 
                         int lastLoggedPercent = -1;
 
+                        double lastReportedPercent = 50.0 + (45.0 * totalBytesRead / totalSize);
+
                         var segmentProgress = new Progress<long>(bytesRead =>
                         {
                             double percent = 50.0 + (45.0 * (totalBytesRead + bytesRead) / totalSize);
-                            progress.Report(("memory_dump", percent));
+
+                            // Only report progress if it has changed by at least 0.1% or if complete
+                            if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesRead == segmentSize)
+                            {
+                                progress.Report(("memory_dump", percent, totalBytesRead + bytesRead, totalSize));
+                                lastReportedPercent = percent;
+                            }
 
                             if (segmentSize == 0)
                             {
@@ -300,7 +307,7 @@ public sealed class BootloaderService(
                 else
                 {
                     // Single-region dump using legacy MemoryRegionProfile
-                    progress.Report(("memory_dump", 50.0));
+                    progress.Report(("memory_dump", 50.0, 0, (long)profiles.Memory.Length));
                     effectiveTaskLogger.LogInformation("Single-region dump");
                     effectiveTaskLogger.LogDebug("Memory region: 0x{Address:X8} - 0x{EndAddress:X8}",
                         profiles.Memory.Start, profiles.Memory.Start + profiles.Memory.Length);
@@ -315,16 +322,24 @@ public sealed class BootloaderService(
 
                     int lastLoggedPercent = -1;
 
+                    double lastReportedDumpPercent = 50.0;
+
                     var dumpProgress = new Progress<long>(bytesRead =>
                     {
                         if (profiles.Memory.Length == 0)
                         {
-                            progress.Report(("memory_dump", 95.0)); // Report near-completion for zero-length dump
+                            progress.Report(("memory_dump", 95.0, 0, 0)); // Report near-completion for zero-length dump
                             return;
                         }
 
                         double percent = 50.0 + (45.0 * bytesRead / profiles.Memory.Length);
-                        progress.Report(("memory_dump", percent));
+
+                        // Only report progress if it has changed by at least 0.1%
+                        if (Math.Abs(percent - lastReportedDumpPercent) >= 0.1 || bytesRead == profiles.Memory.Length)
+                        {
+                            progress.Report(("memory_dump", percent, bytesRead, (long)profiles.Memory.Length));
+                            lastReportedDumpPercent = percent;
+                        }
 
                         // Log progress at every 1% interval
                         double dumpPercent = (double)bytesRead / profiles.Memory.Length * 100.0;
@@ -356,14 +371,14 @@ public sealed class BootloaderService(
                 }
 
                 // Stage 9: Teardown (95% progress)
-                progress.Report(("teardown", 95.0));
+                progress.Report(("teardown", 95.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 9: Teardown ---");
                 effectiveTaskLogger.LogDebug("Cleaning up PLC client resources...");
 
                 // Client will be disposed automatically via 'await using'
 
                 // Stage 10: Complete (100% progress)
-                progress.Report(("complete", 100.0));
+                progress.Report(("complete", 100.0, null, null));
                 effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
                 effectiveTaskLogger.LogInformation("✓ Successfully dumped {ByteCount:N0} bytes ({ByteCountKB:F2} KB)",
                     memoryData.Length, memoryData.Length / 1024.0);

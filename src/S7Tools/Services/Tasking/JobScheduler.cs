@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Tasking;
 
@@ -9,13 +10,17 @@ namespace S7Tools.Services.Tasking;
 /// Manages job scheduling, execution, and resource coordination.
 /// Executes jobs in parallel when resources allow, queuing conflicting jobs.
 /// </summary>
-public sealed class JobScheduler : IJobScheduler, IDisposable
+public sealed class JobScheduler(
+    ILogger<JobScheduler> logger,
+    IResourceCoordinator resources,
+    IBootloaderService bootloader)
+    : IJobScheduler, IDisposable
 {
-    private readonly ILogger<JobScheduler> _logger;
-    private readonly IResourceCoordinator _resources;
-    private readonly IBootloaderService _bootloader;
-    private readonly ConcurrentDictionary<int, Job> _jobs = new();
-    private readonly ConcurrentDictionary<int, Task> _runningJobs = new();
+    private readonly ILogger<JobScheduler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IResourceCoordinator _resources = resources ?? throw new ArgumentNullException(nameof(resources));
+    private readonly IBootloaderService _bootloader = bootloader ?? throw new ArgumentNullException(nameof(bootloader));
+    private readonly ConcurrentDictionary<int, Job> _jobs = [];
+    private readonly ConcurrentDictionary<int, Task> _runningJobs = [];
     private readonly SemaphoreSlim _schedulerLock = new(1, 1);
     private CancellationTokenSource? _schedulerCts;
     private Task? _schedulerTask;
@@ -26,22 +31,6 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
 
     /// <inheritdoc />
     public event EventHandler<JobProgressChangedEventArgs>? JobProgressChanged;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="JobScheduler"/> class.
-    /// </summary>
-    /// <param name="logger">Logger instance for diagnostics.</param>
-    /// <param name="resources">Resource coordinator for managing exclusive resource access.</param>
-    /// <param name="bootloader">Bootloader service for job execution.</param>
-    public JobScheduler(
-        ILogger<JobScheduler> logger,
-        IResourceCoordinator resources,
-        IBootloaderService bootloader)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _resources = resources ?? throw new ArgumentNullException(nameof(resources));
-        _bootloader = bootloader ?? throw new ArgumentNullException(nameof(bootloader));
-    }
 
     /// <inheritdoc />
     public Task<Job> EnqueueAsync(Job job, CancellationToken cancellationToken = default)
@@ -135,8 +124,7 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
     /// <inheritdoc />
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await _schedulerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await _schedulerLock.ExecuteAsync(async () =>
         {
             if (_schedulerTask != null)
             {
@@ -147,18 +135,14 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
             _schedulerTask = Task.Run(() => ProcessQueueAsync(_schedulerCts.Token), _schedulerCts.Token);
 
             _logger.LogInformation("Job scheduler started");
-        }
-        finally
-        {
-            _schedulerLock.Release();
-        }
+            await Task.CompletedTask;
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task StopAsync(TimeSpan gracefulTimeout, CancellationToken cancellationToken = default)
     {
-        await _schedulerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await _schedulerLock.ExecuteAsync(async () =>
         {
             if (_schedulerTask == null || _schedulerCts == null)
             {
@@ -180,11 +164,7 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
             _schedulerCts = null;
 
             _logger.LogInformation("Job scheduler stopped");
-        }
-        finally
-        {
-            _schedulerLock.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -330,7 +310,7 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
             _logger.LogInformation("Job {JobId} executing bootloader operation", job.Id);
 
             // STEP 1: Execute actual bootloader operation
-            var progress = new Progress<(string stage, double percent)>(p =>
+            var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>(p =>
             {
                 // Update job progress
                 double percentage = p.percent;

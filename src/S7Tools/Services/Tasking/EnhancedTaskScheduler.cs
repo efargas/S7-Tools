@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Tasking;
 
@@ -710,8 +711,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private async Task ProcessTasksAsync()
     {
-        await _schedulerSemaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _schedulerSemaphore.ExecuteAsync(async () =>
         {
             // Promote due scheduled tasks
             if (!_scheduledTasks.IsEmpty)
@@ -776,11 +776,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 // Clean up tracking when task completes
                 _ = executionTask.ContinueWith(t => _activeExecutions.TryRemove(taskId, out _), TaskScheduler.Default);
             }
-        }
-        finally
-        {
-            _schedulerSemaphore.Release();
-        }
+            await Task.CompletedTask;
+        });
     }
 
     /// <summary>
@@ -824,15 +821,34 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskLogger.MainLogger?.LogInformation("Job profile loaded: {ProfileName}", jobProfile.Name);
 
             // Create progress reporter
-            var progress = new Progress<(string stage, double percent)>(p =>
+            var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>(p =>
             {
-                task.UpdateProgress(p.percent, p.stage);
-                TaskProgressUpdated?.Invoke(task.TaskId, p.percent, p.stage);
+                var extraData = new Dictionary<string, object>();
+                if (p.bytesRead.HasValue)
+                {
+                    extraData["BytesRead"] = p.bytesRead.Value;
+                }
+                if (p.totalBytes.HasValue)
+                {
+                    extraData["TotalBytes"] = p.totalBytes.Value;
+                }
+
+                task.UpdateProgress(p.percent, p.stage, extraData);
+                TaskProgressUpdated?.Invoke(task.TaskId, p.percent, p.stage, extraData);
 
                 // Log progress to task logger
-                taskLogger.MainLogger?.LogInformation(
-                    "Progress: {Stage} - {Percent:F1}%",
-                    p.stage, p.percent);
+                if (p.bytesRead.HasValue && p.totalBytes.HasValue)
+                {
+                    taskLogger.MainLogger?.LogInformation(
+                        "Progress: {Stage} - {Percent:F1}% ({BytesRead}/{TotalBytes} bytes)",
+                        p.stage, p.percent, p.bytesRead, p.totalBytes);
+                }
+                else
+                {
+                    taskLogger.MainLogger?.LogInformation(
+                        "Progress: {Stage} - {Percent:F1}%",
+                        p.stage, p.percent);
+                }
             });
 
             // Execute the job
@@ -984,23 +1000,21 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private async Task SaveTasksAsync()
     {
-        await _persistenceSemaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _persistenceSemaphore.ExecuteAsync(async () =>
         {
-            var tasksToSave = _tasks.Values.ToList();
-            string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, JsonOptions);
+            try
+            {
+                var tasksToSave = _tasks.Values.ToList();
+                string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, JsonOptions);
 
-            await File.WriteAllTextAsync(_tasksFilePath, json).ConfigureAwait(false);
-            _logger.LogDebug("Saved {Count} tasks to {Path}", tasksToSave.Count, _tasksFilePath);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to save tasks to {Path}", _tasksFilePath);
-        }
-        finally
-        {
-            _persistenceSemaphore.Release();
-        }
+                await File.WriteAllTextAsync(_tasksFilePath, json).ConfigureAwait(false);
+                _logger.LogDebug("Saved {Count} tasks to {Path}", tasksToSave.Count, _tasksFilePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save tasks to {Path}", _tasksFilePath);
+            }
+        });
     }
 
     /// <summary>
@@ -1008,59 +1022,57 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private async Task LoadTasksAsync()
     {
-        await _persistenceSemaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _persistenceSemaphore.ExecuteAsync(async () =>
         {
-            if (!File.Exists(_tasksFilePath))
+            try
             {
-                _logger.LogInformation("No existing tasks file found at {Path}", _tasksFilePath);
-                return;
-            }
-
-            string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
-            List<TaskExecution>? loadedTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
-
-            if (loadedTasks != null && loadedTasks.Count > 0)
-            {
-                foreach (TaskExecution task in loadedTasks)
+                if (!File.Exists(_tasksFilePath))
                 {
-                    _tasks[task.TaskId] = task;
-
-                    // Restore queued and scheduled tasks to their queues
-                    if (task.State == TaskState.Queued)
-                    {
-                        _taskQueue.Enqueue(task.TaskId);
-                    }
-                    else if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
-                    {
-                        if (scheduledObj is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
-                        {
-                            string? dateString = jsonElement.GetString();
-                            if (!string.IsNullOrEmpty(dateString) && DateTime.TryParse(dateString, out DateTime scheduledTime))
-                            {
-                                _scheduledTasks[task.TaskId] = scheduledTime;
-                            }
-                        }
-                    }
-                    // Reset running tasks to queued (they were interrupted by app close)
-                    else if (task.State == TaskState.Running)
-                    {
-                        task.UpdateState(TaskState.Queued, "Restored from interrupted session");
-                        _taskQueue.Enqueue(task.TaskId);
-                    }
+                    _logger.LogInformation("No existing tasks file found at {Path}", _tasksFilePath);
+                    return;
                 }
 
-                _logger.LogInformation("Loaded {Count} tasks from {Path}", loadedTasks.Count, _tasksFilePath);
+                string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
+                List<TaskExecution>? loadedTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+
+                if (loadedTasks != null && loadedTasks.Count > 0)
+                {
+                    foreach (TaskExecution task in loadedTasks)
+                    {
+                        _tasks[task.TaskId] = task;
+
+                        // Restore queued and scheduled tasks to their queues
+                        if (task.State == TaskState.Queued)
+                        {
+                            _taskQueue.Enqueue(task.TaskId);
+                        }
+                        else if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
+                        {
+                            if (scheduledObj is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                string? dateString = jsonElement.GetString();
+                                if (!string.IsNullOrEmpty(dateString) && DateTime.TryParse(dateString, out DateTime scheduledTime))
+                                {
+                                    _scheduledTasks[task.TaskId] = scheduledTime;
+                                }
+                            }
+                        }
+                        // Reset running tasks to queued (they were interrupted by app close)
+                        else if (task.State == TaskState.Running)
+                        {
+                            task.UpdateState(TaskState.Queued, "Restored from interrupted session");
+                            _taskQueue.Enqueue(task.TaskId);
+                        }
+                    }
+
+                    _logger.LogInformation("Loaded {Count} tasks from {Path}", loadedTasks.Count, _tasksFilePath);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load tasks from {Path}", _tasksFilePath);
-        }
-        finally
-        {
-            _persistenceSemaphore.Release();
-        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load tasks from {Path}", _tasksFilePath);
+            }
+        });
     }
 
     #endregion

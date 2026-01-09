@@ -7,6 +7,7 @@ using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Resources;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -14,47 +15,26 @@ namespace S7Tools.Services.Bootloader;
 /// Consolidated bootloader service orchestrating complete memory dump workflow with TaskExecution integration.
 /// Provides retry mechanisms, comprehensive error handling, and detailed progress tracking.
 /// </summary>
-public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDisposable
+public sealed class EnhancedBootloaderService(
+    ILogger<EnhancedBootloaderService> logger,
+    IPayloadProvider payloads,
+    ISocatService socat,
+    IPowerSupplyService power,
+    ISerialPortService serialPort,
+    Func<JobProfileSet, IPlcClient> clientFactory,
+    IResourceCoordinator resourceCoordinator)
+    : IEnhancedBootloaderService, IDisposable
 {
-    private readonly ILogger<EnhancedBootloaderService> _logger;
-    private readonly IPayloadProvider _payloads;
-    private readonly ISocatService _socat;
-    private readonly IPowerSupplyService _power;
-    private readonly ISerialPortService _serialPort;
-    private readonly Func<JobProfileSet, IPlcClient> _clientFactory;
-    private readonly IResourceCoordinator _resourceCoordinator;
+    private readonly ILogger<EnhancedBootloaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly IPayloadProvider _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));
+    private readonly ISocatService _socat = socat ?? throw new ArgumentNullException(nameof(socat));
+    private readonly IPowerSupplyService _power = power ?? throw new ArgumentNullException(nameof(power));
+    private readonly ISerialPortService _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
+    private readonly Func<JobProfileSet, IPlcClient> _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+    private readonly IResourceCoordinator _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
-
     private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
     private bool _disposed;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EnhancedBootloaderService"/> class.
-    /// </summary>
-    /// <param name="logger">Logger instance for diagnostics.</param>
-    /// <param name="payloads">Payload provider for stager and dumper files.</param>
-    /// <param name="socat">Socat service for serial-to-TCP bridge management.</param>
-    /// <param name="power">Power supply service for PLC power control.</param>
-    /// <param name="serialPort">Serial port service for device configuration.</param>
-    /// <param name="clientFactory">Factory method for creating PLC client instances.</param>
-    /// <param name="resourceCoordinator">Service for resource coordination and conflict detection.</param>
-    public EnhancedBootloaderService(
-        ILogger<EnhancedBootloaderService> logger,
-        IPayloadProvider payloads,
-        ISocatService socat,
-        IPowerSupplyService power,
-        ISerialPortService serialPort,
-        Func<JobProfileSet, IPlcClient> clientFactory,
-        IResourceCoordinator resourceCoordinator)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));
-        _socat = socat ?? throw new ArgumentNullException(nameof(socat));
-        _power = power ?? throw new ArgumentNullException(nameof(power));
-        _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
-        _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
-        _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
-    }
 
     /// <inheritdoc />
     public RetryConfiguration RetryConfiguration => _retryConfiguration;
@@ -66,18 +46,18 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         _logger.LogInformation("Bootloader retry configuration updated: {Configuration}",
             new
             {
-                MaxConnectionRetries = configuration.MaxConnectionRetries,
-                MaxCommunicationRetries = configuration.MaxCommunicationRetries,
-                MaxMemoryOperationRetries = configuration.MaxMemoryOperationRetries,
-                InitialRetryDelay = configuration.InitialRetryDelay,
-                UseExponentialBackoff = configuration.UseExponentialBackoff
+                configuration.MaxConnectionRetries,
+                configuration.MaxCommunicationRetries,
+                configuration.MaxMemoryOperationRetries,
+                configuration.InitialRetryDelay,
+                configuration.UseExponentialBackoff
             });
     }
 
     /// <inheritdoc />
     public async Task<byte[]> DumpAsync(
         JobProfileSet profiles,
-        IProgress<(string stage, double percent)> progress,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
         Microsoft.Extensions.Logging.ILogger? processLogger = null,
         Microsoft.Extensions.Logging.ILogger? protocolLogger = null,
@@ -86,7 +66,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(progress);
 
-        var effectiveTaskLogger = taskLogger ?? _logger;
+        Microsoft.Extensions.Logging.ILogger effectiveTaskLogger = taskLogger ?? _logger;
 
         effectiveTaskLogger.LogInformation("Starting enhanced bootloader dump operation");
 
@@ -96,7 +76,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         try
         {
             // Stage 0: Configure serial port (2% progress)
-            progress.Report(("serial_config", 0.02));
+            progress.Report(("serial_config", 2.0, null, null));
             effectiveTaskLogger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
 
             // Use serial configuration directly from profile
@@ -114,7 +94,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             effectiveTaskLogger.LogInformation("Serial port {Device} configured successfully", profiles.Serial.Device);
 
             // Stage 1: Setup socat bridge (5% progress)
-            progress.Report(("socat_setup", 0.05));
+            progress.Report(("socat_setup", 5.0, null, null));
             effectiveTaskLogger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
 
             // Use socat configuration directly from profile (must be non-null after Phase 2 changes)
@@ -134,7 +114,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 profiles.Socat.Port, socatProcess.ProcessId);
 
             // Stage 2: Connect to power supply (8% progress)
-            progress.Report(("power_connect", 0.08));
+            progress.Report(("power_connect", 8.0, null, null));
             _logger.LogDebug("Connecting to power supply at {Host}:{Port}",
                 profiles.Power.Host, profiles.Power.Port);
 
@@ -155,7 +135,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 profiles.Power.Host, profiles.Power.Port);
 
             // Stage 3: Power ON PLC (10% progress)
-            progress.Report(("power_on", 0.10));
+            progress.Report(("power_on", 10.0, null, null));
             effectiveTaskLogger.LogDebug("Turning PLC power ON");
 
             bool powerOn = await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
@@ -172,7 +152,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             await Task.Delay(profiles.PowerOnTimeMs, cancellationToken).ConfigureAwait(false);
 
             // Stage 4: Power cycle PLC (12% progress)
-            progress.Report(("power_cycle", 0.12));
+            progress.Report(("power_cycle", 12.0, null, null));
             effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
 
             // Power cycle: OFF → delay → ON (using PowerOffDelayMs from job profile)
@@ -182,14 +162,14 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             effectiveTaskLogger.LogInformation("PLC power cycled successfully");
 
             // Stage 5: Create PLC client and connect to socat (15% progress)
-            progress.Report(("plc_connect", 0.15));
+            progress.Report(("plc_connect", 15.0, null, null));
             await using IPlcClient client = _clientFactory(profiles);
 
             _logger.LogDebug("PLC client created and connecting to socat TCP server");
             processLogger?.LogInformation("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
 
             // Stage 6: Perform handshake (20% progress)
-            progress.Report(("handshake", 0.20));
+            progress.Report(("handshake", 20.0, null, null));
             _logger.LogDebug("Performing bootloader handshake");
 
             await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
@@ -201,7 +181,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             processLogger?.LogInformation("Bootloader version: {Version}", version);
 
             // Stage 7: Install stager (30% progress)
-            progress.Report(("stager_install", 0.30));
+            progress.Report(("stager_install", 30.0, null, null));
             _logger.LogDebug("Installing stager payload from {BasePath}", profiles.Payloads.BasePath);
 
             byte[] stagerPayload = await _payloads.GetStagerAsync(
@@ -256,7 +236,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                         throw new InvalidOperationException($"Invalid memory segment start address '{segment.StartAddress}'.");
                     }
 
-                    if (segment.Size <= 0 || segment.Size > uint.MaxValue)
+                    if (segment.Size is <= 0 or > uint.MaxValue)
                     {
                         throw new InvalidOperationException(
                             $"Invalid memory segment size '{segment.Size}' for segment '{segment.Name}'. Must be in range 1..{uint.MaxValue}.");
@@ -264,14 +244,14 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
                     uint segmentSize = (uint)segment.Size;
 
-                    progress.Report(("memory_dump", 50.0 + (45.0 * totalBytesRead / totalSize)));
+                    progress.Report(("memory_dump", 50.0 + (45.0 * totalBytesRead / totalSize), totalBytesRead, totalSize));
                     _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",
                         i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
 
                     var segmentProgress = new Progress<long>(bytesRead =>
                     {
                         double percent = 50.0 + (45.0 * (totalBytesRead + bytesRead) / totalSize);
-                        progress.Report(("memory_dump", percent));
+                        progress.Report(("memory_dump", percent, totalBytesRead + bytesRead, totalSize));
                     });
 
                     byte[] segmentData = await client.DumpMemoryAsync(
@@ -290,14 +270,14 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 }
 
                 // Concatenate all segment data
-                memoryData = segmentDataList.SelectMany(arr => arr).ToArray();
+                memoryData = [.. segmentDataList.SelectMany(arr => arr)];
                 _logger.LogInformation("Multi-segment dump completed: {TotalSegments} segments, {TotalSize} bytes total",
                     selectedSegments.Count, memoryData.Length);
             }
             else
             {
                 // Single-region dump using legacy MemoryRegionProfile
-                progress.Report(("memory_dump", 0.50));
+                progress.Report(("memory_dump", 50.0, 0, (long)profiles.Memory.Length));
                 _logger.LogDebug("Dumping memory region 0x{Address:X8} - 0x{EndAddress:X8} ({Length} bytes)",
                     profiles.Memory.Start,
                     profiles.Memory.Start + profiles.Memory.Length,
@@ -310,7 +290,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 var dumpProgress = new Progress<long>(bytesRead =>
                 {
                     double percent = 50.0 + (45.0 * bytesRead / profiles.Memory.Length);
-                    progress.Report(("memory_dump", percent));
+                    progress.Report(("memory_dump", percent, bytesRead, (long)profiles.Memory.Length));
                 });
 
                 memoryData = await client.DumpMemoryAsync(
@@ -327,13 +307,13 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             }
 
             // Stage 9: Teardown (95% progress)
-            progress.Report(("teardown", 0.95));
+            progress.Report(("teardown", 95.0, null, null));
             _logger.LogDebug("Cleaning up resources");
 
             // Client will be disposed automatically via 'await using'
 
             // Stage 10: Complete (100% progress)
-            progress.Report(("complete", 1.0));
+            progress.Report(("complete", 100.0, null, null));
             _logger.LogInformation("Bootloader dump operation completed successfully. " +
                 "Dumped {ByteCount} bytes", memoryData.Length);
 
@@ -387,8 +367,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         ArgumentNullException.ThrowIfNull(taskExecution);
         ArgumentNullException.ThrowIfNull(profiles);
 
-        await _operationSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _operationSemaphore.ExecuteAsync(async () =>
         {
             _logger.LogInformation("Starting enhanced bootloader dump operation for task {TaskId}", taskExecution.TaskId);
 
@@ -396,16 +375,31 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             taskExecution.UpdateState(TaskState.Running, "Initializing bootloader operation");
 
             // Create a progress reporter that updates the TaskExecution
-            var progressReporter = new Progress<(string stage, double percent)>(progress =>
+            var progressReporter = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>(progress =>
             {
-                (string? stage, double percent) = progress;
+                (string? stage, double percent, long? bytesRead, long? totalBytes) = progress;
                 // Progress is already in 0-100 range from BootloaderService
                 string operation = GetUserFriendlyOperationName(stage);
 
-                taskExecution.UpdateProgress(percent, operation);
+                var extraData = new Dictionary<string, object>();
+                if (bytesRead.HasValue && totalBytes.HasValue)
+                {
+                    extraData["BytesRead"] = bytesRead.Value;
+                    extraData["TotalBytes"] = totalBytes.Value;
+                }
 
-                _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation}",
-                    taskExecution.TaskId, percent, operation);
+                taskExecution.UpdateProgress(percent, operation, extraData);
+
+                if (bytesRead.HasValue && totalBytes.HasValue)
+                {
+                    _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation} ({BytesRead}/{TotalBytes} bytes)",
+                        taskExecution.TaskId, percent, operation, bytesRead, totalBytes);
+                }
+                else
+                {
+                    _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation}",
+                        taskExecution.TaskId, percent, operation);
+                }
             });
 
             // Estimate operation time
@@ -461,11 +455,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
                 throw new BootloaderOperationException(errorMessage, ex);
             }
-        }
-        finally
-        {
-            _operationSemaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -506,8 +496,8 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
             ValidationResult result = validationErrors.Count == 0
                 ? ValidationResult.Success()
-                : ValidationResult.Failure(validationErrors.Select(error =>
-                    new ValidationError("Resource", error)).ToArray());
+                : ValidationResult.Failure([.. validationErrors.Select(error =>
+                    new ValidationError("Resource", error))]);
 
             _logger.LogDebug("Resource validation completed. Valid: {IsValid}, Errors: {ErrorCount}",
                 result.IsValid, validationErrors.Count);
@@ -568,9 +558,9 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                 MaxTransferSize = 1024,
                 SupportsPauseResume = false,
                 Capabilities = BootloaderCapabilities.MemoryRead | BootloaderCapabilities.Checksums,
-                AvailableMemoryRegions = new List<MemoryRegion>
-                {
-                    new MemoryRegion
+                AvailableMemoryRegions =
+                [
+                    new()
                     {
                         Name = "Flash Memory",
                         StartAddress = profiles.Memory.Start,
@@ -578,7 +568,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
                         AccessFlags = MemoryAccessFlags.Read,
                         Description = "Main flash memory region"
                     }
-                }
+                ]
             };
 
             _logger.LogDebug("Retrieved bootloader info: Version={Version}, Model={Model}",
@@ -604,11 +594,11 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         {
             // Simple estimation based on memory size
             // Assume ~1KB/second transfer rate plus fixed overhead
-            const double transferRateBytesPerSecond = 1024.0;
-            const double fixedOverheadSeconds = 30.0; // Setup, handshake, teardown
+            const double TransferRateBytesPerSecond = 1024.0;
+            const double FixedOverheadSeconds = 30.0; // Setup, handshake, teardown
 
-            double transferTimeSeconds = profiles.Memory.Length / transferRateBytesPerSecond;
-            double totalTimeSeconds = transferTimeSeconds + fixedOverheadSeconds;
+            double transferTimeSeconds = profiles.Memory.Length / TransferRateBytesPerSecond;
+            double totalTimeSeconds = transferTimeSeconds + FixedOverheadSeconds;
 
             var estimatedTime = TimeSpan.FromSeconds(totalTimeSeconds);
 
@@ -749,14 +739,14 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
         }
     }
 
-    private static IEnumerable<ResourceKey> ExtractResourceKeys(JobProfileSet profiles)
+    private static ResourceKey[] ExtractResourceKeys(JobProfileSet profiles)
     {
-        return new[]
-        {
+        return
+        [
             new ResourceKey("serial", profiles.Serial.Device),
             new ResourceKey("tcp", profiles.Socat.Port.ToString()),
             new ResourceKey("modbus", $"{profiles.Power.Host}:{profiles.Power.Port}")
-        };
+        ];
     }
 
     /// <summary>
@@ -867,7 +857,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
         return errors.Count == 0
             ? ValidationResult.Success()
-            : ValidationResult.Failure(errors.Select(e => new ValidationError("ProfileSet", e)).ToArray());
+            : ValidationResult.Failure([.. errors.Select(e => new ValidationError("ProfileSet", e))]);
     }
 
     /// <inheritdoc />
@@ -877,11 +867,11 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
         // Base overhead: 15 seconds
         // Transfer rate: 256 bytes/sec (conservative estimate)
-        const double baseOverheadSeconds = 15.0;
-        const double bytesPerSecond = 256.0;
+        const double BaseOverheadSeconds = 15.0;
+        const double BytesPerSecond = 256.0;
 
-        double transferTime = memoryRegion.Length / bytesPerSecond;
-        double totalSeconds = baseOverheadSeconds + transferTime;
+        double transferTime = memoryRegion.Length / BytesPerSecond;
+        double totalSeconds = BaseOverheadSeconds + transferTime;
 
         // Clamp to 5-300s range per SC-001
         totalSeconds = Math.Clamp(totalSeconds, 5.0, 300.0);

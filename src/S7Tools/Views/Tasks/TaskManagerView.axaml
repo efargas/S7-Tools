@@ -90,11 +90,53 @@
           MinHeight="200">
           <DataGrid.Columns>
             <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="150" />
-            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="80" />
-            <DataGridTextColumn Header="Progress"
-              Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="80" />
+            <DataGridTextColumn Header="Step" Binding="{Binding CurrentOperation}" Width="150" />
+            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="110" />
+
+            <!-- Overall Progress Column -->
+            <DataGridTemplateColumn Header="Progress" Width="250">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="*,Auto" Margin="4,0">
+                    <ProgressBar Grid.Column="0" Value="{Binding ProgressPercentage}" Minimum="0"
+                      Maximum="100"
+                      Height="10" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <TextBlock Grid.Column="1"
+                      Text="{Binding ProgressPercentage, StringFormat='{}{0:F0}%'}"
+                      FontSize="11" VerticalAlignment="Center" Width="30" TextAlignment="Right" />
+                  </Grid>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
+            <!-- Memory Dump Progress Column -->
+            <DataGridTemplateColumn Header="Memory Dump" Width="*">
+              <DataGridTemplateColumn.CellTemplate>
+                <DataTemplate>
+                  <Grid ColumnDefinitions="*,Auto" Margin="4,2" VerticalAlignment="Center">
+                    <ProgressBar Grid.Column="0" Value="{Binding BytesRead}"
+                      Maximum="{Binding TotalBytes}" Minimum="0"
+                      Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
+                      IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    <TextBlock Grid.Column="1" FontSize="11"
+                      Foreground="{DynamicResource SystemBaseMediumBrush}"
+                      VerticalAlignment="Center" TextAlignment="Right"
+                      IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}">
+                      <TextBlock.Text>
+                        <MultiBinding StringFormat="{}{0:N0} / {1:N0} B">
+                          <Binding Path="BytesRead" FallbackValue="0" />
+                          <Binding Path="TotalBytes" FallbackValue="0" />
+                        </MultiBinding>
+                      </TextBlock.Text>
+                    </TextBlock>
+                  </Grid>
+                </DataTemplate>
+              </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>
+
             <DataGridTextColumn Header="Started"
-              Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
+              Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="120" />
+
             <DataGridTemplateColumn Header="Actions" Width="120">
               <DataGridTemplateColumn.CellTemplate>
                 <DataTemplate>
