@@ -47,7 +47,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private long _successfulTasks;
     private long _failedTasks;
     private long _cancelledTasks;
-    private readonly List<TimeSpan> _executionTimes = [];
+    private readonly Queue<TimeSpan> _executionTimes = new(); // Use Queue for O(1) operations
+    private const int MaxExecutionTimesCount = 1000;
     private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     #endregion
@@ -867,10 +868,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             {
                 lock (_executionTimes)
                 {
-                    _executionTimes.Add(task.ExecutionTime.Value);
-                    if (_executionTimes.Count > 1000) // Keep only last 1000 execution times
+                    _executionTimes.Enqueue(task.ExecutionTime.Value);
+                    while (_executionTimes.Count > MaxExecutionTimesCount)
                     {
-                        _executionTimes.RemoveAt(0);
+                        _executionTimes.Dequeue(); // O(1) instead of List.RemoveAt(0) which is O(n)
                     }
                 }
             }
