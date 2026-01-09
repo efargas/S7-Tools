@@ -560,7 +560,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     {
         IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
         var allResources = runningTasks.SelectMany(t => t.LockedResources).ToList();
-        var resourceLocks = allResources.ToDictionary(r => r, r => runningTasks.First(t => t.LockedResources.Contains(r)).TaskId);
+        var resourceLocks = allResources.ToDictionary(r => r, r =>
+            runningTasks.FirstOrDefault(t => t.LockedResources.Contains(r))?.TaskId ?? Guid.Empty);
 
         return new ResourceUsageInfo
         {
