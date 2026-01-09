@@ -30,6 +30,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
     private readonly ConcurrentQueue<Guid> _taskQueue = new();
     private readonly ConcurrentDictionary<Guid, DateTime> _scheduledTasks = new();
+    private readonly ConcurrentDictionary<Guid, Task> _activeExecutions = new(); // Track active execution tasks
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
     private readonly SemaphoreSlim _persistenceSemaphore = new(1, 1);
     private readonly Timer _processingTimer;
@@ -764,10 +765,14 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 }
             }
 
-            // Start the tasks
+            // Start the tasks with tracking to prevent race conditions
             foreach (Guid taskId in tasksToStart)
             {
-                _ = Task.Run(() => ExecuteTaskAsync(taskId));
+                Task executionTask = ExecuteTaskAsync(taskId);
+                _activeExecutions.TryAdd(taskId, executionTask);
+
+                // Clean up tracking when task completes
+                _ = executionTask.ContinueWith(t => _activeExecutions.TryRemove(taskId, out _), TaskScheduler.Default);
             }
         }
         finally
