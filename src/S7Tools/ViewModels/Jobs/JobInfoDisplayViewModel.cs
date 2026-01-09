@@ -325,9 +325,6 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                         }
 
                         // Segment statistics
-                        var selectedSegments = memoryProfile.Segments.Where(s => s.IsSelected).ToList();
-                        long totalSelectedSize = selectedSegments.Sum(s => s.Size);
-
                         profileProperties.Add(new PropertyDisplayItem
                         {
                             Label = "Total Segments",
@@ -335,41 +332,62 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                             Tooltip = "Total number of memory segments in profile"
                         });
 
-                        profileProperties.Add(new PropertyDisplayItem
+                        // IMPORTANT: Get segment selection from JOB's SelectedMemorySegment field,
+                        // NOT from the profile's default IsSelected state
+                        MemorySegment? jobSelectedSegment = null;
+                        if (!string.IsNullOrEmpty(job.SelectedMemorySegment))
                         {
-                            Label = "Selected Segments",
-                            Value = selectedSegments.Count.ToString(),
-                            Tooltip = "Number of segments marked for memory dump"
-                        });
+                            jobSelectedSegment = memoryProfile.Segments
+                                .FirstOrDefault(s => s.Name.Equals(job.SelectedMemorySegment, StringComparison.Ordinal));
+                        }
 
-                        profileProperties.Add(new PropertyDisplayItem
+                        if (jobSelectedSegment != null)
                         {
-                            Label = "Total Selected Size",
-                            Value = FormatSize(totalSelectedSize),
-                            Tooltip = $"{totalSelectedSize} bytes total"
-                        });
-
-                        // Add detailed segment information
-                        if (selectedSegments.Any())
-                        {
-                            for (int i = 0; i < selectedSegments.Count; i++)
+                            // Show job's selected segment
+                            profileProperties.Add(new PropertyDisplayItem
                             {
-                                MemorySegment segment = selectedSegments[i];
-                                segmentProperties.Add(new PropertyDisplayItem
-                                {
-                                    Label = segment.Name,
-                                    Value = $"{segment.AddressRange} ({segment.SizeFormatted})",
-                                    Tooltip = $"Type: {segment.Type}, Size: {segment.Size} bytes"
-                                });
-                            }
+                                Label = "Selected Segments",
+                                Value = "1",
+                                Tooltip = $"Memory segment selected for dump: {jobSelectedSegment.Name}"
+                            });
+
+                            profileProperties.Add(new PropertyDisplayItem
+                            {
+                                Label = "Total Selected Size",
+                                Value = FormatSize(jobSelectedSegment.Size),
+                                Tooltip = $"{jobSelectedSegment.Size} bytes"
+                            });
+
+                            // Add segment detail
+                            segmentProperties.Add(new PropertyDisplayItem
+                            {
+                                Label = jobSelectedSegment.Name,
+                                Value = $"{jobSelectedSegment.AddressRange} ({jobSelectedSegment.SizeFormatted})",
+                                Tooltip = $"Type: {jobSelectedSegment.Type}, Size: {jobSelectedSegment.Size} bytes"
+                            });
                         }
                         else
                         {
+                            // Fallback: no job selection, show warning
+                            profileProperties.Add(new PropertyDisplayItem
+                            {
+                                Label = "Selected Segments",
+                                Value = "0",
+                                Tooltip = "No segment selected for memory dump"
+                            });
+
+                            profileProperties.Add(new PropertyDisplayItem
+                            {
+                                Label = "Total Selected Size",
+                                Value = "0 bytes",
+                                Tooltip = "No segment selected"
+                            });
+
                             segmentProperties.Add(new PropertyDisplayItem
                             {
                                 Label = "Warning",
-                                Value = "No segments selected for memory dump",
-                                Tooltip = "No segments are currently selected. Configure this in the Job wizard."
+                                Value = "No segment selected for memory dump",
+                                Tooltip = "No segment is currently selected. Configure this in the Job wizard."
                             });
                         }
                     }

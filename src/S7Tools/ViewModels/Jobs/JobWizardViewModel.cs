@@ -35,7 +35,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private readonly IJobManager _jobManager;
     private readonly IUIThreadService _uiThreadService;
     private readonly IFileDialogService? _fileDialogService;
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private readonly IViewModelFactory _vmFactory;
 
     // Resource strings (cached for performance)
@@ -80,7 +80,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private uint _memoryStart = MemoryConstants.DefaultUserMemoryStart;
     private uint _memoryLength = MemoryConstants.DefaultDumpSize;
     public sealed record MemoryPreset(string Name, uint Start, uint Length);
-    public ObservableCollection<MemoryPreset> MemoryPresets { get; } = new();
+    public ObservableCollection<MemoryPreset> MemoryPresets { get; } = [];
     private MemoryPreset? _selectedMemoryPreset;
 
     // Timing & Output
@@ -110,11 +110,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         _fileDialogService = fileDialogService;
         _vmFactory = viewModelFactory ?? throw new ArgumentNullException(nameof(viewModelFactory));
 
-        SerialProfiles = new ObservableCollection<SerialPortProfile>();
-        SocatProfiles = new ObservableCollection<SocatProfile>();
-        PowerProfiles = new ObservableCollection<PowerSupplyProfile>();
-        MemoryProfiles = new ObservableCollection<MemoryMappingProfile>();
-        AvailablePorts = new ObservableCollection<string>();
+        SerialProfiles = [];
+        SocatProfiles = [];
+        PowerProfiles = [];
+        MemoryProfiles = [];
+        AvailablePorts = [];
         // Initialize memory presets
         MemoryPresets.Add(new MemoryPreset("4KB Boot Sector", MemoryConstants.DefaultUserMemoryStart, MemoryConstants.DefaultDumpSize));
         MemoryPresets.Add(new MemoryPreset("8KB Region", 0x20001000u, 0x2000u));
@@ -137,18 +137,15 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             x => x.SelectedSocat,
             x => x.SelectedPower,
             x => x.SelectedMemoryRegion,
-            (step, serial, socat, power, memoryRegion) =>
+            (step, serial, socat, power, memoryRegion) => step switch
             {
-                return step switch
-                {
-                    WizardStep.Serial => serial != null,
-                    WizardStep.Socat => socat != null,
-                    WizardStep.Power => power != null,
-                    WizardStep.Memory => memoryRegion != null && memoryRegion.HasSelectedSegments,
-                    WizardStep.TimingOutput => !string.IsNullOrWhiteSpace(OutputPath) && !string.IsNullOrWhiteSpace(PayloadsBasePath) && PowerOnTimeMs >= 0 && PowerOffDelayMs >= 0,
-                    WizardStep.Review => false,
-                    _ => false
-                };
+                WizardStep.Serial => serial != null,
+                WizardStep.Socat => socat != null,
+                WizardStep.Power => power != null,
+                WizardStep.Memory => memoryRegion != null && memoryRegion.HasSelectedSegments,
+                WizardStep.TimingOutput => !string.IsNullOrWhiteSpace(OutputPath) && !string.IsNullOrWhiteSpace(PayloadsBasePath) && PowerOnTimeMs >= 0 && PowerOffDelayMs >= 0,
+                WizardStep.Review => false,
+                _ => false
             });
 
         IObservable<bool> canFinish = this.WhenAnyValue(
@@ -481,18 +478,12 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the number of selected segments in the memory region profile.
     /// </summary>
-    public int SelectedSegmentCount
-    {
-        get { return SelectedMemoryRegion?.SelectedSegments.Count() ?? 0; }
-    }
+    public int SelectedSegmentCount => SelectedMemoryRegion?.SelectedSegments.Count() ?? 0;
 
     /// <summary>
     /// Gets the total size of selected segments in bytes.
     /// </summary>
-    public long TotalSelectedSize
-    {
-        get { return SelectedMemoryRegion?.TotalSelectedSize ?? 0; }
-    }
+    public long TotalSelectedSize => SelectedMemoryRegion?.TotalSelectedSize ?? 0;
 
     /// <summary>
     /// Gets a formatted summary of the power timing (On: Xms, Off: Yms).
@@ -648,7 +639,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 MemoryProfiles.Clear();
                 foreach (MemoryMappingProfile? m in memoryProfiles)
                 {
-                    MemoryProfiles.Add(m);
+                    MemoryProfiles.Add(m.ClonePreserveId());
                 }
 
                 // Apply preselection if provided, else fall back to defaults
@@ -737,6 +728,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 return;
             }
 
+            // CRITICAL: Sync segment selections from memory step ViewModel to main wizard
+            // The memory step UI works with its own cloned profiles, so we need to
+            // copy the segment selection state back to the wizard's SelectedMemoryRegion
+            SyncMemoryRegionFromStepViewModel();
+
             JobProfile job;
 
             if (IsEditMode && _editingJobId.HasValue)
@@ -759,7 +755,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 existingJob.MemoryRegionProfileId = SelectedMemoryRegion.Id;
 
                 // Save selected segment name
-                var selectedSegment = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.IsSelected);
+                MemorySegment? selectedSegment = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.IsSelected);
+                _logger.LogInformation("Saving job: Selected segment from SelectedMemoryRegion is '{SegmentName}'",
+                    selectedSegment?.Name ?? "(none)");
                 existingJob.SelectedMemorySegment = selectedSegment?.Name ?? string.Empty;
 
                 existingJob.Payloads = new PayloadSetProfile
@@ -786,7 +784,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 job.MemoryRegionProfileId = SelectedMemoryRegion.Id;
 
                 // Save selected segment name
-                var selectedSegment = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.IsSelected);
+                MemorySegment? selectedSegment = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.IsSelected);
                 job.SelectedMemorySegment = selectedSegment?.Name ?? string.Empty;
 
                 job.Payloads = new PayloadSetProfile
@@ -807,7 +805,8 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, IsEditMode ? "Failed to update job via wizard" : "Failed to create job via wizard");
+            string errorMessage = IsEditMode ? "Failed to update job via wizard" : "Failed to create job via wizard";
+            _logger.LogError(ex, "{ErrorMessage}", errorMessage);
             Status = string.Format(IsEditMode ? "Error updating job: {0}" : UIStrings.Status_ErrorCreatingJob, ex.Message);
             Completed = false;
         }
@@ -831,10 +830,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                InitializeFromJob(job);
-            });
+            await _uiThreadService.InvokeOnUIThreadAsync(() => InitializeFromJob(job));
         }
         catch (Exception ex)
         {
@@ -867,11 +863,11 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         // Restore selected segment if possible
         if (SelectedMemoryRegion != null && !string.IsNullOrEmpty(job.SelectedMemorySegment))
         {
-            var segmentToSelect = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.Name == job.SelectedMemorySegment);
+            MemorySegment? segmentToSelect = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.Name == job.SelectedMemorySegment);
             if (segmentToSelect != null)
             {
                 // First deselect all to be safe
-                foreach (var seg in SelectedMemoryRegion.Segments)
+                foreach (MemorySegment seg in SelectedMemoryRegion.Segments)
                 {
                     if (seg.Name != job.SelectedMemorySegment)
                     {
@@ -908,6 +904,19 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         }
         PowerOnTimeMs = job.PowerOnTimeMs;
         PowerOffDelayMs = job.PowerOffDelayMs;
+
+        // CRITICAL: First ensure memory step ViewModel has the correct profile selected,
+        // THEN sync segment selections from wizard to memory step
+        if (SelectedMemoryRegion != null && MemoryRegionStepViewModel != null)
+        {
+            // Tell memory step ViewModel to select the same profile ID as the wizard
+            bool profileSelected = MemoryRegionStepViewModel.SetSelectedProfileId(SelectedMemoryRegion.Id);
+            _logger.LogInformation("Told memory step to select profile ID {ProfileId}: {Success}",
+                SelectedMemoryRegion.Id, profileSelected);
+
+            //Now sync the segment selections
+            SyncMemoryRegionToStepViewModel();
+        }
 
         // Force validation update
         this.RaisePropertyChanged(nameof(CurrentStep));
@@ -947,6 +956,128 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
             OutputPath = folder;
         }
         return Unit.Default;
+    }
+
+    /// <summary>
+    /// Synchronizes memory segment selections from the memory step ViewModel to the main wizard's SelectedMemoryRegion.
+    /// </summary>
+    /// <remarks>
+    /// The memory step ViewModel (JobWizardMemoryRegionStepViewModel) and the main wizard work with
+    /// separate cloned instances of MemoryMappingProfile. When users toggle segment selections in the
+    /// memory step UI, they modify the memory step's clone. Before saving, we must sync these changes
+    /// back to the wizard's SelectedMemoryRegion so the correct segments are persisted.
+    /// </remarks>
+    private void SyncMemoryRegionFromStepViewModel()
+    {
+        if (SelectedMemoryRegion == null || MemoryRegionStepViewModel?.SelectedProfile == null)
+        {
+            _logger.LogWarning("Cannot sync memory region: SelectedMemoryRegion or MemoryRegionStepViewModel.SelectedProfile is null");
+            return;
+        }
+
+        // Verify we're syncing the same profile (by ID)
+        if (SelectedMemoryRegion.Id != MemoryRegionStepViewModel.SelectedProfile.Id)
+        {
+            _logger.LogWarning("Memory region profile ID mismatch: Wizard has {WizardId}, MemoryStep has {StepId}",
+                SelectedMemoryRegion.Id, MemoryRegionStepViewModel.SelectedProfile.Id);
+            return;
+        }
+
+        _logger.LogInformation("Syncing segment selections from memory step ViewModel to wizard (Profile: {ProfileName}, ID: {ProfileId})",
+            SelectedMemoryRegion.Name, SelectedMemoryRegion.Id);
+
+        // Log what's selected in the memory step BEFORE sync
+        MemorySegment? stepSelectedSegment = MemoryRegionStepViewModel.SelectedProfile.Segments.FirstOrDefault(s => s.IsSelected);
+        _logger.LogInformation("Memory step has segment '{SegmentName}' selected",
+            stepSelectedSegment?.Name ?? "(none)");
+
+        // Copy IsSelected state from memory step's segments to wizard's segments
+        foreach (MemorySegment wizardSegment in SelectedMemoryRegion.Segments)
+        {
+            // Find corresponding segment in memory step ViewModel by name
+            MemorySegment? stepSegment = MemoryRegionStepViewModel.SelectedProfile.Segments
+                .FirstOrDefault(s => s.Name.Equals(wizardSegment.Name, StringComparison.Ordinal));
+
+            if (stepSegment != null)
+            {
+                bool oldValue = wizardSegment.IsSelected;
+                wizardSegment.IsSelected = stepSegment.IsSelected;
+
+                if (oldValue != stepSegment.IsSelected)
+                {
+                    _logger.LogDebug("Synced segment '{SegmentName}': IsSelected changed from {OldValue} to {NewValue}",
+                        wizardSegment.Name, oldValue, stepSegment.IsSelected);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Could not find segment '{SegmentName}' in memory step ViewModel for sync",
+                    wizardSegment.Name);
+            }
+        }
+
+        // Trigger property change notifications for dependent properties
+        this.RaisePropertyChanged(nameof(MemoryRegionSummary));
+        this.RaisePropertyChanged(nameof(SelectedSegmentCount));
+        this.RaisePropertyChanged(nameof(TotalSelectedSize));
+
+        _logger.LogInformation("Memory region sync complete: {SelectedCount} segment(s) selected",
+            SelectedMemoryRegion.SelectedSegments.Count());
+    }
+
+    /// <summary>
+    /// Synchronizes memory segment selections from the main wizard's SelectedMemoryRegion to the memory step ViewModel.
+    /// </summary>
+    /// <remarks>
+    /// This is the REVERSE direction of SyncMemoryRegionFromStepViewModel. It's used when loading a job for editing
+    /// to ensure the memory step ViewModel's UI shows the correct segment selection from the saved job profile.
+    /// </remarks>
+    private void SyncMemoryRegionToStepViewModel()
+    {
+        if (SelectedMemoryRegion == null || MemoryRegionStepViewModel?.SelectedProfile == null)
+        {
+            _logger.LogWarning("Cannot reverse sync memory region: SelectedMemoryRegion or MemoryRegionStepViewModel.SelectedProfile is null");
+            return;
+        }
+
+        // Verify we're syncing the same profile (by ID)
+        if (SelectedMemoryRegion.Id != MemoryRegionStepViewModel.SelectedProfile.Id)
+        {
+            _logger.LogWarning("Memory region profile ID mismatch for reverse sync: Wizard has {WizardId}, MemoryStep has {StepId}",
+                SelectedMemoryRegion.Id, MemoryRegionStepViewModel.SelectedProfile.Id);
+            return;
+        }
+
+        _logger.LogInformation("Reverse syncing segment selections from wizard to memory step ViewModel (Profile: {ProfileName}, ID: {ProfileId})",
+            SelectedMemoryRegion.Name, SelectedMemoryRegion.Id);
+
+        // Copy IsSelected state from wizard's segments to memory step's segments
+        foreach (MemorySegment stepSegment in MemoryRegionStepViewModel.SelectedProfile.Segments)
+        {
+            // Find corresponding segment in wizard by name
+            MemorySegment? wizardSegment = SelectedMemoryRegion.Segments
+                .FirstOrDefault(s => s.Name.Equals(stepSegment.Name, StringComparison.Ordinal));
+
+            if (wizardSegment != null)
+            {
+                bool oldValue = stepSegment.IsSelected;
+                stepSegment.IsSelected = wizardSegment.IsSelected;
+
+                if (oldValue != wizardSegment.IsSelected)
+                {
+                    _logger.LogDebug("Reverse synced segment '{SegmentName}': IsSelected changed from {OldValue} to {NewValue}",
+                        stepSegment.Name, oldValue, wizardSegment.IsSelected);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("Could not find segment '{SegmentName}' in wizard for reverse sync",
+                    stepSegment.Name);
+            }
+        }
+
+        _logger.LogInformation("Reverse sync complete: Memory step now shows {SelectedCount} segment(s) selected",
+            MemoryRegionStepViewModel.SelectedProfile.SelectedSegments.Count());
     }
 
     private async Task ScanPortsAsync()
@@ -1107,6 +1238,26 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 SelectedPower = PowerProfiles.FirstOrDefault(p => p.Id == job.PowerSupplyProfileId);
                 SelectedMemoryRegion = MemoryProfiles.FirstOrDefault(p => p.Id == job.MemoryRegionProfileId);
 
+                // Restore selected segment if possible
+                if (SelectedMemoryRegion != null && !string.IsNullOrEmpty(job.SelectedMemorySegment))
+                {
+                    MemorySegment? segmentToSelect = SelectedMemoryRegion.Segments.FirstOrDefault(s => s.Name == job.SelectedMemorySegment);
+                    if (segmentToSelect != null)
+                    {
+                        // First deselect all to be safe
+                        foreach (MemorySegment seg in SelectedMemoryRegion.Segments)
+                        {
+                            if (seg.Name != job.SelectedMemorySegment)
+                            {
+                                seg.IsSelected = false;
+                            }
+                        }
+
+                        // Select the correct one
+                        segmentToSelect.IsSelected = true;
+                    }
+                }
+
                 // Populate memory settings from selected profile
                 if (SelectedMemoryRegion != null)
                 {
@@ -1152,6 +1303,22 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 }
 
                 Status = "Job loaded for editing";
+            }).ConfigureAwait(false);
+
+            // CRITICAL: After loading and restoring segment selection, sync to memory step ViewModel
+            // so the UI shows the correct segment when user navigates to the Memory step
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                if (SelectedMemoryRegion != null && MemoryRegionStepViewModel != null)
+                {
+                    // Tell memory step ViewModel to select the same profile ID
+                    bool profileSelected = MemoryRegionStepViewModel.SetSelectedProfileId(SelectedMemoryRegion.Id);
+                    _logger.LogInformation("LoadJobForEditAsync: Told memory step to select profile ID {ProfileId}: {Success}",
+                        SelectedMemoryRegion.Id, profileSelected);
+
+                    // Now sync the segment selections
+                    SyncMemoryRegionToStepViewModel();
+                }
             }).ConfigureAwait(false);
 
             _logger.LogInformation("Loaded job {JobId} for editing in wizard", jobId);

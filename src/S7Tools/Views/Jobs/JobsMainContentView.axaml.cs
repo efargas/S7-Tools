@@ -11,7 +11,7 @@ namespace S7Tools.Views.Jobs;
 
 public partial class JobsMainContentView : UserControl, IDisposable
 {
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
     private bool _disposed;
     private double _lastPanelWidth = 400; // Store the last panel width for restoration
 
@@ -53,7 +53,7 @@ public partial class JobsMainContentView : UserControl, IDisposable
             .DisposeWith(_disposables);
     }
 
-    private void SetupLayoutEvents()
+    private static void SetupLayoutEvents()
     {
         // Subscribe to GridSplitter events for real-time layout feedback
         // Note: Avalonia GridSplitter doesn't expose resize events directly

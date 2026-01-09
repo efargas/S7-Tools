@@ -33,6 +33,7 @@ public interface IJobProfileSetFactory
     /// <param name="outputPath">Output directory path for dump files.</param>
     /// <param name="powerOnTimeMs">Time to wait after powering on PLC (milliseconds). Default 5000ms.</param>
     /// <param name="powerOffDelayMs">Time to wait after powering off PLC (milliseconds). Default 2000ms.</param>
+    /// <param name="selectedMemorySegment">Optional name of a specific memory segment to dump. If specified, only this segment will be included.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A complete JobProfileSet with all profile instances loaded.</returns>
     /// <exception cref="ProfileNotFoundException">Thrown when any profile cannot be found by ID.</exception>
@@ -45,45 +46,33 @@ public interface IJobProfileSetFactory
         string outputPath,
         int powerOnTimeMs = 5000,
         int powerOffDelayMs = 2000,
+        string? selectedMemorySegment = null,
         CancellationToken cancellationToken = default);
 }
 
 /// <summary>
 /// Default implementation of IJobProfileSetFactory that resolves profiles from managers.
 /// </summary>
-public sealed class JobProfileSetFactory : IJobProfileSetFactory
+/// <param name="serialManager">The serial port profile manager.</param>
+/// <param name="socatManager">The socat profile manager.</param>
+/// <param name="powerManager">The power supply profile manager.</param>
+/// <param name="memoryRegionManager">The memory region profile manager.</param>
+/// <param name="payloadSetManager">The payload set profile manager.</param>
+/// <param name="logger">The logger instance.</param>
+public sealed class JobProfileSetFactory(
+    IProfileManager<SerialPortProfile> serialManager,
+    IProfileManager<SocatProfile> socatManager,
+    IProfileManager<PowerSupplyProfile> powerManager,
+    IProfileManager<MemoryMappingProfile> memoryRegionManager,
+    IProfileManager<PayloadSetProfile> payloadSetManager,
+    ILogger<JobProfileSetFactory> logger) : IJobProfileSetFactory
 {
-    private readonly IProfileManager<SerialPortProfile> _serialManager;
-    private readonly IProfileManager<SocatProfile> _socatManager;
-    private readonly IProfileManager<PowerSupplyProfile> _powerManager;
-    private readonly IProfileManager<MemoryMappingProfile> _memoryRegionManager;
-    private readonly IProfileManager<PayloadSetProfile> _payloadSetManager;
-    private readonly ILogger<JobProfileSetFactory> _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="JobProfileSetFactory"/> class.
-    /// </summary>
-    /// <param name="serialManager">The serial port profile manager.</param>
-    /// <param name="socatManager">The socat profile manager.</param>
-    /// <param name="powerManager">The power supply profile manager.</param>
-    /// <param name="memoryRegionManager">The memory region profile manager.</param>
-    /// <param name="payloadSetManager">The payload set profile manager.</param>
-    /// <param name="logger">The logger instance.</param>
-    public JobProfileSetFactory(
-        IProfileManager<SerialPortProfile> serialManager,
-        IProfileManager<SocatProfile> socatManager,
-        IProfileManager<PowerSupplyProfile> powerManager,
-        IProfileManager<MemoryMappingProfile> memoryRegionManager,
-        IProfileManager<PayloadSetProfile> payloadSetManager,
-        ILogger<JobProfileSetFactory> logger)
-    {
-        _serialManager = serialManager ?? throw new ArgumentNullException(nameof(serialManager));
-        _socatManager = socatManager ?? throw new ArgumentNullException(nameof(socatManager));
-        _powerManager = powerManager ?? throw new ArgumentNullException(nameof(powerManager));
-        _memoryRegionManager = memoryRegionManager ?? throw new ArgumentNullException(nameof(memoryRegionManager));
-        _payloadSetManager = payloadSetManager ?? throw new ArgumentNullException(nameof(payloadSetManager));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly IProfileManager<SerialPortProfile> _serialManager = serialManager ?? throw new ArgumentNullException(nameof(serialManager));
+    private readonly IProfileManager<SocatProfile> _socatManager = socatManager ?? throw new ArgumentNullException(nameof(socatManager));
+    private readonly IProfileManager<PowerSupplyProfile> _powerManager = powerManager ?? throw new ArgumentNullException(nameof(powerManager));
+    private readonly IProfileManager<MemoryMappingProfile> _memoryRegionManager = memoryRegionManager ?? throw new ArgumentNullException(nameof(memoryRegionManager));
+    private readonly IProfileManager<PayloadSetProfile> _payloadSetManager = payloadSetManager ?? throw new ArgumentNullException(nameof(payloadSetManager));
+    private readonly ILogger<JobProfileSetFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc/>
     public async Task<JobProfileSet> CreateFromProfileIdsAsync(
@@ -95,6 +84,7 @@ public sealed class JobProfileSetFactory : IJobProfileSetFactory
         string outputPath,
         int powerOnTimeMs = 5000,
         int powerOffDelayMs = 2000,
+        string? selectedMemorySegment = null,
         CancellationToken cancellationToken = default)
     {
         _logger.LogDebug(
@@ -159,6 +149,48 @@ public sealed class JobProfileSetFactory : IJobProfileSetFactory
 
             var memoryRegion = new MemoryRegionProfile(startAddress, size);
 
+            // Filter MemoryMappingProfile if a specific segment is selected
+            MemoryMappingProfile? filteredMemoryProfile = memoryProfile;
+            if (!string.IsNullOrEmpty(selectedMemorySegment) && memoryProfile != null)
+            {
+                MemorySegment? selectedSegment = memoryProfile.Segments
+                    .FirstOrDefault(s => s.Name == selectedMemorySegment);
+
+                if (selectedSegment != null)
+                {
+                    // Create a new MemoryMappingProfile with only the selected segment
+                    // Mark the selected segment as selected
+                    var filteredSegment = new MemorySegment
+                    {
+                        Name = selectedSegment.Name,
+                        StartAddress = selectedSegment.StartAddress,
+                        Size = selectedSegment.Size,
+                        Type = selectedSegment.Type,
+                        IsSelected = true,
+                        Description = selectedSegment.Description
+                    };
+
+                    filteredMemoryProfile = new MemoryMappingProfile
+                    {
+                        Id = memoryProfile.Id,
+                        Name = memoryProfile.Name,
+                        Description = $"{memoryProfile.Description} (Segment: {selectedMemorySegment})",
+                        Segments = [filteredSegment]
+                    };
+
+                    // Also update the legacy MemoryRegionProfile to match the selected segment
+                    memoryRegion = new MemoryRegionProfile(
+                        selectedSegment.StartAddress ?? "0x20000000",
+                        (uint)selectedSegment.Size);
+
+                    _logger.LogDebug("Filtered MemoryMappingProfile to single segment: {SegmentName}", selectedMemorySegment);
+                }
+                else
+                {
+                    _logger.LogWarning("Selected memory segment '{SegmentName}' not found in profile, using all segments", selectedMemorySegment);
+                }
+            }
+
             // Build the complete JobProfileSet
             var profileSet = new JobProfileSet(
                 serialRef,
@@ -169,11 +201,11 @@ public sealed class JobProfileSetFactory : IJobProfileSetFactory
                 outputPath,
                 powerOnTimeMs,
                 powerOffDelayMs,
-                memoryProfile); // Include full MemoryMappingProfile for segment-based operations
+                filteredMemoryProfile); // Use filtered profile instead of original
 
             _logger.LogInformation(
-                "Successfully created JobProfileSet with profiles: Serial={SerialName}, Socat={SocatName}, Power={PowerName}, MemoryRegion={MemoryName}, PayloadSet={PayloadName}, OutputPath={OutputPath}",
-                serialProfile.Name, socatProfile.Name, powerProfile.Name, memoryProfile.Name, payloadProfile.Name, outputPath);
+                "Successfully created JobProfileSet with profiles: Serial={SerialName}, Socat={SocatName}, Power={PowerName}, MemoryRegion={MemoryName}, PayloadSet={PayloadName}, OutputPath={OutputPath}, SelectedSegment={SelectedSegment}",
+                serialProfile.Name, socatProfile.Name, powerProfile.Name, filteredMemoryProfile!.Name, payloadProfile.Name, outputPath, selectedMemorySegment ?? "(all)");
 
             return profileSet;
         }

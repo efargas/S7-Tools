@@ -264,13 +264,13 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
                     uint segmentSize = (uint)segment.Size;
 
-                    progress.Report(("memory_dump", 0.50 + (0.45 * totalBytesRead / totalSize)));
+                    progress.Report(("memory_dump", 50.0 + (45.0 * totalBytesRead / totalSize)));
                     _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",
                         i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
 
                     var segmentProgress = new Progress<long>(bytesRead =>
                     {
-                        double percent = 0.50 + (0.45 * (totalBytesRead + bytesRead) / totalSize);
+                        double percent = 50.0 + (45.0 * (totalBytesRead + bytesRead) / totalSize);
                         progress.Report(("memory_dump", percent));
                     });
 
@@ -309,7 +309,7 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
 
                 var dumpProgress = new Progress<long>(bytesRead =>
                 {
-                    double percent = 0.50 + (0.45 * bytesRead / profiles.Memory.Length);
+                    double percent = 50.0 + (45.0 * bytesRead / profiles.Memory.Length);
                     progress.Report(("memory_dump", percent));
                 });
 
@@ -399,13 +399,13 @@ public sealed class EnhancedBootloaderService : IEnhancedBootloaderService, IDis
             var progressReporter = new Progress<(string stage, double percent)>(progress =>
             {
                 (string? stage, double percent) = progress;
-                double progressPercentage = percent * 100.0;
+                // Progress is already in 0-100 range from BootloaderService
                 string operation = GetUserFriendlyOperationName(stage);
 
-                taskExecution.UpdateProgress(progressPercentage, operation);
+                taskExecution.UpdateProgress(percent, operation);
 
                 _logger.LogDebug("Task {TaskId} progress: {Percentage:F1}% - {Operation}",
-                    taskExecution.TaskId, progressPercentage, operation);
+                    taskExecution.TaskId, percent, operation);
             });
 
             // Estimate operation time

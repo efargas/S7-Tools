@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
@@ -12,10 +13,11 @@ namespace S7Tools.Services.Logging;
 /// <summary>
 /// Factory for creating task-specific loggers with dedicated DataStores and file outputs.
 /// </summary>
-public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger) : ITaskLoggerFactory, IDisposable
+public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger, S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService) : ITaskLoggerFactory, IDisposable
 {
     private readonly IPathService _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
     private readonly ILogger<TaskLoggerFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
     private readonly ConcurrentDictionary<Guid, TaskLoggerContext> _activeLoggers = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
@@ -47,14 +49,13 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
 
             Directory.CreateDirectory(taskLogDir);
 
-            // Create DataStores for in-memory logging
-            var mainDataStore = new LogDataStore(new LogDataStoreOptions { MaxEntries = 10000 });
-            LogDataStore? protocolDataStore = captureProtocol
-                ? new LogDataStore(new LogDataStoreOptions { MaxEntries = 50000 })
-                : null;
-            LogDataStore? processDataStore = captureProcessOutput
-                ? new LogDataStore(new LogDataStoreOptions { MaxEntries = 20000 })
-                : null;
+            // Get shared DataStores from CentralizedTaskLogService
+            (ITaskLogDataStore mainDataStore, ITaskLogDataStore processDataStore, ITaskLogDataStore protocolDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(taskId);
+
+            // Cast to LogDataStore for use with providers
+            var mainLogDataStore = (LogDataStore)mainDataStore;
+            LogDataStore? processLogDataStore = captureProcessOutput ? (LogDataStore?)processDataStore : null;
+            LogDataStore? protocolLogDataStore = captureProtocol ? (LogDataStore?)protocolDataStore : null;
 
             // Create logger providers with DataStores
             var mainConfig = new DataStoreLoggerConfiguration
@@ -71,12 +72,12 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
                 CaptureProperties = true
             };
 
-            var mainProvider = new DataStoreLoggerProvider(mainDataStore, mainConfig);
-            DataStoreLoggerProvider? protocolProvider = protocolDataStore != null
-                ? new DataStoreLoggerProvider(protocolDataStore, protocolConfig)
+            var mainProvider = new DataStoreLoggerProvider(mainLogDataStore, mainConfig);
+            DataStoreLoggerProvider? protocolProvider = protocolLogDataStore != null
+                ? new DataStoreLoggerProvider(protocolLogDataStore, protocolConfig)
                 : null;
-            DataStoreLoggerProvider? processProvider = processDataStore != null
-                ? new DataStoreLoggerProvider(processDataStore, mainConfig)
+            DataStoreLoggerProvider? processProvider = processLogDataStore != null
+                ? new DataStoreLoggerProvider(processLogDataStore, mainConfig)
                 : null;
 
             // Create file logger providers
@@ -135,9 +136,9 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             var context = new TaskLoggerContext
             {
                 TaskLogger = taskLogger,
-                MainDataStore = mainDataStore,
-                ProtocolDataStore = protocolDataStore,
-                ProcessDataStore = processDataStore,
+                MainDataStore = mainLogDataStore,
+                ProtocolDataStore = protocolLogDataStore,
+                ProcessDataStore = processLogDataStore,
                 MainProvider = mainProvider,
                 ProtocolProvider = protocolProvider,
                 ProcessProvider = processProvider,

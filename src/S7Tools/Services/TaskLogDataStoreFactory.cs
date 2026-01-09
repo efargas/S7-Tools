@@ -2,22 +2,20 @@ using Microsoft.Extensions.Options;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Services.Interfaces;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Services;
 
-using S7Tools.Core.Services.Interfaces;
-
-public class TaskLogDataStoreFactory : ITaskLogDataStoreFactory
+public class TaskLogDataStoreFactory(IOptions<TaskLogDataStoreOptions> options) : ITaskLogDataStoreFactory
 {
-    private readonly IOptions<TaskLogDataStoreOptions> _options;
+    private readonly IOptions<TaskLogDataStoreOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
 
-    public TaskLogDataStoreFactory(IOptions<TaskLogDataStoreOptions> options)
+    public (ITaskLogDataStore MainLog, ITaskLogDataStore ProcessLog, ITaskLogDataStore ProtocolLog) CreateLogDataStores()
     {
-        _options = options;
-    }
-
-    public (ITaskLogDataStore main, ITaskLogDataStore process, ITaskLogDataStore protocol) CreateLogDataStores()
-    {
-        return (new TaskLogDataStore(_options.Value.MaxEntries), new TaskLogDataStore(_options.Value.MaxEntries), new TaskLogDataStore(_options.Value.MaxEntries));
+        return (
+            MainLog: new S7Tools.Infrastructure.Logging.Core.Storage.LogDataStore(new S7Tools.Infrastructure.Logging.Core.Models.LogDataStoreOptions { MaxEntries = _options.Value.MaxEntries }),
+            ProcessLog: new S7Tools.Infrastructure.Logging.Core.Storage.LogDataStore(new S7Tools.Infrastructure.Logging.Core.Models.LogDataStoreOptions { MaxEntries = _options.Value.MaxEntries }),
+            ProtocolLog: new S7Tools.Infrastructure.Logging.Core.Storage.LogDataStore(new S7Tools.Infrastructure.Logging.Core.Models.LogDataStoreOptions { MaxEntries = _options.Value.MaxEntries })
+        );
     }
 }

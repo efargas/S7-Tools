@@ -470,6 +470,16 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
     private void SetupJobSpecificCommands()
     {
+        // Intercept Edit button clicks and navigate to Edit (Wizard) instead of showing edit dialog
+        EditCommand.Subscribe(_ =>
+        {
+            if (SelectedProfile != null)
+            {
+                _logger.LogInformation("Edit button clicked: Navigating to Edit (Wizard) for job {JobId}", SelectedProfile.Id);
+                SelectedSideMenuItem = "Edit (Wizard)";
+            }
+        }).DisposeWith(_localDisposables);
+
         // Template-related commands
         IObservable<bool> hasTemplates = this.WhenAnyValue(x => x.JobTemplates.Count)
             .Select(count => count > 0);
@@ -562,7 +572,13 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                         {
                             try
                             {
-                                _logger.LogInformation("Wizard completed, refreshing jobs list and selecting created job");
+                                _logger.LogInformation("Wizard completed, refreshing jobs list and navigating to Main View");
+
+                                // Navigate back to Main View
+                                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                                {
+                                    SelectedSideMenuItem = "Main View";
+                                }).ConfigureAwait(false);
 
                                 // Wait a moment for the job to be fully persisted
                                 await Task.Delay(500);
@@ -621,6 +637,42 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 {
                     JobWizardViewModel wizard = _viewModelFactory.Create<JobWizardViewModel>();
 
+                    // Subscribe to wizard completion to navigate back and refresh
+                    wizard.WhenAnyValue(w => w.Completed)
+                        .Where(completed => completed)
+                        .Take(1)
+                        .Subscribe(async _ =>
+                        {
+                            try
+                            {
+                                _logger.LogInformation("Edit wizard completed, refreshing jobs list and navigating to Main View");
+
+                                // Navigate back to Main View
+                                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                                {
+                                    SelectedSideMenuItem = "Main View";
+                                }).ConfigureAwait(false);
+
+                                // Wait a moment for changes to be persisted
+                                await Task.Delay(500);
+
+                                // Refresh jobs list
+                                await RefreshJobsAsync();
+
+                                // Keep the edited job selected
+                                int? editedJobId = SelectedProfile?.Id;
+                                if (editedJobId.HasValue)
+                                {
+                                    SelectedProfile = Profiles.FirstOrDefault(p => p.Id == editedJobId.Value);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to handle edit wizard completion");
+                            }
+                        })
+                        .DisposeWith(_localDisposables);
+
                     // Load the selected job into the wizard for editing
                     _ = Task.Run(async () =>
                     {
@@ -645,8 +697,8 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
 
             // Fallback to placeholder when factory is not available or fails
-            return new JobWizardPlaceholderViewModel($"Edit Job: {SelectedProfile.Name}",
-                $"Use the job editing wizard to modify the job profile '{SelectedProfile.Name}' with guided setup.");
+            return new JobWizardPlaceholderViewModel($"Edit Job: {SelectedProfile?.Name ?? "Unknown"}",
+                $"Use the job editing wizard to modify the job profile '{SelectedProfile?.Name ?? "Unknown"}' with guided setup.");
         }
         catch (Exception ex)
         {

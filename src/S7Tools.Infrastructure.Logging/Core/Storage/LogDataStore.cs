@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
 using S7Tools.Core.Models;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Infrastructure.Logging.Core.Models;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;
@@ -11,7 +12,7 @@ namespace S7Tools.Infrastructure.Logging.Core.Storage;
 /// <summary>
 /// Thread-safe circular buffer implementation for storing log entries with real-time notifications.
 /// </summary>
-public sealed class LogDataStore : ILogDataStore
+public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore
 {
     /// <summary>
     /// Export format constants.
@@ -66,7 +67,7 @@ public sealed class LogDataStore : ILogDataStore
             {
                 if (_count == 0)
                 {
-                    return Array.Empty<LogModel>();
+                    return [];
                 }
 
                 var result = new LogModel[_count];
@@ -241,7 +242,7 @@ public sealed class LogDataStore : ILogDataStore
         {
             if (_count == 0)
             {
-                return Enumerable.Empty<LogModel>();
+                return [];
             }
 
             var result = new List<LogModel>(_count);
@@ -265,7 +266,7 @@ public sealed class LogDataStore : ILogDataStore
         {
             if (_count == 0)
             {
-                return Enumerable.Empty<LogModel>();
+                return [];
             }
 
             var result = new List<LogModel>(_count);
@@ -388,6 +389,22 @@ public sealed class LogDataStore : ILogDataStore
     private void OnCollectionChanged(NotifyCollectionChangedEventArgs args)
     {
         CollectionChanged?.Invoke(this, args);
+    }
+
+    /// <summary>
+    /// Returns an enumerator that iterates through the log entries.
+    /// </summary>
+    public IEnumerator<LogModel> GetEnumerator()
+    {
+        return Entries.GetEnumerator();
+    }
+
+    /// <summary>
+    /// Returns an enumerator that iterates through the log entries.
+    /// </summary>
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 
     /// <inheritdoc />
