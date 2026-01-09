@@ -7,17 +7,19 @@ using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Infrastructure.Logging.Providers.Microsoft;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Logging;
 
 /// <summary>
 /// Factory for creating task-specific loggers with dedicated DataStores and file outputs.
 /// </summary>
-public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger, S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService) : ITaskLoggerFactory, IDisposable
+public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger, S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService, IApplicationSettingsService applicationSettingsService) : ITaskLoggerFactory, IDisposable
 {
     private readonly IPathService _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
     private readonly ILogger<TaskLoggerFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
+    private readonly IApplicationSettingsService _applicationSettingsService = applicationSettingsService ?? throw new ArgumentNullException(nameof(applicationSettingsService));
     private readonly ConcurrentDictionary<Guid, TaskLoggerContext> _activeLoggers = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
@@ -30,8 +32,7 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
         bool captureProcessOutput = true,
         CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             if (_activeLoggers.TryGetValue(taskId, out TaskLoggerContext? existingLogger))
             {
@@ -58,16 +59,26 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             LogDataStore? protocolLogDataStore = captureProtocol ? (LogDataStore?)protocolDataStore : null;
 
             // Create logger providers with DataStores
+            // Get configured log level from application settings (default to Information if not set or invalid)
+            string logLevelString = _applicationSettingsService.GetSetting<string>("logging.level", "Information");
+
+
+
+            if (!Enum.TryParse(logLevelString, true, out LogLevel configuredLogLevel))
+            {
+                configuredLogLevel = LogLevel.Information;
+            }
+
             var mainConfig = new DataStoreLoggerConfiguration
             {
-                LogLevel = LogLevel.Debug,
+                LogLevel = configuredLogLevel,
                 IncludeScopes = true,
                 CaptureProperties = true
             };
 
             var protocolConfig = new DataStoreLoggerConfiguration
             {
-                LogLevel = LogLevel.Trace,
+                LogLevel = configuredLogLevel,
                 IncludeScopes = true,
                 CaptureProperties = true
             };
@@ -83,18 +94,18 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             // Create file logger providers
             ILogger mainFileLogger = await CreateFileLoggerAsync(
                 Path.Combine(taskLogDir, "main.log"),
-                LogLevel.Debug).ConfigureAwait(false);
+                configuredLogLevel).ConfigureAwait(false);
 
             ILogger? protocolFileLogger = captureProtocol
                 ? await CreateFileLoggerAsync(
                     Path.Combine(taskLogDir, "protocol.log"),
-                    LogLevel.Trace).ConfigureAwait(false)
+                    configuredLogLevel).ConfigureAwait(false)
                 : null;
 
             ILogger? processFileLogger = captureProcessOutput
                 ? await CreateFileLoggerAsync(
                     Path.Combine(taskLogDir, "process.log"),
-                    LogLevel.Debug).ConfigureAwait(false)
+                    configuredLogLevel).ConfigureAwait(false)
                 : null;
 
             // Create composite loggers
@@ -154,18 +165,13 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
                 taskName, taskId, taskLogDir);
 
             return taskLogger;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task FinalizeTaskLoggerAsync(Guid taskId, CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await _semaphore.ExecuteAsync(async () =>
         {
             if (!_activeLoggers.TryRemove(taskId, out TaskLoggerContext? context))
             {
@@ -173,16 +179,7 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
                 return;
             }
 
-            // Export final logs to files
-            if (context.MainDataStore != null)
-            {
-                string exportText = await context.MainDataStore.ExportAsync(LogDataStore.ExportFormats.Text)
-                    .ConfigureAwait(false);
-                await File.AppendAllTextAsync(
-                    context.TaskLogger.MainLogFilePath!,
-                    "\n=== Final Export ===\n" + exportText,
-                    cancellationToken).ConfigureAwait(false);
-            }
+
 
             // Calculate total log size
             long totalSize = 0;
@@ -215,11 +212,9 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             _logger.LogInformation(
                 "Finalized task logger for {TaskId}. Total size: {Size} bytes, Entries: {Entries}",
                 taskId, totalSize, context.TaskLogger.TotalLogEntries);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+
+            await Task.CompletedTask;
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -389,7 +384,7 @@ internal class FileLogger : ILogger, IDisposable
         _minLevel = minLevel;
         _writer = new StreamWriter(filePath, append: true, System.Text.Encoding.UTF8)
         {
-            AutoFlush = true
+            AutoFlush = false // Prevent blocking I/O on every log call
         };
     }
 

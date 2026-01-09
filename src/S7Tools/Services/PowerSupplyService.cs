@@ -7,6 +7,7 @@ using NModbus;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services;
 
@@ -49,10 +50,9 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        var effectiveLogger = taskLogger ?? _logger;
+        Microsoft.Extensions.Logging.ILogger effectiveLogger = taskLogger ?? _logger;
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             if (_isConnected)
             {
@@ -124,18 +124,13 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
                     $"Failed to connect to power supply: {ex.Message}",
                     ex);
             }
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await _semaphore.ExecuteAsync(async () =>
         {
             if (!_isConnected)
             {
@@ -146,11 +141,8 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             _logger.LogInformation("Disconnecting from power supply");
             CleanupConnection();
             _logger.LogInformation("Disconnected from power supply");
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            await Task.CompletedTask;
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -219,150 +211,142 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
     /// <inheritdoc />
     public async Task<bool> TurnOnAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = taskLogger ?? _logger;
+        Microsoft.Extensions.Logging.ILogger effectiveLogger = taskLogger ?? _logger;
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
-            EnsureConnected();
+            try
+            {
+                EnsureConnected();
 
-            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+                ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+                ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
 
-            effectiveLogger.LogDebug("Writing coil to turn power ON (Device: {DeviceId}, Coil: {Coil}, Address: 0x{Address:X4})",
-                modbusTcpConfig.DeviceId, modbusTcpConfig.OnOffCoil, coilAddress);
+                effectiveLogger.LogDebug("Writing coil to turn power ON (Device: {DeviceId}, Coil: {Coil}, Address: 0x{Address:X4})",
+                    modbusTcpConfig.DeviceId, modbusTcpConfig.OnOffCoil, coilAddress);
 
-            await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, true).ConfigureAwait(false);
+                await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, true).ConfigureAwait(false);
 
-            effectiveLogger.LogDebug("Power turned ON successfully");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            effectiveLogger.LogError(ex, "Failed to turn power ON: {Message}", ex.Message);
-            return false;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+                effectiveLogger.LogDebug("Power turned ON successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                effectiveLogger.LogError(ex, "Failed to turn power ON: {Message}", ex.Message);
+                return false;
+            }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<bool> TurnOffAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = taskLogger ?? _logger;
+        Microsoft.Extensions.Logging.ILogger effectiveLogger = taskLogger ?? _logger;
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
-            EnsureConnected();
+            try
+            {
+                EnsureConnected();
 
-            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+                ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+                ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
 
-            effectiveLogger.LogDebug("Writing coil to turn power OFF (Device: {DeviceId}, Coil: {Coil}, Address: 0x{Address:X4})",
-                modbusTcpConfig.DeviceId, modbusTcpConfig.OnOffCoil, coilAddress);
+                effectiveLogger.LogDebug("Writing coil to turn power OFF (Device: {DeviceId}, Coil: {Coil}, Address: 0x{Address:X4})",
+                    modbusTcpConfig.DeviceId, modbusTcpConfig.OnOffCoil, coilAddress);
 
-            await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, false).ConfigureAwait(false);
+                await _modbusMaster!.WriteSingleCoilAsync(modbusTcpConfig.DeviceId, coilAddress, false).ConfigureAwait(false);
 
-            effectiveLogger.LogDebug("Power turned OFF successfully");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            effectiveLogger.LogError(ex, "Failed to turn power OFF: {Message}", ex.Message);
-            return false;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+                effectiveLogger.LogDebug("Power turned OFF successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                effectiveLogger.LogError(ex, "Failed to turn power OFF: {Message}", ex.Message);
+                return false;
+            }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<bool> ReadPowerStateAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
-            EnsureConnected();
+            try
+            {
+                EnsureConnected();
 
-            ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
-            ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
+                ModbusTcpConfiguration modbusTcpConfig = (_currentConfiguration as ModbusTcpConfiguration)!;
+                ushort coilAddress = modbusTcpConfig.ConvertToProtocolAddress(modbusTcpConfig.OnOffCoil);
 
-            _logger.LogDebug("Reading power state (Device: {DeviceId}, Coil: {Coil})",
-                modbusTcpConfig.DeviceId, coilAddress);
+                _logger.LogDebug("Reading power state (Device: {DeviceId}, Coil: {Coil})",
+                    modbusTcpConfig.DeviceId, coilAddress);
 
-            bool[] coils = await _modbusMaster!.ReadCoilsAsync(modbusTcpConfig.DeviceId, coilAddress, 1).ConfigureAwait(false);
-            bool state = coils[0];
+                bool[] coils = await _modbusMaster!.ReadCoilsAsync(modbusTcpConfig.DeviceId, coilAddress, 1).ConfigureAwait(false);
+                bool state = coils[0];
 
-            _logger.LogDebug("Power state read: {State}", state ? "ON" : "OFF");
-            return state;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to read power state: {Message}", ex.Message);
+                _logger.LogDebug("Power state read: {State}", state ? "ON" : "OFF");
+                return state;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to read power state: {Message}", ex.Message);
 
-            string connectionTarget = _currentConfiguration is ModbusTcpConfiguration config
-                ? $"{config.Host}:{config.Port}"
-                : "Unknown";
-            throw new ConnectionException(
-                connectionTarget,
-                "ModbusTCP",
-                $"Failed to read power state: {ex.Message}",
-                ex);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+                string connectionTarget = _currentConfiguration is ModbusTcpConfiguration config
+                    ? $"{config.Host}:{config.Port}"
+                    : "Unknown";
+                throw new ConnectionException(
+                    connectionTarget,
+                    "ModbusTCP",
+                    $"Failed to read power state: {ex.Message}",
+                    ex);
+            }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<bool> PowerCycleAsync(int delayMs = 5000, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = taskLogger ?? _logger;
+        Microsoft.Extensions.Logging.ILogger effectiveLogger = taskLogger ?? _logger;
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
-            EnsureConnected();
-
-            effectiveLogger.LogDebug("Starting power cycle with {Delay}ms delay", delayMs);
-
-            // Turn off
-            bool offResult = await TurnOffWithoutLockAsync(cancellationToken).ConfigureAwait(false);
-            if (!offResult)
+            try
             {
-                effectiveLogger.LogError("Power cycle failed: Could not turn power OFF");
+                EnsureConnected();
+
+                effectiveLogger.LogDebug("Starting power cycle with {Delay}ms delay", delayMs);
+
+                // Turn off
+                bool offResult = await TurnOffWithoutLockAsync().ConfigureAwait(false);
+                if (!offResult)
+                {
+                    effectiveLogger.LogError("Power cycle failed: Could not turn power OFF");
+                    return false;
+                }
+
+                // Wait
+                effectiveLogger.LogDebug("Waiting {Delay}ms before turning power back ON", delayMs);
+                await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
+
+                // Turn on
+                bool onResult = await TurnOnWithoutLockAsync().ConfigureAwait(false);
+                if (!onResult)
+                {
+                    effectiveLogger.LogError("Power cycle failed: Could not turn power ON");
+                    return false;
+                }
+
+                effectiveLogger.LogDebug("Power cycle completed successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                effectiveLogger.LogError(ex, "Power cycle failed: {Message}", ex.Message);
                 return false;
             }
-
-            // Wait
-            effectiveLogger.LogDebug("Waiting {Delay}ms before turning power back ON", delayMs);
-            await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
-
-            // Turn on
-            bool onResult = await TurnOnWithoutLockAsync(cancellationToken).ConfigureAwait(false);
-            if (!onResult)
-            {
-                effectiveLogger.LogError("Power cycle failed: Could not turn power ON");
-                return false;
-            }
-
-            effectiveLogger.LogDebug("Power cycle completed successfully");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            effectiveLogger.LogError(ex, "Power cycle failed: {Message}", ex.Message);
-            return false;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     #endregion
@@ -381,7 +365,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         }
     }
 
-    private async Task<bool> TurnOnWithoutLockAsync(CancellationToken cancellationToken)
+    private async Task<bool> TurnOnWithoutLockAsync()
     {
         // This method is called from PowerCycleAsync which already holds the lock
         try
@@ -398,7 +382,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         }
     }
 
-    private async Task<bool> TurnOffWithoutLockAsync(CancellationToken cancellationToken)
+    private async Task<bool> TurnOffWithoutLockAsync()
     {
         // This method is called from PowerCycleAsync which already holds the lock
         try

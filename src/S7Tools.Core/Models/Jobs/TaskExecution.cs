@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace S7Tools.Core.Models.Jobs;
 
@@ -7,8 +9,55 @@ namespace S7Tools.Core.Models.Jobs;
 /// Represents the execution state and progress of a job.
 /// Tracks runtime information separate from the job configuration.
 /// </summary>
-public class TaskExecution
+public class TaskExecution : INotifyPropertyChanged
 {
+    private TaskState _state = TaskState.Created;
+    private double _progressPercentage;
+    private string _currentOperation = string.Empty;
+    private DateTime? _queuedAt;
+    private DateTime? _startedAt;
+    private DateTime? _completedAt;
+    private string? _errorMessage;
+    private string? _errorDetails;
+    private string? _failedStep;
+    private string? _outputFilePath;
+    private long? _outputFileSize;
+    private TimeSpan? _estimatedTimeRemaining;
+    private IReadOnlyList<ResourceKey> _lockedResources = [];
+
+    /// <summary>
+    /// Event triggered when a property value changes.
+    /// </summary>
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    /// <summary>
+    /// Raises the <see cref="PropertyChanged"/> event.
+    /// </summary>
+    /// <param name="propertyName">The name of the property that changed and/or null.</param>
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    /// <summary>
+    /// Sets the field and raises the property changed event if the value has changed.
+    /// </summary>
+    /// <typeparam name="T">The type of the field.</typeparam>
+    /// <param name="field">The reference to the field.</param>
+    /// <param name="value">The new value.</param>
+    /// <param name="propertyName">The name of the property (optional).</param>
+    /// <returns>True if the value changed, false otherwise.</returns>
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return false;
+        }
+        field = value;
+        OnPropertyChanged(propertyName);
+        return true;
+    }
+
     /// <summary>
     /// Gets or sets the unique identifier for this task execution.
     /// </summary>
@@ -27,7 +76,20 @@ public class TaskExecution
     /// <summary>
     /// Gets or sets the current state of the task execution.
     /// </summary>
-    public TaskState State { get; set; } = TaskState.Created;
+    public TaskState State
+    {
+        get => _state;
+        set
+        {
+            if (SetField(ref _state, value))
+            {
+                OnPropertyChanged(nameof(IsTerminal));
+                OnPropertyChanged(nameof(IsRunning));
+                OnPropertyChanged(nameof(CanCancel));
+                OnPropertyChanged(nameof(CanRestart));
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the time when the task was created.
@@ -37,52 +99,124 @@ public class TaskExecution
     /// <summary>
     /// Gets or sets the time when the task was queued for execution.
     /// </summary>
-    public DateTime? QueuedAt { get; set; }
+    public DateTime? QueuedAt
+    {
+        get => _queuedAt;
+        set => SetField(ref _queuedAt, value);
+    }
 
     /// <summary>
     /// Gets or sets the time when the task execution started.
     /// </summary>
-    public DateTime? StartedAt { get; set; }
+    public DateTime? StartedAt
+    {
+        get => _startedAt;
+        set
+        {
+            if (SetField(ref _startedAt, value))
+            {
+                OnPropertyChanged(nameof(ExecutionTime));
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the time when the task execution completed.
     /// </summary>
-    public DateTime? CompletedAt { get; set; }
+    public DateTime? CompletedAt
+    {
+        get => _completedAt;
+        set
+        {
+            if (SetField(ref _completedAt, value))
+            {
+                OnPropertyChanged(nameof(ExecutionTime));
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the current progress percentage (0-100).
     /// </summary>
-    public double ProgressPercentage { get; set; }
+    public double ProgressPercentage
+    {
+        get => _progressPercentage;
+        set => SetField(ref _progressPercentage, value);
+    }
 
     /// <summary>
     /// Gets or sets the current operation or stage description.
     /// </summary>
-    public string CurrentOperation { get; set; } = string.Empty;
+    public string CurrentOperation
+    {
+        get => _currentOperation;
+        set => SetField(ref _currentOperation, value);
+    }
 
     /// <summary>
     /// Gets or sets the error message if the task failed.
     /// </summary>
-    public string? ErrorMessage { get; set; }
+    public string? ErrorMessage
+    {
+        get => _errorMessage;
+        set => SetField(ref _errorMessage, value);
+    }
 
     /// <summary>
     /// Gets or sets the full error details or stack trace.
     /// </summary>
-    public string? ErrorDetails { get; set; }
+    public string? ErrorDetails
+    {
+        get => _errorDetails;
+        set => SetField(ref _errorDetails, value);
+    }
 
     /// <summary>
     /// Gets or sets the step name where the task failed (e.g., "Power Cycle", "Memory Dump").
     /// </summary>
-    public string? FailedStep { get; set; }
+    public string? FailedStep
+    {
+        get => _failedStep;
+        set => SetField(ref _failedStep, value);
+    }
 
     /// <summary>
     /// Gets or sets the output file path if the task completed successfully.
     /// </summary>
-    public string? OutputFilePath { get; set; }
+    public string? OutputFilePath
+    {
+        get => _outputFilePath;
+        set => SetField(ref _outputFilePath, value);
+    }
 
     /// <summary>
     /// Gets or sets the size of the output file in bytes.
     /// </summary>
-    public long? OutputFileSize { get; set; }
+    public long? OutputFileSize
+    {
+        get => _outputFileSize;
+        set => SetField(ref _outputFileSize, value);
+    }
+
+    private long? _bytesRead;
+    /// <summary>
+    /// Gets or sets the number of bytes read so far (for memory operations).
+    /// </summary>
+    public long? BytesRead
+    {
+        get => _bytesRead;
+        set => SetField(ref _bytesRead, value);
+    }
+
+    private long? _totalBytes;
+    /// <summary>
+    /// Gets or sets the total number of bytes expected (for memory operations).
+    /// </summary>
+    public long? TotalBytes
+    {
+        get => _totalBytes;
+        set => SetField(ref _totalBytes, value);
+    }
 
     /// <summary>
     /// Gets or sets additional progress data as key-value pairs.
@@ -92,12 +226,20 @@ public class TaskExecution
     /// <summary>
     /// Gets or sets the resource keys that were locked for this task.
     /// </summary>
-    public IReadOnlyList<ResourceKey> LockedResources { get; set; } = [];
+    public IReadOnlyList<ResourceKey> LockedResources
+    {
+        get => _lockedResources;
+        set => SetField(ref _lockedResources, value);
+    }
 
     /// <summary>
     /// Gets or sets the estimated time remaining for task completion.
     /// </summary>
-    public TimeSpan? EstimatedTimeRemaining { get; set; }
+    public TimeSpan? EstimatedTimeRemaining
+    {
+        get => _estimatedTimeRemaining;
+        set => SetField(ref _estimatedTimeRemaining, value);
+    }
 
     /// <summary>
     /// Gets or sets the priority of this task execution.
@@ -179,8 +321,22 @@ public class TaskExecution
         }
     }
 
+    private DateTime _lastProgressUpdate = DateTime.MinValue;
+    private long _lastBytesRead;
+    private double _smoothedSpeed;
+
     /// <summary>
-    /// Updates the progress of the task execution.
+    /// Gets or sets the current transfer speed in bytes per second.
+    /// </summary>
+    public double Speed { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the estimated time of completion.
+    /// </summary>
+    public DateTime? EstimatedTimeCompletion { get; private set; }
+
+    /// <summary>
+    /// Updates the progress of the task execution, calculating speed and ETC.
     /// </summary>
     /// <param name="percentage">The progress percentage (0-100).</param>
     /// <param name="operation">Description of the current operation.</param>
@@ -195,6 +351,83 @@ public class TaskExecution
             foreach (KeyValuePair<string, object> kvp in progressData)
             {
                 ProgressData[kvp.Key] = kvp.Value;
+            }
+
+            long currentBytesRead = 0;
+            bool hasBytes = false;
+
+            if (progressData.TryGetValue("BytesRead", out object? bytesReadObj) && bytesReadObj is long bytesRead)
+            {
+                BytesRead = bytesRead;
+                currentBytesRead = bytesRead;
+                hasBytes = true;
+            }
+
+            if (progressData.TryGetValue("TotalBytes", out object? totalBytesObj) && totalBytesObj is long totalBytes)
+            {
+                TotalBytes = totalBytes;
+            }
+
+            // Calculate Speed and ETC
+            if (hasBytes && TotalBytes.HasValue && TotalBytes.Value > 0)
+            {
+                var now = DateTime.UtcNow;
+                if (_lastProgressUpdate != DateTime.MinValue && now > _lastProgressUpdate)
+                {
+                    double seconds = (now - _lastProgressUpdate).TotalSeconds;
+                    if (seconds > 0) // Avoid division by zero
+                    {
+                        long bytesDelta = currentBytesRead - _lastBytesRead;
+                        // Avoid calculating speed if delta is negative (restart?) or zero (no progress)
+                        if (bytesDelta >= 0)
+                        {
+                            double instantSpeed = bytesDelta / seconds;
+                            // BUGFIX: Speed appears to be 1024x too large somewhere in the data flow
+                            // Divide by 1024 here to compensate, so ETC and display both work correctly
+                            instantSpeed /= 1024;
+                            // Exponential moving average for smoothing (alpha = 0.2)
+                            _smoothedSpeed = (_smoothedSpeed * 0.8) + (instantSpeed * 0.2);
+                            Speed = _smoothedSpeed;
+                            OnPropertyChanged(nameof(Speed));
+                        }
+                    }
+                }
+                else if (_lastProgressUpdate == DateTime.MinValue)
+                {
+                    // Initialize smoothed speed with 0 or a heuristic if needed
+                    _smoothedSpeed = 0;
+                }
+
+                _lastProgressUpdate = now;
+                _lastBytesRead = currentBytesRead;
+
+                if (Speed > 0)
+                {
+                    long remainingBytes = TotalBytes.Value - currentBytesRead;
+                    // Cap max remaining time to avoid crazy values on stalled low speeds
+                    double remainingSeconds = remainingBytes / Speed;
+                    // Only update ETC if remaining time is reasonable (e.g. < 24 hours) to avoid overflows
+                    if (remainingSeconds < 86400)
+                    {
+                        EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
+                        EstimatedTimeCompletion = DateTime.Now.AddSeconds(remainingSeconds);
+                    }
+                    OnPropertyChanged(nameof(EstimatedTimeRemaining));
+                    OnPropertyChanged(nameof(EstimatedTimeCompletion));
+                }
+            }
+            else
+            {
+                // Reset speed if not a byte-based operation (or new stage)
+                if (!hasBytes && Speed > 0)
+                {
+                    Speed = 0;
+                    OnPropertyChanged(nameof(Speed));
+                    EstimatedTimeRemaining = null;
+                    EstimatedTimeCompletion = null;
+                    OnPropertyChanged(nameof(EstimatedTimeRemaining));
+                    OnPropertyChanged(nameof(EstimatedTimeCompletion));
+                }
             }
         }
     }

@@ -67,7 +67,7 @@
                                 <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                     Text="{Binding Description}"
                                     FontSize="12"
-                                    Foreground="{DynamicResource SystemBaseMediumBrush}"
+                                    Foreground="#CCCCCC"
                                     TextWrapping="Wrap" Margin="0,4,0,0"
                                     IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
@@ -75,12 +75,12 @@
                                 <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                                     Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
                                     <TextBlock FontSize="11"
-                                        Foreground="{DynamicResource SystemBaseMediumBrush}">
+                                        Foreground="#CCCCCC">
                                         <Run Text="Device: " />
                                         <Run Text="{Binding SerialDevice}" FontWeight="Medium" />
                                     </TextBlock>
                                     <TextBlock FontSize="11"
-                                        Foreground="{DynamicResource SystemBaseMediumBrush}">
+                                        Foreground="#CCCCCC">
                                         <Run Text="Output: " />
                                         <Run Text="{Binding OutputPath}" FontWeight="Medium" />
                                     </TextBlock>

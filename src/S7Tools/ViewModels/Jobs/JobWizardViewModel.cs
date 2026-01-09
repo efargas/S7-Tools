@@ -74,7 +74,6 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     // Port scanning
     private bool _isScanning;
     private string? _selectedPort;
-    private readonly CancellationTokenSource _scanCancellationTokenSource = new();
 
     // Memory
     private uint _memoryStart = MemoryConstants.DefaultUserMemoryStart;
@@ -1345,8 +1344,6 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         if (disposing)
         {
             _disposables.Dispose();
-            _scanCancellationTokenSource?.Cancel();
-            _scanCancellationTokenSource?.Dispose();
             PortScanner?.Dispose();
             // no resources
         }

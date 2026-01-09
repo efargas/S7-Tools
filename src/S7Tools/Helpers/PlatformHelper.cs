@@ -48,15 +48,17 @@ public static class PlatformHelper
 
                     bool opened = false;
                     Exception? lastError = null;
-                    foreach ((string? fileName, string? args) in candidates)
+                    foreach ((string? fileName, string? _) in candidates)
                     {
                         try
                         {
-                            var testPsi = new ProcessStartInfo(fileName, args)
+                            var testPsi = new ProcessStartInfo(fileName)
                             {
                                 UseShellExecute = false,
                                 CreateNoWindow = true
                             };
+                            testPsi.ArgumentList.Add(path);
+
                             using var proc = Process.Start(testPsi);
                             if (proc != null)
                             {

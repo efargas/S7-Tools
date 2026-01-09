@@ -15,7 +15,8 @@ public delegate void TaskStateChanged(TaskExecution taskExecution);
 /// <param name="taskId">The unique identifier of the task.</param>
 /// <param name="percentage">The progress percentage (0-100).</param>
 /// <param name="operation">Description of the current operation.</param>
-public delegate void TaskProgressUpdated(Guid taskId, double percentage, string operation);
+/// <param name="extraData">Optional additional data (e.g., bytes read, total bytes).</param>
+public delegate void TaskProgressUpdated(Guid taskId, double percentage, string operation, Dictionary<string, object>? extraData = null);
 
 /// <summary>
 /// Defines the contract for enhanced task scheduling and execution management.

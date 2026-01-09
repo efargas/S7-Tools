@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Tasking;
 
@@ -30,6 +31,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
     private readonly ConcurrentQueue<Guid> _taskQueue = new();
     private readonly ConcurrentDictionary<Guid, DateTime> _scheduledTasks = new();
+    private readonly ConcurrentDictionary<Guid, Task> _activeExecutions = new(); // Track active execution tasks
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
     private readonly SemaphoreSlim _persistenceSemaphore = new(1, 1);
     private readonly Timer _processingTimer;
@@ -46,7 +48,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private long _successfulTasks;
     private long _failedTasks;
     private long _cancelledTasks;
-    private readonly List<TimeSpan> _executionTimes = [];
+    private readonly Queue<TimeSpan> _executionTimes = new(); // Use Queue for O(1) operations
+    private const int MaxExecutionTimesCount = 1000;
     private static readonly System.Text.Json.JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     #endregion
@@ -143,7 +146,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             State = TaskState.Created,
             Priority = priority,
             LockedResources = executionJob.Resources,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow
         };
 
         _tasks[taskExecution.TaskId] = taskExecution;
@@ -214,7 +217,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskId, task.JobName, localTime);
 
         // If time already passed or is now, promote to queue immediately
-        if (localTime <= DateTime.Now)
+        if (localTime <= DateTime.UtcNow)
         {
             _scheduledTasks.TryRemove(taskId, out _);
             task.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
@@ -548,7 +551,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             int queuePosition = queuedTasks.TakeWhile(t => t.TaskId != taskId).Count();
             var estimatedWaitTime = TimeSpan.FromMinutes(queuePosition * 5); // Rough estimate
 
-            return DateTime.Now.Add(estimatedWaitTime);
+            return DateTime.UtcNow.Add(estimatedWaitTime);
         }
 
         return null;
@@ -559,7 +562,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     {
         IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
         var allResources = runningTasks.SelectMany(t => t.LockedResources).ToList();
-        var resourceLocks = allResources.ToDictionary(r => r, r => runningTasks.First(t => t.LockedResources.Contains(r)).TaskId);
+        var resourceLocks = allResources.ToDictionary(r => r, r =>
+            runningTasks.FirstOrDefault(t => t.LockedResources.Contains(r))?.TaskId ?? Guid.Empty);
 
         return new ResourceUsageInfo
         {
@@ -635,7 +639,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
-        DateTime cutoffTime = DateTime.Now - maxAge;
+        DateTime cutoffTime = DateTime.UtcNow - maxAge;
         var oldTasks = _tasks.Values
             .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
             .ToList();
@@ -670,7 +674,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             CancelledTasks = _cancelledTasks,
             AverageExecutionTime = averageExecutionTime,
             TasksByState = tasksByState,
-            Uptime = DateTime.Now - _startTime
+            Uptime = DateTime.UtcNow - _startTime
         };
     }
 
@@ -707,14 +711,13 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private async Task ProcessTasksAsync()
     {
-        await _schedulerSemaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _schedulerSemaphore.ExecuteAsync(async () =>
         {
             // Promote due scheduled tasks
             if (!_scheduledTasks.IsEmpty)
             {
-                DateTime nowLocal = DateTime.Now;
-                List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowLocal).Select(kvp => kvp.Key)];
+                DateTime nowUtc = DateTime.UtcNow;
+                List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowUtc).Select(kvp => kvp.Key)];
                 foreach (Guid dueId in dueTaskIds)
                 {
                     if (_tasks.TryGetValue(dueId, out TaskExecution? scheduledTask) && scheduledTask.State == TaskState.Scheduled)
@@ -764,16 +767,17 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 }
             }
 
-            // Start the tasks
+            // Start the tasks with tracking to prevent race conditions
             foreach (Guid taskId in tasksToStart)
             {
-                _ = Task.Run(() => ExecuteTaskAsync(taskId));
+                Task executionTask = ExecuteTaskAsync(taskId);
+                _activeExecutions.TryAdd(taskId, executionTask);
+
+                // Clean up tracking when task completes
+                _ = executionTask.ContinueWith(t => _activeExecutions.TryRemove(taskId, out _), TaskScheduler.Default);
             }
-        }
-        finally
-        {
-            _schedulerSemaphore.Release();
-        }
+            await Task.CompletedTask;
+        });
     }
 
     /// <summary>
@@ -817,15 +821,34 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskLogger.MainLogger?.LogInformation("Job profile loaded: {ProfileName}", jobProfile.Name);
 
             // Create progress reporter
-            var progress = new Progress<(string stage, double percent)>(p =>
+            var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>(p =>
             {
-                task.UpdateProgress(p.percent, p.stage);
-                TaskProgressUpdated?.Invoke(task.TaskId, p.percent, p.stage);
+                var extraData = new Dictionary<string, object>();
+                if (p.bytesRead.HasValue)
+                {
+                    extraData["BytesRead"] = p.bytesRead.Value;
+                }
+                if (p.totalBytes.HasValue)
+                {
+                    extraData["TotalBytes"] = p.totalBytes.Value;
+                }
+
+                task.UpdateProgress(p.percent, p.stage, extraData);
+                TaskProgressUpdated?.Invoke(task.TaskId, p.percent, p.stage, extraData);
 
                 // Log progress to task logger
-                taskLogger.MainLogger?.LogInformation(
-                    "Progress: {Stage} - {Percent:F1}%",
-                    p.stage, p.percent);
+                if (p.bytesRead.HasValue && p.totalBytes.HasValue)
+                {
+                    taskLogger.MainLogger?.LogInformation(
+                        "Progress: {Stage} - {Percent:F1}% ({BytesRead}/{TotalBytes} bytes)",
+                        p.stage, p.percent, p.bytesRead, p.totalBytes);
+                }
+                else
+                {
+                    taskLogger.MainLogger?.LogInformation(
+                        "Progress: {Stage} - {Percent:F1}%",
+                        p.stage, p.percent);
+                }
             });
 
             // Execute the job
@@ -861,10 +884,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             {
                 lock (_executionTimes)
                 {
-                    _executionTimes.Add(task.ExecutionTime.Value);
-                    if (_executionTimes.Count > 1000) // Keep only last 1000 execution times
+                    _executionTimes.Enqueue(task.ExecutionTime.Value);
+                    while (_executionTimes.Count > MaxExecutionTimesCount)
                     {
-                        _executionTimes.RemoveAt(0);
+                        _executionTimes.Dequeue(); // O(1) instead of List.RemoveAt(0) which is O(n)
                     }
                 }
             }
@@ -977,23 +1000,21 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private async Task SaveTasksAsync()
     {
-        await _persistenceSemaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _persistenceSemaphore.ExecuteAsync(async () =>
         {
-            var tasksToSave = _tasks.Values.ToList();
-            string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, JsonOptions);
+            try
+            {
+                var tasksToSave = _tasks.Values.ToList();
+                string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, JsonOptions);
 
-            await File.WriteAllTextAsync(_tasksFilePath, json).ConfigureAwait(false);
-            _logger.LogDebug("Saved {Count} tasks to {Path}", tasksToSave.Count, _tasksFilePath);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to save tasks to {Path}", _tasksFilePath);
-        }
-        finally
-        {
-            _persistenceSemaphore.Release();
-        }
+                await File.WriteAllTextAsync(_tasksFilePath, json).ConfigureAwait(false);
+                _logger.LogDebug("Saved {Count} tasks to {Path}", tasksToSave.Count, _tasksFilePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save tasks to {Path}", _tasksFilePath);
+            }
+        });
     }
 
     /// <summary>
@@ -1001,59 +1022,57 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private async Task LoadTasksAsync()
     {
-        await _persistenceSemaphore.WaitAsync().ConfigureAwait(false);
-        try
+        await _persistenceSemaphore.ExecuteAsync(async () =>
         {
-            if (!File.Exists(_tasksFilePath))
+            try
             {
-                _logger.LogInformation("No existing tasks file found at {Path}", _tasksFilePath);
-                return;
-            }
-
-            string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
-            List<TaskExecution>? loadedTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
-
-            if (loadedTasks != null && loadedTasks.Count > 0)
-            {
-                foreach (TaskExecution task in loadedTasks)
+                if (!File.Exists(_tasksFilePath))
                 {
-                    _tasks[task.TaskId] = task;
-
-                    // Restore queued and scheduled tasks to their queues
-                    if (task.State == TaskState.Queued)
-                    {
-                        _taskQueue.Enqueue(task.TaskId);
-                    }
-                    else if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
-                    {
-                        if (scheduledObj is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
-                        {
-                            string? dateString = jsonElement.GetString();
-                            if (!string.IsNullOrEmpty(dateString) && DateTime.TryParse(dateString, out DateTime scheduledTime))
-                            {
-                                _scheduledTasks[task.TaskId] = scheduledTime;
-                            }
-                        }
-                    }
-                    // Reset running tasks to queued (they were interrupted by app close)
-                    else if (task.State == TaskState.Running)
-                    {
-                        task.UpdateState(TaskState.Queued, "Restored from interrupted session");
-                        _taskQueue.Enqueue(task.TaskId);
-                    }
+                    _logger.LogInformation("No existing tasks file found at {Path}", _tasksFilePath);
+                    return;
                 }
 
-                _logger.LogInformation("Loaded {Count} tasks from {Path}", loadedTasks.Count, _tasksFilePath);
+                string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
+                List<TaskExecution>? loadedTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+
+                if (loadedTasks != null && loadedTasks.Count > 0)
+                {
+                    foreach (TaskExecution task in loadedTasks)
+                    {
+                        _tasks[task.TaskId] = task;
+
+                        // Restore queued and scheduled tasks to their queues
+                        if (task.State == TaskState.Queued)
+                        {
+                            _taskQueue.Enqueue(task.TaskId);
+                        }
+                        else if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
+                        {
+                            if (scheduledObj is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.String)
+                            {
+                                string? dateString = jsonElement.GetString();
+                                if (!string.IsNullOrEmpty(dateString) && DateTime.TryParse(dateString, out DateTime scheduledTime))
+                                {
+                                    _scheduledTasks[task.TaskId] = scheduledTime;
+                                }
+                            }
+                        }
+                        // Reset running tasks to queued (they were interrupted by app close)
+                        else if (task.State == TaskState.Running)
+                        {
+                            task.UpdateState(TaskState.Queued, "Restored from interrupted session");
+                            _taskQueue.Enqueue(task.TaskId);
+                        }
+                    }
+
+                    _logger.LogInformation("Loaded {Count} tasks from {Path}", loadedTasks.Count, _tasksFilePath);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to load tasks from {Path}", _tasksFilePath);
-        }
-        finally
-        {
-            _persistenceSemaphore.Release();
-        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load tasks from {Path}", _tasksFilePath);
+            }
+        });
     }
 
     #endregion

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Extensions;
 using S7Tools.Resources;
 
 namespace S7Tools.Services;
@@ -46,7 +47,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <summary>
     /// In-memory cache of profiles. Access must be protected by <see cref="_semaphore"/>.
     /// </summary>
-    protected readonly List<T> _profiles = new();
+    protected readonly List<T> _profiles = [];
 
     /// <summary>
     /// Absolute path to the JSON file where profiles are persisted.
@@ -124,14 +125,12 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         ArgumentNullException.ThrowIfNull(profile);
 
         _logger.LogInformation("🚀 StandardProfileManager.CreateAsync ENTRY for profile: {ProfileName}", profile.Name);
-        _logger.LogInformation("🔒 Waiting for semaphore in CreateAsync...");
+        _logger.LogInformation(" Waiting for semaphore in CreateAsync...");
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-
-        _logger.LogInformation("✅ Semaphore acquired in CreateAsync for profile: {ProfileName}", profile.Name);
-
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
+            _logger.LogInformation("✅ Semaphore acquired in CreateAsync for profile: {ProfileName}", profile.Name);
+
             _logger.LogInformation("📂 Calling EnsureLoadedAsync...");
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("✅ EnsureLoadedAsync completed, profiles loaded: {Count}", _profiles.Count);
@@ -188,13 +187,9 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     ProfileTypeName, newProfile.Name, newProfile.Id);
 
             T clonedProfile = CloneProfile(newProfile);
+            _logger.LogDebug("🔓 Releasing semaphore in CreateAsync (auto via ExecuteAsync)");
             return clonedProfile;
-        }
-        finally
-        {
-            _logger.LogDebug("🔓 Releasing semaphore in CreateAsync");
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -209,8 +204,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
         _logger.LogDebug("StandardProfileManager.UpdateAsync called for profile: {ProfileName}, ID: {ProfileId}", profile.Name, profile.Id);
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -267,11 +261,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 ProfileTypeName, updatedProfile.Name, updatedProfile.Id);
 
             return CloneProfile(updatedProfile);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -280,8 +270,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         if (profileId <= 0)
         { throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId)); }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -307,11 +296,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 ProfileTypeName, profile.Name, profile.Id);
 
             return true;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -323,8 +308,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         if (string.IsNullOrWhiteSpace(newName))
         { throw new ArgumentException("New name cannot be empty.", nameof(newName)); }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -355,11 +339,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 ProfileTypeName, sourceProfile.Name, duplicateProfile.Name, duplicateProfile.Id);
 
             return CloneProfile(duplicateProfile);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     #endregion
@@ -369,48 +349,33 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-            return _profiles.Select(CloneProfile).ToList();
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            return (IEnumerable<T>)_profiles.Select(CloneProfile).ToList();
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<T?> GetByIdAsync(int profileId, CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
             T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
             return profile != null ? CloneProfile(profile) : null;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<T?> GetDefaultAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
             T? defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
             return defaultProfile != null ? CloneProfile(defaultProfile) : null;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     #endregion
@@ -425,8 +390,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId));
         }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -444,18 +408,13 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
             _logger.LogInformation("Set {ProfileType} profile as default: {ProfileName} (ID: {ProfileId})",
                 ProfileTypeName, profile.Name, profile.Id);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<T> EnsureDefaultExistsAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -483,11 +442,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
                 ProfileTypeName, systemDefault.Name, systemDefault.Id);
 
             return CloneProfile(systemDefault);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     #endregion
@@ -502,17 +457,12 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             return false;
         }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
             return !_profiles.Any(p => p.Id != excludeId &&
                                       string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
@@ -523,16 +473,11 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
             throw new ArgumentException("Base name cannot be empty.", nameof(baseName));
         }
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
             return EnsureUniqueNameCore(baseName, excludeId);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -567,16 +512,11 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <inheritdoc/>
     public async Task<int> GetNextAvailableIdAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
             return GetNextAvailableIdCore();
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <summary>
@@ -613,8 +553,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     {
         ArgumentNullException.ThrowIfNull(profiles);
 
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
@@ -673,27 +612,18 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
 
             _logger.LogInformation("Imported {Count} {ProfileType} profiles", importedProfiles.Count, ProfileTypeName);
 
-            return importedProfiles;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            return (IEnumerable<T>)importedProfiles;
+        }, cancellationToken);
     }
 
     /// <inheritdoc/>
     public async Task<IEnumerable<T>> ExportAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _semaphore.ExecuteAsync(async () =>
         {
             await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
-            return _profiles.Select(CloneProfile).ToList();
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
+            return (IEnumerable<T>)_profiles.Select(CloneProfile).ToList();
+        }, cancellationToken);
     }
 
     #endregion

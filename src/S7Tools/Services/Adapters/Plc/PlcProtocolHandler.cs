@@ -61,7 +61,7 @@ namespace S7Tools.Services.Adapters.Plc
             Array.Copy(padding, 0, handshakePayload, 0, padding.Length);
             Array.Copy(magic, 0, handshakePayload, padding.Length, magic.Length);
 
-            for (int attempt = 0; attempt < 100; attempt++)
+            for (int attempt = 0; attempt < 50; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await _protocol.RawWriteAsync(handshakePayload, 0, handshakePayload.Length, cancellationToken);
@@ -92,19 +92,11 @@ namespace S7Tools.Services.Adapters.Plc
             throw new Exception("Handshake failed after 100 attempts");
         }
 
-        public async Task<string> GetVersionAsync(CancellationToken cancellationToken)
+        public async Task<byte[]> GetVersionAsync(CancellationToken cancellationToken)
         {
             // Handler 0x00 = Get Info
             byte[]? response = await InvokePrimaryHandlerAsync(0x00, [], true, cancellationToken);
-            if (response == null)
-            {
-                return "Unknown";
-            }
-
-            // Simple parsing
-            string ascii = System.Text.Encoding.ASCII.GetString(response);
-            // Return cleaned string
-            return ascii.Replace("\0", "").Trim();
+            return response ?? [];
         }
     }
 }

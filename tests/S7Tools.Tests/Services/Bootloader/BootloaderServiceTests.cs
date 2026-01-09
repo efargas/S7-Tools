@@ -107,15 +107,17 @@ public class EnhancedBootloaderServiceTests
             SerialDevice = "/dev/ttyUSB0",
             IsRunning = true
         };
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(socatProcessInfo);
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
-        power.ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<CancellationToken>())
+        power.ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(true);
-        power.TurnOnAsync(Arg.Any<CancellationToken>())
+        power.TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(true);
-        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+        power.TurnOnAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+            .Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
@@ -128,7 +130,7 @@ public class EnhancedBootloaderServiceTests
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(
             payloads: payloads,
@@ -139,10 +141,10 @@ public class EnhancedBootloaderServiceTests
         );
 
         JobProfileSet profiles = CreateTestProfiles();
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        byte[] result = await service.DumpAsync(profiles, progress, null, CancellationToken.None);
+        byte[] result = await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -153,9 +155,10 @@ public class EnhancedBootloaderServiceTests
             Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>());
 
         // Verify 7-stage workflow execution order
-        await socatService.Received(1).StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
-        await power.Received(1).ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<CancellationToken>());
-        await power.Received(1).PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>());
+        await socatService.Received(1).StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
+        await power.Received(1).ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
+        await power.Received(1).TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
+        await power.Received(1).PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
         await plcClient.Received(1).HandshakeAsync(Arg.Any<CancellationToken>());
         await plcClient.Received(1).InstallStagerAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
         await plcClient.Received(1).DumpMemoryAsync(
@@ -181,13 +184,14 @@ public class EnhancedBootloaderServiceTests
             SerialDevice = "/dev/ttyUSB0",
             IsRunning = true
         };
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(socatProcessInfo);
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
-        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
-        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
-        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.DumpMemoryAsync(
@@ -197,7 +201,7 @@ public class EnhancedBootloaderServiceTests
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(
             payloads: payloads,
@@ -207,16 +211,17 @@ public class EnhancedBootloaderServiceTests
             clientFactory: ClientFactory
         );
 
-        var progressReports = new List<(string stage, double percent)>();
-        var progress = new Progress<(string stage, double percent)>(p => progressReports.Add(p));
+        var progressReports = new List<(string stage, double percent, long? bytesRead, long? totalBytes)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>(p => progressReports.Add(p));
         JobProfileSet profiles = CreateTestProfiles();
 
         // Act
-        await service.DumpAsync(profiles, progress, null, CancellationToken.None);
+        await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         progressReports.Should().NotBeEmpty("Progress should be reported");
         progressReports.Should().Contain(p => p.stage == "socat_setup", "Should report socat stage");
+        progressReports.Should().Contain(p => p.stage == "power_off_initial", "Should report power off initial stage");
         progressReports.Should().Contain(p => p.stage == "power_cycle", "Should report power cycle stage");
 
         // Verify progress percentages increase
@@ -229,14 +234,14 @@ public class EnhancedBootloaderServiceTests
     {
         // Arrange
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(serialPort: serialPort);
 
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(null!, progress, null, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(null!, progress, null, null, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
@@ -247,14 +252,14 @@ public class EnhancedBootloaderServiceTests
     {
         // Arrange
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(serialPort: serialPort);
 
         JobProfileSet profiles = CreateTestProfiles();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, null!, null, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, null!, null, null, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
@@ -270,18 +275,18 @@ public class EnhancedBootloaderServiceTests
         // Arrange
         IPayloadProvider payloads = Substitute.For<IPayloadProvider>();
         ISocatService socatService = Substitute.For<ISocatService>();
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
-        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>())
+        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(false); // Connection fails
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(
             payloads: payloads,
@@ -292,10 +297,10 @@ public class EnhancedBootloaderServiceTests
         );
 
         JobProfileSet profiles = CreateTestProfiles();
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -309,7 +314,7 @@ public class EnhancedBootloaderServiceTests
         IPayloadProvider payloads = Substitute.For<IPayloadProvider>();
 
         ISocatService socatService = Substitute.For<ISocatService>();
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns<Task<SocatProcessInfo>>(_ => Task.FromException<SocatProcessInfo>(
                 new InvalidOperationException("Socat failed to start")));
 
@@ -318,7 +323,7 @@ public class EnhancedBootloaderServiceTests
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(
             payloads: payloads,
@@ -329,10 +334,10 @@ public class EnhancedBootloaderServiceTests
         );
 
         JobProfileSet profiles = CreateTestProfiles();
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -348,13 +353,14 @@ public class EnhancedBootloaderServiceTests
             .Returns(new byte[] { 0x01 });
 
         ISocatService socatService = Substitute.For<ISocatService>();
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
-        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
-        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
-        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.HandshakeAsync(Arg.Any<CancellationToken>())
@@ -363,7 +369,7 @@ public class EnhancedBootloaderServiceTests
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(
             payloads: payloads,
@@ -374,10 +380,10 @@ public class EnhancedBootloaderServiceTests
         );
 
         JobProfileSet profiles = CreateTestProfiles();
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -395,7 +401,7 @@ public class EnhancedBootloaderServiceTests
         cts.Cancel(); // Cancel immediately
 
         // Configure socatService to throw when cancellation is detected
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
                 CancellationToken token = callInfo.Arg<CancellationToken>();
@@ -404,16 +410,16 @@ public class EnhancedBootloaderServiceTests
             });
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
-        power.ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<CancellationToken>())
+        power.ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(true);
-        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>())
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(
             payloads: payloads,
@@ -424,10 +430,10 @@ public class EnhancedBootloaderServiceTests
         );
 
         JobProfileSet profiles = CreateTestProfiles();
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, cts.Token);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, null, null, cts.Token);
 
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
@@ -442,13 +448,14 @@ public class EnhancedBootloaderServiceTests
             .Returns(new byte[] { 0x01 });
 
         ISocatService socatService = Substitute.For<ISocatService>();
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
-        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
-        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
-        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.HandshakeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
@@ -459,7 +466,7 @@ public class EnhancedBootloaderServiceTests
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = CreateService(
             payloads: payloads,
@@ -470,10 +477,10 @@ public class EnhancedBootloaderServiceTests
         );
 
         JobProfileSet profiles = CreateTestProfiles();
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -491,13 +498,14 @@ public class EnhancedBootloaderServiceTests
             .Returns(new byte[] { 0x02 });
 
         ISocatService socatService = Substitute.For<ISocatService>();
-        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
+        socatService.StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>())
             .Returns(new SocatProcessInfo { ProcessId = 1234, TcpPort = 1238 });
 
         IPowerSupplyService power = Substitute.For<IPowerSupplyService>();
-        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
-        power.TurnOnAsync(Arg.Any<CancellationToken>()).Returns(true);
-        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.ConnectAsync(Arg.Any<ModbusTcpConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.TurnOnAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
+        power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.HandshakeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
@@ -510,7 +518,7 @@ public class EnhancedBootloaderServiceTests
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
 
         ISerialPortService serialPort = Substitute.For<ISerialPortService>();
-        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<CancellationToken>()).Returns(true);
+        serialPort.ApplyConfigurationAsync(Arg.Any<string>(), Arg.Any<SerialPortConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         var service = new EnhancedBootloaderService(
             NullLogger<EnhancedBootloaderService>.Instance,
@@ -523,10 +531,10 @@ public class EnhancedBootloaderServiceTests
         );
 
         JobProfileSet profiles = CreateTestProfiles();
-        var progress = new Progress<(string stage, double percent)>();
+        var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, CancellationToken.None);
+        Func<Task> act = async () => await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()

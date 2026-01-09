@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
+
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Adapters;
 
@@ -7,27 +9,21 @@ namespace S7Tools.Services.Adapters;
 /// Provides bootloader payload files from the filesystem.
 /// Loads stager and memory dumper binaries from configured base path.
 /// </summary>
-public sealed class FilePayloadProvider : IPayloadProvider, IDisposable
+public sealed class FilePayloadProvider(ILogger<FilePayloadProvider> logger) : IPayloadProvider, IDisposable
 {
-    private readonly ILogger<FilePayloadProvider> _logger;
+    private readonly ILogger<FilePayloadProvider> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly SemaphoreSlim _cacheLock = new(1, 1);
     private byte[]? _cachedStager;
     private byte[]? _cachedDumper;
     private string? _cachedBasePath;
     private bool _disposed;
 
-    public FilePayloadProvider(ILogger<FilePayloadProvider> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
-
     /// <inheritdoc />
     public async Task<byte[]> GetStagerAsync(string basePath, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(basePath, nameof(basePath));
 
-        await _cacheLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _cacheLock.ExecuteAsync(async () =>
         {
             // Return cached stager if base path hasn't changed
             if (_cachedStager is not null && _cachedBasePath == basePath)
@@ -59,11 +55,7 @@ public sealed class FilePayloadProvider : IPayloadProvider, IDisposable
 
             _logger.LogInformation("Loaded stager payload: {Size} bytes from {StagerPath}", payload.Length, stagerPath);
             return payload;
-        }
-        finally
-        {
-            _cacheLock.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -71,8 +63,7 @@ public sealed class FilePayloadProvider : IPayloadProvider, IDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(basePath, nameof(basePath));
 
-        await _cacheLock.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return await _cacheLock.ExecuteAsync(async () =>
         {
             // Return cached dumper if base path hasn't changed
             if (_cachedDumper is not null && _cachedBasePath == basePath)
@@ -104,11 +95,7 @@ public sealed class FilePayloadProvider : IPayloadProvider, IDisposable
 
             _logger.LogInformation("Loaded memory dumper payload: {Size} bytes from {DumperPath}", payload.Length, dumperPath);
             return payload;
-        }
-        finally
-        {
-            _cacheLock.Release();
-        }
+        }, cancellationToken);
     }
 
     /// <summary>

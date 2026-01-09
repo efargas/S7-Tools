@@ -30,7 +30,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
     private readonly IPowerSupplyProfileService _powerService;
     private readonly IMemoryRegionProfileService _memoryRegionService;
     private readonly ILogger<JobInfoDisplayViewModel> _logger;
-    private readonly CompositeDisposable _disposables = new();
+    private readonly CompositeDisposable _disposables = [];
 
     private JobProfile? _selectedJob;
     private string _jobBasicInfo = "No job selected";
@@ -39,7 +39,7 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
     private IProfileDetailsViewModel? _powerSupplyProfileDetails;
     private IProfileDetailsViewModel? _memoryRegionProfileDetails;
     private bool _hasMissingProfiles;
-    private readonly ObservableCollection<string> _missingProfileWarnings = new();
+    private readonly ObservableCollection<string> _missingProfileWarnings = [];
 
     public JobInfoDisplayViewModel(
         IProfileDetailsService profileDetailsService,

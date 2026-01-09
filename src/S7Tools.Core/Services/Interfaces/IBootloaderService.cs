@@ -22,7 +22,7 @@ public interface IBootloaderService
     /// <returns>The dumped memory data.</returns>
     Task<byte[]> DumpAsync(
         JobProfileSet profiles,
-        IProgress<(string stage, double percent)> progress,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
         Microsoft.Extensions.Logging.ILogger? processLogger = null,
         Microsoft.Extensions.Logging.ILogger? protocolLogger = null,
