@@ -4,6 +4,7 @@ using S7Tools.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 
@@ -15,6 +16,7 @@ public sealed class DataStoreLogger : ILogger
     private readonly string _categoryName;
     private readonly ILogDataStore _dataStore;
     private readonly DataStoreLoggerConfiguration _configuration;
+    private readonly ITimeProvider _timeProvider;
 
     /// <summary>
     /// Initializes a new instance of the DataStoreLogger class.
@@ -22,11 +24,13 @@ public sealed class DataStoreLogger : ILogger
     /// <param name="categoryName">The category name for this logger.</param>
     /// <param name="dataStore">The data store to write log entries to.</param>
     /// <param name="configuration">The logger configuration.</param>
-    public DataStoreLogger(string categoryName, ILogDataStore dataStore, DataStoreLoggerConfiguration configuration)
+    /// <param name="timeProvider">The time provider for timestamp generation.</param>
+    public DataStoreLogger(string categoryName, ILogDataStore dataStore, DataStoreLoggerConfiguration configuration, ITimeProvider timeProvider)
     {
         _categoryName = categoryName ?? throw new ArgumentNullException(nameof(categoryName));
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
 
     /// <inheritdoc />
@@ -65,7 +69,7 @@ public sealed class DataStoreLogger : ILogger
 
         var logEntry = new LogModel
         {
-            Timestamp = DateTime.UtcNow,
+            Timestamp = _timeProvider.GetLocalNow(),
             Level = logLevel,
             Category = _categoryName,
             Message = message,

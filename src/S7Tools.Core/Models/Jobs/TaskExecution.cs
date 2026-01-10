@@ -48,7 +48,7 @@ public class TaskExecution : INotifyPropertyChanged
     public TaskExecution(ITimeProvider timeProvider)
     {
         _timeProvider = timeProvider;
-        CreatedAt = _timeProvider.GetUtcNow();
+        CreatedAt = _timeProvider.GetLocalNow();
     }
 
     /// <summary>
@@ -61,9 +61,9 @@ public class TaskExecution : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Helper to get UTC now from provider or fallback.
+    /// Helper to get local now from provider or fallback.
     /// </summary>
-    private DateTime UtcNow => _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
+    private DateTime Now => _timeProvider?.GetLocalNow() ?? DateTime.Now;
 
     /// <summary>
     /// Event triggered when a property value changes.
@@ -134,7 +134,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets or sets the time when the task was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
 
     /// <summary>
     /// Gets or sets the time when the task was queued for execution.
@@ -309,7 +309,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets the total time since the task was created.
     /// </summary>
-    public TimeSpan TotalTime => UtcNow - CreatedAt;
+    public TimeSpan TotalTime => Now - CreatedAt;
 
     /// <summary>
     /// Gets a value indicating whether the task is in a terminal state.
@@ -343,15 +343,15 @@ public class TaskExecution : INotifyPropertyChanged
         switch (newState)
         {
             case TaskState.Queued:
-                QueuedAt = UtcNow;
+                QueuedAt = Now;
                 break;
             case TaskState.Running:
-                StartedAt = UtcNow;
+                StartedAt = Now;
                 break;
             case TaskState.Completed:
             case TaskState.Failed:
             case TaskState.Cancelled:
-                CompletedAt = UtcNow;
+                CompletedAt = Now;
                 break;
         }
 
@@ -411,7 +411,7 @@ public class TaskExecution : INotifyPropertyChanged
             // Calculate Speed and ETC
             if (hasBytes && TotalBytes.HasValue && TotalBytes.Value > 0)
             {
-                var now = UtcNow;
+                var now = Now;
                 if (_lastProgressUpdate != DateTime.MinValue && now > _lastProgressUpdate)
                 {
                     double seconds = (now - _lastProgressUpdate).TotalSeconds;
@@ -448,7 +448,7 @@ public class TaskExecution : INotifyPropertyChanged
                     if (remainingSeconds < 86400)
                     {
                         EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
-                        EstimatedTimeCompletion = UtcNow.AddSeconds(remainingSeconds);
+                        EstimatedTimeCompletion = Now.AddSeconds(remainingSeconds);
                     }
                     OnPropertyChanged(nameof(EstimatedTimeRemaining));
                     OnPropertyChanged(nameof(EstimatedTimeCompletion));

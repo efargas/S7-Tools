@@ -153,7 +153,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             State = TaskState.Created,
             Priority = priority,
             LockedResources = executionJob.Resources,
-            CreatedAt = _timeProvider.GetUtcNow()
+            CreatedAt = _timeProvider.GetLocalNow()
         };
         taskExecution.Initialize(_timeProvider);
 

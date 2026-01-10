@@ -1324,7 +1324,7 @@ public partial class SocatService : ISocatService, IDisposable
                 Configuration = configuration.Clone(),
                 Profile = profile?.Clone(),
                 CommandLine = $"{fileName} {arguments}",
-                StartTime = _timeProvider.GetUtcNow(),
+                StartTime = _timeProvider.GetLocalNow(),
                 IsRunning = true,
                 Status = SocatProcessStatus.Running,
                 ActiveConnections = 0,
@@ -1334,10 +1334,10 @@ public partial class SocatService : ISocatService, IDisposable
                     BytesTcpToSerial = 0,
                     TotalConnections = 0,
                     ActiveConnections = 0,
-                    LastUpdated = _timeProvider.GetUtcNow(),
+                    LastUpdated = _timeProvider.GetLocalNow(),
                     Uptime = TimeSpan.Zero
                 },
-                LastUpdated = _timeProvider.GetUtcNow()
+                LastUpdated = _timeProvider.GetLocalNow()
             };
 
             // Store the actual Process object to keep it alive
@@ -1594,12 +1594,12 @@ public partial class SocatService : ISocatService, IDisposable
                         Configuration = new SocatConfiguration { TcpPort = port, TcpHost = host },
                         Profile = null,
                         CommandLine = cmd,
-                        StartTime = _timeProvider.GetUtcNow(), // Reverted to UtcNow for internal consistency
+                        StartTime = _timeProvider.GetLocalNow(), // Reverted from UtcNow for local consistency
                         IsRunning = true,
                         Status = SocatProcessStatus.Running,
                         ActiveConnections = 0,
                         TransferStats = new SocatTransferStats(),
-                        LastUpdated = _timeProvider.GetUtcNow() // Reverted to UtcNow for internal consistency
+                        LastUpdated = _timeProvider.GetLocalNow() // Reverted from UtcNow for local consistency
                     };
 
                     _runningProcesses[pid] = info;

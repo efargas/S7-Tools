@@ -14,12 +14,13 @@ namespace S7Tools.Services.Logging;
 /// <summary>
 /// Factory for creating task-specific loggers with dedicated DataStores and file outputs.
 /// </summary>
-public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger, S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService, IApplicationSettingsService applicationSettingsService) : ITaskLoggerFactory, IDisposable
+public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger, S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService, IApplicationSettingsService applicationSettingsService, ITimeProvider timeProvider) : ITaskLoggerFactory, IDisposable
 {
     private readonly IPathService _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
     private readonly ILogger<TaskLoggerFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
     private readonly IApplicationSettingsService _applicationSettingsService = applicationSettingsService ?? throw new ArgumentNullException(nameof(applicationSettingsService));
+    private readonly ITimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly ConcurrentDictionary<Guid, TaskLoggerContext> _activeLoggers = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
@@ -49,7 +50,7 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             {
                 // Create log directory for this task
                 string sanitizedTaskName = SanitizeFileName(taskName);
-                string timestamp = DateTime.UtcNow.ToLocalTime().ToString("yyyyMMdd_HHmmss");
+                string timestamp = _timeProvider.GetLocalNow().ToString("yyyyMMdd_HHmmss");
                 string taskLogDir = Path.Combine(
                     _pathService.LogsDirectory,
                     "Tasks",
@@ -87,12 +88,12 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
                     CaptureProperties = true
                 };
 
-                mainProvider = new DataStoreLoggerProvider(mainLogDataStore, mainConfig);
+                mainProvider = new DataStoreLoggerProvider(mainLogDataStore, _timeProvider, mainConfig);
                 protocolProvider = protocolLogDataStore != null
-                    ? new DataStoreLoggerProvider(protocolLogDataStore, protocolConfig)
+                    ? new DataStoreLoggerProvider(protocolLogDataStore, _timeProvider, protocolConfig)
                     : null;
                 processProvider = processLogDataStore != null
-                    ? new DataStoreLoggerProvider(processLogDataStore, mainConfig)
+                    ? new DataStoreLoggerProvider(processLogDataStore, _timeProvider, mainConfig)
                     : null;
 
                 // Create file logger providers

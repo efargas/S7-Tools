@@ -138,8 +138,8 @@ public class JobManager(
 
             // Assign ID and add to collection
             newJob.Id = GetNextAvailableIdCore();
-            newJob.CreatedAt = _timeProvider.GetUtcNow();
-            newJob.ModifiedAt = _timeProvider.GetUtcNow();
+            newJob.CreatedAt = _timeProvider.GetLocalNow();
+            newJob.ModifiedAt = _timeProvider.GetLocalNow();
 
             _profiles.Add(newJob);
             _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
@@ -170,8 +170,8 @@ public class JobManager(
 
             // Assign ID and add to collection
             job.Id = GetNextAvailableIdCore();
-            job.CreatedAt = _timeProvider.GetUtcNow();
-            job.ModifiedAt = _timeProvider.GetUtcNow();
+            job.CreatedAt = _timeProvider.GetLocalNow();
+            job.ModifiedAt = _timeProvider.GetLocalNow();
 
             _profiles.Add(job);
             _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
@@ -641,8 +641,8 @@ public class JobManager(
             Description = jobProfile.Description ?? string.Empty,
             ProfileSet = profileSet,
             State = JobState.Created,
-            CreatedAt = _timeProvider.GetUtcNow(),
-            ModifiedAt = _timeProvider.GetUtcNow(),
+            CreatedAt = _timeProvider.GetLocalNow(),
+            ModifiedAt = _timeProvider.GetLocalNow(),
             Progress = 0.0,
             CurrentOperation = string.Empty,
             OutputPath = jobProfile.OutputPath ?? string.Empty

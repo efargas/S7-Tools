@@ -199,7 +199,7 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
                 IsAccessible = isAccessible,
                 IsInUse = await IsPortInUseAsync(portPath, cancellationToken).ConfigureAwait(false),
                 Description = GetPortDescription(portType),
-                LastUpdated = _timeProvider.GetUtcNow()
+                LastUpdated = _timeProvider.GetLocalNow()
             };
 
             // Get USB device info if it's a USB port
@@ -857,7 +857,7 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
             config.DisableEchoControl = sttyOutput.Contains("-echoctl");
             config.DisableEchoKillErase = sttyOutput.Contains("-echoke");
 
-            config.ModifiedAt = _timeProvider.GetUtcNow();
+            config.ModifiedAt = _timeProvider.GetLocalNow();
         }
         catch (Exception ex)
         {

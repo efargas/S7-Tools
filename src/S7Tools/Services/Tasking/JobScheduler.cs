@@ -50,8 +50,8 @@ public sealed class JobScheduler(
         Job queuedJob = job with
         {
             State = JobState.Queued,
-            QueuedAt = _timeProvider.GetUtcNow(),
-            ModifiedAt = _timeProvider.GetUtcNow()
+            QueuedAt = _timeProvider.GetLocalNow(),
+            ModifiedAt = _timeProvider.GetLocalNow()
         };
 
         _jobs[job.Id] = queuedJob;
@@ -82,8 +82,8 @@ public sealed class JobScheduler(
         Job canceledJob = job with
         {
             State = JobState.Canceled,
-            CompletedAt = _timeProvider.GetUtcNow(),
-            ModifiedAt = _timeProvider.GetUtcNow()
+            CompletedAt = _timeProvider.GetLocalNow(),
+            ModifiedAt = _timeProvider.GetLocalNow()
         };
 
         _jobs[jobId] = canceledJob;
@@ -258,8 +258,8 @@ public sealed class JobScheduler(
                     Job runningJob = job with
                     {
                         State = JobState.Running,
-                        StartedAt = _timeProvider.GetUtcNow(),
-                        ModifiedAt = _timeProvider.GetUtcNow()
+                        StartedAt = _timeProvider.GetLocalNow(),
+                        ModifiedAt = _timeProvider.GetLocalNow()
                     };
                     _jobs[job.Id] = runningJob;
 
@@ -322,7 +322,7 @@ public sealed class JobScheduler(
                 {
                     Progress = percentage,
                     CurrentOperation = operation,
-                    ModifiedAt = _timeProvider.GetUtcNow()
+                    ModifiedAt = _timeProvider.GetLocalNow()
                 };
                 _jobs[job.Id] = progressJob;
 
@@ -362,8 +362,8 @@ public sealed class JobScheduler(
                 State = JobState.Completed,
                 Progress = 100.0,
                 CurrentOperation = "Complete",
-                CompletedAt = _timeProvider.GetUtcNow(),
-                ModifiedAt = _timeProvider.GetUtcNow()
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
             };
             _jobs[job.Id] = completedJob;
 
@@ -382,8 +382,8 @@ public sealed class JobScheduler(
             {
                 State = JobState.Canceled,
                 ErrorMessage = "Operation canceled by user",
-                CompletedAt = _timeProvider.GetUtcNow(),
-                ModifiedAt = _timeProvider.GetUtcNow()
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
             };
             _jobs[job.Id] = canceledJob;
 
@@ -405,8 +405,8 @@ public sealed class JobScheduler(
             {
                 State = JobState.Failed,
                 ErrorMessage = ex.Message,
-                CompletedAt = _timeProvider.GetUtcNow(),
-                ModifiedAt = _timeProvider.GetUtcNow()
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
             };
             _jobs[job.Id] = failedJob;
 
