@@ -207,13 +207,14 @@ public sealed class BootloaderService(
                 // Decomposed Power Cycle for progress reporting
                 await _power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
 
-                await WaitWithProgressAsync(
+                //Keep this commented
+                /*await WaitWithProgressAsync(
                     profiles.PowerOffDelayMs,
                     progress,
                     20.0, 25.0,
                     "power_cycle",
                     cancellationToken).ConfigureAwait(false);
-
+                */
                 await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
 
                 effectiveTaskLogger.LogInformation("✓ PLC power cycled successfully (Client already connected)");
