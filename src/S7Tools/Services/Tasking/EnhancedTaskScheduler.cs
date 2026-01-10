@@ -643,30 +643,27 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         if (graceful)
         {
             // Wait for running tasks to complete with a timeout
-            IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Waiting for {Count} running tasks to complete (max 30 seconds)", runningTasks.Count);
+            var activeExecutionTasks = _activeExecutions.Values.ToList();
+            _logger.LogInformation("Waiting for {Count} running tasks to complete (max 30 seconds)", activeExecutionTasks.Count);
 
-            // Add 30-second timeout to prevent infinite wait
-            const int maxWaitSeconds = 30;
-            DateTime startTime = _timeProvider.GetUtcNow();
-
-            while (runningTasks.Count > 0)
+            if (activeExecutionTasks.Count > 0)
             {
-                // Check if timeout elapsed
-                if ((_timeProvider.GetUtcNow() - startTime).TotalSeconds >= maxWaitSeconds)
+                var allTasks = Task.WhenAll(activeExecutionTasks);
+                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+
+                var completedTask = await Task.WhenAny(allTasks, timeoutTask).ConfigureAwait(false);
+
+                if (completedTask == timeoutTask)
                 {
-                    _logger.LogWarning("Graceful shutdown timeout reached after {Seconds} seconds with {Count} tasks still running",
-                        maxWaitSeconds, runningTasks.Count);
-                    break;
+                    _logger.LogWarning("Graceful shutdown timeout reached after 30 seconds with {Count} tasks still running",
+                        _activeExecutions.Count);
                 }
-
-                await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
-                runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            if (runningTasks.Count == 0)
-            {
-                _logger.LogInformation("All running tasks completed before shutdown");
+                else
+                {
+                    // Await the WhenAll task to propagate any exceptions from the tasks.
+                    await allTasks.ConfigureAwait(false);
+                    _logger.LogInformation("All running tasks completed before shutdown");
+                }
             }
         }
 
