@@ -27,7 +27,8 @@ public class JobManager(
     ISerialPortProfileService serialProfileService,
     ISocatProfileService socatProfileService,
     IPowerSupplyProfileService powerSupplyProfileService,
-    IMemoryRegionProfileService memoryRegionProfileService)
+    IMemoryRegionProfileService memoryRegionProfileService,
+    ITimeProvider timeProvider)
     : StandardProfileManager<JobProfile>(options.Value.ProfilesPath, logger), IJobManager
 {
     #region Private Fields
@@ -37,6 +38,7 @@ public class JobManager(
     private readonly ISocatProfileService _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
     private readonly IPowerSupplyProfileService _powerSupplyProfileService = powerSupplyProfileService ?? throw new ArgumentNullException(nameof(powerSupplyProfileService));
     private readonly IMemoryRegionProfileService _memoryRegionProfileService = memoryRegionProfileService ?? throw new ArgumentNullException(nameof(memoryRegionProfileService));
+    private readonly ITimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
 
     #endregion
@@ -136,8 +138,8 @@ public class JobManager(
 
             // Assign ID and add to collection
             newJob.Id = GetNextAvailableIdCore();
-            newJob.CreatedAt = DateTime.UtcNow;
-            newJob.ModifiedAt = DateTime.UtcNow;
+            newJob.CreatedAt = _timeProvider.GetUtcNow();
+            newJob.ModifiedAt = _timeProvider.GetUtcNow();
 
             _profiles.Add(newJob);
             _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
@@ -168,8 +170,8 @@ public class JobManager(
 
             // Assign ID and add to collection
             job.Id = GetNextAvailableIdCore();
-            job.CreatedAt = DateTime.UtcNow;
-            job.ModifiedAt = DateTime.UtcNow;
+            job.CreatedAt = _timeProvider.GetUtcNow();
+            job.ModifiedAt = _timeProvider.GetUtcNow();
 
             _profiles.Add(job);
             _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
@@ -639,8 +641,8 @@ public class JobManager(
             Description = jobProfile.Description ?? string.Empty,
             ProfileSet = profileSet,
             State = JobState.Created,
-            CreatedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow,
+            CreatedAt = _timeProvider.GetUtcNow(),
+            ModifiedAt = _timeProvider.GetUtcNow(),
             Progress = 0.0,
             CurrentOperation = string.Empty,
             OutputPath = jobProfile.OutputPath ?? string.Empty

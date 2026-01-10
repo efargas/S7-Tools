@@ -24,6 +24,7 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
     private readonly IApplicationSettingsService _settingsService;
+    private readonly ITimeProvider _timeProvider;
     private readonly Timer _monitoringTimer;
     private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = [];
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -35,11 +36,16 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
     /// <param name="settingsService">The application settings service for runtime configuration.</param>
+    /// <param name="timeProvider">The time provider for abstracting time operations.</param>
     /// <exception cref="ArgumentNullException">Thrown when logger or settingsService is null.</exception>
-    public SerialPortService(ILogger<SerialPortService> logger, IApplicationSettingsService settingsService)
+    public SerialPortService(
+        ILogger<SerialPortService> logger,
+        IApplicationSettingsService settingsService,
+        ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
         _logger.LogDebug("SerialPortService initialized with runtime settings from IApplicationSettingsService");
 
@@ -193,7 +199,7 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
                 IsAccessible = isAccessible,
                 IsInUse = await IsPortInUseAsync(portPath, cancellationToken).ConfigureAwait(false),
                 Description = GetPortDescription(portType),
-                LastUpdated = DateTime.UtcNow
+                LastUpdated = _timeProvider.GetUtcNow()
             };
 
             // Get USB device info if it's a USB port
@@ -851,7 +857,7 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
             config.DisableEchoControl = sttyOutput.Contains("-echoctl");
             config.DisableEchoKillErase = sttyOutput.Contains("-echoke");
 
-            config.ModifiedAt = DateTime.UtcNow;
+            config.ModifiedAt = _timeProvider.GetUtcNow();
         }
         catch (Exception ex)
         {

@@ -17,6 +17,7 @@ public sealed class BootloaderService(
     ISocatService socat,
     IPowerSupplyService power,
     ISerialPortService serialPort,
+    ITimeProvider timeProvider,
     Func<JobProfileSet, IPlcClient> clientFactory) : IBootloaderService
 {
     private readonly ILogger<BootloaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -25,6 +26,7 @@ public sealed class BootloaderService(
     private readonly IPowerSupplyService _power = power ?? throw new ArgumentNullException(nameof(power));
     private readonly ISerialPortService _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
     private readonly Func<JobProfileSet, IPlcClient> _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+    private readonly ITimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
     private const int InitialPowerOffWaitMs = 10000;
 
@@ -272,8 +274,7 @@ public sealed class BootloaderService(
                         cancellationToken).ConfigureAwait(false);
 
                     effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
-
-                    DateTime dumpStartTime = DateTime.UtcNow;
+                    DateTime dumpStartTime = _timeProvider.GetUtcNow();
 
                     for (int i = 0; i < selectedSegments.Count; i++)
                     {
@@ -317,7 +318,7 @@ public sealed class BootloaderService(
                             }
                         });
 
-                        DateTime segmentStartTime = DateTime.UtcNow;
+                        DateTime segmentStartTime = _timeProvider.GetUtcNow();
                         byte[] segmentData = await client.DumpMemoryAsync(
                             segmentStart,
                             segmentSize,
@@ -325,7 +326,7 @@ public sealed class BootloaderService(
                             segmentProgress,
                             cancellationToken).ConfigureAwait(false);
 
-                        TimeSpan segmentDuration = DateTime.UtcNow - segmentStartTime;
+                        TimeSpan segmentDuration = _timeProvider.GetUtcNow() - segmentStartTime;
                         double transferRate = segmentData.Length / segmentDuration.TotalSeconds;
 
                         segmentDataList.Add(segmentData);
@@ -337,7 +338,7 @@ public sealed class BootloaderService(
 
                     // Concatenate all segment data
                     memoryData = [.. segmentDataList.SelectMany(arr => arr)];
-                    TimeSpan totalDuration = DateTime.UtcNow - dumpStartTime;
+                    TimeSpan totalDuration = _timeProvider.GetUtcNow() - dumpStartTime;
                     double overallRate = memoryData.Length / totalDuration.TotalSeconds;
 
                     effectiveTaskLogger.LogInformation("✓ Multi-segment dump completed: {TotalSegments} segments, {TotalSize:N0} bytes",
@@ -394,7 +395,7 @@ public sealed class BootloaderService(
                         }
                     });
 
-                    DateTime dumpStartTime = DateTime.UtcNow;
+                    DateTime dumpStartTime = _timeProvider.GetUtcNow();
                     memoryData = await client.DumpMemoryAsync(
                         profiles.Memory.Start,
                         profiles.Memory.Length,
@@ -402,7 +403,7 @@ public sealed class BootloaderService(
                         dumpProgress,
                         cancellationToken).ConfigureAwait(false);
 
-                    TimeSpan dumpDuration = DateTime.UtcNow - dumpStartTime;
+                    TimeSpan dumpDuration = _timeProvider.GetUtcNow() - dumpStartTime;
                     double transferRate = memoryData.Length > 0 && dumpDuration.TotalSeconds > 0 ? memoryData.Length / dumpDuration.TotalSeconds : 0;
 
                     effectiveTaskLogger.LogInformation("✓ Memory dump completed: {Size:N0} bytes from 0x{Start:X8}",

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
+
+using S7Tools.Core.Services.Interfaces;
+
 namespace S7Tools.Core.Models.Jobs;
 
 /// <summary>
@@ -24,6 +27,43 @@ public class TaskExecution : INotifyPropertyChanged
     private long? _outputFileSize;
     private TimeSpan? _estimatedTimeRemaining;
     private IReadOnlyList<ResourceKey> _lockedResources = [];
+
+    /// <summary>
+    /// Event triggered when a property value changes.
+    /// </summary>
+    private ITimeProvider? _timeProvider;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskExecution"/> class.
+    /// Default constructor for serialization.
+    /// </summary>
+    public TaskExecution()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskExecution"/> class with a time provider.
+    /// </summary>
+    /// <param name="timeProvider">The time provider to use for timestamps.</param>
+    public TaskExecution(ITimeProvider timeProvider)
+    {
+        _timeProvider = timeProvider;
+        CreatedAt = _timeProvider.GetUtcNow();
+    }
+
+    /// <summary>
+    /// Initializes the time provider for this instance (e.g. after deserialization).
+    /// </summary>
+    /// <param name="timeProvider">The time provider.</param>
+    public void Initialize(ITimeProvider timeProvider)
+    {
+        _timeProvider = timeProvider;
+    }
+
+    /// <summary>
+    /// Helper to get UTC now from provider or fallback.
+    /// </summary>
+    private DateTime UtcNow => _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
 
     /// <summary>
     /// Event triggered when a property value changes.
@@ -269,7 +309,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets the total time since the task was created.
     /// </summary>
-    public TimeSpan TotalTime => DateTime.UtcNow - CreatedAt;
+    public TimeSpan TotalTime => UtcNow - CreatedAt;
 
     /// <summary>
     /// Gets a value indicating whether the task is in a terminal state.
@@ -303,15 +343,15 @@ public class TaskExecution : INotifyPropertyChanged
         switch (newState)
         {
             case TaskState.Queued:
-                QueuedAt = DateTime.UtcNow;
+                QueuedAt = UtcNow;
                 break;
             case TaskState.Running:
-                StartedAt = DateTime.UtcNow;
+                StartedAt = UtcNow;
                 break;
             case TaskState.Completed:
             case TaskState.Failed:
             case TaskState.Cancelled:
-                CompletedAt = DateTime.UtcNow;
+                CompletedAt = UtcNow;
                 break;
         }
 
@@ -371,7 +411,7 @@ public class TaskExecution : INotifyPropertyChanged
             // Calculate Speed and ETC
             if (hasBytes && TotalBytes.HasValue && TotalBytes.Value > 0)
             {
-                var now = DateTime.UtcNow;
+                var now = UtcNow;
                 if (_lastProgressUpdate != DateTime.MinValue && now > _lastProgressUpdate)
                 {
                     double seconds = (now - _lastProgressUpdate).TotalSeconds;
@@ -408,7 +448,7 @@ public class TaskExecution : INotifyPropertyChanged
                     if (remainingSeconds < 86400)
                     {
                         EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
-                        EstimatedTimeCompletion = DateTime.UtcNow.AddSeconds(remainingSeconds);
+                        EstimatedTimeCompletion = UtcNow.AddSeconds(remainingSeconds);
                     }
                     OnPropertyChanged(nameof(EstimatedTimeRemaining));
                     OnPropertyChanged(nameof(EstimatedTimeCompletion));

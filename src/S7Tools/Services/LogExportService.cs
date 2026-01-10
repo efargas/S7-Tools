@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Services.Interfaces;
 
@@ -21,6 +22,7 @@ public class LogExportService : ILogExportService
 {
     private readonly ILogger<LogExportService> _logger;
     private readonly IPathService _pathService;
+    private readonly ITimeProvider _timeProvider;
     private readonly string _defaultExportPath;
 
     /// <summary>
@@ -28,10 +30,12 @@ public class LogExportService : ILogExportService
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="pathService">The path service for resolving export paths.</param>
-    public LogExportService(ILogger<LogExportService> logger, IPathService pathService)
+    /// <param name="timeProvider">The time provider for file timestamp generation.</param>
+    public LogExportService(ILogger<LogExportService> logger, IPathService pathService, ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
         // Use the dynamic path service for export path resolution
         _defaultExportPath = _pathService.ExportedLogsDirectory;
@@ -147,7 +151,7 @@ public class LogExportService : ILogExportService
     /// <inheritdoc/>
     public string GenerateDefaultFileName(ExportFormat format)
     {
-        string timestamp = DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.FileTimestamp);
+        string timestamp = _timeProvider.GetLocalNow().ToString(DateTimeFormats.FileTimestamp);
         string extension = format switch
         {
             ExportFormat.Text => "txt",
@@ -168,7 +172,7 @@ public class LogExportService : ILogExportService
     {
         var sb = new StringBuilder();
         sb.AppendLine("S7Tools Log Export");
-        sb.AppendLine($"Generated: {DateTime.UtcNow.ToLocalTime():yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Generated: {_timeProvider.GetLocalNow():yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine(new string('=', 80));
         sb.AppendLine();
 
@@ -202,7 +206,7 @@ public class LogExportService : ILogExportService
             ExportInfo = new
             {
                 Application = "S7Tools",
-                ExportDate = DateTime.UtcNow.ToLocalTime(),
+                ExportDate = _timeProvider.GetLocalNow(),
                 TotalEntries = logs.Count()
             },
             Logs = logs

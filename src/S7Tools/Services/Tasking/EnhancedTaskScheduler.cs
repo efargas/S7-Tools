@@ -26,6 +26,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly IJobManager _jobManager;
     private readonly IPathService _pathService;
     private readonly ITaskLoggerFactory _taskLoggerFactory;
+    private readonly ITimeProvider _timeProvider;
     private readonly string _tasksFilePath;
 
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
@@ -42,7 +43,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private bool _isRunning;
     private bool _disposed;
     private int _maxConcurrentTasks = Environment.ProcessorCount;
-    private readonly DateTime _startTime = DateTime.UtcNow;
+    private readonly DateTime _startTime;
 
     // Statistics
     private long _totalTasksProcessed;
@@ -76,13 +77,15 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <param name="jobManager">Job manager for accessing job configurations.</param>
     /// <param name="pathService">Path service for resolving application paths.</param>
     /// <param name="taskLoggerFactory">Task logger factory for creating task-specific loggers.</param>
+    /// <param name="timeProvider">Time provider for consistent task scheduling.</param>
     public EnhancedTaskScheduler(
         ILogger<EnhancedTaskScheduler> logger,
         IResourceCoordinator resourceCoordinator,
         IBootloaderService bootloaderService,
         IJobManager jobManager,
         IPathService pathService,
-        ITaskLoggerFactory taskLoggerFactory)
+        ITaskLoggerFactory taskLoggerFactory,
+        ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
@@ -90,6 +93,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
         _taskLoggerFactory = taskLoggerFactory ?? throw new ArgumentNullException(nameof(taskLoggerFactory));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+
+        _startTime = _timeProvider.GetUtcNow();
 
         // Set up tasks file path using PathService
         _tasksFilePath = _pathService.TasksPath;
@@ -147,8 +153,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             State = TaskState.Created,
             Priority = priority,
             LockedResources = executionJob.Resources,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _timeProvider.GetUtcNow()
         };
+        taskExecution.Initialize(_timeProvider);
 
         _tasks[taskExecution.TaskId] = taskExecution;
 
@@ -243,7 +250,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskId, task.JobName, localTime);
 
         // If time already passed or is now, promote to queue immediately
-        if (utcTime <= DateTime.UtcNow)
+        if (utcTime <= _timeProvider.GetUtcNow())
         {
             _scheduledTasks.TryRemove(taskId, out _);
             if (!TryEnqueueInternal(taskId, task, "Promoted to queue from schedule"))
@@ -641,12 +648,12 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
             // Add 30-second timeout to prevent infinite wait
             const int maxWaitSeconds = 30;
-            DateTime startTime = DateTime.UtcNow;
+            DateTime startTime = _timeProvider.GetUtcNow();
 
             while (runningTasks.Count > 0)
             {
                 // Check if timeout elapsed
-                if ((DateTime.UtcNow - startTime).TotalSeconds >= maxWaitSeconds)
+                if ((_timeProvider.GetUtcNow() - startTime).TotalSeconds >= maxWaitSeconds)
                 {
                     _logger.LogWarning("Graceful shutdown timeout reached after {Seconds} seconds with {Count} tasks still running",
                         maxWaitSeconds, runningTasks.Count);
@@ -687,7 +694,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
-        DateTime cutoffTime = DateTime.UtcNow - maxAge;
+        DateTime cutoffTime = _timeProvider.GetUtcNow() - maxAge;
         var oldTasks = _tasks.Values
             .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
             .ToList();
@@ -722,7 +729,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             CancelledTasks = _cancelledTasks,
             AverageExecutionTime = averageExecutionTime,
             TasksByState = tasksByState,
-            Uptime = DateTime.UtcNow - _startTime
+            Uptime = _timeProvider.GetUtcNow() - _startTime
         };
     }
 
@@ -764,7 +771,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Promote due scheduled tasks
             if (!_scheduledTasks.IsEmpty)
             {
-                DateTime nowUtc = DateTime.UtcNow;
+                DateTime nowUtc = _timeProvider.GetUtcNow();
                 List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowUtc).Select(kvp => kvp.Key)];
                 foreach (Guid dueId in dueTaskIds)
                 {

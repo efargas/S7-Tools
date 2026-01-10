@@ -28,6 +28,7 @@ public partial class SocatService : ISocatService, IDisposable
     private readonly ILogger<SocatService> _logger;
     private readonly IApplicationSettingsService _settingsService;
     private readonly ISerialPortService _serialPortService;
+    private readonly ITimeProvider _timeProvider;
     private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = [];
     private readonly Dictionary<int, Process> _activeProcesses = []; // Keep actual Process objects alive
     private readonly Dictionary<int, Timer> _processMonitors = [];
@@ -40,15 +41,18 @@ public partial class SocatService : ISocatService, IDisposable
     /// <param name="logger">The logger instance for structured logging.</param>
     /// <param name="settingsService">The application settings service for runtime configuration.</param>
     /// <param name="serialPortService">The serial port service for device validation and configuration.</param>
+    /// <param name="timeProvider">The time provider for abstracting time operations.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     public SocatService(
         ILogger<SocatService> logger,
         IApplicationSettingsService settingsService,
-        ISerialPortService serialPortService)
+        ISerialPortService serialPortService,
+        ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
         _logger.LogDebug("SocatService initialized with runtime settings from IApplicationSettingsService");
     }
@@ -1320,7 +1324,7 @@ public partial class SocatService : ISocatService, IDisposable
                 Configuration = configuration.Clone(),
                 Profile = profile?.Clone(),
                 CommandLine = $"{fileName} {arguments}",
-                StartTime = DateTime.UtcNow,
+                StartTime = _timeProvider.GetUtcNow(),
                 IsRunning = true,
                 Status = SocatProcessStatus.Running,
                 ActiveConnections = 0,
@@ -1330,10 +1334,10 @@ public partial class SocatService : ISocatService, IDisposable
                     BytesTcpToSerial = 0,
                     TotalConnections = 0,
                     ActiveConnections = 0,
-                    LastUpdated = DateTime.UtcNow,
+                    LastUpdated = _timeProvider.GetUtcNow(),
                     Uptime = TimeSpan.Zero
                 },
-                LastUpdated = DateTime.UtcNow
+                LastUpdated = _timeProvider.GetUtcNow()
             };
 
             // Store the actual Process object to keep it alive
@@ -1590,12 +1594,12 @@ public partial class SocatService : ISocatService, IDisposable
                         Configuration = new SocatConfiguration { TcpPort = port, TcpHost = host },
                         Profile = null,
                         CommandLine = cmd,
-                        StartTime = DateTime.UtcNow, // Reverted to UtcNow for internal consistency
+                        StartTime = _timeProvider.GetUtcNow(), // Reverted to UtcNow for internal consistency
                         IsRunning = true,
                         Status = SocatProcessStatus.Running,
                         ActiveConnections = 0,
                         TransferStats = new SocatTransferStats(),
-                        LastUpdated = DateTime.UtcNow // Reverted to UtcNow for internal consistency
+                        LastUpdated = _timeProvider.GetUtcNow() // Reverted to UtcNow for internal consistency
                     };
 
                     _runningProcesses[pid] = info;
