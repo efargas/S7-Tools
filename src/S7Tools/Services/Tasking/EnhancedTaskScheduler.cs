@@ -827,13 +827,22 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Start the tasks with tracking to prevent race conditions
             foreach (Guid taskId in tasksToStart)
             {
-                Task executionTask = ExecuteTaskAsync(taskId);
+                Task executionTask = ExecuteAndTrackTaskAsync(taskId);
                 _activeExecutions.TryAdd(taskId, executionTask);
-
-                // Clean up tracking when task completes
-                _ = executionTask.ContinueWith(t => _activeExecutions.TryRemove(taskId, out _), TaskScheduler.Default);
             }
         });
+    }
+
+    private async Task ExecuteAndTrackTaskAsync(Guid taskId)
+    {
+        try
+        {
+            await ExecuteTaskAsync(taskId).ConfigureAwait(false);
+        }
+        finally
+        {
+            _activeExecutions.TryRemove(taskId, out _);
+        }
     }
 
     /// <summary>
