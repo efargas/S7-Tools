@@ -26,10 +26,12 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly IJobManager _jobManager;
     private readonly IPathService _pathService;
     private readonly ITaskLoggerFactory _taskLoggerFactory;
+    private readonly ITimeProvider _timeProvider;
     private readonly string _tasksFilePath;
 
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
     private readonly ConcurrentQueue<Guid> _taskQueue = new();
+    private const int MaxQueueSize = 1000;
     private readonly ConcurrentDictionary<Guid, DateTime> _scheduledTasks = new();
     private readonly ConcurrentDictionary<Guid, Task> _activeExecutions = new(); // Track active execution tasks
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
@@ -41,7 +43,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private bool _isRunning;
     private bool _disposed;
     private int _maxConcurrentTasks = Environment.ProcessorCount;
-    private readonly DateTime _startTime = DateTime.UtcNow;
+    private readonly DateTime _startTime;
 
     // Statistics
     private long _totalTasksProcessed;
@@ -75,13 +77,15 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <param name="jobManager">Job manager for accessing job configurations.</param>
     /// <param name="pathService">Path service for resolving application paths.</param>
     /// <param name="taskLoggerFactory">Task logger factory for creating task-specific loggers.</param>
+    /// <param name="timeProvider">Time provider for consistent task scheduling.</param>
     public EnhancedTaskScheduler(
         ILogger<EnhancedTaskScheduler> logger,
         IResourceCoordinator resourceCoordinator,
         IBootloaderService bootloaderService,
         IJobManager jobManager,
         IPathService pathService,
-        ITaskLoggerFactory taskLoggerFactory)
+        ITaskLoggerFactory taskLoggerFactory,
+        ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _resourceCoordinator = resourceCoordinator ?? throw new ArgumentNullException(nameof(resourceCoordinator));
@@ -89,6 +93,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
         _taskLoggerFactory = taskLoggerFactory ?? throw new ArgumentNullException(nameof(taskLoggerFactory));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+
+        _startTime = _timeProvider.GetUtcNow();
 
         // Set up tasks file path using PathService
         _tasksFilePath = _pathService.TasksPath;
@@ -146,8 +153,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             State = TaskState.Created,
             Priority = priority,
             LockedResources = executionJob.Resources,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _timeProvider.GetLocalNow()
         };
+        taskExecution.Initialize(_timeProvider);
 
         _tasks[taskExecution.TaskId] = taskExecution;
 
@@ -175,13 +183,37 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        task.UpdateState(TaskState.Queued, "Task queued for execution");
-        _taskQueue.Enqueue(taskId);
+        if (!TryEnqueueInternal(taskId, task))
+        {
+            return Task.FromResult(false);
+        }
 
         TaskStateChanged?.Invoke(task);
 
-        _logger.LogInformation("Enqueued task {TaskId} ({JobName})", taskId, task.JobName);
+        _logger.LogInformation("Enqueued task {TaskId} ({JobName}) - Queue size: {QueueSize}/{MaxSize}",
+            taskId, task.JobName, _taskQueue.Count, MaxQueueSize);
+
         return Task.FromResult(true);
+    }
+
+    /// <summary>
+    /// Attempts to enqueue a task while respecting the maximum queue size.
+    /// Updates task state to Failed if the queue is full.
+    /// </summary>
+    private bool TryEnqueueInternal(Guid taskId, TaskExecution task, string? stateMessage = null)
+    {
+        if (_taskQueue.Count >= MaxQueueSize)
+        {
+            _logger.LogError("Task queue is full ({Count}/{Max}). Cannot enqueue task {TaskId}",
+                _taskQueue.Count, MaxQueueSize, taskId);
+            task.UpdateState(TaskState.Failed, $"Task queue is full ({MaxQueueSize})");
+            TaskStateChanged?.Invoke(task);
+            return false;
+        }
+
+        task.UpdateState(TaskState.Queued, stateMessage ?? "Task queued for execution");
+        _taskQueue.Enqueue(taskId);
+        return true;
     }
 
     /// <inheritdoc/>
@@ -199,17 +231,18 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        // Normalize to Local timezone per requirement
-        DateTime localTime = scheduledTime.Kind switch
+        // Normalize to UTC for internal storage and comparison
+        DateTime utcTime = scheduledTime.Kind switch
         {
-            DateTimeKind.Unspecified => DateTime.SpecifyKind(scheduledTime, DateTimeKind.Local),
-            DateTimeKind.Utc => scheduledTime.ToLocalTime(),
+            DateTimeKind.Unspecified => DateTime.SpecifyKind(scheduledTime, DateTimeKind.Local).ToUniversalTime(),
+            DateTimeKind.Local => scheduledTime.ToUniversalTime(),
             _ => scheduledTime
         };
+        DateTime localTime = utcTime.ToLocalTime();
 
         task.UpdateState(TaskState.Scheduled, $"Scheduled for {localTime}");
-        task.ProgressData["ScheduledTime"] = localTime;
-        _scheduledTasks[taskId] = localTime;
+        task.ProgressData["ScheduledTime"] = utcTime;
+        _scheduledTasks[taskId] = utcTime;
 
         TaskStateChanged?.Invoke(task);
 
@@ -217,12 +250,17 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskId, task.JobName, localTime);
 
         // If time already passed or is now, promote to queue immediately
-        if (localTime <= DateTime.UtcNow)
+        if (utcTime <= _timeProvider.GetUtcNow())
         {
             _scheduledTasks.TryRemove(taskId, out _);
-            task.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
-            TaskStateChanged?.Invoke(task);
-            _taskQueue.Enqueue(taskId);
+            if (!TryEnqueueInternal(taskId, task, "Promoted to queue from schedule"))
+            {
+                _logger.LogWarning("Failed to promote scheduled task {TaskId} to queue because it is full", taskId);
+            }
+            else
+            {
+                TaskStateChanged?.Invoke(task);
+            }
         }
 
         return Task.FromResult(true);
@@ -469,7 +507,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         Job executionJob = jobProfile.ToExecutionJob();
         foreach (ResourceKey resource in executionJob.Resources)
         {
-            if (!_resourceCoordinator.TryAcquire([resource]))
+            if (!_resourceCoordinator.AreAvailable([resource]))
             {
                 // Resource is locked - find which task is using it
                 TaskExecution? lockingTask = _tasks.Values.FirstOrDefault(t =>
@@ -481,7 +519,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     switch (resource.Kind.ToLowerInvariant())
                     {
                         case "serial":
-                            reasons.Add($"Serial port '{resource.Id}' is in use by task '{lockingTask.JobName}' (started {lockingTask.StartedAt:HH:mm:ss})");
+                            reasons.Add($"Serial port '{resource.Id}' is in use by task '{lockingTask.JobName}' (started {lockingTask.StartedAt?.ToLocalTime():HH:mm:ss})");
                             break;
                         case "tcp":
                             reasons.Add($"TCP port {resource.Id} is in use by task '{lockingTask.JobName}' (socat server running)");
@@ -604,14 +642,28 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         if (graceful)
         {
-            // Wait for running tasks to complete
-            IReadOnlyCollection<TaskExecution> runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
-            _logger.LogInformation("Waiting for {Count} running tasks to complete", runningTasks.Count);
+            // Wait for running tasks to complete with a timeout
+            var activeExecutionTasks = _activeExecutions.Values.ToList();
+            _logger.LogInformation("Waiting for {Count} running tasks to complete (max 30 seconds)", activeExecutionTasks.Count);
 
-            while (runningTasks.Count > 0)
+            if (activeExecutionTasks.Count > 0)
             {
-                await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
-                runningTasks = await GetRunningTasksAsync(cancellationToken).ConfigureAwait(false);
+                var allTasks = Task.WhenAll(activeExecutionTasks);
+                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
+
+                var completedTask = await Task.WhenAny(allTasks, timeoutTask).ConfigureAwait(false);
+
+                if (completedTask == timeoutTask)
+                {
+                    _logger.LogWarning("Graceful shutdown timeout reached after 30 seconds with {Count} tasks still running",
+                        _activeExecutions.Count);
+                }
+                else
+                {
+                    // Await the WhenAll task to propagate any exceptions from the tasks.
+                    await allTasks.ConfigureAwait(false);
+                    _logger.LogInformation("All running tasks completed before shutdown");
+                }
             }
         }
 
@@ -639,7 +691,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
-        DateTime cutoffTime = DateTime.UtcNow - maxAge;
+        DateTime cutoffTime = _timeProvider.GetUtcNow() - maxAge;
         var oldTasks = _tasks.Values
             .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
             .ToList();
@@ -674,7 +726,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             CancelledTasks = _cancelledTasks,
             AverageExecutionTime = averageExecutionTime,
             TasksByState = tasksByState,
-            Uptime = DateTime.UtcNow - _startTime
+            Uptime = _timeProvider.GetUtcNow() - _startTime
         };
     }
 
@@ -716,15 +768,20 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Promote due scheduled tasks
             if (!_scheduledTasks.IsEmpty)
             {
-                DateTime nowUtc = DateTime.UtcNow;
+                DateTime nowUtc = _timeProvider.GetUtcNow();
                 List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowUtc).Select(kvp => kvp.Key)];
                 foreach (Guid dueId in dueTaskIds)
                 {
                     if (_tasks.TryGetValue(dueId, out TaskExecution? scheduledTask) && scheduledTask.State == TaskState.Scheduled)
                     {
-                        scheduledTask.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
-                        TaskStateChanged?.Invoke(scheduledTask);
-                        _taskQueue.Enqueue(dueId);
+                        if (!TryEnqueueInternal(dueId, scheduledTask, "Promoted to queue from schedule"))
+                        {
+                            _logger.LogWarning("Failed to promote due scheduled task {TaskId} to queue because it is full", dueId);
+                        }
+                        else
+                        {
+                            TaskStateChanged?.Invoke(scheduledTask);
+                        }
                     }
                     _scheduledTasks.TryRemove(dueId, out _);
                 }
@@ -760,7 +817,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                         task.UpdateProgress(task.ProgressPercentage, $"Waiting: {reasonsText}");
                         TaskProgressUpdated?.Invoke(task.TaskId, task.ProgressPercentage, task.CurrentOperation ?? string.Empty);
 
-                        // Re-queue for later
+                        // Re-queue for later (bypass check as we just dequeued it)
                         _taskQueue.Enqueue(taskId);
                         break; // Stop trying if resources aren't available
                     }
@@ -770,14 +827,22 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Start the tasks with tracking to prevent race conditions
             foreach (Guid taskId in tasksToStart)
             {
-                Task executionTask = ExecuteTaskAsync(taskId);
+                Task executionTask = ExecuteAndTrackTaskAsync(taskId);
                 _activeExecutions.TryAdd(taskId, executionTask);
-
-                // Clean up tracking when task completes
-                _ = executionTask.ContinueWith(t => _activeExecutions.TryRemove(taskId, out _), TaskScheduler.Default);
             }
-            await Task.CompletedTask;
         });
+    }
+
+    private async Task ExecuteAndTrackTaskAsync(Guid taskId)
+    {
+        try
+        {
+            await ExecuteTaskAsync(taskId).ConfigureAwait(false);
+        }
+        finally
+        {
+            _activeExecutions.TryRemove(taskId, out _);
+        }
     }
 
     /// <summary>
@@ -812,7 +877,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Log task start
             taskLogger.MainLogger?.LogInformation(
                 "Task execution started: {JobName} (ID: {TaskId}) at {StartTime}",
-                task.JobName, taskId, DateTime.UtcNow);
+                task.JobName, taskId, DateTime.UtcNow.ToLocalTime());
 
             // Get the job profile
             JobProfile jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false)
@@ -885,9 +950,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 lock (_executionTimes)
                 {
                     _executionTimes.Enqueue(task.ExecutionTime.Value);
+                    // M-3: Enforce max count to prevent unbounded growth
                     while (_executionTimes.Count > MaxExecutionTimesCount)
                     {
-                        _executionTimes.Dequeue(); // O(1) instead of List.RemoveAt(0) which is O(n)
+                        _executionTimes.Dequeue(); // O(1) operation
                     }
                 }
             }
@@ -1044,7 +1110,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                         // Restore queued and scheduled tasks to their queues
                         if (task.State == TaskState.Queued)
                         {
-                            _taskQueue.Enqueue(task.TaskId);
+                            if (!TryEnqueueInternal(task.TaskId, task, "Restored queued task"))
+                            {
+                                _logger.LogWarning("Failed to restore queued task {TaskId} because queue is full", task.TaskId);
+                            }
                         }
                         else if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
                         {
@@ -1053,15 +1122,19 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                                 string? dateString = jsonElement.GetString();
                                 if (!string.IsNullOrEmpty(dateString) && DateTime.TryParse(dateString, out DateTime scheduledTime))
                                 {
-                                    _scheduledTasks[task.TaskId] = scheduledTime;
+                                    _scheduledTasks[task.TaskId] = scheduledTime.Kind == DateTimeKind.Unspecified
+                                        ? DateTime.SpecifyKind(scheduledTime, DateTimeKind.Utc)
+                                        : scheduledTime.ToUniversalTime();
                                 }
                             }
                         }
                         // Reset running tasks to queued (they were interrupted by app close)
                         else if (task.State == TaskState.Running)
                         {
-                            task.UpdateState(TaskState.Queued, "Restored from interrupted session");
-                            _taskQueue.Enqueue(task.TaskId);
+                            if (!TryEnqueueInternal(task.TaskId, task, "Restored from interrupted session"))
+                            {
+                                _logger.LogWarning("Failed to restore interrupted running task {TaskId} because queue is full", task.TaskId);
+                            }
                         }
                     }
 

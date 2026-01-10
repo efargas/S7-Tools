@@ -401,7 +401,7 @@ namespace S7Tools.Services
         /// <returns>Full path to main log file</returns>
         public string GetMainLogPath(int rollingNumber = 0)
         {
-            string timestamp = DateTime.Now.ToString(FileNaming.TimestampFormat);
+            string timestamp = DateTime.UtcNow.ToLocalTime().ToString(FileNaming.TimestampFormat);
             string fileName = string.Format(ResourcePaths.MainLogFilePattern, timestamp, rollingNumber);
             return Path.Combine(MainLogsDirectory, fileName);
         }
@@ -418,7 +418,7 @@ namespace S7Tools.Services
                 throw new ArgumentException(UIStrings.Exception_FormatNullOrEmpty, nameof(format));
             }
 
-            string timestamp = DateTime.Now.ToString(FileNaming.TimestampFormat);
+            string timestamp = DateTime.UtcNow.ToLocalTime().ToString(FileNaming.TimestampFormat);
             string extension = format.ToLowerInvariant() switch
             {
                 "csv" => FileNaming.CsvExtension,

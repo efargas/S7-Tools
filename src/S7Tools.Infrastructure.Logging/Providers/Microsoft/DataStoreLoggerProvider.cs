@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 
@@ -14,6 +15,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
 {
     private readonly ILogDataStore _dataStore;
     private readonly DataStoreLoggerConfiguration _configuration;
+    private readonly ITimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, DataStoreLogger> _loggers = new();
     private IExternalScopeProvider? _scopeProvider;
     private bool _disposed;
@@ -23,21 +25,25 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     /// </summary>
     /// <param name="dataStore">The data store to write log entries to.</param>
     /// <param name="configuration">The logger configuration.</param>
-    public DataStoreLoggerProvider(ILogDataStore dataStore, DataStoreLoggerConfiguration? configuration = null)
+    /// <param name="timeProvider">The time provider for timestamp generation.</param>
+    public DataStoreLoggerProvider(ILogDataStore dataStore, ITimeProvider timeProvider, DataStoreLoggerConfiguration? configuration = null)
     {
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
         _configuration = configuration ?? new DataStoreLoggerConfiguration();
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
 
     /// <summary>
     /// Initializes a new instance of the DataStoreLoggerProvider class with options.
     /// </summary>
     /// <param name="dataStore">The data store to write log entries to.</param>
+    /// <param name="timeProvider">The time provider for timestamp generation.</param>
     /// <param name="options">The logger configuration options.</param>
-    public DataStoreLoggerProvider(ILogDataStore dataStore, IOptionsMonitor<DataStoreLoggerConfiguration> options)
+    public DataStoreLoggerProvider(ILogDataStore dataStore, ITimeProvider timeProvider, IOptionsMonitor<DataStoreLoggerConfiguration> options)
     {
         _dataStore = dataStore ?? throw new ArgumentNullException(nameof(dataStore));
         _configuration = options?.CurrentValue ?? new DataStoreLoggerConfiguration();
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
         // Monitor configuration changes
         options?.OnChange(config =>
@@ -59,7 +65,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
             throw new ObjectDisposedException(nameof(DataStoreLoggerProvider));
         }
 
-        return _loggers.GetOrAdd(categoryName, name => new DataStoreLogger(name, _dataStore, _configuration));
+        return _loggers.GetOrAdd(categoryName, name => new DataStoreLogger(name, _dataStore, _configuration, _timeProvider));
     }
 
     /// <inheritdoc />

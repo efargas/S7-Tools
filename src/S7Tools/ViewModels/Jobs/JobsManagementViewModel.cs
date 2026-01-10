@@ -973,8 +973,8 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             // Reset ID for import (will be assigned new ID)
             importedJob.Id = 0;
-            importedJob.CreatedAt = DateTime.Now;
-            importedJob.ModifiedAt = DateTime.Now;
+            importedJob.CreatedAt = DateTime.UtcNow;
+            importedJob.ModifiedAt = DateTime.UtcNow;
 
             // Add the imported job
             JobProfile addedJob = await _jobManager.CreateAsync(importedJob);
@@ -1151,7 +1151,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             }
 
             // Show date/time picker dialog using input dialog
-            string currentTime = DateTime.Now.AddMinutes(5).ToString(S7Tools.Constants.AppConstants.StandardUserInputDateFormat);
+            string currentTime = DateTime.UtcNow.ToLocalTime().AddMinutes(5).ToString(S7Tools.Constants.AppConstants.StandardUserInputDateFormat);
             Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Schedule Task",
                 $"Enter the scheduled execution time for job '{SelectedProfile.Name}':\n\nFormat: {S7Tools.Constants.AppConstants.StandardUserInputDateFormat} (24-hour format)",
@@ -1176,7 +1176,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                 return;
             }
 
-            DateTime validationTime = DateTime.Now;
+            DateTime validationTime = DateTime.UtcNow;
             // Check if scheduled time is in the past (allow 1-minute tolerance for "now")
             if (scheduledTime < validationTime.AddMinutes(-1))
             {

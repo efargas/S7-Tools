@@ -864,7 +864,7 @@ public sealed class EnhancedBootloaderService(
             Directory.CreateDirectory(outputPath);
 
             // Generate filename with timestamp and task ID
-            string timestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
+            string timestamp = DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.FileTimestamp);
             string fileName = $"memory_dump_{timestamp}_{taskId:N}.bin";
             string filePath = Path.Combine(outputPath, fileName);
 

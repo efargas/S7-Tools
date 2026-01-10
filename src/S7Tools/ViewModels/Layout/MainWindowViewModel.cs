@@ -454,7 +454,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            string message = $"This is a {levelName} level log message generated at {DateTime.Now}";
+            string message = $"This is a {levelName} level log message generated at {DateTime.UtcNow.ToLocalTime()}";
 
             switch (level)
             {
@@ -496,7 +496,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            string exportText = "Log Export - " + DateTime.Now.ToString(DateTimeFormats.LongDateTime);
+            string exportText = "Log Export - " + DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.LongDateTime);
             await _clipboardService.SetTextAsync(exportText);
             StatusMessage = UIStrings.LogExportCopied;
             _logger.LogInformation("Log export copied to clipboard");

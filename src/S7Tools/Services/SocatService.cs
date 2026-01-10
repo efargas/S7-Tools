@@ -28,6 +28,7 @@ public partial class SocatService : ISocatService, IDisposable
     private readonly ILogger<SocatService> _logger;
     private readonly IApplicationSettingsService _settingsService;
     private readonly ISerialPortService _serialPortService;
+    private readonly ITimeProvider _timeProvider;
     private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = [];
     private readonly Dictionary<int, Process> _activeProcesses = []; // Keep actual Process objects alive
     private readonly Dictionary<int, Timer> _processMonitors = [];
@@ -40,15 +41,18 @@ public partial class SocatService : ISocatService, IDisposable
     /// <param name="logger">The logger instance for structured logging.</param>
     /// <param name="settingsService">The application settings service for runtime configuration.</param>
     /// <param name="serialPortService">The serial port service for device validation and configuration.</param>
+    /// <param name="timeProvider">The time provider for abstracting time operations.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     public SocatService(
         ILogger<SocatService> logger,
         IApplicationSettingsService settingsService,
-        ISerialPortService serialPortService)
+        ISerialPortService serialPortService,
+        ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
         _logger.LogDebug("SocatService initialized with runtime settings from IApplicationSettingsService");
     }
@@ -375,8 +379,6 @@ public partial class SocatService : ISocatService, IDisposable
 
         // NOW ACQUIRE SEMAPHORE - only protect shared state access
         _logger.LogDebug("Acquiring semaphore for socat start operation");
-        // NOW ACQUIRE SEMAPHORE - only protect shared state access
-        _logger.LogDebug("Acquiring semaphore for socat start operation");
         return await _semaphore.ExecuteAsync(async () =>
         {
             _logger.LogDebug("Checking concurrent instances: Current={Current}, Max={Max}",
@@ -637,30 +639,29 @@ public partial class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<IEnumerable<SocatProcessInfo>> GetRunningProcessesAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("📋 GetRunningProcessesAsync ENTRY");
+        _logger.LogDebug("GetRunningProcessesAsync called");
 
         // Discover external socat processes first (outside lock to avoid long hold)
         await DiscoverExternalSocatProcessesAsync(cancellationToken).ConfigureAwait(false);
 
-        _logger.LogInformation("🔒 Waiting for semaphore...");
+        _logger.LogDebug("Waiting for semaphore...");
 
         return await _semaphore.ExecuteAsync(async () =>
         {
-            _logger.LogInformation("🔓 Semaphore acquired");
-
-            _logger.LogInformation("📊 Current _runningProcesses count before update: {Count}", _runningProcesses.Count);
+            _logger.LogDebug("Semaphore acquired");
+            _logger.LogDebug("Current running processes count before update: {Count}", _runningProcesses.Count);
 
             // Update process status before returning
-            _logger.LogInformation("🔄 Calling UpdateProcessStatusesAsync...");
-            await UpdateProcessStatusesAsync().ConfigureAwait(false);
-            _logger.LogInformation("✅ UpdateProcessStatusesAsync completed");
+            _logger.LogDebug("Calling UpdateProcessStatusesAsync...");
+            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogDebug("UpdateProcessStatusesAsync completed");
 
-            _logger.LogInformation("📊 Final _runningProcesses count: {Count}", _runningProcesses.Count);
+            _logger.LogDebug("Final running processes count: {Count}", _runningProcesses.Count);
             var result = _runningProcesses.Values.ToList();
-            _logger.LogInformation("📊 Returning {Count} processes", result.Count);
+            _logger.LogDebug("Returning {Count} processes", result.Count);
 
-            _logger.LogInformation("🔓 Releasing semaphore (auto)...");
-            _logger.LogInformation("🏁 GetRunningProcessesAsync EXIT");
+            _logger.LogDebug("Releasing semaphore (auto)...");
+            _logger.LogDebug("GetRunningProcessesAsync complete");
             return (IEnumerable<SocatProcessInfo>)result;
         }, cancellationToken);
     }
@@ -791,7 +792,7 @@ public partial class SocatService : ISocatService, IDisposable
 
         return await _semaphore.ExecuteAsync(async () =>
         {
-            await UpdateProcessStatusesAsync().ConfigureAwait(false);
+            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
             return _runningProcesses.Values.FirstOrDefault(p => p.TcpPort == tcpPort && p.IsRunning);
         }, cancellationToken);
     }
@@ -1269,7 +1270,6 @@ public partial class SocatService : ISocatService, IDisposable
             }
 
             // Set up process exit handler before starting
-            // Set up process exit handler before starting
             process.Exited += (sender, args) => Task.Run(async () => await _semaphore.ExecuteAsync(async () =>
             {
                 if (_runningProcesses.TryGetValue(process.Id, out SocatProcessInfo? processInfo))
@@ -1282,12 +1282,15 @@ public partial class SocatService : ISocatService, IDisposable
                     ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
                 }
 
-                // Clean up references
+                // Clean up references - but DO NOT dispose process here
+                // Disposal is handled by StopSocatByIdAsync or the Exited handler cleanup
+                // Disposing here creates a race condition if StopSocatByIdAsync is running concurrently
                 _runningProcesses.Remove(process.Id);
                 _activeProcesses.Remove(process.Id);
 
-                // Dispose the process now that it's finished
-                process.Dispose();
+                // NOTE: Process will be disposed either by:
+                // 1. StopSocatByIdAsync when explicitly stopped
+                // 2. Garbage collection after all references are removed
                 await Task.CompletedTask;
             }));
 
@@ -1321,7 +1324,7 @@ public partial class SocatService : ISocatService, IDisposable
                 Configuration = configuration.Clone(),
                 Profile = profile?.Clone(),
                 CommandLine = $"{fileName} {arguments}",
-                StartTime = DateTime.UtcNow,
+                StartTime = _timeProvider.GetLocalNow(),
                 IsRunning = true,
                 Status = SocatProcessStatus.Running,
                 ActiveConnections = 0,
@@ -1331,10 +1334,10 @@ public partial class SocatService : ISocatService, IDisposable
                     BytesTcpToSerial = 0,
                     TotalConnections = 0,
                     ActiveConnections = 0,
-                    LastUpdated = DateTime.UtcNow,
+                    LastUpdated = _timeProvider.GetLocalNow(),
                     Uptime = TimeSpan.Zero
                 },
-                LastUpdated = DateTime.UtcNow
+                LastUpdated = _timeProvider.GetLocalNow()
             };
 
             // Store the actual Process object to keep it alive
@@ -1507,7 +1510,7 @@ public partial class SocatService : ISocatService, IDisposable
     /// Updates the status of all running processes.
     /// </summary>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
-    private async Task UpdateProcessStatusesAsync()
+    private async Task UpdateProcessStatusesAsync(CancellationToken cancellationToken = default)
     {
         var processIds = _runningProcesses.Keys.ToList();
 
@@ -1591,12 +1594,12 @@ public partial class SocatService : ISocatService, IDisposable
                         Configuration = new SocatConfiguration { TcpPort = port, TcpHost = host },
                         Profile = null,
                         CommandLine = cmd,
-                        StartTime = DateTime.Now,
+                        StartTime = _timeProvider.GetLocalNow(), // Reverted from UtcNow for local consistency
                         IsRunning = true,
                         Status = SocatProcessStatus.Running,
                         ActiveConnections = 0,
                         TransferStats = new SocatTransferStats(),
-                        LastUpdated = DateTime.Now
+                        LastUpdated = _timeProvider.GetLocalNow() // Reverted from UtcNow for local consistency
                     };
 
                     _runningProcesses[pid] = info;

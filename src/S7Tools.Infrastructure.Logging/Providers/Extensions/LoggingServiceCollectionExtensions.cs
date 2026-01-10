@@ -6,6 +6,7 @@ using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Infrastructure.Logging.Providers.Microsoft;
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Extensions;
 
@@ -54,7 +55,8 @@ public static class LoggingServiceCollectionExtensions
         {
             ILogDataStore dataStore = serviceProvider.GetRequiredService<ILogDataStore>();
             DataStoreLoggerConfiguration configuration = serviceProvider.GetRequiredService<DataStoreLoggerConfiguration>();
-            return new DataStoreLoggerProvider(dataStore, configuration);
+            ITimeProvider timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+            return new DataStoreLoggerProvider(dataStore, timeProvider, configuration);
         });
 
         return services;
@@ -110,7 +112,8 @@ public static class LoggingServiceCollectionExtensions
         {
             ILogDataStore dataStore = serviceProvider.GetRequiredService<ILogDataStore>();
             DataStoreLoggerConfiguration configuration = serviceProvider.GetRequiredService<DataStoreLoggerConfiguration>();
-            return new DataStoreLoggerProvider(dataStore, configuration);
+            ITimeProvider timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
+            return new DataStoreLoggerProvider(dataStore, timeProvider, configuration);
         });
 
         return services;

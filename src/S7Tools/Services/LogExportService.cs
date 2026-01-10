@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Services.Interfaces;
 
@@ -21,6 +22,7 @@ public class LogExportService : ILogExportService
 {
     private readonly ILogger<LogExportService> _logger;
     private readonly IPathService _pathService;
+    private readonly ITimeProvider _timeProvider;
     private readonly string _defaultExportPath;
 
     /// <summary>
@@ -28,10 +30,12 @@ public class LogExportService : ILogExportService
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="pathService">The path service for resolving export paths.</param>
-    public LogExportService(ILogger<LogExportService> logger, IPathService pathService)
+    /// <param name="timeProvider">The time provider for file timestamp generation.</param>
+    public LogExportService(ILogger<LogExportService> logger, IPathService pathService, ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
         // Use the dynamic path service for export path resolution
         _defaultExportPath = _pathService.ExportedLogsDirectory;
@@ -147,7 +151,7 @@ public class LogExportService : ILogExportService
     /// <inheritdoc/>
     public string GenerateDefaultFileName(ExportFormat format)
     {
-        string timestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
+        string timestamp = _timeProvider.GetLocalNow().ToString(DateTimeFormats.FileTimestamp);
         string extension = format switch
         {
             ExportFormat.Text => "txt",
@@ -168,13 +172,13 @@ public class LogExportService : ILogExportService
     {
         var sb = new StringBuilder();
         sb.AppendLine("S7Tools Log Export");
-        sb.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Generated: {_timeProvider.GetLocalNow():yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine(new string('=', 80));
         sb.AppendLine();
 
         foreach (LogModel? log in logs.OrderBy(l => l.Timestamp))
         {
-            sb.AppendLine($"[{log.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{log.Level}] {log.Category}");
+            sb.AppendLine($"[{log.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss.fff}] [{log.Level}] {log.Category}");
             sb.AppendLine($"Message: {log.FormattedMessage}");
 
             if (log.Exception != null)
@@ -202,7 +206,7 @@ public class LogExportService : ILogExportService
             ExportInfo = new
             {
                 Application = "S7Tools",
-                ExportDate = DateTime.UtcNow,
+                ExportDate = _timeProvider.GetLocalNow(),
                 TotalEntries = logs.Count()
             },
             Logs = logs
@@ -210,7 +214,7 @@ public class LogExportService : ILogExportService
                 .Select(log => new
                 {
                     Id = log.Id,
-                    Timestamp = log.Timestamp, // Serialized as ISO 8601
+                    Timestamp = log.Timestamp.ToLocalTime(), // Serialized as ISO 8601 (Local)
                     Level = log.Level.ToString(),
                     Category = log.Category,
                     Message = log.Message,
@@ -249,7 +253,7 @@ public class LogExportService : ILogExportService
         // CSV Data
         foreach (LogModel? log in logs.OrderBy(l => l.Timestamp))
         {
-            string timestamp = log.Timestamp.ToString(DateTimeFormats.MillisecondDateTime);
+            string timestamp = log.Timestamp.ToLocalTime().ToString(DateTimeFormats.MillisecondDateTime);
             string level = log.Level.ToString();
             string category = EscapeCsvField(log.Category);
             string message = EscapeCsvField(log.FormattedMessage);

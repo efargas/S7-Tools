@@ -401,7 +401,7 @@ public class DuplicateMemoryRegionProfileDialogViewModel : ViewModelBase, IDispo
         }
 
         // Last resort - add timestamp
-        string timestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
+        string timestamp = DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.FileTimestamp);
         return $"{baseName} Copy {timestamp}";
     }
 

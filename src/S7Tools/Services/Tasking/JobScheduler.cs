@@ -13,12 +13,14 @@ namespace S7Tools.Services.Tasking;
 public sealed class JobScheduler(
     ILogger<JobScheduler> logger,
     IResourceCoordinator resources,
-    IBootloaderService bootloader)
+    IBootloaderService bootloader,
+    ITimeProvider timeProvider)
     : IJobScheduler, IDisposable
 {
     private readonly ILogger<JobScheduler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IResourceCoordinator _resources = resources ?? throw new ArgumentNullException(nameof(resources));
     private readonly IBootloaderService _bootloader = bootloader ?? throw new ArgumentNullException(nameof(bootloader));
+    private readonly ITimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly ConcurrentDictionary<int, Job> _jobs = [];
     private readonly ConcurrentDictionary<int, Task> _runningJobs = [];
     private readonly SemaphoreSlim _schedulerLock = new(1, 1);
@@ -48,8 +50,8 @@ public sealed class JobScheduler(
         Job queuedJob = job with
         {
             State = JobState.Queued,
-            QueuedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            QueuedAt = _timeProvider.GetLocalNow(),
+            ModifiedAt = _timeProvider.GetLocalNow()
         };
 
         _jobs[job.Id] = queuedJob;
@@ -80,8 +82,8 @@ public sealed class JobScheduler(
         Job canceledJob = job with
         {
             State = JobState.Canceled,
-            CompletedAt = DateTime.UtcNow,
-            ModifiedAt = DateTime.UtcNow
+            CompletedAt = _timeProvider.GetLocalNow(),
+            ModifiedAt = _timeProvider.GetLocalNow()
         };
 
         _jobs[jobId] = canceledJob;
@@ -256,8 +258,8 @@ public sealed class JobScheduler(
                     Job runningJob = job with
                     {
                         State = JobState.Running,
-                        StartedAt = DateTime.UtcNow,
-                        ModifiedAt = DateTime.UtcNow
+                        StartedAt = _timeProvider.GetLocalNow(),
+                        ModifiedAt = _timeProvider.GetLocalNow()
                     };
                     _jobs[job.Id] = runningJob;
 
@@ -320,7 +322,7 @@ public sealed class JobScheduler(
                 {
                     Progress = percentage,
                     CurrentOperation = operation,
-                    ModifiedAt = DateTime.UtcNow
+                    ModifiedAt = _timeProvider.GetLocalNow()
                 };
                 _jobs[job.Id] = progressJob;
 
@@ -345,7 +347,7 @@ public sealed class JobScheduler(
 
             // STEP 2: Save dump data to output path
             string outputPath = job.ProfileSet.OutputPath;
-            string filename = $"dump_{job.Id}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.bin";
+            string filename = $"dump_{job.Id}_{_timeProvider.GetLocalNow():yyyyMMdd_HHmmss}.bin";
             string fullPath = Path.Combine(outputPath, filename);
 
             Directory.CreateDirectory(outputPath); // Ensure directory exists
@@ -360,8 +362,8 @@ public sealed class JobScheduler(
                 State = JobState.Completed,
                 Progress = 100.0,
                 CurrentOperation = "Complete",
-                CompletedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
             };
             _jobs[job.Id] = completedJob;
 
@@ -371,7 +373,7 @@ public sealed class JobScheduler(
                 JobState.Completed,
                 null));
 
-            _logger.LogInformation("✅ Job {JobId} completed successfully", job.Id);
+            _logger.LogInformation("Job {JobId} completed successfully", job.Id);
         }
         catch (OperationCanceledException)
         {
@@ -380,8 +382,8 @@ public sealed class JobScheduler(
             {
                 State = JobState.Canceled,
                 ErrorMessage = "Operation canceled by user",
-                CompletedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
             };
             _jobs[job.Id] = canceledJob;
 
@@ -397,14 +399,14 @@ public sealed class JobScheduler(
         catch (Exception ex)
         {
             // Unexpected error - transition to Failed state
-            _logger.LogError(ex, "❌ Job {JobId} failed: {ErrorMessage}", job.Id, ex.Message);
+            _logger.LogError(ex, "Job {JobId} failed: {ErrorMessage}", job.Id, ex.Message);
 
             Job failedJob = job with
             {
                 State = JobState.Failed,
                 ErrorMessage = ex.Message,
-                CompletedAt = DateTime.UtcNow,
-                ModifiedAt = DateTime.UtcNow
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
             };
             _jobs[job.Id] = failedJob;
 

@@ -55,13 +55,15 @@ namespace S7Tools.Services.Adapters.Plc
 
         public async Task PerformHandshakeAsync(CancellationToken cancellationToken)
         {
+            const int MaxHandshakeAttempts = 50; // Maximum attempts before giving up
+
             byte[] magic = System.Text.Encoding.ASCII.GetBytes("MFGT1");
             byte[] padding = System.Text.Encoding.ASCII.GetBytes("AAAA");
             byte[] handshakePayload = new byte[padding.Length + magic.Length];
             Array.Copy(padding, 0, handshakePayload, 0, padding.Length);
             Array.Copy(magic, 0, handshakePayload, padding.Length, magic.Length);
 
-            for (int attempt = 0; attempt < 50; attempt++)
+            for (int attempt = 0; attempt < MaxHandshakeAttempts; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await _protocol.RawWriteAsync(handshakePayload, 0, handshakePayload.Length, cancellationToken);
@@ -89,7 +91,7 @@ namespace S7Tools.Services.Adapters.Plc
                 }
                 await Task.Delay(10, cancellationToken);
             }
-            throw new Exception("Handshake failed after 100 attempts");
+            throw new Exception($"Handshake failed after {MaxHandshakeAttempts} attempts");
         }
 
         public async Task<byte[]> GetVersionAsync(CancellationToken cancellationToken)

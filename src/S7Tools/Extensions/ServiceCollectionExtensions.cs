@@ -45,6 +45,9 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        // Add Time Provider - Critical for testability and consistency
+        services.TryAddSingleton<ITimeProvider, S7Tools.Services.Time.TimeProvider>();
+
         // Add UI Thread Service
         services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
 
@@ -124,7 +127,8 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ISerialPortService>(provider =>
             new SerialPortService(
                 provider.GetRequiredService<ILogger<SerialPortService>>(),
-                provider.GetRequiredService<IApplicationSettingsService>()
+                provider.GetRequiredService<IApplicationSettingsService>(),
+                provider.GetRequiredService<ITimeProvider>()
             )
         );
 
@@ -137,7 +141,8 @@ public static class ServiceCollectionExtensions
             new SocatService(
                 provider.GetRequiredService<ILogger<SocatService>>(),
                 provider.GetRequiredService<IApplicationSettingsService>(),
-                provider.GetRequiredService<ISerialPortService>()
+                provider.GetRequiredService<ISerialPortService>(),
+                provider.GetRequiredService<ITimeProvider>()
             )
         );
 
@@ -273,6 +278,7 @@ public static class ServiceCollectionExtensions
             ISocatProfileService socatProfileService = serviceProvider.GetRequiredService<ISocatProfileService>();
             IPowerSupplyProfileService powerSupplyProfileService = serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
             IMemoryRegionProfileService memoryRegionProfileService = serviceProvider.GetRequiredService<IMemoryRegionProfileService>();
+            ITimeProvider timeProvider = serviceProvider.GetRequiredService<ITimeProvider>();
 
 
             // Create options with dynamically resolved path
@@ -281,7 +287,7 @@ public static class ServiceCollectionExtensions
                 ProfilesPath = pathService.JobsPath
             });
 
-            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService, memoryRegionProfileService);
+            return new JobManager(options, logger, resourceCoordinator, serialProfileService, socatProfileService, powerSupplyProfileService, memoryRegionProfileService, timeProvider);
         });
 
         // Add JobProfileSetFactory for creating JobProfileSet from profile IDs
