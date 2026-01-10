@@ -195,21 +195,18 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private bool TryEnqueueInternal(Guid taskId, TaskExecution task, string? stateMessage = null)
     {
-        lock (_taskQueue)
+        if (_taskQueue.Count >= MaxQueueSize)
         {
-            if (_taskQueue.Count >= MaxQueueSize)
-            {
-                _logger.LogError("Task queue is full ({Count}/{Max}). Cannot enqueue task {TaskId}",
-                    _taskQueue.Count, MaxQueueSize, taskId);
-                task.UpdateState(TaskState.Failed, $"Task queue is full ({MaxQueueSize})");
-                TaskStateChanged?.Invoke(task);
-                return false;
-            }
-
-            task.UpdateState(TaskState.Queued, stateMessage ?? "Task queued for execution");
-            _taskQueue.Enqueue(taskId);
-            return true;
+            _logger.LogError("Task queue is full ({Count}/{Max}). Cannot enqueue task {TaskId}",
+                _taskQueue.Count, MaxQueueSize, taskId);
+            task.UpdateState(TaskState.Failed, $"Task queue is full ({MaxQueueSize})");
+            TaskStateChanged?.Invoke(task);
+            return false;
         }
+
+        task.UpdateState(TaskState.Queued, stateMessage ?? "Task queued for execution");
+        _taskQueue.Enqueue(taskId);
+        return true;
     }
 
     /// <inheritdoc/>
