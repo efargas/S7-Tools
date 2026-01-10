@@ -437,7 +437,7 @@ public sealed class BootloaderService(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Bootloader dump operation failed: {ErrorMessage}", ex.Message);
-            effectiveTaskLogger?.LogError("❌ DUMP OPERATION FAILED: {ErrorMessage}", ex.Message);
+            effectiveTaskLogger?.LogError("DUMP OPERATION FAILED: {ErrorMessage}", ex.Message);
             effectiveTaskLogger?.LogError("Exception type: {ExceptionType}", ex.GetType().Name);
             throw;
         }

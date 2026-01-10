@@ -406,7 +406,7 @@ public class ExampleViewModel : ReactiveObject, IDisposable
 private readonly ILogger<MyClass> _logger;
 
 // Structured logging - ALWAYS use this pattern
-_logger.LogInformation("User performed action: {Action} at {Timestamp}", action, DateTime.Now);
+_logger.LogInformation("User performed action: {Action} at {Timestamp}", action, DateTime.UtcNow);
 _logger.LogError(exception, "Error occurred in {Method}", nameof(MyMethod));
 ```
 

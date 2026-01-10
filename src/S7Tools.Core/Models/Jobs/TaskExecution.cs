@@ -269,7 +269,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets the total time since the task was created.
     /// </summary>
-    public TimeSpan TotalTime => DateTime.Now - CreatedAt;
+    public TimeSpan TotalTime => DateTime.UtcNow - CreatedAt;
 
     /// <summary>
     /// Gets a value indicating whether the task is in a terminal state.
@@ -303,15 +303,15 @@ public class TaskExecution : INotifyPropertyChanged
         switch (newState)
         {
             case TaskState.Queued:
-                QueuedAt = DateTime.Now;
+                QueuedAt = DateTime.UtcNow;
                 break;
             case TaskState.Running:
-                StartedAt = DateTime.Now;
+                StartedAt = DateTime.UtcNow;
                 break;
             case TaskState.Completed:
             case TaskState.Failed:
             case TaskState.Cancelled:
-                CompletedAt = DateTime.Now;
+                CompletedAt = DateTime.UtcNow;
                 break;
         }
 
@@ -408,7 +408,7 @@ public class TaskExecution : INotifyPropertyChanged
                     if (remainingSeconds < 86400)
                     {
                         EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
-                        EstimatedTimeCompletion = DateTime.Now.AddSeconds(remainingSeconds);
+                        EstimatedTimeCompletion = DateTime.UtcNow.AddSeconds(remainingSeconds);
                     }
                     OnPropertyChanged(nameof(EstimatedTimeRemaining));
                     OnPropertyChanged(nameof(EstimatedTimeCompletion));

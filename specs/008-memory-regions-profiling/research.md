@@ -26,7 +26,7 @@ public class MemoryRegionProfileService : StandardProfileManager<MemoryRegionPro
     {
         Id = Guid.NewGuid(),
         Name = "Default Memory Regions",
-        CreatedAt = DateTime.Now,
+        CreatedAt = DateTime.UtcNow,
         Segments = new List<MemorySegment>
         {
             new() { Name = ".text", StartAddress = "0x08000000", Size = 128 * 1024, Type = MemorySegmentType.Flash },

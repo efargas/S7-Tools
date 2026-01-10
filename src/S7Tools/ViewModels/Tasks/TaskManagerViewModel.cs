@@ -335,7 +335,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     }
 
     // Last update timestamp for UI display
-    private DateTime _lastUpdated = DateTime.Now;
+    private DateTime _lastUpdated = DateTime.UtcNow.ToLocalTime();
 
     /// <summary>
     /// Gets the timestamp of the last task list update.
@@ -639,7 +639,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
                 MergeCollection(FinishedTasks, tasksByState[TaskDisplayState.Finished].SelectMany(x => x));
 
                 UpdateStatistics();
-                LastUpdated = DateTime.Now;
+                LastUpdated = DateTime.UtcNow.ToLocalTime();
             });
         }
         catch (Exception ex)
@@ -891,7 +891,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         {
             // TODO: Show schedule dialog to get date/time
             // For now, schedule for 5 minutes from now as a placeholder
-            DateTime scheduledTime = DateTime.Now.AddMinutes(5);
+            DateTime scheduledTime = DateTime.UtcNow.ToLocalTime().AddMinutes(5);
 
             IsLoading = true;
             StatusMessage = UIStrings.Status_SchedulingTask;

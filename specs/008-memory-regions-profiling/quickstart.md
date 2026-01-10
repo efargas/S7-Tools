@@ -91,8 +91,8 @@ namespace S7Tools.Core.Models
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; }
         public List<MemorySegment> Segments { get; set; } = new();
     }
@@ -221,7 +221,7 @@ public class MemoryRegionProfileService : StandardProfileManager<MemoryRegionPro
     {
         Id = Guid.NewGuid(),
         Name = "Default Memory Regions",
-        CreatedAt = DateTime.Now,
+        CreatedAt = DateTime.UtcNow,
         Segments = new List<MemorySegment>
         {
             new() { Name = ".text", StartAddress = "0x08000000", Size = 128 * 1024, Type = MemorySegmentType.Flash },

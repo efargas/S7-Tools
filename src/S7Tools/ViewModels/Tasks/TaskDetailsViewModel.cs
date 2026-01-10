@@ -1205,7 +1205,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 CancellationToken.None);
 
             // Save the dumped data to the output file
-            string outputFile = Path.Combine(jobProfile.OutputPath, $"dump_{DateTime.Now:yyyyMMdd_HHmmss}.bin");
+            string outputFile = Path.Combine(jobProfile.OutputPath, $"dump_{DateTime.UtcNow.ToLocalTime():yyyyMMdd_HHmmss}.bin");
             await File.WriteAllBytesAsync(outputFile, dumpedData);
 
             ManualProcessProgress = 100;
@@ -1234,7 +1234,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         {
             foreach (S7Tools.Core.Models.LogModel item in args.NewItems)
             {
-                _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
+                _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp.ToLocalTime(), Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
             }
         }
         else if (sender is S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore dataStore)
@@ -1260,7 +1260,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 collection.Clear();
                 foreach (LogModel item in dataStore)
                 {
-                    collection.Add(new S7Tools.Models.LogEntry { Timestamp = item.Timestamp, Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
+                    collection.Add(new S7Tools.Models.LogEntry { Timestamp = item.Timestamp.ToLocalTime(), Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
                 }
             });
         }

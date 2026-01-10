@@ -30,6 +30,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
     private readonly ConcurrentQueue<Guid> _taskQueue = new();
+    private const int MaxQueueSize = 1000;
     private readonly ConcurrentDictionary<Guid, DateTime> _scheduledTasks = new();
     private readonly ConcurrentDictionary<Guid, Task> _activeExecutions = new(); // Track active execution tasks
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
@@ -175,31 +176,40 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        // Check queue size limit to prevent unbounded growth
-        const int MaxQueueSize = 1000; // Maximum number of queued tasks
-
-        lock (_taskQueue)
+        if (!TryEnqueueInternal(taskId, task))
         {
-            int currentQueueCount = _taskQueue.Count;
-
-            if (currentQueueCount >= MaxQueueSize)
-            {
-                _logger.LogError("Task queue is full ({Count}/{Max}). Cannot enqueue task {TaskId}",
-                    currentQueueCount, MaxQueueSize, taskId);
-                task.UpdateState(TaskState.Failed, $"Task queue is full ({currentQueueCount}/{MaxQueueSize})");
-                TaskStateChanged?.Invoke(task);
-                return Task.FromResult(false);
-            }
-
-            task.UpdateState(TaskState.Queued, "Task queued for execution");
-            _taskQueue.Enqueue(taskId);
+            return Task.FromResult(false);
         }
 
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Enqueued task {TaskId} ({JobName}) - Queue size: {QueueSize}/{MaxSize}",
-            taskId, task.JobName, currentQueueCount + 1, MaxQueueSize);
+            taskId, task.JobName, _taskQueue.Count, MaxQueueSize);
+
         return Task.FromResult(true);
+    }
+
+    /// <summary>
+    /// Attempts to enqueue a task while respecting the maximum queue size.
+    /// Updates task state to Failed if the queue is full.
+    /// </summary>
+    private bool TryEnqueueInternal(Guid taskId, TaskExecution task, string? stateMessage = null)
+    {
+        lock (_taskQueue)
+        {
+            if (_taskQueue.Count >= MaxQueueSize)
+            {
+                _logger.LogError("Task queue is full ({Count}/{Max}). Cannot enqueue task {TaskId}",
+                    _taskQueue.Count, MaxQueueSize, taskId);
+                task.UpdateState(TaskState.Failed, $"Task queue is full ({MaxQueueSize})");
+                TaskStateChanged?.Invoke(task);
+                return false;
+            }
+
+            task.UpdateState(TaskState.Queued, stateMessage ?? "Task queued for execution");
+            _taskQueue.Enqueue(taskId);
+            return true;
+        }
     }
 
     /// <inheritdoc/>
@@ -217,17 +227,18 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        // Normalize to Local timezone per requirement
-        DateTime localTime = scheduledTime.Kind switch
+        // Normalize to UTC for internal storage and comparison
+        DateTime utcTime = scheduledTime.Kind switch
         {
-            DateTimeKind.Unspecified => DateTime.SpecifyKind(scheduledTime, DateTimeKind.Local),
-            DateTimeKind.Utc => scheduledTime.ToLocalTime(),
+            DateTimeKind.Unspecified => DateTime.SpecifyKind(scheduledTime, DateTimeKind.Local).ToUniversalTime(),
+            DateTimeKind.Local => scheduledTime.ToUniversalTime(),
             _ => scheduledTime
         };
+        DateTime localTime = utcTime.ToLocalTime();
 
         task.UpdateState(TaskState.Scheduled, $"Scheduled for {localTime}");
-        task.ProgressData["ScheduledTime"] = localTime;
-        _scheduledTasks[taskId] = localTime;
+        task.ProgressData["ScheduledTime"] = utcTime;
+        _scheduledTasks[taskId] = utcTime;
 
         TaskStateChanged?.Invoke(task);
 
@@ -235,12 +246,17 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskId, task.JobName, localTime);
 
         // If time already passed or is now, promote to queue immediately
-        if (localTime <= DateTime.UtcNow)
+        if (utcTime <= DateTime.UtcNow)
         {
             _scheduledTasks.TryRemove(taskId, out _);
-            task.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
-            TaskStateChanged?.Invoke(task);
-            _taskQueue.Enqueue(taskId);
+            if (!TryEnqueueInternal(taskId, task, "Promoted to queue from schedule"))
+            {
+                _logger.LogWarning("Failed to promote scheduled task {TaskId} to queue because it is full", taskId);
+            }
+            else
+            {
+                TaskStateChanged?.Invoke(task);
+            }
         }
 
         return Task.FromResult(true);
@@ -487,7 +503,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         Job executionJob = jobProfile.ToExecutionJob();
         foreach (ResourceKey resource in executionJob.Resources)
         {
-            if (!_resourceCoordinator.TryAcquire([resource]))
+            if (!_resourceCoordinator.AreAvailable([resource]))
             {
                 // Resource is locked - find which task is using it
                 TaskExecution? lockingTask = _tasks.Values.FirstOrDefault(t =>
@@ -499,7 +515,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     switch (resource.Kind.ToLowerInvariant())
                     {
                         case "serial":
-                            reasons.Add($"Serial port '{resource.Id}' is in use by task '{lockingTask.JobName}' (started {lockingTask.StartedAt:HH:mm:ss})");
+                            reasons.Add($"Serial port '{resource.Id}' is in use by task '{lockingTask.JobName}' (started {lockingTask.StartedAt?.ToLocalTime():HH:mm:ss})");
                             break;
                         case "tcp":
                             reasons.Add($"TCP port {resource.Id} is in use by task '{lockingTask.JobName}' (socat server running)");
@@ -757,9 +773,14 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 {
                     if (_tasks.TryGetValue(dueId, out TaskExecution? scheduledTask) && scheduledTask.State == TaskState.Scheduled)
                     {
-                        scheduledTask.UpdateState(TaskState.Queued, "Promoted to queue from schedule");
-                        TaskStateChanged?.Invoke(scheduledTask);
-                        _taskQueue.Enqueue(dueId);
+                        if (!TryEnqueueInternal(dueId, scheduledTask, "Promoted to queue from schedule"))
+                        {
+                            _logger.LogWarning("Failed to promote due scheduled task {TaskId} to queue because it is full", dueId);
+                        }
+                        else
+                        {
+                            TaskStateChanged?.Invoke(scheduledTask);
+                        }
                     }
                     _scheduledTasks.TryRemove(dueId, out _);
                 }
@@ -795,7 +816,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                         task.UpdateProgress(task.ProgressPercentage, $"Waiting: {reasonsText}");
                         TaskProgressUpdated?.Invoke(task.TaskId, task.ProgressPercentage, task.CurrentOperation ?? string.Empty);
 
-                        // Re-queue for later
+                        // Re-queue for later (bypass check as we just dequeued it)
                         _taskQueue.Enqueue(taskId);
                         break; // Stop trying if resources aren't available
                     }
@@ -846,7 +867,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Log task start
             taskLogger.MainLogger?.LogInformation(
                 "Task execution started: {JobName} (ID: {TaskId}) at {StartTime}",
-                task.JobName, taskId, DateTime.UtcNow);
+                task.JobName, taskId, DateTime.UtcNow.ToLocalTime());
 
             // Get the job profile
             JobProfile jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false)
@@ -1079,7 +1100,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                         // Restore queued and scheduled tasks to their queues
                         if (task.State == TaskState.Queued)
                         {
-                            _taskQueue.Enqueue(task.TaskId);
+                            if (!TryEnqueueInternal(task.TaskId, task, "Restored queued task"))
+                            {
+                                _logger.LogWarning("Failed to restore queued task {TaskId} because queue is full", task.TaskId);
+                            }
                         }
                         else if (task.State == TaskState.Scheduled && task.ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
                         {
@@ -1088,15 +1112,19 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                                 string? dateString = jsonElement.GetString();
                                 if (!string.IsNullOrEmpty(dateString) && DateTime.TryParse(dateString, out DateTime scheduledTime))
                                 {
-                                    _scheduledTasks[task.TaskId] = scheduledTime;
+                                    _scheduledTasks[task.TaskId] = scheduledTime.Kind == DateTimeKind.Unspecified
+                                        ? DateTime.SpecifyKind(scheduledTime, DateTimeKind.Utc)
+                                        : scheduledTime.ToUniversalTime();
                                 }
                             }
                         }
                         // Reset running tasks to queued (they were interrupted by app close)
                         else if (task.State == TaskState.Running)
                         {
-                            task.UpdateState(TaskState.Queued, "Restored from interrupted session");
-                            _taskQueue.Enqueue(task.TaskId);
+                            if (!TryEnqueueInternal(task.TaskId, task, "Restored from interrupted session"))
+                            {
+                                _logger.LogWarning("Failed to restore interrupted running task {TaskId} because queue is full", task.TaskId);
+                            }
                         }
                     }
 

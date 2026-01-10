@@ -260,7 +260,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
     /// <param name="logLevel">The log level to test.</param>
     private void TestLogWithLevel(LogLevel logLevel)
     {
-        string message = $"Test {logLevel} log message at {DateTime.Now:HH:mm:ss}";
+        string message = $"Test {logLevel} log message at {DateTime.UtcNow.ToLocalTime():HH:mm:ss}";
 
 
         _logger.Log(logLevel, message);
@@ -276,7 +276,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
         try
         {
             // For now, just show a message. Full implementation would export actual logs.
-            string exportedLogs = $"Log export requested at {DateTime.Now.ToString(DateTimeFormats.LongDateTime)}";
+            string exportedLogs = $"Log export requested at {DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.LongDateTime)}";
             await _clipboardService.SetTextAsync(exportedLogs);
             StatusMessage = UIStrings.Status_LogsExportedToClipboard;
             LastButtonPressed = "Export";

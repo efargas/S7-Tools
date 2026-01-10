@@ -45,7 +45,7 @@ public class UnifiedLogger : ILogger
 
         var message = formatter(state, exception);
         var logEntry = new LogEntry(
-            DateTime.Now,
+            DateTime.UtcNow,
             logLevel,
             _categoryName,
             message,

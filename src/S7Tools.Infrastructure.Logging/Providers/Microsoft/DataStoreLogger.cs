@@ -65,7 +65,7 @@ public sealed class DataStoreLogger : ILogger
 
         var logEntry = new LogModel
         {
-            Timestamp = DateTime.Now,
+            Timestamp = DateTime.UtcNow,
             Level = logLevel,
             Category = _categoryName,
             Message = message,

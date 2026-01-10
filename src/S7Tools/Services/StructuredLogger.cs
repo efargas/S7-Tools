@@ -192,7 +192,7 @@ internal class OperationContext : IOperationContext
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         OperationName = operationName ?? throw new ArgumentNullException(nameof(operationName));
         Properties = new Dictionary<string, object>(properties);
-        StartTime = DateTime.Now;
+        StartTime = DateTime.UtcNow;
         _stopwatch = Stopwatch.StartNew();
 
         // Log operation start

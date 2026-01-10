@@ -1590,12 +1590,12 @@ public partial class SocatService : ISocatService, IDisposable
                         Configuration = new SocatConfiguration { TcpPort = port, TcpHost = host },
                         Profile = null,
                         CommandLine = cmd,
-                        StartTime = DateTime.UtcNow, // Fixed: Changed from DateTime.Now to DateTime.UtcNow
+                        StartTime = DateTime.UtcNow, // Reverted to UtcNow for internal consistency
                         IsRunning = true,
                         Status = SocatProcessStatus.Running,
                         ActiveConnections = 0,
                         TransferStats = new SocatTransferStats(),
-                        LastUpdated = DateTime.UtcNow // Fixed: Changed from DateTime.Now to DateTime.UtcNow
+                        LastUpdated = DateTime.UtcNow // Reverted to UtcNow for internal consistency
                     };
 
                     _runningProcesses[pid] = info;

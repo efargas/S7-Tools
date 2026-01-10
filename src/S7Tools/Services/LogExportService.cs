@@ -147,7 +147,7 @@ public class LogExportService : ILogExportService
     /// <inheritdoc/>
     public string GenerateDefaultFileName(ExportFormat format)
     {
-        string timestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
+        string timestamp = DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.FileTimestamp);
         string extension = format switch
         {
             ExportFormat.Text => "txt",
@@ -168,13 +168,13 @@ public class LogExportService : ILogExportService
     {
         var sb = new StringBuilder();
         sb.AppendLine("S7Tools Log Export");
-        sb.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Generated: {DateTime.UtcNow.ToLocalTime():yyyy-MM-dd HH:mm:ss}");
         sb.AppendLine(new string('=', 80));
         sb.AppendLine();
 
         foreach (LogModel? log in logs.OrderBy(l => l.Timestamp))
         {
-            sb.AppendLine($"[{log.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{log.Level}] {log.Category}");
+            sb.AppendLine($"[{log.Timestamp.ToLocalTime():yyyy-MM-dd HH:mm:ss.fff}] [{log.Level}] {log.Category}");
             sb.AppendLine($"Message: {log.FormattedMessage}");
 
             if (log.Exception != null)
@@ -202,7 +202,7 @@ public class LogExportService : ILogExportService
             ExportInfo = new
             {
                 Application = "S7Tools",
-                ExportDate = DateTime.UtcNow,
+                ExportDate = DateTime.UtcNow.ToLocalTime(),
                 TotalEntries = logs.Count()
             },
             Logs = logs
@@ -210,7 +210,7 @@ public class LogExportService : ILogExportService
                 .Select(log => new
                 {
                     Id = log.Id,
-                    Timestamp = log.Timestamp, // Serialized as ISO 8601
+                    Timestamp = log.Timestamp.ToLocalTime(), // Serialized as ISO 8601 (Local)
                     Level = log.Level.ToString(),
                     Category = log.Category,
                     Message = log.Message,
@@ -249,7 +249,7 @@ public class LogExportService : ILogExportService
         // CSV Data
         foreach (LogModel? log in logs.OrderBy(l => l.Timestamp))
         {
-            string timestamp = log.Timestamp.ToString(DateTimeFormats.MillisecondDateTime);
+            string timestamp = log.Timestamp.ToLocalTime().ToString(DateTimeFormats.MillisecondDateTime);
             string level = log.Level.ToString();
             string category = EscapeCsvField(log.Category);
             string message = EscapeCsvField(log.FormattedMessage);

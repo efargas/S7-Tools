@@ -40,131 +40,160 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
                 return existingLogger.TaskLogger;
             }
 
-            // Create log directory for this task
-            string sanitizedTaskName = SanitizeFileName(taskName);
-            string timestamp = DateTime.UtcNow.ToLocalTime().ToString("yyyyMMdd_HHmmss");
-            string taskLogDir = Path.Combine(
-                _pathService.LogsDirectory,
-                "Tasks",
-                $"{sanitizedTaskName}_{timestamp}_{taskId.ToString()[..8]}");
+            DataStoreLoggerProvider? mainProvider = null;
+            DataStoreLoggerProvider? protocolProvider = null;
+            DataStoreLoggerProvider? processProvider = null;
+            var fileLoggers = new List<ILogger>();
 
-            Directory.CreateDirectory(taskLogDir);
-
-            // Get shared DataStores from CentralizedTaskLogService
-            (ITaskLogDataStore mainDataStore, ITaskLogDataStore processDataStore, ITaskLogDataStore protocolDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(taskId);
-
-            // Cast to LogDataStore for use with providers
-            var mainLogDataStore = (LogDataStore)mainDataStore;
-            LogDataStore? processLogDataStore = captureProcessOutput ? (LogDataStore?)processDataStore : null;
-            LogDataStore? protocolLogDataStore = captureProtocol ? (LogDataStore?)protocolDataStore : null;
-
-            // Create logger providers with DataStores
-            // Get configured log level from application settings (default to Information if not set or invalid)
-            string logLevelString = _applicationSettingsService.GetSetting<string>("logging.level", "Information");
-
-
-
-            if (!Enum.TryParse(logLevelString, true, out LogLevel configuredLogLevel))
+            try
             {
-                configuredLogLevel = LogLevel.Information;
+                // Create log directory for this task
+                string sanitizedTaskName = SanitizeFileName(taskName);
+                string timestamp = DateTime.UtcNow.ToLocalTime().ToString("yyyyMMdd_HHmmss");
+                string taskLogDir = Path.Combine(
+                    _pathService.LogsDirectory,
+                    "Tasks",
+                    $"{sanitizedTaskName}_{timestamp}_{taskId.ToString()[..8]}");
+
+                Directory.CreateDirectory(taskLogDir);
+
+                // Get shared DataStores from CentralizedTaskLogService
+                (ITaskLogDataStore mainDataStore, ITaskLogDataStore processDataStore, ITaskLogDataStore protocolDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(taskId);
+
+                // Cast to LogDataStore for use with providers
+                var mainLogDataStore = (LogDataStore)mainDataStore;
+                LogDataStore? processLogDataStore = captureProcessOutput ? (LogDataStore?)processDataStore : null;
+                LogDataStore? protocolLogDataStore = captureProtocol ? (LogDataStore?)protocolDataStore : null;
+
+                // Create logger providers with DataStores
+                string logLevelString = _applicationSettingsService.GetSetting<string>("logging.level", "Information");
+
+                if (!Enum.TryParse(logLevelString, true, out LogLevel configuredLogLevel))
+                {
+                    configuredLogLevel = LogLevel.Information;
+                }
+
+                var mainConfig = new DataStoreLoggerConfiguration
+                {
+                    LogLevel = configuredLogLevel,
+                    IncludeScopes = true,
+                    CaptureProperties = true
+                };
+
+                var protocolConfig = new DataStoreLoggerConfiguration
+                {
+                    LogLevel = configuredLogLevel,
+                    IncludeScopes = true,
+                    CaptureProperties = true
+                };
+
+                mainProvider = new DataStoreLoggerProvider(mainLogDataStore, mainConfig);
+                protocolProvider = protocolLogDataStore != null
+                    ? new DataStoreLoggerProvider(protocolLogDataStore, protocolConfig)
+                    : null;
+                processProvider = processLogDataStore != null
+                    ? new DataStoreLoggerProvider(processLogDataStore, mainConfig)
+                    : null;
+
+                // Create file logger providers
+                ILogger mainFileLogger = await CreateFileLoggerAsync(
+                    Path.Combine(taskLogDir, "main.log"),
+                    configuredLogLevel).ConfigureAwait(false);
+                fileLoggers.Add(mainFileLogger);
+
+                ILogger? protocolFileLogger = null;
+                if (captureProtocol)
+                {
+                    protocolFileLogger = await CreateFileLoggerAsync(
+                        Path.Combine(taskLogDir, "protocol.log"),
+                        configuredLogLevel).ConfigureAwait(false);
+                    fileLoggers.Add(protocolFileLogger);
+                }
+
+                ILogger? processFileLogger = null;
+                if (captureProcessOutput)
+                {
+                    processFileLogger = await CreateFileLoggerAsync(
+                        Path.Combine(taskLogDir, "process.log"),
+                        configuredLogLevel).ConfigureAwait(false);
+                    fileLoggers.Add(processFileLogger);
+                }
+
+                // Create composite loggers
+                var mainLogger = new CompositeLogger(
+                    [.. new[] { mainProvider.CreateLogger($"Task.{taskName}"), mainFileLogger }.Where(l => l != null)]);
+
+                CompositeLogger? protocolLogger = captureProtocol
+                    ? new CompositeLogger(
+                        new[] { protocolProvider?.CreateLogger($"Task.{taskName}.Protocol"), protocolFileLogger }
+                            .Where(l => l != null).ToArray()!)
+                    : null;
+
+                CompositeLogger? processLogger = captureProcessOutput
+                    ? new CompositeLogger(
+                        new[] { processProvider?.CreateLogger($"Task.{taskName}.Process"), processFileLogger }
+                            .Where(l => l != null).ToArray()!)
+                    : null;
+
+                // Create TaskLogger metadata
+                var taskLogger = new TaskLogger
+                {
+                    TaskId = taskId,
+                    MainLogger = mainLogger,
+                    ProtocolLogger = protocolLogger,
+                    ProcessLogger = processLogger,
+                    MainLogDataStoreId = mainDataStore.GetHashCode().ToString(),
+                    ProtocolLogDataStoreId = protocolDataStore?.GetHashCode().ToString(),
+                    ProcessLogDataStoreId = processDataStore?.GetHashCode().ToString(),
+                    MainLogFilePath = Path.Combine(taskLogDir, "main.log"),
+                    ProtocolLogFilePath = captureProtocol ? Path.Combine(taskLogDir, "protocol.log") : null,
+                    ProcessLogFilePath = captureProcessOutput ? Path.Combine(taskLogDir, "process.log") : null,
+                    CaptureProtocol = captureProtocol,
+                    CaptureProcessOutput = captureProcessOutput,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                // Store context for cleanup
+                var context = new TaskLoggerContext
+                {
+                    TaskLogger = taskLogger,
+                    MainDataStore = mainLogDataStore,
+                    ProtocolDataStore = protocolLogDataStore,
+                    ProcessDataStore = processLogDataStore,
+                    MainProvider = mainProvider,
+                    ProtocolProvider = protocolProvider,
+                    ProcessProvider = processProvider,
+                    FileLoggers = [.. fileLoggers],
+                    LogDirectory = taskLogDir
+                };
+
+                _activeLoggers[taskId] = context;
+
+                _logger.LogInformation(
+                    "Created task logger for {TaskName} ({TaskId}) at {LogDir}",
+                    taskName, taskId, taskLogDir);
+
+                return taskLogger;
             }
-
-            var mainConfig = new DataStoreLoggerConfiguration
+            catch (Exception ex)
             {
-                LogLevel = configuredLogLevel,
-                IncludeScopes = true,
-                CaptureProperties = true
-            };
+                _logger.LogError(ex, "Failed to create task logger for {TaskName} ({TaskId})", taskName, taskId);
 
-            var protocolConfig = new DataStoreLoggerConfiguration
-            {
-                LogLevel = configuredLogLevel,
-                IncludeScopes = true,
-                CaptureProperties = true
-            };
+                // Cleanup partially created resources
+                mainProvider?.Dispose();
+                protocolProvider?.Dispose();
+                processProvider?.Dispose();
 
-            var mainProvider = new DataStoreLoggerProvider(mainLogDataStore, mainConfig);
-            DataStoreLoggerProvider? protocolProvider = protocolLogDataStore != null
-                ? new DataStoreLoggerProvider(protocolLogDataStore, protocolConfig)
-                : null;
-            DataStoreLoggerProvider? processProvider = processLogDataStore != null
-                ? new DataStoreLoggerProvider(processLogDataStore, mainConfig)
-                : null;
+                foreach (ILogger fileLogger in fileLoggers)
+                {
+                    if (fileLogger is IDisposable disposable)
+                    {
+                        disposable.Dispose();
+                    }
+                }
 
-            // Create file logger providers
-            ILogger mainFileLogger = await CreateFileLoggerAsync(
-                Path.Combine(taskLogDir, "main.log"),
-                configuredLogLevel).ConfigureAwait(false);
-
-            ILogger? protocolFileLogger = captureProtocol
-                ? await CreateFileLoggerAsync(
-                    Path.Combine(taskLogDir, "protocol.log"),
-                    configuredLogLevel).ConfigureAwait(false)
-                : null;
-
-            ILogger? processFileLogger = captureProcessOutput
-                ? await CreateFileLoggerAsync(
-                    Path.Combine(taskLogDir, "process.log"),
-                    configuredLogLevel).ConfigureAwait(false)
-                : null;
-
-            // Create composite loggers
-            // Create composite loggers
-            var mainLogger = new CompositeLogger(
-                [.. new[] { mainProvider.CreateLogger($"Task.{taskName}"), mainFileLogger }.Where(l => l != null)]);
-
-            CompositeLogger? protocolLogger = captureProtocol
-                ? new CompositeLogger(
-                    new[] { protocolProvider?.CreateLogger($"Task.{taskName}.Protocol"), protocolFileLogger }
-                        .Where(l => l != null).ToArray()!)
-                : null;
-
-            CompositeLogger? processLogger = captureProcessOutput
-                ? new CompositeLogger(
-                    new[] { processProvider?.CreateLogger($"Task.{taskName}.Process"), processFileLogger }
-                        .Where(l => l != null).ToArray()!)
-                : null;
-
-            // Create TaskLogger metadata
-            var taskLogger = new TaskLogger
-            {
-                TaskId = taskId,
-                MainLogger = mainLogger,
-                ProtocolLogger = protocolLogger,
-                ProcessLogger = processLogger,
-                MainLogDataStoreId = mainDataStore.GetHashCode().ToString(),
-                ProtocolLogDataStoreId = protocolDataStore?.GetHashCode().ToString(),
-                ProcessLogDataStoreId = processDataStore?.GetHashCode().ToString(),
-                MainLogFilePath = Path.Combine(taskLogDir, "main.log"),
-                ProtocolLogFilePath = captureProtocol ? Path.Combine(taskLogDir, "protocol.log") : null,
-                ProcessLogFilePath = captureProcessOutput ? Path.Combine(taskLogDir, "process.log") : null,
-                CaptureProtocol = captureProtocol,
-                CaptureProcessOutput = captureProcessOutput,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            // Store context for cleanup
-            var context = new TaskLoggerContext
-            {
-                TaskLogger = taskLogger,
-                MainDataStore = mainLogDataStore,
-                ProtocolDataStore = protocolLogDataStore,
-                ProcessDataStore = processLogDataStore,
-                MainProvider = mainProvider,
-                ProtocolProvider = protocolProvider,
-                ProcessProvider = processProvider,
-                FileLoggers = new[] { mainFileLogger, protocolFileLogger, processFileLogger }
-                    .Where(l => l != null).ToList()!,
-                LogDirectory = taskLogDir
-            };
-
-            _activeLoggers[taskId] = context;
-
-            _logger.LogInformation(
-                "Created task logger for {TaskName} ({TaskId}) at {LogDir}",
-                taskName, taskId, taskLogDir);
-
-            return taskLogger;
+                throw;
+            }
         }, cancellationToken);
     }
 

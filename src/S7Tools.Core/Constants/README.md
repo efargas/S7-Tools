@@ -13,8 +13,8 @@ This directory contains centralized constant definitions used throughout the S7T
 ```csharp
 using S7Tools.Core.Constants;
 
-string shortDate = DateTime.Now.ToString(DateTimeFormats.ShortDateTime);
-string fileTimestamp = DateTime.Now.ToString(DateTimeFormats.FileTimestamp);
+string shortDate = DateTime.UtcNow.ToString(DateTimeFormats.ShortDateTime);
+string fileTimestamp = DateTime.UtcNow.ToString(DateTimeFormats.FileTimestamp);
 ```
 
 **Available Formats**:

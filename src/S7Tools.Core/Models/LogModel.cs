@@ -15,7 +15,7 @@ public sealed record LogModel
     /// <summary>
     /// Gets the timestamp when the log entry was created.
     /// </summary>
-    public DateTime Timestamp { get; init; } = DateTime.Now;
+    public DateTime Timestamp { get; init; } = DateTime.UtcNow;
 
     /// <summary>
     /// Gets the log level (Information, Warning, Error, etc.).

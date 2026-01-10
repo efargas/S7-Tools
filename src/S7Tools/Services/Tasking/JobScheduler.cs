@@ -345,7 +345,7 @@ public sealed class JobScheduler(
 
             // STEP 2: Save dump data to output path
             string outputPath = job.ProfileSet.OutputPath;
-            string filename = $"dump_{job.Id}_{DateTime.UtcNow:yyyyMMdd_HHmmss}.bin";
+            string filename = $"dump_{job.Id}_{DateTime.UtcNow.ToLocalTime():yyyyMMdd_HHmmss}.bin";
             string fullPath = Path.Combine(outputPath, filename);
 
             Directory.CreateDirectory(outputPath); // Ensure directory exists
@@ -371,7 +371,7 @@ public sealed class JobScheduler(
                 JobState.Completed,
                 null));
 
-            _logger.LogInformation("✅ Job {JobId} completed successfully", job.Id);
+            _logger.LogInformation("Job {JobId} completed successfully", job.Id);
         }
         catch (OperationCanceledException)
         {
@@ -397,7 +397,7 @@ public sealed class JobScheduler(
         catch (Exception ex)
         {
             // Unexpected error - transition to Failed state
-            _logger.LogError(ex, "❌ Job {JobId} failed: {ErrorMessage}", job.Id, ex.Message);
+            _logger.LogError(ex, "Job {JobId} failed: {ErrorMessage}", job.Id, ex.Message);
 
             Job failedJob = job with
             {

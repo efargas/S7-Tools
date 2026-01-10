@@ -34,7 +34,7 @@ public class SettingsManagementViewModel : ReactiveObject
     private bool _showLogLevelInLogs = true;
     private string _settingsStatusMessage = UIStrings.Status_SettingsReady;
     private string _currentSettingsFilePath = string.Empty;
-    private DateTime _settingsLastModified = DateTime.Now;
+    private DateTime _settingsLastModified = DateTime.UtcNow.ToLocalTime();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsManagementViewModel"/> class for design-time.
@@ -335,11 +335,11 @@ public class SettingsManagementViewModel : ReactiveObject
             try
             {
                 var fileInfo = new System.IO.FileInfo(CurrentSettingsFilePath);
-                SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.Now;
+                SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.UtcNow.ToLocalTime();
             }
             catch
             {
-                SettingsLastModified = DateTime.Now;
+                SettingsLastModified = DateTime.UtcNow.ToLocalTime();
             }
 
             _logger.LogDebug("Settings loaded from service");
@@ -375,7 +375,7 @@ public class SettingsManagementViewModel : ReactiveObject
             await _settingsService.SaveUserSettingsAsync(userSettings);
 
             SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
-            SettingsLastModified = DateTime.Now;
+            SettingsLastModified = DateTime.UtcNow.ToLocalTime();
             _logger.LogInformation("Settings saved to {Path}", CurrentSettingsFilePath);
         }
         catch (Exception ex)
@@ -399,7 +399,7 @@ public class SettingsManagementViewModel : ReactiveObject
             RefreshFromSettings();
 
             SettingsStatusMessage = UIStrings.Status_SettingsLoadedSuccessfully;
-            SettingsLastModified = DateTime.Now;
+            SettingsLastModified = DateTime.UtcNow.ToLocalTime();
             _logger.LogInformation("Settings loaded from {Path}", CurrentSettingsFilePath);
         }
         catch (Exception ex)
@@ -585,7 +585,7 @@ public class SettingsManagementViewModel : ReactiveObject
 
             _logger.LogInformation("Settings imported from JSON successfully");
             SettingsStatusMessage = UIStrings.Status_SettingsImportedSuccessfully;
-            SettingsLastModified = DateTime.Now;
+            SettingsLastModified = DateTime.UtcNow.ToLocalTime();
 
             return true;
         }

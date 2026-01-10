@@ -193,7 +193,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _accessiblePortsCount, value);
     }
 
-    private DateTime _lastScanTime = DateTime.Now;
+    private DateTime _lastScanTime = DateTime.UtcNow.ToLocalTime();
     /// <summary>
     /// Gets or sets the timestamp of the last scan.
     /// </summary>
@@ -447,7 +447,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
                 IsScanning = true;
                 StatusMessage = UIStrings.Status_ScanningForPorts;
             });
-            DateTime startTime = DateTime.Now;
+            DateTime startTime = DateTime.UtcNow;
 
             _scanCancellationTokenSource = new CancellationTokenSource();
             CancellationToken cancellationToken = _scanCancellationTokenSource.Token;
@@ -475,7 +475,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
                     PortType = portType,
                     PortTypeDisplay = GetPortTypeDisplay(portType),
                     IsAccessible = !CheckAccessibility || await _portService.IsPortAccessibleAsync(portName, 1000, cancellationToken),
-                    LastChecked = DateTime.Now
+                    LastChecked = DateTime.UtcNow.ToLocalTime()
                 };
 
                 // Get additional port information if accessible
@@ -517,8 +517,8 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
                 ApplyFiltersToDiscoveredPorts();
 
                 // Update statistics
-                DateTime endTime = DateTime.Now;
-                LastScanTime = endTime;
+                DateTime endTime = DateTime.UtcNow;
+                LastScanTime = endTime.ToLocalTime();
                 LastScanDuration = endTime - startTime;
                 TotalPortsFound = DiscoveredPorts.Count;
                 AccessiblePortsCount = DiscoveredPorts.Count(p => p.IsAccessible);
@@ -610,7 +610,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             bool isAccessible = await _portService.IsPortAccessibleAsync(portName).ConfigureAwait(false);
 
             SelectedPort.IsAccessible = isAccessible;
-            SelectedPort.LastChecked = DateTime.Now;
+            SelectedPort.LastChecked = DateTime.UtcNow.ToLocalTime();
 
             if (isAccessible)
             {
@@ -664,7 +664,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             bool success = await _portService.ApplyConfigurationAsync(SelectedPort.PortName, defaultConfig);
 
             SelectedPort.LastTestResult = success ? "Success" : "Failed";
-            SelectedPort.LastTested = DateTime.Now;
+            SelectedPort.LastTested = DateTime.UtcNow.ToLocalTime();
 
             StatusMessage = success
                 ? $"Port {SelectedPort.PortName} test successful"
@@ -706,7 +706,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             }
 
             // Show save file dialog
-            string defaultFileName = $"SerialPortScan_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            string defaultFileName = $"SerialPortScan_{DateTime.UtcNow.ToLocalTime():yyyyMMdd_HHmmss}.json";
             string? filePath = await _fileDialogService.ShowSaveFileDialogAsync(
                 "Export Scan Results",
                 "JSON files (*.json)|*.json|Text files (*.txt)|*.txt|All files (*.*)|*.*",
@@ -722,7 +722,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             // Prepare export data
             var exportData = new
             {
-                ExportDate = DateTime.Now,
+                ExportDate = DateTime.UtcNow.ToLocalTime(),
                 TotalPortsFound = DiscoveredPorts.Count,
                 Ports = DiscoveredPorts.Select(p => new
                 {
@@ -1104,7 +1104,7 @@ public class SerialPortInfo : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _serialNumber, value);
     }
 
-    private DateTime _lastChecked = DateTime.Now;
+    private DateTime _lastChecked = DateTime.UtcNow.ToLocalTime();
     /// <summary>
     /// Gets or sets the last checked timestamp.
     /// </summary>
@@ -1140,7 +1140,7 @@ public class SerialPortInfo : ReactiveObject
 /// </summary>
 public class ScanResult : ReactiveObject
 {
-    private DateTime _scanTime = DateTime.Now;
+    private DateTime _scanTime = DateTime.UtcNow.ToLocalTime();
     /// <summary>
     /// Gets or sets the scan timestamp.
     /// </summary>

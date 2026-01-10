@@ -140,7 +140,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _currentSettingsFilePath, value);
     }
 
-    private DateTime _settingsLastModified = DateTime.Now;
+    private DateTime _settingsLastModified = DateTime.UtcNow.ToLocalTime();
     public DateTime SettingsLastModified
     {
         get => _settingsLastModified;
@@ -182,11 +182,11 @@ public class LoggingSettingsViewModel : ViewModelBase
         try
         {
             var fileInfo = new System.IO.FileInfo(CurrentSettingsFilePath);
-            SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.Now;
+            SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.UtcNow.ToLocalTime();
         }
         catch
         {
-            SettingsLastModified = DateTime.Now;
+            SettingsLastModified = DateTime.UtcNow.ToLocalTime();
         }
     }
 
