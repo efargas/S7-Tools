@@ -177,19 +177,23 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         // Check queue size limit to prevent unbounded growth
         const int MaxQueueSize = 1000; // Maximum number of queued tasks
-        int currentQueueCount = _taskQueue.Count;
 
-        if (currentQueueCount >= MaxQueueSize)
+        lock (_taskQueue)
         {
-            _logger.LogError("Task queue is full ({Count}/{Max}). Cannot enqueue task {TaskId}",
-                currentQueueCount, MaxQueueSize, taskId);
-            task.UpdateState(TaskState.Failed, $"Task queue is full ({currentQueueCount}/{MaxQueueSize})");
-            TaskStateChanged?.Invoke(task);
-            return Task.FromResult(false);
-        }
+            int currentQueueCount = _taskQueue.Count;
 
-        task.UpdateState(TaskState.Queued, "Task queued for execution");
-        _taskQueue.Enqueue(taskId);
+            if (currentQueueCount >= MaxQueueSize)
+            {
+                _logger.LogError("Task queue is full ({Count}/{Max}). Cannot enqueue task {TaskId}",
+                    currentQueueCount, MaxQueueSize, taskId);
+                task.UpdateState(TaskState.Failed, $"Task queue is full ({currentQueueCount}/{MaxQueueSize})");
+                TaskStateChanged?.Invoke(task);
+                return Task.FromResult(false);
+            }
+
+            task.UpdateState(TaskState.Queued, "Task queued for execution");
+            _taskQueue.Enqueue(taskId);
+        }
 
         TaskStateChanged?.Invoke(task);
 
