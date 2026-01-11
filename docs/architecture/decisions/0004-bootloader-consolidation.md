@@ -1,3 +1,14 @@
+---
+title: "ADR-0004: Bootloader Services Consolidation Analysis"
+date: 2025-11-21
+status: Accepted
+tags:
+  - architecture
+  - analysis
+  - bootloader
+  - consolidation
+---
+
 # Bootloader Services Consolidation Analysis
 
 **Date**: 2025-11-21

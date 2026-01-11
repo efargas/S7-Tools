@@ -40,6 +40,7 @@ public sealed class JobProfilePropagationTests : IDisposable
 
         var options = Options.Create(new JobManagerOptions { ProfilesPath = _testProfilesPath });
         var resourceCoordinator = Substitute.For<IResourceCoordinator>();
+        var timeProvider = Substitute.For<ITimeProvider>();
 
         _jobManager = new JobManager(
             options,
@@ -48,7 +49,8 @@ public sealed class JobProfilePropagationTests : IDisposable
             _serialProfileService,
             _socatProfileService,
             _powerSupplyProfileService,
-            _memoryRegionProfileService
+            _memoryRegionProfileService,
+            timeProvider
         );
     }
 

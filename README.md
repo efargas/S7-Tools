@@ -10,7 +10,7 @@
 S7Tools is a .NET 8 + Avalonia UI application built with Clean Architecture and MVVM (ReactiveUI). It includes unified profile management (Serial, Socat, Power Supply), a real‑time log viewer, and a developer‑friendly DI setup for rapid extension.
 
 > [!NOTE]
-> For a deep dive into the system design, see the Architecture Blueprint: docs/Project_Architecture_Blueprint.md
+> For a deep dive into the system design, see the Architecture Overview: [docs/architecture/overview.md](docs/architecture/overview.md)
 
 ## Features
 
@@ -83,6 +83,7 @@ src/
 		Services/Interfaces/      # Service contracts
 		Exceptions/               # Custom exception hierarchy
 	S7Tools.Infrastructure.Logging/  # Custom logging provider and in-memory datastore
+	S7Tools.Diagnostics/          # Diagnostic tools and analysis
 tests/                          # xUnit test projects per layer
 docs/                           # Architecture and additional documentation
 ```
@@ -151,11 +152,11 @@ dotnet publish src/S7Tools/S7Tools.csproj -c Release -r osx-arm64 --self-contain
 
 ## Documentation
 
-- Documentation Index: docs/INDEX.md
-- AI Agent Guide: docs/guides/ai-agent-guide.md
-- Architecture Overview: docs/architecture/overview.md
-- Architectural Decisions: docs/architecture/decisions/_index.md
-- Pattern Catalog: docs/patterns/_index.md
+- Documentation Index: [docs/INDEX.md](docs/INDEX.md)
+- AI Agent Guide: [AGENTS.md](AGENTS.md) (or [docs/guides/ai-agent-guide.md](docs/guides/ai-agent-guide.md))
+- Architecture Overview: [docs/architecture/overview.md](docs/architecture/overview.md)
+- Architectural Decisions: [docs/architecture/decisions/_index.md](docs/architecture/decisions/_index.md)
+- Pattern Catalog: [docs/patterns/_index.md](docs/patterns/_index.md)
 
 ## Logging Viewer
 
@@ -179,4 +180,4 @@ The app includes a real-time Log Viewer backed by an in-memory DataStore provide
 - [Index](docs/INDEX.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-22*

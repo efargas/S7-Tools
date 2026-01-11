@@ -1,6 +1,6 @@
 ---
 title: "Architectural Decision Records (ADR) Index"
-version: "1.0.0"
+version: "1.0.1"
 created: "2025-01-15"
 last-updated: "2025-11-10"
 status: "current"
@@ -16,6 +16,9 @@ This index lists the key architectural decisions for S7Tools. New decisions shou
 
 - [ADR-0001: UI Framework — Avalonia + ReactiveUI](0001-ui-framework.md)
 - [ADR-0002: Logging — In-memory DataStore Provider](0002-logging-provider.md)
+- [ADR-0003: Bootloader Integration Analysis](0003-bootloader-integration-analysis.md)
+- [ADR-0004: Bootloader Services Consolidation](0004-bootloader-consolidation.md)
+- [ADR-0005: Job Profile Propagation Verification](0005-profile-propagation.md)
 
 ## How to add an ADR
 

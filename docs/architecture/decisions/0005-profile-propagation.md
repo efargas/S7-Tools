@@ -1,7 +1,19 @@
+---
+title: "ADR-0005: Job Profile Propagation Analysis"
+date: 2025-12-15
+status: Accepted
+tags:
+  - architecture
+  - analysis
+  - jobs
+  - profiles
+  - propagation
+---
+
 # Job Profile Propagation Analysis
 
-**Date:** 2025-12-15  
-**Issue:** Check the correct propagation of task job profiles to bootloader services, verify they aren't overwritten by defaults values.  
+**Date:** 2025-12-15
+**Issue:** Check the correct propagation of task job profiles to bootloader services, verify they aren't overwritten by defaults values.
 **Status:** ✅ VERIFIED - Working as designed
 
 ## Executive Summary
@@ -20,24 +32,24 @@ JobProfile (persisted storage)
     ├─ SocatProfileId: 1
     ├─ PowerSupplyProfileId: 1
     └─ MemoryRegionProfileId: 1
-    
+
     ↓ JobManager.CreateExecutionJobAsync()
-    
+
 Full Profile Loading (parallel)
     ├─ SerialPortProfile ← _serialProfileService.GetByIdAsync(1)
     ├─ SocatProfile ← _socatProfileService.GetByIdAsync(1)
     ├─ PowerSupplyProfile ← _powerSupplyProfileService.GetByIdAsync(1)
     └─ MemoryMappingProfile ← _memoryRegionProfileService.GetByIdAsync(1)
-    
+
     ↓ ProfileRef Creation
-    
+
 ProfileRef Objects (using FromProfile() factories)
     ├─ SerialProfileRef.FromProfile(serialProfile, device)
     ├─ SocatProfileRef.FromProfile(socatProfile)
     └─ PowerProfileRef.FromProfile(powerProfile, delaySeconds)
-    
+
     ↓ JobProfileSet Construction
-    
+
 JobProfileSet (execution-ready)
     ├─ Serial: SerialProfileRef (full config)
     ├─ Socat: SocatProfileRef (full config)
@@ -45,9 +57,9 @@ JobProfileSet (execution-ready)
     ├─ Memory: MemoryRegionProfile
     ├─ PowerOnTimeMs: 8000 ← from JobProfile ✅
     └─ PowerOffDelayMs: 3500 ← from JobProfile ✅
-    
+
     ↓ BootloaderService.DumpAsync(profiles)
-    
+
 Bootloader Execution
     ├─ await Task.Delay(profiles.PowerOnTimeMs) ← uses custom 8000ms ✅
     └─ await _power.PowerCycleAsync(profiles.PowerOffDelayMs) ← uses custom 3500ms ✅
@@ -65,7 +77,7 @@ public class JobProfile : IProfileBase
     // Custom timing parameters stored per job
     public int PowerOnTimeMs { get; set; } = 5000;
     public int PowerOffDelayMs { get; set; } = 2000;
-    
+
     // Profile references
     public int SerialProfileId { get; set; }
     public int SocatProfileId { get; set; }
@@ -88,7 +100,7 @@ public async Task<Job> CreateExecutionJobAsync(JobProfile jobProfile)
         jobProfile.SocatProfileId);
     PowerSupplyProfile? powerProfile = await _powerSupplyProfileService.GetByIdAsync(
         jobProfile.PowerSupplyProfileId);
-    
+
     // Convert to ProfileRefs with full configurations
     SerialProfileRef serialRef = SerialProfileRef.FromProfile(
         serialProfile, jobProfile.SerialDevice);
@@ -96,7 +108,7 @@ public async Task<Job> CreateExecutionJobAsync(JobProfile jobProfile)
         socatProfile, ephemeral: true);
     PowerProfileRef powerRef = PowerProfileRef.FromProfile(
         powerProfile, jobProfile.PowerOffDelayMs / 1000);
-    
+
     // Create JobProfileSet with timing from JobProfile (NOT defaults)
     var profileSet = new JobProfileSet(
         serialRef,
@@ -109,7 +121,7 @@ public async Task<Job> CreateExecutionJobAsync(JobProfile jobProfile)
         jobProfile.PowerOffDelayMs,    // ← Custom value preserved
         memoryProfile
     );
-    
+
     return new Job { ProfileSet = profileSet, ... };
 }
 ```
@@ -126,7 +138,7 @@ public async Task<byte[]> DumpAsync(
 {
     // Uses timing from profiles parameter (NOT hardcoded defaults)
     await Task.Delay(profiles.PowerOnTimeMs, cancellationToken);
-    
+
     await _power.PowerCycleAsync(
         profiles.PowerOffDelayMs,  // ← Uses value from JobProfile
         cancellationToken);
@@ -158,7 +170,7 @@ services.TryAddTransient<Func<JobProfileSet, IPlcClient>>(provider =>
         var host = string.IsNullOrEmpty(profiles.Socat.Configuration?.TcpHost)
             ? "127.0.0.1"
             : profiles.Socat.Configuration.TcpHost;
-        
+
         client.Configure(host, profiles.Socat.Port);  // ← Uses profile config
         return client;
     };
@@ -286,5 +298,5 @@ The task job profile system maintains user-specified values throughout the entir
 
 ---
 
-**Analysis performed by:** GitHub Copilot Agent  
+**Analysis performed by:** GitHub Copilot Agent
 **Date:** December 15, 2025

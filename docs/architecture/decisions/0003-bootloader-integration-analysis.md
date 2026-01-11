@@ -1,3 +1,14 @@
+---
+title: "ADR-0003: Bootloader Integration Analysis"
+date: 2025-11-13
+status: Accepted
+tags:
+  - architecture
+  - analysis
+  - bootloader
+  - profiles
+---
+
 # Bootloader Integration Analysis - Profile Configuration Mismatch
 
 ## Executive Summary

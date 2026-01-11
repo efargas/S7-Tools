@@ -1,8 +1,8 @@
 ---
 title: "S7Tools Documentation Index"
-version: "1.0.0"
+version: "1.0.1"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-22"
 status: "current"
 tags: ["index", "navigation", "documentation"]
 ---
@@ -297,7 +297,7 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 
 ---
 
-**Last Updated**: 2025-11-10 | **Version**: 1.0.0 | **Status**: Current
+**Last Updated**: 2025-11-22 | **Version**: 1.0.1 | **Status**: Current
 
 **Navigation Tips**:
 
@@ -336,4 +336,4 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [Pattern Template](templates/pattern-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-22*

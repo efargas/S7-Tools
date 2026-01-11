@@ -92,7 +92,7 @@ private void SyncMemoryRegionFromStepViewModel()
         // Update wizard's clone with the same selection
         MemorySegment? wizardSegment = SelectedMemoryRegion.Segments
             .FirstOrDefault(s => s.Name == selectedInStep.Name);
-            
+
         if (wizardSegment != null)
         {
             // Clear other selections
@@ -119,7 +119,7 @@ private void SyncMemoryRegionToStepViewModel()
 
     // CRITICAL: First ensure memory step has the SAME profile selected
     bool profileSelected = MemoryRegionStepViewModel.SetSelectedProfileId(SelectedMemoryRegion.Id);
-    
+
     if (!profileSelected)
         return;
 
@@ -132,7 +132,7 @@ private void SyncMemoryRegionToStepViewModel()
         // Update memory step's clone with the same selection
         MemorySegment? stepSegment = MemoryRegionStepViewModel.SelectedProfile.Segments
             .FirstOrDefault(s => s.Name == selectedInWizard.Name);
-            
+
         if (stepSegment != null)
         {
             // Clear other selections
@@ -294,7 +294,7 @@ Stored in `Jobs.json`:
 
 ---
 
-**Version**: 1.1.0  
-**Last Updated**: 2026-01-09  
-**Status**: Current  
+**Version**: 1.1.0
+**Last Updated**: 2026-01-09
+**Status**: Current
 **Maintainer**: Development Team
