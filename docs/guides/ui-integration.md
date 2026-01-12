@@ -1,8 +1,8 @@
 ---
 title: "UI Integration Workflow"
-version: "1.1.0"
+version: "1.2.0"
 created: "2025-01-15"
-last-updated: "2025-11-10"
+last-updated: "2025-11-20"
 status: "current"
 tags: ["guide", "ui", "integration", "workflow", "avalonia"]
 related:
@@ -13,8 +13,8 @@ related:
 
 # UI Integration Workflow
 
-**Last Updated**: 2025-11-10
-**Version**: 1.1
+**Last Updated**: 2025-11-20
+**Version**: 1.2
 
 This document explains the S7Tools UI integration pattern: how components connect from the Activity Bar through Side Panels to Main Content Views.
 
@@ -140,18 +140,19 @@ private void NavigateToActivityBarItemContent(string itemId)
 
 **Location**: `ViewLocator.cs`
 
-The ViewLocator automatically maps ViewModels to Views with category support:
+The ViewLocator automatically maps ViewModels to Views using a cached naming convention:
 
 ```
-MyFeatureViewModel (in Pages category) → MyFeatureView (in Pages category)
-MyFeatureSidebarViewModel (in Layout category) → MyFeatureSidebarView (in Layout category)
+S7Tools.ViewModels.Pages.MyFeatureViewModel
+  ↓ (Transforms to)
+S7Tools.Views.Pages.MyFeatureView
 ```
 
-**Naming Convention**:
-- Remove "ViewModel" suffix
-- Replace with "View" suffix
-- Match namespace: `ViewModels.{Category}` → `Views.{Category}`
-- Category preserved during transformation
+**Rules**:
+1. Replace `.ViewModels.` with `.Views.`
+2. Replace `ViewModel` suffix with `View`
+3. Fallback: Search for type in same assembly if direct resolution fails
+4. Cache result for performance
 
 ### 4. Data Template Binding
 
@@ -172,41 +173,6 @@ MyFeatureSidebarViewModel (in Layout category) → MyFeatureSidebarView (in Layo
 <ContentControl Content="{Binding Navigation.MainContent}">
   <!-- ViewLocator handles default mapping -->
 </ContentControl>
-```
-
-## ViewLocator Pattern
-
-### How It Works
-
-1. **Type Resolution**: ViewLocator receives a ViewModel instance
-2. **Name Transformation**:
-   - Full type name: `S7Tools.ViewModels.Pages.MyFeatureViewModel`
-   - Replace namespace: `S7Tools.Views.Pages.MyFeatureView`
-   - Category (`Pages`) is preserved in the transformation
-   - Replace suffix: `ViewModel` → `View`
-3. **Type Loading**: Uses reflection to find the View type
-4. **Instance Creation**: Creates View instance via `Activator.CreateInstance`
-5. **Binding**: Avalonia automatically sets DataContext to the ViewModel
-
-### Cache Optimization
-
-ViewLocator uses `ConcurrentDictionary` to cache type mappings:
-
-```csharp
-private static readonly ConcurrentDictionary<Type, Type?> ViewTypeCache = new();
-
-public Control? Build(object? param)
-{
-    Type vmType = param.GetType();
-    Type? type = ViewTypeCache.GetOrAdd(vmType, ResolveViewType);
-
-    if (type != null)
-    {
-        return (Control)Activator.CreateInstance(type)!;
-    }
-
-    return new TextBlock { Text = "Not Found: " + viewName };
-}
 ```
 
 ## Implementation Guide
@@ -233,10 +199,10 @@ public IEnumerable<ActivityBarItem> GetDefaultItems()
 
 #### Step 2: Create ViewModels
 
-**File**: `ViewModels/MyFeatureViewModel.cs`
+**File**: `ViewModels/Pages/MyFeatureViewModel.cs`
 
 ```csharp
-namespace S7Tools.ViewModels;
+namespace S7Tools.ViewModels.Pages;
 
 public class MyFeatureViewModel : ViewModelBase
 {
@@ -261,45 +227,31 @@ public class MyFeatureViewModel : ViewModelBase
         get => _selectedContentViewModel;
         set => this.RaiseAndSetIfChanged(ref _selectedContentViewModel, value);
     }
-
-    private void UpdateMainContent()
-    {
-        // Switch main content based on sidebar selection
-        SelectedContentViewModel = _selectedCategory switch
-        {
-            "Overview" => new MyFeatureOverviewViewModel(),
-            "Details" => new MyFeatureDetailsViewModel(),
-            _ => null
-        };
-    }
 }
 ```
 
 #### Step 3: Create Views
 
-**Sidebar View**: `Views/MyFeatureSidebarView.axaml`
+**Sidebar View**: `Views/Pages/MyFeatureSidebarView.axaml`
 
 ```xaml
-#### Step 3: Create Views
-
-**Sidebar View**: `Views/{Category}/MyFeatureSidebarView.axaml`
-
-```xml
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:S7Tools.ViewModels.{Category}"
-             x:Class="S7Tools.Views.{Category}.MyFeatureSidebarView"
+             xmlns:vm="using:S7Tools.ViewModels.Pages"
+             x:Class="S7Tools.Views.Pages.MyFeatureSidebarView"
+             x:DataType="vm:MyFeatureViewModel">
+    <!-- Sidebar content -->
+</UserControl>
 ```
 
-**Main Content View**: `Views/MyFeatureMainView.axaml`
+**Main Content View**: `Views/Pages/MyFeatureView.axaml`
 
 ```xaml
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:vm="using:S7Tools.ViewModels"
+             xmlns:vm="using:S7Tools.ViewModels.Pages"
+             x:Class="S7Tools.Views.Pages.MyFeatureView"
              x:DataType="vm:MyFeatureViewModel">
-
-  <!-- Content switches based on sidebar selection -->
-  <ContentControl Content="{Binding SelectedContentViewModel}" />
+    <!-- Main content -->
 </UserControl>
 ```
 
@@ -312,8 +264,6 @@ private void NavigateToActivityBarItemContent(string itemId)
 {
     switch (itemId)
     {
-        // ... existing cases ...
-
         case "myfeature":
             SidebarTitle = "My Feature";
             MainContentTitle = "My Feature Management";
@@ -322,19 +272,16 @@ private void NavigateToActivityBarItemContent(string itemId)
             MyFeatureViewModel? featureViewModel = CreateViewModel<MyFeatureViewModel>();
             CurrentContent = featureViewModel;  // Sidebar
             MainContent = featureViewModel;      // Main content
-            DetailContent = featureViewModel;
-            ShowLogStats = false;
-            _logger.LogDebug("Navigated to My Feature");
             break;
     }
 }
 ```
 
-#### Step 5: Add Data Template (Optional)
+#### Step 5: Add Sidebar Data Template (Mandatory)
 
-**File**: `Views/Base/MainWindow.axaml`
+**File**: `Views/Layout/MainWindow.axaml`
 
-If you need a specific sidebar template different from the main view:
+Since `ViewLocator` maps `MyFeatureViewModel` to `MyFeatureView` (main content), you must manually map it to `MyFeatureSidebarView` for the sidebar `ContentControl`.
 
 ```xaml
 <ContentControl Grid.Row="1" Content="{Binding Navigation.CurrentContent}">
@@ -344,28 +291,6 @@ If you need a specific sidebar template different from the main view:
     </DataTemplate>
   </ContentControl.DataTemplates>
 </ContentControl>
-```
-
-### Right Panel Pattern (Optional)
-
-For features requiring a right panel (e.g., properties, details):
-
-```csharp
-public class MyFeatureViewModel : ViewModelBase
-{
-    // Right panel content
-    private object? _rightPanelContent;
-    public object? RightPanelContent
-    {
-        get => _rightPanelContent;
-        set => this.RaiseAndSetIfChanged(ref _rightPanelContent, value);
-    }
-
-    public void ShowDetails(MyItem item)
-    {
-        RightPanelContent = new MyItemDetailsViewModel(item);
-    }
-}
 ```
 
 ## Reusable UI Controls
@@ -379,102 +304,11 @@ S7Tools provides reusable controls in the `Controls` category for common UI patt
 
 A self-contained control for serial port discovery and selection.
 
-**Features**:
-- Automatic port scanning
-- Real-time port availability updates
-- Port details display (name, description, manufacturer)
-- Refresh capability
-- Status indicators
-
-**Usage Example**:
-```xaml
-<UserControl xmlns:controls="using:S7Tools.Views.Controls">
-  <controls:SerialPortDiscoveryControl />
-</UserControl>
-```
-
-**ViewModel Integration**:
-```csharp
-// In your feature ViewModel
-using S7Tools.ViewModels.Controls;
-
-public class MyFeatureViewModel : ViewModelBase
-{
-    private SerialPortDiscoveryViewModel _portDiscovery;
-
-    public SerialPortDiscoveryViewModel PortDiscovery
-    {
-        get => _portDiscovery;
-        set => this.RaiseAndSetIfChanged(ref _portDiscovery, value);
-    }
-
-    // Prefer constructor injection for better testability and DI best practices
-    public MyFeatureViewModel(SerialPortDiscoveryViewModel portDiscovery)
-    {
-        PortDiscovery = portDiscovery ?? throw new ArgumentNullException(nameof(portDiscovery));
-    }
-}
-```
-
 ### SidebarSection
 
 **Location**: `Views/Controls/SidebarSection.axaml`
 
 A collapsible section control for organizing sidebar content.
-
-**Features**:
-- Expandable/collapsible sections
-- Icon support
-- Header customization
-- Consistent styling with VSCode theme
-
-**Usage Example**:
-```xaml
-<UserControl xmlns:controls="using:S7Tools.Views.Controls">
-  <StackPanel>
-    <controls:SidebarSection Header="Settings"
-                             Icon="fa-solid fa-cog"
-                             IsExpanded="True">
-      <!-- Section content here -->
-      <StackPanel>
-        <TextBlock Text="Option 1" />
-        <TextBlock Text="Option 2" />
-      </StackPanel>
-    </controls:SidebarSection>
-
-    <controls:SidebarSection Header="Advanced"
-                             Icon="fa-solid fa-sliders"
-                             IsExpanded="False">
-      <!-- Advanced options -->
-    </controls:SidebarSection>
-  </StackPanel>
-</UserControl>
-```
-
-### Sidebar Views Pattern
-
-**Pattern**: Feature-specific sidebar views in the feature's category
-
-**Examples**:
-- `Views/Jobs/JobsSidebarView.axaml` - Jobs feature sidebar
-- `Views/Tasks/TaskManagerSidebarView.axaml` - Task manager sidebar
-
-**Usage**: These views provide feature-specific navigation and filtering within the sidebar panel while the main content area displays detailed information.
-
-## Code Templates
-
-See the `docs/templates/ui-integration/` folder for complete scaffolded templates:
-
-- **Feature ViewModel Template**: Complete ViewModel with sidebar integration (with category support)
-- **Sidebar View Template**: XAML template for sidebar categories (with category namespaces)
-- **Main Content View Template**: XAML template for main content area (with category namespaces)
-- **Right Panel View Template**: XAML template for optional right panel
-- **Service Template**: Background service template
-- **Integration Checklist**: Step-by-step implementation guide (with category selection)
-
-**Template Placeholders**:
-- `[FEATURE_NAME]` - Replace with your feature name (e.g., Reports, Analytics)
-- `[CATEGORY]` - Replace with chosen category (Base, Controls, Dialogs, Jobs, Layout, Pages, Profiles, Settings, Tasks)
 
 ## Best Practices
 
@@ -486,7 +320,7 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 
 ### 2. View Naming
 
-- **Consistency**: Follow `{Feature}SidebarView` and `{Feature}MainView` patterns
+- **Consistency**: Follow `{Feature}SidebarView` and `{Feature}View` patterns
 - **Namespace**: Keep ViewModels and Views in matching namespace structures
 - **DataType**: Always specify `x:DataType` for compiled bindings
 
@@ -506,13 +340,13 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 
 ### View Not Found
 
-**Error**: `Not Found: S7Tools.Views.MyFeatureView`
+**Error**: `Not Found: S7Tools.Views.Pages.MyFeatureView`
 
 **Solution**:
-- Check ViewModel namespace matches `S7Tools.ViewModels.{Category}` (e.g., `S7Tools.ViewModels.Pages`)
-- Check View namespace matches `S7Tools.Views.{Category}` (e.g., `S7Tools.Views.Pages`)
-- Verify category folders exist and match between ViewModels and Views
-- Verify View class name: `MyFeatureViewModel` → `MyFeatureView`
+- Check ViewModel namespace matches `S7Tools.ViewModels.{Category}`
+- Check View namespace matches `S7Tools.Views.{Category}`
+- Verify View class name follows convention: `MyFeatureViewModel` → `MyFeatureView`
+- Ensure View has code-behind file (`.axaml.cs`)
 
 ### Sidebar Not Updating
 
@@ -532,17 +366,8 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 - Check ViewLocator can resolve the ViewModel → View mapping
 - Ensure `ContentControl.Content` binding is correct
 
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2025-10-24 | Initial documentation with ViewLocator pattern |
-
 ## Related Documentation
 
 - [Mvvm Patterns](architecture/mvvm-patterns.md)
 - [Reusable Controls](patterns/reusable-controls.md)
 - [Readme](templates/ui-integration/README.md)
-
----
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

@@ -6,7 +6,7 @@ last-updated: "2026-01-09"
 status: "current"
 tags: ["job-wizard", "memory", "persistence", "ux"]
 related:
-  - "docs/MEMORY_REGION_PROFILES.md"
+  - "docs/guides/features/memory-region-profiling.md"
   - "docs/patterns/_index.md"
 ---
 
@@ -288,9 +288,9 @@ Stored in `Jobs.json`:
 
 ## Related Documentation
 
-- [Memory Region Profiling Guide](MEMORY_REGION_PROFILES.md)
-- [Wizard Patterns](patterns/_index.md#wizard-patterns)
-- [Profile Management Pattern](patterns/profile-management.md)
+- [Memory Region Profiling Guide](memory-region-profiling.md)
+- [Wizard Patterns](../../patterns/_index.md#wizard-patterns)
+- [Profile Management Pattern](../../patterns/profile-management.md)
 
 ---
 

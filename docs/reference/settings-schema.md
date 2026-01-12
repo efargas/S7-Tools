@@ -1,8 +1,8 @@
 ---
 title: "Settings Schema Documentation"
-version: "1.0.0"
+version: "1.1.0"
 created: "2025-10-23"
-last-updated: "2025-11-10"
+last-updated: "2025-11-20"
 status: "current"
 tags: ["reference", "settings", "schema", "configuration"]
 related:
@@ -12,12 +12,12 @@ related:
 
 # S7Tools Settings Schema Documentation
 
-**Last Updated**: 2025-11-10
-**Version**: 1.0
+**Last Updated**: 2025-11-20
+**Version**: 1.1
 
 ## Overview
 
-S7Tools uses a key-value based settings system with dot notation for hierarchical organization. Settings are persisted in JSON format and managed through `ISettingsService`.
+S7Tools uses a key-value based settings system with dot notation for hierarchical organization. Settings are persisted in JSON format and managed through `IApplicationSettingsService`. The settings system supports user overrides, default values, and event-based change notifications.
 
 ## Naming Convention
 
@@ -58,6 +58,12 @@ User interface behavior and display preferences.
 | `ui.showTimestampInLogs` | `bool` | `true` | Display timestamp column in log viewer |
 | `ui.showCategoryInLogs` | `bool` | `true` | Display category column in log viewer |
 | `ui.showLogLevelInLogs` | `bool` | `true` | Display log level column in log viewer |
+| `ui.theme` | `string` | `Dark` | Application theme (Dark/Light) |
+| `ui.language` | `string` | `en-US` | Application language/culture |
+| `ui.sidebarVisible` | `bool` | `true` | Default visibility of the sidebar |
+| `ui.sidebarWidth` | `double` | `300` | Default width of the sidebar |
+| `ui.bottomPanelVisible` | `bool` | `true` | Default visibility of the bottom panel |
+| `ui.bottomPanelHeight` | `double` | `200` | Default height of the bottom panel |
 
 **Usage Example**:
 ```csharp
@@ -102,6 +108,20 @@ int timeout = _settingsService.GetSetting<int>("powerSupply.connectionTimeout", 
 
 ---
 
+### 5. Path Configuration (`paths.*`)
+
+Dynamic paths populated at runtime.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `paths.resourcesRoot` | `string` | (Runtime) | Root resources directory |
+| `paths.payloads` | `string` | (Runtime) | Path for payload files |
+| `paths.firmware` | `string` | (Runtime) | Path for firmware files |
+| `paths.extractions` | `string` | (Runtime) | Path for extractions |
+| `paths.dumps` | `string` | (Runtime) | Path for memory dumps |
+
+---
+
 ## Type Conventions
 
 ### String Settings
@@ -135,7 +155,7 @@ Use for:
 ### 1. Choose the Right Category
 
 Pick an existing category or create a new one:
-- **Existing**: `logging.*`, `ui.*`, `profiles.*`, `powerSupply.*`
+- **Existing**: `logging.*`, `ui.*`, `profiles.*`, `powerSupply.*`, `paths.*`
 - **New**: Use a clear, descriptive category name
 
 ### 2. Define the Key
@@ -217,6 +237,7 @@ public class SettingsChangedEventArgs : EventArgs
     public string Key { get; init; }
     public object? OldValue { get; init; }
     public object? NewValue { get; init; }
+    public bool IsUserSetting { get; init; }
 }
 ```
 
@@ -296,27 +317,26 @@ protected override void Dispose(bool disposing)
 
 ---
 
-## Migration and Versioning
+## File Format
 
-### Adding New Settings
-- New settings default gracefully if not in user config
-- No migration required for additions
+The settings file uses a structured JSON format that separates default values from user overrides.
 
-### Renaming Settings
-- Add new setting
-- Keep old setting for one version
-- Migrate in code during load
-- Document deprecation
+```json
+{
+  "DefaultSettings": {
+    "logging.level": "Information",
+    "ui.theme": "Dark"
+  },
+  "UserSettings": {
+    "logging.level": "Debug",
+    "ui.theme": "Light"
+  },
+  "SettingsFilePath": "/path/to/settings.json",
+  "LastModified": "2025-11-20T10:00:00Z"
+}
+```
 
-### Removing Settings
-- Mark as deprecated for one version
-- Remove in subsequent version
-- Document in changelog
-
-### Type Changes
-- Avoid changing types of existing settings
-- If necessary, create new setting with different key
-- Migrate data during load
+Legacy formats are automatically migrated to this structure upon load.
 
 ---
 
@@ -359,6 +379,3 @@ protected override void Dispose(bool disposing)
 
 - [Overview](architecture/overview.md)
 - [Development Workflow](guides/development-workflow.md)
-
----
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

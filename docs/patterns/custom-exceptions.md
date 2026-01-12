@@ -1,8 +1,8 @@
 ---
 title: "Custom Domain Exceptions Pattern"
-version: "1.0.0"
+version: "1.1.0"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-20"
 status: "current"
 tags: ["pattern", "exceptions", "error-handling", "clean-architecture", "domain-driven"]
 related:
@@ -147,6 +147,27 @@ public class ConfigurationException : S7ToolsException
         SettingKey = settingKey;
     }
 }
+
+// Bootloader errors
+public class BootloaderException : S7ToolsException
+{
+    public int? JobId { get; init; }
+    public string? Stage { get; init; }
+
+    public BootloaderException(string message, int? jobId = null, string? stage = null)
+        : base(message)
+    {
+        JobId = jobId;
+        Stage = stage;
+    }
+
+    public BootloaderException(string message, Exception innerException, int? jobId = null, string? stage = null)
+        : base(message, innerException)
+    {
+        JobId = jobId;
+        Stage = stage;
+    }
+}
 ```
 
 ### Full Hierarchy
@@ -164,9 +185,15 @@ S7ToolsException (base)
 ├── ValidationException
 │   ├── InvalidProfileNameException
 │   └── InvalidMemoryRegionException
-└── ConfigurationException
-    ├── SettingNotFoundException
-    └── InvalidSettingValueException
+├── ConfigurationException
+│   ├── SettingsLoadException
+│   └── PathResolutionException
+└── BootloaderException
+    ├── HandshakeFailedException
+    ├── PayloadInstallException
+    ├── MemoryDumpException
+    └── ResourceUnavailableException
+├── DialogParentNotFoundException
 ```
 
 ## Specific Exception Implementations
@@ -212,51 +239,76 @@ public class ReadOnlyProfileModificationException : ProfileException
 }
 ```
 
-### Connection Exceptions
+### Bootloader Exceptions
 
 ```csharp
-public class NetworkPortInUseException : ConnectionException
+public class HandshakeFailedException : BootloaderException
 {
-    public NetworkPortInUseException(int port)
-        : base($"Network port {port} is already in use.", null, port)
+    public string? ExpectedVersion { get; }
+    public string? ActualVersion { get; }
+
+    public HandshakeFailedException(string message, string? expectedVersion = null, string? actualVersion = null)
+        : base(message)
     {
+        ExpectedVersion = expectedVersion;
+        ActualVersion = actualVersion;
     }
 }
 
-public class SocatConnectionFailedException : ConnectionException
+public class PayloadInstallException : BootloaderException
 {
-    public string? ErrorDetails { get; init; }
+    public string? PayloadType { get; }
+    public long? PayloadSize { get; }
 
-    public SocatConnectionFailedException(string host, int port, string errorDetails)
-        : base($"Socat connection failed: {host}:{port}", host, port)
+    public PayloadInstallException(string message, string? payloadType = null, long? payloadSize = null)
+        : base(message)
     {
-        ErrorDetails = errorDetails;
+        PayloadType = payloadType;
+        PayloadSize = payloadSize;
+    }
+}
+
+public class ResourceUnavailableException : BootloaderException
+{
+    public IEnumerable<string> UnavailableResources { get; }
+
+    public ResourceUnavailableException(string message, IEnumerable<string> unavailableResources)
+        : base(message)
+    {
+        UnavailableResources = unavailableResources;
     }
 }
 ```
 
-### Validation Exceptions
+### UI & Infrastructure Exceptions
 
 ```csharp
-public class InvalidProfileNameException : ValidationException
+public class DialogParentNotFoundException : S7ToolsException
 {
-    public InvalidProfileNameException(string name)
-        : base("Name", $"Profile name '{name}' is invalid.", name)
+    public DialogParentNotFoundException(string message) : base(message) { }
+}
+
+public class PathResolutionException : Exception
+{
+    public string FailedPath { get; }
+    public string Operation { get; }
+
+    public PathResolutionException(string message, string failedPath, string operation) : base(message)
     {
+        FailedPath = failedPath;
+        Operation = operation;
     }
 }
 
-public class InvalidMemoryRegionException : ValidationException
+public class SettingsLoadException : Exception
 {
-    public int StartAddress { get; }
-    public int Length { get; }
+    public string SettingsFilePath { get; }
+    public string ErrorType { get; }
 
-    public InvalidMemoryRegionException(int startAddress, int length)
-        : base("MemoryRegion",
-            $"Invalid memory region: Start={startAddress:X}, Length={length}")
+    public SettingsLoadException(string message, string settingsFilePath, string errorType) : base(message)
     {
-        StartAddress = startAddress;
-        Length = length;
+        SettingsFilePath = settingsFilePath;
+        ErrorType = errorType;
     }
 }
 ```
@@ -312,35 +364,6 @@ public class StandardProfileManager<T> where T : class, IProfileBase
             await SaveToFileAsync(ct).ConfigureAwait(false);
 
             return (T)existing.Clone();
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
-    }
-
-    public async Task<bool> DeleteAsync(int profileId, CancellationToken ct = default)
-    {
-        await _semaphore.WaitAsync(ct).ConfigureAwait(false);
-        try
-        {
-            var profile = _profiles.FirstOrDefault(p => p.Id == profileId);
-
-            if (profile == null)
-            {
-                throw new ProfileNotFoundException(profileId);
-            }
-
-            // ✅ Prevent default profile deletion with details
-            if (profile.IsDefault)
-            {
-                throw new DefaultProfileDeletionException(profile.Id, profile.Name);
-            }
-
-            _profiles.Remove(profile);
-            await SaveToFileAsync(ct).ConfigureAwait(false);
-
-            return true;
         }
         finally
         {
@@ -536,39 +559,6 @@ public async Task DeleteAsync_DefaultProfile_ThrowsDefaultProfileDeletionExcepti
 }
 ```
 
-### Test Exception Context
-
-```csharp
-[Fact]
-public void ProfileNotFoundException_Should_Include_ProfileId()
-{
-    // Arrange
-    int profileId = 42;
-
-    // Act
-    var exception = new ProfileNotFoundException(profileId);
-
-    // Assert
-    Assert.Equal(profileId, exception.ProfileId);
-    Assert.Contains("42", exception.Message);
-}
-
-[Fact]
-public void ValidationException_Should_Include_PropertyName_And_Value()
-{
-    // Arrange
-    var propertyName = "Name";
-    var invalidValue = "";
-
-    // Act
-    var exception = new ValidationException(propertyName, "Name is required", invalidValue);
-
-    // Assert
-    Assert.Equal(propertyName, exception.PropertyName);
-    Assert.Equal(invalidValue, exception.InvalidValue);
-}
-```
-
 ## Anti-Patterns
 
 ### ❌ Don't: Use Generic Exceptions
@@ -677,6 +667,7 @@ public async Task SaveAsync()
 - `ConnectionException.cs` - Connection category exception
 - `ValidationException.cs` - Validation category exception
 - `ConfigurationException.cs` - Configuration category exception
+- `BootloaderException.cs` - Base for bootloader errors
 
 **Usage Examples**:
 - `src/S7Tools/Services/StandardProfileManager.cs` - Throws profile exceptions
@@ -684,9 +675,9 @@ public async Task SaveAsync()
 
 ---
 
-**Last Updated**: 2025-11-10
+**Last Updated**: 2025-11-20
 **Status**: Current implementation standard
-**Test Coverage**: 6 exception tests (100% coverage of exception constructors)
+**Test Coverage**: Exception constructors fully tested
 
 ## Related Documentation
 
@@ -697,6 +688,3 @@ public async Task SaveAsync()
 - [Profile Management](profile-management.md)
 - [System Patterns](system-patterns.md)
 - [_Index](../reviews/_index.md)
-
----
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*

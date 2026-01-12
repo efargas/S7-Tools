@@ -1,8 +1,8 @@
 ---
 title: "S7Tools Documentation Index"
-version: "1.0.0"
+version: "1.2.0"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-20"
 status: "current"
 tags: ["index", "navigation", "documentation"]
 ---
@@ -51,6 +51,14 @@ Welcome to the S7Tools Documentation System. This is the master index for all S7
 - [ADR Index](architecture/decisions/_index.md)
 - [Architecture Diagrams](architecture/diagrams.md)
 
+### ✨ Features
+
+**Purpose**: Detailed documentation of specific application features
+
+| Feature | Description |
+|---------|-------------|
+| [Task Logging](features/task-logging.md) | Task-specific logging system with multiple channels |
+
 ### 🔧 Patterns
 
 **Purpose**: Implementation patterns, best practices, and anti-patterns
@@ -64,6 +72,7 @@ Welcome to the S7Tools Documentation System. This is the master index for all S7
 | **Service Coordination** | [Resource Coordinator](patterns/resource-coordination.md) |
 | **Error Handling** | [Custom Exceptions](patterns/custom-exceptions.md) |
 | **UI Components** | [Reusable Controls](patterns/reusable-controls.md) |
+| **UI Synchronization** | [UI Refresh Service](patterns/ui-refresh-service.md) |
 
 **Quick Links**:
 
@@ -81,14 +90,23 @@ Welcome to the S7Tools Documentation System. This is the master index for all S7
 |------------|-----------|
 | **Onboarding** | [Developer Onboarding](guides/onboarding.md), [AI Agent Guide](guides/ai-agent-guide.md) |
 | **Development** | [Development Workflow](guides/development-workflow.md), [Code Style](guides/code-style.md) |
+| **UI** | [UI Integration Workflow](guides/ui-integration.md) |
+| **Features** | [Memory Region Profiling](guides/features/memory-region-profiling.md), [Job Wizard Persistence](guides/features/job-wizard-persistence.md) |
 | **Testing** | [Testing Guide](guides/testing-guide.md) |
-| **Documentation** | [Memory Bank Usage](guides/memory-bank-usage.md) |
-| **Migration** | [Deprecated Patterns](guides/migration/deprecated-patterns.md) |
+| **Migration** | [Deprecated Property Migration](guides/migration/deprecated-property-migration.md) |
 
 **Quick Links**:
 
 - [AI Agent Guide](guides/ai-agent-guide.md) - For coding agents
 - [Development Workflow](guides/development-workflow.md) - Daily workflow
+
+### 📚 Reference
+
+**Purpose**: API references, schemas, and configuration details
+
+| Document | Description |
+|----------|-------------|
+| [Settings Schema](reference/settings-schema.md) | Application settings keys, types, and defaults |
 
 ### 📝 Templates
 
@@ -114,8 +132,6 @@ Welcome to the S7Tools Documentation System. This is the master index for all S7
 | [Latest Review](reviews/LATEST.md) | Current quality baseline (symlink) |
 | [Recent Reviews](reviews/) | All reviews chronologically |
 | [Review Archive](reviews/archive/) | Historical reviews (>6 months) |
-
-**Current Baseline**: 361 tests (360 passing, 1 skipped) = 99.7% pass rate | A+ grade (98/100)
 
 ### 📦 Archive
 
@@ -163,39 +179,6 @@ grep -r "status: \"current\"" docs/
 grep -r "status: \"deprecated\"" docs/
 ```
 
-## 🎯 Common Tasks
-
-### Task: Implement New Feature
-
-1. Read [Architecture Overview](architecture/overview.md) - Understand layers
-2. Check [Pattern Catalog](patterns/_index.md) - Find relevant patterns
-3. Copy [ViewModel Template](templates/viewmodel-template.md) - Start with boilerplate
-4. Follow [Testing Guide](guides/testing-guide.md) - Write tests first
-5. Review [Latest Code Review](reviews/LATEST.md) - Check quality standards
-
-### Task: Fix Bug
-
-1. Understand current behavior - Read relevant pattern docs
-2. Check [Code Review History](reviews/) - Known issues in that area
-3. Verify fix doesn't break architectural rules
-4. Update pattern docs if bug revealed misunderstanding
-
-### Task: Add New Pattern
-
-1. Copy [Pattern Template](templates/pattern-template.md)
-2. Document problem, solution, examples
-3. Add frontmatter with proper tags
-4. Link from [Pattern Catalog](patterns/_index.md)
-5. Create example in [patterns/examples/](patterns/examples/)
-
-### Task: Onboard to Project
-
-1. Read [Developer Onboarding](guides/onboarding.md) - Complete guide
-2. Read [Architecture Overview](architecture/overview.md) - System understanding
-3. Skim [Pattern Catalog](patterns/_index.md) - Available patterns
-4. Read [Development Workflow](guides/development-workflow.md) - Daily process
-5. Build project and run tests
-
 ## 🤖 AI Agent Optimization
 
 ### Context Gathering Priority (Fastest First)
@@ -216,31 +199,9 @@ grep -r "status: \"deprecated\"" docs/
 | `docs/guides/development-workflow.md` | Development process | Before making changes |
 | `docs/reviews/LATEST.md` | Quality baseline | Before submitting work |
 
-### Search Optimization
-
-```python
-# Efficient AI agent context gathering
-def gather_context(task_description):
-    # Phase 1: Always read (foundation)
-    read("docs/INDEX.md")
-    read("docs/architecture/overview.md")
-
-    # Phase 2: Pattern selection (targeted)
-    patterns_index = read("docs/patterns/_index.md")
-    relevant_patterns = filter_by_tags(patterns_index, task_description)
-    for pattern in relevant_patterns[:3]:  # Top 3
-        read(f"docs/patterns/{pattern}")
-
-    # Phase 3: Examples (verification)
-    for pattern in relevant_patterns[:3]:
-        read(f"docs/patterns/examples/{pattern}-example.cs")
-
-    return context
-```
-
 ## 📊 Documentation Statistics
 
-- **Total Categories**: 6 (architecture, patterns, guides, templates, reviews, archive)
+- **Total Categories**: 7 (architecture, features, patterns, guides, reference, reviews, archive)
 - **Max Directory Depth**: 3 levels
 - **Link Validation**: Automated on every commit
 - **Metadata Standard**: YAML frontmatter with 8 required fields
@@ -253,51 +214,9 @@ def gather_context(task_description):
 - [Architecture Diagrams](architecture/diagrams.md) - Visual representations
 - [Latest Code Review](reviews/LATEST.md) - Quality baseline
 
-## 🛠️ Documentation Maintenance
-
-### Updating Documentation
-
-1. Find the right file using this index
-2. Edit with proper [frontmatter schema](guides/frontmatter-schema.md)
-3. Increment version following [semver rules](guides/versioning-guide.md)
-4. Run validation: `./scripts/validate-all.sh docs/`
-5. Commit with descriptive message
-
-### Validation Scripts
-
-```bash
-# Validate frontmatter
-python scripts/validate-frontmatter.py docs/
-
-# Check for duplicates
-python scripts/detect-duplicates.py docs/
-
-# Find orphans
-python scripts/detect-orphans.py docs/
-
-# Full validation suite
-./scripts/validate-all.sh docs/
-```
-
-See [scripts/README.md](../scripts/README.md) for detailed usage.
-
-## 📞 Getting Help
-
-**Documentation Issues**:
-
-- Broken link? Run `markdown-link-check` and file an issue
-- Missing documentation? Check this index, then create PR
-- Unclear pattern? Comment on related GitHub issue
-
-**Questions**:
-
-- Architecture → Read [Overview](architecture/overview.md) first
-- Patterns → Browse [Catalog](patterns/_index.md)
-- Workflow → Check [Development Guide](guides/development-workflow.md)
-
 ---
 
-**Last Updated**: 2025-11-10 | **Version**: 1.0.0 | **Status**: Current
+**Last Updated**: 2025-11-20 | **Version**: 1.2.0 | **Status**: Current
 
 **Navigation Tips**:
 
@@ -314,13 +233,18 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [Diagrams](architecture/diagrams.md)
 - [Mvvm Patterns](architecture/mvvm-patterns.md)
 - [Overview](architecture/overview.md)
+- [Task Logging](features/task-logging.md)
 - [Ai Agent Guide](guides/ai-agent-guide.md)
 - [Code Style](guides/code-style.md)
 - [Development Workflow](guides/development-workflow.md)
+- [Job Wizard Persistence](guides/features/job-wizard-persistence.md)
+- [Memory Region Profiling](guides/features/memory-region-profiling.md)
 - [Memory Bank Usage](guides/memory-bank-usage.md)
 - [Deprecated Patterns](guides/migration/deprecated-patterns.md)
+- [Deprecated Property Migration](guides/migration/deprecated-property-migration.md)
 - [Onboarding](guides/onboarding.md)
 - [Testing Guide](guides/testing-guide.md)
+- [Ui Integration](guides/ui-integration.md)
 - [Versioning Guide](guides/versioning-guide.md)
 - [_Index](patterns/_index.md)
 - [Custom Exceptions](patterns/custom-exceptions.md)
@@ -329,6 +253,9 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [Resource Coordination](patterns/resource-coordination.md)
 - [Reusable Controls](patterns/reusable-controls.md)
 - [System Patterns](patterns/system-patterns.md)
+- [Ui Refresh Service](patterns/ui-refresh-service.md)
+- [Settings Schema](reference/settings-schema.md)
+- [2025 11 07 Comprehensive Review](reviews/2025-11-07-comprehensive-review.md)
 - [2025 11 10 Quality Improvements](reviews/2025-11-10-quality-improvements.md)
 - [Latest](reviews/LATEST.md)
 - [_Index](reviews/_index.md)
@@ -336,4 +263,4 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [Pattern Template](templates/pattern-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2025-11-20*
