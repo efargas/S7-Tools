@@ -185,11 +185,11 @@ public sealed class BootloaderService(
 
                 effectiveTaskLogger.LogDebug("Power stabilization complete");
 
-                // Stage 5: Create PLC client and CONNECT to socat (17% progress)
+                // Stage 6: Create PLC client and CONNECT to socat (17% progress)
                 // We connect BEFORE power cycling to ensure the serial port is open and ready.
                 // This eliminates the ~1-2s latency of socat/forking that causes us to miss the 500ms handshake window.
                 progress.Report(("plc_connect", 17.0, null, null));
-                effectiveTaskLogger.LogInformation("--- Stage 5: PLC Client Connection ---");
+                effectiveTaskLogger.LogInformation("--- Stage 6: PLC Client Connection ---");
                 await using IPlcClient client = _clientFactory(profiles);
 
                 // Set protocol logger for detailed communication logging
@@ -201,9 +201,9 @@ public sealed class BootloaderService(
                 await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
                 effectiveTaskLogger.LogInformation("✓ PLC client connected to socat (Ready for Handshake)");
 
-                // Stage 6: Power cycle PLC (20% progress)
+                // Stage 7: Power cycle PLC (20% progress)
                 progress.Report(("power_cycle", 20.0, null, null));
-                effectiveTaskLogger.LogInformation("--- Stage 6: Power Cycle PLC ---");
+                effectiveTaskLogger.LogInformation("--- Stage 7: Power Cycle PLC ---");
                 effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
 
                 // Decomposed Power Cycle for progress reporting
@@ -222,9 +222,9 @@ public sealed class BootloaderService(
                 effectiveTaskLogger.LogInformation("✓ PLC power cycled successfully (Client already connected)");
 
 
-                // Stage 7: Perform handshake (25% progress)
+                // Stage 8: Perform handshake (25% progress)
                 progress.Report(("handshake", 25.0, null, null));
-                effectiveTaskLogger.LogInformation("--- Stage 7: Bootloader Handshake ---");
+                effectiveTaskLogger.LogInformation("--- Stage 8: Bootloader Handshake ---");
                 effectiveTaskLogger.LogDebug("Performing bootloader handshake");
 
                 // client is already connected; HandshakeAsync will just perform the protocol handshake immediately.
@@ -235,9 +235,9 @@ public sealed class BootloaderService(
 
                 effectiveTaskLogger.LogInformation("✓ Connected to bootloader version: {Version}", version);
 
-                // Stage 8: Install stager (30% progress)
+                // Stage 9: Install stager (30% progress)
                 progress.Report(("stager_install", 30.0, null, null));
-                effectiveTaskLogger.LogInformation("--- Stage 8: Install Stager Payload ---");
+                effectiveTaskLogger.LogInformation("--- Stage 9: Install Stager Payload ---");
                 effectiveTaskLogger.LogDebug("Loading stager payload from {BasePath}", profiles.Payloads.BasePath);
 
                 byte[] stagerPayload = await _payloads.GetStagerAsync(
@@ -252,8 +252,22 @@ public sealed class BootloaderService(
 
                 effectiveTaskLogger.LogInformation("✓ Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
 
-                // Stage 9: Dump memory (50% - 95% progress)
-                effectiveTaskLogger.LogInformation("--- Stage 9: Memory Dump ---");
+                // Stage 10: Install Dumper Payload (40% progress)
+                progress.Report(("dumper_install", 40.0, null, null));
+                effectiveTaskLogger.LogInformation("--- Stage 10: Install Memory Dumper Payload ---");
+
+                byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
+                    profiles.Payloads.BasePath,
+                    cancellationToken).ConfigureAwait(false);
+
+                effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
+                effectiveTaskLogger.LogDebug("Installing dumper payload to PLC...");
+
+                await client.InstallDumperAsync(dumperPayload, cancellationToken).ConfigureAwait(false);
+                effectiveTaskLogger.LogInformation("✓ Dumper payload installed successfully");
+
+                // Stage 11: Memory Dump (50% - 95% progress)
+                effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump ---");
                 byte[] memoryData;
 
                 if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
@@ -269,11 +283,9 @@ public sealed class BootloaderService(
                     long totalBytesRead = 0;
                     long totalSize = profiles.MemoryMapping.TotalSelectedSize;
 
-                    byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
-                        profiles.Payloads.BasePath,
-                        cancellationToken).ConfigureAwait(false);
 
-                    effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
+
+                    // Dumper payload already installed in Stage 9
                     DateTime dumpStartTime = _timeProvider.GetUtcNow();
 
                     for (int i = 0; i < selectedSegments.Count; i++)
@@ -319,10 +331,10 @@ public sealed class BootloaderService(
                         });
 
                         DateTime segmentStartTime = _timeProvider.GetUtcNow();
-                        byte[] segmentData = await client.DumpMemoryAsync(
+
+                        byte[] segmentData = await client.InvokeDumperAsync(
                             segmentStart,
                             segmentSize,
-                            dumperPayload,
                             segmentProgress,
                             cancellationToken).ConfigureAwait(false);
 
@@ -356,11 +368,10 @@ public sealed class BootloaderService(
                     effectiveTaskLogger.LogDebug("Size: {Length:N0} bytes ({LengthKB:F2} KB)",
                         profiles.Memory.Length, profiles.Memory.Length / 1024.0);
 
-                    byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
-                        profiles.Payloads.BasePath,
-                        cancellationToken).ConfigureAwait(false);
+                    effectiveTaskLogger.LogDebug("Size: {Length:N0} bytes ({LengthKB:F2} KB)",
+                        profiles.Memory.Length, profiles.Memory.Length / 1024.0);
 
-                    effectiveTaskLogger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
+                    // Dumper payload already installed in Stage 9
 
                     int lastLoggedPercent = -1;
 
@@ -396,10 +407,9 @@ public sealed class BootloaderService(
                     });
 
                     DateTime dumpStartTime = _timeProvider.GetUtcNow();
-                    memoryData = await client.DumpMemoryAsync(
+                    memoryData = await client.InvokeDumperAsync(
                         profiles.Memory.Start,
                         profiles.Memory.Length,
-                        dumperPayload,
                         dumpProgress,
                         cancellationToken).ConfigureAwait(false);
 
@@ -412,14 +422,14 @@ public sealed class BootloaderService(
                         dumpDuration.TotalSeconds, transferRate, transferRate / 1024.0);
                 }
 
-                // Stage 10: Teardown (95% progress)
+                // Stage 12: Teardown (95% progress)
                 progress.Report(("teardown", 95.0, null, null));
-                effectiveTaskLogger.LogInformation("--- Stage 10: Teardown ---");
+                effectiveTaskLogger.LogInformation("--- Stage 12: Teardown ---");
                 effectiveTaskLogger.LogDebug("Cleaning up PLC client resources...");
 
                 // Client will be disposed automatically via 'await using'
 
-                // Stage 11: Complete (100% progress)
+                // Stage 13: Complete (100% progress)
                 progress.Report(("complete", 100.0, null, null));
                 effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
                 effectiveTaskLogger.LogInformation("✓ Successfully dumped {ByteCount:N0} bytes ({ByteCountKB:F2} KB)",

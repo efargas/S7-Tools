@@ -138,10 +138,23 @@ namespace S7Tools.Services.Adapters
 
         #region Memory Dump
 
-        public async Task<byte[]> DumpMemoryAsync(uint address, uint length, byte[] dumpPayload, IProgress<long> progress, CancellationToken cancellationToken = default)
+        public async Task InstallDumperAsync(byte[] dumperPayload, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Starting Memory Dump via Stager...");
-            return await _memoryManager.DumpMemoryAsync(address, length, dumpPayload, _stagerManager, progress, cancellationToken);
+            _logger.LogInformation("Installing Dumper Payload via Stager...");
+            // Install to DUMPER_PAYLOAD_LOCATION and Hook 2
+            await _stagerManager.InstallAddHookViaStagerAsync(
+                PlcConstants.DUMPER_PAYLOAD_LOCATION,
+                dumperPayload,
+                PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND,
+                cancellationToken);
+            _logger.LogInformation("Dumper payload installed at 0x{Addr:X} (Hook {Hook})",
+                PlcConstants.DUMPER_PAYLOAD_LOCATION, PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND);
+        }
+
+        public async Task<byte[]> InvokeDumperAsync(uint address, uint length, IProgress<long> progress, CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Invoking Dumper (0x{Addr:X}, {Len} bytes)...", address, length);
+            return await _memoryManager.InvokeDumperAsync(address, length, progress, cancellationToken);
         }
 
         #endregion

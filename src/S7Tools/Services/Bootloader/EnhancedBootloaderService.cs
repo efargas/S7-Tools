@@ -207,6 +207,7 @@ public sealed class EnhancedBootloaderService(
             await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
 
             effectiveTaskLogger.LogInformation("PLC power cycled successfully");
+            // Stage 8: Handshake (28% progress)
             progress.Report(("handshake", 28.0, null, null));
             _logger.LogDebug("Performing bootloader handshake");
 
@@ -216,7 +217,7 @@ public sealed class EnhancedBootloaderService(
             _logger.LogInformation("Connected to bootloader version: {Version}", version);
             processLogger?.LogInformation("Bootloader version: {Version}", version);
 
-            // Stage 9: Install stager (30% -> 50% progress)
+            // Stage 9: Install stager (30% -> 40% progress)
             // Stager installation progress simulation based on baud rate
             _logger.LogDebug("Installing stager payload from {BasePath}", profiles.Payloads.BasePath);
             byte[] stagerPayload = await _payloads.GetStagerAsync(
@@ -230,7 +231,7 @@ public sealed class EnhancedBootloaderService(
                 stagerPayload.Length,
                 baudRate,
                 progress,
-                30.0, 50.0,
+                30.0, 40.0,
                 "stager_install",
                 stagerCts.Token);
 
@@ -247,10 +248,45 @@ public sealed class EnhancedBootloaderService(
                 catch (OperationCanceledException) { }
             }
 
-            _logger.LogInformation("Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
+            effectiveTaskLogger.LogInformation("Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
             processLogger?.LogInformation("Stager installed: {Size} bytes", stagerPayload.Length);
 
-            // Stage 10: Dump memory (50% - 95% progress)
+            // Stage 10: Install Dumper Payload (40% -> 50% progress)
+            progress.Report(("dumper_install", 40.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 10: Install Memory Dumper Payload ---");
+
+            byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
+                profiles.Payloads.BasePath,
+                cancellationToken).ConfigureAwait(false);
+
+            _logger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
+            _logger.LogDebug("Installing dumper payload to PLC...");
+
+            using var dumperCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            Task dumperProgressTask = SimulateProgressAsync(
+                dumperPayload.Length,
+                baudRate,
+                progress,
+                40.0, 50.0,
+                "dumper_install",
+                dumperCts.Token);
+
+            try
+            {
+                await client.InstallDumperAsync(dumperPayload, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                dumperCts.Cancel();
+                try
+                { await dumperProgressTask.ConfigureAwait(false); }
+                catch (OperationCanceledException) { }
+            }
+
+            effectiveTaskLogger.LogInformation("Dumper payload installed successfully");
+
+            // Stage 11: Dump memory (50% - 95% progress)
+            effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump ---");
             byte[] memoryData;
 
             if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
@@ -269,9 +305,7 @@ public sealed class EnhancedBootloaderService(
                     throw new InvalidOperationException("Selected memory segments have a total size of 0 bytes.");
                 }
 
-                byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
-                    profiles.Payloads.BasePath,
-                    cancellationToken).ConfigureAwait(false);
+                // Dumper payload already installed in Stage 10
 
                 for (int i = 0; i < selectedSegments.Count; i++)
                 {
@@ -306,60 +340,39 @@ public sealed class EnhancedBootloaderService(
                     double segmentTotalRange = 45.0 * segmentSize / totalSize;
                     double segmentBasePercent = 50.0 + (45.0 * totalBytesRead / totalSize);
 
-                    // Allocated 10% of this segment's range for Dumper Upload, 90% for Memory Read
-                    double uploadRange = segmentTotalRange * 0.1;
-                    double readRange = segmentTotalRange * 0.9;
-
-                    double uploadStart = segmentBasePercent;
-                    double uploadEnd = segmentBasePercent + uploadRange;
-                    double readEnd = segmentBasePercent + segmentTotalRange;
+                    // All range allocated to read since upload is done
+                    double readRange = segmentTotalRange;
 
                     _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",
                         i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
 
-                    using var uploadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                     bool isReading = false;
 
-                    // Start dumper upload simulation
-                    Task uploadProgressTask = SimulateProgressAsync(
-                        dumperPayload.Length,
-                        segmentBaudRate,
-                        progress,
-                        uploadStart, uploadEnd,
-                        "memory_dump",
-                        uploadCts.Token);
+                    // No upload simulation needed here
 
                     var segmentProgress = new Progress<long>(bytesRead =>
                     {
                         if (!isReading)
                         {
                             isReading = true;
-                            uploadCts.Cancel();
                         }
 
-                        double percent = uploadEnd + (readRange * bytesRead / segmentSize);
+                        double percent = segmentBasePercent + (readRange * bytesRead / segmentSize);
                         progress.Report(("memory_dump", percent, totalBytesRead + bytesRead, totalSize));
                     });
 
                     byte[] segmentData;
                     try
                     {
-                        segmentData = await client.DumpMemoryAsync(
+                        segmentData = await client.InvokeDumperAsync(
                             segmentStart,
                             segmentSize,
-                            dumperPayload,
                             segmentProgress,
                             cancellationToken).ConfigureAwait(false);
                     }
                     finally
                     {
-                        if (!isReading)
-                        {
-                            uploadCts.Cancel(); // Ensure cancelled if exception occurs before reading
-                        }
-                        try
-                        { await uploadProgressTask.ConfigureAwait(false); }
-                        catch (OperationCanceledException) { }
+                        // No upload task to await
                     }
 
                     segmentDataList.Add(segmentData);
@@ -384,58 +397,36 @@ public sealed class EnhancedBootloaderService(
                     profiles.Memory.Start + profiles.Memory.Length,
                     profiles.Memory.Length);
 
-                byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
-                    profiles.Payloads.BasePath,
-                    cancellationToken).ConfigureAwait(false);
+                // Dumper payload already installed in Stage 10
 
-                int dumperBaudRate = profiles.Serial.Configuration.BaudRate;
-                using var uploadCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 bool isReading = false;
 
-                // Split progress: 10% for upload (50.0 -> 54.5), 90% for reading (54.5 -> 95.0)
-                double uploadStart = 50.0;
-                double uploadEnd = 54.5;
-                double readRange = 40.5;
-
-                // Start dumper upload simulation
-                Task uploadProgressTask = SimulateProgressAsync(
-                    dumperPayload.Length,
-                    dumperBaudRate,
-                    progress,
-                    uploadStart, uploadEnd,
-                    "memory_dump",
-                    uploadCts.Token);
+                // All 45% range (50.0 -> 95.0) for reading
+                double readRange = 45.0;
+                double basePercent = 50.0;
 
                 var dumpProgress = new Progress<long>(bytesRead =>
                 {
                     if (!isReading)
                     {
                         isReading = true;
-                        uploadCts.Cancel();
                     }
 
-                    double percent = uploadEnd + (readRange * bytesRead / profiles.Memory.Length);
+                    double percent = basePercent + (readRange * bytesRead / profiles.Memory.Length);
                     progress.Report(("memory_dump", percent, bytesRead, (long)profiles.Memory.Length));
                 });
 
                 try
                 {
-                    memoryData = await client.DumpMemoryAsync(
+                    memoryData = await client.InvokeDumperAsync(
                         profiles.Memory.Start,
                         profiles.Memory.Length,
-                        dumperPayload,
                         dumpProgress,
                         cancellationToken).ConfigureAwait(false);
                 }
                 finally
                 {
-                    if (!isReading)
-                    {
-                        uploadCts.Cancel();
-                    }
-                    try
-                    { await uploadProgressTask.ConfigureAwait(false); }
-                    catch (OperationCanceledException) { }
+                    // No upload task to clean up
                 }
 
                 _logger.LogInformation("Memory dump completed: {Size} bytes from 0x{Start:X8}",
@@ -444,14 +435,16 @@ public sealed class EnhancedBootloaderService(
                     memoryData.Length, profiles.Memory.Start);
             }
 
-            // Stage 11: Teardown (95% progress)
+            // Stage 12: Teardown (95% progress)
             progress.Report(("teardown", 95.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 12: Teardown ---");
             _logger.LogDebug("Cleaning up resources");
 
             // Client will be disposed automatically via 'await using'
 
-            // Stage 12: Complete (100% progress)
+            // Stage 13: Complete (100% progress)
             progress.Report(("complete", 100.0, null, null));
+            effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
             _logger.LogInformation("Bootloader dump operation completed successfully. " +
                 "Dumped {ByteCount} bytes", memoryData.Length);
 

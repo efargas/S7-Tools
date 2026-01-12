@@ -48,7 +48,8 @@ public sealed class JobProfilePropagationTests : IDisposable
             _serialProfileService,
             _socatProfileService,
             _powerSupplyProfileService,
-            _memoryRegionProfileService
+            _memoryRegionProfileService,
+            Substitute.For<ITimeProvider>()
         );
     }
 

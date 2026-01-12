@@ -62,19 +62,15 @@ namespace S7Tools.Services.Adapters.Plc
             await _protocol.ReceivePacketAsync(cancellationToken);
         }
 
-        public async Task<byte[]> DumpMemoryAsync(uint address, uint length, byte[] dumpPayload, PlcStagerManager stager, IProgress<long> progress, CancellationToken cancellationToken)
+        public async Task<byte[]> InvokeDumperAsync(uint address, uint length, IProgress<long> progress, CancellationToken cancellationToken)
         {
-            // 1. Install Dumper using Stager (Hook 7 installs to Hook 2)
-            await stager.InstallAddHookViaStagerAsync(PlcConstants.DUMPER_PAYLOAD_LOCATION, dumpPayload, PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND, cancellationToken);
-
-            // 2. Invoke Dumper (Hook 2)
             // Protocol: 'A' + Addr + Len
             var args = new byte[9];
             args[0] = (byte)'A';
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(address), 0, args, 1, 4);
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(length), 0, args, 5, 4);
 
-            // Send Command
+            // Send Command (Invoke Hook 2)
             var response = await _protocol.InvokeAddHookAsync(PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND, args, true, cancellationToken);
 
             if (response == null || !System.Text.Encoding.ASCII.GetString(response).StartsWith("Ok"))
@@ -82,7 +78,7 @@ namespace S7Tools.Services.Adapters.Plc
                 throw new Exception("Dumper invocation failed.");
             }
 
-            // 3. Receive Data
+            // Receive Data
             var data = await ReceiveManyAsync(progress, cancellationToken);
             return data;
         }

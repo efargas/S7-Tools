@@ -9,7 +9,7 @@ namespace S7Tools.Tests.Services.Bootloader;
 
 /// <summary>
 /// Integration tests for the EnhancedBootloaderService.
-/// Tests the 7-stage workflow execution and resource failure handling.
+/// Tests the workflow execution and resource failure handling.
 /// </summary>
 public class EnhancedBootloaderServiceTests
 {
@@ -123,8 +123,9 @@ public class EnhancedBootloaderServiceTests
         IPlcClient plcClient = Substitute.For<IPlcClient>();
         plcClient.HandshakeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
         plcClient.InstallStagerAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
-        plcClient.DumpMemoryAsync(
-                Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
+        plcClient.InstallDumperAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        plcClient.InvokeDumperAsync(
+                Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
             .Returns(new byte[256]);
 
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
@@ -151,18 +152,20 @@ public class EnhancedBootloaderServiceTests
         result.Length.Should().Be(256); // Expected dump size
 
         // Verify all stages executed
-        await plcClient.Received(1).DumpMemoryAsync(
-            Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>());
+        await plcClient.Received(1).InvokeDumperAsync(
+            Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>());
 
-        // Verify 7-stage workflow execution order
+        // Verify workflow execution order
         await socatService.Received(1).StartSocatAsync(Arg.Any<SocatConfiguration>(), Arg.Any<string>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
         await power.Received(1).ConnectAsync(Arg.Any<PowerSupplyConfiguration>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
-        await power.Received(1).TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
-        await power.Received(1).PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
+        await power.Received(2).TurnOffAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
+        await power.Received(2).TurnOnAsync(Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
+        await power.DidNotReceive().PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>());
         await plcClient.Received(1).HandshakeAsync(Arg.Any<CancellationToken>());
         await plcClient.Received(1).InstallStagerAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
-        await plcClient.Received(1).DumpMemoryAsync(
-            Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>());
+        await plcClient.Received(1).InstallDumperAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>());
+        await plcClient.Received(1).InvokeDumperAsync(
+            Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -194,8 +197,8 @@ public class EnhancedBootloaderServiceTests
         power.PowerCycleAsync(Arg.Any<int>(), Arg.Any<Microsoft.Extensions.Logging.ILogger?>(), Arg.Any<CancellationToken>()).Returns(true);
 
         IPlcClient plcClient = Substitute.For<IPlcClient>();
-        plcClient.DumpMemoryAsync(
-                Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
+        plcClient.InvokeDumperAsync(
+                Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
             .Returns(new byte[1024]);
 
         IPlcClient ClientFactory(JobProfileSet profiles) => plcClient;
@@ -511,7 +514,8 @@ public class EnhancedBootloaderServiceTests
         plcClient.HandshakeAsync(Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
         plcClient.GetBootloaderVersionAsync(Arg.Any<CancellationToken>()).Returns("1.0.0");
         plcClient.InstallStagerAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
-        plcClient.DumpMemoryAsync(Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<byte[]>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
+        plcClient.InstallDumperAsync(Arg.Any<byte[]>(), Arg.Any<CancellationToken>()).Returns(Task.CompletedTask);
+        plcClient.InvokeDumperAsync(Arg.Any<uint>(), Arg.Any<uint>(), Arg.Any<IProgress<long>>(), Arg.Any<CancellationToken>())
             .Returns<Task<byte[]>>(_ => Task.FromException<byte[]>(
                 new InvalidOperationException("Memory dump read timeout")));
 
