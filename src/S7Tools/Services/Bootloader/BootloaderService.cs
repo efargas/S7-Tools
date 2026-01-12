@@ -31,7 +31,8 @@ public sealed class BootloaderService(
     private const int InitialPowerOffWaitMs = 10000;
 
     /// <inheritdoc />
-    public async Task<byte[]> DumpAsync(
+    /// <inheritdoc />
+    public async Task<IList<byte[]>> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
@@ -435,7 +436,7 @@ public sealed class BootloaderService(
                 effectiveTaskLogger.LogInformation("✓ Successfully dumped {ByteCount:N0} bytes ({ByteCountKB:F2} KB)",
                     memoryData.Length, memoryData.Length / 1024.0);
 
-                return memoryData;
+                return [memoryData];
             }
             finally
             {

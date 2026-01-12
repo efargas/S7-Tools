@@ -20,7 +20,7 @@ public interface IBootloaderService
     /// <param name="protocolLogger">Optional logger for capturing protocol-level PLC communication.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The dumped memory data.</returns>
-    Task<byte[]> DumpAsync(
+    Task<IList<byte[]>> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,

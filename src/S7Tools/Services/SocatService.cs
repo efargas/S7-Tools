@@ -326,6 +326,18 @@ public partial class SocatService : ISocatService, IDisposable
         bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
 
         // PERFORM VALIDATIONS BEFORE ACQUIRING SEMAPHORE to reduce lock duration
+
+        // Fail fast if TCP port is already in use
+        _logger.LogDebug("Checking if TCP port {Port} is available (pre-check)", profile.Configuration.TcpPort);
+        if (await IsPortInUseAsync(profile.Configuration.TcpPort, cancellationToken).ConfigureAwait(false))
+        {
+            _logger.LogError("TCP port {Port} is already in use (pre-check)", profile.Configuration.TcpPort);
+            throw new ConnectionException(
+                $"0.0.0.0:{profile.Configuration.TcpPort}",
+                "TCP",
+                $"TCP port {profile.Configuration.TcpPort} is already in use");
+        }
+
         // Validate serial device exists before starting socat
         _logger.LogDebug("Checking if serial device exists: {Device}", serialDevice);
         if (!File.Exists(serialDevice))

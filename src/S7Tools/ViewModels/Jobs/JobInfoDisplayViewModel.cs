@@ -358,12 +358,19 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
                                 Tooltip = $"{jobSelectedSegment.Size} bytes"
                             });
 
+                            profileProperties.Add(new PropertyDisplayItem
+                            {
+                                Label = "Dump Count",
+                                Value = $"{job.DumpCount}",
+                                Tooltip = $"The memory segment will be dumped {job.DumpCount} times"
+                            });
+
                             // Add segment detail
                             segmentProperties.Add(new PropertyDisplayItem
                             {
                                 Label = jobSelectedSegment.Name,
-                                Value = $"{jobSelectedSegment.AddressRange} ({jobSelectedSegment.SizeFormatted})",
-                                Tooltip = $"Type: {jobSelectedSegment.Type}, Size: {jobSelectedSegment.Size} bytes"
+                                Value = $"{jobSelectedSegment.AddressRange} ({jobSelectedSegment.SizeFormatted}) x {job.DumpCount}",
+                                Tooltip = $"Type: {jobSelectedSegment.Type}, Size: {jobSelectedSegment.Size} bytes, Iterations: {job.DumpCount}"
                             });
                         }
                         else

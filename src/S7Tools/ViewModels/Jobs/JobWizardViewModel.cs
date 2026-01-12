@@ -767,6 +767,13 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 existingJob.PowerOnTimeMs = PowerOnTimeMs;
                 existingJob.PowerOffDelayMs = PowerOffDelayMs;
 
+                existingJob.PowerOnTimeMs = PowerOnTimeMs;
+                existingJob.PowerOffDelayMs = PowerOffDelayMs;
+                if (MemoryRegionStepViewModel != null)
+                {
+                    existingJob.DumpCount = MemoryRegionStepViewModel.DumpCount;
+                }
+
                 job = await _jobManager.UpdateAsync(existingJob).ConfigureAwait(false);
                 Status = "Job updated successfully";
                 _logger.LogInformation("Job updated via wizard: {JobId} {JobName}", job.Id, job.Name);
@@ -794,10 +801,19 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 job.PowerOnTimeMs = PowerOnTimeMs;
                 job.PowerOffDelayMs = PowerOffDelayMs;
 
+                job.PowerOnTimeMs = PowerOnTimeMs;
+                job.PowerOffDelayMs = PowerOffDelayMs;
+                if (MemoryRegionStepViewModel != null)
+                {
+                    job.DumpCount = MemoryRegionStepViewModel.DumpCount;
+                }
+
                 job = await _jobManager.CreateAsync(job).ConfigureAwait(false);
                 Status = UIStrings.Status_JobCreated;
                 _logger.LogInformation("Job created via wizard: {JobId} {JobName}", job.Id, job.Name);
             }
+
+
 
             CreatedJobId = job.Id;
             Completed = true;
@@ -915,6 +931,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
 
             //Now sync the segment selections
             SyncMemoryRegionToStepViewModel();
+
+            // Sync Dump Count
+            MemoryRegionStepViewModel.DumpCount = job.DumpCount;
         }
 
         // Force validation update

@@ -203,6 +203,51 @@
       </StackPanel>
     </Border>
 
+    <!-- 3. Dump Configuration (Loop Count) -->
+    <Border Background="#2D2D2D"
+            BorderBrush="#464647"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="16"
+            IsVisible="{Binding SelectedProfile, Converter={x:Static converters:ObjectConverters.IsNotNull}}">
+      <StackPanel Spacing="12">
+        <StackPanel Orientation="Horizontal" Spacing="8">
+          <icons:Icon Value="fa-solid fa-repeat"
+                      Width="16"
+                      Height="16"
+                      Foreground="#2196F3"
+                      VerticalAlignment="Center" />
+          <TextBlock Text="STEP 3: Configure Dump Iterations"
+                     FontWeight="Bold"
+                     FontSize="14"
+                     Foreground="#2196F3" />
+        </StackPanel>
+
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
+          <StackPanel Grid.Column="0" Spacing="4">
+            <TextBlock Text="Dump Count:" 
+                       Foreground="#CCCCCC" 
+                       VerticalAlignment="Center" />
+            <NumericUpDown Value="{Binding DumpCount}" 
+                           Minimum="1" 
+                           Maximum="1000" 
+                           FormatString="0" 
+                           Width="120"
+                           HorizontalAlignment="Left" />
+          </StackPanel>
+          
+          <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock Text="How many times to dump the selected segment." 
+                       Foreground="#AAAAAA" 
+                       FontSize="11" />
+            <TextBlock Text="Useful for capturing memory changes over time." 
+                       Foreground="#888888" 
+                       FontSize="10" />
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+    </Border>
+
     <!-- 3. Profile Details Summary (informational) -->
     <Border Background="#2D2D2D"
             BorderBrush="#464647"

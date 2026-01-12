@@ -52,11 +52,14 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private ObservableCollection<TaskExecution> _finishedTasks = [];
 
     // Current selection and UI state
-    private TaskExecution? _selectedTask;
+    private TaskExecution _selectedTask = TaskExecution.Empty;
     private bool _isLoading;
     private string? _statusMessage;
     private bool _isAutoRefreshEnabled = true;
     private int _refreshIntervalSeconds = 2;
+
+    // Throttling for UI updates
+    private readonly System.Reactive.Subjects.ISubject<TaskExecution> _taskStateChangedSubject = new System.Reactive.Subjects.Subject<TaskExecution>();
 
     // Task statistics for dashboard
     private int _totalTasksCount;
@@ -222,10 +225,14 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// Drives the enable/disable state of task operation commands.
     /// Used for displaying detailed task information and progress.
     /// </remarks>
-    public TaskExecution? SelectedTask
+    /// <summary>
+    /// Gets or sets the currently selected task.
+    /// Never null; uses TaskExecution.Empty when no task is selected.
+    /// </summary>
+    public TaskExecution SelectedTask
     {
         get => _selectedTask;
-        set => this.RaiseAndSetIfChanged(ref _selectedTask, value);
+        set => this.RaiseAndSetIfChanged(ref _selectedTask, value ?? TaskExecution.Empty);
     }
 
     /// <summary>
@@ -465,28 +472,28 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         // Selection-dependent commands with proper validation
         IObservable<bool> hasSelectedTask = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task != null);
+            .Select(task => task.TaskId != Guid.Empty);
 
         IObservable<bool> canStart = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task?.State == TaskState.Created);
+            .Select(task => task.TaskId != Guid.Empty && task.State == TaskState.Created);
 
         IObservable<bool> canStop = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task?.CanCancel == true);
+            .Select(task => task.TaskId != Guid.Empty && task.CanCancel);
 
         IObservable<bool> canSchedule = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task?.State == TaskState.Created);
+            .Select(task => task.TaskId != Guid.Empty && task.State == TaskState.Created);
 
         IObservable<bool> canRestart = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task?.CanRestart == true);
+            .Select(task => task.TaskId != Guid.Empty && task.CanRestart);
 
         IObservable<bool> canPause = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task?.State == TaskState.Running);
+            .Select(task => task.TaskId != Guid.Empty && task.State == TaskState.Running);
 
         IObservable<bool> canResume = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task?.State == TaskState.Paused);
+            .Select(task => task.TaskId != Guid.Empty && task.State == TaskState.Paused);
 
         IObservable<bool> canDelete = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task?.IsTerminal == true);
+            .Select(task => task.TaskId != Guid.Empty && task.IsTerminal);
 
         IObservable<bool> hasFinishedTasks = this.WhenAnyValue(x => x.FinishedTasks.Count)
             .Select(count => count > 0);
@@ -506,11 +513,6 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         ClearFinishedTasksCommand = ReactiveCommand.CreateFromTask(ExecuteClearFinishedTasksAsync, hasFinishedTasks);
         CreateTaskCommand = ReactiveCommand.CreateFromTask(ExecuteCreateTaskAsync);
 
-        // Subscribe to command execution for logging
-        StartTaskCommand.Subscribe(_ => _logger.LogDebug("Start task command executed for task {TaskId}", SelectedTask?.TaskId)).DisposeWith(_disposables);
-        StopTaskCommand.Subscribe(_ => _logger.LogDebug("Stop task command executed for task {TaskId}", SelectedTask?.TaskId)).DisposeWith(_disposables);
-        ScheduleTaskCommand.Subscribe(_ => _logger.LogDebug("Schedule task command executed for task {TaskId}", SelectedTask?.TaskId)).DisposeWith(_disposables);
-        RestartTaskCommand.Subscribe(_ => _logger.LogDebug("Restart task command executed for task {TaskId}", SelectedTask?.TaskId)).DisposeWith(_disposables);
     }
 
     private void SetupCollections()
@@ -555,7 +557,28 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         // Subscribe to progress updates
         _taskScheduler.TaskProgressUpdated += OnTaskProgressUpdated;
 
-        // Setup throttling timer (update UI every 250ms max)
+        // Setup throttling for state changes to prevent UI freezing
+        _taskStateChangedSubject
+            .Sample(TimeSpan.FromMilliseconds(250))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(task =>
+            {
+                _ = _uiThreadService.InvokeOnUIThreadAsync(async () =>
+                {
+                    try
+                    {
+                        await LoadTasksAsync().ConfigureAwait(false);
+                        _logger.LogDebug("UI refreshed after throttled task state change");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to refresh UI after task state change");
+                    }
+                });
+            })
+            .DisposeWith(_disposables);
+
+        // Setup throttling timer for PROGRESS updates (update UI every 250ms max)
         _progressUpdateTimer = Observable.Interval(TimeSpan.FromMilliseconds(250))
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(_ => ProcessPendingProgressUpdates())
@@ -564,21 +587,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
     private void OnTaskStateChanged(TaskExecution taskExecution)
     {
-        // Update UI on the UI thread when task state changes
-        _ = _uiThreadService.InvokeOnUIThreadAsync(async () =>
-        {
-            try
-            {
-                // Refresh tasks to ensure UI is synchronized
-                await LoadTasksAsync().ConfigureAwait(false);
-
-                _logger.LogDebug("Task state changed: {TaskId} -> {State}", taskExecution.TaskId, taskExecution.State);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to handle task state change for task {TaskId}", taskExecution.TaskId);
-            }
-        });
+        // Push to subject for throttling instead of direct update
+        _taskStateChangedSubject.OnNext(taskExecution);
     }
 
     private void OnTaskProgressUpdated(Guid taskId, double percentage, string operation, Dictionary<string, object>? extraData = null)
@@ -756,9 +766,10 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         // Use parameter if provided, otherwise fall back to SelectedTask
         TaskExecution? targetTask = task ?? SelectedTask;
 
-        if (targetTask == null)
+        // Check for null or Empty task
+        if (targetTask == null || targetTask.TaskId == Guid.Empty)
         {
-            _logger.LogWarning("Start task command called but no task was provided or selected");
+            _logger.LogWarning("Start task command called but no valid task was provided or selected");
             return;
         }
 
@@ -1085,7 +1096,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             // Since there's no direct delete method, we'll just mark it and let cleanup handle it
             StatusMessage = $"Task '{SelectedTask.JobName}' will be removed during next cleanup";
             _logger.LogInformation("Marked task {TaskId} ({JobName}) for cleanup", SelectedTask.TaskId, SelectedTask.JobName);
-            SelectedTask = null;
+            SelectedTask = TaskExecution.Empty;
         }
         catch (Exception ex)
         {
@@ -1148,7 +1159,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
             if (SelectedTask?.IsTerminal == true)
             {
-                SelectedTask = null;
+                SelectedTask = TaskExecution.Empty;
             }
         }
         catch (Exception ex)

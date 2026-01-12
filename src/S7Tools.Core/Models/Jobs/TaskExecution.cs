@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 
+using System.Text.Json.Serialization;
 using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Core.Models.Jobs;
@@ -40,6 +41,18 @@ public class TaskExecution : INotifyPropertyChanged
     public TaskExecution()
     {
     }
+
+    /// <summary>
+    /// Gets a singleton instance of an empty task execution (Null Object pattern).
+    /// </summary>
+    public static TaskExecution Empty { get; } = new()
+    {
+        TaskId = Guid.Empty,
+        JobName = "None",
+        State = TaskState.Created,
+        ProgressPercentage = 0,
+        CurrentOperation = "No task selected"
+    };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskExecution"/> class with a time provider.
@@ -289,6 +302,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets or sets the task-specific logger information.
     /// </summary>
+    [JsonIgnore]
     public TaskLogger? Logger { get; set; }
 
     /// <summary>
@@ -361,9 +375,7 @@ public class TaskExecution : INotifyPropertyChanged
         }
     }
 
-    private DateTime _lastProgressUpdate = DateTime.MinValue;
-    private long _lastBytesRead;
-    private double _smoothedSpeed;
+    private double _lastSpeedUpdatePercentage = -1; // Force initial update
 
     /// <summary>
     /// Gets or sets the current transfer speed in bytes per second.
@@ -408,50 +420,53 @@ public class TaskExecution : INotifyPropertyChanged
                 TotalBytes = totalBytes;
             }
 
-            // Calculate Speed and ETC
+            // Calculate Speed and ETC - Optimized: Average Speed, Throttled to 1%
             if (hasBytes && TotalBytes.HasValue && TotalBytes.Value > 0)
             {
-                var now = Now;
-                if (_lastProgressUpdate != DateTime.MinValue && now > _lastProgressUpdate)
+                // Only update speed/ETC if progress has moved significantly (1%) or finished
+                // This prevents UI thrashing and provides a more stable ETC based on average speed
+                bool shouldUpdate = (Math.Abs(ProgressPercentage - _lastSpeedUpdatePercentage) >= 1.0) ||
+                                    (ProgressPercentage >= 100) ||
+                                    (_lastSpeedUpdatePercentage < 0);
+
+                if (shouldUpdate && StartedAt.HasValue)
                 {
-                    double seconds = (now - _lastProgressUpdate).TotalSeconds;
-                    if (seconds > 0) // Avoid division by zero
+                    DateTime now = Now;
+                    TimeSpan elapsed = now - StartedAt.Value;
+
+                    if (elapsed.TotalSeconds > 1) // Wait 1 second for stability
                     {
-                        long bytesDelta = currentBytesRead - _lastBytesRead;
-                        // Avoid calculating speed if delta is negative (restart?) or zero (no progress)
-                        if (bytesDelta >= 0)
+                        // Calculate Average Speed: Total Bytes / Total Time
+                        // This naturally smoothes out spikes and provides better long-term ETC
+                        double averageSpeed = currentBytesRead / elapsed.TotalSeconds;
+
+                        // Removed 1024 divisor: Speed property expects Bytes/Second, and the Converter handles scaling
+                        Speed = averageSpeed;
+                        OnPropertyChanged(nameof(Speed));
+
+                        if (Speed > 0)
                         {
-                            double instantSpeed = bytesDelta / seconds;
-                            // BUGFIX: Speed appears to be 1024x too large somewhere in the data flow
-                            // Divide by 1024 here to compensate, so ETC and display both work correctly
-                            instantSpeed /= 1024;
-                            // Exponential moving average for smoothing (alpha = 0.2)
-                            _smoothedSpeed = (_smoothedSpeed * 0.8) + (instantSpeed * 0.2);
-                            Speed = _smoothedSpeed;
-                            OnPropertyChanged(nameof(Speed));
+                            long remainingBytes = Math.Max(0, TotalBytes.Value - currentBytesRead);
+                            // Standard calculation: Bytes / (Bytes/Second) = Seconds
+                            double remainingSeconds = remainingBytes / Speed;
+
+                            if (remainingSeconds < 86400) // Sanity check: < 24 hours
+                            {
+                                EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
+                                EstimatedTimeCompletion = Now.AddSeconds(remainingSeconds);
+                            }
+                            else
+                            {
+                                EstimatedTimeRemaining = null;
+                                EstimatedTimeCompletion = null;
+                            }
+
+                            OnPropertyChanged(nameof(EstimatedTimeRemaining));
+                            OnPropertyChanged(nameof(EstimatedTimeCompletion));
                         }
-                    }
-                }
-                else if (_lastProgressUpdate == DateTime.MinValue)
-                {
-                    // Initialize smoothed speed with 0 or a heuristic if needed
-                    _smoothedSpeed = 0;
-                }
 
-                _lastProgressUpdate = now;
-                _lastBytesRead = currentBytesRead;
-
-                if (Speed > 0)
-                {
-                    long remainingBytes = Math.Max(0, TotalBytes.Value - currentBytesRead);
-                    double remainingSeconds = remainingBytes / Speed;
-                    if (remainingSeconds < 86400)
-                    {
-                        EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
-                        EstimatedTimeCompletion = Now.AddSeconds(remainingSeconds);
+                        _lastSpeedUpdatePercentage = ProgressPercentage;
                     }
-                    OnPropertyChanged(nameof(EstimatedTimeRemaining));
-                    OnPropertyChanged(nameof(EstimatedTimeCompletion));
                 }
             }
             else

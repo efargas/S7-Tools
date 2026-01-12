@@ -627,7 +627,8 @@ public class JobManager(
             jobProfile.OutputPath,
             jobProfile.PowerOnTimeMs,
             jobProfile.PowerOffDelayMs,
-            memoryProfile // Pass full MemoryMappingProfile for segment-based dumping
+            memoryProfile, // Pass full MemoryMappingProfile for segment-based dumping
+            jobProfile.DumpCount
         );
 
         // Generate resource keys

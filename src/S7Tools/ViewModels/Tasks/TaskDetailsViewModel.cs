@@ -214,14 +214,23 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             if (_taskExecution != null)
             {
                 // Detach from old task's log stores
-                _mainLogDataStore.CollectionChanged -= _mainHandler;
-                _processLogDataStore.CollectionChanged -= _processHandler;
-                _protocolLogDataStore.CollectionChanged -= _protocolHandler;
+                if (_mainLogDataStore != null)
+                {
+                    _mainLogDataStore.CollectionChanged -= _mainHandler;
+                }
+                if (_processLogDataStore != null)
+                {
+                    _processLogDataStore.CollectionChanged -= _processHandler;
+                }
+                if (_protocolLogDataStore != null)
+                {
+                    _protocolLogDataStore.CollectionChanged -= _protocolHandler;
+                }
             }
 
             this.RaiseAndSetIfChanged(ref _taskExecution, value);
 
-            if (value == null)
+            if (value == null || value.TaskId == Guid.Empty)
             {
                 _mainLogDataStore = null!;
                 _processLogDataStore = null!;
@@ -1199,21 +1208,43 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             // 9. Dump memory
             // 10. Teardown
             // 11. Complete
-            byte[] dumpedData = await _bootloaderService.DumpWithTaskTrackingAsync(
+            IList<byte[]> dumpedDataList = await _bootloaderService.DumpWithTaskTrackingAsync(
                 TaskExecution,
                 profileSet,
                 CancellationToken.None);
 
-            // Save the dumped data to the output file
-            string outputFile = Path.Combine(jobProfile.OutputPath, $"dump_{DateTime.UtcNow.ToLocalTime():yyyyMMdd_HHmmss}.bin");
-            await File.WriteAllBytesAsync(outputFile, dumpedData);
+            long totalSize = dumpedDataList.Sum(x => (long)x.Length);
+            string outputDescription;
+
+            Directory.CreateDirectory(jobProfile.OutputPath);
+
+            if (dumpedDataList.Count == 1)
+            {
+                string outputFile = Path.Combine(jobProfile.OutputPath, $"dump_{DateTime.UtcNow.ToLocalTime():yyyyMMdd_HHmmss}.bin");
+                await File.WriteAllBytesAsync(outputFile, dumpedDataList[0]);
+                outputDescription = outputFile;
+            }
+            else
+            {
+                string timestamp = DateTime.UtcNow.ToLocalTime().ToString("yyyyMMdd_HHmmss");
+                string baseFileName = $"dump_{timestamp}";
+                var savedFiles = new List<string>();
+
+                for (int i = 0; i < dumpedDataList.Count; i++)
+                {
+                    string outputFile = Path.Combine(jobProfile.OutputPath, $"{baseFileName}_iter{i + 1}.bin");
+                    await File.WriteAllBytesAsync(outputFile, dumpedDataList[i]);
+                    savedFiles.Add(outputFile);
+                }
+                outputDescription = $"{savedFiles.Count} files saved to {jobProfile.OutputPath}";
+            }
 
             ManualProcessProgress = 100;
             CurrentProcessStep = "Manual process completed";
             EstimatedTimeRemaining = null;
-            StatusMessage = $"Manual process completed successfully. Output: {outputFile}";
+            StatusMessage = $"Manual process completed successfully. {outputDescription}";
 
-            _logger.LogInformation("Manual process completed. Dumped {ByteCount} bytes to {OutputFile}", dumpedData.Length, outputFile);
+            _logger.LogInformation("Manual process completed. Dumped {ByteCount} bytes. Output: {OutputDesc}", totalSize, outputDescription);
         }
         catch (Exception ex)
         {

@@ -354,13 +354,7 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
 
         try
         {
-            if (!await IsPortAccessibleAsync(portPath, cancellationToken: cancellationToken).ConfigureAwait(false))
-            {
-                throw new ConnectionException(
-                    portPath,
-                    "SerialPort",
-                    $"Port {portPath} is not accessible");
-            }
+
 
             string command = GenerateSttyCommand(portPath, configuration);
             effectiveLogger.LogDebug("Executing stty command: {Command}", command);

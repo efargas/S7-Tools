@@ -57,7 +57,7 @@ public sealed class EnhancedBootloaderService(
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> DumpAsync(
+    public async Task<IList<byte[]>> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
@@ -287,7 +287,8 @@ public sealed class EnhancedBootloaderService(
 
             // Stage 11: Dump memory (50% - 95% progress)
             effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump ---");
-            byte[] memoryData;
+
+            var allDumps = new List<byte[]>();
 
             if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
             {
@@ -296,143 +297,168 @@ public sealed class EnhancedBootloaderService(
                 _logger.LogInformation("Dumping {SegmentCount} selected memory segments from profile '{ProfileName}'",
                     selectedSegments.Count, profiles.MemoryMapping.Name);
 
-                var segmentDataList = new List<byte[]>();
-                long totalBytesRead = 0;
-                long totalSize = profiles.MemoryMapping.TotalSelectedSize;
+                long totalSize = profiles.MemoryMapping.TotalSelectedSize * profiles.DumpCount;
 
                 if (totalSize <= 0)
                 {
                     throw new InvalidOperationException("Selected memory segments have a total size of 0 bytes.");
                 }
 
-                // Dumper payload already installed in Stage 10
+                long totalBytesRead = 0;
 
-                for (int i = 0; i < selectedSegments.Count; i++)
+                // Loop Iterations -> Segments
+                for (int dumpIter = 0; dumpIter < profiles.DumpCount; dumpIter++)
                 {
-                    MemorySegment segment = selectedSegments[i];
-                    string start = segment.StartAddress ?? throw new InvalidOperationException("Memory segment start address is null.");
+                    var currentDumpBytes = new List<byte>();
 
-                    if (start.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    for (int i = 0; i < selectedSegments.Count; i++)
                     {
-                        start = start[2..];
+                        MemorySegment segment = selectedSegments[i];
+                        string start = segment.StartAddress ?? throw new InvalidOperationException("Memory segment start address is null.");
+
+                        if (start.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                        {
+                            start = start[2..];
+                        }
+
+                        if (!uint.TryParse(
+                                start,
+                                System.Globalization.NumberStyles.HexNumber,
+                                System.Globalization.CultureInfo.InvariantCulture,
+                                out uint segmentStart))
+                        {
+                            throw new InvalidOperationException($"Invalid memory segment start address '{segment.StartAddress}'.");
+                        }
+
+                        if (segment.Size is <= 0 or > uint.MaxValue)
+                        {
+                            throw new InvalidOperationException(
+                                $"Invalid memory segment size '{segment.Size}' for segment '{segment.Name}'. Must be in range 1..{uint.MaxValue}.");
+                        }
+
+                        uint segmentSize = (uint)segment.Size;
+
+                        // Calculate progress ranges for this segment iteration
+                        // Total available range for this segment in the overall progress (50% - 95%)
+                        double segmentTotalRange = 45.0 * segmentSize / totalSize;
+                        double segmentBasePercent = 50.0 + (45.0 * totalBytesRead / totalSize);
+
+                        // All range allocated to read since upload is done
+                        double readRange = segmentTotalRange;
+
+                        _logger.LogDebug("Dumping segment {Index}/{Total} (Iter {Iter}/{IterTotal}): '{Name}' @ 0x{Address:X8} ({Size} bytes)",
+                            i + 1, selectedSegments.Count, dumpIter + 1, profiles.DumpCount, segment.Name, segmentStart, segmentSize);
+
+                        bool isReading = false;
+
+                        var segmentProgress = new Progress<long>(bytesRead =>
+                        {
+                            if (!isReading)
+                            {
+                                isReading = true;
+                            }
+
+                            double percent = segmentBasePercent + (readRange * bytesRead / segmentSize);
+                            progress.Report(("memory_dump", percent, totalBytesRead + bytesRead, totalSize));
+                        });
+
+                        byte[] segmentData;
+                        try
+                        {
+                            segmentData = await client.InvokeDumperAsync(
+                                segmentStart,
+                                segmentSize,
+                                segmentProgress,
+                                cancellationToken).ConfigureAwait(false);
+                        }
+                        finally
+                        {
+                            // No upload task to clean up
+                        }
+
+                        currentDumpBytes.AddRange(segmentData);
+                        totalBytesRead += segmentData.Length;
+
+                        _logger.LogInformation("Segment '{Name}' (Iter {Iter}) dumped successfully: {Size} bytes",
+                            segment.Name, dumpIter + 1, segmentData.Length);
+                        processLogger?.LogInformation("Segment {Index}/{Total} '{Name}' [Dump {Iter}/{IterTotal}]: {Size} bytes from 0x{Start:X8}",
+                            i + 1, selectedSegments.Count, segment.Name, dumpIter + 1, profiles.DumpCount, segmentData.Length, segmentStart);
                     }
 
-                    if (!uint.TryParse(
-                            start,
-                            System.Globalization.NumberStyles.HexNumber,
-                            System.Globalization.CultureInfo.InvariantCulture,
-                            out uint segmentStart))
+                    allDumps.Add(currentDumpBytes.ToArray());
+
+                    // Add delay between dumps if multiple iterations (and not the last one)
+                    if (dumpIter < profiles.DumpCount - 1)
                     {
-                        throw new InvalidOperationException($"Invalid memory segment start address '{segment.StartAddress}'.");
+                        await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                     }
+                }
 
-                    if (segment.Size is <= 0 or > uint.MaxValue)
-                    {
-                        throw new InvalidOperationException(
-                            $"Invalid memory segment size '{segment.Size}' for segment '{segment.Name}'. Must be in range 1..{uint.MaxValue}.");
-                    }
+                _logger.LogInformation("Multi-segment dump completed: {Iterations} iterations, {TotalSize} bytes total",
+                    profiles.DumpCount, totalBytesRead);
+            }
+            else
+            {
+                // Single-region dump using legacy MemoryRegionProfile
+                long totalSize = (long)profiles.Memory.Length * profiles.DumpCount;
+                progress.Report(("memory_dump", 50.0, 0, totalSize));
 
-                    uint segmentSize = (uint)segment.Size;
-                    int segmentBaudRate = profiles.Serial.Configuration.BaudRate;
+                _logger.LogDebug("Dumping memory region 0x{Address:X8} - 0x{EndAddress:X8} ({Length} bytes) x {Count} iterations",
+                    profiles.Memory.Start,
+                    profiles.Memory.Start + profiles.Memory.Length,
+                    profiles.Memory.Length,
+                    profiles.DumpCount);
 
-                    // Calculate progress ranges for this segment
-                    // Total available range for this segment in the overall progress (50% - 95%)
-                    double segmentTotalRange = 45.0 * segmentSize / totalSize;
-                    double segmentBasePercent = 50.0 + (45.0 * totalBytesRead / totalSize);
+                long totalBytesRead = 0;
 
-                    // All range allocated to read since upload is done
-                    double readRange = segmentTotalRange;
-
-                    _logger.LogDebug("Dumping segment {Index}/{Total}: '{Name}' @ 0x{Address:X8} ({Size} bytes)",
-                        i + 1, selectedSegments.Count, segment.Name, segmentStart, segmentSize);
-
+                for (int dumpIter = 0; dumpIter < profiles.DumpCount; dumpIter++)
+                {
                     bool isReading = false;
 
-                    // No upload simulation needed here
+                    // Progress for this iteration
+                    // Each iteration takes 1/Count of the 45% range
+                    double dumpRange = 45.0 / profiles.DumpCount;
+                    double dumpBasePercent = 50.0 + (dumpIter * dumpRange);
 
-                    var segmentProgress = new Progress<long>(bytesRead =>
+                    var dumpProgress = new Progress<long>(bytesRead =>
                     {
                         if (!isReading)
                         {
                             isReading = true;
                         }
 
-                        double percent = segmentBasePercent + (readRange * bytesRead / segmentSize);
+                        // Local percent for this dump
+                        double percent = dumpBasePercent + (dumpRange * bytesRead / profiles.Memory.Length);
                         progress.Report(("memory_dump", percent, totalBytesRead + bytesRead, totalSize));
                     });
 
-                    byte[] segmentData;
+                    byte[] data;
                     try
                     {
-                        segmentData = await client.InvokeDumperAsync(
-                            segmentStart,
-                            segmentSize,
-                            segmentProgress,
+                        data = await client.InvokeDumperAsync(
+                            profiles.Memory.Start,
+                            profiles.Memory.Length,
+                            dumpProgress,
                             cancellationToken).ConfigureAwait(false);
                     }
                     finally
                     {
-                        // No upload task to await
+                        // No upload task to clean up
                     }
 
-                    segmentDataList.Add(segmentData);
-                    totalBytesRead += segmentData.Length;
+                    allDumps.Add(data);
+                    totalBytesRead += data.Length;
 
-                    _logger.LogInformation("Segment '{Name}' dumped successfully: {Size} bytes", segment.Name, segmentData.Length);
-                    processLogger?.LogInformation("Segment {Index}/{Total} '{Name}': {Size} bytes from 0x{Start:X8}",
-                        i + 1, selectedSegments.Count, segment.Name, segmentData.Length, segmentStart);
-                }
-
-                // Concatenate all segment data
-                memoryData = [.. segmentDataList.SelectMany(arr => arr)];
-                _logger.LogInformation("Multi-segment dump completed: {TotalSegments} segments, {TotalSize} bytes total",
-                    selectedSegments.Count, memoryData.Length);
-            }
-            else
-            {
-                // Single-region dump using legacy MemoryRegionProfile
-                progress.Report(("memory_dump", 50.0, 0, (long)profiles.Memory.Length));
-                _logger.LogDebug("Dumping memory region 0x{Address:X8} - 0x{EndAddress:X8} ({Length} bytes)",
-                    profiles.Memory.Start,
-                    profiles.Memory.Start + profiles.Memory.Length,
-                    profiles.Memory.Length);
-
-                // Dumper payload already installed in Stage 10
-
-                bool isReading = false;
-
-                // All 45% range (50.0 -> 95.0) for reading
-                double readRange = 45.0;
-                double basePercent = 50.0;
-
-                var dumpProgress = new Progress<long>(bytesRead =>
-                {
-                    if (!isReading)
+                    if (dumpIter < profiles.DumpCount - 1)
                     {
-                        isReading = true;
+                        await Task.Delay(100, cancellationToken).ConfigureAwait(false);
                     }
-
-                    double percent = basePercent + (readRange * bytesRead / profiles.Memory.Length);
-                    progress.Report(("memory_dump", percent, bytesRead, (long)profiles.Memory.Length));
-                });
-
-                try
-                {
-                    memoryData = await client.InvokeDumperAsync(
-                        profiles.Memory.Start,
-                        profiles.Memory.Length,
-                        dumpProgress,
-                        cancellationToken).ConfigureAwait(false);
-                }
-                finally
-                {
-                    // No upload task to clean up
                 }
 
-                _logger.LogInformation("Memory dump completed: {Size} bytes from 0x{Start:X8}",
-                    memoryData.Length, profiles.Memory.Start);
-                processLogger?.LogInformation("Memory dump complete: {Size} bytes from 0x{Start:X8}",
-                    memoryData.Length, profiles.Memory.Start);
+                _logger.LogInformation("Memory dump completed: {Iterations} iterations from 0x{Start:X8}",
+                    profiles.DumpCount, profiles.Memory.Start);
+                processLogger?.LogInformation("Memory dump complete: {Iterations} iterations from 0x{Start:X8}",
+                    profiles.DumpCount, profiles.Memory.Start);
             }
 
             // Stage 12: Teardown (95% progress)
@@ -446,9 +472,9 @@ public sealed class EnhancedBootloaderService(
             progress.Report(("complete", 100.0, null, null));
             effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
             _logger.LogInformation("Bootloader dump operation completed successfully. " +
-                "Dumped {ByteCount} bytes", memoryData.Length);
+                "Dumped {DumpCount} files", allDumps.Count);
 
-            return memoryData;
+            return allDumps;
         }
         catch (Exception ex)
         {
@@ -490,7 +516,7 @@ public sealed class EnhancedBootloaderService(
     }
 
     /// <inheritdoc />
-    public async Task<byte[]> DumpWithTaskTrackingAsync(
+    public async Task<IList<byte[]>> DumpWithTaskTrackingAsync(
         TaskExecution taskExecution,
         JobProfileSet profiles,
         CancellationToken cancellationToken = default)
@@ -555,26 +581,27 @@ public sealed class EnhancedBootloaderService(
                 Microsoft.Extensions.Logging.ILogger? protocolLogger = taskExecution.Logger?.ProtocolLogger;
 
                 // Execute the memory dump with retry logic
-                byte[] memoryData = await ExecuteWithRetryAsync(
+                IList<byte[]> memoryDataList = await ExecuteWithRetryAsync(
                     () => DumpAsync(profiles, progressReporter, taskLogger, processLogger, protocolLogger, cancellationToken),
                     RetryableOperations.All,
                     taskExecution,
                     cancellationToken).ConfigureAwait(false);
 
-                // Save the output file
+                // Save the output file(s)
                 string outputFilePath = await SaveMemoryDumpAsync(
-                    memoryData,
+                    memoryDataList,
                     profiles.OutputPath,
                     taskExecution.TaskId,
                     cancellationToken).ConfigureAwait(false);
 
                 // Mark task as completed
-                taskExecution.MarkAsCompleted(outputFilePath, memoryData.Length);
+                long totalLength = memoryDataList.Sum(x => (long)x.Length);
+                taskExecution.MarkAsCompleted(outputFilePath, totalLength);
 
                 _logger.LogInformation("Enhanced bootloader dump completed successfully for task {TaskId}. " +
                     "Output saved to: {OutputPath}", taskExecution.TaskId, outputFilePath);
 
-                return memoryData;
+                return memoryDataList;
             }
             catch (OperationCanceledException)
             {
@@ -846,36 +873,48 @@ public sealed class EnhancedBootloaderService(
     }
 
     private async Task<string> SaveMemoryDumpAsync(
-        byte[] memoryData,
+        IList<byte[]> memoryDataList,
         string outputPath,
         Guid taskId,
         CancellationToken cancellationToken)
     {
-        try
+        if (memoryDataList == null || memoryDataList.Count == 0)
         {
-            // Ensure output directory exists
-            Directory.CreateDirectory(outputPath);
+            return string.Empty;
+        }
 
-            // Generate filename with timestamp and task ID
-            string timestamp = DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.FileTimestamp);
-            string fileName = $"memory_dump_{timestamp}_{taskId:N}.bin";
-            string filePath = Path.Combine(outputPath, fileName);
+        Directory.CreateDirectory(outputPath);
 
-            // Write memory data to file
-            await File.WriteAllBytesAsync(filePath, memoryData, cancellationToken)
-                .ConfigureAwait(false);
+        // If only one dump, use standard naming
+        if (memoryDataList.Count == 1)
+        {
+            string fileName = $"dump-{taskId:N}.bin";
+            string fullPath = Path.Combine(outputPath, fileName);
+            await File.WriteAllBytesAsync(fullPath, memoryDataList[0], cancellationToken).ConfigureAwait(false);
 
             _logger.LogInformation("Memory dump saved to: {FilePath} ({FileSize} bytes)",
-                filePath, memoryData.Length);
+                fullPath, memoryDataList[0].Length);
 
-            return filePath;
+            return fullPath;
         }
-        catch (Exception ex)
+
+        // Multi-dump: save files with iteration index
+        string baseFileName = $"dump-{taskId:N}";
+        var savedPaths = new List<string>();
+
+        for (int i = 0; i < memoryDataList.Count; i++)
         {
-            _logger.LogError(ex, "Failed to save memory dump: {ErrorMessage}", ex.Message);
-            throw new BootloaderOperationException($"Failed to save memory dump: {ex.Message}", ex);
+            string fileName = $"{baseFileName}_iter{i + 1}.bin";
+            string fullPath = Path.Combine(outputPath, fileName);
+            await File.WriteAllBytesAsync(fullPath, memoryDataList[i], cancellationToken).ConfigureAwait(false);
+            savedPaths.Add(fullPath);
         }
+
+        _logger.LogInformation("Saved {Count} dump files to {BasePath}", memoryDataList.Count, outputPath);
+
+        return savedPaths[0];
     }
+
 
     private static ResourceKey[] ExtractResourceKeys(JobProfileSet profiles)
     {

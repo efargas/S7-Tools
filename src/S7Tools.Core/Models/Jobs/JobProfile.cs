@@ -173,6 +173,13 @@ public class JobProfile : IProfileBase
     public string SelectedMemorySegment { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the number of times to perform the memory dump.
+    /// </summary>
+    /// <value>The number of dump iterations (default is 1).</value>
+    [Range(1, 1000, ErrorMessage = "Dump count must be between 1 and 1000")]
+    public int DumpCount { get; set; } = 1;
+
+    /// <summary>
     /// Gets or sets the payload configuration for this job.
     /// </summary>
     /// <value>The payload files and configuration for the bootloader operation.</value>
@@ -225,6 +232,8 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1, // Default socat profile
             PowerSupplyProfileId = 1, // Default power supply profile
             MemoryRegionProfileId = 1, // Default memory region profile
+            SelectedMemorySegment = "BSS", // Standard segment
+            DumpCount = 1,
             Payloads = PayloadSetProfile.CreateDefault(), // Default payload configuration
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
@@ -264,6 +273,8 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1,
             PowerSupplyProfileId = 1,
             MemoryRegionProfileId = 1, // Default to first available memory region profile
+            SelectedMemorySegment = "",
+            DumpCount = 1,
             Payloads = PayloadSetProfile.CreateDefault(),
             OutputPath = "./dumps",
             PowerOnTimeMs = 5000,
@@ -300,6 +311,8 @@ public class JobProfile : IProfileBase
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegionProfileId = MemoryRegionProfileId,
+            SelectedMemorySegment = SelectedMemorySegment,
+            DumpCount = DumpCount,
             Payloads = Payloads,
             OutputPath = OutputPath,
             PowerOnTimeMs = PowerOnTimeMs,
@@ -337,6 +350,8 @@ public class JobProfile : IProfileBase
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegionProfileId = MemoryRegionProfileId,
+            SelectedMemorySegment = SelectedMemorySegment,
+            DumpCount = DumpCount,
             Payloads = Payloads,
             OutputPath = OutputPath,
             PowerOnTimeMs = PowerOnTimeMs,
@@ -371,6 +386,8 @@ public class JobProfile : IProfileBase
             SocatProfileId = SocatProfileId,
             PowerSupplyProfileId = PowerSupplyProfileId,
             MemoryRegionProfileId = MemoryRegionProfileId,
+            SelectedMemorySegment = SelectedMemorySegment,
+            DumpCount = DumpCount,
             Payloads = Payloads,
             OutputPath = OutputPath,
             PowerOnTimeMs = PowerOnTimeMs,
@@ -433,6 +450,11 @@ public class JobProfile : IProfileBase
         if (MemoryRegionProfileId <= 0)
         {
             errors.Add("Valid memory region profile must be selected");
+        }
+
+        if (DumpCount < 1)
+        {
+            errors.Add("Dump count must be at least 1");
         }
 
         if (Payloads == null)
@@ -498,7 +520,7 @@ public class JobProfile : IProfileBase
             AddressingMode = ModbusAddressingMode.Base0
         };
 
-        var serialRef = new SerialProfileRef("", 9600, "None", 8, "One", defaultSerialConfig); // Will be populated from actual profile
+        var serialRef = new SerialProfileRef(SerialDevice, 9600, "None", 8, "One", defaultSerialConfig); // Will be populated from actual profile
         var socatRef = new SocatProfileRef(0, true, defaultSocatConfig); // Will be populated from actual profile
         var powerRef = new PowerProfileRef("", 0, 0, PowerOffDelayMs / 1000, defaultPowerConfig); // Will be populated from actual profile
 
@@ -513,7 +535,8 @@ public class JobProfile : IProfileBase
             Payloads,
             OutputPath,
             PowerOnTimeMs,
-            PowerOffDelayMs
+            PowerOffDelayMs,
+            DumpCount: DumpCount
         );
 
         // Generate a deterministic ID based on the profile name
@@ -580,6 +603,11 @@ public class JobProfile : IProfileBase
     public string GetSummary()
     {
         string summary = $"{Name}: MemoryRegionProfile[{MemoryRegionProfileId}]";
+
+        if (DumpCount > 1)
+        {
+            summary += $", {DumpCount}x dumps";
+        }
 
         if (IsTemplate)
         {

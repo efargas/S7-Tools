@@ -18,7 +18,7 @@ public interface IEnhancedBootloaderService : IBootloaderService
     /// <param name="profiles">Job profile set containing all configuration parameters.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The dumped memory data.</returns>
-    Task<byte[]> DumpWithTaskTrackingAsync(
+    Task<IList<byte[]>> DumpWithTaskTrackingAsync(
         TaskExecution taskExecution,
         JobProfileSet profiles,
         CancellationToken cancellationToken = default);

@@ -9,6 +9,7 @@ namespace S7Tools.Core.Models.Jobs;
 /// <param name="Power">Power supply control configuration.</param>
 /// <param name="Memory">Memory region configuration for dumping (legacy single-segment).</param>
 /// <param name="MemoryMapping">Memory mapping profile with multiple segments (preferred).</param>
+/// <param name="DumpCount">Number of times to perform the dump operation (default 1).</param>
 /// <param name="Payloads">Payload file configuration.</param>
 /// <param name="OutputPath">Output directory path for dump files.</param>
 /// <param name="PowerOnTimeMs">Time to wait after powering on PLC before operations (milliseconds).</param>
@@ -22,5 +23,6 @@ public sealed record JobProfileSet(
     string OutputPath,
     int PowerOnTimeMs = 5000,
     int PowerOffDelayMs = 2000,
-    MemoryMappingProfile? MemoryMapping = null
+    MemoryMappingProfile? MemoryMapping = null,
+    int DumpCount = 1
 );

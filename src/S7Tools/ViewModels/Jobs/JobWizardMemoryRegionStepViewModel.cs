@@ -38,6 +38,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
     private string _status = string.Empty;
     private MemoryMappingProfile? _selectedProfile;
     private bool _isStepValid;
+    private int _dumpCount = 1;
 
     #endregion
 
@@ -130,6 +131,19 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
     {
         get => _isStepValid;
         private set => this.RaiseAndSetIfChanged(ref _isStepValid, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the number of times to perform the memory dump.
+    /// </summary>
+    public int DumpCount
+    {
+        get => _dumpCount;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _dumpCount, value);
+            this.RaisePropertyChanged(nameof(ValidationMessage));
+        }
     }
 
     #endregion
@@ -233,7 +247,7 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
                 return "Only one segment can be selected for this job";
             }
 
-            return $"✓ Memory segment '{SelectedSegments.FirstOrDefault()?.Name}' selected for dumping";
+            return $"✓ Memory segment '{SelectedSegments.FirstOrDefault()?.Name}' selected for dumping ({DumpCount}x)";
         }
     }
 
@@ -296,6 +310,11 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
             errors.Add(UIStrings.Validation_OnlyOneSegmentAllowed);
         }
 
+        if (DumpCount < 1)
+        {
+            errors.Add("Dump count must be at least 1");
+        }
+
         // Validate the profile itself
         List<string> profileErrors = SelectedProfile.Validate();
         errors.AddRange(profileErrors);
@@ -321,7 +340,8 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
         // Update validation when profile selection changes
         this.WhenAnyValue(
                 x => x.SelectedProfile,
-                x => x.SelectedSegmentCount)
+                x => x.SelectedSegmentCount,
+                x => x.DumpCount)
             .Select(_ => ValidateStepConfiguration())
             .Subscribe(isValid => IsStepValid = isValid)
             .DisposeWith(_disposables);
@@ -329,8 +349,8 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
     private bool ValidateStepConfiguration()
     {
-        // Valid only if exactly one segment is selected
-        return SelectedProfile != null && SelectedSegmentCount == 1;
+        // Valid only if exactly one segment is selected and DumpCount is valid
+        return SelectedProfile != null && SelectedSegmentCount == 1 && DumpCount >= 1;
     }
 
     private async Task LoadProfilesAsync()

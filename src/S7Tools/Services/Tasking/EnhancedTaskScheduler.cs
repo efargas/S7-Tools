@@ -28,6 +28,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly ITaskLoggerFactory _taskLoggerFactory;
     private readonly ITimeProvider _timeProvider;
     private readonly string _tasksFilePath;
+    private readonly string _historyFilePath;
 
     private readonly ConcurrentDictionary<Guid, TaskExecution> _tasks = new();
     private readonly ConcurrentQueue<Guid> _taskQueue = new();
@@ -36,9 +37,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly ConcurrentDictionary<Guid, Task> _activeExecutions = new(); // Track active execution tasks
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
     private readonly SemaphoreSlim _persistenceSemaphore = new(1, 1);
-    private readonly Timer _processingTimer;
-    private readonly Timer _cleanupTimer;
-    private readonly Timer _persistenceTimer;
+    private readonly Timer _scheduleTimer;
+    private DateTime _lastCleanupTime;
+    private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
 
     private bool _isRunning;
     private bool _disposed;
@@ -99,21 +100,17 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         // Set up tasks file path using PathService
         _tasksFilePath = _pathService.TasksPath;
+        _historyFilePath = Path.Combine(Path.GetDirectoryName(_tasksFilePath) ?? string.Empty, "Tasks_History.json");
+
         string? tasksDirectory = Path.GetDirectoryName(_tasksFilePath);
         if (!string.IsNullOrEmpty(tasksDirectory))
         {
             Directory.CreateDirectory(tasksDirectory);
         }
 
-        // Set up timers for periodic processing, cleanup, and persistence
-        _processingTimer = new Timer(ProcessTasks, null, Timeout.Infinite, Timeout.Infinite);
-        _cleanupTimer = new Timer(PerformCleanup, null, Timeout.Infinite, Timeout.Infinite);
-        _persistenceTimer = new Timer(PersistTasks, null, Timeout.Infinite, Timeout.Infinite);
-
-        // Start timers
-        _processingTimer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
-        _cleanupTimer.Change(TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
-        _persistenceTimer.Change(TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+        // Initialize schedule timer (disabled initially)
+        _scheduleTimer = new Timer(ProcessTasks, null, Timeout.Infinite, Timeout.Infinite);
+        _lastCleanupTime = _timeProvider.GetUtcNow();
 
         // Load existing tasks from persistence
         _ = LoadTasksAsync();
@@ -193,6 +190,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _logger.LogInformation("Enqueued task {TaskId} ({JobName}) - Queue size: {QueueSize}/{MaxSize}",
             taskId, task.JobName, _taskQueue.Count, MaxQueueSize);
 
+        _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist task enqueue
+
+        TriggerScheduler(); // Critical fix: Wake up scheduler to process the new task
+
         return Task.FromResult(true);
     }
 
@@ -263,6 +264,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             }
         }
 
+        _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist task schedule or queue promotion
+        TriggerScheduler();
         return Task.FromResult(true);
     }
 
@@ -303,6 +306,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _logger.LogInformation("Cancelled task {TaskId} ({JobName}). Reason: {Reason}",
             taskId, task.JobName, reason ?? "No reason provided");
 
+        _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist cancelled state
         return Task.FromResult(true);
     }
 
@@ -325,6 +329,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Paused task {TaskId} ({JobName})", taskId, task.JobName);
+        _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist paused state
         return Task.FromResult(true);
     }
 
@@ -347,6 +352,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         TaskStateChanged?.Invoke(task);
 
         _logger.LogInformation("Resumed task {TaskId} ({JobName})", taskId, task.JobName);
+        _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist resumed state
         return Task.FromResult(true);
     }
 
@@ -681,6 +687,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         _maxConcurrentTasks = maxConcurrentTasks;
         _logger.LogInformation("Set max concurrent tasks to {MaxConcurrentTasks}", maxConcurrentTasks);
+        TriggerScheduler();
         await Task.Yield();
     }
 
@@ -691,7 +698,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <inheritdoc/>
     public async Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default)
     {
-        DateTime cutoffTime = _timeProvider.GetUtcNow() - maxAge;
+        // Use Local time because TaskExecution.CompletedAt uses Local time
+        DateTime cutoffTime = _timeProvider.GetLocalNow() - maxAge;
         var oldTasks = _tasks.Values
             .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
             .ToList();
@@ -735,7 +743,22 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     #region Private Methods
 
     /// <summary>
-    /// Timer callback to process queued tasks.
+    /// Triggers the scheduler to process tasks immediately.
+    /// Thread-safe and fire-and-forget.
+    /// </summary>
+    private void TriggerScheduler()
+    {
+        if (!_isRunning || _disposed)
+        {
+            return;
+        }
+
+        // Use the timer callback mechanism to run processing on thread pool
+        ProcessTasks(null);
+    }
+
+    /// <summary>
+    /// Timer callback to process tasks.
     /// </summary>
     /// <param name="state">Timer state (unused).</param>
     private void ProcessTasks(object? state)
@@ -766,9 +789,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         await _schedulerSemaphore.ExecuteAsync(async () =>
         {
             // Promote due scheduled tasks
+            DateTime nowUtc = _timeProvider.GetUtcNow();
             if (!_scheduledTasks.IsEmpty)
             {
-                DateTime nowUtc = _timeProvider.GetUtcNow();
                 List<Guid> dueTaskIds = [.. _scheduledTasks.Where(kvp => kvp.Value <= nowUtc).Select(kvp => kvp.Key)];
                 foreach (Guid dueId in dueTaskIds)
                 {
@@ -781,10 +804,43 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                         else
                         {
                             TaskStateChanged?.Invoke(scheduledTask);
+                            // Persist changes as we modified state
+                            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
                         }
                     }
                     _scheduledTasks.TryRemove(dueId, out _);
                 }
+            }
+
+            // Schedule next wake-up for remaining scheduled tasks
+            if (!_scheduledTasks.IsEmpty)
+            {
+                DateTime nextSchedule = _scheduledTasks.Values.Min();
+                if (nextSchedule > nowUtc)
+                {
+                    TimeSpan delay = nextSchedule - nowUtc;
+                    // Add small buffer to ensure we wake up after the time
+                    delay = delay.Add(TimeSpan.FromMilliseconds(100));
+                    _scheduleTimer.Change(delay, Timeout.InfiniteTimeSpan);
+                }
+                else
+                {
+                    // Should have been processed, but just in case
+                    _scheduleTimer.Change(TimeSpan.FromMilliseconds(100), Timeout.InfiniteTimeSpan);
+                }
+            }
+            else
+            {
+                _scheduleTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
+
+            // Check for incidental cleanup
+            if (nowUtc - _lastCleanupTime > _cleanupInterval)
+            {
+                _lastCleanupTime = nowUtc;
+                // Run cleanup in background without awaiting here to not block processing
+                _ = Task.Run(() => CleanupOldTasksAsync(TimeSpan.FromHours(24)), CancellationToken.None)
+                    .ContinueWith(t => { if (t.Result > 0) { _ = SaveTasksAsync(); } });
             }
 
             int runningCount = _tasks.Values.Count(t => t.State == TaskState.Running);
@@ -796,7 +852,11 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             }
 
             var tasksToStart = new List<Guid>();
+            var tasksToRequeue = new List<Guid>();
 
+            // Iterate through the queue to find executable tasks
+            // We continue until we fill available slots or drain the queue
+            // Skipped tasks (due to locks) are collected to be re-enqueued
             while (tasksToStart.Count < availableSlots && _taskQueue.TryDequeue(out Guid taskId))
             {
                 if (_tasks.TryGetValue(taskId, out TaskExecution? task) && task.State == TaskState.Queued)
@@ -817,11 +877,16 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                         task.UpdateProgress(task.ProgressPercentage, $"Waiting: {reasonsText}");
                         TaskProgressUpdated?.Invoke(task.TaskId, task.ProgressPercentage, task.CurrentOperation ?? string.Empty);
 
-                        // Re-queue for later (bypass check as we just dequeued it)
-                        _taskQueue.Enqueue(taskId);
-                        break; // Stop trying if resources aren't available
+                        // Collect for re-queueing
+                        tasksToRequeue.Add(taskId);
                     }
                 }
+            }
+
+            // Re-enqueue skipped tasks
+            foreach (var skippedId in tasksToRequeue)
+            {
+                _taskQueue.Enqueue(skippedId);
             }
 
             // Start the tasks with tracking to prevent race conditions
@@ -842,6 +907,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         finally
         {
             _activeExecutions.TryRemove(taskId, out _);
+            TriggerScheduler(); // Wake up scheduler to process next task in queue
         }
     }
 
@@ -863,6 +929,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         {
             task.UpdateState(TaskState.Running, "Starting task execution");
             TaskStateChanged?.Invoke(task);
+            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist running state
 
             // Create task-specific logger
             taskLogger = await _taskLoggerFactory.CreateTaskLoggerAsync(
@@ -919,7 +986,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             // Execute the job
             taskLogger.MainLogger?.LogInformation("Starting bootloader execution");
             Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile.Id, CancellationToken.None).ConfigureAwait(false);
-            byte[] dumpData = await _bootloaderService.DumpAsync(
+
+            IList<byte[]> dumpDataList = await _bootloaderService.DumpAsync(
                 executionJob.ProfileSet,
                 progress,
                 taskLogger.MainLogger,
@@ -928,18 +996,44 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 CancellationToken.None)
                 .ConfigureAwait(false);
 
-            taskLogger.MainLogger?.LogInformation("Bootloader dump completed. Size: {Size} bytes", dumpData.Length);
+            long totalSize = dumpDataList.Sum(x => (long)x.Length);
+            taskLogger.MainLogger?.LogInformation("Bootloader dump completed. Total size: {Size} bytes. Files: {Count}",
+                totalSize, dumpDataList.Count);
 
-            // Save the output
-            string outputFile = Path.Combine(jobProfile.OutputPath, $"dump-{task.TaskId:N}.bin");
-            Directory.CreateDirectory(jobProfile.OutputPath);
-            await File.WriteAllBytesAsync(outputFile, dumpData, CancellationToken.None).ConfigureAwait(false);
+            string primaryOutputFile = string.Empty;
 
-            taskLogger.MainLogger?.LogInformation("Output saved to: {OutputFile}", outputFile);
+            if (dumpDataList.Count > 0)
+            {
+                Directory.CreateDirectory(jobProfile.OutputPath);
+
+                if (dumpDataList.Count == 1)
+                {
+                    string outputFile = Path.Combine(jobProfile.OutputPath, $"dump-{task.TaskId:N}.bin");
+                    await File.WriteAllBytesAsync(outputFile, dumpDataList[0], CancellationToken.None).ConfigureAwait(false);
+                    primaryOutputFile = outputFile;
+                    taskLogger.MainLogger?.LogInformation("Output saved to: {OutputFile}", outputFile);
+                }
+                else
+                {
+                    string baseFileName = $"dump-{task.TaskId:N}";
+                    var savedFiles = new List<string>();
+
+                    for (int i = 0; i < dumpDataList.Count; i++)
+                    {
+                        string outputFile = Path.Combine(jobProfile.OutputPath, $"{baseFileName}_iter{i + 1}.bin");
+                        await File.WriteAllBytesAsync(outputFile, dumpDataList[i], CancellationToken.None).ConfigureAwait(false);
+                        savedFiles.Add(outputFile);
+                    }
+
+                    primaryOutputFile = savedFiles[0];
+                    taskLogger.MainLogger?.LogInformation("Outputs saved to: {OutputPath} ({Count} files)", jobProfile.OutputPath, savedFiles.Count);
+                }
+            }
 
             // Mark as completed
-            task.MarkAsCompleted(outputFile, dumpData.Length);
+            task.MarkAsCompleted(primaryOutputFile, totalSize);
             TaskStateChanged?.Invoke(task);
+            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist completed state
 
             // Update statistics
             Interlocked.Increment(ref _totalTasksProcessed);
@@ -963,12 +1057,13 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 task.ExecutionTime);
 
             _logger.LogInformation("Task {TaskId} ({JobName}) completed successfully. Output: {OutputFile}",
-                taskId, task.JobName, outputFile);
+                taskId, task.JobName, primaryOutputFile);
         }
         catch (OperationCanceledException)
         {
             task.UpdateState(TaskState.Cancelled, "Task was cancelled");
             TaskStateChanged?.Invoke(task);
+            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist cancelled state
             Interlocked.Increment(ref _cancelledTasks);
 
             taskLogger?.MainLogger?.LogWarning("Task was cancelled");
@@ -978,6 +1073,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         {
             task.MarkAsFailed(ex.Message, ex.ToString());
             TaskStateChanged?.Invoke(task);
+            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist failed state
             Interlocked.Increment(ref _totalTasksProcessed);
             Interlocked.Increment(ref _failedTasks);
 
@@ -1038,31 +1134,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     }
 
     /// <summary>
-    /// Timer callback for periodic task persistence.
-    /// </summary>
-    /// <param name="state">Timer state (unused).</param>
-    private void PersistTasks(object? state)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await SaveTasksAsync().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during periodic task persistence");
-            }
-        });
-    }
-
-    /// <summary>
     /// Saves all tasks to persistent storage.
+    /// </summary>
+    /// <summary>
+    /// Saves all tasks to persistent storage, separating active and finished tasks.
     /// </summary>
     private async Task SaveTasksAsync()
     {
@@ -1070,15 +1145,26 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         {
             try
             {
-                var tasksToSave = _tasks.Values.ToList();
-                string json = System.Text.Json.JsonSerializer.Serialize(tasksToSave, JsonOptions);
+                var allTasks = _tasks.Values.ToList();
 
-                await File.WriteAllTextAsync(_tasksFilePath, json).ConfigureAwait(false);
-                _logger.LogDebug("Saved {Count} tasks to {Path}", tasksToSave.Count, _tasksFilePath);
+                // Split tasks into active and finished
+                var activeTasks = allTasks.Where(t => !t.IsTerminal).ToList();
+                var finishedTasks = allTasks.Where(t => t.IsTerminal).ToList();
+
+                // Save active tasks to main file
+                string activeJson = System.Text.Json.JsonSerializer.Serialize(activeTasks, JsonOptions);
+                await File.WriteAllTextAsync(_tasksFilePath, activeJson).ConfigureAwait(false);
+
+                // Save finished tasks to history file
+                string historyJson = System.Text.Json.JsonSerializer.Serialize(finishedTasks, JsonOptions);
+                await File.WriteAllTextAsync(_historyFilePath, historyJson).ConfigureAwait(false);
+
+                _logger.LogDebug("Saved {ActiveCount} active tasks to {Path} and {HistoryCount} finished tasks to {HistoryPath}",
+                    activeTasks.Count, _tasksFilePath, finishedTasks.Count, _historyFilePath);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save tasks to {Path}", _tasksFilePath);
+                _logger.LogError(ex, "Failed to save tasks to persistence files");
             }
         });
     }
@@ -1092,14 +1178,43 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         {
             try
             {
-                if (!File.Exists(_tasksFilePath))
+                var loadedTasks = new List<TaskExecution>();
+
+                // Load active tasks
+                if (File.Exists(_tasksFilePath))
                 {
-                    _logger.LogInformation("No existing tasks file found at {Path}", _tasksFilePath);
-                    return;
+                    try
+                    {
+                        string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
+                        var activeTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+                        if (activeTasks != null)
+                        {
+                            loadedTasks.AddRange(activeTasks);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to load active tasks from {Path}", _tasksFilePath);
+                    }
                 }
 
-                string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
-                List<TaskExecution>? loadedTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+                // Load history tasks
+                if (File.Exists(_historyFilePath))
+                {
+                    try
+                    {
+                        string json = await File.ReadAllTextAsync(_historyFilePath).ConfigureAwait(false);
+                        var historyTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+                        if (historyTasks != null)
+                        {
+                            loadedTasks.AddRange(historyTasks);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to load history tasks from {Path}", _historyFilePath);
+                    }
+                }
 
                 if (loadedTasks != null && loadedTasks.Count > 0)
                 {
@@ -1138,12 +1253,15 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                         }
                     }
 
-                    _logger.LogInformation("Loaded {Count} tasks from {Path}", loadedTasks.Count, _tasksFilePath);
+                    _logger.LogInformation("Loaded {Count} tasks from persistence", loadedTasks.Count);
+
+                    // Trigger scheduler to pick up any queued tasks that were restored
+                    TriggerScheduler();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to load tasks from {Path}", _tasksFilePath);
+                _logger.LogError(ex, "Failed to load tasks from persistence");
             }
         });
     }
@@ -1181,9 +1299,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 _logger.LogError(ex, "Error saving tasks on dispose");
             }
 
-            _processingTimer?.Dispose();
-            _cleanupTimer?.Dispose();
-            _persistenceTimer?.Dispose();
+            _scheduleTimer?.Dispose();
             _schedulerSemaphore?.Dispose();
             _persistenceSemaphore?.Dispose();
         }
