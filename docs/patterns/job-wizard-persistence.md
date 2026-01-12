@@ -1,16 +1,16 @@
 ---
-title: "Job Wizard Segment Persistence"
-version: "1.1.0"
+title: "Job Wizard Segment Persistence Pattern"
+version: "1.1.1"
 created: "2026-01-09"
-last-updated: "2026-01-09"
+last-updated: "2025-11-22"
 status: "current"
-tags: ["job-wizard", "memory", "persistence", "ux"]
+tags: ["job-wizard", "memory", "persistence", "ux", "pattern"]
 related:
-  - "docs/MEMORY_REGION_PROFILES.md"
+  - "docs/patterns/memory-regions.md"
   - "docs/patterns/_index.md"
 ---
 
-# Job Wizard Segment Persistence Guide
+# Job Wizard Segment Persistence Pattern
 
 ## Overview
 
@@ -288,13 +288,12 @@ Stored in `Jobs.json`:
 
 ## Related Documentation
 
-- [Memory Region Profiling Guide](MEMORY_REGION_PROFILES.md)
-- [Wizard Patterns](patterns/_index.md#wizard-patterns)
-- [Profile Management Pattern](patterns/profile-management.md)
+- [Memory Region Profiling Pattern](memory-regions.md)
+- [Profile Management Pattern](profile-management.md)
 
 ---
 
-**Version**: 1.1.0
-**Last Updated**: 2026-01-09
+**Version**: 1.1.1
+**Last Updated**: 2025-11-22
 **Status**: Current
 **Maintainer**: Development Team

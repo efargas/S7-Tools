@@ -1,16 +1,16 @@
 ---
-title: "Memory Region Profiling Guide"
-version: "1.0.0"
+title: "Memory Region Profiling Pattern"
+version: "1.0.1"
 created: "2025-11-12"
-last-updated: "2025-11-12"
+last-updated: "2025-11-22"
 status: "current"
-tags: ["memory", "profiling", "plc", "bootloader", "job-wizard"]
+tags: ["memory", "profiling", "plc", "bootloader", "job-wizard", "pattern"]
 related:
   - "docs/patterns/profile-management.md"
   - "docs/guides/development-workflow.md"
 ---
 
-# Memory Region Profiling Guide
+# Memory Region Profiling Pattern
 
 ## Overview
 
@@ -360,13 +360,7 @@ public interface IMemoryMappingProfileService
 
 ## Related Documentation
 
-- [Profile Management Pattern](patterns/profile-management.md)
-- [Development Workflow](guides/development-workflow.md)
-- [Architecture Overview](architecture/overview.md)
-- [System Patterns](patterns/system-patterns.md)
-
----
-
-**Last Updated**: 2025-11-12
-**Status**: Current
-**Maintainer**: Development Team
+- [Profile Management Pattern](profile-management.md)
+- [Development Workflow](../guides/development-workflow.md)
+- [Architecture Overview](../architecture/overview.md)
+- [System Patterns](system-patterns.md)

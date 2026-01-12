@@ -1,3 +1,15 @@
+---
+title: "Task-Specific Logging System"
+version: "1.0.1"
+created: "2025-11-13"
+last-updated: "2025-11-22"
+status: "current"
+tags: ["architecture", "logging", "tasks", "infrastructure"]
+related:
+  - docs/architecture/overview.md
+  - docs/patterns/system-patterns.md
+---
+
 # Task-Specific Logging System
 
 ## Overview
@@ -346,10 +358,10 @@ This implementation follows S7Tools architectural principles:
 
 ## Related Documentation
 
-- [Task Execution Model](../src/S7Tools.Core/Models/Jobs/TaskExecution.cs)
-- [Task Scheduler](../src/S7Tools/Services/Tasking/EnhancedTaskScheduler.cs)
-- [LogDataStore](../src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs)
-- [System Patterns](./patterns/system-patterns.md)
+- [Task Execution Model](../../src/S7Tools.Core/Models/Jobs/TaskExecution.cs)
+- [Task Scheduler](../../src/S7Tools/Services/Tasking/EnhancedTaskScheduler.cs)
+- [LogDataStore](../../src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs)
+- [System Patterns](../patterns/system-patterns.md)
 
 ---
 

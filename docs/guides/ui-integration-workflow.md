@@ -1,8 +1,8 @@
 ---
 title: "UI Integration Workflow"
-version: "1.1.0"
+version: "1.1.1"
 created: "2025-01-15"
-last-updated: "2025-11-10"
+last-updated: "2025-11-22"
 status: "current"
 tags: ["guide", "ui", "integration", "workflow", "avalonia"]
 related:
@@ -13,8 +13,8 @@ related:
 
 # UI Integration Workflow
 
-**Last Updated**: 2025-11-10
-**Version**: 1.1
+**Last Updated**: 2025-11-22
+**Version**: 1.1.1
 
 This document explains the S7Tools UI integration pattern: how components connect from the Activity Bar through Side Panels to Main Content Views.
 
@@ -39,14 +39,14 @@ S7Tools uses a VSCode-style UI architecture with three main areas:
 │  │  c   │    i     │             a                  │   │
 │  │  t   │    d     │             i                  │   │
 │  │  i   │    e     │             n                  │   │
-│  │  v   │          │                                │   │
-│  │  i   │    P     │             C                  │   │
-│  │  t   │    a     │             o                  │   │
-│  │  y   │    n     │             n                  │   │
-│  │      │    e     │             t                  │   │
-│  │  B   │    l     │             e                  │   │
-│  │  a   │          │             n                  │   │
-│  │  r   │          │             t                  │   │
+│  │  v   │    P     │             C                  │   │
+│  │  i   │    a     │             o                  │   │
+│  │  t   │    n     │             n                  │   │
+│  │  y   │    e     │             t                  │   │
+│  │      │    l     │             e                  │   │
+│  │  B   │          │             n                  │   │
+│  │  a   │          │             t                  │   │
+│  │  r   │          │                                │   │
 │  │      │          │                                │   │
 │  └──────┴──────────┴────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────┘
@@ -275,11 +275,6 @@ public class MyFeatureViewModel : ViewModelBase
 }
 ```
 
-#### Step 3: Create Views
-
-**Sidebar View**: `Views/MyFeatureSidebarView.axaml`
-
-```xaml
 #### Step 3: Create Views
 
 **Sidebar View**: `Views/{Category}/MyFeatureSidebarView.axaml`
@@ -537,12 +532,10 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2025-10-24 | Initial documentation with ViewLocator pattern |
+| 1.1 | 2025-11-22 | Updates for VSCode-style UI architecture |
 
 ## Related Documentation
 
-- [Mvvm Patterns](architecture/mvvm-patterns.md)
-- [Reusable Controls](patterns/reusable-controls.md)
-- [Readme](templates/ui-integration/README.md)
-
----
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [Reusable Controls](../patterns/reusable-controls.md)
+- [Readme](../templates/ui-integration/README.md)

@@ -7,177 +7,55 @@
 
 </div>
 
-S7Tools is a .NET 8 + Avalonia UI application built with Clean Architecture and MVVM (ReactiveUI). It includes unified profile management (Serial, Socat, Power Supply), a real‑time log viewer, and a developer‑friendly DI setup for rapid extension.
+S7Tools is a .NET 8 + Avalonia UI application built with Clean Architecture and MVVM (ReactiveUI). It includes unified profile management, a real‑time log viewer, and a robust job scheduling system.
 
-> [!NOTE]
-> For a deep dive into the system design, see the Architecture Overview: [docs/architecture/overview.md](docs/architecture/overview.md)
+> [!TIP]
+> **For AI Agents & Developers**: Start with [AGENTS.md](AGENTS.md) for a rapid context download.
+
+## 📚 Documentation
+
+The documentation is organized in the `docs/` directory:
+
+*   **[Index](docs/INDEX.md)**: Master list of all documentation.
+*   **[Architecture](docs/architecture/overview.md)**: System design, layers, and decisions.
+*   **[Patterns](docs/patterns/_index.md)**: Reusable coding patterns and standards.
+*   **[Guides](docs/guides/_index.md)**: Workflows, migration guides, and testing.
 
 ## Features
 
-- Cross‑platform desktop app (Linux, macOS, Windows) with Avalonia UI and ReactiveUI
-- Real‑time in‑app logging via a custom in‑memory DataStore provider
-- Unified Profile Management pattern for:
-	- Serial Port profiles
-	- Socat profiles (server settings)
-	- Power Supply profiles (Modbus TCP)
-- Clean Architecture, DI‑first composition, and testable service abstractions
-- Diagnostic startup mode for quick environment validation (`--diag`)
+- **Cross‑platform**: Linux, macOS, Windows.
+- **Job Wizard**: Multi-step wizard for creating complex PLC tasks.
+- **Profile Management**: Unified system for Serial, Socat, Power Supply, and Memory Region profiles.
+- **Task Logging**: Comprehensive logging system with main, protocol, and process channels.
+- **Diagnostics**: Built-in diagnostic tools (`--diag`).
 
-## Quick start
+## Quick Start
 
-> [!IMPORTANT]
-> Prerequisite: .NET 8 SDK
+### Prerequisites
+*   .NET 8 SDK
 
-> [!WARNING]
-> **MANDATORY**: Use terminal commands only. VS Code tasks are strictly FORBIDDEN for .NET operations.
-
-Build the solution:
-
+### Build & Run
 ```bash
+# Clean and Build
 dotnet clean src/S7Tools.sln
-dotnet restore src/S7Tools.sln
 dotnet build src/S7Tools.sln --configuration Debug
-```
 
-Run the desktop app:
-
-```bash
+# Run
 dotnet run --project src/S7Tools/S7Tools.csproj
+
+# Run Tests
+dotnet test src/S7Tools.sln
 ```
 
-Run in diagnostic mode (initializes services, prints diagnostics, and exits):
+## Project Structure
 
-```bash
-dotnet run --project src/S7Tools/S7Tools.csproj -- --diag
-```
+*   `src/S7Tools`: Main UI Application (Avalonia).
+*   `src/S7Tools.Core`: Domain models, interfaces, and business rules (No external dependencies).
+*   `src/S7Tools.Infrastructure.Logging`: Logging implementation.
+*   `src/S7Tools.Diagnostics`: Diagnostic console tool.
+*   `tests/`: Unit and integration tests.
 
-## Project structure
-
-```
-src/
-	S7Tools/                      # UI (Avalonia app)
-		ViewModels/               # Categorized ViewModels
-			Base/                 # Base classes (ViewModelBase)
-			Controls/             # Control-related ViewModels (PropertyDisplayItem)
-			Dialogs/              # Dialog ViewModels (Confirmation, Input)
-			Jobs/                 # Job management ViewModels
-			Layout/               # Layout ViewModels (MainWindow, Navigation, BottomPanel)
-			Pages/                # Page ViewModels (Home, Connections, LogViewer, About, PlcInput)
-			Profiles/             # Profile ViewModels (Serial, Socat, PowerSupply)
-			Settings/             # Settings ViewModels
-			Tasks/                # Task management ViewModels
-		Views/                    # Categorized Views (mirrors ViewModels structure)
-			Controls/             # Reusable controls (SidebarSection)
-			Dialogs/              # Dialog windows
-			Jobs/                 # Job-related views
-			Layout/               # Layout views (MainWindow, TaskManagerShell)
-			Pages/                # Page views
-			Profiles/             # Profile edit content views
-			Settings/             # Settings views
-			Tasks/                # Task views
-		Services/                 # Application services
-		Extensions/               # DI registration (ServiceCollectionExtensions.cs)
-	S7Tools.Core/                 # Domain interfaces, commands, validation, logging abstractions
-		Models/                   # Domain models
-			Jobs/                 # Job-related models (JobProfile, JobManagerOptions, etc.)
-		Services/Interfaces/      # Service contracts
-		Exceptions/               # Custom exception hierarchy
-	S7Tools.Infrastructure.Logging/  # Custom logging provider and in-memory datastore
-	S7Tools.Diagnostics/          # Diagnostic tools and analysis
-tests/                          # xUnit test projects per layer
-docs/                           # Architecture and additional documentation
-```
-
-> [!TIP]
-> All services are registered via DI in `src/S7Tools/Extensions/ServiceCollectionExtensions.cs`. Avoid adding registrations in `Program.cs`.
-
-## Development
-
-> [!IMPORTANT]
-> **Constitutional Requirement**: ALL .NET operations MUST use terminal commands. VS Code tasks are FORBIDDEN.
-
-Essential commands:
-
-```bash
-# Build and test
-dotnet clean src/S7Tools.sln
-dotnet restore src/S7Tools.sln
-dotnet build src/S7Tools.sln --configuration Debug
-dotnet test src/S7Tools.sln --configuration Debug
-
-# Code formatting (required before commit)
-dotnet format src/S7Tools.sln
-```
-
-- Pattern highlights:
-	- MVVM with ReactiveUI (`ReactiveCommand`, `Interaction`, `RaiseAndSetIfChanged`)
-	- Service‑oriented design with interfaces in Core, implementations in UI/Infra
-	- Centralized DI and background service initialization helpers
-	- Unified `StandardProfileManager<T>` for thread‑safe, JSON‑backed CRUD with default/profile rules
-
-> [!WARNING]
-> When adding or modifying profile services, avoid nested semaphore acquisitions. Follow the internal helper pattern used in `StandardProfileManager<T>` to prevent deadlocks.
-
-## Packaging (Avalonia publish)
-
-> [!TIP]
-> Replace `-c Release` with `-c Debug` if needed. Artifacts will be placed in `bin/Release/net8.0/<rid>/publish`.
-
-Windows (self-contained, win-x64):
-
-```bash
-dotnet publish src/S7Tools/S7Tools.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
-```
-
-Linux (self-contained, linux-x64):
-
-```bash
-dotnet publish src/S7Tools/S7Tools.csproj -c Release -r linux-x64 --self-contained true /p:PublishSingleFile=true
-```
-
-macOS (self-contained, osx-x64):
-
-```bash
-dotnet publish src/S7Tools/S7Tools.csproj -c Release -r osx-x64 --self-contained true /p:PublishSingleFile=true
-```
-
-macOS (Apple Silicon, osx-arm64):
-
-```bash
-dotnet publish src/S7Tools/S7Tools.csproj -c Release -r osx-arm64 --self-contained true /p:PublishSingleFile=true
-```
-
-> [!NOTE]
-> For platform-specific packaging (DMG/MSI/AppImage), see Avalonia’s distribution guides. The above commands create portable, single-file binaries.
-
-## Documentation
-
-- Documentation Index: [docs/INDEX.md](docs/INDEX.md)
-- AI Agent Guide: [AGENTS.md](AGENTS.md) (or [docs/guides/ai-agent-guide.md](docs/guides/ai-agent-guide.md))
-- Architecture Overview: [docs/architecture/overview.md](docs/architecture/overview.md)
-- Architectural Decisions: [docs/architecture/decisions/_index.md](docs/architecture/decisions/_index.md)
-- Pattern Catalog: [docs/patterns/_index.md](docs/patterns/_index.md)
-
-## Logging Viewer
-
-The app includes a real-time Log Viewer backed by an in-memory DataStore provider.
-
-- Open from the activity bar: “Log Viewer”
-- Filter by level, category, or search text
-- Toggle columns (timestamp, level, category) in the viewer
-- Export logs: use the UI command to copy/export current logs (also available via the main window’s export logs command)
-
-> [!NOTE]
-> Logging is structured (`ILogger<T>` with scopes/properties). The in-memory store is bounded by `MaxEntries` configured during DI.
-
-## Troubleshooting
-
-- Linux serial access may require adding your user to the `dialout` group and re‑logging.
-- For socat‑related features, ensure `socat` is installed and accessible on your system.
-
-## Related Documentation
-
-- [Index](docs/INDEX.md)
+For detailed folder structure, see [docs/architecture/overview.md](docs/architecture/overview.md).
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-22*
+*Last updated: 2025-11-22*

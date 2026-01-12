@@ -1,19 +1,19 @@
 ---
-title: "Settings Schema Documentation"
-version: "1.0.0"
+title: "Settings Schema Architecture"
+version: "1.0.1"
 created: "2025-10-23"
-last-updated: "2025-11-10"
+last-updated: "2025-11-22"
 status: "current"
-tags: ["reference", "settings", "schema", "configuration"]
+tags: ["architecture", "settings", "schema", "configuration"]
 related:
   - docs/architecture/overview.md
   - docs/guides/development-workflow.md
 ---
 
-# S7Tools Settings Schema Documentation
+# Settings Schema Architecture
 
-**Last Updated**: 2025-11-10
-**Version**: 1.0
+**Last Updated**: 2025-11-22
+**Version**: 1.0.1
 
 ## Overview
 
@@ -357,8 +357,5 @@ protected override void Dispose(bool disposing)
 
 ## Related Documentation
 
-- [Overview](architecture/overview.md)
-- [Development Workflow](guides/development-workflow.md)
-
----
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+- [Overview](overview.md)
+- [Development Workflow](../guides/development-workflow.md)

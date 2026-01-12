@@ -1,8 +1,8 @@
 ---
 title: "Deprecated Property Migration Guide"
-version: "1.0.0"
+version: "1.0.1"
 created: "2025-11-10"
-last-updated: "2025-11-10"
+last-updated: "2025-11-22"
 status: "current"
 tags: ["guide", "migration", "deprecated", "properties"]
 related:
@@ -165,7 +165,7 @@ A migration utility is planned for v1.5.0 that will:
 ### Support
 
 For questions or assistance with migration:
-- Review the Memory Region Profile Management documentation: `docs/MEMORY_REGION_PROFILES.md`
+- Review the Memory Region Profile Management documentation: `docs/patterns/memory-regions.md`
 - Check the Job Wizard implementation: `src/S7Tools/ViewModels/Jobs/JobWizardViewModel.cs`
 - Refer to pattern documentation: `PATTERNS_REFERENCE.md` (Memory Region Profile Management section)
 
@@ -182,8 +182,5 @@ No additional deprecations are currently planned.
 
 ## Related Documentation
 
-- [Deprecated Patterns](guides/migration/deprecated-patterns.md)
-- [Versioning Guide](guides/versioning-guide.md)
-
----
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+- [Deprecated Patterns](deprecated-patterns.md)
+- [Versioning Guide](../versioning-guide.md)
