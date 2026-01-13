@@ -319,6 +319,17 @@ public sealed class EnhancedBootloaderService(
 
             if (totalDumpBytes <= 0)
                 totalDumpBytes = 1; // Prevent div/0
+                long totalSize;
+                try
+                {
+                    totalSize = checked(profiles.MemoryMapping.TotalSelectedSize * profiles.DumpCount);
+                }
+                catch (OverflowException ex)
+                {
+                    throw new InvalidOperationException(
+                        $"Total dump size overflow (TotalSelectedSize={profiles.MemoryMapping.TotalSelectedSize}, DumpCount={profiles.DumpCount}).",
+                        ex);
+                }
 
             long globalBytesRead = 0;
 

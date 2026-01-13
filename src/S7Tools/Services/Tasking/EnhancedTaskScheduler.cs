@@ -701,7 +701,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         // Use Local time because TaskExecution.CompletedAt uses Local time
         DateTime cutoffTime = _timeProvider.GetLocalNow() - maxAge;
         var oldTasks = _tasks.Values
-            .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
+            .Where(t => t.IsTerminal && t.CompletedAt.HasValue && t.CompletedAt.Value < cutoffTime)
             .ToList();
 
         foreach (TaskExecution? task in oldTasks)
@@ -748,13 +748,20 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private void TriggerScheduler()
     {
-        if (!_isRunning || _disposed)
+        if (_disposed)
         {
             return;
         }
 
-        // Use the timer callback mechanism to run processing on thread pool
-        ProcessTasks(null);
+        // Coalesce bursts of triggers into a single scheduled run
+        try
+        {
+            _scheduleTimer.Change(0, Timeout.Infinite);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Scheduler is shutting down; ignore
+        }
     }
 
     /// <summary>
@@ -832,9 +839,23 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             else
             {
                 _scheduleTimer.Change(Timeout.Infinite, Timeout.Infinite);
-            }
 
-            // Check for incidental cleanup
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        int removed = await CleanupOldTasksAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
+                        if (removed > 0)
+                        {
+                            await SaveTasksAsync().ConfigureAwait(false);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Background cleanup failed");
+                    }
+                }, CancellationToken.None);
+            }
             if (nowUtc - _lastCleanupTime > _cleanupInterval)
             {
                 _lastCleanupTime = nowUtc;
