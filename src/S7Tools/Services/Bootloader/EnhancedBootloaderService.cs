@@ -297,7 +297,17 @@ public sealed class EnhancedBootloaderService(
                 _logger.LogInformation("Dumping {SegmentCount} selected memory segments from profile '{ProfileName}'",
                     selectedSegments.Count, profiles.MemoryMapping.Name);
 
-                long totalSize = profiles.MemoryMapping.TotalSelectedSize * profiles.DumpCount;
+                long totalSize;
+                try
+                {
+                    totalSize = checked(profiles.MemoryMapping.TotalSelectedSize * profiles.DumpCount);
+                }
+                catch (OverflowException ex)
+                {
+                    throw new InvalidOperationException(
+                        $"Total dump size overflow (TotalSelectedSize={profiles.MemoryMapping.TotalSelectedSize}, DumpCount={profiles.DumpCount}).",
+                        ex);
+                }
 
                 if (totalSize <= 0)
                 {
