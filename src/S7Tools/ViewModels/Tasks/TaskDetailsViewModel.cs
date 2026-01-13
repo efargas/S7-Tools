@@ -1246,7 +1246,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             ManualProcessProgress = 100;
             CurrentProcessStep = "Manual process completed";
             EstimatedTimeRemaining = null;
-            StatusMessage = $"Manual process completed successfully.";
+            StatusMessage = $"Manual process completed successfully. {outputDescription}";
 
             _logger.LogInformation("Manual process completed. Dumped {ByteCount} bytes. Output: {OutputDesc}", totalSize, outputDescription);
 
