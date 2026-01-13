@@ -307,14 +307,23 @@ public sealed class EnhancedBootloaderService(
             long totalDumpBytes = 0;
             var segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
 
-            if (segments.Count == 0)
+            try
             {
-                totalDumpBytes = (long)profiles.Memory.Length * profiles.DumpCount;
+                if (segments.Count == 0)
+                {
+                    totalDumpBytes = checked((long)profiles.Memory.Length * profiles.DumpCount);
+                }
+                else
+                {
+                    long singlePassBytes = segments.Sum(s => (long)s.Size);
+                    totalDumpBytes = checked(singlePassBytes * profiles.DumpCount);
+                }
             }
-            else
+            catch (OverflowException ex)
             {
-                long singlePassBytes = segments.Sum(s => (long)s.Size);
-                totalDumpBytes = singlePassBytes * profiles.DumpCount;
+                throw new InvalidOperationException(
+                    $"Total dump size calculation overflowed (DumpCount={profiles.DumpCount}).",
+                    ex);
             }
 
             if (totalDumpBytes <= 0)
