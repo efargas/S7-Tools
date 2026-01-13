@@ -1230,21 +1230,30 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 string baseFileName = $"dump_{timestamp}";
                 var savedFiles = new List<string>();
 
+                System.Text.StringBuilder sb = new();
+                sb.AppendLine($"Generated {dumpedDataList.Count} files:");
+
                 for (int i = 0; i < dumpedDataList.Count; i++)
                 {
                     string outputFile = Path.Combine(jobProfile.OutputPath, $"{baseFileName}_iter{i + 1}.bin");
                     await File.WriteAllBytesAsync(outputFile, dumpedDataList[i]);
                     savedFiles.Add(outputFile);
+                    sb.AppendLine($"{i + 1}. {outputFile} ({dumpedDataList[i].Length:N0} bytes)");
                 }
-                outputDescription = $"{savedFiles.Count} files saved to {jobProfile.OutputPath}";
+                outputDescription = sb.ToString();
             }
 
             ManualProcessProgress = 100;
             CurrentProcessStep = "Manual process completed";
             EstimatedTimeRemaining = null;
-            StatusMessage = $"Manual process completed successfully. {outputDescription}";
+            StatusMessage = $"Manual process completed successfully.";
 
             _logger.LogInformation("Manual process completed. Dumped {ByteCount} bytes. Output: {OutputDesc}", totalSize, outputDescription);
+
+            // For manual process, we might want to show the full list in a dialog or log, 
+            // but for now StatusMessage is short. 
+            // We can perhaps start a process to open the folder?
+            // User requested: "must show all the files created and its size individually"
         }
         catch (Exception ex)
         {

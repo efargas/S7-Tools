@@ -146,10 +146,6 @@ public sealed class BootloaderService(
                 bool powerOff = await _power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
                 if (!powerOff)
                 {
-                    // Log warning but continue? Or throw? Assuming safe to throw if we can't ensure off state.
-                    // For robustness, let's treat failure to turn off as critical if we expect a clean slate.
-                    // However, if it's already off, TurnOffAsync might return true or false depending on implementation.
-                    // Assuming TurnOffAsync returns success of the command.
                     throw new InvalidOperationException("Failed to turn PLC power OFF");
                 }
 
@@ -157,10 +153,11 @@ public sealed class BootloaderService(
                     InitialPowerOffWaitMs,
                     progress,
                     9.0, 15.0, // 9% to 15% during wait
-                    "power_off_initial",
+                    "power_off_wait",
                     cancellationToken).ConfigureAwait(false);
 
                 effectiveTaskLogger.LogInformation("✓ PLC powered OFF and wait time completed");
+
                 // Stage 4: Power ON PLC (15% progress)
                 progress.Report(("power_on", 15.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 4: Power ON PLC ---");
@@ -177,18 +174,18 @@ public sealed class BootloaderService(
                 // Wait for initial power-on stabilization (15% -> 17%)
                 effectiveTaskLogger.LogDebug("Waiting {DelayMs}ms for PLC power stabilization", profiles.PowerOnTimeMs);
 
+                // FIX: Use granular wait for Power On stabilization
                 await WaitWithProgressAsync(
                     profiles.PowerOnTimeMs,
                     progress,
                     15.0, 17.0,
-                    "power_on",
+                    "power_on_stabilize",
                     cancellationToken).ConfigureAwait(false);
 
                 effectiveTaskLogger.LogDebug("Power stabilization complete");
 
                 // Stage 6: Create PLC client and CONNECT to socat (17% progress)
                 // We connect BEFORE power cycling to ensure the serial port is open and ready.
-                // This eliminates the ~1-2s latency of socat/forking that causes us to miss the 500ms handshake window.
                 progress.Report(("plc_connect", 17.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 6: PLC Client Connection ---");
                 await using IPlcClient client = _clientFactory(profiles);
@@ -210,21 +207,21 @@ public sealed class BootloaderService(
                 // Decomposed Power Cycle for progress reporting
                 await _power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
 
-                //Keep this commented
-                /*await WaitWithProgressAsync(
+                // Short wait between power cycle
+                await WaitWithProgressAsync(
                     profiles.PowerOffDelayMs,
                     progress,
-                    20.0, 25.0,
-                    "power_cycle",
+                    20.0, 22.0,
+                    "power_cycle_wait",
                     cancellationToken).ConfigureAwait(false);
-                */
+
                 await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
 
                 effectiveTaskLogger.LogInformation("✓ PLC power cycled successfully (Client already connected)");
 
 
                 // Stage 8: Perform handshake (25% progress)
-                progress.Report(("handshake", 25.0, null, null));
+                progress.Report(("handshake", 22.0, null, null)); // Adjusted to start from 22
                 effectiveTaskLogger.LogInformation("--- Stage 8: Bootloader Handshake ---");
                 effectiveTaskLogger.LogDebug("Performing bootloader handshake");
 
@@ -236,8 +233,8 @@ public sealed class BootloaderService(
 
                 effectiveTaskLogger.LogInformation("✓ Connected to bootloader version: {Version}", version);
 
-                // Stage 9: Install stager (30% progress)
-                progress.Report(("stager_install", 30.0, null, null));
+                // Stage 9: Install stager (25% progress)
+                progress.Report(("stager_install", 25.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 9: Install Stager Payload ---");
                 effectiveTaskLogger.LogDebug("Loading stager payload from {BasePath}", profiles.Payloads.BasePath);
 
@@ -253,8 +250,8 @@ public sealed class BootloaderService(
 
                 effectiveTaskLogger.LogInformation("✓ Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
 
-                // Stage 10: Install Dumper Payload (40% progress)
-                progress.Report(("dumper_install", 40.0, null, null));
+                // Stage 10: Install Dumper Payload (28% progress)
+                progress.Report(("dumper_install", 28.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 10: Install Memory Dumper Payload ---");
 
                 byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
@@ -267,176 +264,185 @@ public sealed class BootloaderService(
                 await client.InstallDumperAsync(dumperPayload, cancellationToken).ConfigureAwait(false);
                 effectiveTaskLogger.LogInformation("✓ Dumper payload installed successfully");
 
-                // Stage 11: Memory Dump (50% - 95% progress)
+                // Stage 11: Memory Dump (30% - 95% progress) = 65% weight? 
+                // User asked for "Memory dump step would be 75% of all the task"
+                // So if we start dump at 20%, we end at 95%. 
+                // Let's adjust slightly:
+                // Setup: 0-20%
+                // Dump: 20-95% (75%)
+                // Teardown: 95-100% (5%)
+
+                // My current previous steps ended at 28%. Let's squeeze earlier steps or just accept slight deviation.
+                // Let's re-map:
+                // Setup (Serial/Socat): 0-5%
+                // Power Setup (Connect, Off, Wait, On): 5-15%
+                // Connect/Shake/Install: 15-20% (Fast steps)
+                // Dump: 20-95%
+
                 effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump ---");
-                byte[] memoryData;
 
-                if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
+                List<byte[]> allDumps = new();
+
+                // Calculate total bytes expected across ALL iterations and segments
+                long totalDumpBytes = 0;
+                var segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
+
+                // If no complex mapping, create a default segment from the basic memory profile
+                if (segments.Count == 0)
                 {
-                    // Multi-segment dump using MemoryMappingProfile
-                    var selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
-                    effectiveTaskLogger.LogInformation("Multi-segment dump: {SegmentCount} segments from profile '{ProfileName}'",
-                        selectedSegments.Count, profiles.MemoryMapping.Name);
-                    effectiveTaskLogger.LogInformation("Total size: {TotalSize:N0} bytes ({TotalSizeKB:F2} KB)",
-                        profiles.MemoryMapping.TotalSelectedSize, profiles.MemoryMapping.TotalSelectedSize / 1024.0);
-
-                    List<byte[]> segmentDataList = [];
-                    long totalBytesRead = 0;
-                    long totalSize = profiles.MemoryMapping.TotalSelectedSize;
-
-
-
-                    // Dumper payload already installed in Stage 9
-                    DateTime dumpStartTime = _timeProvider.GetUtcNow();
-
-                    for (int i = 0; i < selectedSegments.Count; i++)
-                    {
-                        MemorySegment segment = selectedSegments[i];
-                        uint segmentStart = uint.Parse(segment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
-                        uint segmentSize = (uint)segment.Size;
-                        progress.Report(("memory_dump", 50.0 + (45.0 * totalBytesRead / totalSize), totalBytesRead, totalSize));
-                        effectiveTaskLogger.LogInformation("Dumping segment {Index}/{Total}: '{Name}'", i + 1, selectedSegments.Count, segment.Name);
-                        effectiveTaskLogger.LogDebug("  Address: 0x{Address:X8}, Size: {Size:N0} bytes ({SizeKB:F2} KB)",
-                            segmentStart, segmentSize, segmentSize / 1024.0);
-
-                        int lastLoggedPercent = -1;
-
-                        double lastReportedPercent = 50.0 + (45.0 * totalBytesRead / totalSize);
-
-                        var segmentProgress = new Progress<long>(bytesRead =>
-                        {
-                            double percent = 50.0 + (45.0 * (totalBytesRead + bytesRead) / totalSize);
-
-                            // Only report progress if it has changed by at least 0.1% or if complete
-                            if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesRead == segmentSize)
-                            {
-                                progress.Report(("memory_dump", percent, totalBytesRead + bytesRead, totalSize));
-                                lastReportedPercent = percent;
-                            }
-
-                            if (segmentSize == 0)
-                            {
-                                return;
-                            }
-
-                            // Log progress at every 1% interval
-                            double segmentPercent = (double)bytesRead / segmentSize * 100.0;
-                            int currentPercent = (int)segmentPercent;
-
-                            if (currentPercent > lastLoggedPercent && currentPercent % 1 == 0)
-                            {
-                                lastLoggedPercent = currentPercent;
-                                effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
-                                    bytesRead, segmentSize, segmentPercent);
-                            }
-                        });
-
-                        DateTime segmentStartTime = _timeProvider.GetUtcNow();
-
-                        byte[] segmentData = await client.InvokeDumperAsync(
-                            segmentStart,
-                            segmentSize,
-                            segmentProgress,
-                            cancellationToken).ConfigureAwait(false);
-
-                        TimeSpan segmentDuration = _timeProvider.GetUtcNow() - segmentStartTime;
-                        double transferRate = segmentData.Length / segmentDuration.TotalSeconds;
-
-                        segmentDataList.Add(segmentData);
-                        totalBytesRead += segmentData.Length;
-
-                        effectiveTaskLogger.LogInformation("  ✓ Segment '{Name}' dumped: {Size:N0} bytes in {Duration:F1}s ({Rate:F1} bytes/s)",
-                            segment.Name, segmentData.Length, segmentDuration.TotalSeconds, transferRate);
-                    }
-
-                    // Concatenate all segment data
-                    memoryData = [.. segmentDataList.SelectMany(arr => arr)];
-                    TimeSpan totalDuration = _timeProvider.GetUtcNow() - dumpStartTime;
-                    double overallRate = memoryData.Length / totalDuration.TotalSeconds;
-
-                    effectiveTaskLogger.LogInformation("✓ Multi-segment dump completed: {TotalSegments} segments, {TotalSize:N0} bytes",
-                        selectedSegments.Count, memoryData.Length);
-                    effectiveTaskLogger.LogInformation("  Duration: {Duration:F1}s, Average rate: {Rate:F1} bytes/s ({RateKB:F1} KB/s)",
-                        totalDuration.TotalSeconds, overallRate, overallRate / 1024.0);
+                    // Placeholder segment for single region
+                    // We handle single region logic below, but unify for calculation
+                    totalDumpBytes = (long)profiles.Memory.Length * profiles.DumpCount;
                 }
                 else
                 {
-                    // Single-region dump using legacy MemoryRegionProfile
-                    progress.Report(("memory_dump", 50.0, 0, (long)profiles.Memory.Length));
-                    effectiveTaskLogger.LogInformation("Single-region dump");
-                    effectiveTaskLogger.LogDebug("Memory region: 0x{Address:X8} - 0x{EndAddress:X8}",
-                        profiles.Memory.Start, profiles.Memory.Start + profiles.Memory.Length);
-                    effectiveTaskLogger.LogDebug("Size: {Length:N0} bytes ({LengthKB:F2} KB)",
-                        profiles.Memory.Length, profiles.Memory.Length / 1024.0);
-
-                    effectiveTaskLogger.LogDebug("Size: {Length:N0} bytes ({LengthKB:F2} KB)",
-                        profiles.Memory.Length, profiles.Memory.Length / 1024.0);
-
-                    // Dumper payload already installed in Stage 9
-
-                    int lastLoggedPercent = -1;
-
-                    double lastReportedDumpPercent = 50.0;
-
-                    var dumpProgress = new Progress<long>(bytesRead =>
-                    {
-                        if (profiles.Memory.Length == 0)
-                        {
-                            progress.Report(("memory_dump", 95.0, 0, 0)); // Report near-completion for zero-length dump
-                            return;
-                        }
-
-                        double percent = 50.0 + (45.0 * bytesRead / profiles.Memory.Length);
-
-                        // Only report progress if it has changed by at least 0.1%
-                        if (Math.Abs(percent - lastReportedDumpPercent) >= 0.1 || bytesRead == profiles.Memory.Length)
-                        {
-                            progress.Report(("memory_dump", percent, bytesRead, (long)profiles.Memory.Length));
-                            lastReportedDumpPercent = percent;
-                        }
-
-                        // Log progress at every 1% interval
-                        double dumpPercent = (double)bytesRead / profiles.Memory.Length * 100.0;
-                        int currentPercent = (int)dumpPercent;
-
-                        if (currentPercent > lastLoggedPercent && currentPercent % 1 == 0)
-                        {
-                            lastLoggedPercent = currentPercent;
-                            effectiveTaskLogger.LogDebug("  Progress: {BytesRead:N0}/{TotalSize:N0} bytes ({Percent:F1}%)",
-                                bytesRead, profiles.Memory.Length, dumpPercent);
-                        }
-                    });
-
-                    DateTime dumpStartTime = _timeProvider.GetUtcNow();
-                    memoryData = await client.InvokeDumperAsync(
-                        profiles.Memory.Start,
-                        profiles.Memory.Length,
-                        dumpProgress,
-                        cancellationToken).ConfigureAwait(false);
-
-                    TimeSpan dumpDuration = _timeProvider.GetUtcNow() - dumpStartTime;
-                    double transferRate = memoryData.Length > 0 && dumpDuration.TotalSeconds > 0 ? memoryData.Length / dumpDuration.TotalSeconds : 0;
-
-                    effectiveTaskLogger.LogInformation("✓ Memory dump completed: {Size:N0} bytes from 0x{Start:X8}",
-                        memoryData.Length, profiles.Memory.Start);
-                    effectiveTaskLogger.LogInformation("  Duration: {Duration:F1}s, Transfer rate: {Rate:F1} bytes/s ({RateKB:F1} KB/s)",
-                        dumpDuration.TotalSeconds, transferRate, transferRate / 1024.0);
+                    long singlePassBytes = segments.Sum(s => (long)s.Size);
+                    totalDumpBytes = singlePassBytes * profiles.DumpCount;
                 }
+
+                long globalBytesRead = 0;
+                DateTime dumpStartTime = _timeProvider.GetUtcNow();
+
+                // Dumper payload is installed ONCE. We can invoke it multiple times.
+
+                for (int iter = 0; iter < profiles.DumpCount; iter++)
+                {
+                    effectiveTaskLogger.LogInformation("Starting Dump Iteration {Iter}/{Total}", iter + 1, profiles.DumpCount);
+
+                    if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
+                    {
+                        var selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
+                        List<byte[]> segmentDataList = [];
+
+                        for (int i = 0; i < selectedSegments.Count; i++)
+                        {
+                            MemorySegment segment = selectedSegments[i];
+                            uint segmentStart = uint.Parse(segment.StartAddress.Replace("0x", ""), System.Globalization.NumberStyles.HexNumber);
+                            uint segmentSize = (uint)segment.Size;
+
+                            string stageName = $"Dumping Seg {i + 1}/{selectedSegments.Count} (Iter {iter + 1}/{profiles.DumpCount})";
+
+                            // Calculate start % for this specific segment
+                            // Base is 20%. Range is 75%.
+                            // percent = 20 + (75 * globalBytesRead / totalDumpBytes)
+                            double currentBasePercent = 20.0 + (75.0 * globalBytesRead / totalDumpBytes);
+
+                            progress.Report((stageName, currentBasePercent, globalBytesRead, totalDumpBytes));
+
+                            effectiveTaskLogger.LogInformation("Dumping segment {Index}/{Total} (Iter {Iter}): '{Name}'",
+                                i + 1, selectedSegments.Count, iter + 1, segment.Name);
+
+                            int lastLoggedPercent = -1;
+                            double lastReportedPercent = currentBasePercent;
+
+                            var segmentProgress = new Progress<long>(bytesRead =>
+                            {
+                                long totalReadSoFar = globalBytesRead + bytesRead;
+                                double percent = 20.0 + (75.0 * totalReadSoFar / totalDumpBytes);
+
+                                // Report if changed by >= 0.1% or complete
+                                if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesRead == segmentSize)
+                                {
+                                    progress.Report((stageName, percent, totalReadSoFar, totalDumpBytes));
+                                    lastReportedPercent = percent;
+                                }
+
+                                // Log occasionally
+                                if (segmentSize > 0)
+                                {
+                                    double segPct = (double)bytesRead / segmentSize * 100.0;
+                                    if ((int)segPct > lastLoggedPercent && (int)segPct % 5 == 0) // Log every 5%
+                                    {
+                                        lastLoggedPercent = (int)segPct;
+                                        effectiveTaskLogger.LogDebug("  Progress: {Percent:F1}% ({Bytes:N0}/{Total:N0})", segPct, bytesRead, segmentSize);
+                                    }
+                                }
+                            });
+
+                            byte[] segmentData = await client.InvokeDumperAsync(
+                                segmentStart,
+                                segmentSize,
+                                segmentProgress,
+                                cancellationToken).ConfigureAwait(false);
+
+                            segmentDataList.Add(segmentData);
+                            globalBytesRead += segmentData.Length;
+
+                            effectiveTaskLogger.LogInformation("  ✓ Segment dumped: {Size:N0} bytes", segmentData.Length);
+                        }
+
+                        // Concatenate segments for this iteration
+                        allDumps.Add([.. segmentDataList.SelectMany(arr => arr)]);
+                    }
+                    else
+                    {
+                        // Single Region Dump
+                        string stageName = $"Dumping Memory (Iter {iter + 1}/{profiles.DumpCount})";
+
+                        double currentBasePercent = 20.0 + (75.0 * globalBytesRead / totalDumpBytes);
+
+                        progress.Report((stageName, currentBasePercent, globalBytesRead, totalDumpBytes));
+
+                        effectiveTaskLogger.LogInformation("Dumping single region (Iter {Iter}/{Total})", iter + 1, profiles.DumpCount);
+
+                        int lastLoggedPercent = -1;
+                        double lastReportedPercent = currentBasePercent;
+
+                        var dumpProgress = new Progress<long>(bytesRead =>
+                        {
+                            long totalReadSoFar = globalBytesRead + bytesRead;
+                            double percent = 20.0 + (75.0 * totalReadSoFar / totalDumpBytes);
+
+                            if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesRead == profiles.Memory.Length)
+                            {
+                                progress.Report((stageName, percent, totalReadSoFar, totalDumpBytes));
+                                lastReportedPercent = percent;
+                            }
+
+                            if (profiles.Memory.Length > 0)
+                            {
+                                double dumpPct = (double)bytesRead / profiles.Memory.Length * 100.0;
+                                if ((int)dumpPct > lastLoggedPercent && (int)dumpPct % 5 == 0)
+                                {
+                                    lastLoggedPercent = (int)dumpPct;
+                                    effectiveTaskLogger.LogDebug("  Progress: {Percent:F1}%", dumpPct);
+                                }
+                            }
+                        });
+
+
+                        byte[] data = await client.InvokeDumperAsync(
+                            profiles.Memory.Start,
+                            profiles.Memory.Length,
+                            dumpProgress,
+                            cancellationToken).ConfigureAwait(false);
+
+                        allDumps.Add(data);
+                        globalBytesRead += data.Length;
+
+                        effectiveTaskLogger.LogInformation("  ✓ Iteration {Iter} complete: {Size:N0} bytes", iter + 1, data.Length);
+                    }
+                }
+
+                TimeSpan dumpDuration = _timeProvider.GetUtcNow() - dumpStartTime;
+                long totalBytesDumped = allDumps.Sum(d => d.Length);
+                double transferRate = totalBytesDumped > 0 && dumpDuration.TotalSeconds > 0 ? totalBytesDumped / dumpDuration.TotalSeconds : 0;
+
+                effectiveTaskLogger.LogInformation("✓ All dumps completed: {Size:N0} bytes total", totalBytesDumped);
+                effectiveTaskLogger.LogInformation("  Total Duration: {Duration:F1}s, Avg Rate: {Rate:F1} bytes/s",
+                    dumpDuration.TotalSeconds, transferRate);
 
                 // Stage 12: Teardown (95% progress)
                 progress.Report(("teardown", 95.0, null, null));
                 effectiveTaskLogger.LogInformation("--- Stage 12: Teardown ---");
-                effectiveTaskLogger.LogDebug("Cleaning up PLC client resources...");
 
                 // Client will be disposed automatically via 'await using'
 
                 // Stage 13: Complete (100% progress)
                 progress.Report(("complete", 100.0, null, null));
                 effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
-                effectiveTaskLogger.LogInformation("✓ Successfully dumped {ByteCount:N0} bytes ({ByteCountKB:F2} KB)",
-                    memoryData.Length, memoryData.Length / 1024.0);
 
-                return [memoryData];
+                return allDumps;
             }
             finally
             {
