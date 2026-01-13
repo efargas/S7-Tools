@@ -84,104 +84,103 @@
       </Grid>
     </Border>
 
-    <!-- Body: Task list and details panel in vertical layout (Scrollable) -->
-    <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled"
-      VerticalScrollBarVisibility="Auto">
-      <Grid RowDefinitions="*,Auto" Margin="16,0,16,16">
-        <!-- Task List -->
-        <DataGrid Grid.Row="0" ItemsSource="{Binding AllActionableTasks}"
-          SelectedItem="{Binding SelectedTask}"
-          IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
-          GridLinesVisibility="Horizontal" HeadersVisibility="Column" Margin="0,0,0,8"
-          MinHeight="200">
-          <DataGrid.Columns>
-            <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="150" />
-            <DataGridTextColumn Header="Step" Binding="{Binding CurrentOperation}" Width="150" />
-            <DataGridTextColumn Header="State" Binding="{Binding State}" Width="110" />
+    <!-- Body: Split View (Task List Top, Details Bottom) -->
+    <Grid Grid.Row="2" RowDefinitions="*,5,*">
 
-            <!-- Overall Progress Column -->
-            <DataGridTemplateColumn Header="Progress" Width="250">
-              <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate>
-                  <Grid ColumnDefinitions="*,Auto" Margin="4,0">
-                    <ProgressBar Grid.Column="0" Value="{Binding ProgressPercentage}" Minimum="0"
-                      Maximum="100"
-                      Height="10" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBlock Grid.Column="1"
-                      Text="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}"
-                      FontSize="11" VerticalAlignment="Center" Width="30" TextAlignment="Right" />
-                  </Grid>
-                </DataTemplate>
-              </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
+      <!-- Task List -->
+      <DataGrid Grid.Row="0" ItemsSource="{Binding AllActionableTasks}"
+        SelectedItem="{Binding SelectedTask}"
+        IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
+        GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+        MinHeight="150" VerticalScrollBarVisibility="Auto">
+        <DataGrid.Columns>
+          <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="150" />
+          <DataGridTextColumn Header="Step" Binding="{Binding CurrentOperation}" Width="150" />
+          <DataGridTextColumn Header="State" Binding="{Binding State}" Width="110" />
 
-            <!-- Memory Dump Progress Column -->
-            <DataGridTemplateColumn Header="Memory Dump" Width="*">
-              <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate>
-                  <Grid ColumnDefinitions="*,Auto" Margin="4,2" VerticalAlignment="Center">
-                    <ProgressBar Grid.Column="0" Value="{Binding BytesRead}"
-                      Maximum="{Binding TotalBytes}" Minimum="0"
-                      Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
-                      IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                    <TextBlock Grid.Column="1" FontSize="11"
-                      Foreground="White"
-                      VerticalAlignment="Center" TextAlignment="Right"
-                      IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}">
-                      <TextBlock.Text>
-                        <MultiBinding Converter="{StaticResource ProgressByteSizeConverter}">
-                          <Binding Path="BytesRead" FallbackValue="0" />
-                          <Binding Path="TotalBytes" FallbackValue="0" />
-                        </MultiBinding>
-                      </TextBlock.Text>
-                    </TextBlock>
-                  </Grid>
-                </DataTemplate>
-              </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
+          <!-- Overall Progress Column -->
+          <DataGridTemplateColumn Header="Progress" Width="250">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="*,Auto" Margin="4,0">
+                  <ProgressBar Grid.Column="0" Value="{Binding ProgressPercentage}" Minimum="0"
+                    Maximum="100"
+                    Height="10" VerticalAlignment="Center" Margin="0,0,8,0" />
+                  <TextBlock Grid.Column="1"
+                    Text="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}"
+                    FontSize="11" VerticalAlignment="Center" Width="30" TextAlignment="Right" />
+                </Grid>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
 
-            <!-- Speed Column -->
-            <DataGridTextColumn Header="Speed"
-              Binding="{Binding Speed, Converter={StaticResource ByteSpeedConverter}}"
-              Width="100" />
+          <!-- Memory Dump Progress Column -->
+          <DataGridTemplateColumn Header="Memory Dump" Width="*">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <Grid ColumnDefinitions="*,Auto" Margin="4,2" VerticalAlignment="Center">
+                  <ProgressBar Grid.Column="0" Value="{Binding BytesRead}"
+                    Maximum="{Binding TotalBytes}" Minimum="0"
+                    Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
+                    IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                  <TextBlock Grid.Column="1" FontSize="11"
+                    Foreground="White"
+                    VerticalAlignment="Center" TextAlignment="Right"
+                    IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <TextBlock.Text>
+                      <MultiBinding Converter="{StaticResource ProgressByteSizeConverter}">
+                        <Binding Path="BytesRead" FallbackValue="0" />
+                        <Binding Path="TotalBytes" FallbackValue="0" />
+                      </MultiBinding>
+                    </TextBlock.Text>
+                  </TextBlock>
+                </Grid>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
 
-            <!-- ETC Column -->
-            <DataGridTextColumn Header="ETC"
-              Binding="{Binding EstimatedTimeRemaining, StringFormat='{}{0:hh\\:mm\\:ss}'}"
-              Width="100" />
+          <!-- Speed Column -->
+          <DataGridTextColumn Header="Speed"
+            Binding="{Binding Speed, Converter={StaticResource ByteSpeedConverter}}"
+            Width="100" />
 
-            <DataGridTextColumn Header="Started"
-              Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="120" />
+          <!-- ETC Column -->
+          <DataGridTextColumn Header="ETC"
+            Binding="{Binding EstimatedTimeRemaining, StringFormat='{}{0:hh\\:mm\\:ss}'}"
+            Width="100" />
 
-            <DataGridTemplateColumn Header="Actions" Width="120">
-              <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate>
-                  <StackPanel Orientation="Horizontal" Spacing="4">
-                    <Button Content="Start" FontSize="10" Padding="6,2"
-                      Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StartTaskCommand}"
-                      CommandParameter="{Binding}"
-                      ToolTip.Tip="Start this task" />
-                    <Button Content="Stop" FontSize="10" Padding="6,2"
-                      Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StopTaskCommand}"
-                      CommandParameter="{Binding}"
-                      ToolTip.Tip="Stop this task" />
-                  </StackPanel>
-                </DataTemplate>
-              </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
-          </DataGrid.Columns>
-        </DataGrid>
+          <DataGridTextColumn Header="Started"
+            Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="120" />
 
-        <!-- Task Details Panel (Collapsible) -->
-        <Expander Grid.Row="1" Header="Task Details"
-          IsExpanded="{Binding IsTaskDetailsPanelExpanded}"
-          Margin="0,8,0,0">
-          <Border Background="#252526" CornerRadius="4" Padding="0" Margin="0,4,0,0">
-            <views:TaskDetailsView DataContext="{Binding TaskDetailsViewModel}" />
-          </Border>
-        </Expander>
-      </Grid>
-    </ScrollViewer>
+          <DataGridTemplateColumn Header="Actions" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <Button Content="Start" FontSize="10" Padding="6,2"
+                    Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StartTaskCommand}"
+                    CommandParameter="{Binding}"
+                    ToolTip.Tip="Start this task" />
+                  <Button Content="Stop" FontSize="10" Padding="6,2"
+                    Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StopTaskCommand}"
+                    CommandParameter="{Binding}"
+                    ToolTip.Tip="Stop this task" />
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+      </DataGrid>
+
+      <!-- GridSplitter -->
+      <GridSplitter Grid.Row="1" Background="#3E3E42" ResizeDirection="Rows"
+        HorizontalAlignment="Stretch" Margin="0,2" />
+
+      <!-- Task Details Panel (Fixed layout) -->
+      <Border Grid.Row="2" Background="#252526" CornerRadius="4" Padding="0" ClipToBounds="True">
+        <views:TaskDetailsView DataContext="{Binding TaskDetailsViewModel}" />
+      </Border>
+
+    </Grid>
 
     <!-- Status Bar -->
     <Border Grid.Row="3" Background="{DynamicResource SystemRegionBrush}"

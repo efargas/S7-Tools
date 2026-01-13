@@ -23,7 +23,7 @@ public sealed class EnhancedBootloaderService(
     ISerialPortService serialPort,
     Func<JobProfileSet, IPlcClient> clientFactory,
     IResourceCoordinator resourceCoordinator)
-    : IEnhancedBootloaderService, IDisposable
+    : BaseBootloaderService(null), IEnhancedBootloaderService, IDisposable
 {
     private readonly ILogger<EnhancedBootloaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IPayloadProvider _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));
@@ -290,189 +290,19 @@ public sealed class EnhancedBootloaderService(
 
             effectiveTaskLogger.LogInformation("Dumper payload installed successfully");
 
-            // Stage 11: Dump memory (20% - 95% progress) - 75% Weight
+            // Stage 11: Memory Dump (20% - 95% progress) - 75% Weight
             effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump ---");
 
-            // My logic shifted:
-            // Pre-steps: 0-30%. 
-            // Dump: 30-95% (65% weight).
-            // Let's force alignment with BootloaderService logic of 20-95% (75% weight)
-            // Effectively I just allocated 0-30% for pre-steps. 
-            // That's acceptable, as long as the memory dump is the bulk. 
-            // Let's use 30% -> 95% = 65% weight for this implementation to keep things smooth without jumping back.
+            var allDumps = await PerformDumpProcessAsync(
+                client,
+                profiles,
+                progress,
+                effectiveTaskLogger,
+                20.0,
+                75.0,
+                cancellationToken).ConfigureAwait(false);
 
-            var allDumps = new List<byte[]>();
-
-            // Calculate total bytes expected across ALL iterations and segments (for global progress)
-            long totalDumpBytes = 0;
-            var segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
-
-            try
-            {
-                if (segments.Count == 0)
-                {
-                    totalDumpBytes = checked((long)profiles.Memory.Length * profiles.DumpCount);
-                }
-                else
-                {
-                    long singlePassBytes = segments.Sum(s => (long)s.Size);
-                    totalDumpBytes = checked(singlePassBytes * profiles.DumpCount);
-                }
-            }
-            catch (OverflowException ex)
-            {
-                throw new InvalidOperationException(
-                    $"Total dump size calculation overflowed (DumpCount={profiles.DumpCount}).",
-                    ex);
-            }
-
-            if (totalDumpBytes <= 0)
-                totalDumpBytes = 1; // Prevent div/0
-                
-            long globalBytesRead = 0;
-
-            for (int dumpIter = 0; dumpIter < profiles.DumpCount; dumpIter++)
-            {
-                effectiveTaskLogger.LogInformation("Starting Dump Iteration {Iter}/{Total}", dumpIter + 1, profiles.DumpCount);
-
-                if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
-                {
-                    var selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
-                    List<byte[]> segmentDataList = [];
-
-                    for (int i = 0; i < selectedSegments.Count; i++)
-                    {
-                        MemorySegment segment = selectedSegments[i];
-                        string start = segment.StartAddress ?? throw new InvalidOperationException("Memory segment start address is null.");
-
-                        if (start.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                        {
-                            start = start[2..];
-                        }
-
-                        if (!uint.TryParse(
-                                start,
-                                System.Globalization.NumberStyles.HexNumber,
-                                System.Globalization.CultureInfo.InvariantCulture,
-                                out uint segmentStart))
-                        {
-                            throw new InvalidOperationException($"Invalid memory segment start address '{segment.StartAddress}'.");
-                        }
-
-                        if (segment.Size is <= 0 or > uint.MaxValue)
-                        {
-                            throw new InvalidOperationException(
-                                $"Invalid memory segment size '{segment.Size}' for segment '{segment.Name}'. Must be in range 1..{uint.MaxValue}.");
-                        }
-
-                        uint segmentSize = (uint)segment.Size;
-
-                        string stageName = $"Dumping Seg {i + 1}/{selectedSegments.Count} (Iter {dumpIter + 1}/{profiles.DumpCount})";
-
-                        // 30% start, 65% range. 
-                        double currentBasePercent = 30.0 + (65.0 * globalBytesRead / totalDumpBytes);
-                        progress.Report((stageName, currentBasePercent, globalBytesRead, totalDumpBytes));
-
-                        _logger.LogDebug("Dumping segment {Index}/{Total} (Iter {Iter}/{IterTotal}): '{Name}' @ 0x{Address:X8} ({Size} bytes)",
-                            i + 1, selectedSegments.Count, dumpIter + 1, profiles.DumpCount, segment.Name, segmentStart, segmentSize);
-
-                        bool isReading = false;
-                        double lastReportedPercent = currentBasePercent;
-
-                        var segmentProgress = new Progress<long>(bytesRead =>
-                        {
-                            if (!isReading)
-                                isReading = true;
-
-                            double percent = 30.0 + (65.0 * (globalBytesRead + bytesRead) / totalDumpBytes);
-
-                            if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesRead == segmentSize)
-                            {
-                                progress.Report((stageName, percent, globalBytesRead + bytesRead, totalDumpBytes));
-                                lastReportedPercent = percent;
-                            }
-                        });
-
-                        byte[] segmentData;
-                        try
-                        {
-                            segmentData = await client.InvokeDumperAsync(
-                                segmentStart,
-                                segmentSize,
-                                segmentProgress,
-                                cancellationToken).ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            // No upload task to clean up
-                        }
-
-                        segmentDataList.Add(segmentData);
-                        globalBytesRead += segmentData.Length;
-
-                        _logger.LogInformation("Segment '{Name}' (Iter {Iter}) dumped successfully: {Size} bytes",
-                            segment.Name, dumpIter + 1, segmentData.Length);
-                    }
-
-                    allDumps.Add([.. segmentDataList.SelectMany(arr => arr)]);
-                }
-                else
-                {
-                    // Single-region dump
-                    string stageName = $"Dumping Memory (Iter {dumpIter + 1}/{profiles.DumpCount})";
-                    double currentBasePercent = 30.0 + (65.0 * globalBytesRead / totalDumpBytes);
-
-                    progress.Report((stageName, currentBasePercent, globalBytesRead, totalDumpBytes));
-
-                    _logger.LogDebug("Dumping memory region 0x{Address:X8} - 0x{EndAddress:X8} ({Length} bytes) (Iter {Iter}/{Total})",
-                        profiles.Memory.Start,
-                        profiles.Memory.Start + profiles.Memory.Length,
-                        profiles.Memory.Length,
-                        dumpIter + 1,
-                        profiles.DumpCount);
-
-
-                    bool isReading = false;
-                    double lastReportedPercent = currentBasePercent;
-
-                    var dumpProgress = new Progress<long>(bytesRead =>
-                    {
-                        if (!isReading)
-                            isReading = true;
-                        double percent = 30.0 + (65.0 * (globalBytesRead + bytesRead) / totalDumpBytes);
-
-                        if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesRead == profiles.Memory.Length)
-                        {
-                            progress.Report((stageName, percent, globalBytesRead + bytesRead, totalDumpBytes));
-                            lastReportedPercent = percent;
-                        }
-                    });
-
-                    byte[] data;
-                    try
-                    {
-                        data = await client.InvokeDumperAsync(
-                            profiles.Memory.Start,
-                            profiles.Memory.Length,
-                            dumpProgress,
-                            cancellationToken).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        // No upload task to clean up
-                    }
-
-                    allDumps.Add(data);
-                    globalBytesRead += data.Length;
-                }
-
-                if (dumpIter < profiles.DumpCount - 1)
-                {
-                    await Task.Delay(100, cancellationToken).ConfigureAwait(false);
-                }
-            }
-
-            _logger.LogInformation("Memory dump completed. Total {Size} bytes.", globalBytesRead);
+            _logger.LogInformation("Memory dump completed. Total {Size} bytes.", allDumps.Sum(d => d.LongLength));
 
             // Stage 12: Teardown (95% progress)
             progress.Report(("teardown", 95.0, null, null));
@@ -989,39 +819,7 @@ public sealed class EnhancedBootloaderService(
             cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task WaitWithProgressAsync(
-        int delayMs,
-        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
-        double startPercent,
-        double targetPercent,
-        string stage,
-        CancellationToken cancellationToken)
-    {
-        if (delayMs <= 0)
-        {
-            return;
-        }
 
-        // Update every 100ms for smoother progress
-        int steps = delayMs / 100;
-        if (steps <= 0)
-        {
-            steps = 1;
-        }
-
-        double increment = (targetPercent - startPercent) / steps;
-
-        for (int i = 0; i < steps; i++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            await Task.Delay(100, cancellationToken).ConfigureAwait(false);
-
-            double currentPercent = startPercent + (increment * (i + 1));
-            // Round to 1 decimal place to match UI display resolution and reduce noise
-            currentPercent = Math.Round(currentPercent, 1);
-            progress.Report((stage, currentPercent, null, null));
-        }
-    }
 
     /// <inheritdoc />
     public async Task<ValidationResult> ValidateProfileSetAsync(

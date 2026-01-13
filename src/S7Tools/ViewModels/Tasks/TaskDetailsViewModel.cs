@@ -15,6 +15,7 @@ using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
+using S7Tools.Core.Constants;
 using S7Tools.Models;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
@@ -40,6 +41,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ISocatProfileService _socatProfileService;
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
     private readonly ICentralizedTaskLogService _centralizedTaskLogService;
+    private readonly IClipboardService _clipboardService;
     private readonly CompositeDisposable _disposables = [];
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
     private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
@@ -83,6 +85,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     /// <param name="socatProfileService">Socat profile service for accessing socat profiles.</param>
     /// <param name="jobProfileSetFactory">Job profile set factory for creating profile sets.</param>
     /// <param name="centralizedTaskLogService">The centralized task log service.</param>
+    /// <param name="clipboardService">The clipboard service.</param>
     public TaskDetailsViewModel(
         ILogger<TaskDetailsViewModel> logger,
         ISocatService socatService,
@@ -95,7 +98,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         ISerialPortProfileService serialPortProfileService,
         ISocatProfileService socatProfileService,
         IJobProfileSetFactory jobProfileSetFactory,
-        ICentralizedTaskLogService centralizedTaskLogService)
+        ICentralizedTaskLogService centralizedTaskLogService,
+        IClipboardService clipboardService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
@@ -109,6 +113,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
         _jobProfileSetFactory = jobProfileSetFactory ?? throw new ArgumentNullException(nameof(jobProfileSetFactory));
         _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
 
         // Initialize log entry collections
         MainLogEntries = [];
@@ -385,9 +390,34 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         private set => this.RaiseAndSetIfChanged(ref _canStartManualProcess, value);
     }
 
+    private bool _autoScroll = true;
+    /// <summary>
+    /// Gets or sets whether auto-scroll is enabled.
+    /// </summary>
+    public bool AutoScroll
+    {
+        get => _autoScroll;
+        set => this.RaiseAndSetIfChanged(ref _autoScroll, value);
+    }
+
+    private bool _isStuckToBottom = true;
+    /// <summary>
+    /// Gets or sets whether the view is currently stuck to the bottom.
+    /// </summary>
+    public bool IsStuckToBottom
+    {
+        get => _isStuckToBottom;
+        set => this.RaiseAndSetIfChanged(ref _isStuckToBottom, value);
+    }
+
     #endregion
 
     #region Commands
+
+    /// <summary>
+    /// Gets the command to copy a log entry to clipboard.
+    /// </summary>
+    public ReactiveCommand<LogEntry, Unit> CopyLogEntryCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to manually start socat server.
@@ -499,6 +529,16 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         StartManualProcessCommand = ReactiveCommand.CreateFromTask(
             ExecuteStartManualProcessAsync,
             this.WhenAnyValue(x => x.CanStartManualProcess));
+
+        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<LogEntry>(async logEntry =>
+        {
+            if (logEntry != null)
+            {
+                // Format: [Timestamp] [Level] Category: Message
+                string logText = $"[{logEntry.Timestamp.ToString(DateTimeFormats.LongDateTime)}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
+                await _clipboardService.SetTextAsync(logText);
+            }
+        });
     }
 
 

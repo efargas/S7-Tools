@@ -42,9 +42,11 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
 
     private ObservableCollection<LogModel> _logEntries;
     private ObservableCollection<LogModel> _filteredLogEntries;
+    private LogModel? _selectedLogEntry;
     private string _searchText = string.Empty;
     private LogLevel _selectedLogLevel = LogLevel.Trace;
     private bool _autoScroll = true;
+    private bool _isStuckToBottom = true;
     private bool _showTimestamp = true;
     private bool _showCategory = true;
     private bool _showLevel = true;
@@ -80,11 +82,13 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         InitializeCommands();
         _bufferedUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogModel>(items =>
         {
+            var newItems = new List<LogModel>();
             foreach (var item in items)
             {
                 LogEntries.Add(item);
+                newItems.Add(item);
             }
-            ApplyFiltersInternal();
+            ProcessNewEntries(newItems);
         }, TimeSpan.FromMilliseconds(500), _uiThreadService);
         InitializeLogStore();
         ApplyFilters();
@@ -141,6 +145,24 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     {
         get => _autoScroll;
         set => this.RaiseAndSetIfChanged(ref _autoScroll, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the view is currently stuck to the bottom.
+    /// </summary>
+    public bool IsStuckToBottom
+    {
+        get => _isStuckToBottom;
+        set => this.RaiseAndSetIfChanged(ref _isStuckToBottom, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the selected log entry.
+    /// </summary>
+    public LogModel? SelectedLogEntry
+    {
+        get => _selectedLogEntry;
+        set => this.RaiseAndSetIfChanged(ref _selectedLogEntry, value);
     }
 
     /// <summary>
@@ -232,7 +254,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the command to copy selected log entry to clipboard.
     /// </summary>
-    public ReactiveCommand<LogModel, Unit> CopyLogEntryCommand { get; private set; } = null!;
+    public ReactiveCommand<LogModel?, Unit> CopyLogEntryCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to refresh the log display.
@@ -332,11 +354,12 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             }
         });
 
-        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<LogModel>(async logEntry =>
+        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<LogModel?>(async logEntry =>
         {
-            if (logEntry != null)
+            var entry = logEntry ?? SelectedLogEntry;
+            if (entry != null)
             {
-                string logText = $"[{logEntry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{logEntry.Timestamp.Millisecond:000}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
+                string logText = $"[{entry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{entry.Timestamp.Millisecond:000}] [{entry.Level}] {entry.Category}: {entry.FormattedMessage}";
                 await _clipboardService.SetTextAsync(logText);
             }
         });
@@ -415,16 +438,82 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
+    /// Processes new log entries incrementally, adding them to FilteredLogEntries if they match current filters.
+    /// </summary>
+    private void ProcessNewEntries(IEnumerable<LogModel> newItems)
+    {
+        var matchedItems = new List<LogModel>();
+
+        foreach (var entry in newItems)
+        {
+            if (IsLogMatch(entry))
+            {
+                matchedItems.Add(entry);
+            }
+        }
+
+        if (matchedItems.Any())
+        {
+            // Assuming new logs are always newer, just append. 
+            // If we needed strict sorting for out-of-order logs, we'd need to insert carefully, 
+            // but for a log viewer, append is standard and performant.
+            foreach (var item in matchedItems)
+            {
+                FilteredLogEntries.Add(item);
+            }
+
+            FilteredLogCount = FilteredLogEntries.Count;
+            TotalLogCount = LogEntries.Count;
+        }
+    }
+
+    /// <summary>
+    /// checks if a log model matches the current filters.
+    /// </summary>
+    private bool IsLogMatch(LogModel entry)
+    {
+        // 1. Log Level
+        if (entry.Level < SelectedLogLevel)
+            return false;
+
+        // 2. Date Range
+        if (StartDate.HasValue && entry.Timestamp < StartDate.Value)
+            return false;
+        if (EndDate.HasValue)
+        {
+            DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
+            if (entry.Timestamp > endDateOffset)
+                return false;
+        }
+
+        // 3. Search Text
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            string term = SearchText;
+            bool matches = (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                           (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                           (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
+
+            if (!matches)
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
     /// Applies the current filters to the log entries. This should be called on the UI thread.
     /// </summary>
     private void ApplyFiltersInternal()
     {
+        // Full rebuild of the filtered list
         IEnumerable<LogModel> filtered = LogEntries.AsEnumerable();
 
-        // Apply log level filter
-        filtered = filtered.Where(entry => entry.Level >= SelectedLogLevel);
+        if (SelectedLogLevel > LogLevel.Trace)
+        {
+            filtered = filtered.Where(entry => entry.Level >= SelectedLogLevel);
+        }
 
-        // Apply search text filter
         if (!string.IsNullOrWhiteSpace(SearchText))
         {
             string term = SearchText;
@@ -435,7 +524,6 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             );
         }
 
-        // Apply date range filter
         if (StartDate.HasValue)
         {
             filtered = filtered.Where(entry => entry.Timestamp >= StartDate.Value);
@@ -449,6 +537,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
 
         // Update filtered collection
         var filteredList = filtered.OrderBy(e => e.Timestamp).ToList();
+
         FilteredLogEntries.Clear();
         foreach (LogModel? entry in filteredList)
         {

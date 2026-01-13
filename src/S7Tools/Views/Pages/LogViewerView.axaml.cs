@@ -5,6 +5,8 @@ using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using S7Tools.ViewModels.Pages;
 
+using System.Diagnostics;
+
 namespace S7Tools.Views.Pages;
 
 /// <summary>
@@ -12,8 +14,9 @@ namespace S7Tools.Views.Pages;
 /// </summary>
 public partial class LogViewerView : UserControl
 {
-    private ScrollViewer? _logScrollViewer;
-    private bool _isUserScrolling;
+    private ListBox? _listBox;
+    private ScrollViewer? _scrollViewer;
+    private LogViewerViewModel? _viewModel;
 
     /// <summary>
     /// Initializes a new instance of the LogViewerView class.
@@ -23,72 +26,134 @@ public partial class LogViewerView : UserControl
         InitializeComponent();
     }
 
-    /// <summary>
-    /// Handles the loaded event to set up auto-scroll behavior.
-    /// </summary>
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        var dataGrid = this.FindControl<DataGrid>("LogDataGrid");
-        if (dataGrid != null)
+
+        _listBox = this.FindControl<ListBox>("LogListBox");
+
+        // Find the ScrollViewer inside the ListBox once it's attached
+        // We use the global capture or specific search as backup.
+        // For ListBox, standard template has a ScrollViewer.
+        if (_listBox != null)
         {
-            // The ScrollViewer is in the DataGrid's template, so we need to get it after it's applied.
-            _logScrollViewer = dataGrid.FindDescendantOfType<ScrollViewer>();
+            _listBox.TemplateApplied += (s, args) =>
+            {
+                var sv = _listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+                if (sv != null)
+                {
+                    _scrollViewer = sv;
+                    _scrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
+                }
+            };
+
+            // Fallback if template already applied
+            var sv = _listBox.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+            if (sv != null && _scrollViewer == null)
+            {
+                _scrollViewer = sv;
+                _scrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
+            }
         }
 
-        if (DataContext is LogViewerViewModel viewModel && _logScrollViewer != null)
+        if (DataContext is LogViewerViewModel viewModel)
         {
-            viewModel.FilteredLogEntries.CollectionChanged += OnLogEntriesChanged;
-            _logScrollViewer.ScrollChanged += OnScrollViewerScrollChanged;
+            _viewModel = viewModel;
+            _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+            _viewModel.FilteredLogEntries.CollectionChanged += OnLogEntriesChanged;
+
+            if (_viewModel.AutoScroll && _viewModel.IsStuckToBottom)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.Post(ScrollToBottom);
+            }
         }
     }
 
-    /// <summary>
-    /// Handles the unloaded event to clean up subscriptions.
-    /// </summary>
     protected override void OnUnloaded(RoutedEventArgs e)
     {
-        if (DataContext is LogViewerViewModel viewModel && _logScrollViewer != null)
-        {
-            viewModel.FilteredLogEntries.CollectionChanged -= OnLogEntriesChanged;
-            _logScrollViewer.ScrollChanged -= OnScrollViewerScrollChanged;
-        }
         base.OnUnloaded(e);
+        if (_scrollViewer != null)
+        {
+            _scrollViewer.ScrollChanged -= OnScrollViewerScrollChanged;
+            _scrollViewer = null; // Added this line to match original behavior
+        }
+
+        if (_viewModel != null)
+        {
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _viewModel.FilteredLogEntries.CollectionChanged -= OnLogEntriesChanged;
+            _viewModel = null;
+        }
+        _listBox = null; // Added this line to match original behavior
     }
 
-    /// <summary>
-    /// Handles changes to the log entries collection to trigger auto-scroll.
-    /// </summary>
-    private void OnLogEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (DataContext is LogViewerViewModel { AutoScroll: true } && !_isUserScrolling)
+        if (e.PropertyName == nameof(LogViewerViewModel.AutoScroll))
         {
-            _logScrollViewer?.ScrollToEnd();
+            if (_viewModel != null && _viewModel.AutoScroll)
+            {
+                // If AutoScroll is re-enabled, ensure we are stuck to bottom and scroll there.
+                _viewModel.IsStuckToBottom = true; // Added this line to match original behavior
+                ScrollToBottom();
+            }
         }
     }
 
-    /// <summary>
-    /// Manages the auto-scroll behavior when the user manually scrolls.
-    /// </summary>
+    private void OnLogEntriesChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (_viewModel?.AutoScroll == true && _viewModel.IsStuckToBottom)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.Post(ScrollToBottom);
+        }
+    }
+
+    private void ScrollToBottom()
+    {
+        if (_viewModel == null || !_viewModel.AutoScroll || !_viewModel.IsStuckToBottom)
+            return;
+
+        if (_listBox != null && _viewModel.FilteredLogEntries.Count > 0)
+        {
+            try
+            {
+                var lastItem = _viewModel.FilteredLogEntries[_viewModel.FilteredLogEntries.Count - 1];
+                _listBox.ScrollIntoView(lastItem);
+            }
+            catch { }
+        }
+    }
+
     private void OnScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
-        if (_logScrollViewer == null) return;
+        if (_viewModel == null || _scrollViewer == null)
+            return;
 
-        // User scrolled manually
-        if (e.OffsetDelta.Y != 0)
+        // Check if we are at the bottom using a safe tolerance (20px)
+        bool isAtBottom = _scrollViewer.Offset.Y >= (_scrollViewer.Extent.Height - _scrollViewer.Viewport.Height - 20.0);
+
+        // Always sync the persistable state
+        _viewModel.IsStuckToBottom = isAtBottom;
+
+        // 1. Detection of Disabling: User scrolls UP
+        if (e.OffsetDelta.Y < 0)
         {
-            // A small tolerance is needed for comparing double values
-            bool isAtBottom = _logScrollViewer.Offset.Y >= _logScrollViewer.ScrollBarMaximum.Y - 1.0;
-
-            // If user scrolls up from the bottom, we disable auto-scrolling.
-            if (e.OffsetDelta.Y < 0 && !isAtBottom)
+            if (_viewModel.AutoScroll)
             {
-                _isUserScrolling = true;
+                _viewModel.AutoScroll = false;
             }
-            // If user scrolls back to the bottom, we re-enable auto-scrolling.
-            else if (e.OffsetDelta.Y > 0 && isAtBottom)
+        }
+
+        // 2. Detection of Enabling: User at Bottom
+        if (isAtBottom)
+        {
+            if (!_viewModel.AutoScroll)
             {
-                _isUserScrolling = false;
+                // Only re-enable if user pushed down
+                if (e.OffsetDelta.Y > 0)
+                {
+                    _viewModel.AutoScroll = true;
+                }
             }
         }
     }

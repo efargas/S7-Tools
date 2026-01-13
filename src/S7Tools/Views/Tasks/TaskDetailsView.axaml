@@ -5,6 +5,7 @@
   xmlns:vm="using:S7Tools.ViewModels.Tasks"
   xmlns:jobs="using:S7Tools.Core.Models.Jobs"
   xmlns:models="using:S7Tools.Models"
+  xmlns:icons="using:Projektanker.Icons.Avalonia"
   xmlns:converters="clr-namespace:S7Tools.Converters"
   mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="800"
   x:Class="S7Tools.Views.Tasks.TaskDetailsView"
@@ -75,417 +76,482 @@
     </Border>
 
     <!-- Tabs for Logs and Controls -->
-    <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedTabIndex}">
-      <!-- Main Log Tab -->
-      <TabItem Header="Main Log">
-        <DataGrid ItemsSource="{Binding MainLogEntries}"
-          Background="#1E1E1E"
-          Foreground="#CCCCCC"
-          GridLinesVisibility="Horizontal"
-          HeadersVisibility="Column"
-          CanUserReorderColumns="True"
-          CanUserResizeColumns="True"
-          CanUserSortColumns="True"
-          IsReadOnly="True"
-          SelectionMode="Single"
-          AutoGenerateColumns="False">
+    <Grid Grid.Row="2" RowDefinitions="Auto,*">
 
-          <DataGrid.Styles>
-            <Style Selector="DataGrid">
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="BorderThickness" Value="1" />
-            </Style>
-            <Style Selector="DataGridColumnHeader">
-              <Setter Property="Background" Value="#2D2D30" />
-              <Setter Property="Foreground" Value="#CCCCCC" />
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="FontWeight" Value="SemiBold" />
-              <Setter Property="FontSize" Value="12" />
-              <Setter Property="Padding" Value="8,4" />
-            </Style>
-            <Style Selector="DataGridRow">
-              <Setter Property="Background" Value="Transparent" />
-            </Style>
-            <Style Selector="DataGridRow:selected">
-              <Setter Property="Background" Value="#094771" />
-            </Style>
-            <Style Selector="DataGridRow:pointerover">
-              <Setter Property="Background" Value="#2A2D2E" />
-            </Style>
-            <Style Selector="DataGridCell">
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="Padding" Value="8,4" />
-              <Setter Property="FontSize" Value="12" />
-            </Style>
-          </DataGrid.Styles>
+      <!-- Toolbar Row with Auto Scroll Toggle -->
+      <Border Grid.Row="0" Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="0,0,0,1"
+        Padding="12,8">
+        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+          <ToggleButton Content="Auto Scroll"
+            IsChecked="{Binding AutoScroll, Mode=TwoWay}"
+            FontSize="12" Padding="8,4" CornerRadius="4">
+            <ToggleButton.Styles>
+              <Style Selector="ToggleButton:checked">
+                <Setter Property="Background" Value="#007ACC" />
+                <Setter Property="Foreground" Value="White" />
+              </Style>
+            </ToggleButton.Styles>
+          </ToggleButton>
+        </StackPanel>
+      </Border>
 
-          <DataGrid.Columns>
-            <!-- Timestamp Column -->
-            <DataGridTextColumn Header="Timestamp"
-              Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
-              Width="160" />
+      <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
+        <!-- Main Log Tab -->
+        <TabItem Header="Main Log">
+          <DataGrid Name="MainLogGrid"
+            ItemsSource="{Binding MainLogEntries}"
+            Background="#1E1E1E"
+            Foreground="#CCCCCC"
+            GridLinesVisibility="Horizontal"
+            HeadersVisibility="Column"
+            CanUserReorderColumns="True"
+            CanUserResizeColumns="True"
+            CanUserSortColumns="True"
+            IsReadOnly="True"
+            SelectionMode="Single"
+            AutoGenerateColumns="False">
 
-            <!-- Level Column -->
-            <DataGridTemplateColumn Header="Level" Width="80">
-              <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate DataType="models:LogEntry">
-                  <Border CornerRadius="3"
-                    Padding="4,2"
-                    Margin="2"
-                    Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
-                    <TextBlock Text="{Binding Level}"
-                      Foreground="White"
-                      FontSize="10"
-                      FontWeight="SemiBold"
-                      HorizontalAlignment="Center" />
-                  </Border>
-                </DataTemplate>
-              </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
+            <DataGrid.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Copy Entry"
+                  Command="{Binding CopyLogEntryCommand}"
+                  CommandParameter="{Binding ElementName=MainLogGrid, Path=SelectedItem}">
+                  <MenuItem.Icon>
+                    <icons:Icon Value="fa-solid fa-copy" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </DataGrid.ContextMenu>
 
-            <!-- Message Column -->
-            <DataGridTextColumn Header="Message"
-              Binding="{Binding FormattedMessage}"
-              Width="*"
-              CanUserResize="True" />
-          </DataGrid.Columns>
-        </DataGrid>
-      </TabItem>
+            <DataGrid.Styles>
+              <Style Selector="DataGrid">
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="BorderThickness" Value="1" />
+              </Style>
+              <Style Selector="DataGridColumnHeader">
+                <Setter Property="Background" Value="#2D2D30" />
+                <Setter Property="Foreground" Value="#CCCCCC" />
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="8,4" />
+              </Style>
+              <Style Selector="DataGridRow">
+                <Setter Property="Background" Value="Transparent" />
+              </Style>
+              <Style Selector="DataGridRow:selected">
+                <Setter Property="Background" Value="#094771" />
+              </Style>
+              <Style Selector="DataGridRow:pointerover">
+                <Setter Property="Background" Value="#2A2D2E" />
+              </Style>
+              <Style Selector="DataGridCell">
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="FontSize" Value="12" />
+              </Style>
+            </DataGrid.Styles>
 
-      <!-- Process/Socat Log Tab -->
-      <TabItem Header="Socat Log">
-        <DataGrid ItemsSource="{Binding ProcessLogEntries}"
-          Background="#1E1E1E"
-          Foreground="#CCCCCC"
-          GridLinesVisibility="Horizontal"
-          HeadersVisibility="Column"
-          CanUserReorderColumns="True"
-          CanUserResizeColumns="True"
-          CanUserSortColumns="True"
-          IsReadOnly="True"
-          SelectionMode="Single"
-          AutoGenerateColumns="False">
+            <DataGrid.Columns>
+              <!-- Timestamp Column -->
+              <DataGridTextColumn Header="Timestamp"
+                Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
+                Width="160" />
 
-          <DataGrid.Styles>
-            <Style Selector="DataGrid">
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="BorderThickness" Value="1" />
-            </Style>
-            <Style Selector="DataGridColumnHeader">
-              <Setter Property="Background" Value="#2D2D30" />
-              <Setter Property="Foreground" Value="#CCCCCC" />
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="FontWeight" Value="SemiBold" />
-              <Setter Property="FontSize" Value="12" />
-              <Setter Property="Padding" Value="8,4" />
-            </Style>
-            <Style Selector="DataGridRow">
-              <Setter Property="Background" Value="Transparent" />
-            </Style>
-            <Style Selector="DataGridRow:selected">
-              <Setter Property="Background" Value="#094771" />
-            </Style>
-            <Style Selector="DataGridRow:pointerover">
-              <Setter Property="Background" Value="#2A2D2E" />
-            </Style>
-            <Style Selector="DataGridCell">
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="Padding" Value="8,4" />
-              <Setter Property="FontSize" Value="12" />
-            </Style>
-          </DataGrid.Styles>
-
-          <DataGrid.Columns>
-            <!-- Timestamp Column -->
-            <DataGridTextColumn Header="Timestamp"
-              Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
-              Width="160" />
-
-            <!-- Level Column -->
-            <DataGridTemplateColumn Header="Level" Width="80">
-              <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate DataType="models:LogEntry">
-                  <Border CornerRadius="3"
-                    Padding="4,2"
-                    Margin="2"
-                    Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
-                    <TextBlock Text="{Binding Level}"
-                      Foreground="White"
-                      FontSize="10"
-                      FontWeight="SemiBold"
-                      HorizontalAlignment="Center" />
-                  </Border>
-                </DataTemplate>
-              </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
-
-            <!-- Message Column -->
-            <DataGridTextColumn Header="Message"
-              Binding="{Binding FormattedMessage}"
-              Width="*"
-              CanUserResize="True" />
-          </DataGrid.Columns>
-        </DataGrid>
-      </TabItem>
-
-      <!-- Protocol Log Tab -->
-      <TabItem Header="Protocol Log">
-        <DataGrid ItemsSource="{Binding ProtocolLogEntries}"
-          Background="#1E1E1E"
-          Foreground="#CCCCCC"
-          GridLinesVisibility="Horizontal"
-          HeadersVisibility="Column"
-          CanUserReorderColumns="True"
-          CanUserResizeColumns="True"
-          CanUserSortColumns="True"
-          IsReadOnly="True"
-          SelectionMode="Single"
-          AutoGenerateColumns="False">
-
-          <DataGrid.Styles>
-            <Style Selector="DataGrid">
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="BorderThickness" Value="1" />
-            </Style>
-            <Style Selector="DataGridColumnHeader">
-              <Setter Property="Background" Value="#2D2D30" />
-              <Setter Property="Foreground" Value="#CCCCCC" />
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="FontWeight" Value="SemiBold" />
-              <Setter Property="FontSize" Value="12" />
-              <Setter Property="Padding" Value="8,4" />
-            </Style>
-            <Style Selector="DataGridRow">
-              <Setter Property="Background" Value="Transparent" />
-            </Style>
-            <Style Selector="DataGridRow:selected">
-              <Setter Property="Background" Value="#094771" />
-            </Style>
-            <Style Selector="DataGridRow:pointerover">
-              <Setter Property="Background" Value="#2A2D2E" />
-            </Style>
-            <Style Selector="DataGridCell">
-              <Setter Property="BorderBrush" Value="#464647" />
-              <Setter Property="Padding" Value="8,4" />
-              <Setter Property="FontSize" Value="12" />
-            </Style>
-          </DataGrid.Styles>
-
-          <DataGrid.Columns>
-            <!-- Timestamp Column -->
-            <DataGridTextColumn Header="Timestamp"
-              Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
-              Width="160" />
-
-            <!-- Level Column -->
-            <DataGridTemplateColumn Header="Level" Width="80">
-              <DataGridTemplateColumn.CellTemplate>
-                <DataTemplate DataType="models:LogEntry">
-                  <Border CornerRadius="3"
-                    Padding="4,2"
-                    Margin="2"
-                    Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
-                    <TextBlock Text="{Binding Level}"
-                      Foreground="White"
-                      FontSize="10"
-                      FontWeight="SemiBold"
-                      HorizontalAlignment="Center" />
-                  </Border>
-                </DataTemplate>
-              </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>
-
-            <!-- Message Column -->
-            <DataGridTextColumn Header="Message"
-              Binding="{Binding FormattedMessage}"
-              Width="*"
-              CanUserResize="True" />
-          </DataGrid.Columns>
-        </DataGrid>
-      </TabItem>
-
-      <!-- Manual Controls Tab -->
-      <TabItem Header="Manual Controls">
-        <ScrollViewer>
-          <StackPanel Spacing="12" Margin="16">
-            <!-- Status Message -->
-            <Border Background="#1E1E1E" CornerRadius="4" Padding="8"
-              IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-              <StackPanel Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="12"
-                  Foreground="{DynamicResource SystemBaseMediumBrush}" />
-                <TextBlock Text="{Binding StatusMessage}" FontSize="12"
-                  Foreground="{DynamicResource SystemAccentBrush}" />
-              </StackPanel>
-            </Border>
-
-            <!-- Socat Server Control -->
-            <TextBlock Text="Socat Server Control" FontWeight="SemiBold" FontSize="14" />
-            <!-- Serial Port Configuration Section -->
-            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
-              Padding="12">
-              <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Grid.Column="0" Text="Serial Port Configuration" FontWeight="SemiBold"
-                    FontSize="14" />
-                  <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding IsSerialPortConnected}">
-                      <TextBlock Text="Connected" FontSize="11" FontWeight="Medium" />
+              <!-- Level Column -->
+              <DataGridTemplateColumn Header="Level" Width="80">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="models:LogEntry">
+                    <Border CornerRadius="3"
+                      Padding="4,2"
+                      Margin="2"
+                      Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
+                      <TextBlock Text="{Binding Level}"
+                        Foreground="White"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        HorizontalAlignment="Center" />
                     </Border>
-                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding !IsSerialPortConnected}">
-                      <TextBlock Text="Disconnected" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                  </StackPanel>
-                </Grid>
-                <TextBlock Text="Apply serial port configuration from task's job profile"
-                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
-                <Button Content="Apply Serial Configuration"
-                  Command="{Binding ApplySerialConfigCommand}"
-                  HorizontalAlignment="Left" />
-              </StackPanel>
-            </Border>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
 
-            <!-- Socat Server Controls Section -->
-            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
-              Padding="12">
-              <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto,Auto">
-                  <TextBlock Grid.Column="0" Text="Socat Server Controls" FontWeight="SemiBold"
-                    FontSize="14" />
-                  <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,0">
-                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding CanStopSocat}">
-                      <TextBlock Text="Running" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding !CanStopSocat}">
-                      <TextBlock Text="Stopped" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                  </StackPanel>
-                  <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <Border Background="#2196F3" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding IsSocatClientConnected}">
-                      <TextBlock Text="Client Connected" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding !IsSocatClientConnected}">
-                      <TextBlock Text="Client Disconnected" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                  </StackPanel>
-                </Grid>
-                <TextBlock Text="Manage socat TCP bridge server and client connection"
-                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
-                <WrapPanel>
-                  <Button Content="Start Server" Command="{Binding StartSocatCommand}"
-                    Margin="0,0,8,0" />
-                  <Button Content="Stop Server" Command="{Binding StopSocatCommand}"
-                    Margin="0,0,8,0" />
-                  <Button Content="Kill Server" Command="{Binding KillSocatCommand}"
-                    Margin="0,0,8,0" />
-                  <Button Content="Connect Client" Command="{Binding ConnectSocatClientCommand}"
-                    Margin="0,0,8,0" />
-                  <Button Content="Disconnect Client"
-                    Command="{Binding DisconnectSocatClientCommand}" />
-                </WrapPanel>
-              </StackPanel>
-            </Border>
+              <!-- Message Column -->
+              <DataGridTextColumn Header="Message"
+                Binding="{Binding FormattedMessage}"
+                Width="*"
+                CanUserResize="True" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </TabItem>
 
-            <!-- Power Supply Controls Section -->
-            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
-              Padding="12">
-              <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Grid.Column="0" Text="Power Supply Controls" FontWeight="SemiBold"
-                    FontSize="14" />
-                  <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding IsPowerConnected}">
-                      <TextBlock Text="Connected" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                    <Border Background="#757575" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding !IsPowerConnected}">
-                      <TextBlock Text="Disconnected" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                  </StackPanel>
-                </Grid>
-                <TextBlock Text="Connect to power supply and control PLC power state"
-                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
-                <WrapPanel>
-                  <Button Content="Connect" Command="{Binding ConnectPowerSupplyCommand}"
-                    Margin="0,0,8,0" />
-                  <Button Content="Disconnect" Command="{Binding DisconnectPowerSupplyCommand}"
-                    Margin="0,0,8,0" />
-                  <Button Content="Power ON" Command="{Binding PowerOnCommand}" Margin="0,0,8,0" />
-                  <Button Content="Power OFF" Command="{Binding PowerOffCommand}" Margin="0,0,8,0" />
-                  <Button Content="Power Cycle" Command="{Binding PowerCycleCommand}" />
-                </WrapPanel>
-              </StackPanel>
-            </Border>
+        <!-- Process/Socat Log Tab -->
+        <TabItem Header="Socat Log">
+          <DataGrid Name="SocatLogGrid"
+            ItemsSource="{Binding ProcessLogEntries}"
+            Background="#1E1E1E"
+            Foreground="#CCCCCC"
+            GridLinesVisibility="Horizontal"
+            HeadersVisibility="Column"
+            CanUserReorderColumns="True"
+            CanUserResizeColumns="True"
+            CanUserSortColumns="True"
+            IsReadOnly="True"
+            SelectionMode="Single"
+            AutoGenerateColumns="False">
 
-            <!-- Manual Process Section -->
-            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
-              Padding="12">
-              <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Grid.Column="0" Text="Manual Process (Steps 5-11)"
-                    FontWeight="SemiBold" FontSize="14" />
-                  <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding CanStartManualProcess}">
-                      <TextBlock Text="Ready" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                    <Border Background="#FF9800" CornerRadius="10" Padding="8,3"
-                      IsVisible="{Binding !CanStartManualProcess}">
-                      <TextBlock Text="Not Ready" FontSize="11" FontWeight="Medium" />
-                    </Border>
-                  </StackPanel>
-                </Grid>
-                <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#AAAAAA">
-                  <Run
-                    Text="Complete steps 1-4 manually (Serial Config, Socat Setup, Power Connect, Power ON), then click Start to automate steps 5-11 (Power Cycle → Memory Dump → Complete)." />
-                </TextBlock>
+            <DataGrid.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Copy Entry"
+                  Command="{Binding CopyLogEntryCommand}"
+                  CommandParameter="{Binding ElementName=SocatLogGrid, Path=SelectedItem}">
+                  <MenuItem.Icon>
+                    <icons:Icon Value="fa-solid fa-copy" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </DataGrid.ContextMenu>
 
-                <!-- Progress Section -->
-                <StackPanel Spacing="4">
-                  <Grid ColumnDefinitions="*,Auto">
-                    <TextBlock Grid.Column="0" Text="{Binding CurrentProcessStep}" FontSize="12"
-                      FontWeight="Medium" />
-                    <TextBlock Grid.Column="1"
-                      Text="{Binding ManualProcessProgress, StringFormat='{}{0:F1}%'}"
-                      FontSize="12" FontWeight="SemiBold" Foreground="#2196F3" />
-                  </Grid>
-                  <ProgressBar Minimum="0" Maximum="100" Value="{Binding ManualProcessProgress}"
-                    Height="6" />
-                  <TextBlock
-                    Text="{Binding EstimatedTimeRemaining, StringFormat='Estimated time remaining: {0:mm\\:ss}'}"
-                    FontSize="11" Foreground="#AAAAAA" />
+            <DataGrid.Styles>
+              <Style Selector="DataGrid">
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="BorderThickness" Value="1" />
+              </Style>
+              <Style Selector="DataGridColumnHeader">
+                <Setter Property="Background" Value="#2D2D30" />
+                <Setter Property="Foreground" Value="#CCCCCC" />
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="8,4" />
+              </Style>
+              <Style Selector="DataGridRow">
+                <Setter Property="Background" Value="Transparent" />
+              </Style>
+              <Style Selector="DataGridRow:selected">
+                <Setter Property="Background" Value="#094771" />
+              </Style>
+              <Style Selector="DataGridRow:pointerover">
+                <Setter Property="Background" Value="#2A2D2E" />
+              </Style>
+              <Style Selector="DataGridCell">
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="FontSize" Value="12" />
+              </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+              <!-- Timestamp Column -->
+              <DataGridTextColumn Header="Timestamp"
+                Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
+                Width="160" />
+
+              <!-- Level Column -->
+              <DataGridTemplateColumn Header="Level" Width="80">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="models:LogEntry">
+                    <Border CornerRadius="3"
+                      Padding="4,2"
+                      Margin="2"
+                      Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
+                      <TextBlock Text="{Binding Level}"
+                        Foreground="White"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        HorizontalAlignment="Center" />
+                    </Border>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+
+              <!-- Message Column -->
+              <DataGridTextColumn Header="Message"
+                Binding="{Binding FormattedMessage}"
+                Width="*"
+                CanUserResize="True" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </TabItem>
+
+        <!-- Protocol Log Tab -->
+        <TabItem Header="Protocol Log">
+          <DataGrid Name="ProtocolLogGrid"
+            ItemsSource="{Binding ProtocolLogEntries}"
+            Background="#1E1E1E"
+            Foreground="#CCCCCC"
+            GridLinesVisibility="Horizontal"
+            HeadersVisibility="Column"
+            CanUserReorderColumns="True"
+            CanUserResizeColumns="True"
+            CanUserSortColumns="True"
+            IsReadOnly="True"
+            SelectionMode="Single"
+            AutoGenerateColumns="False">
+
+            <DataGrid.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Copy Entry"
+                  Command="{Binding CopyLogEntryCommand}"
+                  CommandParameter="{Binding ElementName=ProtocolLogGrid, Path=SelectedItem}">
+                  <MenuItem.Icon>
+                    <icons:Icon Value="fa-solid fa-copy" />
+                  </MenuItem.Icon>
+                </MenuItem>
+              </ContextMenu>
+            </DataGrid.ContextMenu>
+
+            <DataGrid.Styles>
+              <Style Selector="DataGrid">
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="BorderThickness" Value="1" />
+              </Style>
+              <Style Selector="DataGridColumnHeader">
+                <Setter Property="Background" Value="#2D2D30" />
+                <Setter Property="Foreground" Value="#CCCCCC" />
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="8,4" />
+              </Style>
+              <Style Selector="DataGridRow">
+                <Setter Property="Background" Value="Transparent" />
+              </Style>
+              <Style Selector="DataGridRow:selected">
+                <Setter Property="Background" Value="#094771" />
+              </Style>
+              <Style Selector="DataGridRow:pointerover">
+                <Setter Property="Background" Value="#2A2D2E" />
+              </Style>
+              <Style Selector="DataGridCell">
+                <Setter Property="BorderBrush" Value="#464647" />
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="FontSize" Value="12" />
+              </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+              <!-- Timestamp Column -->
+              <DataGridTextColumn Header="Timestamp"
+                Binding="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
+                Width="160" />
+
+              <!-- Level Column -->
+              <DataGridTemplateColumn Header="Level" Width="80">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="models:LogEntry">
+                    <Border CornerRadius="3"
+                      Padding="4,2"
+                      Margin="2"
+                      Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
+                      <TextBlock Text="{Binding Level}"
+                        Foreground="White"
+                        FontSize="10"
+                        FontWeight="SemiBold"
+                        HorizontalAlignment="Center" />
+                    </Border>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+
+              <!-- Message Column -->
+              <DataGridTextColumn Header="Message"
+                Binding="{Binding FormattedMessage}"
+                Width="*"
+                CanUserResize="True" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </TabItem>
+
+        <!-- Manual Controls Tab -->
+        <TabItem Header="Manual Controls">
+          <ScrollViewer>
+            <StackPanel Spacing="12" Margin="16">
+              <!-- Status Message -->
+              <Border Background="#1E1E1E" CornerRadius="4" Padding="8"
+                IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="Status:" FontWeight="SemiBold" FontSize="12"
+                    Foreground="{DynamicResource SystemBaseMediumBrush}" />
+                  <TextBlock Text="{Binding StatusMessage}" FontSize="12"
+                    Foreground="{DynamicResource SystemAccentBrush}" />
                 </StackPanel>
+              </Border>
 
-                <Button Content="Start Manual Process"
-                  Command="{Binding StartManualProcessCommand}"
-                  HorizontalAlignment="Left" />
-              </StackPanel>
-            </Border>
+              <!-- Socat Server Control -->
+              <TextBlock Text="Socat Server Control" FontWeight="SemiBold" FontSize="14" />
+              <!-- Serial Port Configuration Section -->
+              <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="Serial Port Configuration"
+                      FontWeight="SemiBold"
+                      FontSize="14" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                      <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding IsSerialPortConnected}">
+                        <TextBlock Text="Connected" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                      <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding !IsSerialPortConnected}">
+                        <TextBlock Text="Disconnected" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+                  <TextBlock Text="Apply serial port configuration from task's job profile"
+                    FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                  <Button Content="Apply Serial Configuration"
+                    Command="{Binding ApplySerialConfigCommand}"
+                    HorizontalAlignment="Left" />
+                </StackPanel>
+              </Border>
 
-            <!-- Validation Section -->
-            <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1" CornerRadius="4"
-              Padding="12">
-              <StackPanel Spacing="8">
-                <TextBlock Text="Validation" FontWeight="SemiBold" FontSize="14" />
-                <TextBlock Text="Run validation checks on task configuration"
-                  FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
-                <Button Content="Run Validation"
-                  Command="{Binding RunValidationCommand}"
-                  HorizontalAlignment="Left" />
-              </StackPanel>
-            </Border>
+              <!-- Socat Server Controls Section -->
+              <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="*,Auto,Auto">
+                    <TextBlock Grid.Column="0" Text="Socat Server Controls" FontWeight="SemiBold"
+                      FontSize="14" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,8,0">
+                      <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding CanStopSocat}">
+                        <TextBlock Text="Running" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                      <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding !CanStopSocat}">
+                        <TextBlock Text="Stopped" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                      <Border Background="#2196F3" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding IsSocatClientConnected}">
+                        <TextBlock Text="Client Connected" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                      <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding !IsSocatClientConnected}">
+                        <TextBlock Text="Client Disconnected" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+                  <TextBlock Text="Manage socat TCP bridge server and client connection"
+                    FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                  <WrapPanel>
+                    <Button Content="Start Server" Command="{Binding StartSocatCommand}"
+                      Margin="0,0,8,0" />
+                    <Button Content="Stop Server" Command="{Binding StopSocatCommand}"
+                      Margin="0,0,8,0" />
+                    <Button Content="Kill Server" Command="{Binding KillSocatCommand}"
+                      Margin="0,0,8,0" />
+                    <Button Content="Connect Client" Command="{Binding ConnectSocatClientCommand}"
+                      Margin="0,0,8,0" />
+                    <Button Content="Disconnect Client"
+                      Command="{Binding DisconnectSocatClientCommand}" />
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
 
-          </StackPanel>
-        </ScrollViewer>
-      </TabItem>
-    </TabControl>
+              <!-- Power Supply Controls Section -->
+              <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="Power Supply Controls" FontWeight="SemiBold"
+                      FontSize="14" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                      <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding IsPowerConnected}">
+                        <TextBlock Text="Connected" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                      <Border Background="#757575" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding !IsPowerConnected}">
+                        <TextBlock Text="Disconnected" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+                  <TextBlock Text="Connect to power supply and control PLC power state"
+                    FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                  <WrapPanel>
+                    <Button Content="Connect" Command="{Binding ConnectPowerSupplyCommand}"
+                      Margin="0,0,8,0" />
+                    <Button Content="Disconnect" Command="{Binding DisconnectPowerSupplyCommand}"
+                      Margin="0,0,8,0" />
+                    <Button Content="Power ON" Command="{Binding PowerOnCommand}" Margin="0,0,8,0" />
+                    <Button Content="Power OFF" Command="{Binding PowerOffCommand}" Margin="0,0,8,0" />
+                    <Button Content="Power Cycle" Command="{Binding PowerCycleCommand}" />
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+
+              <!-- Manual Process Section -->
+              <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0" Text="Manual Process (Steps 5-11)"
+                      FontWeight="SemiBold" FontSize="14" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                      <Border Background="#4CAF50" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding CanStartManualProcess}">
+                        <TextBlock Text="Ready" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                      <Border Background="#FF9800" CornerRadius="10" Padding="8,3"
+                        IsVisible="{Binding !CanStartManualProcess}">
+                        <TextBlock Text="Not Ready" FontSize="11" FontWeight="Medium" />
+                      </Border>
+                    </StackPanel>
+                  </Grid>
+                  <TextBlock TextWrapping="Wrap" FontSize="12" Foreground="#AAAAAA">
+                    <Run
+                      Text="Complete steps 1-4 manually (Serial Config, Socat Setup, Power Connect, Power ON), then click Start to automate steps 5-11 (Power Cycle → Memory Dump → Complete)." />
+                  </TextBlock>
+
+                  <!-- Progress Section -->
+                  <StackPanel Spacing="4">
+                    <Grid ColumnDefinitions="*,Auto">
+                      <TextBlock Grid.Column="0" Text="{Binding CurrentProcessStep}" FontSize="12"
+                        FontWeight="Medium" />
+                      <TextBlock Grid.Column="1"
+                        Text="{Binding ManualProcessProgress, StringFormat='{}{0:F1}%'}"
+                        FontSize="12" FontWeight="SemiBold" Foreground="#2196F3" />
+                    </Grid>
+                    <ProgressBar Minimum="0" Maximum="100" Value="{Binding ManualProcessProgress}"
+                      Height="6" />
+                    <TextBlock
+                      Text="{Binding EstimatedTimeRemaining, StringFormat='Estimated time remaining: {0:mm\\:ss}'}"
+                      FontSize="11" Foreground="#AAAAAA" />
+                  </StackPanel>
+
+                  <Button Content="Start Manual Process"
+                    Command="{Binding StartManualProcessCommand}"
+                    HorizontalAlignment="Left" />
+                </StackPanel>
+              </Border>
+
+              <!-- Validation Section -->
+              <Border Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="1"
+                CornerRadius="4"
+                Padding="12">
+                <StackPanel Spacing="8">
+                  <TextBlock Text="Validation" FontWeight="SemiBold" FontSize="14" />
+                  <TextBlock Text="Run validation checks on task configuration"
+                    FontSize="12" Foreground="#AAAAAA" TextWrapping="Wrap" />
+                  <Button Content="Run Validation"
+                    Command="{Binding RunValidationCommand}"
+                    HorizontalAlignment="Left" />
+                </StackPanel>
+              </Border>
+
+            </StackPanel>
+          </ScrollViewer>
+        </TabItem>
+      </TabControl>
+    </Grid>
   </Grid>
 
 </UserControl>
