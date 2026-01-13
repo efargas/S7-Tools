@@ -753,8 +753,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return;
         }
 
-        // Use the timer callback mechanism to run processing on thread pool
-        ProcessTasks(null);
+        // Coalesce bursts of triggers into a single scheduled run
+        _scheduleTimer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
     }
 
     /// <summary>
