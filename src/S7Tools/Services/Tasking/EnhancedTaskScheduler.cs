@@ -754,7 +754,14 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
 
         // Coalesce bursts of triggers into a single scheduled run
-        _scheduleTimer.Change(TimeSpan.Zero, Timeout.InfiniteTimeSpan);
+        try
+        {
+            _scheduleTimer.Change(0, Timeout.Infinite);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Scheduler is shutting down; ignore
+        }
     }
 
     /// <summary>
