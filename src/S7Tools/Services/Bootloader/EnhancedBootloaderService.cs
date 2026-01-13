@@ -350,6 +350,12 @@ public sealed class EnhancedBootloaderService(
                             throw new InvalidOperationException($"Invalid memory segment start address '{segment.StartAddress}'.");
                         }
 
+                        if (segment.Size is <= 0 or > uint.MaxValue)
+                        {
+                            throw new InvalidOperationException(
+                                $"Invalid memory segment size '{segment.Size}' for segment '{segment.Name}'. Must be in range 1..{uint.MaxValue}.");
+                        }
+
                         uint segmentSize = (uint)segment.Size;
 
                         string stageName = $"Dumping Seg {i + 1}/{selectedSegments.Count} (Iter {dumpIter + 1}/{profiles.DumpCount})";
