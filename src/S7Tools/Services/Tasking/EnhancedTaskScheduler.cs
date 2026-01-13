@@ -839,14 +839,22 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             else
             {
                 _scheduleTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                _ = Task.Run(() => CleanupOldTasksAsync(TimeSpan.FromHours(24)), CancellationToken.None)
-                    .ContinueWith(t =>
+
+                _ = Task.Run(async () =>
+                {
+                    try
                     {
-                        if (t.IsCompletedSuccessfully && t.Result > 0)
+                        int removed = await CleanupOldTasksAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
+                        if (removed > 0)
                         {
-                            _ = SaveTasksAsync();
+                            await SaveTasksAsync().ConfigureAwait(false);
                         }
-                    }, CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Background cleanup failed");
+                    }
+                }, CancellationToken.None);
             }
             if (nowUtc - _lastCleanupTime > _cleanupInterval)
             {
