@@ -297,7 +297,16 @@ public sealed class BootloaderService(
                 else
                 {
                     long singlePassBytes = segments.Sum(s => (long)s.Size);
-                    totalDumpBytes = singlePassBytes * profiles.DumpCount;
+                    try
+                    {
+                        totalDumpBytes = checked(singlePassBytes * profiles.DumpCount);
+                    }
+                    catch (OverflowException ex)
+                    {
+                        throw new InvalidOperationException(
+                            $"Total dump size calculation overflowed (Single pass size={singlePassBytes}, Dump count={profiles.DumpCount}).",
+                            ex);
+                    }
                 }
 
                 long globalBytesRead = 0;
