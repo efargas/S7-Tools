@@ -701,7 +701,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         // Use Local time because TaskExecution.CompletedAt uses Local time
         DateTime cutoffTime = _timeProvider.GetLocalNow() - maxAge;
         var oldTasks = _tasks.Values
-            .Where(t => t.IsTerminal && t.CompletedAt < cutoffTime)
+            .Where(t => t.IsTerminal && t.CompletedAt.HasValue && t.CompletedAt.Value < cutoffTime)
             .ToList();
 
         foreach (TaskExecution? task in oldTasks)
