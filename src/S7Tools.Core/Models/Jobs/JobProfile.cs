@@ -456,6 +456,10 @@ public class JobProfile : IProfileBase
         {
             errors.Add("Dump count must be at least 1");
         }
+        if (DumpCount > 1000)
+        {
+            errors.Add("Dump count cannot exceed 1000");
+        }
 
         if (Payloads == null)
         {
