@@ -839,9 +839,15 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             else
             {
                 _scheduleTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                _ = Task.Run(() => CleanupOldTasksAsync(TimeSpan.FromHours(24)), CancellationToken.None)
+                    .ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully && t.Result > 0)
+                        {
+                            _ = SaveTasksAsync();
+                        }
+                    }, CancellationToken.None);
             }
-
-            // Check for incidental cleanup
             if (nowUtc - _lastCleanupTime > _cleanupInterval)
             {
                 _lastCleanupTime = nowUtc;
