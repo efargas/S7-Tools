@@ -748,7 +748,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// </summary>
     private void TriggerScheduler()
     {
-        if (!_isRunning || _disposed)
+        if (_disposed)
         {
             return;
         }
