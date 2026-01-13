@@ -45,7 +45,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets a singleton instance of an empty task execution (Null Object pattern).
     /// </summary>
-    public static TaskExecution Empty => new()
+    public static TaskExecution Empty { get; } = new()
     {
         TaskId = Guid.Empty,
         JobName = "None",
