@@ -284,29 +284,36 @@ public sealed class BootloaderService(
                 List<byte[]> allDumps = new();
 
                 // Calculate total bytes expected across ALL iterations and segments
-                long totalDumpBytes = 0;
+                long totalDumpBytes;
                 var segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
 
-                // If no complex mapping, create a default segment from the basic memory profile
-                if (segments.Count == 0)
+                if (profiles.DumpCount <= 0)
                 {
-                    // Placeholder segment for single region
-                    // We handle single region logic below, but unify for calculation
-                    totalDumpBytes = (long)profiles.Memory.Length * profiles.DumpCount;
+                    throw new InvalidOperationException($"Invalid dump count: {profiles.DumpCount}. Must be >= 1.");
                 }
-                else
+
+                try
                 {
-                    long singlePassBytes = segments.Sum(s => (long)s.Size);
-                    try
+                    if (segments.Count == 0)
                     {
+                        totalDumpBytes = checked((long)profiles.Memory.Length * profiles.DumpCount);
+                    }
+                    else
+                    {
+                        long singlePassBytes = segments.Sum(s => (long)s.Size);
                         totalDumpBytes = checked(singlePassBytes * profiles.DumpCount);
                     }
-                    catch (OverflowException ex)
-                    {
-                        throw new InvalidOperationException(
-                            $"Total dump size calculation overflowed (Single pass size={singlePassBytes}, Dump count={profiles.DumpCount}).",
-                            ex);
-                    }
+                }
+                catch (OverflowException ex)
+                {
+                    throw new InvalidOperationException(
+                        $"Total dump size calculation overflowed (DumpCount={profiles.DumpCount}).",
+                        ex);
+                }
+
+                if (totalDumpBytes <= 0)
+                {
+                    throw new InvalidOperationException("Total dump size is 0 bytes; cannot report progress for an empty dump.");
                 }
 
                 long globalBytesRead = 0;
