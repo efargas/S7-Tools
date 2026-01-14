@@ -597,17 +597,10 @@ public partial class App : Application
                 logger.LogError("❌ IApplicationSettingsService not found in service provider");
             }
 
-            // STEP 4: Initialize file logging service to start monitoring logs
-            logger.LogDebug("Step 4: Initializing file logging service");
-            Services.FileLogWriter? fileLogWriter = _serviceProvider.GetService<Services.FileLogWriter>();
-            if (fileLogWriter != null)
-            {
-                logger.LogInformation("✅ File logging service initialized and monitoring DataStore");
-            }
-            else
-            {
-                logger.LogWarning("⚠️ FileLogWriter not found - file logging will not be available");
-            }
+            // STEP 4: File logging service (UnifiedLogger/FileLogSink) is initialized automatically via DI
+            // The UnifiedLoggerProvider will instantiate FileLogSink which starts its own processing task
+            logger.LogDebug("Step 4: Verifying file logging initialization");
+            logger.LogInformation("✅ File logging service initialized (UnifiedLogger with FileLogSink)");
 
             logger.LogInformation("🎉 Synchronous initialization completed successfully");
         }

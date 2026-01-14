@@ -516,4 +516,307 @@ public abstract class BaseBootloaderService
             progress.Report((stage, currentPercent, null, null));
         }
     }
+    /// <summary>
+    /// Performs the complete bootloader orchestration (13 stages) using streaming for dumps.
+    /// This centralizes the logic previously duplicated in BootloaderService and EnhancedBootloaderService.
+    /// </summary>
+    protected async Task<IList<byte[]>> PerformBootloaderOrchestrationAsync(
+        JobProfileSet profiles,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        ILogger effectiveTaskLogger,
+        ILogger? processLogger,
+        ILogger? protocolLogger,
+        ISerialPortService serialPort,
+        ISocatService socat,
+        IPowerSupplyService power,
+        IPayloadProvider payloads,
+        Func<JobProfileSet, IPlcClient> clientFactory,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentNullException.ThrowIfNull(progress);
+        ArgumentNullException.ThrowIfNull(serialPort);
+        ArgumentNullException.ThrowIfNull(socat);
+        ArgumentNullException.ThrowIfNull(power);
+        ArgumentNullException.ThrowIfNull(payloads);
+        ArgumentNullException.ThrowIfNull(clientFactory);
+
+        const int InitialPowerOffWaitMs = 10000;
+        SocatProcessInfo? socatProcess = null;
+        bool isPowerConnected = false;
+
+        try
+        {
+            // Stage 0: Configure serial port (1% progress)
+            progress.Report(("serial_config", 1.0, null, null));
+            effectiveTaskLogger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
+
+            bool serialConfigured = await serialPort.ApplyConfigurationAsync(
+                profiles.Serial.Device,
+                profiles.Serial.Configuration,
+                effectiveTaskLogger,
+                cancellationToken).ConfigureAwait(false);
+
+            if (!serialConfigured)
+            {
+                throw new InvalidOperationException($"Failed to configure serial port {profiles.Serial.Device}");
+            }
+
+            effectiveTaskLogger.LogInformation("✓ Serial port {Device} configured successfully", profiles.Serial.Device);
+
+            // Stage 1: Setup socat bridge (3% progress)
+            progress.Report(("socat_setup", 3.0, null, null));
+            effectiveTaskLogger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
+
+            if (profiles.Socat.Configuration == null)
+            {
+                throw new InvalidOperationException("Socat configuration is required but was null.");
+            }
+
+            // Sync baud rate from serial profile to socat configuration
+            profiles.Socat.Configuration.BaudRate = profiles.Serial.Baud;
+
+            socatProcess = await socat.StartSocatAsync(
+                profiles.Socat.Configuration,
+                profiles.Serial.Device,
+                processLogger,
+                protocolLogger,
+                cancellationToken).ConfigureAwait(false);
+
+            effectiveTaskLogger.LogInformation("✓ Socat bridge started on TCP port {Port} (PID: {ProcessId})",
+                profiles.Socat.Port, socatProcess.ProcessId);
+
+            // Stage 2: Connect to power supply (5% progress)
+            progress.Report(("power_connect", 5.0, null, null));
+            effectiveTaskLogger.LogDebug("Connecting to power supply at {Host}:{Port}", profiles.Power.Host, profiles.Power.Port);
+
+            if (profiles.Power.Configuration == null)
+            {
+                throw new InvalidOperationException("Power supply configuration is required but was null.");
+            }
+
+            bool connected = await power.ConnectAsync(profiles.Power.Configuration, effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+            if (!connected)
+            {
+                throw new InvalidOperationException("Failed to connect to power supply.");
+            }
+            isPowerConnected = true;
+
+            effectiveTaskLogger.LogInformation("✓ Connected to power supply at {Host}:{Port}", profiles.Power.Host, profiles.Power.Port);
+
+            // Stage 3: Initial Power OFF (6% progress)
+            progress.Report(("power_off_initial", 6.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 3: Initial Power OFF ---");
+
+            bool powerOff = await power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+            if (!powerOff)
+                throw new InvalidOperationException("Failed to turn PLC power OFF");
+
+            await WaitWithProgressAsync(
+                InitialPowerOffWaitMs,
+                progress,
+                6.0, 10.0,
+                "power_off_wait",
+                cancellationToken).ConfigureAwait(false);
+
+            effectiveTaskLogger.LogInformation("✓ PLC powered OFF and wait time completed");
+
+            // Stage 4: Power ON (10% progress)
+            progress.Report(("power_on", 10.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 4: Power ON PLC ---");
+
+            bool powerOn = await power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+            if (!powerOn)
+                throw new InvalidOperationException("Failed to turn PLC power ON");
+
+            effectiveTaskLogger.LogInformation("✓ PLC powered ON");
+
+            // Stage 5: Wait for stabilization (10% -> 11%)
+            await WaitWithProgressAsync(
+                profiles.PowerOnTimeMs,
+                progress,
+                10.0, 11.0,
+                "power_on_stabilize",
+                cancellationToken).ConfigureAwait(false);
+
+            // Stage 6: PLC Client & Connect (12% progress)
+            progress.Report(("plc_connect", 12.0, null, null));
+            await using IPlcClient client = clientFactory(profiles);
+
+            // Set protocol logger if available
+            client.SetProtocolLogger(protocolLogger);
+
+            effectiveTaskLogger.LogDebug("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
+            await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
+
+            // Stage 7: Power Cycle (13% -> 15%)
+            progress.Report(("power_cycle", 13.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 7: Power Cycle PLC ---");
+
+            await power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+
+            await WaitWithProgressAsync(
+                profiles.PowerOffDelayMs,
+                progress,
+                13.0, 15.0,
+                "power_cycle_wait",
+                cancellationToken).ConfigureAwait(false);
+
+            await power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
+            effectiveTaskLogger.LogInformation("✓ PLC power cycled successfully");
+
+            // Perform handshake immediately after power on
+            await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
+
+            // Stage 8: Handshake Info (15% progress)
+            progress.Report(("handshake", 15.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 8: Bootloader Handshake ---");
+
+            string version = await client.GetBootloaderVersionAsync(cancellationToken).ConfigureAwait(false);
+            effectiveTaskLogger.LogInformation("✓ Connected to bootloader version: {Version}", version);
+
+            // Stage 9: Install Stager (16% progress)
+            progress.Report(("stager_install", 16.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 9: Install Stager Payload ---");
+
+            byte[] stagerPayload = await payloads.GetStagerAsync(profiles.Payloads.BasePath, cancellationToken).ConfigureAwait(false);
+
+            // Simulated progress for installation
+            using (var stagerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                var progressTask = SimulateProgressAsync(
+                    stagerPayload.LongLength,
+                    profiles.Serial.Configuration.BaudRate,
+                    progress,
+                    16.0, 18.0,
+                    "stager_install",
+                    stagerCts.Token);
+
+                try
+                {
+                    await client.InstallStagerAsync(stagerPayload, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    stagerCts.Cancel();
+                    try
+                    { await progressTask.ConfigureAwait(false); }
+                    catch (OperationCanceledException) { }
+                }
+            }
+            effectiveTaskLogger.LogInformation("✓ Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
+
+            // Stage 10: Install Dumper (18% progress)
+            progress.Report(("dumper_install", 18.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 10: Install Memory Dumper Payload ---");
+
+            byte[] dumperPayload = await payloads.GetMemoryDumperAsync(profiles.Payloads.BasePath, cancellationToken).ConfigureAwait(false);
+
+            using (var dumperCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+            {
+                var progressTask = SimulateProgressAsync(
+                    dumperPayload.LongLength,
+                    profiles.Serial.Configuration.BaudRate,
+                    progress,
+                    18.0, 20.0,
+                    "dumper_install",
+                    dumperCts.Token);
+
+                try
+                {
+                    await client.InstallDumperAsync(dumperPayload, cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    dumperCts.Cancel();
+                    try
+                    { await progressTask.ConfigureAwait(false); }
+                    catch (OperationCanceledException) { }
+                }
+            }
+            effectiveTaskLogger.LogInformation("✓ Dumper payload installed successfully");
+
+            // Stage 11: Memory Dump (20% - 95% progress) - 75% weight
+            effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump (Streaming) ---");
+
+            var allDumps = await PerformDumpProcessStreamingAsync(
+                client,
+                profiles,
+                progress,
+                effectiveTaskLogger,
+                20.0,
+                75.0,
+                cancellationToken).ConfigureAwait(false);
+
+            // Stage 12: Teardown (95% progress)
+            progress.Report(("teardown", 95.0, null, null));
+            effectiveTaskLogger.LogInformation("--- Stage 12: Teardown ---");
+
+            // Stage 13: Complete
+            progress.Report(("complete", 100.0, null, null));
+            effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
+
+            return allDumps;
+        }
+        catch (Exception ex)
+        {
+            // Log full exception in process logger if available
+            processLogger?.LogError(ex, "Dump failed: {ErrorMessage}", ex.Message);
+            effectiveTaskLogger.LogError("DUMP OPERATION FAILED: {ErrorMessage}", ex.Message);
+            throw;
+        }
+        finally
+        {
+            if (socatProcess != null)
+            {
+                try
+                {
+                    await socat.StopSocatAsync(socatProcess, cancellationToken).ConfigureAwait(false);
+                    effectiveTaskLogger.LogDebug("✓ Socat process stopped");
+                }
+                catch (Exception ex) { effectiveTaskLogger.LogWarning("Failed to stop socat: {Message}", ex.Message); }
+            }
+
+            if (isPowerConnected)
+            {
+                try
+                {
+                    await power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+                    effectiveTaskLogger.LogDebug("✓ Disconnected from power supply");
+                }
+                catch (Exception ex) { effectiveTaskLogger.LogWarning("Failed to disconnect power: {Message}", ex.Message); }
+            }
+        }
+    }
+
+    protected async Task SimulateProgressAsync(
+        long payloadSize,
+        int baudRate,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        double startPercent,
+        double targetPercent,
+        string stage,
+        CancellationToken cancellationToken)
+    {
+        // 10 bits per byte (8 data + 1 start + 1 stop). Baud rate is bits/sec.
+        double durationSeconds = ((double)payloadSize * 10.0) / (double)baudRate;
+        int delayMs = (int)(durationSeconds * 1000);
+
+        // Add 10% buffering for overhead
+        delayMs = (int)(delayMs * 1.1);
+
+        // Force a minimum delay of 1 second to ensure the progress bar animation is visible
+        if (delayMs < 1000)
+        {
+            delayMs = 1000;
+        }
+
+        await WaitWithProgressAsync(
+            delayMs,
+            progress,
+            startPercent,
+            targetPercent,
+            stage,
+            cancellationToken).ConfigureAwait(false);
+    }
 }

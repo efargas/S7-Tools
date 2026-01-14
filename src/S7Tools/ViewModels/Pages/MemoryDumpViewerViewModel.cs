@@ -140,6 +140,9 @@ public partial class MemoryDumpViewerViewModel : ViewModelBase, IDisposable
             // Configure orchestrator
             _orchestrator.Configure(Host, Port, startAddr);
 
+            // Yield to UI thread to ensure status updates render
+            await Task.Yield();
+
             _cts = new CancellationTokenSource();
 
             IsConnected = true;

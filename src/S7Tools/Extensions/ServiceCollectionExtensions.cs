@@ -13,6 +13,7 @@ using S7Tools.Core.Validation;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Infrastructure.Logging.Providers.Extensions;
+using S7Tools.Infrastructure.Logging.Sinks;
 using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services;
@@ -93,8 +94,9 @@ public static class ServiceCollectionExtensions
         // Add Log Export Service
         services.TryAddTransient<ILogExportService, LogExportService>();
 
-        // Add File Log Writer - will subscribe to in-memory log data store and persist to disk when enabled
-        services.TryAddSingleton<FileLogWriter>();
+        // Register FileLogSink as ILogSink for UnifiedLoggerProvider
+        // It starts automatically in its constructor
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<ILogSink, FileLogSink>());
 
         // Add File Dialog Service
         services.TryAddTransient<IFileDialogService>(provider =>
@@ -413,6 +415,7 @@ public static class ServiceCollectionExtensions
 
         // Add Task Management ViewModels (Task Manager and Jobs Management)
         services.TryAddTransient<TaskDetailsViewModel>();
+        services.TryAddTransient<TaskStatisticsViewModel>();
         services.TryAddSingleton<TaskManagerViewModel>();
         services.TryAddSingleton<ActiveTasksViewModel>();
         services.TryAddSingleton<ScheduledTasksViewModel>();
@@ -730,7 +733,6 @@ public static class ServiceCollectionExtensions
 
             // UI and logging services
             typeof(IUIRefreshService),
-            typeof(FileLogWriter),
             typeof(S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore)
         ];
 

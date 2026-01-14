@@ -45,10 +45,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
         ILogger<Services.ApplicationSettingsService> settingsLogger = loggerFactory.CreateLogger<Services.ApplicationSettingsService>();
-        ILogger<Services.PathService> pathLogger = loggerFactory.CreateLogger<Services.PathService>();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serviceProvider = services.BuildServiceProvider();
 
         // Create a mock path service for design time
-        var pathService = new Services.PathService(pathLogger);
+        var pathService = new Services.PathService(serviceProvider);
         return new Services.ApplicationSettingsService(settingsLogger, pathService);
     }
 

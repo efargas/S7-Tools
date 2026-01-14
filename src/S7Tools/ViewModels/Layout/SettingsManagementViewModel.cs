@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reactive;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
@@ -61,10 +62,13 @@ public class SettingsManagementViewModel : ReactiveObject
     {
         using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
         ILogger<Services.ApplicationSettingsService> settingsLogger = loggerFactory.CreateLogger<Services.ApplicationSettingsService>();
-        ILogger<Services.PathService> pathLogger = loggerFactory.CreateLogger<Services.PathService>();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        var serviceProvider = services.BuildServiceProvider();
 
         // Create a mock path service for design time
-        var pathService = new Services.PathService(pathLogger);
+        var pathService = new Services.PathService(serviceProvider);
         return new Services.ApplicationSettingsService(settingsLogger, pathService);
     }
 

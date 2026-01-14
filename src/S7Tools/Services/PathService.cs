@@ -1,4 +1,5 @@
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
@@ -13,22 +14,27 @@ namespace S7Tools.Services
     /// </summary>
     public sealed class PathService : IPathService
     {
-        private readonly ILogger<PathService> _logger;
+        private readonly IServiceProvider _serviceProvider;
+        private ILogger<PathService>? _loggerInstance;
+
+        private ILogger<PathService>? Logger => _loggerInstance ??= _serviceProvider.GetService<ILogger<PathService>>();
+
         private PathConfiguration? _pathConfiguration;
 
         /// <summary>
         /// Initializes a new instance of the PathService class
         /// </summary>
-        /// <param name="logger">Logger for structured logging</param>
-        public PathService(ILogger<PathService> logger)
+        /// <param name="serviceProvider">Service provider for lazy dependency resolution</param>
+        public PathService(IServiceProvider serviceProvider)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
             // Resolve base directory from executable location
             string executablePath = Assembly.GetExecutingAssembly().Location;
             BaseDirectory = Path.GetDirectoryName(executablePath) ?? Environment.CurrentDirectory;
 
-            _logger.LogInformation("PathService initialized with base directory: {BaseDirectory}", BaseDirectory);
+            // Log manually via lazy logger if available, but avoid strictly requiring it during ctor
+            // Logger?.LogInformation("PathService initialized with base directory: {BaseDirectory}", BaseDirectory);
         }
 
         /// <summary>
@@ -160,7 +166,7 @@ namespace S7Tools.Services
         /// <returns>PathConfiguration with resolved paths</returns>
         public async Task<PathConfiguration> InitializeAsync()
         {
-            _logger.LogInformation("Initializing path configuration and creating required directories");
+            Logger?.LogInformation("Initializing path configuration and creating required directories");
 
             try
             {
@@ -210,25 +216,25 @@ namespace S7Tools.Services
                     }
                     else
                     {
-                        _logger.LogWarning("Directory could not be ensured: {DirectoryPath}", directory);
+                        Logger?.LogWarning("Directory could not be ensured: {DirectoryPath}", directory);
                     }
                 }
 
                 _pathConfiguration.IsInitialized = true;
 
-                _logger.LogInformation("Path configuration initialized successfully. Created {DirectoryCount} directories",
+                Logger?.LogInformation("Path configuration initialized successfully. Created {DirectoryCount} directories",
                     createdDirectories.Count);
 
                 if (createdDirectories.Count > 0)
                 {
-                    _logger.LogDebug("Created directories: {CreatedDirectories}", string.Join(", ", createdDirectories));
+                    Logger?.LogDebug("Created directories: {CreatedDirectories}", string.Join(", ", createdDirectories));
                 }
 
                 return _pathConfiguration;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initialize path configuration");
+                Logger?.LogError(ex, "Failed to initialize path configuration");
                 throw new PathResolutionException("Path configuration initialization failed", BaseDirectory, "Initialize", ex);
             }
         }
@@ -252,7 +258,7 @@ namespace S7Tools.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to resolve path: {RelativePath} from base: {BaseDirectory}",
+                Logger?.LogError(ex, "Failed to resolve path: {RelativePath} from base: {BaseDirectory}",
                     relativePath, BaseDirectory);
                 throw new PathResolutionException($"Failed to resolve path: {relativePath}", relativePath, "ResolvePath", ex);
             }
@@ -274,11 +280,11 @@ namespace S7Tools.Services
             {
                 if (Directory.Exists(directoryPath))
                 {
-                    _logger.LogDebug("Directory already exists: {DirectoryPath}", directoryPath);
+                    Logger?.LogDebug("Directory already exists: {DirectoryPath}", directoryPath);
                     return true;
                 }
 
-                _logger.LogDebug("Creating directory: {DirectoryPath}", directoryPath);
+                Logger?.LogDebug("Creating directory: {DirectoryPath}", directoryPath);
                 Directory.CreateDirectory(directoryPath);
 
                 // Verify creation
@@ -286,28 +292,28 @@ namespace S7Tools.Services
 
                 if (Directory.Exists(directoryPath))
                 {
-                    _logger.LogInformation("Successfully created directory: {DirectoryPath}", directoryPath);
+                    Logger?.LogInformation("Successfully created directory: {DirectoryPath}", directoryPath);
                     return true;
                 }
 
-                _logger.LogWarning("Directory creation reported success but directory does not exist: {DirectoryPath}", directoryPath);
+                Logger?.LogWarning("Directory creation reported success but directory does not exist: {DirectoryPath}", directoryPath);
                 return false;
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogError(ex, "Access denied when creating directory: {DirectoryPath}", directoryPath);
+                Logger?.LogError(ex, "Access denied when creating directory: {DirectoryPath}", directoryPath);
                 throw new PathResolutionException($"Access denied when creating directory: {directoryPath}",
                     directoryPath, "EnsureDirectoryExists", ex);
             }
             catch (DirectoryNotFoundException ex)
             {
-                _logger.LogError(ex, "Parent directory not found when creating: {DirectoryPath}", directoryPath);
+                Logger?.LogError(ex, "Parent directory not found when creating: {DirectoryPath}", directoryPath);
                 throw new PathResolutionException($"Parent directory not found when creating: {directoryPath}",
                     directoryPath, "EnsureDirectoryExists", ex);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error creating directory: {DirectoryPath}", directoryPath);
+                Logger?.LogError(ex, "Unexpected error creating directory: {DirectoryPath}", directoryPath);
                 throw new PathResolutionException($"Failed to create directory: {directoryPath}",
                     directoryPath, "EnsureDirectoryExists", ex);
             }
@@ -319,7 +325,7 @@ namespace S7Tools.Services
         /// <returns>Validation result with any issues found</returns>
         public async Task<PathValidationResult> ValidatePathsAsync()
         {
-            _logger.LogInformation("Validating all required paths");
+            Logger?.LogInformation("Validating all required paths");
 
             var result = new PathValidationResult { IsValid = true };
 
@@ -364,7 +370,7 @@ namespace S7Tools.Services
                             if (await EnsureDirectoryExistsAsync(pathValue).ConfigureAwait(false))
                             {
                                 result.CreatedDirectories.Add(pathValue);
-                                _logger.LogInformation("Created missing directory for {PathName}: {PathValue}", pathName, pathValue);
+                                Logger?.LogInformation("Created missing directory for {PathName}: {PathValue}", pathName, pathValue);
                             }
                             else
                             {
@@ -380,14 +386,14 @@ namespace S7Tools.Services
                     }
                 }
 
-                _logger.LogInformation("Path validation completed. Valid: {IsValid}, Errors: {ErrorCount}, Created: {CreatedCount}",
+                Logger?.LogInformation("Path validation completed. Valid: {IsValid}, Errors: {ErrorCount}, Created: {CreatedCount}",
                     result.IsValid, result.Errors.Count, result.CreatedDirectories.Count);
 
                 return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error during path validation");
+                Logger?.LogError(ex, "Unexpected error during path validation");
                 result.Errors.Add($"Validation failed with unexpected error: {ex.Message}");
                 result.IsValid = false;
                 return result;

@@ -24,16 +24,16 @@
           <TextBlock Text="Task Manager" FontWeight="SemiBold" FontSize="18"
             VerticalAlignment="Center" />
           <Border Background="{DynamicResource SystemAccentBrush}" CornerRadius="12" Padding="8,4">
-            <TextBlock Text="{Binding RunningTasksCount, StringFormat='Active: {0}'}"
+            <TextBlock Text="{Binding Statistics.RunningTasksCount, StringFormat='Active: {0}'}"
               Foreground="{DynamicResource SystemAltHighBrush}" FontSize="12" FontWeight="Medium" />
           </Border>
           <Border Background="{DynamicResource SystemBaseLowBrush}" CornerRadius="12" Padding="8,4">
-            <TextBlock Text="{Binding TotalTasksCount, StringFormat='Total: {0}'}"
+            <TextBlock Text="{Binding Statistics.TotalTasksCount, StringFormat='Total: {0}'}"
               Foreground="{DynamicResource SystemBaseHighBrush}" FontSize="12" />
           </Border>
           <Border Background="#D32F2F" CornerRadius="12" Padding="8,4"
-            IsVisible="{Binding FailedTasksCount, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock Text="{Binding FailedTasksCount, StringFormat='Failed: {0}'}"
+            IsVisible="{Binding Statistics.FailedTasksCount, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="{Binding Statistics.FailedTasksCount, StringFormat='Failed: {0}'}"
               Foreground="White" FontSize="12" />
           </Border>
         </StackPanel>
@@ -78,7 +78,7 @@
         <StackPanel Grid.Column="3" Spacing="4">
           <TextBlock Text="Avg. Time" FontSize="12"
             Foreground="{DynamicResource SystemBaseMediumBrush}" />
-          <TextBlock Text="{Binding AverageExecutionTime, StringFormat='{}{0:mm\\:ss}'}"
+          <TextBlock Text="{Binding Statistics.AverageExecutionTime, StringFormat='{}{0:mm\\:ss}'}"
             FontSize="24" FontWeight="SemiBold" />
         </StackPanel>
       </Grid>

@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Providers.Microsoft;
@@ -24,12 +26,12 @@ public class FileLogSink : IFileLogSink, IDisposable
     /// <summary>
     /// Initializes a new instance of the <see cref="FileLogSink"/> class.
     /// </summary>
-    /// <param name="configuration">Configuration for file logging.</param>
+    /// <param name="options">Configuration options for file logging.</param>
     /// <param name="pathService">Service for path resolution.</param>
-    public FileLogSink(CombinedFileLoggerConfiguration configuration, IPathService pathService)
+    public FileLogSink(IOptions<CombinedFileLoggerConfiguration> options, IPathService pathService)
     {
-        _configuration = configuration;
-        _pathService = pathService;
+        _configuration = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
         _processTask = Task.Run(ProcessQueueAsync);
     }
 

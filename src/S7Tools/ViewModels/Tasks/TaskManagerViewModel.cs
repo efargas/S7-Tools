@@ -42,6 +42,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private readonly IUIThreadService _uiThreadService;
     private readonly IDialogService _dialogService;
     private readonly TaskDetailsViewModel _taskDetailsViewModel;
+    private readonly TaskStatisticsViewModel _taskStatisticsViewModel;
     private readonly CompositeDisposable _disposables = [];
 
     // State-based task collections for UI binding
@@ -61,12 +62,6 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     // Throttling for UI updates
     private readonly System.Reactive.Subjects.ISubject<TaskExecution> _taskStateChangedSubject = new System.Reactive.Subjects.Subject<TaskExecution>();
 
-    // Task statistics for dashboard
-    private int _totalTasksCount;
-    private int _runningTasksCount;
-    private int _failedTasksCount;
-    private TimeSpan _averageExecutionTime;
-    private string _resourceUtilization = string.Empty;
     private int _selectedTabIndex;
     private bool _isTaskDetailsPanelExpanded = true;
 
@@ -85,7 +80,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         IJobManager jobManager,
         IUIThreadService uiThreadService,
         IDialogService dialogService,
-        TaskDetailsViewModel taskDetailsViewModel)
+        TaskDetailsViewModel taskDetailsViewModel,
+        TaskStatisticsViewModel taskStatisticsViewModel)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
@@ -93,6 +89,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _taskDetailsViewModel = taskDetailsViewModel ?? throw new ArgumentNullException(nameof(taskDetailsViewModel));
+        _taskStatisticsViewModel = taskStatisticsViewModel ?? throw new ArgumentNullException(nameof(taskStatisticsViewModel));
 
         SetupCommands();
         SetupCollections();
@@ -113,15 +110,15 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
                 await Task.Delay(100).ConfigureAwait(false);
 
                 await LoadTasksAsync().ConfigureAwait(false);
-                _logger.LogInformation("Task Manager initialized with {TaskCount} tasks", TotalTasksCount);
+                _logger.LogInformation("Task Manager initialized with {TaskCount} tasks", Statistics.TotalTasksCount);
 
                 // If no tasks loaded, try one more time after a longer delay
                 // This handles cases where the scheduler is still initializing
-                if (TotalTasksCount == 0)
+                if (Statistics.TotalTasksCount == 0)
                 {
                     await Task.Delay(500).ConfigureAwait(false);
                     await LoadTasksAsync().ConfigureAwait(false);
-                    _logger.LogInformation("Task Manager retry load completed with {TaskCount} tasks", TotalTasksCount);
+                    _logger.LogInformation("Task Manager retry load completed with {TaskCount} tasks", Statistics.TotalTasksCount);
                 }
             }
             catch (Exception ex)
@@ -138,6 +135,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// Gets the task details view model for the details panel.
     /// </summary>
     public TaskDetailsViewModel TaskDetailsViewModel => _taskDetailsViewModel;
+
+    /// <summary>
+    /// Gets the statistics view model.
+    /// </summary>
+    public TaskStatisticsViewModel Statistics => _taskStatisticsViewModel;
 
     /// <summary>
     /// Gets the collection of tasks in the Created state.
@@ -285,51 +287,6 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         get => _refreshIntervalSeconds;
         set => this.RaiseAndSetIfChanged(ref _refreshIntervalSeconds, Math.Clamp(value, 1, 60));
-    }
-
-    /// <summary>
-    /// Gets the total number of tasks across all states.
-    /// </summary>
-    public int TotalTasksCount
-    {
-        get => _totalTasksCount;
-        private set => this.RaiseAndSetIfChanged(ref _totalTasksCount, value);
-    }
-
-    /// <summary>
-    /// Gets the number of currently running tasks.
-    /// </summary>
-    public int RunningTasksCount
-    {
-        get => _runningTasksCount;
-        private set => this.RaiseAndSetIfChanged(ref _runningTasksCount, value);
-    }
-
-    /// <summary>
-    /// Gets the number of failed tasks.
-    /// </summary>
-    public int FailedTasksCount
-    {
-        get => _failedTasksCount;
-        private set => this.RaiseAndSetIfChanged(ref _failedTasksCount, value);
-    }
-
-    /// <summary>
-    /// Gets the average execution time for completed tasks.
-    /// </summary>
-    public TimeSpan AverageExecutionTime
-    {
-        get => _averageExecutionTime;
-        private set => this.RaiseAndSetIfChanged(ref _averageExecutionTime, value);
-    }
-
-    /// <summary>
-    /// Gets the current resource utilization summary.
-    /// </summary>
-    public string ResourceUtilization
-    {
-        get => _resourceUtilization;
-        private set => this.RaiseAndSetIfChanged(ref _resourceUtilization, value);
     }
 
     /// <summary>
@@ -732,26 +689,12 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
     private void UpdateStatistics()
     {
-        int allTasksCount = CreatedTasks.Count + QueuedTasks.Count + ScheduledTasks.Count + ActiveTasks.Count + FinishedTasks.Count;
-        TotalTasksCount = allTasksCount;
-        RunningTasksCount = ActiveTasks.Count(t => t.State == TaskState.Running);
-        FailedTasksCount = FinishedTasks.Count(t => t.State == TaskState.Failed);
-
-        // Calculate average execution time for completed tasks
-        var completedTasks = FinishedTasks.Where(t => t.State == TaskState.Completed && t.ExecutionTime.HasValue).ToList();
-        if (completedTasks.Count > 0)
-        {
-            double totalTime = completedTasks.Sum(t => t.ExecutionTime!.Value.TotalMilliseconds);
-            AverageExecutionTime = TimeSpan.FromMilliseconds(totalTime / completedTasks.Count);
-        }
-        else
-        {
-            AverageExecutionTime = TimeSpan.Zero;
-        }
-
-        // Update resource utilization summary
-        int activeResourceCount = ActiveTasks.SelectMany(t => t.LockedResources).Distinct().Count();
-        ResourceUtilization = $"{activeResourceCount} resources in use";
+        _taskStatisticsViewModel.Update(
+            CreatedTasks.Count,
+            QueuedTasks.Count,
+            ScheduledTasks.Count,
+            ActiveTasks,
+            FinishedTasks);
 
         // Notify that AllActionableTasks has changed (since it's computed from multiple collections)
         this.RaisePropertyChanged(nameof(AllActionableTasks));
@@ -1118,8 +1061,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
             await LoadTasksAsync().ConfigureAwait(false);
 
-            StatusMessage = $"Refreshed {TotalTasksCount} tasks";
-            _logger.LogDebug("Manually refreshed Task Manager with {TaskCount} tasks", TotalTasksCount);
+            StatusMessage = $"Refreshed {Statistics.TotalTasksCount} tasks";
+            _logger.LogDebug("Manually refreshed Task Manager with {TaskCount} tasks", Statistics.TotalTasksCount);
         }
         catch (Exception ex)
         {

@@ -48,7 +48,8 @@ public class TaskManagerViewModelTests
             jobManager.Object,
             (uiThreadService ?? new Mock<IUIThreadService>()).Object,
             dialogService.Object,
-            (taskDetailsViewModel ?? CreateMockTaskDetailsViewModel()).Object);
+            (taskDetailsViewModel ?? CreateMockTaskDetailsViewModel()).Object,
+            new TaskStatisticsViewModel());
     }
 
     [Fact]

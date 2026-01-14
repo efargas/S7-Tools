@@ -36,27 +36,6 @@ public sealed class EnhancedBootloaderService(
     private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
     private bool _disposed;
 
-    private const int InitialPowerOffWaitMs = 10000;
-
-    /// <inheritdoc />
-    public RetryConfiguration RetryConfiguration => _retryConfiguration;
-
-    /// <inheritdoc />
-    public void UpdateRetryConfiguration(RetryConfiguration configuration)
-    {
-        _retryConfiguration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-        _logger.LogInformation("Bootloader retry configuration updated: {Configuration}",
-            new
-            {
-                configuration.MaxConnectionRetries,
-                configuration.MaxCommunicationRetries,
-                configuration.MaxMemoryOperationRetries,
-                configuration.InitialRetryDelay,
-                configuration.UseExponentialBackoff
-            });
-    }
-
-    /// <inheritdoc />
     public async Task<IList<byte[]>> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
@@ -70,292 +49,29 @@ public sealed class EnhancedBootloaderService(
 
         Microsoft.Extensions.Logging.ILogger effectiveTaskLogger = taskLogger ?? _logger;
 
-        effectiveTaskLogger.LogInformation("Starting enhanced bootloader dump operation");
+        effectiveTaskLogger.LogInformation("Starting enhanced bootloader dump operation (delegating to base orchestration)");
 
-        SocatProcessInfo? socatProcess = null;
-        bool isPowerConnected = false;
+        return await PerformBootloaderOrchestrationAsync(
+            profiles,
+            progress,
+            effectiveTaskLogger,
+            processLogger,
+            protocolLogger,
+            _serialPort,
+            _socat,
+            _power,
+            _payloads,
+            _clientFactory,
+            cancellationToken).ConfigureAwait(false);
+    }
 
-        try
-        {
-            // Stage 0: Configure serial port (1% progress)
-            progress.Report(("serial_config", 1.0, null, null));
-            effectiveTaskLogger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
+    /// <inheritdoc />
+    public RetryConfiguration RetryConfiguration => _retryConfiguration;
 
-            // Use serial configuration directly from profile
-            bool serialConfigured = await _serialPort.ApplyConfigurationAsync(
-                profiles.Serial.Device,
-                profiles.Serial.Configuration,
-                effectiveTaskLogger,
-                cancellationToken).ConfigureAwait(false);
-
-            if (!serialConfigured)
-            {
-                throw new InvalidOperationException($"Failed to configure serial port {profiles.Serial.Device}");
-            }
-
-            effectiveTaskLogger.LogInformation("Serial port {Device} configured successfully", profiles.Serial.Device);
-
-            // Stage 1: Setup socat bridge (3% progress)
-            progress.Report(("socat_setup", 3.0, null, null));
-            effectiveTaskLogger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
-
-            // Use socat configuration directly from profile (must be non-null after Phase 2 changes)
-            if (profiles.Socat.Configuration == null)
-            {
-                throw new InvalidOperationException("Socat configuration is required but was null. Ensure job profile includes full socat configuration.");
-            }
-
-            socatProcess = await _socat.StartSocatAsync(
-                profiles.Socat.Configuration,
-                profiles.Serial.Device,
-                processLogger,
-                protocolLogger,
-                cancellationToken).ConfigureAwait(false);
-
-            effectiveTaskLogger.LogInformation("Socat bridge started on TCP port {Port} (PID: {ProcessId})",
-                profiles.Socat.Port, socatProcess.ProcessId);
-
-            // Stage 2: Connect to power supply (5% progress)
-            progress.Report(("power_connect", 5.0, null, null));
-            _logger.LogDebug("Connecting to power supply at {Host}:{Port}",
-                profiles.Power.Host, profiles.Power.Port);
-
-            // Use power configuration directly from profile (must be non-null after Phase 2 changes)
-            if (profiles.Power.Configuration == null)
-            {
-                throw new InvalidOperationException("Power supply configuration is required but was null. Ensure job profile includes full power supply configuration.");
-            }
-
-            bool connected = await _power.ConnectAsync(profiles.Power.Configuration, effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
-            if (!connected)
-            {
-                throw new InvalidOperationException(UIStrings.Exception_FailedToConnectToPowerSupply);
-            }
-            isPowerConnected = true;
-
-            effectiveTaskLogger.LogInformation("Connected to power supply at {Host}:{Port}",
-                profiles.Power.Host, profiles.Power.Port);
-
-            // Match BootloaderService.cs logic for weighted progress
-            // Stage 3: Power OFF PLC and wait (5% -> 6% progress)
-            progress.Report(("power_off_initial", 6.0, null, null));
-            effectiveTaskLogger.LogInformation("--- Stage 3: Initial Power OFF ---");
-            _logger.LogDebug("Turning PLC power OFF and waiting {WaitMs}ms", InitialPowerOffWaitMs);
-
-            bool powerOff = await _power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
-            if (!powerOff)
-            {
-                throw new InvalidOperationException("Failed to turn PLC power OFF");
-            }
-
-            await WaitWithProgressAsync(
-                InitialPowerOffWaitMs,
-                progress,
-                6.0, 10.0,
-                "power_off_wait",
-                cancellationToken).ConfigureAwait(false);
-
-            effectiveTaskLogger.LogInformation("PLC powered OFF and wait time completed");
-
-            // Stage 4: Power ON PLC (10% progress)
-            progress.Report(("power_on", 10.0, null, null));
-            effectiveTaskLogger.LogInformation("--- Stage 4: Power ON PLC ---");
-            effectiveTaskLogger.LogDebug("Turning PLC power ON");
-
-            bool powerOn = await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
-            if (!powerOn)
-            {
-                throw new InvalidOperationException("Failed to turn PLC power ON");
-            }
-
-            effectiveTaskLogger.LogInformation("PLC powered ON");
-            processLogger?.LogInformation("PLC power: ON");
-
-            // Stage 5: Wait for PLC to fully power on (15% -> 17%)
-            effectiveTaskLogger.LogDebug("Waiting {DelayMs}ms for PLC to power on", profiles.PowerOnTimeMs);
-
-            // FIX: Use granular wait for power on 
-            await WaitWithProgressAsync(
-                 profiles.PowerOnTimeMs,
-                 progress,
-                 10.0, 11.0,
-                 "power_on_stabilize",
-                 cancellationToken).ConfigureAwait(false);
-
-            // Stage 6: Create PLC client and connect to socat (12% progress)
-            progress.Report(("plc_connect", 12.0, null, null));
-            await using IPlcClient client = _clientFactory(profiles);
-
-            _logger.LogDebug("PLC client created and connecting to socat TCP server");
-            processLogger?.LogInformation("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
-            await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
-
-            // Stage 7: Power cycle PLC (13% -> 15% progress)
-            progress.Report(("power_cycle", 13.0, null, null));
-            effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
-
-            // Decomposed Power Cycle for progress reporting
-            await _power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
-
-            await WaitWithProgressAsync(
-                profiles.PowerOffDelayMs, // Short wait
-                progress,
-                13.0, 15.0,
-                "power_cycle_wait",
-                cancellationToken).ConfigureAwait(false);
-
-            await _power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
-
-            // Critical timing: Perform handshake immediately after power on
-            await client.HandshakeAsync(cancellationToken).ConfigureAwait(false);
-
-            effectiveTaskLogger.LogInformation("PLC power cycled successfully");
-
-            // Stage 8: Handshake (15% progress) - Aligned with BootloaderService
-            progress.Report(("handshake", 15.0, null, null));
-            _logger.LogDebug("Performing bootloader handshake");
-
-            string version = await client.GetBootloaderVersionAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            _logger.LogInformation("Connected to bootloader version: {Version}", version);
-            processLogger?.LogInformation("Bootloader version: {Version}", version);
-
-            // Stage 9: Install stager (16% progress)
-            progress.Report(("stager_install", 16.0, null, null));
-            _logger.LogDebug("Installing stager payload from {BasePath}", profiles.Payloads.BasePath);
-            byte[] stagerPayload = await _payloads.GetStagerAsync(
-                profiles.Payloads.BasePath,
-                cancellationToken).ConfigureAwait(false);
-
-            // Simulate installation progress
-            int baudRate = profiles.Serial.Configuration.BaudRate;
-            using var stagerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-            Task stagerProgressTask = SimulateProgressAsync(
-                stagerPayload.Length,
-                baudRate,
-                progress,
-                16.0, 18.0,
-                "stager_install",
-                stagerCts.Token);
-
-            try
-            {
-                await client.InstallStagerAsync(stagerPayload, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            finally
-            {
-                stagerCts.Cancel();
-                try
-                { await stagerProgressTask.ConfigureAwait(false); }
-                catch (OperationCanceledException) { }
-            }
-
-            effectiveTaskLogger.LogInformation("Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
-            processLogger?.LogInformation("Stager installed: {Size} bytes", stagerPayload.Length);
-
-            // Stage 10: Install Dumper Payload (18% progress)
-            progress.Report(("dumper_install", 18.0, null, null));
-            effectiveTaskLogger.LogInformation("--- Stage 10: Install Memory Dumper Payload ---");
-
-            byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
-                profiles.Payloads.BasePath,
-                cancellationToken).ConfigureAwait(false);
-
-            _logger.LogDebug("Memory dumper payload loaded: {Size} bytes", dumperPayload.Length);
-            _logger.LogDebug("Installing dumper payload to PLC...");
-
-            using var dumperCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            Task dumperProgressTask = SimulateProgressAsync(
-                dumperPayload.Length,
-                baudRate,
-                progress,
-                18.0, 20.0,
-                "dumper_install",
-                dumperCts.Token);
-
-            try
-            {
-                await client.InstallDumperAsync(dumperPayload, cancellationToken).ConfigureAwait(false);
-            }
-            finally
-            {
-                dumperCts.Cancel();
-                try
-                { await dumperProgressTask.ConfigureAwait(false); }
-                catch (OperationCanceledException) { }
-            }
-
-            effectiveTaskLogger.LogInformation("Dumper payload installed successfully");
-
-            // Stage 11: Memory Dump (20% - 95% progress) - 75% Weight
-            effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump ---");
-
-            var allDumps = await PerformDumpProcessAsync(
-                client,
-                profiles,
-                progress,
-                effectiveTaskLogger,
-                20.0,
-                75.0,
-                cancellationToken).ConfigureAwait(false);
-
-            _logger.LogInformation("Memory dump completed. Total {Size} bytes.", allDumps.Sum(d => d.LongLength));
-
-            // Stage 12: Teardown (95% progress)
-            progress.Report(("teardown", 95.0, null, null));
-            effectiveTaskLogger.LogInformation("--- Stage 12: Teardown ---");
-            _logger.LogDebug("Cleaning up resources");
-
-            // Client will be disposed automatically via 'await using'
-
-            // Stage 13: Complete (100% progress)
-            progress.Report(("complete", 100.0, null, null));
-            effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
-            _logger.LogInformation("Bootloader dump operation completed successfully. " +
-                "Dumped {DumpCount} files", allDumps.Count);
-
-            return allDumps;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Bootloader dump operation failed: {ErrorMessage}", ex.Message);
-            processLogger?.LogError("Dump failed: {ErrorMessage}", ex.Message);
-            throw;
-        }
-        finally
-        {
-            // Always stop socat and disconnect from power supply
-            if (socatProcess != null)
-            {
-                try
-                {
-                    await _socat.StopSocatAsync(socatProcess, cancellationToken).ConfigureAwait(false);
-                    _logger.LogDebug("Socat bridge on port {Port} stopped (PID: {ProcessId})",
-                        profiles.Socat.Port, socatProcess.ProcessId);
-                }
-                catch (Exception teardownEx)
-                {
-                    _logger.LogWarning(teardownEx, "Failed to stop socat (PID: {ProcessId}) during teardown",
-                        socatProcess.ProcessId);
-                }
-            }
-
-            if (isPowerConnected)
-            {
-                try
-                {
-                    await _power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
-                    _logger.LogDebug("Disconnected from power supply");
-                }
-                catch (Exception teardownEx)
-                {
-                    _logger.LogWarning(teardownEx, "Failed to disconnect power supply during teardown");
-                }
-            }
-        }
+    /// <inheritdoc />
+    public void UpdateRetryConfiguration(RetryConfiguration configuration)
+    {
+        _retryConfiguration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
     /// <inheritdoc />
@@ -785,39 +501,7 @@ public sealed class EnhancedBootloaderService(
         }
     }
 
-    private async Task SimulateProgressAsync(
-        long payloadSize,
-        int baudRate,
-        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
-        double startPercent,
-        double targetPercent,
-        string stage,
-        CancellationToken cancellationToken)
-    {
-        // 10 bits per byte (8 data + 1 start + 1 stop). Baud rate is bits/sec.
-        // Duration in seconds = (size * 10) / baudRate
-        // Ensure double arithmetic
-        double durationSeconds = ((double)payloadSize * 10.0) / (double)baudRate;
-        int delayMs = (int)(durationSeconds * 1000);
 
-        // Add 10% buffering for overhead
-        delayMs = (int)(delayMs * 1.1);
-
-        // Force a minimum delay of 1 second to ensure the progress bar animation is visible to the user,
-        // even for small payloads or high baud rates.
-        if (delayMs < 1000)
-        {
-            delayMs = 1000;
-        }
-
-        await WaitWithProgressAsync(
-            delayMs,
-            progress,
-            startPercent,
-            targetPercent,
-            stage,
-            cancellationToken).ConfigureAwait(false);
-    }
 
 
 
