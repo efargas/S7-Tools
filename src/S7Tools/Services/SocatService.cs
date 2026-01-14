@@ -416,7 +416,8 @@ public partial class SocatService : ISocatService, IDisposable
             throw new ArgumentException("Process ID must be greater than zero", nameof(processId));
         }
 
-        return await _semaphore.ExecuteAsync(async () =>
+        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
             if (!_runningProcesses.TryGetValue(processId, out SocatProcessInfo? processInfo))
             {
@@ -424,163 +425,30 @@ public partial class SocatService : ISocatService, IDisposable
                 return false;
             }
 
-            // Get shutdown timeout from settings and clamp to a safe range
+            // Get shutdown timeout from settings
             int configuredShutdownSeconds = _settingsService.GetSetting("socat.processShutdownTimeoutSeconds", 5);
-            int processShutdownTimeoutSeconds = Math.Clamp(configuredShutdownSeconds, 1, 120);
-            if (processShutdownTimeoutSeconds != configuredShutdownSeconds)
+            int timeoutMs = Math.Clamp(configuredShutdownSeconds, 1, 120) * 1000;
+
+            // Delegate process stop to ProcessManager
+            bool stopped = await _processManager.StopProcessAsync(processId, timeoutMs, cancellationToken).ConfigureAwait(false);
+
+            if (stopped)
             {
-                _logger.LogWarning("Adjusted 'socat.processShutdownTimeoutSeconds' from {Configured} to safe value {Effective}", configuredShutdownSeconds, processShutdownTimeoutSeconds);
-            }
-            int timeoutMs = processShutdownTimeoutSeconds * 1000;
-
-            Process? processToDispose = null; // Track process for disposal if created via GetProcessById
-            try
-            {
-                Process? process = null;
-                if (_activeProcesses.TryGetValue(processId, out Process? storedProcess))
-                {
-                    // Use our stored process reference (will be disposed in finally block)
-                    process = storedProcess;
-                }
-                else
-                {
-                    // Fallback to system process lookup if not in our dictionary
-                    try
-                    {
-                        process = processToDispose = Process.GetProcessById(processId);
-                    }
-                    catch (ArgumentException)
-                    {
-                        // Process doesn't exist anymore
-                        processInfo.Status = SocatProcessStatus.Stopped;
-                        processInfo.IsRunning = false;
-                        _logger.LogDebug("Socat process {ProcessId} was already stopped", processId);
-                        return true;
-                    }
-                }
-
-                bool exited = false;
-
-                // Retrieve child processes (e.g., forked connections) BEFORE killing parent
-                List<int> childPids = await GetChildProcessesAsync(processId, cancellationToken).ConfigureAwait(false);
-                if (childPids.Count > 0)
-                {
-                    _logger.LogDebug("Found {Count} child processes for socat {ProcessId}: {Children}",
-                        childPids.Count, processId, string.Join(", ", childPids));
-                }
-
-                // Try SIGTERM on Unix-like systems
-                if (!process.HasExited)
-                {
-                    try
-                    {
-                        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
-                        {
-                            // Send SIGTERM
-                            (bool _, int _, string _, string _) = await ExecuteCommandAsync($"kill -TERM {processId}", timeoutMs / 2, cancellationToken).ConfigureAwait(false);
-                            exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
-                        }
-                        else
-                        {
-                            // On Windows, try CloseMainWindow if possible (unlikely headless)
-                            if (process.MainWindowHandle != IntPtr.Zero)
-                            {
-                                process.CloseMainWindow();
-                                exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // Ignore and escalate below
-                    }
-                }
-
-                if (!exited && !process.HasExited)
-                {
-                    _logger.LogWarning("Socat process {ProcessId} did not exit after SIGTERM, forcing termination", processId);
-                    process.Kill();
-                    await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
-                }
-
-                // Clean up child processes if they are still running
-                if (childPids.Count > 0 && (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
-                {
-                    foreach (int childPid in childPids)
-                    {
-                        try
-                        {
-                            // Quickly check if child is still alive
-                            (bool success, int _, string _, string _) = await ExecuteCommandAsync($"kill -0 {childPid}", 500, cancellationToken).ConfigureAwait(false);
-                            if (success)
-                            {
-                                _logger.LogInformation("Cleaning up child process {ChildPid} for socat {ProcessId}", childPid, processId);
-                                await ExecuteCommandAsync($"kill -9 {childPid}", 500, cancellationToken).ConfigureAwait(false);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Failed to cleanup child process {ChildPid}", childPid);
-                        }
-                    }
-                }
-
+                // Update facade state
                 processInfo.Status = SocatProcessStatus.Stopped;
                 processInfo.IsRunning = false;
+                _runningProcesses.Remove(processId);
 
                 _logger.LogInformation("Stopped socat process {ProcessId}", processId);
-
                 ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
-                return true;
             }
-            catch (ArgumentException)
-            {
-                processInfo.Status = SocatProcessStatus.Stopped;
-                processInfo.IsRunning = false;
-                _logger.LogDebug("Socat process {ProcessId} was already stopped", processId);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to stop socat process {ProcessId}", processId);
-                return false;
-            }
-            finally
-            {
-                // Dispose fallback process if it was created
-                if (processToDispose != null)
-                {
-                    try
-                    {
-                        processToDispose.Dispose();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error disposing fallback process {ProcessId}", processId);
-                    }
-                }
 
-                _runningProcesses.Remove(processId);
-                // Clean up the stored process reference and dispose it
-                if (_activeProcesses.TryGetValue(processId, out Process? storedProcess))
-                {
-                    _activeProcesses.Remove(processId);
-                    try
-                    {
-                        storedProcess.Dispose();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Error disposing process {ProcessId}", processId);
-                    }
-                }
-                if (_processMonitors.TryGetValue(processId, out Timer? monitor))
-                {
-                    monitor.Dispose();
-                    _processMonitors.Remove(processId);
-                }
-            }
-        }, cancellationToken);
+            return stopped;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     /// <inheritdoc />
