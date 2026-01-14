@@ -72,85 +72,68 @@ public partial class App : Application
             try
             {
                 // Get required services
-                IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
                 ILogger<App> logger = _serviceProvider.GetRequiredService<ILogger<App>>();
 
-                // CRITICAL: Initialize path services SYNCHRONOUSLY to ensure proper resource structure
-                // This must happen before any other services try to access files/folders
-                try
-                {
-                    logger.LogInformation("🔄 Starting synchronous path and settings initialization...");
-                    InitializePathAndSettingsSync(logger);
-                    logger.LogInformation("✅ Path and settings initialization completed successfully");
+                // Show Splash Screen
+                logger.LogInformation("🚀 Launching Splash Screen...");
 
-                    // Now that foundational services are ready, initialize profile services asynchronously in parallel
-                    logger.LogInformation("🚀 Starting async profile services initialization in background...");
-                    _ = Task.Run(async () =>
+                // Resolve correct logger for ViewModel
+                var splashLogger = _serviceProvider.GetRequiredService<ILogger<ViewModels.SplashScreenViewModel>>();
+                var splashViewModel = new ViewModels.SplashScreenViewModel(_serviceProvider, splashLogger);
+
+                var splashScreen = new Views.SplashScreenWindow
+                {
+                    DataContext = splashViewModel
+                };
+
+                desktop.MainWindow = splashScreen;
+                splashScreen.Show();
+
+                // Run initialization in background
+                _ = Task.Run(async () =>
+                {
+                    try
                     {
-                        try
+                        // 1. Critical Base Initialization (previously synchronous)
+                        await splashViewModel.InitializeAsync();
+
+                        // 2. Profile Services Initialization
+                        logger.LogInformation("🚀 Starting async profile services initialization...");
+                        await _serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
+
+                        // 3. Start Schedulers
+                        await StartSchedulersAsync(logger);
+
+                        // 4. Switch to Main Window on UI Thread
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            await _serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
-                            logger.LogInformation("✅ Profile services initialization completed successfully");
+                            logger.LogInformation("✅ Initialization complete. Switching to Main Window.");
 
-                            // Start the JobScheduler after profile services are initialized
-                            try
-                            {
-                                logger.LogInformation("🚀 Starting JobScheduler...");
-                                Core.Services.Interfaces.IJobScheduler? jobScheduler = _serviceProvider.GetService<Core.Services.Interfaces.IJobScheduler>();
-                                if (jobScheduler != null)
-                                {
-                                    await jobScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);
-                                    logger.LogInformation("✅ JobScheduler started successfully");
-                                }
-                                else
-                                {
-                                    logger.LogWarning("⚠️ JobScheduler service not found in DI container");
-                                }
-                            }
-                            catch (Exception schedulerEx)
-                            {
-                                logger.LogError(schedulerEx, "❌ Failed to start JobScheduler");
-                            }
+                            // Create Main Window
+                            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                            desktop.MainWindow = mainWindow;
+                            mainWindow.Show();
 
-                            // Start the TaskScheduler (EnhancedTaskScheduler) for task execution
-                            try
-                            {
-                                logger.LogInformation("🚀 Starting TaskScheduler...");
-                                Core.Services.Interfaces.ITaskScheduler? taskScheduler = _serviceProvider.GetService<Core.Services.Interfaces.ITaskScheduler>();
-                                if (taskScheduler != null)
-                                {
-                                    await taskScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);
-                                    logger.LogInformation("✅ TaskScheduler started successfully");
-                                }
-                                else
-                                {
-                                    logger.LogWarning("⚠️ TaskScheduler service not found in DI container");
-                                }
-                            }
-                            catch (Exception taskSchedulerEx)
-                            {
-                                logger.LogError(taskSchedulerEx, "❌ Failed to start TaskScheduler");
-                            }
-                        }
-                        catch (Exception profileEx)
+                            // Close Splash Screen
+                            splashScreen.Close();
+
+                            // 5. Post-Startup: Register Interaction Handlers (requires MainWindow to be active context)
+                            // We need the IDialogService here.
+                            var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+                            RegisterInteractionHandlers(dialogService, logger);
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogCritical(ex, "❌ Critical application startup failure");
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                         {
-                            logger.LogError(profileEx, "❌ Profile services initialization failed");
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "❌ CRITICAL: Path and settings initialization failed - application may not function correctly");
-                    // Continue anyway to allow user to see error in UI
-                }
-
-                logger.LogDebug("Registering dialog interaction handlers");
-
-                // Register interaction handlers on the UI thread with proper window context
-                RegisterInteractionHandlers(dialogService, logger);
-
-                // Create and set main window
-                desktop.MainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                            // Show fatal error on splash screen if possible, or message box
+                            splashViewModel.StatusText = "CRITICAL ERROR: " + ex.Message;
+                            // Keep splash screen open to show error
+                        });
+                    }
+                });
 
                 // Application exit handled - settings are saved automatically by ApplicationSettingsService
                 desktop.Exit += (s, e) =>
@@ -158,9 +141,8 @@ public partial class App : Application
                     ILogger<App>? exitLogger = _serviceProvider.GetService<ILogger<App>>();
                     exitLogger?.LogInformation("Application exiting");
                 };
-
-                logger.LogInformation("Application initialization completed successfully");
             }
+
             catch (Exception ex)
             {
                 // Log error but don't crash the application
@@ -480,134 +462,48 @@ public partial class App : Application
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Initializes path services and settings synchronously to ensure proper startup order.
-    ///
-    /// ARCHITECTURAL DECISION: Synchronous Initialization Pattern
-    /// =========================================================
-    ///
-    /// This method INTENTIONALLY blocks the UI thread during initialization. This is a deliberate
-    /// architectural decision based on strict service dependency requirements:
-    ///
-    /// Service Dependency Chain:
-    /// 1. IPathService - Creates all required directories (Resources/, Profiles/, Logs/, etc.)
-    /// 2. IResourceManagerService - Creates default resource files (requires directories from #1)
-    /// 3. IApplicationSettingsService - Loads settings from files (requires resources from #2)
-    /// 4. FileLogWriter - Monitors DataStore for file logging (requires paths from #1)
-    ///
-    /// Why Synchronous?
-    /// ----------------
-    /// - Profile managers, job services, and UI components depend on paths existing BEFORE they initialize
-    /// - Settings must be loaded BEFORE any service tries to read configuration
-    /// - Resource files must exist BEFORE any service tries to access them
-    /// - If we initialize asynchronously, race conditions occur where services fail because paths/files don't exist yet
-    ///
-    /// Why Not Task.Run()?
-    /// -------------------
-    /// - Task.Run() would still block initialization, just on a thread pool thread
-    /// - The UI window cannot be shown until these services are ready
-    /// - Moving to Task.Run() adds complexity without solving the fundamental requirement:
-    ///   "These services MUST be ready before the application can function"
-    ///
-    /// Performance Impact:
-    /// -------------------
-    /// - Typical initialization time: 50-200ms (file I/O + JSON deserialization)
-    /// - User sees no window during this time (acceptable for startup)
-    /// - Profile services initialize asynchronously in background after this completes
-    ///
-    /// Alternative Considered: Splash Screen
-    /// --------------------------------------
-    /// A splash screen with async initialization was considered, but rejected because:
-    /// - Adds complexity for minimal benefit (initialization is fast)
-    /// - Still requires blocking before showing main window
-    /// - Doesn't solve the fundamental dependency chain
-    ///
-    /// Future Optimization:
-    /// --------------------
-    /// If startup time becomes problematic (>500ms), consider:
-    /// - Lazy loading of non-critical resources
-    /// - Splash screen with progress indicator
-    /// - Parallel initialization of independent services (requires careful dependency analysis)
-    ///
-    /// Related Patterns:
-    /// -----------------
-    /// - See systemPatterns.md: "Internal Method Pattern" for proper async handling after initialization
-    /// - See SEMAPHORE_DEADLOCK_FIXES_COMPLETE.md for threading best practices
-    /// </summary>
-    /// <param name="logger">Logger instance for tracking initialization</param>
-    private void InitializePathAndSettingsSync(ILogger logger)
-    {
-        logger.LogInformation("🔄 Initializing path services and application settings synchronously");
 
+
+    private async Task StartSchedulersAsync(ILogger logger)
+    {
+        // Start the JobScheduler after profile services are initialized
         try
         {
-            // STEP 1: Initialize path service and create folder structure
-            logger.LogDebug("Step 1: Initializing path service");
-            S7Tools.Core.Interfaces.Services.IPathService? pathService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IPathService>();
-            if (pathService != null)
+            logger.LogInformation("🚀 Starting JobScheduler...");
+            Core.Services.Interfaces.IJobScheduler? jobScheduler = _serviceProvider.GetService<Core.Services.Interfaces.IJobScheduler>();
+            if (jobScheduler != null)
             {
-                // Initialize paths synchronously (this creates folder structure)
-                Task<PathConfiguration> pathTask = pathService.InitializeAsync();
-                PathConfiguration pathConfig = pathTask.GetAwaiter().GetResult(); // Force synchronous execution
-                logger.LogInformation("✅ Path service initialized - Base directory: {BaseDirectory}", pathConfig.BaseDirectory);
+                await jobScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);
+                logger.LogInformation("✅ JobScheduler started successfully");
             }
             else
             {
-                logger.LogError("❌ IPathService not found in service provider");
-                return;
+                logger.LogWarning("⚠️ JobScheduler service not found in DI container");
             }
-
-            // STEP 2: Initialize resource manager to create missing files
-            logger.LogDebug("Step 2: Initializing resource manager");
-            S7Tools.Core.Interfaces.Services.IResourceManagerService? resourceService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IResourceManagerService>();
-            if (resourceService != null)
-            {
-                Task<ResourceInitializationResult> resourceTask = resourceService.InitializeResourcesAsync();
-                ResourceInitializationResult result = resourceTask.GetAwaiter().GetResult(); // Force synchronous execution
-                if (result.Success)
-                {
-                    logger.LogInformation("✅ Resource manager initialized - Created {ResourceCount} resources", result.CreatedResources.Count);
-                }
-                else
-                {
-                    logger.LogWarning("⚠️ Resource manager completed with {ErrorCount} errors", result.Errors.Count);
-                    foreach (string error in result.Errors)
-                    {
-                        logger.LogWarning("Resource error: {Error}", error);
-                    }
-                }
-            }
-            else
-            {
-                logger.LogError("❌ IResourceManagerService not found in service provider");
-            }
-
-            // STEP 3: Initialize application settings service and load configuration
-            logger.LogDebug("Step 3: Loading application settings");
-            S7Tools.Core.Interfaces.Services.IApplicationSettingsService? settingsService = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
-            if (settingsService != null)
-            {
-                Task<Core.Models.Configuration.ApplicationSettings> settingsTask = settingsService.LoadSettingsAsync();
-                Core.Models.Configuration.ApplicationSettings settings = settingsTask.GetAwaiter().GetResult(); // Force synchronous execution
-                logger.LogInformation("✅ Application settings loaded - {EffectiveCount} effective settings, {UserCount} user overrides",
-                    settings.EffectiveSettings.Count, settings.UserSettings.Count);
-            }
-            else
-            {
-                logger.LogError("❌ IApplicationSettingsService not found in service provider");
-            }
-
-            // STEP 4: File logging service (UnifiedLogger/FileLogSink) is initialized automatically via DI
-            // The UnifiedLoggerProvider will instantiate FileLogSink which starts its own processing task
-            logger.LogDebug("Step 4: Verifying file logging initialization");
-            logger.LogInformation("✅ File logging service initialized (UnifiedLogger with FileLogSink)");
-
-            logger.LogInformation("🎉 Synchronous initialization completed successfully");
         }
-        catch (Exception ex)
+        catch (Exception schedulerEx)
         {
-            logger.LogError(ex, "💥 Critical failure during synchronous initialization");
-            throw; // Re-throw to let caller handle
+            logger.LogError(schedulerEx, "❌ Failed to start JobScheduler");
+        }
+
+        // Start the TaskScheduler (EnhancedTaskScheduler) for task execution
+        try
+        {
+            logger.LogInformation("🚀 Starting TaskScheduler...");
+            Core.Services.Interfaces.ITaskScheduler? taskScheduler = _serviceProvider.GetService<Core.Services.Interfaces.ITaskScheduler>();
+            if (taskScheduler != null)
+            {
+                await taskScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);
+                logger.LogInformation("✅ TaskScheduler started successfully");
+            }
+            else
+            {
+                logger.LogWarning("⚠️ TaskScheduler service not found in DI container");
+            }
+        }
+        catch (Exception taskSchedulerEx)
+        {
+            logger.LogError(taskSchedulerEx, "❌ Failed to start TaskScheduler");
         }
     }
 
