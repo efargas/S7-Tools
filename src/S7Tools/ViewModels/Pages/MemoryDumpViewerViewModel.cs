@@ -219,7 +219,17 @@ public partial class MemoryDumpViewerViewModel : ViewModelBase, IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        DisconnectAsync().GetAwaiter().GetResult();
-        _cts?.Dispose();
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _cts?.Cancel();
+            _cts?.Dispose();
+            _cts = null;
+        }
     }
 }

@@ -429,7 +429,7 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
         _logChannel = Channel.CreateUnbounded<LogEntry>(new UnboundedChannelOptions
         {
             SingleWriter = false,  // Multiple threads can log
-            SingleReader = true     // Single background writer
+            SingleReader = true    // Single background writer
         });
 
         // Start background writer task
@@ -499,7 +499,8 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
                 await writer.WriteLineAsync(logLine);
 
                 // Flush periodically (every 10 entries) or on Critical/Error
-                if (entry.Level >= LogLevel.Error || _logChannel.Reader.Count == 0)
+                if (entry.Level >= LogLevel.Error ||
+                    (_logChannel.Reader.CanCount && _logChannel.Reader.Count == 0))
                 {
                     await writer.FlushAsync();
                 }

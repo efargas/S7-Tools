@@ -12,7 +12,7 @@ public class DateTimeToStringConverterTests
     {
         // Arrange
         var converter = new DateTimeToStringConverter();
-        var dateTime = new DateTime(2025, 10, 22, 14, 30, 45);
+        var dateTime = new DateTime(2025, 10, 22, 14, 30, 45, DateTimeKind.Local);
         string format = "yyyy-MM-dd HH:mm";
 
         // Act
@@ -27,7 +27,9 @@ public class DateTimeToStringConverterTests
     {
         // Arrange
         var converter = new DateTimeToStringConverter();
-        var dateTimeOffset = new DateTimeOffset(2025, 10, 22, 14, 30, 45, TimeSpan.Zero);
+        var date = new DateTime(2025, 10, 22, 14, 30, 45);
+        var localOffsetForDate = TimeZoneInfo.Local.GetUtcOffset(date);
+        var dateTimeOffset = new DateTimeOffset(date, localOffsetForDate);
         string format = "yyyy-MM-dd HH:mm";
 
         // Act
@@ -55,13 +57,14 @@ public class DateTimeToStringConverterTests
     {
         // Arrange
         var converter = new DateTimeToStringConverter();
-        var dateTime = new DateTime(2025, 10, 22, 14, 30, 45);
+        var dateTime = new DateTime(2025, 10, 22, 14, 30, 45, DateTimeKind.Local);
 
         // Act
         object? result = converter.Convert(dateTime, typeof(string), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.Equal("2025-10-22 14:30", result);
+        // Default format is "yyyy-MM-dd HH:mm:ss.fff"
+        Assert.Equal("2025-10-22 14:30:45.000", result);
     }
 
     [Fact]
@@ -69,7 +72,7 @@ public class DateTimeToStringConverterTests
     {
         // Arrange
         var converter = new DateTimeToStringConverter();
-        var dateTime = new DateTime(2025, 10, 22, 14, 30, 45);
+        var dateTime = new DateTime(2025, 10, 22, 14, 30, 45, DateTimeKind.Local);
         string format = "MMM dd, yyyy";
 
         // Act

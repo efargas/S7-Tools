@@ -119,8 +119,8 @@
             <DataGridTemplateColumn.CellTemplate>
               <DataTemplate>
                 <Grid ColumnDefinitions="*,Auto" Margin="4,2" VerticalAlignment="Center">
-                  <ProgressBar Grid.Column="0" Value="{Binding BytesRead}"
-                    Maximum="{Binding TotalBytes}" Minimum="0"
+                  <ProgressBar Grid.Column="0" Value="{Binding BytesRead, FallbackValue=0}"
+                    Maximum="{Binding TotalBytes, FallbackValue=100}" Minimum="0"
                     Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
                     IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}" />
                   <TextBlock Grid.Column="1" FontSize="11"
@@ -139,9 +139,8 @@
             </DataGridTemplateColumn.CellTemplate>
           </DataGridTemplateColumn>
 
-          <!-- Speed Column -->
           <DataGridTextColumn Header="Speed"
-            Binding="{Binding Speed, Converter={StaticResource ByteSpeedConverter}}"
+            Binding="{Binding Speed, Converter={StaticResource ByteSpeedConverter}, Mode=OneWay}"
             Width="100" />
 
           <!-- ETC Column -->

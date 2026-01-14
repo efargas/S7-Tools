@@ -37,6 +37,6 @@ public class ByteSpeedConverter : IValueConverter
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException();
+        return null; // Return null instead of throwing, as this is used in OneWay contexts mostly
     }
 }
