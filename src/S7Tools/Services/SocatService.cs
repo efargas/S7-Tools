@@ -27,34 +27,90 @@ public partial class SocatService : ISocatService, IDisposable
 #pragma warning disable CS0067 // Events may be declared for external subscriptions; not used in this assembly
     private readonly ILogger<SocatService> _logger;
     private readonly IApplicationSettingsService _settingsService;
+
+    // Specialized service components (Phase 2 refactoring)
+    private readonly Socat.SocatCommandBuilder _commandBuilder;
+    private readonly Socat.SocatProcessManager _processManager;
+    private readonly Socat.SocatPortManager _portManager;
+    private readonly Socat.SocatConfigurationService _configService;
+
+    // Temporary: Keep old fields for backward compatibility during incremental refactoring
+    // TODO: Remove these once all methods are refactored to use specialized services
     private readonly ISerialPortService _serialPortService;
     private readonly ITimeProvider _timeProvider;
-    private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = [];
-    private readonly Dictionary<int, Process> _activeProcesses = []; // Keep actual Process objects alive
+    private readonly Dictionary<int, Process> _activeProcesses = [];
     private readonly Dictionary<int, Timer> _processMonitors = [];
+
+    // State management (coordinated by facade)
+    private readonly Dictionary<int, SocatProcessInfo> _runningProcesses = [];
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
 
     /// <summary>
-    /// Initializes a new instance of the SocatService class.
+    /// Initializes a new instance of the SocatService class (Facade/Orchestrator).
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
     /// <param name="settingsService">The application settings service for runtime configuration.</param>
-    /// <param name="serialPortService">The serial port service for device validation and configuration.</param>
-    /// <param name="timeProvider">The time provider for abstracting time operations.</param>
+    /// <param name="commandBuilder">Service for command generation and validation.</param>
+    /// <param name="processManager">Service for process lifecycle management.</param>
+    /// <param name="portManager">Service for port checking and connection testing.</param>
+    /// <param name="configService">Service for serial device configuration.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     public SocatService(
         ILogger<SocatService> logger,
         IApplicationSettingsService settingsService,
-        ISerialPortService serialPortService,
-        ITimeProvider timeProvider)
+        Socat.SocatCommandBuilder commandBuilder,
+        Socat.SocatProcessManager processManager,
+        Socat.SocatPortManager portManager,
+        Socat.SocatConfigurationService configService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        _commandBuilder = commandBuilder ?? throw new ArgumentNullException(nameof(commandBuilder));
+        _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
+        _portManager = portManager ?? throw new ArgumentNullException(nameof(portManager));
+        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
 
-        _logger.LogDebug("SocatService initialized with runtime settings from IApplicationSettingsService");
+        // Temporary: Extract dependencies from specialized services for backward compatibility
+        // These will be removed as methods are refactored
+        _serialPortService = configService.GetType()
+            .GetField("_serialPortService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.GetValue(configService) as ISerialPortService
+            ?? throw new InvalidOperationException("Cannot extract ISerialPortService from SocatConfigurationService");
+
+        _timeProvider = processManager.GetType()
+            .GetField("_timeProvider", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.GetValue(processManager) as ITimeProvider
+            ?? throw new InvalidOperationException("Cannot extract ITimeProvider from SocatProcessManager");
+
+        // Wire up process exit events from ProcessManager
+        _processManager.ProcessExited += OnProcessExited;
+
+        _logger.LogDebug("SocatService initialized as facade with 4 specialized services");
+    }
+
+    private void OnProcessExited(object? sender, Socat.ProcessExitedEventArgs e)
+    {
+        // Handle process exit event from ProcessManager
+        Task.Run(async () =>
+        {
+            await _semaphore.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (_runningProcesses.TryGetValue(e.ProcessId, out SocatProcessInfo? processInfo))
+                {
+                    processInfo.IsRunning = false;
+                    processInfo.Status = SocatProcessStatus.Stopped;
+                    _runningProcesses.Remove(e.ProcessId);
+
+                    ProcessStopped?.Invoke(this, new SocatProcessEventArgs(processInfo));
+                }
+            }
+            finally
+            {
+                _semaphore.Release();
+            }
+        });
     }
 
     #region Events
@@ -98,116 +154,22 @@ public partial class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public string GenerateSocatCommand(SocatConfiguration configuration, string serialDevice)
     {
-        ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
-        if (string.IsNullOrWhiteSpace(serialDevice))
-        {
-            throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
-        }
-
-        return configuration.GenerateCommand(serialDevice);
+        // Delegate to CommandBuilder service
+        return _commandBuilder.GenerateCommand(configuration, serialDevice);
     }
 
     /// <inheritdoc />
     public string GenerateSocatCommandForProfile(SocatProfile profile, string serialDevice)
     {
-        ArgumentNullException.ThrowIfNull(profile, nameof(profile));
-        if (string.IsNullOrWhiteSpace(serialDevice))
-        {
-            throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
-        }
-
-        return profile.Configuration.GenerateCommand(serialDevice);
+        // Delegate to CommandBuilder service
+        return _commandBuilder.GenerateCommandForProfile(profile, serialDevice);
     }
 
     /// <inheritdoc />
     public SocatCommandValidationResult ValidateSocatCommand(string command)
     {
-        if (string.IsNullOrWhiteSpace(command))
-        {
-            throw new ArgumentException("Command cannot be null or empty", nameof(command));
-        }
-
-        var result = new SocatCommandValidationResult
-        {
-            ValidatedCommand = command.Trim()
-        };
-
-        try
-        {
-            // Basic command structure validation
-            if (!command.TrimStart().StartsWith("socat", StringComparison.OrdinalIgnoreCase))
-            {
-                result.Errors.Add("Command must start with 'socat'");
-                result.IsValid = false;
-                return result;
-            }
-
-            // Check for required TCP-LISTEN part
-            Match tcpListenMatch = TcpListenRegex().Match(command);
-            if (!tcpListenMatch.Success)
-            {
-                result.Errors.Add("Command must contain TCP-LISTEN:port specification");
-                result.IsValid = false;
-            }
-            else
-            {
-                if (int.TryParse(tcpListenMatch.Groups[1].Value, out int port))
-                {
-                    if (!NetworkConstants.IsValidPort(port))
-                    {
-                        result.Errors.Add(string.Format(NetworkConstants.PortRangeError, port));
-                        result.IsValid = false;
-                    }
-                    else
-                    {
-                        result.DetectedTcpPort = port;
-                    }
-                }
-            }
-
-            // Check for serial device specification
-            Match deviceMatch = SerialDeviceRegex().Match(command);
-            if (!deviceMatch.Success)
-            {
-                result.Errors.Add("Command must contain a serial device path (/dev/...)");
-                result.IsValid = false;
-            }
-            else
-            {
-                result.DetectedSerialDevice = deviceMatch.Groups[1].Value;
-            }
-
-            // Check for potentially dangerous flags
-            if (command.Contains("-r", StringComparison.OrdinalIgnoreCase))
-            {
-                result.Warnings.Add("Command contains raw mode flag (-r) which may affect performance");
-            }
-
-            // Check if command requires root privileges (ports < 1024)
-            if (result.DetectedTcpPort.HasValue && result.DetectedTcpPort.Value < 1024)
-            {
-                result.RequiresRoot = true;
-                result.Warnings.Add($"TCP port {result.DetectedTcpPort.Value} may require root privileges");
-            }
-
-            // If no errors, command is valid
-            if (result.Errors.Count == 0)
-            {
-                result.IsValid = true;
-            }
-
-            _logger.LogDebug("Validated socat command: {IsValid}, Port: {Port}, Device: {Device}",
-                result.IsValid, result.DetectedTcpPort, result.DetectedSerialDevice);
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error validating socat command: {Command}", command);
-            result.Errors.Add($"Validation error: {ex.Message}");
-            result.IsValid = false;
-            return result;
-        }
+        // Delegate to CommandBuilder service
+        return _commandBuilder.Validate(command);
     }
 
     #endregion
@@ -752,61 +714,38 @@ public partial class SocatService : ISocatService, IDisposable
     /// <returns>True if the port is in use, false otherwise.</returns>
     public async Task<bool> IsPortInUseAsync(int tcpPort, CancellationToken cancellationToken = default)
     {
-        if (!NetworkConstants.IsValidPort(tcpPort))
-        {
-            throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
-        }
-
+        // Check managed processes first
+        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        bool managedUsage;
         try
         {
-            // First, check our managed processes under lock
-            // First, check our managed processes under lock
-            bool isManaged = await _semaphore.ExecuteAsync(async () =>
-            {
-                await Task.CompletedTask;
-                SocatProcessInfo? managedProcess = _runningProcesses.Values.FirstOrDefault(p => p.TcpPort == tcpPort && p.IsRunning);
-                return managedProcess != null;
-            }, cancellationToken);
-
-            if (isManaged)
-            {
-                return true;
-            }
-
-            // Then, attempt to bind to the port to detect external usage
-            try
-            {
-                using var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Any, tcpPort);
-                listener.Start();
-                listener.Stop();
-                return false; // successfully bound -> port not in use
-            }
-            catch (System.Net.Sockets.SocketException)
-            {
-                return true; // bind failed -> port in use or insufficient privileges
-            }
+            managedUsage = _portManager.IsPortUsedByManagedProcess(tcpPort, _runningProcesses.Values);
         }
-        catch (Exception ex)
+        finally
         {
-            _logger.LogError(ex, "Failed to check if TCP port {Port} is in use", tcpPort);
-            // Be conservative: assume port is in use on error to avoid collisions
-            return true;
+            _semaphore.Release();
         }
+
+        if (managedUsage)
+            return true;
+
+        // Delegate systemwide check to PortManager
+        return await _portManager.IsPortInUseAsync(tcpPort, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<SocatProcessInfo?> GetProcessByPortAsync(int tcpPort, CancellationToken cancellationToken = default)
     {
-        if (!NetworkConstants.IsValidPort(tcpPort))
+        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
+            // Delegate to PortManager for lookup
+            return _portManager.GetProcessByPort(tcpPort, _runningProcesses.Values);
         }
-
-        return await _semaphore.ExecuteAsync(async () =>
+        finally
         {
-            await UpdateProcessStatusesAsync(cancellationToken).ConfigureAwait(false);
-            return _runningProcesses.Values.FirstOrDefault(p => p.TcpPort == tcpPort && p.IsRunning);
-        }, cancellationToken);
+            _semaphore.Release();
+        }
     }
 
     /// <inheritdoc />
@@ -974,35 +913,8 @@ public partial class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<bool> TestTcpConnectionAsync(string tcpHost, int tcpPort, int timeoutMs = 5000, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(tcpHost))
-        {
-            throw new ArgumentException("TCP host cannot be null or empty", nameof(tcpHost));
-        }
-
-        if (!NetworkConstants.IsValidPort(tcpPort))
-        {
-            throw new ArgumentException($"TCP port must be between {NetworkConstants.MinPort} and {NetworkConstants.MaxPort}", nameof(tcpPort));
-        }
-
-        try
-        {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(timeoutMs);
-            using var client = new System.Net.Sockets.TcpClient();
-            await client.ConnectAsync(tcpHost, tcpPort, cts.Token).ConfigureAwait(false);
-            _logger.LogDebug("TCP connection test to {Host}:{Port}: Success", tcpHost, tcpPort);
-            return true;
-        }
-        catch (OperationCanceledException)
-        {
-            _logger.LogWarning("TCP connection test to {Host}:{Port} timed out after {TimeoutMs}ms", tcpHost, tcpPort, timeoutMs);
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "TCP connection test to {Host}:{Port} failed", tcpHost, tcpPort);
-            return false;
-        }
+        // Delegate to PortManager
+        return await _portManager.TestConnectionAsync(tcpHost, tcpPort, timeoutMs, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -1034,122 +946,15 @@ public partial class SocatService : ISocatService, IDisposable
     /// <inheritdoc />
     public async Task<bool> PrepareSerialDeviceAsync(string serialDevice, SocatConfiguration configuration, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(serialDevice))
-        {
-            throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
-        }
-
-        ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
-
-        try
-        {
-            // Validate device accessibility first
-            SerialDeviceValidationResult validation = await ValidateSerialDeviceAsync(serialDevice, cancellationToken).ConfigureAwait(false);
-            if (!validation.IsValid)
-            {
-                _logger.LogError("Serial device validation failed for {Device}: {Errors}",
-                    serialDevice, string.Join(", ", validation.Errors));
-                return false;
-            }
-
-            // For socat, we typically want the device in raw mode
-            // We can create a default serial port configuration for socat use
-            // Use configuration from the profile
-            var serialConfig = new SerialPortConfiguration
-            {
-                BaudRate = configuration.BaudRate, // Use configured baud rate
-                CharacterSize = 8,
-                Parity = ParityMode.Even,
-                StopBits = StopBits.One,
-                DisableHardwareFlowControl = true,
-                RawMode = true
-            };
-
-            // Apply the configuration using the serial port service
-            bool applied = await _serialPortService.ApplyConfigurationAsync(serialDevice, serialConfig, null, cancellationToken).ConfigureAwait(false);
-
-            if (applied)
-            {
-                _logger.LogDebug("Successfully prepared serial device {Device} for socat", serialDevice);
-            }
-            else
-            {
-                _logger.LogWarning("Failed to prepare serial device {Device} for socat", serialDevice);
-            }
-
-            return applied;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error preparing serial device {Device} for socat", serialDevice);
-            return false;
-        }
+        // Delegate to ConfigurationService
+        return await _configService.PrepareSerialDeviceAsync(serialDevice, configuration, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<SerialDeviceValidationResult> ValidateSerialDeviceAsync(string serialDevice, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(serialDevice))
-        {
-            throw new ArgumentException("Serial device cannot be null or empty", nameof(serialDevice));
-        }
-
-        var result = new SerialDeviceValidationResult();
-
-        try
-        {
-            // Check if device exists
-            result.Exists = File.Exists(serialDevice);
-            if (!result.Exists)
-            {
-                result.Errors.Add($"Serial device {serialDevice} does not exist");
-                result.IsValid = false;
-                return result;
-            }
-
-            // Check device accessibility using serial port service
-            bool accessible = await _serialPortService.IsPortAccessibleAsync(serialDevice, 1000, cancellationToken).ConfigureAwait(false);
-            result.IsAccessible = accessible;
-
-            if (!accessible)
-            {
-                result.Errors.Add($"Serial device {serialDevice} is not accessible");
-                result.IsValid = false;
-            }
-
-            // Get additional device information
-            SerialPortInfo? portInfo = await _serialPortService.GetPortInfoAsync(serialDevice, cancellationToken).ConfigureAwait(false);
-            if (portInfo != null)
-            {
-                result.DeviceInfo = $"Type: {portInfo.PortType}, Description: {portInfo.Description}";
-                result.IsInUse = portInfo.IsInUse;
-
-                if (portInfo.IsInUse)
-                {
-                    result.Warnings.Add($"Serial device {serialDevice} appears to be in use by another process");
-                }
-            }
-            else
-            {
-                result.DeviceInfo = "Unable to retrieve device information";
-            }
-
-            // If we reach here with no errors, the device is valid
-            if (result.Errors.Count == 0)
-            {
-                result.IsValid = true;
-            }
-
-            _logger.LogDebug("Validated serial device {Device}: {IsValid}", serialDevice, result.IsValid);
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error validating serial device {Device}", serialDevice);
-            result.Errors.Add($"Validation error: {ex.Message}");
-            result.IsValid = false;
-            return result;
-        }
+        // Delegate to ConfigurationService
+        return await _configService.ValidateSerialDeviceAsync(serialDevice, cancellationToken).ConfigureAwait(false);
     }
 
     #endregion

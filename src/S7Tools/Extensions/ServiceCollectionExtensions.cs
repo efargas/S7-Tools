@@ -137,12 +137,22 @@ public static class ServiceCollectionExtensions
         // Register as IProfileManager<SocatProfile> for generic dependency injection
         services.TryAddSingleton<IProfileManager<Core.Models.SocatProfile>>(provider =>
             provider.GetRequiredService<ISocatProfileService>());
+
+        // Register Socat specialized services (Phase 2 refactoring)
+        services.TryAddSingleton<Services.Socat.SocatCommandBuilder>();
+        services.TryAddSingleton<Services.Socat.SocatProcessManager>();
+        services.TryAddSingleton<Services.Socat.SocatPortManager>();
+        services.TryAddSingleton<Services.Socat.SocatConfigurationService>();
+
+        // Register Socat facade service (orchestrates specialized services)
         services.TryAddSingleton<ISocatService>(provider =>
             new SocatService(
                 provider.GetRequiredService<ILogger<SocatService>>(),
                 provider.GetRequiredService<IApplicationSettingsService>(),
-                provider.GetRequiredService<ISerialPortService>(),
-                provider.GetRequiredService<ITimeProvider>()
+                provider.GetRequiredService<Services.Socat.SocatCommandBuilder>(),
+                provider.GetRequiredService<Services.Socat.SocatProcessManager>(),
+                provider.GetRequiredService<Services.Socat.SocatPortManager>(),
+                provider.GetRequiredService<Services.Socat.SocatConfigurationService>()
             )
         );
 
