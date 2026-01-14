@@ -4,17 +4,22 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Linq;
+using System.Threading;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;
 
 /// <summary>
-/// A dedicated, in-memory circular buffer for task logs.
+/// A dedicated, in-memory circular buffer for task logs with thread-safe access.
 /// </summary>
 public class TaskLogDataStore : ITaskLogDataStore
 {
     private readonly ObservableCollection<LogModel> _logs = new();
+    private readonly object _lock = new();
+    private readonly int _maxEntries;
+    private readonly Action<Action> _uiDispatch;
 
     /// <inheritdoc />
     public event NotifyCollectionChangedEventHandler? CollectionChanged;
@@ -23,18 +28,34 @@ public class TaskLogDataStore : ITaskLogDataStore
     /// Initializes a new instance of the <see cref="TaskLogDataStore"/> class.
     /// </summary>
     /// <param name="maxEntries">The maximum number of entries to store (optional).</param>
-    public TaskLogDataStore(int maxEntries = 1000)
+    /// <param name="uiDispatch">Optional delegate to dispatch updates to the UI thread. If null, updates run synchronously.</param>
+    public TaskLogDataStore(int maxEntries = 1000, Action<Action>? uiDispatch = null)
     {
+        _maxEntries = maxEntries;
+        _uiDispatch = uiDispatch ?? (action => action());
         _logs.CollectionChanged += (s, e) => CollectionChanged?.Invoke(s, e);
     }
 
     /// <summary>
-    /// Adds a new log entry to the store.
+    /// Adds a new log entry to the store in a thread-safe manner.
     /// </summary>
     /// <param name="entry">The log entry to add.</param>
     public void AddEntry(LogModel entry)
     {
-        _logs.Add(entry);
+        // UI updates must happen on the UI thread or synchronized context
+        _uiDispatch(() =>
+        {
+            lock (_lock)
+            {
+                _logs.Add(entry);
+
+                // Enforce circular buffer limit
+                while (_logs.Count > _maxEntries)
+                {
+                    _logs.RemoveAt(0);
+                }
+            }
+        });
     }
 
     /// <summary>
@@ -42,18 +63,30 @@ public class TaskLogDataStore : ITaskLogDataStore
     /// </summary>
     public void Clear()
     {
-        _logs.Clear();
+        _uiDispatch(() =>
+        {
+            lock (_lock)
+            {
+                _logs.Clear();
+            }
+        });
     }
 
     /// <inheritdoc />
     public IEnumerator<LogModel> GetEnumerator()
     {
-        return _logs.GetEnumerator();
+        // Snapshot for thread-safe enumeration
+        List<LogModel> snapshot;
+        lock (_lock)
+        {
+            snapshot = _logs.ToList();
+        }
+        return snapshot.GetEnumerator();
     }
 
     /// <inheritdoc />
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return _logs.GetEnumerator();
+        return GetEnumerator();
     }
 }

@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
@@ -105,7 +106,7 @@ public partial class App : Application
                         await StartSchedulersAsync(logger);
 
                         // 4. Switch to Main Window on UI Thread
-                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                        await Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             logger.LogInformation("✅ Initialization complete. Switching to Main Window.");
 
@@ -126,7 +127,7 @@ public partial class App : Application
                     catch (Exception ex)
                     {
                         logger.LogCritical(ex, "❌ Critical application startup failure");
-                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                        await Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             // Show fatal error on splash screen if possible, or message box
                             splashViewModel.StatusText = "CRITICAL ERROR: " + ex.Message;
@@ -407,9 +408,13 @@ public partial class App : Application
                 return DialogResult<T>.Failure("Main window not available");
             }
 
-            Window dialog = dialogFactory();
-            T? result = await dialog.ShowDialog<T>(mainWindow);
-            return DialogResult<T>.Success(result);
+            // Ensure dialog creation and showing happens on UI thread
+            return await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                Window dialog = dialogFactory();
+                T? result = await dialog.ShowDialog<T>(mainWindow);
+                return DialogResult<T>.Success(result);
+            });
         }
         catch (Exception ex)
         {
@@ -431,17 +436,17 @@ public partial class App : Application
             logger.LogError("Critical UI Error: {Title} - {Message}", title, message);
 
             // Try to show a simple message box as fallback
-            Window? mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-            if (mainWindow != null)
+            // Ensure we access UI elements on UI thread
+            return Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                var errorDialog = new ConfirmationDialog
+                Window? mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+                if (mainWindow != null)
                 {
-                    DataContext = new ConfirmationDialogViewModel(title, message, false)
-                };
+                    var errorDialog = new ConfirmationDialog
+                    {
+                        DataContext = new ConfirmationDialogViewModel(title, message, false)
+                    };
 
-                // Fire and forget - don't await to avoid potential recursion
-                _ = Task.Run(async () =>
-                {
                     try
                     {
                         await errorDialog.ShowDialog<bool>(mainWindow);
@@ -450,19 +455,15 @@ public partial class App : Application
                     {
                         logger.LogError(ex, "Failed to show critical error dialog");
                     }
-                });
-            }
+                }
+            });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to show critical error notification");
+            return Task.CompletedTask;
         }
-
-        // No awaited work in this method; return a completed task.
-        return Task.CompletedTask;
     }
-
-
 
     private async Task StartSchedulersAsync(ILogger logger)
     {

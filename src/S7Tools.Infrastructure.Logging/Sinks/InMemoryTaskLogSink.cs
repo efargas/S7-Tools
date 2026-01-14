@@ -14,6 +14,9 @@ public class InMemoryTaskLogSink : IInMemoryTaskLogSink
     private readonly ICentralizedTaskLogService _logService;
     private bool _disposed;
 
+    // Constant for the prefix to avoid string allocations
+    private const string TaskCategoryPrefix = "Task.";
+
     /// <summary>
     /// Initializes a new instance of the <see cref="InMemoryTaskLogSink"/> class.
     /// </summary>
@@ -26,26 +29,50 @@ public class InMemoryTaskLogSink : IInMemoryTaskLogSink
     /// <inheritdoc />
     public void Write(LogEntry entry)
     {
-        if (entry.Category.StartsWith("Task"))
+        // Optimized check using constant
+        if (!entry.Category.StartsWith(TaskCategoryPrefix, StringComparison.Ordinal))
         {
-            var parts = entry.Category.Split('.');
-            if (parts.Length > 1 && Guid.TryParse(parts[1], out var taskId))
-            {
-                var (main, process, protocol) = _logService.GetOrCreateStoresForTask(taskId);
-                var logModel = new LogModel
-                {
-                    Timestamp = entry.Timestamp,
-                    Level = entry.LogLevel,
-                    Category = entry.Category,
-                    Message = entry.Message
-                };
+            return;
+        }
 
-                var lastPart = parts.Last();
-                if (lastPart.Equals("Process", StringComparison.OrdinalIgnoreCase))
+        // Category format: Task.{TaskId}.{SubCategory}
+        // e.g. Task.53e1a90c-....Main or Task.53e1a90c-....Process
+
+        ReadOnlySpan<char> categorySpan = entry.Category.AsSpan();
+
+        // Skip prefix "Task."
+        int prefixLength = TaskCategoryPrefix.Length;
+        if (categorySpan.Length <= prefixLength) return;
+
+        ReadOnlySpan<char> remaining = categorySpan.Slice(prefixLength);
+
+        // Find next dot to isolate TaskId
+        int dotIndex = remaining.IndexOf('.');
+
+        // If no dot, it might just be Task.{Guid} which implies Main
+        ReadOnlySpan<char> guidSpan = dotIndex == -1 ? remaining : remaining.Slice(0, dotIndex);
+
+        if (Guid.TryParse(guidSpan, out var taskId))
+        {
+            var (main, process, protocol) = _logService.GetOrCreateStoresForTask(taskId);
+            var logModel = new LogModel
+            {
+                Timestamp = entry.Timestamp,
+                Level = entry.LogLevel,
+                Category = entry.Category,
+                Message = entry.Message
+            };
+
+            // Determine subcategory
+            if (dotIndex != -1 && dotIndex < remaining.Length - 1)
+            {
+                ReadOnlySpan<char> subCategory = remaining.Slice(dotIndex + 1);
+
+                if (subCategory.Equals("Process", StringComparison.OrdinalIgnoreCase))
                 {
                     process.AddEntry(logModel);
                 }
-                else if (lastPart.Equals("Protocol", StringComparison.OrdinalIgnoreCase))
+                else if (subCategory.Equals("Protocol", StringComparison.OrdinalIgnoreCase))
                 {
                     protocol.AddEntry(logModel);
                 }
@@ -53,6 +80,11 @@ public class InMemoryTaskLogSink : IInMemoryTaskLogSink
                 {
                     main.AddEntry(logModel);
                 }
+            }
+            else
+            {
+                // Default to Main if no subcategory specified
+                main.AddEntry(logModel);
             }
         }
     }

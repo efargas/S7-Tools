@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -22,6 +25,29 @@ public class FileLogSink : IFileLogSink, IDisposable
     private readonly CancellationTokenSource _cts = new();
     private readonly Task _processTask;
     private bool _disposed;
+
+    // Batch processing settings
+    private const int MaxBatchSize = 100;
+    private const int FlushIntervalMs = 500;
+
+    // Cache for resolved paths to avoid resolving on every write
+    // Using a limited cache to prevent memory leaks from dynamic categories (e.g. Task.{Guid})
+    // In practice, file paths are determined by the log configuration, not the dynamic category parts usually.
+    // However, if configuration maps specific categories to files, we need to be careful.
+    // _configuration.GetFilePathForCategory usually maps predefined categories.
+    // We will use a bounded cache with LRU-like behavior if needed, or just rely on the fact that
+    // GetFilePathForCategory collapses categories.
+    //
+    // Let's inspect `GetFilePathForCategory`. It likely maps "Task.*" to a specific file.
+    // If so, the returned relativePath is stable. We should key off the *result* of GetFilePathForCategory?
+    // No, we key off the category string because that's the input.
+    // To prevent leaks, we will only cache the first 50 unique categories encountered.
+    // Most apps have a finite set of high-volume categories. Dynamic ones usually map to a default or wildcard.
+    private readonly ConcurrentDictionary<string, string> _pathCache = new();
+    private const int MaxCacheSize = 50;
+
+    // Track directories we've already ensured exist
+    private readonly ConcurrentDictionary<string, bool> _ensuredDirectories = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="FileLogSink"/> class.
@@ -48,17 +74,32 @@ public class FileLogSink : IFileLogSink, IDisposable
 
     private async Task ProcessQueueAsync()
     {
+        var batch = new List<LogEntry>(MaxBatchSize);
+        var flushTimer = Task.Delay(FlushIntervalMs, _cts.Token);
+
         while (!_cts.Token.IsCancellationRequested)
         {
             try
             {
-                if (_logQueue.TryDequeue(out var entry))
+                // Drain the queue up to MaxBatchSize
+                while (batch.Count < MaxBatchSize && _logQueue.TryDequeue(out var entry))
                 {
-                    await WriteToFileAsync(entry);
+                    batch.Add(entry);
+                }
+
+                if (batch.Count > 0)
+                {
+                    await WriteBatchAsync(batch);
+                    batch.Clear();
+
+                    // Reset timer since we just flushed
+                    flushTimer = Task.Delay(FlushIntervalMs, _cts.Token);
                 }
                 else
                 {
-                    await Task.Delay(100, _cts.Token);
+                    // No logs, wait for timer or cancellation
+                    await flushTimer;
+                    flushTimer = Task.Delay(FlushIntervalMs, _cts.Token);
                 }
             }
             catch (OperationCanceledException)
@@ -67,37 +108,110 @@ public class FileLogSink : IFileLogSink, IDisposable
             }
             catch
             {
-                // Ignore write errors to avoid crashing app
+                // Ignore processing errors to keep loop alive
+            }
+        }
+
+        // Flush remaining logs on exit
+        if (!_logQueue.IsEmpty)
+        {
+            try
+            {
+                batch.Clear();
+                while (_logQueue.TryDequeue(out var entry))
+                {
+                    batch.Add(entry);
+                }
+
+                if (batch.Count > 0)
+                {
+                    await WriteBatchAsync(batch);
+                }
+            }
+            catch
+            {
+                // Best effort
             }
         }
     }
 
-    private async Task WriteToFileAsync(LogEntry entry)
+    private async Task WriteBatchAsync(List<LogEntry> entries)
     {
-        try
-        {
-            // Determine file path based on category (Main, Process, Protocol, etc.)
-            var relativePath = _configuration.GetFilePathForCategory(entry.Category);
-            var fullPath = _pathService.ResolvePath(relativePath);
+        // Group by destination file path to minimize file opens
+        var groups = entries
+            .GroupBy(e => GetFullPath(e.Category))
+            .ToList();
 
-            var dir = Path.GetDirectoryName(fullPath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+        foreach (var group in groups)
+        {
+            string fullPath = group.Key;
+            if (string.IsNullOrEmpty(fullPath)) continue;
+
+            try
+            {
+                EnsureDirectoryExists(fullPath);
+
+                var sb = new StringBuilder();
+                foreach (var entry in group)
+                {
+                    sb.Append('[').Append(entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")).Append("] [")
+                      .Append(entry.LogLevel).Append("] [")
+                      .Append(entry.Category).Append("] ")
+                      .Append(entry.Message);
+
+                    if (entry.Exception != null)
+                    {
+                        sb.AppendLine();
+                        sb.Append(entry.Exception);
+                    }
+                    sb.AppendLine();
+                }
+
+                await File.AppendAllTextAsync(fullPath, sb.ToString(), CancellationToken.None);
+            }
+            catch
+            {
+                // Fallback or ignore
+            }
+        }
+    }
+
+    private string GetFullPath(string category)
+    {
+        // Use TryGetValue to avoid closure allocation in GetOrAdd if key exists
+        if (_pathCache.TryGetValue(category, out var path))
+        {
+            return path;
+        }
+
+        // Bounded cache: if full, resolve directly without caching to prevent leak
+        if (_pathCache.Count >= MaxCacheSize)
+        {
+             var relativePath = _configuration.GetFilePathForCategory(category);
+             return _pathService.ResolvePath(relativePath);
+        }
+
+        // Add to cache
+        return _pathCache.GetOrAdd(category, cat =>
+        {
+            var relativePath = _configuration.GetFilePathForCategory(cat);
+            return _pathService.ResolvePath(relativePath);
+        });
+    }
+
+    private void EnsureDirectoryExists(string fullPath)
+    {
+        string? dir = Path.GetDirectoryName(fullPath);
+        if (string.IsNullOrEmpty(dir)) return;
+
+        if (!_ensuredDirectories.ContainsKey(dir))
+        {
+            if (!Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
-
-            // Format: [Timestamp] [Level] [Category] Message
-            var line = $"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.LogLevel}] [{entry.Category}] {entry.Message}";
-            if (entry.Exception != null)
-            {
-                line += Environment.NewLine + entry.Exception;
-            }
-
-            await File.AppendAllTextAsync(fullPath, line + Environment.NewLine);
-        }
-        catch
-        {
-            // fallback
+            // Use TryAdd to be safe, value doesn't strictly matter
+            _ensuredDirectories.TryAdd(dir, true);
         }
     }
 
@@ -122,6 +236,15 @@ public class FileLogSink : IFileLogSink, IDisposable
         if (disposing)
         {
             _cts.Cancel();
+            try
+            {
+                _processTask.Wait(1000);
+            }
+            catch
+            {
+                // Ignore task wait errors
+            }
+
             _cts.Dispose();
         }
 
