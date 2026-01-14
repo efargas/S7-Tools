@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
@@ -187,7 +188,11 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
 
                 foreach (ILogger fileLogger in fileLoggers)
                 {
-                    if (fileLogger is IDisposable disposable)
+                    if (fileLogger is IAsyncDisposable asyncDisposable)
+                    {
+                        await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                    }
+                    else if (fileLogger is IDisposable disposable)
                     {
                         disposable.Dispose();
                     }
@@ -233,7 +238,11 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
 
             foreach (ILogger? fileLogger in context.FileLoggers)
             {
-                if (fileLogger is IDisposable disposable)
+                if (fileLogger is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                }
+                else if (fileLogger is IDisposable disposable)
                 {
                     disposable.Dispose();
                 }
@@ -283,8 +292,8 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             Directory.CreateDirectory(directory);
         }
 
-        // Create a simple file logger using a StreamWriter
-        var fileLogger = new FileLogger(filePath, minLevel);
+        // Create async-safe file logger using Channels
+        var fileLogger = new AsyncFileLogger(filePath, minLevel);
         await Task.CompletedTask; // For async pattern consistency
 
         return fileLogger;
@@ -398,24 +407,30 @@ internal class CompositeLogger(ILogger[] loggers) : ILogger
 }
 
 /// <summary>
-/// Simple file logger implementation.
+/// Async-safe file logger implementation using System.Threading.Channels.
+/// Eliminates deadlock risks by using non-blocking writes with a background processing task.
 /// </summary>
-internal class FileLogger : ILogger, IDisposable
+internal class AsyncFileLogger : ILogger, IAsyncDisposable
 {
-    private readonly string _filePath;
+    private readonly Channel<LogEntry> _logChannel;
+    private readonly Task _writerTask;
+    private readonly CancellationTokenSource _shutdownCts = new();
     private readonly LogLevel _minLevel;
-    private readonly StreamWriter _writer;
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
 
-    public FileLogger(string filePath, LogLevel minLevel)
+    public AsyncFileLogger(string filePath, LogLevel minLevel)
     {
-        _filePath = filePath;
         _minLevel = minLevel;
-        _writer = new StreamWriter(filePath, append: true, System.Text.Encoding.UTF8)
+
+        // Create unbounded channel for log entries (unbounded to never block producers)
+        _logChannel = Channel.CreateUnbounded<LogEntry>(new UnboundedChannelOptions
         {
-            AutoFlush = false // Prevent blocking I/O on every log call
-        };
+            SingleWriter = false,  // Multiple threads can log
+            SingleReader = true     // Single background writer
+        });
+
+        // Start background writer task
+        _writerTask = Task.Run(async () => await ProcessLogQueueAsync(filePath));
     }
 
     public IDisposable? BeginScope<TState>(TState state) where TState : notnull
@@ -441,44 +456,110 @@ internal class FileLogger : ILogger, IDisposable
         }
 
         string message = formatter(state, exception);
-        string timestamp = DateTime.UtcNow.ToLocalTime().ToString(S7Tools.Constants.AppConstants.StandardDateFormat);
-        string logLine = $"[{timestamp}] [{logLevel}] {message}";
 
-        if (exception != null)
+        var entry = new LogEntry
         {
-            logLine += Environment.NewLine + exception.ToString();
-        }
+            Timestamp = DateTime.UtcNow,
+            Level = logLevel,
+            Message = message,
+            Exception = exception
+        };
 
-        _semaphore.Wait();
+        // Non-blocking write - fire and forget
+        // If channel is full (shouldn't happen with unbounded), log is dropped
+        _logChannel.Writer.TryWrite(entry);
+    }
+
+    /// <summary>
+    /// Background task that processes the log queue and writes to file.
+    /// </summary>
+    private async Task ProcessLogQueueAsync(string filePath)
+    {
         try
         {
-            _writer.WriteLine(logLine);
+            await using var writer = new StreamWriter(filePath, append: true, System.Text.Encoding.UTF8)
+            {
+                AutoFlush = false // Batch writes for better performance
+            };
+
+            // Process entries until channel is completed
+            await foreach (var entry in _logChannel.Reader.ReadAllAsync(_shutdownCts.Token))
+            {
+                string timestamp = entry.Timestamp.ToLocalTime().ToString(S7Tools.Constants.AppConstants.StandardDateFormat);
+                string logLine = $"[{timestamp}] [{entry.Level}] {entry.Message}";
+
+                if (entry.Exception != null)
+                {
+                    logLine += Environment.NewLine + entry.Exception.ToString();
+                }
+
+                await writer.WriteLineAsync(logLine);
+
+                // Flush periodically (every 10 entries) or on Critical/Error
+                if (entry.Level >= LogLevel.Error || _logChannel.Reader.Count == 0)
+                {
+                    await writer.FlushAsync();
+                }
+            }
+
+            // Final flush on shutdown
+            await writer.FlushAsync();
         }
-        finally
+        catch (OperationCanceledException)
         {
-            _semaphore.Release();
+            // Expected during shutdown
+        }
+        catch (Exception ex)
+        {
+            // Log to console as last resort (can't use logger from logger)
+            Console.Error.WriteLine($"FileLogger background task failed: {ex}");
         }
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
         if (_disposed)
         {
             return;
         }
 
-        _semaphore.Wait();
+        _disposed = true;
+
+        // Signal completion and wait for background writer to finish
+        _logChannel.Writer.Complete();
+
         try
         {
-            _writer?.Flush();
-            _writer?.Dispose();
+            // Wait for writer task to complete with timeout
+            await _writerTask.WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        catch (TimeoutException)
+        {
+            // Force cancellation if task doesn't complete in time
+            _shutdownCts.Cancel();
+            try
+            {
+                await _writerTask;
+            }
+            catch (OperationCanceledException)
+            {
+                // Expected
+            }
         }
         finally
         {
-            _semaphore.Release();
-            _semaphore.Dispose();
+            _shutdownCts.Dispose();
         }
+    }
 
-        _disposed = true;
+    /// <summary>
+    /// Log entry record for channel processing.
+    /// </summary>
+    private record LogEntry
+    {
+        public DateTime Timestamp { get; init; }
+        public LogLevel Level { get; init; }
+        public string Message { get; init; } = string.Empty;
+        public Exception? Exception { get; init; }
     }
 }

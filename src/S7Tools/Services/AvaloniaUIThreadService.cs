@@ -137,67 +137,34 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
         }
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// [OBSOLETE - DANGEROUS] Attempts to invoke an action on the UI thread with a timeout.
+    /// </summary>
+    /// <remarks>
+    /// This method is marked obsolete because it uses blocking .Wait() which can cause deadlocks.
+    /// Use async alternatives instead.
+    /// </remarks>
+    [Obsolete("DANGEROUS: Uses blocking .Wait() which can cause deadlocks. This method will be removed in a future version. Use async patterns instead.", error: true)]
     public bool TryInvokeOnUIThread(Action action, TimeSpan timeout)
     {
-        if (action == null)
-        {
-            throw new ArgumentNullException(nameof(action));
-        }
-
-        if (IsUIThread)
-        {
-            action();
-            return true;
-        }
-
-        try
-        {
-            DispatcherOperation task = Dispatcher.UIThread.InvokeAsync(action);
-            task.Wait(timeout);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
+        throw new NotSupportedException(
+            "TryInvokeOnUIThread is obsolete due to deadlock risks from blocking .Wait() calls. " +
+            "Please refactor your code to use async patterns and avoid the need for timeout-based UI thread invocation.");
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// [OBSOLETE - DANGEROUS] Attempts to invoke a function on the UI thread with a timeout.
+    /// </summary>
+    /// <remarks>
+    /// This method is marked obsolete because it uses blocking .Wait() and .Result which can cause deadlocks.
+    /// Use async alternatives instead.
+    /// </remarks>
+    [Obsolete("DANGEROUS: Uses blocking .Wait() and .Result which can cause deadlocks. This method will be removed in a future version. Use async patterns instead.", error: true)]
     public bool TryInvokeOnUIThread<T>(Func<T> function, TimeSpan timeout, out T result)
     {
-        result = default(T)!;
-
-        if (function == null)
-        {
-            throw new ArgumentNullException(nameof(function));
-        }
-
-        if (IsUIThread)
-        {
-            try
-            {
-                result = function();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        try
-        {
-            DispatcherOperation<T> task = Dispatcher.UIThread.InvokeAsync(function);
-            task.Wait(timeout);
-            result = task.Result;
-            return true;
-        }
-        catch
-        {
-            // Ignore exceptions and return false
-        }
-
-        return false;
+        result = default!;
+        throw new NotSupportedException(
+            "TryInvokeOnUIThread<T> is obsolete due to deadlock risks from blocking .Wait() and .Result calls. " +
+            "Please refactor your code to use async patterns and avoid the need for timeout-based UI thread invocation.");
     }
 }
