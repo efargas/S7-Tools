@@ -60,4 +60,17 @@ public interface IPlcProtocol
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task ConnectAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Disconnects from the PLC.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task DisconnectAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the underlying stream for the protocol connection.
+    /// </summary>
+    /// <returns>The underlying stream if connected, otherwise null.</returns>
+    Stream? GetStream();
 }

@@ -39,6 +39,11 @@ namespace S7Tools.Services.Adapters
             await _transport.ConnectAsync(cancellationToken);
         }
 
+        public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+        {
+            await _transport.DisconnectAsync(cancellationToken);
+        }
+
         #region Protocol Utils (Encoding/Decoding)
 
         private static byte CalculateChecksum(byte[] packetData, int offset, int length)
@@ -51,7 +56,7 @@ namespace S7Tools.Services.Adapters
             return (byte)-sum;
         }
 
-        private static byte[] EncodePacket(byte[] contents)
+        public static byte[] EncodePacket(byte[] contents)
         {
             if (contents.Length > 254)
             {
@@ -163,5 +168,7 @@ namespace S7Tools.Services.Adapters
         {
             return await _transport.ReadAsync(buffer, offset, count, cancellationToken);
         }
+
+        public Stream? GetStream() => _transport.GetStream();
     }
 }

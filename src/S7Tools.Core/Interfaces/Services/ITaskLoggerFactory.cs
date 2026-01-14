@@ -19,7 +19,6 @@ public interface ITaskLoggerFactory
     Task<TaskLogger> CreateTaskLoggerAsync(
         Guid taskId,
         string taskName,
-        bool captureProtocol = true,
         bool captureProcessOutput = true,
         CancellationToken cancellationToken = default);
 

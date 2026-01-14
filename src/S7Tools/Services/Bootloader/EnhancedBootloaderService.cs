@@ -41,7 +41,6 @@ public sealed class EnhancedBootloaderService(
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
         Microsoft.Extensions.Logging.ILogger? processLogger = null,
-        Microsoft.Extensions.Logging.ILogger? protocolLogger = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profiles);
@@ -56,7 +55,6 @@ public sealed class EnhancedBootloaderService(
             progress,
             effectiveTaskLogger,
             processLogger,
-            protocolLogger,
             _serialPort,
             _socat,
             _power,
@@ -137,11 +135,10 @@ public sealed class EnhancedBootloaderService(
                 // Get process logger from task execution if available
                 Microsoft.Extensions.Logging.ILogger? taskLogger = taskExecution.Logger?.MainLogger;
                 Microsoft.Extensions.Logging.ILogger? processLogger = taskExecution.Logger?.ProcessLogger;
-                Microsoft.Extensions.Logging.ILogger? protocolLogger = taskExecution.Logger?.ProtocolLogger;
 
                 // Execute the memory dump with retry logic
                 IList<byte[]> memoryDataList = await ExecuteWithRetryAsync(
-                    () => DumpAsync(profiles, progressReporter, taskLogger, processLogger, protocolLogger, cancellationToken),
+                    () => DumpAsync(profiles, progressReporter, taskLogger, processLogger, cancellationToken),
                     RetryableOperations.All,
                     taskExecution,
                     cancellationToken).ConfigureAwait(false);

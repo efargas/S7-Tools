@@ -18,10 +18,7 @@ public class TaskLogger
     /// </summary>
     public ILogger? MainLogger { get; set; }
 
-    /// <summary>
-    /// Gets or sets the protocol logger for TCP/socat communication.
-    /// </summary>
-    public ILogger? ProtocolLogger { get; set; }
+
 
     /// <summary>
     /// Gets or sets the process logger for capturing socat stdout/stderr.
@@ -33,10 +30,7 @@ public class TaskLogger
     /// </summary>
     public string? MainLogDataStoreId { get; set; }
 
-    /// <summary>
-    /// Gets or sets the in-memory DataStore ID for protocol logs.
-    /// </summary>
-    public string? ProtocolLogDataStoreId { get; set; }
+
 
     /// <summary>
     /// Gets or sets the in-memory DataStore ID for process output logs.
@@ -48,10 +42,7 @@ public class TaskLogger
     /// </summary>
     public string? MainLogFilePath { get; set; }
 
-    /// <summary>
-    /// Gets or sets the file path for the protocol log file.
-    /// </summary>
-    public string? ProtocolLogFilePath { get; set; }
+
 
     /// <summary>
     /// Gets or sets the file path for the process output log file.
@@ -63,10 +54,7 @@ public class TaskLogger
     /// </summary>
     public bool IsEnabled { get; set; } = true;
 
-    /// <summary>
-    /// Gets or sets whether protocol logging is enabled.
-    /// </summary>
-    public bool CaptureProtocol { get; set; } = true;
+
 
     /// <summary>
     /// Gets or sets whether process output logging is enabled.
@@ -111,10 +99,7 @@ public class TaskLogger
             parts.Add($"Main: {Path.GetFileName(MainLogFilePath)}");
         }
 
-        if (ProtocolLogFilePath != null && CaptureProtocol)
-        {
-            parts.Add($"Protocol: {Path.GetFileName(ProtocolLogFilePath)}");
-        }
+
 
         if (ProcessLogFilePath != null && CaptureProcessOutput)
         {

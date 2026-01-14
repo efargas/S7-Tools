@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Models.MemoryDump;
+using S7Tools.Core.Models;
 using S7Tools.Services;
 
 namespace S7Tools.ViewModels.Pages;
@@ -153,7 +153,7 @@ public partial class MemoryDumpViewerViewModel : ViewModelBase, IDisposable
             {
                 try
                 {
-                    await _orchestrator.StartSessionAsync(_cts.Token);
+                    await _orchestrator.StartSessionAsync(cancellationToken: _cts.Token);
                 }
                 catch (Exception ex)
                 {

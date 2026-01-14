@@ -996,7 +996,6 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskLogger = await _taskLoggerFactory.CreateTaskLoggerAsync(
                 taskId,
                 task.JobName,
-                captureProtocol: true,
                 captureProcessOutput: true,
                 CancellationToken.None).ConfigureAwait(false);
 
@@ -1014,6 +1013,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskLogger.MainLogger?.LogInformation("Job profile loaded: {ProfileName}", jobProfile.Name);
 
             // Create progress reporter
+            // Create progress reporter with throttling
+            double lastLoggedPercent = -1;
+            string lastLoggedStage = string.Empty;
+
             var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>(p =>
             {
                 var extraData = new Dictionary<string, object>();
@@ -1029,18 +1032,38 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 task.UpdateProgress(p.percent, p.stage, extraData);
                 TaskProgressUpdated?.Invoke(task.TaskId, p.percent, p.stage, extraData);
 
-                // Log progress to task logger
-                if (p.bytesRead.HasValue && p.totalBytes.HasValue)
+                // Throttle logging to task logger (Info level)
+                // Log if:
+                // 1. Stage changed
+                // 2. Percent changed by >= 5%
+                // 3. Percent is 0% or 100%
+                bool shouldLog = false;
+
+                if (!string.Equals(lastLoggedStage, p.stage, StringComparison.Ordinal))
                 {
-                    taskLogger.MainLogger?.LogInformation(
-                        "Progress: {Stage} - {Percent:F1}% ({BytesRead}/{TotalBytes} bytes)",
-                        p.stage, p.percent, p.bytesRead, p.totalBytes);
+                    shouldLog = true;
+                    lastLoggedStage = p.stage;
                 }
-                else
+                else if (Math.Abs(p.percent - lastLoggedPercent) >= 5.0 || p.percent <= 0.001 || p.percent >= 99.99)
                 {
-                    taskLogger.MainLogger?.LogInformation(
-                        "Progress: {Stage} - {Percent:F1}%",
-                        p.stage, p.percent);
+                    shouldLog = true;
+                    lastLoggedPercent = p.percent;
+                }
+
+                if (shouldLog)
+                {
+                    if (p.bytesRead.HasValue && p.totalBytes.HasValue)
+                    {
+                        taskLogger.MainLogger?.LogInformation(
+                            "Progress: {Stage} - {Percent:F1}% ({BytesRead}/{TotalBytes} bytes)",
+                            p.stage, p.percent, p.bytesRead, p.totalBytes);
+                    }
+                    else
+                    {
+                        taskLogger.MainLogger?.LogInformation(
+                            "Progress: {Stage} - {Percent:F1}%",
+                            p.stage, p.percent);
+                    }
                 }
             });
 
@@ -1053,7 +1076,6 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 progress,
                 taskLogger.MainLogger,
                 taskLogger.ProcessLogger,
-                taskLogger.ProtocolLogger,
                 CancellationToken.None)
                 .ConfigureAwait(false);
 

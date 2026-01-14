@@ -3,7 +3,7 @@ using System.Buffers.Binary;
 using System.Linq;
 using System.Text;
 
-namespace S7Tools.Core.Models.MemoryDump;
+namespace S7Tools.Core.Models;
 
 /// <summary>
 /// Represents a contiguous block of PLC memory with its address and data.

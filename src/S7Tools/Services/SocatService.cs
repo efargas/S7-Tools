@@ -173,7 +173,8 @@ public partial class SocatService : ISocatService, IDisposable
     #region Process Management
 
     /// <inheritdoc />
-    public async Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public async Task<SocatProcessInfo> StartSocatAsync(SocatConfiguration configuration, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
         if (string.IsNullOrWhiteSpace(serialDevice))
@@ -185,7 +186,6 @@ public partial class SocatService : ISocatService, IDisposable
         int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
         bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
 
-        // Check concurrent instances limit
         // Check concurrent instances limit
         return await _semaphore.ExecuteAsync(async () =>
         {
@@ -205,7 +205,6 @@ public partial class SocatService : ISocatService, IDisposable
                     $"Serial device '{serialDevice}' does not exist. Please check the device connection and try scanning for devices again.");
             }
 
-            // Check if TCP port is already in use (internal check - semaphore already held)
             // Check if port is already in use (delegate to PortManager)
             bool portInUse = _portManager.IsPortUsedByManagedProcess(configuration.TcpPort, _runningProcesses.Values);
             if (!portInUse)
@@ -234,21 +233,6 @@ public partial class SocatService : ISocatService, IDisposable
                 }
             }
 
-            // Enable hex dump and increased debug level if protocol logger is provided
-            if (protocolLogger != null)
-            {
-                if (!configuration.HexDump)
-                {
-                    _logger.LogDebug("Enabling hex dump for protocol logging");
-                    configuration.HexDump = true;
-                }
-                if (configuration.DebugLevel < 2)
-                {
-                    _logger.LogDebug("Increasing debug level to 2 for protocol logging");
-                    configuration.DebugLevel = 2;
-                }
-            }
-
             // Generate and validate command
             string command = GenerateSocatCommand(configuration, serialDevice);
             SocatCommandValidationResult validation = ValidateSocatCommand(command);
@@ -258,7 +242,7 @@ public partial class SocatService : ISocatService, IDisposable
             }
 
             // Start socat process
-            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, configuration, serialDevice, null, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
+            SocatProcessInfo processInfo = await StartSocatProcessAsync(command, configuration, serialDevice, null, processLogger, cancellationToken).ConfigureAwait(false);
 
             _runningProcesses[processInfo.ProcessId] = processInfo;
 
@@ -273,7 +257,7 @@ public partial class SocatService : ISocatService, IDisposable
     }
 
     /// <inheritdoc />
-    public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, Microsoft.Extensions.Logging.ILogger? protocolLogger = null, CancellationToken cancellationToken = default)
+    public async Task<SocatProcessInfo> StartSocatWithProfileAsync(SocatProfile profile, string serialDevice, Microsoft.Extensions.Logging.ILogger? processLogger = null, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Entering StartSocatWithProfileAsync - Profile: {ProfileName}, Device: {Device}",
             profile?.Name ?? "NULL", serialDevice ?? "NULL");
@@ -327,21 +311,6 @@ public partial class SocatService : ISocatService, IDisposable
             }
         }
 
-        // Enable hex dump and increased debug level if protocol logger is provided
-        if (protocolLogger != null)
-        {
-            if (!profile.Configuration.HexDump)
-            {
-                _logger.LogDebug("Enabling hex dump for protocol logging");
-                profile.Configuration.HexDump = true;
-            }
-            if (profile.Configuration.DebugLevel < 2)
-            {
-                _logger.LogDebug("Increasing debug level to 2 for protocol logging");
-                profile.Configuration.DebugLevel = 2;
-            }
-        }
-
         // Generate and validate command (before semaphore)
         _logger.LogDebug("Generating socat command");
         string command = GenerateSocatCommandForProfile(profile, serialDevice);
@@ -390,7 +359,7 @@ public partial class SocatService : ISocatService, IDisposable
             _logger.LogDebug("Starting socat process with profile '{Profile}'", profile.Name);
             try
             {
-                SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, protocolLogger, processLogger, cancellationToken).ConfigureAwait(false);
+                SocatProcessInfo processInfo = await StartSocatProcessAsync(command, profile.Configuration, serialDevice, profile, processLogger, cancellationToken).ConfigureAwait(false);
 
                 _runningProcesses[processInfo.ProcessId] = processInfo;
 
@@ -765,7 +734,6 @@ public partial class SocatService : ISocatService, IDisposable
         SocatConfiguration configuration,
         string serialDevice,
         SocatProfile? profile,
-        Microsoft.Extensions.Logging.ILogger? protocolLogger,
         Microsoft.Extensions.Logging.ILogger? processLogger,
         CancellationToken cancellationToken)
     {
@@ -838,38 +806,12 @@ public partial class SocatService : ISocatService, IDisposable
                     {
                         errorBuilder!.AppendLine(e.Data);
 
-                        // Check if this is a hex dump line (socat outputs hex dumps to stderr when -x flag is used)
-                        // Heuristic:
-                        // 1. Existing checks for < > (less reliable if timestamps are gone/changed)
-                        // 2. Explicit hex content "0x..."
-                        // 3. Separator line "--"
-                        // 4. Line starting with a specific pattern of hex digits (e.g. " 41 41 " or " 05 2d ")
-                        // 5. Short lines that look like partial hex dump
-                        string trimmedData = e.Data.TrimEnd();
-                        bool isHexDumpLine =
-                            trimmedData.Contains("< ") ||
-                            trimmedData.Contains("> ") ||
-                            (trimmedData.Contains("0x") && trimmedData.Length > 15) ||
-                            trimmedData.Trim() == "--" ||
-                            HexDumpRegex().IsMatch(trimmedData);
+                        // Clean up the log message by removing the timestamp if present
+                        // Format: 2026/01/09 03:05:33 socat[113280] N ...
+                        string cleanMessage = SocatLogTimestampRegex().Replace(e.Data, string.Empty);
 
-                        if (isHexDumpLine && protocolLogger != null)
-                        {
-                            // Route hex dump output to protocol logger
-                            // Also need to clean timestamp if present
-                            string cleanOutput = SocatLogTimestampRegex().Replace(e.Data, string.Empty);
-                            protocolLogger.LogDebug("{HexData}", cleanOutput);
-                        }
-                        else
-                        {
-                            // Regular error output
-                            // Clean up the log message by removing the timestamp if present
-                            // Format: 2026/01/09 03:05:33 socat[113280] N ...
-                            string cleanMessage = SocatLogTimestampRegex().Replace(e.Data, string.Empty);
-
-                            // Only log to the task-specific logger, NOT the main application logger
-                            processLogger?.LogInformation("socat[{ProcessId}] {Message}", processId, cleanMessage);
-                        }
+                        // Only log to the task-specific logger, NOT the main application logger
+                        processLogger?.LogDebug("socat[{ProcessId}] {Message}", processId, cleanMessage);
                     }
                 };
             }
@@ -1387,6 +1329,5 @@ public partial class SocatService : ISocatService, IDisposable
 
     #endregion
 
-    [GeneratedRegex(@"^\s+([0-9a-fA-F]{2}\s+)+")]
-    private static partial Regex HexDumpRegex();
+
 }

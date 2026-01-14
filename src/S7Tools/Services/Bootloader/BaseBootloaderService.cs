@@ -300,11 +300,17 @@ public abstract class BaseBootloaderService
 
                             // Stream segment directly to combined file
                             long segBytesWritten = 0;
+                            double lastReportedSegPercent = segStartPercent;
                             var segProgress = new Progress<long>(bytes =>
                             {
                                 segBytesWritten = bytes;
                                 double percent = segStartPercent + (segWeight * bytes / segLength);
-                                progress.Report((stageName, percent, bytes, segLength));
+
+                                if (Math.Abs(percent - lastReportedSegPercent) >= 1.0 || bytes == segLength)
+                                {
+                                    progress.Report((stageName, percent, bytes, segLength));
+                                    lastReportedSegPercent = percent;
+                                }
                             });
 
                             await client.InvokeDumperStreamAsync(
@@ -364,6 +370,9 @@ public abstract class BaseBootloaderService
         }
         finally
         {
+            // Stop any persistent streaming session established during the process
+            await client.StopDumperSessionAsync().ConfigureAwait(false);
+
             // Clean up temp files
             foreach (string tempFile in tempFiles)
             {
@@ -410,6 +419,7 @@ public abstract class BaseBootloaderService
         DateTime dumpStartTime = _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
         long totalBytesReceived = 0;
         double lastReportedPercent = startPercent;
+        int lastLoggedStepPercent = -1;
 
         // Create output directory if needed
         string? directory = System.IO.Path.GetDirectoryName(outputFilePath);
@@ -439,8 +449,8 @@ public abstract class BaseBootloaderService
                 totalBytesReceived = bytesReceived;
                 double percent = startPercent + (weight * bytesReceived / length);
 
-                // Report if changed by >= 0.1%
-                if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesReceived == length)
+                // Report if changed by >= 1.0%
+                if (Math.Abs(percent - lastReportedPercent) >= 1.0 || bytesReceived == length)
                 {
                     progress.Report((stageName, percent, bytesReceived, length));
                     lastReportedPercent = percent;
@@ -450,8 +460,10 @@ public abstract class BaseBootloaderService
                 if (length > 0)
                 {
                     double pct = (double)bytesReceived / length * 100.0;
-                    if ((int)pct % 5 == 0)
+                    int currentStepPct = (int)pct;
+                    if (currentStepPct > lastLoggedStepPercent && currentStepPct % 5 == 0)
                     {
+                        lastLoggedStepPercent = currentStepPct;
                         logger.LogDebug("  Progress: {Percent:F1}% ({Bytes:N0}/{Total:N0})",
                             pct, bytesReceived, length);
                     }
@@ -525,7 +537,6 @@ public abstract class BaseBootloaderService
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         ILogger effectiveTaskLogger,
         ILogger? processLogger,
-        ILogger? protocolLogger,
         ISerialPortService serialPort,
         ISocatService socat,
         IPowerSupplyService power,
@@ -580,7 +591,6 @@ public abstract class BaseBootloaderService
                 profiles.Socat.Configuration,
                 profiles.Serial.Device,
                 processLogger,
-                protocolLogger,
                 cancellationToken).ConfigureAwait(false);
 
             effectiveTaskLogger.LogInformation("✓ Socat bridge started on TCP port {Port} (PID: {ProcessId})",
@@ -643,8 +653,7 @@ public abstract class BaseBootloaderService
             progress.Report(("plc_connect", 12.0, null, null));
             await using IPlcClient client = clientFactory(profiles);
 
-            // Set protocol logger if available
-            client.SetProtocolLogger(protocolLogger);
+
 
             effectiveTaskLogger.LogDebug("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
             await client.ConnectAsync(cancellationToken).ConfigureAwait(false);

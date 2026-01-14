@@ -330,8 +330,8 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();
 
         // Add High-Performance Memory Dump Services
-        services.TryAddTransient<S7Tools.Core.Services.DumperService>();
-        services.TryAddTransient<Services.MemoryDumpOrchestrator>();
+        services.TryAddSingleton<S7Tools.Services.Adapters.Plc.DumperService>();
+        services.TryAddSingleton<Services.MemoryDumpOrchestrator>();
 
         // Add PLC Adapters
         services.TryAddTransient<IPlcTransport, Services.Adapters.PlcTransportAdapter>();
@@ -424,6 +424,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<TaskCreatorViewModel>();
         services.TryAddSingleton<TaskManagerShellViewModel>();
         services.TryAddSingleton<JobsManagementViewModel>();
+        services.TryAddSingleton<ActiveTasksViewModel>();
         services.TryAddTransient<JobWizardViewModel>();
         services.TryAddTransient<JobWizardMemoryRegionStepViewModel>();
 

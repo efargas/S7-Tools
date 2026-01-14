@@ -56,4 +56,10 @@ public interface IPlcTransport : IAsyncDisposable
     /// <param name="host">The host address.</param>
     /// <param name="port">The port number.</param>
     void Configure(string host, int port);
+
+    /// <summary>
+    /// Gets the underlying stream for the transport connection.
+    /// </summary>
+    /// <returns>The underlying stream if connected, otherwise null.</returns>
+    Stream? GetStream();
 }

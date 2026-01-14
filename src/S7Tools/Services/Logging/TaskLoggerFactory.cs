@@ -35,7 +35,6 @@ public class TaskLoggerFactory(
     public async Task<TaskLogger> CreateTaskLoggerAsync(
         Guid taskId,
         string taskName,
-        bool captureProtocol = true,
         bool captureProcessOutput = true,
         CancellationToken cancellationToken = default)
     {
@@ -48,7 +47,6 @@ public class TaskLoggerFactory(
             }
 
             DataStoreLoggerProvider? mainProvider = null;
-            DataStoreLoggerProvider? protocolProvider = null;
             DataStoreLoggerProvider? processProvider = null;
             var fileLoggers = new List<ILogger>();
 
@@ -65,12 +63,11 @@ public class TaskLoggerFactory(
                 Directory.CreateDirectory(taskLogDir);
 
                 // Get shared DataStores from CentralizedTaskLogService
-                (ITaskLogDataStore mainDataStore, ITaskLogDataStore processDataStore, ITaskLogDataStore protocolDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(taskId);
+                (ITaskLogDataStore mainDataStore, ITaskLogDataStore processDataStore, ITaskLogDataStore _) = _centralizedTaskLogService.GetOrCreateStoresForTask(taskId);
 
                 // Cast to LogDataStore for use with providers
                 var mainLogDataStore = (LogDataStore)mainDataStore;
                 LogDataStore? processLogDataStore = captureProcessOutput ? (LogDataStore?)processDataStore : null;
-                LogDataStore? protocolLogDataStore = captureProtocol ? (LogDataStore?)protocolDataStore : null;
 
                 // Create logger providers with DataStores
                 string logLevelString = _applicationSettingsService.GetSetting<string>("logging.level", "Information");
@@ -87,17 +84,7 @@ public class TaskLoggerFactory(
                     CaptureProperties = true
                 };
 
-                var protocolConfig = new DataStoreLoggerConfiguration
-                {
-                    LogLevel = configuredLogLevel,
-                    IncludeScopes = true,
-                    CaptureProperties = true
-                };
-
                 mainProvider = new DataStoreLoggerProvider(mainLogDataStore, _timeProvider, mainConfig);
-                protocolProvider = protocolLogDataStore != null
-                    ? new DataStoreLoggerProvider(protocolLogDataStore, _timeProvider, protocolConfig)
-                    : null;
                 processProvider = processLogDataStore != null
                     ? new DataStoreLoggerProvider(processLogDataStore, _timeProvider, mainConfig)
                     : null;
@@ -108,14 +95,7 @@ public class TaskLoggerFactory(
                     configuredLogLevel).ConfigureAwait(false);
                 fileLoggers.Add(mainFileLogger);
 
-                ILogger? protocolFileLogger = null;
-                if (captureProtocol)
-                {
-                    protocolFileLogger = await CreateFileLoggerAsync(
-                        Path.Combine(taskLogDir, "protocol.log"),
-                        configuredLogLevel).ConfigureAwait(false);
-                    fileLoggers.Add(protocolFileLogger);
-                }
+
 
                 ILogger? processFileLogger = null;
                 if (captureProcessOutput)
@@ -130,12 +110,6 @@ public class TaskLoggerFactory(
                 var mainLogger = new CompositeLogger(
                     [.. new[] { mainProvider.CreateLogger($"Task.{taskName}"), mainFileLogger }.Where(l => l != null)]);
 
-                CompositeLogger? protocolLogger = captureProtocol
-                    ? new CompositeLogger(
-                        new[] { protocolProvider?.CreateLogger($"Task.{taskName}.Protocol"), protocolFileLogger }
-                            .Where(l => l != null).ToArray()!)
-                    : null;
-
                 CompositeLogger? processLogger = captureProcessOutput
                     ? new CompositeLogger(
                         new[] { processProvider?.CreateLogger($"Task.{taskName}.Process"), processFileLogger }
@@ -147,15 +121,11 @@ public class TaskLoggerFactory(
                 {
                     TaskId = taskId,
                     MainLogger = mainLogger,
-                    ProtocolLogger = protocolLogger,
                     ProcessLogger = processLogger,
                     MainLogDataStoreId = mainDataStore.GetHashCode().ToString(),
-                    ProtocolLogDataStoreId = protocolDataStore?.GetHashCode().ToString(),
                     ProcessLogDataStoreId = processDataStore?.GetHashCode().ToString(),
                     MainLogFilePath = Path.Combine(taskLogDir, "main.log"),
-                    ProtocolLogFilePath = captureProtocol ? Path.Combine(taskLogDir, "protocol.log") : null,
                     ProcessLogFilePath = captureProcessOutput ? Path.Combine(taskLogDir, "process.log") : null,
-                    CaptureProtocol = captureProtocol,
                     CaptureProcessOutput = captureProcessOutput,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -165,10 +135,8 @@ public class TaskLoggerFactory(
                 {
                     TaskLogger = taskLogger,
                     MainDataStore = mainLogDataStore,
-                    ProtocolDataStore = protocolLogDataStore,
                     ProcessDataStore = processLogDataStore,
                     MainProvider = mainProvider,
-                    ProtocolProvider = protocolProvider,
                     ProcessProvider = processProvider,
                     FileLoggers = [.. fileLoggers],
                     LogDirectory = taskLogDir
@@ -188,7 +156,6 @@ public class TaskLoggerFactory(
 
                 // Cleanup partially created resources
                 mainProvider?.Dispose();
-                protocolProvider?.Dispose();
                 processProvider?.Dispose();
 
                 foreach (ILogger fileLogger in fileLoggers)
@@ -235,10 +202,8 @@ public class TaskLoggerFactory(
 
             // Cleanup
             context.MainProvider?.Dispose();
-            context.ProtocolProvider?.Dispose();
             context.ProcessProvider?.Dispose();
             context.MainDataStore?.Dispose();
-            context.ProtocolDataStore?.Dispose();
             context.ProcessDataStore?.Dispose();
 
             foreach (ILogger? fileLogger in context.FileLoggers)
@@ -278,7 +243,6 @@ public class TaskLoggerFactory(
         return logType switch
         {
             TaskLogType.Main => context.MainDataStore,
-            TaskLogType.Protocol => context.ProtocolDataStore,
             TaskLogType.Process => context.ProcessDataStore,
             _ => null
         };
@@ -326,10 +290,8 @@ public class TaskLoggerFactory(
             foreach (TaskLoggerContext context in _activeLoggers.Values)
             {
                 context.MainProvider?.Dispose();
-                context.ProtocolProvider?.Dispose();
                 context.ProcessProvider?.Dispose();
                 context.MainDataStore?.Dispose();
-                context.ProtocolDataStore?.Dispose();
                 context.ProcessDataStore?.Dispose();
 
                 foreach (ILogger? fileLogger in context.FileLoggers)
@@ -352,10 +314,8 @@ public class TaskLoggerFactory(
     {
         public TaskLogger TaskLogger { get; set; } = null!;
         public LogDataStore? MainDataStore { get; set; }
-        public LogDataStore? ProtocolDataStore { get; set; }
         public LogDataStore? ProcessDataStore { get; set; }
         public DataStoreLoggerProvider? MainProvider { get; set; }
-        public DataStoreLoggerProvider? ProtocolProvider { get; set; }
         public DataStoreLoggerProvider? ProcessProvider { get; set; }
         public List<ILogger> FileLoggers { get; set; } = [];
         public string LogDirectory { get; set; } = string.Empty;

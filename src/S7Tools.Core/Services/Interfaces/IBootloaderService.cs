@@ -17,7 +17,6 @@ public interface IBootloaderService
     /// <param name="progress">Progress reporter providing stage name and completion percentage.</param>
     /// <param name="taskLogger">Optional logger for main task operations and workflow steps.</param>
     /// <param name="processLogger">Optional logger for capturing socat process stdout/stderr output.</param>
-    /// <param name="protocolLogger">Optional logger for capturing protocol-level PLC communication.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <returns>The dumped memory data.</returns>
     Task<IList<byte[]>> DumpAsync(
@@ -25,7 +24,6 @@ public interface IBootloaderService
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
         Microsoft.Extensions.Logging.ILogger? processLogger = null,
-        Microsoft.Extensions.Logging.ILogger? protocolLogger = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

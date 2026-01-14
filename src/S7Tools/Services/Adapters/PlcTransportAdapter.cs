@@ -100,6 +100,8 @@ namespace S7Tools.Services.Adapters
             // await _stream.FlushAsync(cancellationToken); // Removed to prevent packet fragmentation logic interference
         }
 
+        public Stream? GetStream() => _stream;
+
         public ValueTask DisposeAsync()
         {
             _stream?.Dispose();

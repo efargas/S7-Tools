@@ -33,7 +33,6 @@ public sealed class BootloaderService(
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
         Microsoft.Extensions.Logging.ILogger? processLogger = null,
-        Microsoft.Extensions.Logging.ILogger? protocolLogger = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(profiles);
@@ -49,7 +48,6 @@ public sealed class BootloaderService(
             progress,
             effectiveTaskLogger,
             processLogger,
-            protocolLogger,
             _serialPort,
             _socat,
             _power,

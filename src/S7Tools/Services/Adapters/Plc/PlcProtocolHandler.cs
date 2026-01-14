@@ -8,6 +8,12 @@ namespace S7Tools.Services.Adapters.Plc
     internal class PlcProtocolHandler(IPlcProtocol protocol)
     {
         private readonly IPlcProtocol _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
+        public async Task DisconnectAsync(CancellationToken cancellationToken)
+        {
+            await _protocol.DisconnectAsync(cancellationToken);
+        }
+
+        public Stream? GetStream() => _protocol.GetStream();
 
         public async Task<byte[]?> InvokePrimaryHandlerAsync(byte handlerIndex, byte[] args, bool awaitResponse, CancellationToken cancellationToken)
         {

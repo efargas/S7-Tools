@@ -1,7 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using S7Tools.Core.Models.MemoryDump;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Core.Protocol;
 

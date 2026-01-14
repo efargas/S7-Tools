@@ -15,36 +15,37 @@ namespace S7Tools.Services.Adapters
     public sealed class PlcClientAdapter : IPlcClient
     {
         private readonly ILogger<PlcClientAdapter> _logger;
-        private ILogger? _protocolLogger;
+
         private readonly IPlcProtocol _protocol;
 
         // Components
         private readonly PlcProtocolHandler _protocolHandler;
         private readonly PlcMemoryManager _memoryManager;
         private readonly PlcStagerManager _stagerManager;
+        private readonly MemoryDumpOrchestrator _orchestrator;
 
         // Socat connection info (set via Configure)
         private string _socatHost = "127.0.0.1";
         private int _socatPort = 3333; // Default fallback
 
-        public PlcClientAdapter(IPlcProtocol protocol, ILogger<PlcClientAdapter> logger, ILoggerFactory loggerFactory)
+        public PlcClientAdapter(
+            IPlcProtocol protocol,
+            ILogger<PlcClientAdapter> logger,
+            ILoggerFactory loggerFactory,
+            MemoryDumpOrchestrator orchestrator)
         {
             _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
             ArgumentNullException.ThrowIfNull(loggerFactory);
 
             // Initialize SOLID components
             _protocolHandler = new PlcProtocolHandler(protocol);
-            _memoryManager = new PlcMemoryManager(_protocolHandler);
+            _memoryManager = new PlcMemoryManager(_protocolHandler, _orchestrator, loggerFactory.CreateLogger<PlcMemoryManager>());
             _stagerManager = new PlcStagerManager(_protocolHandler, _memoryManager);
         }
 
-        public void SetProtocolLogger(ILogger? protocolLogger)
-        {
-            _protocolLogger = protocolLogger;
-            // TODO: Protocol logger can be used for detailed hex dumps of PLC communication
-            // For now, store it for future implementation
-        }
+
 
         public void Configure(string host, int port)
         {
@@ -60,6 +61,11 @@ namespace S7Tools.Services.Adapters
             if (_protocol is IAsyncDisposable d)
             {
                 await d.DisposeAsync();
+            }
+            // Dispose the orchestrator if it implements IDisposable
+            if (_orchestrator is IDisposable disposableOrchestrator)
+            {
+                disposableOrchestrator.Dispose();
             }
         }
 
@@ -89,7 +95,7 @@ namespace S7Tools.Services.Adapters
             }
 
             // Log raw bytes for debugging
-            _protocolLogger?.LogDebug("Version Response Hex: {Hex}", BitConverter.ToString(versionBytes));
+            _logger.LogDebug("Version Response Hex: {Hex}", BitConverter.ToString(versionBytes));
 
             // Specific parsing for binary version format:
             // Look for 0x56 ('V') followed by 3 bytes (Major, Minor, Patch)
@@ -183,6 +189,12 @@ namespace S7Tools.Services.Adapters
                 _socatHost,
                 _socatPort,
                 cancellationToken);
+        }
+
+        public async Task StopDumperSessionAsync()
+        {
+            _logger.LogInformation("Stopping persistent dumper session...");
+            await _orchestrator.StopAsync().ConfigureAwait(false);
         }
 
         #endregion

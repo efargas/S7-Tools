@@ -15,6 +15,7 @@ using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
+using S7Tools.Collections;
 using S7Tools.Core.Constants;
 using S7Tools.Models;
 using S7Tools.Services;
@@ -47,10 +48,8 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
     private ITaskLogDataStore _mainLogDataStore;
     private ITaskLogDataStore _processLogDataStore;
-    private ITaskLogDataStore _protocolLogDataStore;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _mainHandler;
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
-    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _protocolHandler;
 
     private TaskExecution? _taskExecution;
     private string _validationResultText = "No validation data";
@@ -118,34 +117,31 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         // Initialize log entry collections
         MainLogEntries = [];
         ProcessLogEntries = [];
-        ProtocolLogEntries = [];
 
         _mainLogDataStore = null!;
         _processLogDataStore = null!;
-        _protocolLogDataStore = null!;
 
         _logUpdater = new S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)>(items =>
         {
+            var mainBatch = new List<LogEntry>();
+            var processBatch = new List<LogEntry>();
+
             foreach ((string logType, LogEntry entry) in items)
             {
-                switch (logType)
-                {
-                    case "Main":
-                        MainLogEntries.Add(entry);
-                        break;
-                    case "Process":
-                        ProcessLogEntries.Add(entry);
-                        break;
-                    case "Protocol":
-                        ProtocolLogEntries.Add(entry);
-                        break;
-                }
+                if (logType == "Main")
+                    mainBatch.Add(entry);
+                else if (logType == "Process")
+                    processBatch.Add(entry);
             }
+
+            if (mainBatch.Count > 0)
+                MainLogEntries.AddRange(mainBatch);
+            if (processBatch.Count > 0)
+                ProcessLogEntries.AddRange(processBatch);
         }, TimeSpan.FromMilliseconds(500), _uiThreadService);
 
         _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
         _processHandler = (s, e) => HandleLogCollectionChanged(s, e, "Process");
-        _protocolHandler = (s, e) => HandleLogCollectionChanged(s, e, "Protocol");
 
         SetupCommands();
         UpdatePowerConnectionState();
@@ -227,10 +223,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 {
                     _processLogDataStore.CollectionChanged -= _processHandler;
                 }
-                if (_protocolLogDataStore != null)
-                {
-                    _protocolLogDataStore.CollectionChanged -= _protocolHandler;
-                }
             }
 
             this.RaiseAndSetIfChanged(ref _taskExecution, value);
@@ -239,17 +231,15 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             {
                 _mainLogDataStore = null!;
                 _processLogDataStore = null!;
-                _protocolLogDataStore = null!;
             }
             else
             {
                 // Get persistent stores for the new task
-                (_mainLogDataStore, _processLogDataStore, _protocolLogDataStore) = _centralizedTaskLogService.GetOrCreateStoresForTask(value.TaskId);
+                (_mainLogDataStore, _processLogDataStore, _) = _centralizedTaskLogService.GetOrCreateStoresForTask(value.TaskId);
 
                 // Attach to new task's log stores
                 _mainLogDataStore.CollectionChanged += _mainHandler;
                 _processLogDataStore.CollectionChanged += _processHandler;
-                _protocolLogDataStore.CollectionChanged += _protocolHandler;
             }
 
             // Clear and repopulate logs from DataStore
@@ -261,17 +251,14 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the collection of parsed main log entries.
     /// </summary>
-    public ObservableCollection<LogEntry> MainLogEntries { get; }
+    public FastObservableCollection<LogEntry> MainLogEntries { get; }
 
     /// <summary>
     /// Gets the collection of parsed process/socat log entries.
     /// </summary>
-    public ObservableCollection<LogEntry> ProcessLogEntries { get; }
+    public FastObservableCollection<LogEntry> ProcessLogEntries { get; }
 
-    /// <summary>
-    /// Gets the collection of parsed protocol log entries.
-    /// </summary>
-    public ObservableCollection<LogEntry> ProtocolLogEntries { get; }
+
 
     /// <summary>
     /// Gets or sets the validation result text.
@@ -546,14 +533,14 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         MainLogEntries.Clear();
         ProcessLogEntries.Clear();
-        ProtocolLogEntries.Clear();
 
         // Repopulate from existing DataStore entries
         if (_mainLogDataStore != null)
         {
+            var batch = new List<LogEntry>();
             foreach (S7Tools.Core.Models.LogModel logModel in _mainLogDataStore)
             {
-                MainLogEntries.Add(new LogEntry
+                batch.Add(new LogEntry
                 {
                     Timestamp = logModel.Timestamp,
                     Level = logModel.Level.ToString(),
@@ -561,13 +548,15 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                     Message = logModel.Message
                 });
             }
+            MainLogEntries.AddRange(batch);
         }
 
         if (_processLogDataStore != null)
         {
+            var batch = new List<LogEntry>();
             foreach (S7Tools.Core.Models.LogModel logModel in _processLogDataStore)
             {
-                ProcessLogEntries.Add(new LogEntry
+                batch.Add(new LogEntry
                 {
                     Timestamp = logModel.Timestamp,
                     Level = logModel.Level.ToString(),
@@ -575,20 +564,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                     Message = logModel.Message
                 });
             }
-        }
-
-        if (_protocolLogDataStore != null)
-        {
-            foreach (S7Tools.Core.Models.LogModel logModel in _protocolLogDataStore)
-            {
-                ProtocolLogEntries.Add(new LogEntry
-                {
-                    Timestamp = logModel.Timestamp,
-                    Level = logModel.Level.ToString(),
-                    Category = logModel.Category,
-                    Message = logModel.Message
-                });
-            }
+            ProcessLogEntries.AddRange(batch);
         }
     }
 
@@ -664,7 +640,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             // Initialized when a task is set
             _mainLogDataStore = null!;
             _processLogDataStore = null!;
-            _protocolLogDataStore = null!;
 
             // View creation helperofile
             SocatProfile? socatProfile = await _socatProfileService.GetByIdAsync(jobProfile.SocatProfileId);
@@ -682,7 +657,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 socatProfile,
                 serialDevice,
                 null, // processLogger - could be TaskExecution.Logger if needed
-                null, // protocolLogger
                 CancellationToken.None);
 
             CanStopSocat = true;
@@ -1331,9 +1305,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                     case "Process":
                         collection = ProcessLogEntries;
                         break;
-                    case "Protocol":
-                        collection = ProtocolLogEntries;
-                        break;
                     default:
                         return;
                 }
@@ -1388,10 +1359,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 _processLogDataStore.CollectionChanged -= _processHandler;
             }
 
-            if (_protocolLogDataStore != null)
-            {
-                _protocolLogDataStore.CollectionChanged -= _protocolHandler;
-            }
 
             _socatTcpClient?.Dispose();
             _taskStateSubscription?.Dispose();

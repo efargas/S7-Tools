@@ -18,9 +18,8 @@ namespace S7Tools.Views.Tasks;
 /// </summary>
 public partial class TaskDetailsView : ReactiveUserControl<TaskDetailsViewModel>
 {
-    private DataGrid? _mainLogGrid;
-    private DataGrid? _socatLogGrid;
-    private DataGrid? _protocolLogGrid;
+    private ScrollViewer? _mainLogScrollViewer;
+    private ScrollViewer? _socatLogScrollViewer;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskDetailsView"/> class.
@@ -29,87 +28,67 @@ public partial class TaskDetailsView : ReactiveUserControl<TaskDetailsViewModel>
     {
         InitializeComponent();
 
-        // Find DataGrids and setup scroll logic
+        // Find ScrollViewers and setup scroll logic
         this.WhenActivated(disposables =>
         {
-            _mainLogGrid = this.FindControl<DataGrid>("MainLogGrid");
-            _socatLogGrid = this.FindControl<DataGrid>("SocatLogGrid");
-            _protocolLogGrid = this.FindControl<DataGrid>("ProtocolLogGrid");
+            _mainLogScrollViewer = this.FindControl<ScrollViewer>("MainLogScrollViewer");
+            _socatLogScrollViewer = this.FindControl<ScrollViewer>("SocatLogScrollViewer");
 
-            SetupAutoScroll(_mainLogGrid, disposables);
-            SetupAutoScroll(_socatLogGrid, disposables);
-            SetupAutoScroll(_protocolLogGrid, disposables);
+            SetupAutoScroll(_mainLogScrollViewer, ViewModel?.MainLogEntries, disposables);
+            SetupAutoScroll(_socatLogScrollViewer, ViewModel?.ProcessLogEntries, disposables);
         });
     }
 
-    private void SetupAutoScroll(DataGrid? dataGrid, CompositeDisposable disposables)
+    private void SetupAutoScroll(ScrollViewer? scrollViewer, INotifyCollectionChanged? collection, CompositeDisposable disposables)
     {
-        if (dataGrid == null)
+        if (scrollViewer == null || collection == null)
             return;
 
         // Auto-Scroll on Collection Changed
-        if (dataGrid.ItemsSource is INotifyCollectionChanged collection)
-        {
-            Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
-                h => collection.CollectionChanged += h,
-                h => collection.CollectionChanged -= h)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(e =>
+        Observable.FromEventPattern<NotifyCollectionChangedEventHandler, NotifyCollectionChangedEventArgs>(
+            h => collection.CollectionChanged += h,
+            h => collection.CollectionChanged -= h)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(e =>
+            {
+                if (ViewModel != null && ViewModel.AutoScroll &&
+                    (e.EventArgs.Action == NotifyCollectionChangedAction.Add || e.EventArgs.Action == NotifyCollectionChangedAction.Reset))
                 {
-                    if (ViewModel != null && ViewModel.AutoScroll && e.EventArgs.Action == NotifyCollectionChangedAction.Add)
-                    {
-                        var lastItem = dataGrid.ItemsSource?.Cast<object>().LastOrDefault();
-                        if (lastItem != null)
-                        {
-                            dataGrid.ScrollIntoView(lastItem, null);
-                        }
-                    }
-                })
-                .DisposeWith(disposables);
+                    // Scroll to bottom using background priority to ensure layout is ready
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => scrollViewer.ScrollToEnd(), Avalonia.Threading.DispatcherPriority.Background);
+                }
+            })
+            .DisposeWith(disposables);
 
 
-            // React to AutoScroll Property Changes (User Toggle)
-            ViewModel.WhenAnyValue(x => x.AutoScroll)
-                .Where(autoScroll => autoScroll) // Only when enabled
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Subscribe(_ =>
+        // React to AutoScroll Property Changes (User Toggle)
+        ViewModel!.WhenAnyValue(x => x.AutoScroll)
+            .Where(autoScroll => autoScroll) // Only when enabled
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ =>
+            {
+                if (ViewModel == null)
+                    return;
+
+                // Use Dispatcher.Post to ensure UI is ready and layout has completed
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
-                    if (ViewModel == null)
-                        return;
+                    scrollViewer.ScrollToEnd();
+                    ViewModel.IsStuckToBottom = true;
+                }, Avalonia.Threading.DispatcherPriority.Background);
+            })
+            .DisposeWith(disposables);
 
-                    // Use Dispatcher.Post to ensure UI is ready and layout has completed
-                    Avalonia.Threading.Dispatcher.UIThread.Post(() =>
-                    {
-                        var lastItem = dataGrid.ItemsSource?.Cast<object>().LastOrDefault();
-                        if (lastItem != null)
-                        {
-                            dataGrid.ScrollIntoView(lastItem, null);
-                            ViewModel.IsStuckToBottom = true;
-                        }
-                    }, Avalonia.Threading.DispatcherPriority.Background);
-                })
-                .DisposeWith(disposables);
-        }
 
         // Smart Scroll Detection (User Scroll)
-        // We need to wait for the template to be applied to find the ScrollViewer?
-        // Actually, AddHandler works on the DataGrid itself for bubbling events
-        dataGrid.AddHandler(ScrollViewer.ScrollChangedEvent, (s, e) =>
+        // ScrollViewer exposes ScrollChanged event directly
+        scrollViewer.ScrollChanged += (s, e) =>
         {
             if (ViewModel == null)
                 return;
 
-            var scrollArgs = e as ScrollChangedEventArgs;
-            if (scrollArgs == null)
-                return;
-
-            // Get the ScrollViewer that triggered the event
-            if (e.Source is not ScrollViewer scrollViewer)
-                return;
-
-            // Only consider the Vertical scroll of the DataGrid's internal ScrollViewer
-            // Filter out horizontal scrolL or inner scrollviewers
-            if (scrollArgs.OffsetDelta.Y == 0)
+            // Only consider vertical scroll
+            if (e.OffsetDelta.Y == 0)
                 return;
 
             // Simple logic: 
@@ -118,19 +97,18 @@ public partial class TaskDetailsView : ReactiveUserControl<TaskDetailsViewModel>
 
             bool isAtBottom = scrollViewer.Offset.Y >= (scrollViewer.Extent.Height - scrollViewer.Viewport.Height - 20); // 20px tolerance
 
-            if (scrollArgs.OffsetDelta.Y < 0)
+            if (e.OffsetDelta.Y < 0)
             {
                 // User scrolled up
                 ViewModel.AutoScroll = false;
             }
-            else if (isAtBottom && scrollArgs.OffsetDelta.Y > 0)
+            else if (isAtBottom && e.OffsetDelta.Y > 0)
             {
                 // User scrolled down to bottom
                 ViewModel.AutoScroll = true;
             }
 
             ViewModel.IsStuckToBottom = isAtBottom;
-
-        }, RoutingStrategies.Bubble);
+        };
     }
 }

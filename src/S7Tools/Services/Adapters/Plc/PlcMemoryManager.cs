@@ -3,16 +3,24 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace S7Tools.Services.Adapters.Plc
 {
     internal class PlcMemoryManager
     {
         private readonly PlcProtocolHandler _protocol;
+        private readonly MemoryDumpOrchestrator _orchestrator;
+        private readonly Microsoft.Extensions.Logging.ILogger<PlcMemoryManager> _logger;
 
-        public PlcMemoryManager(PlcProtocolHandler protocol)
+        public PlcMemoryManager(
+            PlcProtocolHandler protocol,
+            MemoryDumpOrchestrator orchestrator,
+            Microsoft.Extensions.Logging.ILogger<PlcMemoryManager> logger)
         {
             _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
+            _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task WriteToIramAsync(uint address, byte[] data, CancellationToken cancellationToken)
@@ -84,8 +92,8 @@ namespace S7Tools.Services.Adapters.Plc
         }
 
         /// <summary>
-        /// Invokes the dumper with streaming using high-performance DumperService.
-        /// Data is streamed incrementally via callback instead of buffering in memory.
+        /// Invokes the dumper with streaming using high-performance DumperService and Orchestrator.
+        /// Data is streamed incrementally via callback while also being dispatched to UI for real-time visualization.
         /// </summary>
         public async Task InvokeDumperStreamAsync(
             uint address,
@@ -96,57 +104,53 @@ namespace S7Tools.Services.Adapters.Plc
             int socatPort,
             CancellationToken cancellationToken)
         {
-            // Protocol: 'A' + Addr + Len (same command as blocking version)
+            // Configure orchestrator
+            _orchestrator.Configure(socatHost ?? "127.0.0.1", socatPort);
+
+            _logger.LogInformation("Preparing to invoke dumper for address 0x{Address:X8}, length {Length} bytes", address, length);
+
+            // Protocol: 'A' + Addr + Len
             var args = new byte[9];
             args[0] = (byte)'A';
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(address), 0, args, 1, 4);
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(length), 0, args, 5, 4);
 
-            // Send dump command
-            var response = await _protocol.InvokeAddHookAsync(PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND, args, true, cancellationToken);
-
-            if (response == null || !System.Text.Encoding.ASCII.GetString(response).StartsWith("Ok"))
-            {
-                throw new Exception("Dumper invocation failed.");
-            }
-
-            // Use DumperService for high-performance streaming ingestion
-            using var dumperService = new S7Tools.Core.Services.DumperService(
-                Microsoft.Extensions.Logging.Abstractions.NullLogger<S7Tools.Core.Services.DumperService>.Instance);
-
-            // Configure with socat connection info
-            dumperService.Configure(socatHost ?? "127.0.0.1", socatPort, address);
-
             long totalReceived = 0;
-
-            // Start the dumping process in the background
-            var dumpTask = dumperService.StartDumpingAsync(cancellationToken);
 
             try
             {
-                //  Subscribe to dumper service output channel
-                await foreach (var block in dumperService.DataReader.ReadAllAsync(cancellationToken))
-                {
-                    // Stream data to callback
-                    await dataCallback(block.Data);
+                // We share the existing session to keep socat ALIVE
+                Stream? currentStream = _protocol.GetStream();
+                _logger.LogDebug("Sharing existing protocol stream with dumper session.");
 
-                    totalReceived += block.Data.Length;
-                    progress?.Report(totalReceived);
-
-                    // Stop when we've received expected length
-                    if (totalReceived >= length)
+                // Use the orchestrator to send the command AND handle the streaming
+                await _orchestrator.InvokeDumpCommandAsync(
+                    (byte)PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND,
+                    args,
+                    address,
+                    length,
+                    async block =>
                     {
-                        break;
-                    }
-                }
+                        await dataCallback(block.Data).ConfigureAwait(false);
+                        totalReceived += block.Data.Length;
+                        progress?.Report(totalReceived);
+                    },
+                    cancellationToken,
+                    currentStream).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Dumper streaming operation failed.");
+                throw;
             }
             finally
             {
-                await dumperService.StopAsync();
-                // Wait for dump task to complete (may already be complete)
-                try
-                { await dumpTask; }
-                catch (OperationCanceledException) { }
+                _logger.LogInformation("Dumper streaming session completed/terminated for segment 0x{Address:X8}", address);
+            }
+
+            if (totalReceived < length)
+            {
+                throw new Exception($"Dump incomplete for segment 0x{address:X8}. Received {totalReceived} of {length} bytes.");
             }
         }
 
