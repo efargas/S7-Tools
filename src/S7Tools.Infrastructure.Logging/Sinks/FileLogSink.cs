@@ -167,7 +167,7 @@ public class FileLogSink : IFileLogSink, IDisposable
                     sb.AppendLine();
                 }
 
-                await File.AppendAllTextAsync(fullPath, sb.ToString(), CancellationToken.None);
+                await File.AppendAllTextAsync(fullPath, sb.ToString(), _cts.Token);
             }
             catch
             {
