@@ -10,6 +10,7 @@ using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Services.Shell;
 using S7Tools.Extensions;
 
 namespace S7Tools.Services.Socat;
@@ -22,6 +23,7 @@ public partial class SocatProcessManager : IDisposable
 {
     private readonly ILogger<SocatProcessManager> _logger;
     private readonly ITimeProvider _timeProvider;
+    private readonly IShellCommandExecutor _shellExecutor;
     private readonly Dictionary<int, Process> _activeProcesses = new();
     private readonly Dictionary<int, Timer> _processMonitors = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -29,10 +31,12 @@ public partial class SocatProcessManager : IDisposable
 
     public SocatProcessManager(
         ILogger<SocatProcessManager> logger,
-        ITimeProvider timeProvider)
+        ITimeProvider timeProvider,
+        IShellCommandExecutor shellExecutor)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        _shellExecutor = shellExecutor ?? throw new ArgumentNullException(nameof(shellExecutor));
     }
 
     /// <summary>
@@ -282,7 +286,7 @@ public partial class SocatProcessManager : IDisposable
             }
 
             // Get child processes before killing parent
-            List<int> childPids = await GetChildProcessesAsync(processId, cancellationToken).ConfigureAwait(false);
+            List<int> childPids = await _shellExecutor.GetChildProcessesAsync(processId, cancellationToken).ConfigureAwait(false);
             if (childPids.Count > 0)
             {
                 _logger.LogDebug("Found {Count} child processes for socat {ProcessId}: {Children}",
@@ -298,7 +302,7 @@ public partial class SocatProcessManager : IDisposable
                 {
                     if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                     {
-                        await ExecuteCommandAsync($"kill -TERM {processId}", cancellationToken).ConfigureAwait(false);
+                        await _shellExecutor.ExecuteCommandAsync($"kill -TERM {processId}", cancellationToken).ConfigureAwait(false);
                         exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
                     }
                     else
@@ -332,11 +336,11 @@ public partial class SocatProcessManager : IDisposable
                     try
                     {
                         // Check if child is still alive
-                        var result = await ExecuteCommandAsync($"kill -0 {childPid}", cancellationToken).ConfigureAwait(false);
+                        var result = await _shellExecutor.ExecuteCommandAsync($"kill -0 {childPid}", cancellationToken).ConfigureAwait(false);
                         if (result.Success)
                         {
                             _logger.LogInformation("Cleaning up child process {ChildPid} for socat {ProcessId}", childPid, processId);
-                            await ExecuteCommandAsync($"kill -9 {childPid}", cancellationToken).ConfigureAwait(false);
+                            await _shellExecutor.ExecuteCommandAsync($"kill -9 {childPid}", cancellationToken).ConfigureAwait(false);
                         }
                     }
                     catch (Exception ex)
@@ -454,75 +458,6 @@ public partial class SocatProcessManager : IDisposable
         }
     }
 
-    private async Task<(bool Success, int ExitCode)> ExecuteCommandAsync(string command, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command}\"",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            if (process != null)
-            {
-                await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                return (process.ExitCode == 0, process.ExitCode);
-            }
-
-            return (false, -1);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to execute command: {Command}", command);
-            return (false, -1);
-        }
-    }
-
-    private async Task<List<int>> GetChildProcessesAsync(int parentPid, CancellationToken cancellationToken)
-    {
-        var childPids = new List<int>();
-
-        try
-        {
-            // Use pgrep to find child processes
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "pgrep",
-                Arguments = $"-P {parentPid}",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            if (process != null)
-            {
-                string output = await process.StandardOutput.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-                await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-
-                foreach (string line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-                {
-                    if (int.TryParse(line.Trim(), out int childPid))
-                    {
-                        childPids.Add(childPid);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to get child processes for {ParentPid}", parentPid);
-        }
-
-        return childPids;
-    }
-
     /// <summary>
     /// Regex pattern for detecting hex dump lines.
     /// </summary>
@@ -537,26 +472,36 @@ public partial class SocatProcessManager : IDisposable
 
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
         if (_disposed)
             return;
 
-        // Dispose all active processes
-        foreach (var process in _activeProcesses.Values)
+        if (disposing)
         {
-            try
-            { process.Dispose(); }
-            catch { }
+            // Dispose all active processes
+            foreach (var process in _activeProcesses.Values)
+            {
+                try
+                { process.Dispose(); }
+                catch { }
+            }
+
+            // Dispose all monitors
+            foreach (var monitor in _processMonitors.Values)
+            {
+                try
+                { monitor.Dispose(); }
+                catch { }
+            }
+
+            _semaphore.Dispose();
         }
 
-        // Dispose all monitors
-        foreach (var monitor in _processMonitors.Values)
-        {
-            try
-            { monitor.Dispose(); }
-            catch { }
-        }
-
-        _semaphore.Dispose();
         _disposed = true;
     }
 }

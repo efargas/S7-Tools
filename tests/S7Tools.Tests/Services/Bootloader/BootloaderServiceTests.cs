@@ -145,11 +145,11 @@ public class EnhancedBootloaderServiceTests
         var progress = new Progress<(string stage, double percent, long? bytesRead, long? totalBytes)>();
 
         // Act
-        byte[] result = await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
+        IList<byte[]> result = await service.DumpAsync(profiles, progress, null, null, null, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
-        result.Length.Should().Be(256); // Expected dump size
+        result[0].Length.Should().Be(256); // Expected dump size
 
         // Verify all stages executed
         await plcClient.Received(1).InvokeDumperAsync(

@@ -77,8 +77,8 @@ public sealed class EnhancedBootloaderService(
 
         try
         {
-            // Stage 0: Configure serial port (2% progress)
-            progress.Report(("serial_config", 2.0, null, null));
+            // Stage 0: Configure serial port (1% progress)
+            progress.Report(("serial_config", 1.0, null, null));
             effectiveTaskLogger.LogDebug("Configuring serial port {Device} with profile configuration", profiles.Serial.Device);
 
             // Use serial configuration directly from profile
@@ -95,8 +95,8 @@ public sealed class EnhancedBootloaderService(
 
             effectiveTaskLogger.LogInformation("Serial port {Device} configured successfully", profiles.Serial.Device);
 
-            // Stage 1: Setup socat bridge (5% progress)
-            progress.Report(("socat_setup", 5.0, null, null));
+            // Stage 1: Setup socat bridge (3% progress)
+            progress.Report(("socat_setup", 3.0, null, null));
             effectiveTaskLogger.LogDebug("Setting up socat bridge on port {Port}", profiles.Socat.Port);
 
             // Use socat configuration directly from profile (must be non-null after Phase 2 changes)
@@ -115,8 +115,8 @@ public sealed class EnhancedBootloaderService(
             effectiveTaskLogger.LogInformation("Socat bridge started on TCP port {Port} (PID: {ProcessId})",
                 profiles.Socat.Port, socatProcess.ProcessId);
 
-            // Stage 2: Connect to power supply (8% progress)
-            progress.Report(("power_connect", 8.0, null, null));
+            // Stage 2: Connect to power supply (5% progress)
+            progress.Report(("power_connect", 5.0, null, null));
             _logger.LogDebug("Connecting to power supply at {Host}:{Port}",
                 profiles.Power.Host, profiles.Power.Port);
 
@@ -137,8 +137,8 @@ public sealed class EnhancedBootloaderService(
                 profiles.Power.Host, profiles.Power.Port);
 
             // Match BootloaderService.cs logic for weighted progress
-            // Stage 3: Power OFF PLC and wait (8% -> 9% progress)
-            progress.Report(("power_off_initial", 9.0, null, null));
+            // Stage 3: Power OFF PLC and wait (5% -> 6% progress)
+            progress.Report(("power_off_initial", 6.0, null, null));
             effectiveTaskLogger.LogInformation("--- Stage 3: Initial Power OFF ---");
             _logger.LogDebug("Turning PLC power OFF and waiting {WaitMs}ms", InitialPowerOffWaitMs);
 
@@ -151,14 +151,14 @@ public sealed class EnhancedBootloaderService(
             await WaitWithProgressAsync(
                 InitialPowerOffWaitMs,
                 progress,
-                9.0, 15.0,
+                6.0, 10.0,
                 "power_off_wait",
                 cancellationToken).ConfigureAwait(false);
 
             effectiveTaskLogger.LogInformation("PLC powered OFF and wait time completed");
 
-            // Stage 4: Power ON PLC (15% progress)
-            progress.Report(("power_on", 15.0, null, null));
+            // Stage 4: Power ON PLC (10% progress)
+            progress.Report(("power_on", 10.0, null, null));
             effectiveTaskLogger.LogInformation("--- Stage 4: Power ON PLC ---");
             effectiveTaskLogger.LogDebug("Turning PLC power ON");
 
@@ -178,20 +178,20 @@ public sealed class EnhancedBootloaderService(
             await WaitWithProgressAsync(
                  profiles.PowerOnTimeMs,
                  progress,
-                 15.0, 17.0,
+                 10.0, 11.0,
                  "power_on_stabilize",
                  cancellationToken).ConfigureAwait(false);
 
-            // Stage 6: Create PLC client and connect to socat (17% progress)
-            progress.Report(("plc_connect", 17.0, null, null));
+            // Stage 6: Create PLC client and connect to socat (12% progress)
+            progress.Report(("plc_connect", 12.0, null, null));
             await using IPlcClient client = _clientFactory(profiles);
 
             _logger.LogDebug("PLC client created and connecting to socat TCP server");
             processLogger?.LogInformation("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
             await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-            // Stage 7: Power cycle PLC (20% -> 22% progress)
-            progress.Report(("power_cycle", 20.0, null, null));
+            // Stage 7: Power cycle PLC (13% -> 15% progress)
+            progress.Report(("power_cycle", 13.0, null, null));
             effectiveTaskLogger.LogDebug("Power cycling PLC: OFF → wait {PowerOffDelayMs}ms → ON", profiles.PowerOffDelayMs);
 
             // Decomposed Power Cycle for progress reporting
@@ -200,7 +200,7 @@ public sealed class EnhancedBootloaderService(
             await WaitWithProgressAsync(
                 profiles.PowerOffDelayMs, // Short wait
                 progress,
-                20.0, 22.0,
+                13.0, 15.0,
                 "power_cycle_wait",
                 cancellationToken).ConfigureAwait(false);
 
@@ -211,8 +211,8 @@ public sealed class EnhancedBootloaderService(
 
             effectiveTaskLogger.LogInformation("PLC power cycled successfully");
 
-            // Stage 8: Handshake (22% progress) - Aligned with BootloaderService
-            progress.Report(("handshake", 22.0, null, null));
+            // Stage 8: Handshake (15% progress) - Aligned with BootloaderService
+            progress.Report(("handshake", 15.0, null, null));
             _logger.LogDebug("Performing bootloader handshake");
 
             string version = await client.GetBootloaderVersionAsync(cancellationToken)
@@ -221,8 +221,8 @@ public sealed class EnhancedBootloaderService(
             _logger.LogInformation("Connected to bootloader version: {Version}", version);
             processLogger?.LogInformation("Bootloader version: {Version}", version);
 
-            // Stage 9: Install stager (25% progress)
-            progress.Report(("stager_install", 25.0, null, null));
+            // Stage 9: Install stager (16% progress)
+            progress.Report(("stager_install", 16.0, null, null));
             _logger.LogDebug("Installing stager payload from {BasePath}", profiles.Payloads.BasePath);
             byte[] stagerPayload = await _payloads.GetStagerAsync(
                 profiles.Payloads.BasePath,
@@ -236,7 +236,7 @@ public sealed class EnhancedBootloaderService(
                 stagerPayload.Length,
                 baudRate,
                 progress,
-                25.0, 28.0,
+                16.0, 18.0,
                 "stager_install",
                 stagerCts.Token);
 
@@ -256,8 +256,8 @@ public sealed class EnhancedBootloaderService(
             effectiveTaskLogger.LogInformation("Stager payload installed successfully ({Size} bytes)", stagerPayload.Length);
             processLogger?.LogInformation("Stager installed: {Size} bytes", stagerPayload.Length);
 
-            // Stage 10: Install Dumper Payload (28% progress)
-            progress.Report(("dumper_install", 28.0, null, null));
+            // Stage 10: Install Dumper Payload (18% progress)
+            progress.Report(("dumper_install", 18.0, null, null));
             effectiveTaskLogger.LogInformation("--- Stage 10: Install Memory Dumper Payload ---");
 
             byte[] dumperPayload = await _payloads.GetMemoryDumperAsync(
@@ -272,7 +272,7 @@ public sealed class EnhancedBootloaderService(
                 dumperPayload.Length,
                 baudRate,
                 progress,
-                28.0, 30.0,
+                18.0, 20.0,
                 "dumper_install",
                 dumperCts.Token);
 

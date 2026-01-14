@@ -1,105 +1,56 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Extensions;
+using S7Tools.Services.SerialPort;
 
 namespace S7Tools.Services;
 
 /// <summary>
-/// Service for serial port operations including port discovery, configuration management, and Linux stty command integration.
-/// This service provides comprehensive serial port management capabilities optimized for Linux systems.
+/// Facade service for serial port operations. Delegates to specialized services for discovery, configuration, and monitoring.
+/// This service maintains the ISerialPortService interface for backward compatibility while providing improved separation of concerns.
 /// </summary>
-public sealed partial class SerialPortService : ISerialPortService, IDisposable
+public sealed class SerialPortService : ISerialPortService, IDisposable
 {
     private readonly ILogger<SerialPortService> _logger;
     private readonly IApplicationSettingsService _settingsService;
-    private readonly ITimeProvider _timeProvider;
-    private readonly Timer _monitoringTimer;
-    private readonly Dictionary<string, SerialPortInfo> _lastKnownPorts = [];
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private bool _isMonitoring;
-    private int _monitoringCallbackRunning;
+
+    // Specialized services
+    private readonly SerialPortDiscoveryService _discoveryService;
+    private readonly SerialPortConfigurationService _configService;
+    private readonly SerialPortMonitoringService _monitoringService;
 
     /// <summary>
     /// Initializes a new instance of the SerialPortService class.
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
     /// <param name="settingsService">The application settings service for runtime configuration.</param>
-    /// <param name="timeProvider">The time provider for abstracting time operations.</param>
-    /// <exception cref="ArgumentNullException">Thrown when logger or settingsService is null.</exception>
+    /// <param name="discoveryService">The discovery service for port scanning.</param>
+    /// <param name="configService">The configuration service for stty operations.</param>
+    /// <param name="monitoringService">The monitoring service for change detection.</param>
     public SerialPortService(
         ILogger<SerialPortService> logger,
         IApplicationSettingsService settingsService,
-        ITimeProvider timeProvider)
+        SerialPortDiscoveryService discoveryService,
+        SerialPortConfigurationService configService,
+        SerialPortMonitoringService monitoringService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        _discoveryService = discoveryService ?? throw new ArgumentNullException(nameof(discoveryService));
+        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _monitoringService = monitoringService ?? throw new ArgumentNullException(nameof(monitoringService));
 
-        _logger.LogDebug("SerialPortService initialized with runtime settings from IApplicationSettingsService");
+        // Wire up events from monitoring service
+        _monitoringService.PortAdded += (s, e) => PortAdded?.Invoke(this, e);
+        _monitoringService.PortRemoved += (s, e) => PortRemoved?.Invoke(this, e);
+        _monitoringService.PortStatusChanged += (s, e) => PortStatusChanged?.Invoke(this, e);
 
-        // Initialize monitoring timer in stopped state to satisfy analyzers and manage lifecycle cleanly
-        // Using self-rescheduling timer to support dynamic interval updates
-        _monitoringTimer = new Timer(static async state =>
-        {
-            if (state is not SerialPortService service)
-            {
-                return;
-            }
-
-            // Capture the timer instance to prevent race conditions with Dispose
-            Timer? timer = service._monitoringTimer;
-            if (timer == null)
-            {
-                return;
-            }
-
-            if (Interlocked.Exchange(ref service._monitoringCallbackRunning, 1) == 1)
-            {
-                return; // Skip overlapping execution
-            }
-
-            try
-            {
-                try
-                {
-                    await service.MonitorPortChangesAsync().ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    service._logger.LogError(ex, "Unhandled exception in serial port monitoring callback");
-                }
-
-                // Re-read the setting to get the latest value for dynamic updates
-                int configuredInterval = service._settingsService.GetSetting("serial.scanIntervalSeconds", 5);
-                int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
-
-                // Reschedule the next run using the captured timer instance
-                try
-                {
-                    timer.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
-                }
-                catch (ObjectDisposedException)
-                {
-                    // Timer disposed during shutdown; ignore
-                }
-            }
-            finally
-            {
-                Interlocked.Exchange(ref service._monitoringCallbackRunning, 0);
-            }
-        }, this, Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        _logger.LogDebug("SerialPortService facade initialized with specialized services");
     }
 
     #region Events
@@ -120,334 +71,99 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
     /// <inheritdoc />
     public async Task<IEnumerable<SerialPortInfo>> ScanAvailablePortsAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Starting serial port scan");
+        // Get settings from application settings service
+        bool includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
+        bool includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
+        bool includeStandardPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
+        int maxScanPorts = _settingsService.GetSetting("serial.maxScanPorts", 32);
 
-        var ports = new List<SerialPortInfo>();
-
-        try
-        {
-            // Get settings from application settings service
-            bool includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
-            bool includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
-            bool includeStandardPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
-            int maxScanPorts = _settingsService.GetSetting("serial.maxScanPorts", 32);
-
-            // Scan USB ports
-            if (includeUsbPorts)
-            {
-                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", maxScanPorts, cancellationToken).ConfigureAwait(false);
-                ports.AddRange(usbPorts);
-            }
-
-            // Scan ACM ports
-            if (includeAcmPorts)
-            {
-                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", maxScanPorts, cancellationToken).ConfigureAwait(false);
-                ports.AddRange(acmPorts);
-            }
-
-            // Scan standard ports
-            if (includeStandardPorts)
-            {
-                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", maxScanPorts, cancellationToken).ConfigureAwait(false);
-                ports.AddRange(standardPorts);
-            }
-
-            _logger.LogInformation("Found {Count} serial ports", ports.Count);
-            return ports;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to scan serial ports");
-            throw new ValidationException(
-                "PortScan",
-                "Port scanning failed due to system issues");
-        }
+        return await _discoveryService.ScanAvailablePortsAsync(
+            includeUsbPorts,
+            includeAcmPorts,
+            includeStandardPorts,
+            maxScanPorts,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<SerialPortInfo?> GetPortInfoAsync(string portPath, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(portPath))
+        // Get port test timeout from settings and clamp to a safe range
+        int configuredTimeoutMs = _settingsService.GetSetting("serial.portTestTimeoutMs", 1000);
+        int portTestTimeoutMs = Math.Clamp(configuredTimeoutMs, 100, 10_000);
+        if (portTestTimeoutMs != configuredTimeoutMs)
         {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
+            _logger.LogWarning("Adjusted 'serial.portTestTimeoutMs' from {Configured} to safe value {Effective}", configuredTimeoutMs, portTestTimeoutMs);
         }
 
-        try
-        {
-            if (!File.Exists(portPath))
-            {
-                return null;
-            }
-
-            // Get port test timeout from settings and clamp to a safe range
-            int configuredTimeoutMs = _settingsService.GetSetting("serial.portTestTimeoutMs", 1000);
-            int portTestTimeoutMs = Math.Clamp(configuredTimeoutMs, 100, 10_000);
-            if (portTestTimeoutMs != configuredTimeoutMs)
-            {
-                _logger.LogWarning("Adjusted 'serial.portTestTimeoutMs' from {Configured} to safe value {Effective}", configuredTimeoutMs, portTestTimeoutMs);
-            }
-
-            SerialPortType portType = GetPortType(portPath);
-            bool isAccessible = await IsPortAccessibleAsync(portPath, portTestTimeoutMs, cancellationToken).ConfigureAwait(false);
-
-            var portInfo = new SerialPortInfo
-            {
-                PortPath = portPath,
-                DisplayName = Path.GetFileName(portPath),
-                PortType = portType,
-                IsAccessible = isAccessible,
-                IsInUse = await IsPortInUseAsync(portPath, cancellationToken).ConfigureAwait(false),
-                Description = GetPortDescription(portType),
-                LastUpdated = _timeProvider.GetLocalNow()
-            };
-
-            // Get USB device info if it's a USB port
-            if (portType is SerialPortType.Usb or SerialPortType.Acm)
-            {
-                portInfo.UsbInfo = await GetUsbDeviceInfoAsync(portPath, cancellationToken).ConfigureAwait(false);
-            }
-
-            return portInfo;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get port info for {PortPath}", portPath);
-            return null;
-        }
+        return await _discoveryService.GetPortInfoAsync(portPath, portTestTimeoutMs, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task<bool> IsPortAccessibleAsync(string portPath, int timeoutMs = 1000, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        try
-        {
-            if (!File.Exists(portPath))
-            {
-                return false;
-            }
-
-            // Test accessibility by trying to read port status with stty
-            string command = $"stty -F {portPath} -a";
-            var (success, _, _, _) = await ExecuteCommandAsync(command, timeoutMs, cancellationToken).ConfigureAwait(false);
-            return success;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Port accessibility test failed for {PortPath}", portPath);
-            return false;
-        }
-    }
+    public Task<bool> IsPortAccessibleAsync(string portPath, int timeoutMs = 1000, CancellationToken cancellationToken = default)
+        => _discoveryService.IsPortAccessibleAsync(portPath, timeoutMs, cancellationToken);
 
     /// <inheritdoc />
     public async Task StartPortMonitoringAsync(CancellationToken cancellationToken = default)
     {
-        await _semaphore.ExecuteAsync(async () =>
+        // Get settings from application settings service
+        bool includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
+        bool includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
+        bool includeStandardPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
+        int maxScanPorts = _settingsService.GetSetting("serial.maxScanPorts", 32);
+
+        // Get scan interval from settings and clamp to a safe range
+        int configuredInterval = _settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+        int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
+        if (scanIntervalSeconds != configuredInterval)
         {
-            if (_isMonitoring)
-            {
-                return;
-            }
+            _logger.LogWarning("Adjusted 'serial.scanIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, scanIntervalSeconds);
+        }
 
-            _isMonitoring = true;
-
-            // Initial scan to populate known ports
-            IEnumerable<SerialPortInfo> currentPorts = await ScanAvailablePortsAsync(cancellationToken).ConfigureAwait(false);
-            foreach (SerialPortInfo port in currentPorts)
-            {
-                _lastKnownPorts[port.PortPath] = port;
-            }
-
-            // Get scan interval from settings and clamp to a safe range
-            int configuredInterval = _settingsService.GetSetting("serial.scanIntervalSeconds", 5);
-            int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
-            if (scanIntervalSeconds != configuredInterval)
-            {
-                _logger.LogWarning("Adjusted 'serial.scanIntervalSeconds' from {Configured} to safe value {Effective}", configuredInterval, scanIntervalSeconds);
-            }
-
-            // Start self-rescheduling timer with initial delay
-            // The timer will reschedule itself after each execution to support dynamic interval updates
-            _monitoringTimer!.Change(TimeSpan.FromSeconds(scanIntervalSeconds), Timeout.InfiniteTimeSpan);
-
-            _logger.LogInformation("Started port monitoring with {Interval}s interval (dynamic updates enabled)", scanIntervalSeconds);
-        }, cancellationToken);
+        await _monitoringService.StartMonitoringAsync(
+            includeUsbPorts,
+            includeAcmPorts,
+            includeStandardPorts,
+            maxScanPorts,
+            scanIntervalSeconds,
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task StopPortMonitoringAsync()
-    {
-        await _semaphore.ExecuteAsync(async () =>
-        {
-            if (!_isMonitoring)
-            {
-                return;
-            }
-
-            _isMonitoring = false;
-            // Stop monitoring timer (keep instance for reuse)
-            _monitoringTimer!.Change(Timeout.Infinite, Timeout.Infinite);
-            _lastKnownPorts.Clear();
-
-            _logger.LogInformation("Stopped port monitoring");
-            await Task.CompletedTask;
-        });
-    }
+    public Task StopPortMonitoringAsync()
+        => _monitoringService.StopMonitoringAsync();
 
     #endregion
 
     #region Configuration Management
 
     /// <inheritdoc />
-    public async Task<SerialPortConfiguration?> ReadPortConfigurationAsync(string portPath, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        try
-        {
-            if (!await IsPortAccessibleAsync(portPath, cancellationToken: cancellationToken).ConfigureAwait(false))
-            {
-                throw new ConnectionException(
-                    portPath,
-                    "SerialPort",
-                    $"Port {portPath} is not accessible");
-            }
-
-            string command = $"stty -F {portPath} -a";
-            SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
-
-            if (!result.Success)
-            {
-                throw new ValidationException(
-                    "PortConfiguration",
-                    $"Failed to read port configuration: {result.StandardError}");
-            }
-
-            return ParseSttyOutput(result.StandardOutput);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to read configuration for port {PortPath}", portPath);
-            throw;
-        }
-    }
+    public Task<SerialPortConfiguration?> ReadPortConfigurationAsync(string portPath, CancellationToken cancellationToken = default)
+        => _configService.ReadPortConfigurationAsync(portPath, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<bool> ApplyConfigurationAsync(string portPath, SerialPortConfiguration configuration, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
-
-        Microsoft.Extensions.Logging.ILogger effectiveLogger = taskLogger ?? _logger;
-
-        try
-        {
-
-
-            string command = GenerateSttyCommand(portPath, configuration);
-            effectiveLogger.LogDebug("Executing stty command: {Command}", command);
-
-            SttyCommandValidationResult validationResult = ValidateSttyCommand(command);
-
-            if (!validationResult.IsValid)
-            {
-                throw new ValidationException(validationResult.Errors);
-            }
-
-            SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
-
-            if (result.Success)
-            {
-                effectiveLogger.LogDebug("Applied configuration to port {PortPath}", portPath);
-                return true;
-            }
-            else
-            {
-                effectiveLogger.LogError("Failed to apply configuration to port {PortPath}: {Error}", portPath, result.StandardError);
-                return false;
-            }
-        }
-        catch (Exception ex)
-        {
-            effectiveLogger.LogError(ex, "Failed to apply configuration to port {PortPath}", portPath);
-            throw;
-        }
-    }
+    public Task<bool> ApplyConfigurationAsync(
+        string portPath,
+        SerialPortConfiguration configuration,
+        Microsoft.Extensions.Logging.ILogger? taskLogger = null,
+        CancellationToken cancellationToken = default)
+        => _configService.ApplyConfigurationAsync(portPath, configuration, taskLogger, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<bool> ApplyProfileAsync(string portPath, SerialPortProfile profile, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        ArgumentNullException.ThrowIfNull(profile, nameof(profile));
-
-        return await ApplyConfigurationAsync(portPath, profile.Configuration, taskLogger, cancellationToken).ConfigureAwait(false);
-    }
+    public Task<bool> ApplyProfileAsync(
+        string portPath,
+        SerialPortProfile profile,
+        Microsoft.Extensions.Logging.ILogger? taskLogger = null,
+        CancellationToken cancellationToken = default)
+        => _configService.ApplyProfileAsync(portPath, profile, taskLogger, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<SerialPortConfiguration?> BackupPortConfigurationAsync(string portPath, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        try
-        {
-            SerialPortConfiguration? configuration = await ReadPortConfigurationAsync(portPath, cancellationToken).ConfigureAwait(false);
-            if (configuration != null)
-            {
-                _logger.LogDebug("Backed up configuration for port {PortPath}", portPath);
-            }
-            return configuration;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to backup configuration for port {PortPath}", portPath);
-            return null;
-        }
-    }
+    public Task<SerialPortConfiguration?> BackupPortConfigurationAsync(string portPath, CancellationToken cancellationToken = default)
+        => _configService.BackupPortConfigurationAsync(portPath, cancellationToken);
 
     /// <inheritdoc />
-    public async Task<bool> RestorePortConfigurationAsync(string portPath, SerialPortConfiguration backupConfiguration, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        ArgumentNullException.ThrowIfNull(backupConfiguration, nameof(backupConfiguration));
-
-        try
-        {
-            bool success = await ApplyConfigurationAsync(portPath, backupConfiguration, null, cancellationToken).ConfigureAwait(false);
-            if (success)
-            {
-                _logger.LogInformation("Restored configuration for port {PortPath}", portPath);
-            }
-            return success;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to restore configuration for port {PortPath}", portPath);
-            throw;
-        }
-    }
+    public Task<bool> RestorePortConfigurationAsync(string portPath, SerialPortConfiguration backupConfiguration, CancellationToken cancellationToken = default)
+        => _configService.RestorePortConfigurationAsync(portPath, backupConfiguration, cancellationToken);
 
     #endregion
 
@@ -455,158 +171,19 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
 
     /// <inheritdoc />
     public string GenerateSttyCommand(string portPath, SerialPortConfiguration configuration)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
-
-        var sb = new StringBuilder();
-        sb.Append($"stty -F {portPath}");
-
-        // Character size
-        sb.Append($" cs{configuration.CharacterSize}");
-
-        // Baud rate
-        sb.Append($" {configuration.BaudRate}");
-
-        // Input flags
-        sb.Append(configuration.IgnoreBreak ? " ignbrk" : " -ignbrk");
-        sb.Append(configuration.DisableBreakInterrupt ? " -brkint" : " brkint");
-        sb.Append(configuration.DisableMapCRtoNL ? " -icrnl" : " icrnl");
-        sb.Append(configuration.DisableBellOnQueueFull ? " -imaxbel" : " imaxbel");
-        sb.Append(configuration.DisableXonXoffFlowControl ? " -ixon" : " ixon");
-
-        // Output flags
-        sb.Append(configuration.DisableOutputProcessing ? " -opost" : " opost");
-        sb.Append(configuration.DisableMapNLtoCRNL ? " -onlcr" : " onlcr");
-
-        // Local flags
-        sb.Append(configuration.DisableSignalGeneration ? " -isig" : " isig");
-        sb.Append(configuration.DisableCanonicalMode ? " -icanon" : " icanon");
-        sb.Append(configuration.DisableExtendedProcessing ? " -iexten" : " iexten");
-        sb.Append(configuration.DisableEcho ? " -echo" : " echo");
-        sb.Append(configuration.DisableEchoErase ? " -echoe" : " echoe");
-        sb.Append(configuration.DisableEchoKill ? " -echok" : " echok");
-        sb.Append(configuration.DisableEchoControl ? " -echoctl" : " echoctl");
-        sb.Append(configuration.DisableEchoKillErase ? " -echoke" : " echoke");
-
-        // Control flags
-        sb.Append(configuration.DisableHardwareFlowControl ? " -crtscts" : " crtscts");
-        sb.Append(configuration.OddParity ? " parodd" : " -parodd");
-        sb.Append(configuration.ParityEnabled ? " parenb" : " -parenb");
-
-        // Special modes
-        if (configuration.RawMode)
-        {
-            sb.Append(" raw");
-        }
-
-        return sb.ToString();
-    }
+        => _configService.GenerateSttyCommand(portPath, configuration);
 
     /// <inheritdoc />
     public string GenerateSttyCommandForProfile(string portPath, SerialPortProfile profile)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        ArgumentNullException.ThrowIfNull(profile, nameof(profile));
-
-        return GenerateSttyCommand(portPath, profile.Configuration);
-    }
+        => _configService.GenerateSttyCommandForProfile(portPath, profile);
 
     /// <inheritdoc />
-    public async Task<SttyCommandResult> ExecuteSttyCommandAsync(string command, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(command))
-        {
-            throw new ArgumentException("Command cannot be null or empty", nameof(command));
-        }
-
-        var stopwatch = Stopwatch.StartNew();
-
-        try
-        {
-            var (success, exitCode, standardOutput, standardError) = await ExecuteCommandAsync(command, 5000, cancellationToken).ConfigureAwait(false);
-            stopwatch.Stop();
-
-            return new SttyCommandResult
-            {
-                Success = success,
-                ExitCode = exitCode,
-                StandardOutput = standardOutput,
-                StandardError = standardError,
-                ExecutionTime = stopwatch.Elapsed,
-                Command = command
-            };
-        }
-        catch (Exception ex)
-        {
-            stopwatch.Stop();
-            _logger.LogError(ex, "Failed to execute stty command: {Command}", command);
-
-            return new SttyCommandResult
-            {
-                Success = false,
-                ExitCode = -1,
-                StandardOutput = "",
-                StandardError = ex.Message,
-                ExecutionTime = stopwatch.Elapsed,
-                Command = command
-            };
-        }
-    }
+    public Task<SttyCommandResult> ExecuteSttyCommandAsync(string command, CancellationToken cancellationToken = default)
+        => _configService.ExecuteSttyCommandAsync(command, cancellationToken);
 
     /// <inheritdoc />
     public SttyCommandValidationResult ValidateSttyCommand(string command)
-    {
-        if (string.IsNullOrWhiteSpace(command))
-        {
-            throw new ArgumentException("Command cannot be null or empty", nameof(command));
-        }
-
-        var result = new SttyCommandValidationResult
-        {
-            ValidatedCommand = command.Trim()
-        };
-
-        // Basic validation
-        if (!command.TrimStart().StartsWith("stty", StringComparison.OrdinalIgnoreCase))
-        {
-            result.Errors.Add("Command must start with 'stty'");
-            return result;
-        }
-
-        // Check for dangerous commands
-        string[] dangerousPatterns =
-        [
-            @"rm\s+", @"del\s+", @"format\s+", @"mkfs\s+",
-            @";\s*dd\s+", @"&&\s*dd\s+", @"\|\s*dd\s+", @"^\s*dd\s+",  // Only dangerous dd usage (standalone dd command)
-            @">\s*/dev/", @";\s*rm\s+", @"&&\s*rm\s+", @"\|\s*rm\s+"
-        ];
-
-        foreach (string? pattern in dangerousPatterns)
-        {
-            if (Regex.IsMatch(command, pattern, RegexOptions.IgnoreCase))
-            {
-                result.Errors.Add($"Command contains potentially dangerous pattern: {pattern}");
-            }
-        }
-
-        // Check for required -F flag
-        if (!DeviceFlagRegex().IsMatch(command))
-        {
-            result.Warnings.Add("Command should specify a device with -F flag");
-        }
-
-        result.IsValid = result.Errors.Count == 0;
-        return result;
-    }
+        => _configService.ValidateSttyCommand(command);
 
     #endregion
 
@@ -614,343 +191,11 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
 
     /// <inheritdoc />
     public SerialPortType GetPortType(string portPath)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        string fileName = Path.GetFileName(portPath).ToLowerInvariant();
-
-        if (fileName.StartsWith("ttyusb"))
-        {
-            return SerialPortType.Usb;
-        }
-        else if (fileName.StartsWith("ttyacm"))
-        {
-            return SerialPortType.Acm;
-        }
-        else if (fileName.StartsWith("ttys"))
-        {
-            return SerialPortType.Standard;
-        }
-        else if (fileName.Contains("virtual") || fileName.Contains("pty"))
-        {
-            return SerialPortType.Virtual;
-        }
-
-        return SerialPortType.Unknown;
-    }
+        => _discoveryService.GetPortType(portPath);
 
     /// <inheritdoc />
-    public async Task<UsbDeviceInfo?> GetUsbDeviceInfoAsync(string portPath, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(portPath))
-        {
-            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
-        }
-
-        try
-        {
-            // Try to get USB device information from sysfs
-            string deviceName = Path.GetFileName(portPath);
-            string sysfsPath = $"/sys/class/tty/{deviceName}/device";
-
-            if (!Directory.Exists(sysfsPath))
-            {
-                return null;
-            }
-
-            var usbInfo = new UsbDeviceInfo
-            {
-                DevicePath = portPath
-            };
-
-            // Try to read vendor and product IDs
-            await TryReadSysfsFileAsync(Path.Combine(sysfsPath, "../idVendor"), value => usbInfo.VendorId = value, cancellationToken).ConfigureAwait(false);
-            await TryReadSysfsFileAsync(Path.Combine(sysfsPath, "../idProduct"), value => usbInfo.ProductId = value, cancellationToken).ConfigureAwait(false);
-            await TryReadSysfsFileAsync(Path.Combine(sysfsPath, "../manufacturer"), value => usbInfo.VendorName = value, cancellationToken).ConfigureAwait(false);
-            await TryReadSysfsFileAsync(Path.Combine(sysfsPath, "../product"), value => usbInfo.ProductName = value, cancellationToken).ConfigureAwait(false);
-            await TryReadSysfsFileAsync(Path.Combine(sysfsPath, "../serial"), value => usbInfo.SerialNumber = value, cancellationToken).ConfigureAwait(false);
-
-            return usbInfo;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogDebug(ex, "Failed to get USB device info for {PortPath}", portPath);
-            return null;
-        }
-    }
-
-    #endregion
-
-    #region Private Methods
-
-    /// <summary>
-    /// Scans for ports of a specific type.
-    /// </summary>
-    /// <param name="basePattern">The base pattern for port paths (e.g., "/dev/ttyUSB").</param>
-    /// <param name="portType">The type of ports to scan for.</param>
-    /// <param name="maxPorts">The maximum number of ports to scan.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A collection of found ports.</returns>
-    private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(string basePattern, int maxPorts, CancellationToken cancellationToken)
-    {
-        var ports = new List<SerialPortInfo>();
-
-        for (int i = 0; i < maxPorts; i++)
-        {
-            string portPath = $"{basePattern}{i}";
-            SerialPortInfo? portInfo = await GetPortInfoAsync(portPath, cancellationToken).ConfigureAwait(false);
-
-            if (portInfo != null)
-            {
-                ports.Add(portInfo);
-            }
-        }
-
-        return ports;
-    }
-
-    /// <summary>
-    /// Monitors port changes and raises events.
-    /// </summary>
-    private async Task MonitorPortChangesAsync()
-    {
-        if (!_isMonitoring)
-        {
-            return;
-        }
-
-        try
-        {
-            IEnumerable<SerialPortInfo> currentPorts = await ScanAvailablePortsAsync().ConfigureAwait(false);
-            var currentPortPaths = currentPorts.ToDictionary(p => p.PortPath, p => p);
-
-            // Check for removed ports
-            var removedPorts = _lastKnownPorts.Keys.Except(currentPortPaths.Keys).ToList();
-            foreach (string? removedPortPath in removedPorts)
-            {
-                SerialPortInfo removedPort = _lastKnownPorts[removedPortPath];
-                _lastKnownPorts.Remove(removedPortPath);
-                PortRemoved?.Invoke(this, new SerialPortEventArgs(removedPort));
-                _logger.LogDebug("Port removed: {PortPath}", removedPortPath);
-            }
-
-            // Check for added ports
-            var addedPorts = currentPortPaths.Keys.Except(_lastKnownPorts.Keys).ToList();
-            foreach (string? addedPortPath in addedPorts)
-            {
-                SerialPortInfo addedPort = currentPortPaths[addedPortPath];
-                _lastKnownPorts[addedPortPath] = addedPort;
-                PortAdded?.Invoke(this, new SerialPortEventArgs(addedPort));
-                _logger.LogDebug("Port added: {PortPath}", addedPortPath);
-            }
-
-            // Check for status changes
-            foreach (string? portPath in currentPortPaths.Keys.Intersect(_lastKnownPorts.Keys))
-            {
-                SerialPortInfo currentPort = currentPortPaths[portPath];
-                SerialPortInfo lastKnownPort = _lastKnownPorts[portPath];
-
-                if (currentPort.IsAccessible != lastKnownPort.IsAccessible)
-                {
-                    _lastKnownPorts[portPath] = currentPort;
-                    PortStatusChanged?.Invoke(this, new SerialPortStatusChangedEventArgs(portPath, lastKnownPort.IsAccessible, currentPort.IsAccessible));
-                    _logger.LogDebug("Port status changed: {PortPath} - {OldStatus} -> {NewStatus}", portPath, lastKnownPort.IsAccessible, currentPort.IsAccessible);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during port monitoring");
-        }
-    }
-
-    /// <summary>
-    /// Checks if a port is currently in use.
-    /// </summary>
-    /// <param name="portPath">The path to the port.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>True if the port is in use, false otherwise.</returns>
-    private async Task<bool> IsPortInUseAsync(string portPath, CancellationToken cancellationToken)
-    {
-        try
-        {
-            // Try to use lsof to check if port is in use
-            string command = $"lsof {portPath}";
-            var (success, _, standardOutput, _) = await ExecuteCommandAsync(command, 2000, cancellationToken).ConfigureAwait(false);
-            return success && !string.IsNullOrWhiteSpace(standardOutput);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Gets a description for a port based on its type.
-    /// </summary>
-    /// <param name="portPath">The path to the port.</param>
-    /// <param name="portType">The type of the port.</param>
-    /// <returns>A description of the port.</returns>
-    private static string GetPortDescription(SerialPortType portType)
-    {
-        return portType switch
-        {
-            SerialPortType.Usb => "USB Serial Port",
-            SerialPortType.Acm => "USB ACM Device",
-            SerialPortType.Standard => "Built-in Serial Port",
-            SerialPortType.Virtual => "Virtual Serial Port",
-            _ => "Serial Port"
-        };
-    }
-
-    /// <summary>
-    /// Parses stty output to create a SerialPortConfiguration.
-    /// </summary>
-    /// <param name="sttyOutput">The output from stty command.</param>
-    /// <returns>A SerialPortConfiguration parsed from the output.</returns>
-    private SerialPortConfiguration ParseSttyOutput(string sttyOutput)
-    {
-        var config = new SerialPortConfiguration();
-
-        try
-        {
-            // Parse baud rate
-            Match baudMatch = BaudRateRegex().Match(sttyOutput);
-            if (baudMatch.Success && int.TryParse(baudMatch.Groups[1].Value, out int baud))
-            {
-                config.BaudRate = baud;
-            }
-
-            // Parse character size
-            Match csMatch = CharacterSizeRegex().Match(sttyOutput);
-            if (csMatch.Success && int.TryParse(csMatch.Groups[1].Value, out int cs))
-            {
-                config.CharacterSize = cs;
-            }
-
-            // Parse flags (simplified parsing - would need more comprehensive implementation)
-            config.ParityEnabled = sttyOutput.Contains("parenb");
-            config.OddParity = sttyOutput.Contains("parodd") && !sttyOutput.Contains("-parodd");
-            config.DisableHardwareFlowControl = sttyOutput.Contains("-crtscts");
-            config.IgnoreBreak = sttyOutput.Contains("ignbrk");
-            config.DisableBreakInterrupt = sttyOutput.Contains("-brkint");
-            config.DisableMapCRtoNL = sttyOutput.Contains("-icrnl");
-            config.DisableBellOnQueueFull = sttyOutput.Contains("-imaxbel");
-            config.DisableXonXoffFlowControl = sttyOutput.Contains("-ixon");
-            config.DisableOutputProcessing = sttyOutput.Contains("-opost");
-            config.DisableMapNLtoCRNL = sttyOutput.Contains("-onlcr");
-            config.DisableSignalGeneration = sttyOutput.Contains("-isig");
-            config.DisableCanonicalMode = sttyOutput.Contains("-icanon");
-            config.DisableExtendedProcessing = sttyOutput.Contains("-iexten");
-            config.DisableEcho = sttyOutput.Contains("-echo");
-            config.DisableEchoErase = sttyOutput.Contains("-echoe");
-            config.DisableEchoKill = sttyOutput.Contains("-echok");
-            config.DisableEchoControl = sttyOutput.Contains("-echoctl");
-            config.DisableEchoKillErase = sttyOutput.Contains("-echoke");
-
-            config.ModifiedAt = _timeProvider.GetLocalNow();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to parse stty output completely");
-        }
-
-        return config;
-    }
-
-    /// <summary>
-    /// Executes a command and returns the result.
-    /// </summary>
-    /// <param name="command">The command to execute.</param>
-    /// <param name="timeoutMs">The timeout in milliseconds.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>The command execution result.</returns>
-    private async Task<(bool Success, int ExitCode, string StandardOutput, string StandardError)> ExecuteCommandAsync(string command, int timeoutMs, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using var process = new Process();
-            _logger.LogInformation("Executing: {Command}", command);
-            process.StartInfo.FileName = "/bin/bash";
-            process.StartInfo.Arguments = $"-c \"{command}\"";
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.CreateNoWindow = true;
-
-            var outputBuilder = new StringBuilder();
-            var errorBuilder = new StringBuilder();
-
-            process.OutputDataReceived += (_, e) => { if (e.Data != null) { outputBuilder.AppendLine(e.Data); } };
-            process.ErrorDataReceived += (_, e) => { if (e.Data != null) { errorBuilder.AppendLine(e.Data); } };
-
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            using var timeoutCts = new CancellationTokenSource(timeoutMs);
-            using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-            try
-            {
-                await process.WaitForExitAsync(combinedCts.Token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                if (!process.HasExited)
-                {
-                    process.Kill();
-                }
-                throw;
-            }
-
-            bool success = process.ExitCode == 0;
-            return (success, process.ExitCode, outputBuilder.ToString().Trim(), errorBuilder.ToString().Trim());
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to execute command: {Command}", command);
-            return (false, -1, "", ex.Message);
-        }
-    }
-
-    /// <summary>
-    /// Tries to read a sysfs file and apply the value using the provided action.
-    /// </summary>
-    /// <param name="filePath">The path to the sysfs file.</param>
-    /// <param name="setValue">The action to apply the read value.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    private static async Task TryReadSysfsFileAsync(string filePath, Action<string> setValue, CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (File.Exists(filePath))
-            {
-                string value = await File.ReadAllTextAsync(filePath, cancellationToken).ConfigureAwait(false);
-                setValue(value.Trim());
-            }
-        }
-        catch
-        {
-            // Ignore errors reading sysfs files
-        }
-    }
-
-    #region Regex Generation
-
-    [GeneratedRegex(@"-F\s+/dev/tty", RegexOptions.IgnoreCase)]
-    private static partial Regex DeviceFlagRegex();
-
-    [GeneratedRegex(@"speed (\d+) baud")]
-    private static partial Regex BaudRateRegex();
-
-    [GeneratedRegex(@"cs(\d)")]
-    private static partial Regex CharacterSizeRegex();
-
-    #endregion
+    public Task<UsbDeviceInfo?> GetUsbDeviceInfoAsync(string portPath, CancellationToken cancellationToken = default)
+        => _discoveryService.GetUsbDeviceInfoAsync(portPath, cancellationToken);
 
     #endregion
 
@@ -961,8 +206,7 @@ public sealed partial class SerialPortService : ISerialPortService, IDisposable
     /// </summary>
     public void Dispose()
     {
-        _monitoringTimer?.Dispose();
-        _semaphore?.Dispose();
+        _monitoringService?.Dispose();
         GC.SuppressFinalize(this);
     }
 

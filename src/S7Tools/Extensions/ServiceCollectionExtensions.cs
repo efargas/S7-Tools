@@ -48,6 +48,9 @@ public static class ServiceCollectionExtensions
         // Add Time Provider - Critical for testability and consistency
         services.TryAddSingleton<ITimeProvider, S7Tools.Services.Time.TimeProvider>();
 
+        // Add Shell Command Executor
+        services.TryAddSingleton<S7Tools.Core.Services.Shell.IShellCommandExecutor, S7Tools.Services.Shell.ShellCommandExecutor>();
+
         // Add UI Thread Service
         services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
 
@@ -124,13 +127,14 @@ public static class ServiceCollectionExtensions
         // Register as IProfileManager<SerialPortProfile> for generic dependency injection
         services.TryAddSingleton<IProfileManager<Core.Models.SerialPortProfile>>(provider =>
             provider.GetRequiredService<ISerialPortProfileService>());
-        services.TryAddSingleton<ISerialPortService>(provider =>
-            new SerialPortService(
-                provider.GetRequiredService<ILogger<SerialPortService>>(),
-                provider.GetRequiredService<IApplicationSettingsService>(),
-                provider.GetRequiredService<ITimeProvider>()
-            )
-        );
+
+        // Register SerialPort specialized services (Phase 1 refactoring)
+        services.TryAddSingleton<Services.SerialPort.SerialPortDiscoveryService>();
+        services.TryAddSingleton<Services.SerialPort.SerialPortConfigurationService>();
+        services.TryAddSingleton<Services.SerialPort.SerialPortMonitoringService>();
+
+        // Register SerialPort facade service (orchestrates specialized services)
+        services.TryAddSingleton<ISerialPortService, SerialPortService>();
 
         // Socat Profile Service (Servers Settings - socat configuration)
         services.TryAddSingleton<ISocatProfileService, SocatProfileService>();

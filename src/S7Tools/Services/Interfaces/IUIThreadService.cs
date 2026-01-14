@@ -62,21 +62,4 @@ public interface IUIThreadService
     /// <param name="action">The action to execute.</param>
     void PostToUIThread(Action action);
 
-    /// <summary>
-    /// Executes an action on the UI thread with a timeout.
-    /// </summary>
-    /// <param name="action">The action to execute.</param>
-    /// <param name="timeout">The maximum time to wait for execution.</param>
-    /// <returns>True if the action was executed within the timeout; otherwise, false.</returns>
-    bool TryInvokeOnUIThread(Action action, TimeSpan timeout);
-
-    /// <summary>
-    /// Executes a function on the UI thread with a timeout.
-    /// </summary>
-    /// <typeparam name="T">The return type of the function.</typeparam>
-    /// <param name="function">The function to execute.</param>
-    /// <param name="timeout">The maximum time to wait for execution.</param>
-    /// <param name="result">The result of the function if successful.</param>
-    /// <returns>True if the function was executed within the timeout; otherwise, false.</returns>
-    bool TryInvokeOnUIThread<T>(Func<T> function, TimeSpan timeout, out T result);
 }

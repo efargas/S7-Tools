@@ -137,34 +137,4 @@ public sealed class AvaloniaUIThreadService : IUIThreadService
         }
     }
 
-    /// <summary>
-    /// [OBSOLETE - DANGEROUS] Attempts to invoke an action on the UI thread with a timeout.
-    /// </summary>
-    /// <remarks>
-    /// This method is marked obsolete because it uses blocking .Wait() which can cause deadlocks.
-    /// Use async alternatives instead.
-    /// </remarks>
-    [Obsolete("DANGEROUS: Uses blocking .Wait() which can cause deadlocks. This method will be removed in a future version. Use async patterns instead.", error: true)]
-    public bool TryInvokeOnUIThread(Action action, TimeSpan timeout)
-    {
-        throw new NotSupportedException(
-            "TryInvokeOnUIThread is obsolete due to deadlock risks from blocking .Wait() calls. " +
-            "Please refactor your code to use async patterns and avoid the need for timeout-based UI thread invocation.");
-    }
-
-    /// <summary>
-    /// [OBSOLETE - DANGEROUS] Attempts to invoke a function on the UI thread with a timeout.
-    /// </summary>
-    /// <remarks>
-    /// This method is marked obsolete because it uses blocking .Wait() and .Result which can cause deadlocks.
-    /// Use async alternatives instead.
-    /// </remarks>
-    [Obsolete("DANGEROUS: Uses blocking .Wait() and .Result which can cause deadlocks. This method will be removed in a future version. Use async patterns instead.", error: true)]
-    public bool TryInvokeOnUIThread<T>(Func<T> function, TimeSpan timeout, out T result)
-    {
-        result = default!;
-        throw new NotSupportedException(
-            "TryInvokeOnUIThread<T> is obsolete due to deadlock risks from blocking .Wait() and .Result calls. " +
-            "Please refactor your code to use async patterns and avoid the need for timeout-based UI thread invocation.");
-    }
 }

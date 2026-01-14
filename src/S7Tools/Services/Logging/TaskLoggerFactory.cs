@@ -15,7 +15,12 @@ namespace S7Tools.Services.Logging;
 /// <summary>
 /// Factory for creating task-specific loggers with dedicated DataStores and file outputs.
 /// </summary>
-public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFactory> logger, S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService, IApplicationSettingsService applicationSettingsService, ITimeProvider timeProvider) : ITaskLoggerFactory, IDisposable
+public class TaskLoggerFactory(
+    IPathService pathService,
+    ILogger<TaskLoggerFactory> logger,
+    S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService,
+    IApplicationSettingsService applicationSettingsService,
+    ITimeProvider timeProvider) : ITaskLoggerFactory, IDisposable
 {
     private readonly IPathService _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
     private readonly ILogger<TaskLoggerFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -251,8 +256,6 @@ public class TaskLoggerFactory(IPathService pathService, ILogger<TaskLoggerFacto
             _logger.LogInformation(
                 "Finalized task logger for {TaskId}. Total size: {Size} bytes, Entries: {Entries}",
                 taskId, totalSize, context.TaskLogger.TotalLogEntries);
-
-            await Task.CompletedTask;
         }, cancellationToken);
     }
 
