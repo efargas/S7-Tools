@@ -83,6 +83,73 @@ namespace S7Tools.Services.Adapters.Plc
             return data;
         }
 
+        /// <summary>
+        /// Invokes the dumper with streaming using high-performance DumperService.
+        /// Data is streamed incrementally via callback instead of buffering in memory.
+        /// </summary>
+        public async Task InvokeDumperStreamAsync(
+            uint address,
+            uint length,
+            Func<ReadOnlyMemory<byte>, ValueTask> dataCallback,
+            IProgress<long> progress,
+            string? socatHost,
+            int socatPort,
+            CancellationToken cancellationToken)
+        {
+            // Protocol: 'A' + Addr + Len (same command as blocking version)
+            var args = new byte[9];
+            args[0] = (byte)'A';
+            Array.Copy(PlcInternalHelpers.GetBigEndianBytes(address), 0, args, 1, 4);
+            Array.Copy(PlcInternalHelpers.GetBigEndianBytes(length), 0, args, 5, 4);
+
+            // Send dump command
+            var response = await _protocol.InvokeAddHookAsync(PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND, args, true, cancellationToken);
+
+            if (response == null || !System.Text.Encoding.ASCII.GetString(response).StartsWith("Ok"))
+            {
+                throw new Exception("Dumper invocation failed.");
+            }
+
+            // Use DumperService for high-performance streaming ingestion
+            using var dumperService = new S7Tools.Core.Services.DumperService(
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<S7Tools.Core.Services.DumperService>.Instance);
+
+            // Configure with socat connection info
+            dumperService.Configure(socatHost ?? "127.0.0.1", socatPort, address);
+
+            long totalReceived = 0;
+
+            // Start the dumping process in the background
+            var dumpTask = dumperService.StartDumpingAsync(cancellationToken);
+
+            try
+            {
+                //  Subscribe to dumper service output channel
+                await foreach (var block in dumperService.DataReader.ReadAllAsync(cancellationToken))
+                {
+                    // Stream data to callback
+                    await dataCallback(block.Data);
+
+                    totalReceived += block.Data.Length;
+                    progress?.Report(totalReceived);
+
+                    // Stop when we've received expected length
+                    if (totalReceived >= length)
+                    {
+                        break;
+                    }
+                }
+            }
+            finally
+            {
+                await dumperService.StopAsync();
+                // Wait for dump task to complete (may already be complete)
+                try
+                { await dumpTask; }
+                catch (OperationCanceledException) { }
+            }
+        }
+
         public async Task<byte[]> ReceiveManyAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             using var ms = new MemoryStream();

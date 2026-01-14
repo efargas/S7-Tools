@@ -1,0 +1,215 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:S7Tools.ViewModels.Pages"
+    xmlns:models="using:S7Tools.Core.Models.MemoryDump"
+    xmlns:icons="using:Projektanker.Icons.Avalonia"
+    mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+    x:Class="S7Tools.Views.Pages.MemoryDumpViewerView"
+    x:DataType="vm:MemoryDumpViewerViewModel"
+    Background="#1E1E1E">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Connection Control Panel -->
+        <Border Grid.Row="0"
+            Background="#2D2D30"
+            BorderBrush="#464647"
+            BorderThickness="0,0,0,1"
+            Padding="12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Connection Parameters -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="Host:"
+                        Foreground="#CCCCCC"
+                        VerticalAlignment="Center"
+                        FontSize="13" />
+                    <TextBox Text="{Binding Host}"
+                        Width="120"
+                        IsEnabled="{Binding !IsConnected}" />
+
+                    <TextBlock Text="Port:"
+                        Foreground="#CCCCCC"
+                        VerticalAlignment="Center"
+                        FontSize="13" />
+                    <TextBox Text="{Binding Port}"
+                        Width="80"
+                        IsEnabled="{Binding !IsConnected}" />
+
+                    <TextBlock Text="Start Address:"
+                        Foreground="#CCCCCC"
+                        VerticalAlignment="Center"
+                        FontSize="13" />
+                    <TextBox Text="{Binding StartAddress}"
+                        Width="100"
+                        Watermark="0x00000000"
+                        IsEnabled="{Binding !IsConnected}" />
+
+                    <Button Command="{Binding ConnectCommand}"
+                        Background="#0E639C"
+                        Foreground="White"
+                        Padding="12,6"
+                        IsEnabled="{Binding !IsConnected}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <icons:Icon Value="fa-solid fa-plug" Width="14" Height="14" />
+                            <TextBlock Text="Connect" FontSize="13" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding DisconnectCommand}"
+                        Background="#C42B1C"
+                        Foreground="White"
+                        Padding="12,6"
+                        IsEnabled="{Binding IsConnected}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <icons:Icon Value="fa-solid fa-times" Width="14" Height="14" />
+                            <TextBlock Text="Disconnect" FontSize="13" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding ClearCommand}"
+                        Background="Transparent"
+                        BorderBrush="#464647"
+                        BorderThickness="1"
+                        Foreground="#CCCCCC"
+                        Padding="12,6">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <icons:Icon Value="fa-solid fa-eraser" Width="14" Height="14" />
+                            <TextBlock Text="Clear" FontSize="13" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Connection Status -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding ConnectionStatus}"
+                        Foreground="#CCCCCC"
+                        VerticalAlignment="Center"
+                        FontSize="13" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Statistics Bar -->
+        <Border Grid.Row="1"
+            Background="#252526"
+            BorderBrush="#464647"
+            BorderThickness="0,0,0,1"
+            Padding="12,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:Icon Value="fa-solid fa-database"
+                            Foreground="#569CD6"
+                            Width="14"
+                            Height="14"
+                            VerticalAlignment="Center" />
+                        <TextBlock Text="Blocks:"
+                            Foreground="#858585"
+                            FontSize="12"
+                            VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding BlockCount}"
+                            Foreground="#CCCCCC"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <icons:Icon Value="fa-solid fa-memory"
+                            Foreground="#4EC9B0"
+                            Width="14"
+                            Height="14"
+                            VerticalAlignment="Center" />
+                        <TextBlock Text="Bytes:"
+                            Foreground="#858585"
+                            FontSize="12"
+                            VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding TotalBytes, StringFormat={}{0:N0}}"
+                            Foreground="#CCCCCC"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            VerticalAlignment="Center" />
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock Grid.Column="2"
+                    Text="Real-Time PLC Memory Dump Viewer"
+                    Foreground="#858585"
+                    FontSize="11"
+                    FontStyle="Italic"
+                    VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Memory Dump Display (Virtualized ListBox) -->
+        <ListBox Grid.Row="2"
+            ItemsSource="{Binding MemoryBlocks}"
+            Background="Transparent"
+            BorderThickness="0">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:MemoryBlock">
+                    <Border Background="#1E1E1E"
+                        BorderBrush="#333337"
+                        BorderThickness="0,0,0,1"
+                        Padding="8,4">
+                        <Grid ColumnDefinitions="90,10,420,10,*">
+                            <!-- Address Column -->
+                            <TextBlock Grid.Column="0"
+                                Text="{Binding Address, StringFormat='0x{0:X8}'}"
+                                FontFamily="Cascadia Mono,Consolas,Courier New"
+                                FontSize="12"
+                                Foreground="#858585"
+                                VerticalAlignment="Center" />
+
+                            <!-- Separator -->
+                            <Rectangle Grid.Column="1"
+                                Fill="#464647"
+                                Width="1"
+                                HorizontalAlignment="Center" />
+
+                            <!-- Hex Data Column -->
+                            <TextBlock Grid.Column="2"
+                                Text="{Binding HexPreview}"
+                                FontFamily="Cascadia Mono,Consolas,Courier New"
+                                FontSize="12"
+                                Foreground="#CE9178"
+                                VerticalAlignment="Center" />
+
+                            <!-- Separator -->
+                            <Rectangle Grid.Column="3"
+                                Fill="#464647"
+                                Width="1"
+                                HorizontalAlignment="Center" />
+
+                            <!-- ASCII Column -->
+                            <TextBlock Grid.Column="4"
+                                Text="{Binding AsciiPreview}"
+                                FontFamily="Cascadia Mono,Consolas,Courier New"
+                                FontSize="12"
+                                Foreground="#4EC9B0"
+                                VerticalAlignment="Center" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

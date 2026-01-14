@@ -57,6 +57,23 @@ public interface IPlcClient : IAsyncDisposable
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Invokes the installed dumper to stream a memory region using high-performance pipeline architecture.
+    /// Data is delivered incrementally via callback for streaming to file or other consumers.
+    /// </summary>
+    /// <param name="address">Starting memory address to dump.</param>
+    /// <param name="length">Length of memory region to dump.</param>
+    /// <param name="dataCallback">Callback invoked with each chunk of received data.</param>
+    /// <param name="progress">Progress reporter for dump operation (bytes received).</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>A task representing the asynchronous streaming operation.</returns>
+    Task InvokeDumperStreamAsync(
+        uint address,
+        uint length,
+        Func<ReadOnlyMemory<byte>, ValueTask> dataCallback,
+        IProgress<long> progress,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Configures the client connection parameters.
     /// </summary>
     /// <param name="host">The host address.</param>

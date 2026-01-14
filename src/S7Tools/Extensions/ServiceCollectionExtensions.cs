@@ -313,6 +313,10 @@ public static class ServiceCollectionExtensions
         // Add Payload Services
         services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();
 
+        // Add High-Performance Memory Dump Services
+        services.TryAddTransient<S7Tools.Core.Services.DumperService>();
+        services.TryAddTransient<Services.MemoryDumpOrchestrator>();
+
         // Add PLC Adapters
         services.TryAddTransient<IPlcTransport, Services.Adapters.PlcTransportAdapter>();
         services.TryAddTransient<IPlcProtocol, Services.Adapters.PlcProtocolAdapter>();
@@ -374,6 +378,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<SettingsViewModel>(provider => new SettingsViewModel(provider));
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
+
+        // Add Memory Dump Viewer ViewModel
+        services.TryAddTransient<MemoryDumpViewerViewModel>();
 
         // Add Profile Management ViewModels as Singletons to persist state across navigation
         services.TryAddSingleton<SerialPortsSettingsViewModel>();

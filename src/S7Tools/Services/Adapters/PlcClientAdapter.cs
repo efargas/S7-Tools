@@ -23,6 +23,10 @@ namespace S7Tools.Services.Adapters
         private readonly PlcMemoryManager _memoryManager;
         private readonly PlcStagerManager _stagerManager;
 
+        // Socat connection info (set via Configure)
+        private string _socatHost = "127.0.0.1";
+        private int _socatPort = 3333; // Default fallback
+
         public PlcClientAdapter(IPlcProtocol protocol, ILogger<PlcClientAdapter> logger, ILoggerFactory loggerFactory)
         {
             _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
@@ -44,6 +48,10 @@ namespace S7Tools.Services.Adapters
 
         public void Configure(string host, int port)
         {
+            // Store socat connection info for streaming dumps
+            _socatHost = host;
+            _socatPort = port;
+
             _protocol.Configure(host, port);
         }
 
@@ -155,6 +163,26 @@ namespace S7Tools.Services.Adapters
         {
             _logger.LogInformation("Invoking Dumper (0x{Addr:X}, {Len} bytes)...", address, length);
             return await _memoryManager.InvokeDumperAsync(address, length, progress, cancellationToken);
+        }
+
+        public async Task InvokeDumperStreamAsync(
+            uint address,
+            uint length,
+            Func<ReadOnlyMemory<byte>, ValueTask> dataCallback,
+            IProgress<long> progress,
+            CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Invoking Dumper (Streaming) (0x{Addr:X}, {Len} bytes)...", address, length);
+
+            // Use socat connection info from Configure() call
+            await _memoryManager.InvokeDumperStreamAsync(
+                address,
+                length,
+                dataCallback,
+                progress,
+                _socatHost,
+                _socatPort,
+                cancellationToken);
         }
 
         #endregion

@@ -357,6 +357,18 @@ public class NavigationViewModel : ReactiveObject
                     _logger.LogDebug("Navigated to Jobs Management");
                     break;
 
+                case "memorydump":
+                    SidebarTitle = "Memory Dump Viewer";
+                    MainContentTitle = "PLC Memory Dump Viewer";
+                    ShowMainContentHeader = true;
+                    MemoryDumpViewerViewModel? memoryDumpViewModel = CreateViewModel<MemoryDumpViewerViewModel>();
+                    CurrentContent = null; // No sidebar content for memory dump
+                    MainContent = memoryDumpViewModel;
+                    DetailContent = memoryDumpViewModel;
+                    ShowLogStats = false;
+                    _logger.LogDebug("Navigated to Memory Dump Viewer");
+                    break;
+
                 default:
                     SidebarTitle = UIStrings.Navigation_Explorer;
                     MainContentTitle = "";

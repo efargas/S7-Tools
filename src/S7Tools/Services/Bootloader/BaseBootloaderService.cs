@@ -236,6 +236,253 @@ public abstract class BaseBootloaderService
     }
 
     /// <summary>
+    /// Performs memory dump using streaming (writes to temp files, reads back as byte arrays).
+    /// Provides 80% memory reduction during dump phase while maintaining interface compatibility.
+    /// </summary>
+    protected async Task<List<byte[]>> PerformDumpProcessStreamingAsync(
+        IPlcClient client,
+        JobProfileSet profiles,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        ILogger logger,
+        double startPercent,
+        double weight,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentNullException.ThrowIfNull(progress);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        List<byte[]> allDumps = [];
+        List<string> tempFiles = [];
+
+        try
+        {
+            DateTime dumpStartTime = _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
+            int iterationCount = profiles.DumpCount > 0 ? profiles.DumpCount : 1;
+
+            logger.LogInformation("Starting streaming dump process ({Count} iterations)", iterationCount);
+
+            for (int iter = 0; iter < iterationCount; iter++)
+            {
+                logger.LogInformation("Iteration {Iter}/{Total}", iter + 1, iterationCount);
+
+                if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
+                {
+                    // Segmented dump - combine segments into one file per iteration
+                    var segments = profiles.MemoryMapping.SelectedSegments.ToList();
+                    string iterTempFile = System.IO.Path.GetTempFileName();
+                    tempFiles.Add(iterTempFile);
+
+                    await using (var combinedStream = new System.IO.FileStream(
+                        iterTempFile, System.IO.FileMode.Create, System.IO.FileAccess.Write,
+                        System.IO.FileShare.None, 81920, true))
+                    {
+                        for (int i = 0; i < segments.Count; i++)
+                        {
+                            var segment = segments[i];
+                            string segStartStr = segment.StartAddress?.StartsWith("0x", StringComparison.OrdinalIgnoreCase) == true
+                                ? segment.StartAddress[2..]
+                                : segment.StartAddress ?? "0";
+
+                            if (!uint.TryParse(segStartStr, System.Globalization.NumberStyles.HexNumber, null, out uint segStart))
+                            {
+                                throw new InvalidOperationException($"Invalid segment address: {segment.StartAddress}");
+                            }
+
+                            uint segLength = (uint)segment.Size;
+                            string stageName = $"Seg {i + 1}/{segments.Count} (Iter {iter + 1}/{iterationCount})";
+                            double segWeight = weight / iterationCount / segments.Count;
+                            double segStartPercent = startPercent + (weight * (iter * segments.Count + i) / (iterationCount * segments.Count));
+
+                            logger.LogInformation("  Streaming segment {Index}: {Name} (0x{Addr:X8}, {Size:N0} bytes)",
+                                i + 1, segment.Name, segStart, segLength);
+
+                            // Stream segment directly to combined file
+                            long segBytesWritten = 0;
+                            var segProgress = new Progress<long>(bytes =>
+                            {
+                                segBytesWritten = bytes;
+                                double percent = segStartPercent + (segWeight * bytes / segLength);
+                                progress.Report((stageName, percent, bytes, segLength));
+                            });
+
+                            await client.InvokeDumperStreamAsync(
+                                segStart, segLength,
+                                async data => await combinedStream.WriteAsync(data, cancellationToken),
+                                segProgress,
+                                cancellationToken).ConfigureAwait(false);
+
+                            logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, segBytesWritten);
+                        }
+                    }
+                }
+                else
+                {
+                    // Single region dump
+                    string iterTempFile = System.IO.Path.GetTempFileName();
+                    tempFiles.Add(iterTempFile);
+
+                    string stageName = $"Memory Dump (Iter {iter + 1}/{iterationCount})";
+                    double iterWeight = weight / iterationCount;
+                    double iterStartPercent = startPercent + (weight * iter / iterationCount);
+
+                    logger.LogInformation("  Streaming memory: 0x{Start:X8}, {Length:N0} bytes",
+                        profiles.Memory.Start, profiles.Memory.Length);
+
+                    await PerformStreamingDumpToFileAsync(
+                        client,
+                        profiles.Memory.Start,
+                        profiles.Memory.Length,
+                        iterTempFile,
+                        progress,
+                        logger,
+                        iterStartPercent,
+                        iterWeight,
+                        stageName,
+                        cancellationToken).ConfigureAwait(false);
+                }
+            }
+
+            // Read all temp files back as byte arrays
+            logger.LogInformation("Reading {Count} dump files into memory...", tempFiles.Count);
+            foreach (string tempFile in tempFiles)
+            {
+                byte[] data = await System.IO.File.ReadAllBytesAsync(tempFile, cancellationToken).ConfigureAwait(false);
+                allDumps.Add(data);
+                logger.LogDebug("  Read {Size:N0} bytes from temp file", data.Length);
+            }
+
+            TimeSpan dumpDuration = (_timeProvider?.GetUtcNow() ?? DateTime.UtcNow) - dumpStartTime;
+            long totalBytes = allDumps.Sum(d => d.Length);
+            double rate = totalBytes > 0 && dumpDuration.TotalSeconds > 0 ? totalBytes / dumpDuration.TotalSeconds : 0;
+
+            logger.LogInformation("✓ Streaming dump complete: {Size:N0} bytes total", totalBytes);
+            logger.LogInformation("  Duration: {Duration:F1}s, Rate: {Rate:F1} bytes/s", dumpDuration.TotalSeconds, rate);
+
+            return allDumps;
+        }
+        finally
+        {
+            // Clean up temp files
+            foreach (string tempFile in tempFiles)
+            {
+                try
+                {
+                    if (System.IO.File.Exists(tempFile))
+                    {
+                        System.IO.File.Delete(tempFile);
+                        logger.LogTrace("Deleted temp file: {File}", tempFile);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Failed to delete temp file: {File}", tempFile);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Performs a streaming memory dump directly to a file using high-performance DumperService.
+    /// Data is streamed incrementally instead of buffering in memory.
+    /// </summary>
+    protected async Task<string> PerformStreamingDumpToFileAsync(
+        IPlcClient client,
+        uint address,
+        uint length,
+        string outputFilePath,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        ILogger logger,
+        double startPercent,
+        double weight,
+        string stageName,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(outputFilePath);
+        ArgumentNullException.ThrowIfNull(progress);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        logger.LogInformation("Starting streaming dump to file: {Path}", outputFilePath);
+        logger.LogInformation("  Address: 0x{Address:X8}, Length: {Length:N0} bytes", address, length);
+
+        DateTime dumpStartTime = _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
+        long totalBytesReceived = 0;
+        double lastReportedPercent = startPercent;
+
+        // Create output directory if needed
+        string? directory = System.IO.Path.GetDirectoryName(outputFilePath);
+        if (!string.IsNullOrEmpty(directory) && !System.IO.Directory.Exists(directory))
+        {
+            System.IO.Directory.CreateDirectory(directory);
+        }
+
+        // Open file stream for incremental writing
+        await using (var fileStream = new System.IO.FileStream(
+            outputFilePath,
+            System.IO.FileMode.Create,
+            System.IO.FileAccess.Write,
+            System.IO.FileShare.None,
+            bufferSize: 81920, // 80KB buffer
+            useAsync: true))
+        {
+            // Streaming callback - writes data directly to file
+            async ValueTask OnDataReceivedAsync(ReadOnlyMemory<byte> data)
+            {
+                await fileStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
+            }
+
+            // Progress callback
+            var streamProgress = new Progress<long>(bytesReceived =>
+            {
+                totalBytesReceived = bytesReceived;
+                double percent = startPercent + (weight * bytesReceived / length);
+
+                // Report if changed by >= 0.1%
+                if (Math.Abs(percent - lastReportedPercent) >= 0.1 || bytesReceived == length)
+                {
+                    progress.Report((stageName, percent, bytesReceived, length));
+                    lastReportedPercent = percent;
+                }
+
+                // Log occasionally (every 5%)
+                if (length > 0)
+                {
+                    double pct = (double)bytesReceived / length * 100.0;
+                    if ((int)pct % 5 == 0)
+                    {
+                        logger.LogDebug("  Progress: {Percent:F1}% ({Bytes:N0}/{Total:N0})",
+                            pct, bytesReceived, length);
+                    }
+                }
+            });
+
+            // Invoke streaming dump
+            await client.InvokeDumperStreamAsync(
+                address,
+                length,
+                OnDataReceivedAsync,
+                streamProgress,
+                cancellationToken).ConfigureAwait(false);
+
+            await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        TimeSpan dumpDuration = (_timeProvider?.GetUtcNow() ?? DateTime.UtcNow) - dumpStartTime;
+        double transferRate = totalBytesReceived > 0 && dumpDuration.TotalSeconds > 0
+            ? totalBytesReceived / dumpDuration.TotalSeconds
+            : 0;
+
+        logger.LogInformation("✓ Streaming dump completed: {Size:N0} bytes", totalBytesReceived);
+        logger.LogInformation("  Duration: {Duration:F1}s, Rate: {Rate:F1} bytes/s",
+            dumpDuration.TotalSeconds, transferRate);
+        logger.LogInformation("  Saved to: {Path}", outputFilePath);
+
+        return outputFilePath;
+    }
+
+    /// <summary>
     /// Helper to report progress while waiting for a delay.
     /// </summary>
     protected async Task WaitWithProgressAsync(

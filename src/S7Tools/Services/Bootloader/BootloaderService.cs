@@ -265,9 +265,9 @@ public sealed class BootloaderService(
                 effectiveTaskLogger.LogInformation("✓ Dumper payload installed successfully");
 
                 // Stage 11: Memory Dump (20% - 95% progress) = 75% weight
-                effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump ---");
+                effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump (Streaming) ---");
 
-                var allDumps = await PerformDumpProcessAsync(
+                var allDumps = await PerformDumpProcessStreamingAsync(
                     client,
                     profiles,
                     progress,
