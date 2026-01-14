@@ -229,6 +229,22 @@ public interface ITaskScheduler
     Task<int> CleanupOldTasksAsync(TimeSpan maxAge, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Removes a specific task from the scheduler.
+    /// The task must be in a terminal state or Created state.
+    /// </summary>
+    /// <param name="taskId">The unique identifier of the task to remove.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>True if the task was removed, false otherwise.</returns>
+    Task<bool> RemoveTaskAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Removes all completed, failed, or cancelled tasks.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>The number of tasks that were removed.</returns>
+    Task<int> ClearFinishedTasksAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets scheduler statistics and performance metrics.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>

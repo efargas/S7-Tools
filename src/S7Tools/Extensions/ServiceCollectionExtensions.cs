@@ -414,10 +414,11 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<PowerSupplyProfileViewModel>();
 
         // Add Task Management ViewModels (Task Manager and Jobs Management)
-        services.TryAddTransient<TaskDetailsViewModel>();
-        services.TryAddTransient<TaskStatisticsViewModel>();
-        services.TryAddSingleton<TaskManagerViewModel>();
-        services.TryAddSingleton<ActiveTasksViewModel>();
+        // Task Viewmodels
+        services.AddTransient<TaskStatisticsViewModel>();
+        services.AddTransient<TaskCommandManager>(); // Registered for DI interaction
+        services.AddSingleton<TaskManagerViewModel>();
+        services.AddTransient<TaskDetailsViewModel>();
         services.TryAddSingleton<ScheduledTasksViewModel>();
         services.TryAddSingleton<HistoryTasksViewModel>();
         services.TryAddSingleton<TaskCreatorViewModel>();

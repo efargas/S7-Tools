@@ -37,10 +37,11 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly ConcurrentDictionary<Guid, Task> _activeExecutions = new(); // Track active execution tasks
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
     private readonly SemaphoreSlim _persistenceSemaphore = new(1, 1);
+    // private readonly TimeSpan _scheduleInterval = TimeSpan.FromSeconds(1); // Unused
+    // Automatic cleanup disabled as per user request - manual only
+    // private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
     private readonly Timer _scheduleTimer;
     private DateTime _lastCleanupTime;
-    private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
-
     private bool _isRunning;
     private bool _disposed;
     private int _maxConcurrentTasks = Environment.ProcessorCount;
@@ -715,6 +716,36 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     }
 
     /// <inheritdoc/>
+    public async Task<bool> RemoveTaskAsync(Guid taskId, CancellationToken cancellationToken = default)
+    {
+        if (!_tasks.TryGetValue(taskId, out TaskExecution? task))
+        {
+            return false;
+        }
+
+        if (task.State is TaskState.Running or TaskState.Paused or TaskState.Queued or TaskState.Scheduled)
+        {
+            _logger.LogWarning("Cannot remove task {TaskId} because it is in state {State}. Cancel it first.", taskId, task.State);
+            return false;
+        }
+
+        if (_tasks.TryRemove(taskId, out _))
+        {
+            _logger.LogInformation("Removed task {TaskId} ({JobName})", taskId, task.JobName);
+            await Task.Run(() => SaveTasksAsync(), CancellationToken.None);
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <inheritdoc/>
+    public Task<int> ClearFinishedTasksAsync(CancellationToken cancellationToken = default)
+    {
+        return CleanupOldTasksAsync(TimeSpan.Zero, cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async Task<SchedulerStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default)
     {
         var tasksByState = _tasks.Values
@@ -842,13 +873,18 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
                 _ = Task.Run(async () =>
                 {
+                    await Task.Yield(); // Satisfy async requirement caused by disabling cleanup
                     try
                     {
+                        // Cleanup old tasks
+                        // Disabled auto-cleanup as per user request
+                        /*
                         int removed = await CleanupOldTasksAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
                         if (removed > 0)
                         {
                             await SaveTasksAsync().ConfigureAwait(false);
                         }
+                        */
                     }
                     catch (Exception ex)
                     {
@@ -856,6 +892,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     }
                 }, CancellationToken.None);
             }
+
+            // Disabled auto-cleanup check
+            /*
             if (nowUtc - _lastCleanupTime > _cleanupInterval)
             {
                 _lastCleanupTime = nowUtc;
@@ -863,6 +902,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 _ = Task.Run(() => CleanupOldTasksAsync(TimeSpan.FromHours(24)), CancellationToken.None)
                     .ContinueWith(t => { if (t.Result > 0) { _ = SaveTasksAsync(); } });
             }
+            */
 
             int runningCount = _tasks.Values.Count(t => t.State == TaskState.Running);
             int availableSlots = _maxConcurrentTasks - runningCount;

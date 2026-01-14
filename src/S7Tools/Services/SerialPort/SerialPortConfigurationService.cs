@@ -27,6 +27,7 @@ public sealed partial class SerialPortConfigurationService
     /// </summary>
     /// <param name="logger">The logger instance for structured logging.</param>
     /// <param name="timeProvider">The time provider for abstracting time operations.</param>
+    /// <param name="shellExecutor">The shell command executor for running system commands.</param>
     public SerialPortConfigurationService(
         ILogger<SerialPortConfigurationService> logger,
         ITimeProvider timeProvider,

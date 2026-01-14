@@ -43,6 +43,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private readonly IDialogService _dialogService;
     private readonly TaskDetailsViewModel _taskDetailsViewModel;
     private readonly TaskStatisticsViewModel _taskStatisticsViewModel;
+    private readonly TaskCommandManager _taskCommandManager;
     private readonly CompositeDisposable _disposables = [];
 
     // State-based task collections for UI binding
@@ -74,6 +75,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
     /// <param name="dialogService">The dialog service for user confirmations.</param>
     /// <param name="taskDetailsViewModel">The task details view model for the details panel.</param>
+    /// <param name="taskStatisticsViewModel">The view model for task statistics.</param>
+    /// <param name="taskCommandManager">The manager for handling task commands.</param>
     public TaskManagerViewModel(
         ILogger<TaskManagerViewModel> logger,
         ITaskScheduler taskScheduler,
@@ -81,7 +84,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         IUIThreadService uiThreadService,
         IDialogService dialogService,
         TaskDetailsViewModel taskDetailsViewModel,
-        TaskStatisticsViewModel taskStatisticsViewModel)
+        TaskStatisticsViewModel taskStatisticsViewModel,
+        TaskCommandManager taskCommandManager)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
@@ -90,6 +94,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _taskDetailsViewModel = taskDetailsViewModel ?? throw new ArgumentNullException(nameof(taskDetailsViewModel));
         _taskStatisticsViewModel = taskStatisticsViewModel ?? throw new ArgumentNullException(nameof(taskStatisticsViewModel));
+        _taskCommandManager = taskCommandManager ?? throw new ArgumentNullException(nameof(taskCommandManager));
 
         SetupCommands();
         SetupCollections();
@@ -706,58 +711,21 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
     private async Task ExecuteStartTaskAsync(TaskExecution? task)
     {
-        // Use parameter if provided, otherwise fall back to SelectedTask
         TaskExecution? targetTask = task ?? SelectedTask;
-
-        // Check for null or Empty task
         if (targetTask == null || targetTask.TaskId == Guid.Empty)
-        {
-            _logger.LogWarning("Start task command called but no valid task was provided or selected");
             return;
-        }
-
-        // Validate task state before starting
-        if (targetTask.State != TaskState.Created)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Cannot start task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be Created)";
-            });
-            _logger.LogWarning("Cannot start task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
-            return;
-        }
 
         try
         {
             IsLoading = true;
             StatusMessage = UIStrings.Status_StartingTask;
 
-            bool success = await _taskScheduler.EnqueueTaskAsync(targetTask.TaskId).ConfigureAwait(false);
-
-            if (success)
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = $"Task '{targetTask.JobName}' queued for execution";
-                });
-                _logger.LogInformation("Started task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
-            }
-            else
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = $"Failed to start task '{targetTask.JobName}'";
-                });
-                _logger.LogWarning("Failed to start task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
-            }
+            var result = await _taskCommandManager.StartTaskAsync(targetTask);
+            UpdateCommandResult(result);
         }
         catch (Exception ex)
         {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Error starting task: {ex.Message}";
-            });
-            _logger.LogError(ex, "Error starting task {TaskId}", targetTask?.TaskId);
+            HandleCommandException(ex, "starting task");
         }
         finally
         {
@@ -767,66 +735,21 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
     private async Task ExecuteStopTaskAsync(TaskExecution? task)
     {
-        // Use parameter if provided, otherwise fall back to SelectedTask
         TaskExecution? targetTask = task ?? SelectedTask;
-
         if (targetTask == null)
-        {
-            _logger.LogWarning("Stop task command called but no task was provided or selected");
             return;
-        }
-
-        // Validate task can be cancelled
-        if (!targetTask.CanCancel)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Cannot stop task '{targetTask.JobName}' - task is in '{targetTask.State}' state";
-            });
-            _logger.LogWarning("Cannot stop task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
-            return;
-        }
-
-        bool confirmed = await _dialogService.ShowConfirmationAsync(
-            "Stop Task",
-            $"Are you sure you want to stop the task '{targetTask.JobName}'?").ConfigureAwait(false);
-
-        if (!confirmed)
-        {
-            return;
-        }
 
         try
         {
             IsLoading = true;
-            StatusMessage = UIStrings.Status_StoppingTask;
+            // No status message here as it might show dialog
 
-            bool success = await _taskScheduler.CancelTaskAsync(targetTask.TaskId).ConfigureAwait(false);
-
-            if (success)
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = $"Task '{targetTask.JobName}' stopped successfully";
-                });
-                _logger.LogInformation("Stopped task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
-            }
-            else
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = $"Failed to stop task '{targetTask.JobName}'";
-                });
-                _logger.LogWarning("Failed to stop task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
-            }
+            var result = await _taskCommandManager.StopTaskAsync(targetTask);
+            UpdateCommandResult(result);
         }
         catch (Exception ex)
         {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Error stopping task: {ex.Message}";
-            });
-            _logger.LogError(ex, "Error stopping task {TaskId}", targetTask?.TaskId);
+            HandleCommandException(ex, "stopping task");
         }
         finally
         {
@@ -837,104 +760,39 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteScheduleTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
 
         try
         {
-            // TODO: Show schedule dialog to get date/time
-            // For now, schedule for 5 minutes from now as a placeholder
-            DateTime scheduledTime = DateTime.UtcNow.ToLocalTime().AddMinutes(5);
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_SchedulingTask;
-
-            bool success = await _taskScheduler.ScheduleTaskAsync(SelectedTask.TaskId, scheduledTime).ConfigureAwait(false);
-
-            if (success)
-            {
-                StatusMessage = $"Task '{SelectedTask.JobName}' scheduled for {scheduledTime:HH:mm}";
-                _logger.LogInformation("Scheduled task {TaskId} ({JobName}) for {ScheduledTime}",
-                    SelectedTask.TaskId, SelectedTask.JobName, scheduledTime);
-            }
-            else
-            {
-                StatusMessage = $"Failed to schedule task '{SelectedTask.JobName}'";
-                _logger.LogWarning("Failed to schedule task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
-            }
+            var result = await _taskCommandManager.ScheduleTaskAsync(SelectedTask);
+            UpdateCommandResult(result);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error scheduling task: {ex.Message}";
-            _logger.LogError(ex, "Error scheduling task {TaskId}", SelectedTask?.TaskId);
-        }
-        finally
-        {
-            IsLoading = false;
+            HandleCommandException(ex, "scheduling task");
         }
     }
 
     private async Task ExecuteRestartTaskAsync(TaskExecution? task)
     {
-        // Use parameter if provided, otherwise fall back to SelectedTask
         TaskExecution? targetTask = task ?? SelectedTask;
-
         if (targetTask == null)
-        {
-            _logger.LogWarning("Restart task command called but no task was provided or selected");
             return;
-        }
-
-        // Validate task can be restarted
-        if (!targetTask.CanRestart)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Cannot restart task '{targetTask.JobName}' - task is in '{targetTask.State}' state";
-            });
-            _logger.LogWarning("Cannot restart task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
-            return;
-        }
 
         try
         {
             IsLoading = true;
-            StatusMessage = UIStrings.Status_RestartingTask;
-
-            TaskExecution? restartedTask = await _taskScheduler.RestartTaskAsync(targetTask.TaskId).ConfigureAwait(false);
-
-            if (restartedTask != null)
+            var result = await _taskCommandManager.RestartTaskAsync(targetTask);
+            UpdateCommandResult(result);
+            if (result.IsSuccess)
             {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = $"Task '{targetTask.JobName}' restarted successfully";
-                });
-                _logger.LogInformation("Restarted task {TaskId} ({JobName}) as {NewTaskId}",
-                    targetTask.TaskId, targetTask.JobName, restartedTask.TaskId);
-
-                // Select the new task
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    SelectedTask = restartedTask;
-                });
-            }
-            else
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = $"Failed to restart task '{targetTask.JobName}'";
-                });
-                _logger.LogWarning("Failed to restart task {TaskId} ({JobName})", targetTask.TaskId, targetTask.JobName);
+                // Logic to select new task? Manager doesn't return the new task ID explicitly in Result message
+                // But we have auto-refresh.
             }
         }
         catch (Exception ex)
         {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Error restarting task: {ex.Message}";
-            });
-            _logger.LogError(ex, "Error restarting task {TaskId}", targetTask?.TaskId);
+            HandleCommandException(ex, "restarting task");
         }
         finally
         {
@@ -945,32 +803,17 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecutePauseTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
 
         try
         {
             IsLoading = true;
-            StatusMessage = UIStrings.Status_PausingTask;
-
-            bool success = await _taskScheduler.PauseTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
-
-            if (success)
-            {
-                StatusMessage = $"Task '{SelectedTask.JobName}' paused successfully";
-                _logger.LogInformation("Paused task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
-            }
-            else
-            {
-                StatusMessage = $"Failed to pause task '{SelectedTask.JobName}'";
-                _logger.LogWarning("Failed to pause task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
-            }
+            var result = await _taskCommandManager.PauseTaskAsync(SelectedTask);
+            UpdateCommandResult(result);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error pausing task: {ex.Message}";
-            _logger.LogError(ex, "Error pausing task {TaskId}", SelectedTask?.TaskId);
+            HandleCommandException(ex, "pausing task");
         }
         finally
         {
@@ -981,32 +824,17 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteResumeTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
 
         try
         {
             IsLoading = true;
-            StatusMessage = UIStrings.Status_ResumingTask;
-
-            bool success = await _taskScheduler.ResumeTaskAsync(SelectedTask.TaskId).ConfigureAwait(false);
-
-            if (success)
-            {
-                StatusMessage = $"Task '{SelectedTask.JobName}' resumed successfully";
-                _logger.LogInformation("Resumed task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
-            }
-            else
-            {
-                StatusMessage = $"Failed to resume task '{SelectedTask.JobName}'";
-                _logger.LogWarning("Failed to resume task {TaskId} ({JobName})", SelectedTask.TaskId, SelectedTask.JobName);
-            }
+            var result = await _taskCommandManager.ResumeTaskAsync(SelectedTask);
+            UpdateCommandResult(result);
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error resuming task: {ex.Message}";
-            _logger.LogError(ex, "Error resuming task {TaskId}", SelectedTask?.TaskId);
+            HandleCommandException(ex, "resuming task");
         }
         finally
         {
@@ -1017,34 +845,24 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteDeleteTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
-
-        bool confirmed = await _dialogService.ShowConfirmationAsync(
-            "Delete Task",
-            $"Are you sure you want to delete the task '{SelectedTask.JobName}'? This will remove it from the task history.").ConfigureAwait(false);
-
-        if (!confirmed)
-        {
-            return;
-        }
 
         try
         {
             IsLoading = true;
-            StatusMessage = UIStrings.Status_DeletingTask;
+            // StatusMessage = UIStrings.Status_DeletingTask; // Handled by Result update or inside if we passed context
 
-            // Use cleanup method to remove old finished tasks
-            // Since there's no direct delete method, we'll just mark it and let cleanup handle it
-            StatusMessage = $"Task '{SelectedTask.JobName}' will be removed during next cleanup";
-            _logger.LogInformation("Marked task {TaskId} ({JobName}) for cleanup", SelectedTask.TaskId, SelectedTask.JobName);
-            SelectedTask = TaskExecution.Empty;
+            var result = await _taskCommandManager.DeleteTaskAsync(SelectedTask);
+            UpdateCommandResult(result);
+
+            if (result.IsSuccess)
+            {
+                SelectedTask = TaskExecution.Empty;
+            }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error deleting task: {ex.Message}";
-            _logger.LogError(ex, "Error deleting task {TaskId}", SelectedTask?.TaskId);
+            HandleCommandException(ex, "deleting task");
         }
         finally
         {
@@ -1066,8 +884,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error refreshing tasks: {ex.Message}";
-            _logger.LogError(ex, "Error refreshing tasks in Task Manager");
+            HandleCommandException(ex, "refreshing tasks");
         }
         finally
         {
@@ -1077,90 +894,69 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
     private async Task ExecuteClearFinishedTasksAsync()
     {
-        bool confirmed = await _dialogService.ShowConfirmationAsync(
-            "Clear Finished Tasks",
-            $"Are you sure you want to clear all {FinishedTasks.Count} finished tasks? This will remove them from the task history.").ConfigureAwait(false);
-
-        if (!confirmed)
-        {
-            return;
-        }
-
         try
         {
             IsLoading = true;
-            StatusMessage = UIStrings.Status_ClearingFinishedTasks;
+            var result = await _taskCommandManager.ClearFinishedTasksAsync();
+            UpdateCommandResult(result);
 
-            // Use cleanup method to remove old tasks
-            int clearedCount = await _taskScheduler.CleanupOldTasksAsync(TimeSpan.Zero).ConfigureAwait(false);
-
-            StatusMessage = $"Cleared {clearedCount} finished tasks";
-            _logger.LogInformation("Cleared {ClearedCount} finished tasks from Task Manager", clearedCount);
-
-            // Refresh the task list to update the UI
-            await LoadTasksAsync().ConfigureAwait(false);
-
-            if (SelectedTask?.IsTerminal == true)
+            if (result.IsSuccess)
             {
-                SelectedTask = TaskExecution.Empty;
+                await LoadTasksAsync().ConfigureAwait(false);
+                if (SelectedTask?.IsTerminal == true)
+                {
+                    SelectedTask = TaskExecution.Empty;
+                }
             }
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error clearing finished tasks: {ex.Message}";
-            _logger.LogError(ex, "Error clearing finished tasks in Task Manager");
+            HandleCommandException(ex, "clearing finished tasks");
         }
         finally
         {
             IsLoading = false;
         }
     }
+
     private async Task ExecuteCreateTaskAsync()
     {
         try
         {
             IsLoading = true;
-            StatusMessage = UIStrings.Status_CreatingNewTask;
+            var result = await _taskCommandManager.CreateTaskAsync();
+            UpdateCommandResult(result);
 
-            // Show job selection dialog
-            JobProfile? selectedJob = await _dialogService.ShowJobSelectionAsync().ConfigureAwait(false);
-
-            if (selectedJob == null)
-            {
-                // User cancelled the dialog
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = "Task creation cancelled";
-                });
-                _logger.LogInformation("Task creation cancelled by user");
-                return;
-            }
-
-            // Create task from selected job
-            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(selectedJob).ConfigureAwait(false);
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Created new task '{newTask.JobName}' from job '{selectedJob.Name}'";
-                // Select the new task
-                SelectedTask = newTask;
-            });
-
-            _logger.LogInformation("Created new task {TaskId} from job {JobId} ({JobName})",
-                newTask.TaskId, selectedJob.Id, selectedJob.Name);
+            // We might want to select the new task if possible, but Manager doesn't return it yet.
+            // For now, auto-refresh and user finds it. 
+            // Previous code did: SelectedTask = newTask;
+            // We can improve this if needed by adding Data to CommandResult.
         }
         catch (Exception ex)
         {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = $"Error creating task: {ex.Message}";
-            });
-            _logger.LogError(ex, "Error creating task in Task Manager");
+            HandleCommandException(ex, "creating task");
         }
         finally
         {
             IsLoading = false;
         }
+    }
+
+    private void UpdateCommandResult(CommandResult result)
+    {
+        if (result.IsCancelled)
+            return;
+
+        if (!string.IsNullOrEmpty(result.Message))
+        {
+            _ = _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = result.Message);
+        }
+    }
+
+    private void HandleCommandException(Exception ex, string operation)
+    {
+        _logger.LogError(ex, "Error {Operation} in Task Manager", operation);
+        _ = _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = $"Error {operation}: {ex.Message}");
     }
 
     #endregion
