@@ -372,17 +372,21 @@ public sealed partial class SerialPortConfigurationService
         // Check for dangerous commands
         string[] dangerousPatterns =
         [
-            @"rm\s+", @"del\s+", @"format\s+", @"mkfs\s+",
-            @";\s*dd\s+", @"&&\s*dd\s+", @"\|\s*dd\s+", @"^\s*dd\s+",  // Only dangerous dd usage (standalone dd command)
-            @">\s*/dev/", @";\s*rm\s+", @"&&\s*rm\s+", @"\|\s*rm\s+"
+            @"`", @"\$", @"&&", @"\|\|", @";", @"\("
         ];
 
         foreach (string? pattern in dangerousPatterns)
         {
-            if (DangerousPatternRegex(pattern).IsMatch(command))
+            if (new Regex(pattern).IsMatch(command))
             {
-                result.Errors.Add($"Command contains potentially dangerous pattern: {pattern}");
+                result.Errors.Add($"Command contains potentially dangerous shell metacharacters: {pattern}");
             }
+        }
+
+        // Check for redirection to sensitive devices
+        if (new Regex(@">\s*/dev/").IsMatch(command))
+        {
+            result.Errors.Add("Command contains potentially dangerous redirection to /dev/");
         }
 
         // Check for required -F flag
