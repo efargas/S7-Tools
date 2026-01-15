@@ -181,27 +181,36 @@ public class FileLogSink : IFileLogSink, IDisposable
         }
     }
 
+    private readonly object _cacheLock = new();
+
     private string GetFullPath(string category)
     {
-        // Use TryGetValue to avoid closure allocation in GetOrAdd if key exists
+        // Use TryGetValue for a fast path to avoid locking if the key already exists.
         if (_pathCache.TryGetValue(category, out var path))
         {
             return path;
         }
 
-        // Bounded cache: if full, resolve directly without caching to prevent leak
-        if (_pathCache.Count >= MaxCacheSize)
+        lock (_cacheLock)
         {
-             var relativePath = _configuration.GetFilePathForCategory(category);
-             return _pathService.ResolvePath(relativePath);
-        }
+            // Double-check if another thread added the item while waiting for the lock.
+            if (_pathCache.TryGetValue(category, out path))
+            {
+                return path;
+            }
 
-        // Add to cache
-        return _pathCache.GetOrAdd(category, cat =>
-        {
-            var relativePath = _configuration.GetFilePathForCategory(cat);
-            return _pathService.ResolvePath(relativePath);
-        });
+            // Bounded cache: if full, resolve directly without caching to prevent leak.
+            if (_pathCache.Count >= MaxCacheSize)
+            {
+                var relativePath = _configuration.GetFilePathForCategory(category);
+                return _pathService.ResolvePath(relativePath);
+            }
+
+            // Add to cache.
+            var newPath = _pathService.ResolvePath(_configuration.GetFilePathForCategory(category));
+            _pathCache.TryAdd(category, newPath);
+            return newPath;
+        }
     }
 
     private void EnsureDirectoryExists(string fullPath)
