@@ -391,8 +391,19 @@ public abstract class BaseBootloaderService
                 }
                 else
                 {
-                    // Single-region dump (no segments)
-                    throw new NotImplementedException("Simplified single-region dump not yet implemented - add if needed");
+                    // Single-region dump: fallback to standard dumper call
+                    string stageName = $"Dumping Memory (Iter {iter+1}/{iterationCount})";
+                    var dumpProgress = new Progress<long>(bytes =>
+                    {
+                        double pct = startPercent + (weight * bytes / profiles.Memory.Length);
+                        progress.Report((stageName, pct, bytes, profiles.Memory.Length));
+                    });
+                    byte[] data = await client.InvokeDumperAsync(
+                        profiles.Memory.Start,
+                        (uint)profiles.Memory.Length,
+                        dumpProgress,
+                        cancellationToken).ConfigureAwait(false);
+                    allDumps.Add(data);
                 }
             }
 
