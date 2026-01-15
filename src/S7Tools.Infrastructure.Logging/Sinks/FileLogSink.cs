@@ -204,15 +204,11 @@ public class FileLogSink : IFileLogSink, IDisposable
         string? dir = Path.GetDirectoryName(fullPath);
         if (string.IsNullOrEmpty(dir)) return;
 
-        if (!_ensuredDirectories.ContainsKey(dir))
+        _ensuredDirectories.GetOrAdd(dir, static d =>
         {
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            // Use TryAdd to be safe, value doesn't strictly matter
-            _ensuredDirectories.TryAdd(dir, true);
-        }
+            Directory.CreateDirectory(d);
+            return true;
+        });
     }
 
     /// <inheritdoc />
