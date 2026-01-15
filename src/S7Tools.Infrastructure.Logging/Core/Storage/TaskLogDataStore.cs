@@ -31,8 +31,26 @@ public class TaskLogDataStore : ITaskLogDataStore
     /// <param name="uiDispatch">Optional delegate to dispatch updates to the UI thread. If null, updates run synchronously.</param>
     public TaskLogDataStore(int maxEntries = 1000, Action<Action>? uiDispatch = null)
     {
+        if (maxEntries <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxEntries), "Max entries must be greater than zero.");
+        }
+
         _maxEntries = maxEntries;
-        _uiDispatch = uiDispatch ?? (action => action());
+
+        // Default: marshal back to the creating thread if possible (typically UI thread).
+        var ctx = SynchronizationContext.Current;
+        _uiDispatch = uiDispatch ?? (action =>
+        {
+            if (ctx != null)
+            {
+                ctx.Post(_ => action(), null);
+                return;
+            }
+
+            action();
+        });
+
         _logs.CollectionChanged += (s, e) => CollectionChanged?.Invoke(s, e);
     }
 
@@ -45,12 +63,15 @@ public class TaskLogDataStore : ITaskLogDataStore
         // UI updates must happen on the UI thread or synchronized context
         _uiDispatch(() =>
         {
-            _logs.Add(entry);
-
-            // Enforce circular buffer limit
-            while (_logs.Count > _maxEntries)
+            lock (_lock)
             {
-                _logs.RemoveAt(0);
+                _logs.Add(entry);
+
+                // Enforce circular buffer limit
+                while (_logs.Count > _maxEntries)
+                {
+                    _logs.RemoveAt(0);
+                }
             }
         });
     }
