@@ -176,7 +176,9 @@ namespace S7Tools.Services.Adapters
             uint length,
             Func<ReadOnlyMemory<byte>, ValueTask> dataCallback,
             IProgress<long> progress,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            bool keepSessionOpen = false,
+            ILogger? logger = null)
         {
             _logger.LogInformation("Invoking Dumper (Streaming) (0x{Addr:X}, {Len} bytes)...", address, length);
 
@@ -188,7 +190,9 @@ namespace S7Tools.Services.Adapters
                 progress,
                 _socatHost,
                 _socatPort,
-                cancellationToken);
+                cancellationToken,
+                keepSessionOpen,
+                logger);
         }
 
         public async Task StopDumperSessionAsync()

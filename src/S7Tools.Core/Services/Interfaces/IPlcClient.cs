@@ -61,13 +61,16 @@ public interface IPlcClient : IAsyncDisposable
     /// <param name="dataCallback">Callback invoked with each chunk of received data.</param>
     /// <param name="progress">Progress reporter for dump operation (bytes received).</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <param name="keepSessionOpen">If true, the underlying dumper session remains active after completion, allowing subsequent calls to reuse the connection.</param>
     /// <returns>A task representing the asynchronous streaming operation.</returns>
     Task InvokeDumperStreamAsync(
         uint address,
         uint length,
         Func<ReadOnlyMemory<byte>, ValueTask> dataCallback,
         IProgress<long> progress,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        bool keepSessionOpen = false,
+        Microsoft.Extensions.Logging.ILogger? logger = null);
 
     /// <summary>
     /// Configures the client connection parameters.

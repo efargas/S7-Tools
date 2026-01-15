@@ -20,10 +20,15 @@ namespace S7Tools.Services.Adapters.Plc
         private readonly ILogger<DumperService> _logger;
         private Socket? _socket;
         private Stream? _stream; // Can be internal or external
-        private readonly Pipe _pipe;
+        private Pipe _pipe; // Not readonly - needs to be recreated for multi-iteration dumps
         private CancellationTokenSource? _cts;
         private Channel<MemoryBlock>? _outputChannel;
         private bool _isExternalStream;
+        private int _consecutiveEofCount;
+        private const int MaxEofRetries = 100; // 5 seconds at 50ms each
+        private ILogger? _sessionLogger;
+        private ILogger Logger => _sessionLogger ?? _logger;
+        private bool _expectGreeting;
 
         public DumperService(ILogger<DumperService> logger)
         {
@@ -36,13 +41,23 @@ namespace S7Tools.Services.Adapters.Plc
         // Expose the reader for the consumer
         public ChannelReader<MemoryBlock> DataReader => _outputChannel?.Reader ?? throw new InvalidOperationException("Dumper session not started");
 
-        public async Task StartDumpingAsync(string host, int port, CancellationToken token, Stream? existingStream = null)
+        public async Task StartDumpingAsync(string host, int port, CancellationToken token, Stream? existingStream = null, ILogger? logger = null)
         {
-            // Ensure any previous session is stopped and state cleared
+            _sessionLogger = logger;
+            // Always stop previous session to cancel old tasks (e.g. FillPipeAsync)
+            // protecting the stream from concurrent reads.
             await StopAsync();
+
+            if (existingStream != null)
+            {
+                // Recreate pipe for fresh iteration
+                _pipe = new Pipe();
+            }
 
             _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
             _isExternalStream = existingStream != null;
+            _consecutiveEofCount = 0; // Reset EOF counter for new session
+            _expectGreeting = true; // Reset grammar state expecting greeting first
 
             // Recreate channel for each session since channels cannot be "reopened" after completion
             _outputChannel = Channel.CreateUnbounded<MemoryBlock>(new UnboundedChannelOptions
@@ -55,18 +70,18 @@ namespace S7Tools.Services.Adapters.Plc
             {
                 if (existingStream != null)
                 {
-                    _logger.LogInformation("Using existing stream for dumper session.");
+                    Logger.LogInformation("Using existing stream for dumper session.");
                     _stream = existingStream;
                 }
                 else
                 {
                     _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    _logger.LogInformation("Connecting to socat at {Host}:{Port}...", host, port);
+                    Logger.LogInformation("Connecting to socat at {Host}:{Port}...", host, port);
                     await _socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(host), port), _cts.Token);
                     _stream = new NetworkStream(_socket, ownsSocket: true);
                 }
 
-                _logger.LogInformation("Connection established. Starting ingestion pipeline.");
+                Logger.LogInformation("Connection established. Starting ingestion pipeline.");
 
                 var fillTask = FillPipeAsync(_stream, _pipe.Writer, _cts.Token);
                 var readTask = ProcessPipeAsync(_pipe.Reader, _outputChannel.Writer, _cts.Token);
@@ -75,11 +90,11 @@ namespace S7Tools.Services.Adapters.Plc
             }
             catch (OperationCanceledException)
             {
-                _logger.LogInformation("Dump operation canceled.");
+                Logger.LogInformation("Dump operation canceled.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Critical error during memory dump.");
+                Logger.LogError(ex, "Critical error during memory dump.");
                 throw;
             }
             finally
@@ -91,10 +106,52 @@ namespace S7Tools.Services.Adapters.Plc
                 {
                     _stream?.Dispose();
                     _socket?.Dispose();
+                    _stream = null;
+                    _socket = null;
                 }
-                _stream = null;
-                _socket = null;
+                // For external streams, don't set _stream to null - it's still valid for next iteration
             }
+        }
+
+        /// <summary>
+        /// Resets the parser state for a new segment command.
+        /// Called before sending a new 'A' command on an existing session.
+        /// PLC sends "Ok" greeting for EACH dump command, so we need to expect it.
+        /// </summary>
+        public void ResetForNewSegment()
+        {
+            _expectGreeting = true;
+            _consecutiveEofCount = 0;
+            Logger.LogDebug("♻️ Dumper state reset for new segment (expecting greeting).");
+        }
+
+        /// <summary>
+        /// Flushes any remaining data from the output channel.
+        /// Call this AFTER a segment completes and BEFORE starting a new segment.
+        /// This prevents leftover data from corrupting the next iteration.
+        /// </summary>
+        public async Task FlushRemainingDataAsync(CancellationToken token)
+        {
+            if (_outputChannel == null)
+                return;
+
+            int flushedCount = 0;
+            while (_outputChannel.Reader.TryRead(out _))
+            {
+                flushedCount++;
+            }
+
+            if (flushedCount > 0)
+            {
+                Logger.LogDebug("🚿 Flushed {Count} remaining blocks from channel", flushedCount);
+            }
+            else
+            {
+                Logger.LogDebug("🚿 Channel was already empty, no flush needed");
+            }
+
+            // Small delay to let any in-flight data settle
+            await Task.Delay(50, token).ConfigureAwait(false);
         }
 
         private async Task FillPipeAsync(Stream stream, PipeWriter writer, CancellationToken token)
@@ -111,14 +168,32 @@ namespace S7Tools.Services.Adapters.Plc
 
                     if (bytesRead == 0)
                     {
-                        break; // EOF
+                        // EOF received - but don't break immediately, PLC might send more data
+                        // This is critical for multi-iteration dumps
+                        _consecutiveEofCount++;
+                        if (_consecutiveEofCount >= MaxEofRetries)
+                        {
+                            Logger.LogWarning("Max EOF retries reached ({Count}), stopping reader", MaxEofRetries);
+                            break;
+                        }
+                        Logger.LogDebug("EOF detected ({Count}/{Max}), waiting for more data...",
+                            _consecutiveEofCount, MaxEofRetries);
+                        await Task.Delay(50, token);
+                        continue;
                     }
 
+                    // Reset EOF counter on successful read
+                    _consecutiveEofCount = 0;
                     writer.Advance(bytesRead);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Normal cancellation during session reset
+                    break;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error receiving data from stream.");
+                    Logger.LogError(ex, "Error receiving data from stream.");
                     break;
                 }
 
@@ -133,61 +208,101 @@ namespace S7Tools.Services.Adapters.Plc
             await writer.CompleteAsync();
         }
 
-        private volatile bool _expectingGreeting;
 
-        public void ExpectGreeting()
-        {
-            _expectingGreeting = true;
-        }
 
         private async Task ProcessPipeAsync(PipeReader reader, ChannelWriter<MemoryBlock> writer, CancellationToken token)
         {
             uint currentAddress = 0;
-            SequencePosition consumed = default;
-            SequencePosition examined = default;
 
             while (!token.IsCancellationRequested)
             {
                 ReadResult result = await reader.ReadAsync(token);
                 ReadOnlySequence<byte> buffer = result.Buffer;
 
-                if (buffer.Length == 0 && result.IsCompleted)
+                if (result.IsCanceled)
                     break;
 
-                consumed = buffer.Start;
-                examined = buffer.End;
+                SequencePosition consumed = buffer.Start;
+                SequencePosition examined = buffer.End;
 
-                if (_expectingGreeting)
+                if (buffer.Length > 0)
                 {
-                    if (TrySkipGreeting(buffer, out long skipBytes))
+                    // VERBOSE TRACE: Print buffer head to diagnose alignment issues
+                    var hexDump = BitConverter.ToString(buffer.Slice(0, Math.Min(buffer.Length, 16)).ToArray());
+                    Logger.LogTrace("Buffer state: Length={Len}, Head=[{Hex}]",
+                        buffer.Length, hexDump);
+
+                    var seqReader = new SequenceReader<byte>(buffer);
+                    bool processed = false;
+
+                    if (_expectGreeting)
                     {
-                        _logger.LogInformation("Found and skipping {Count} bytes of sync greeting.", skipBytes);
-                        _expectingGreeting = false;
+                        // Try to find the greeting in the buffer (skipping junk if necessary)
+                        bool foundGreeting = TryConsumeGreeting(ref seqReader);
 
-                        consumed = buffer.GetPosition(skipBytes);
-                        buffer = buffer.Slice(skipBytes);
+                        // CRITICAL FIX: Always update 'consumed' to where the reader ended up.
+                        // TryConsumeGreeting now consumes junk bytes up to the potential greeting.
+                        consumed = seqReader.Position;
 
-                        if (buffer.Length == 0)
+                        if (foundGreeting)
                         {
-                            reader.AdvanceTo(consumed, examined);
-                            continue;
+                            _expectGreeting = false; // Greeting consumed, switch to data mode
+                            processed = true;
+
+                            Logger.LogInformation("✅ Greeting consumed. Switching to DATA mode.");
+
+                            // Check if we consumed everything or have leftovers
+                            if (seqReader.Remaining > 0)
+                            {
+                                Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
+
+                                // Re-slice to strip the greeting we just ate
+                                buffer = buffer.Slice(consumed);
+
+                                // Parse remaining as data protocol
+                                ParseProtocol(buffer, ref currentAddress, writer);
+                            }
+                        }
+                        else
+                        {
+                            // Greeting expected but not found yet.
+                            // If we consumed some junk (consumed != start), processed is effectively true
+                            if (!consumed.Equals(buffer.Start))
+                            {
+                                processed = true;
+                            }
+                            else
+                            {
+                                processed = false;
+                            }
                         }
                     }
                     else
                     {
-                        // Not found yet. Keep enough to not miss split greeting (at least 2 bytes if present)
-                        long keep = Math.Min(buffer.Length, 2);
-                        consumed = buffer.GetPosition(buffer.Length - keep);
-                        reader.AdvanceTo(consumed, examined);
-                        continue;
+                        // Data Mode
+                        processed = true;
+                        consumed = ParseProtocol(buffer, ref currentAddress, writer);
+                    }
+
+                    if (!processed && buffer.Length > 0 && buffer.Length < 16)
+                    {
+                        // Potential STUCK STATE diagnostic
                     }
                 }
 
-                consumed = ParseProtocol(buffer, ref currentAddress, writer);
                 reader.AdvanceTo(consumed, examined);
 
                 if (result.IsCompleted)
                 {
+                    // Check for leftovers on completion
+                    if (buffer.Length > 0)
+                    {
+                        Logger.LogWarning("Pipe completed with {Len} unconsumed bytes remaining.", buffer.Length);
+                    }
+                    else
+                    {
+                        Logger.LogInformation("Pipe processing completed cleanly.");
+                    }
                     break;
                 }
             }
@@ -196,40 +311,81 @@ namespace S7Tools.Services.Adapters.Plc
             await reader.CompleteAsync();
         }
 
-        private bool TrySkipGreeting(ReadOnlySequence<byte> buffer, out long skipBytes)
+        /// <summary>
+        /// Scans the buffer for the 'Ok' greeting. 
+        /// Consumes (skips) any garbage bytes before the greeting.
+        /// Returns true if full greeting consumed.
+        /// Returns false if greeting not found (reader positioned at start of potential partial match or end).
+        /// </summary>
+        /// <summary>
+        /// Scans the buffer for the 'Ok' greeting. 
+        /// Consumes (skips) any garbage bytes before the greeting.
+        /// Returns true if full greeting consumed.
+        /// Returns false if greeting not found (reader positioned at start of potential partial match or end).
+        /// </summary>
+        private bool TryConsumeGreeting(ref SequenceReader<byte> reader)
         {
-            var seqReader = new SequenceReader<byte>(buffer);
-            skipBytes = 0;
+            // We need to look for 0x05 (Framed) or 'O' (Legacy)
+            // Strategy: Read byte by byte. If match start, check rest. If fail, continue scanning.
 
-            while (!seqReader.End)
+            while (reader.Remaining > 0)
             {
-                if (seqReader.TryRead(out byte b) && b == 0x4F) // 'O'
+                long startOfCandidate = reader.Consumed;
+
+                if (!reader.TryPeek(out byte b))
+                    break;
+
+                // Candidate 1: Framed "\x05", "O", "k"
+                if (b == 0x05)
                 {
-                    if (seqReader.Remaining >= 1)
+                    if (reader.Remaining < 5)
                     {
-                        if (seqReader.TryRead(out byte b2) && b2 == 0x6B) // 'k'
-                        {
-                            long posO = seqReader.Consumed - 2;
-
-                            // Determine skip size: 6 for framed [05 Ok 00 00 CS], 3 or 4 for raw
-                            // We check if the byte before 'O' is 0x05 (length byte of framed packet)
-                            bool isFramed = false;
-                            if (posO >= 1)
-                            {
-                                var slice = buffer.Slice(posO - 1, 1);
-                                if (slice.FirstSpan[0] == 0x05)
-                                    isFramed = true;
-                            }
-
-                            if (isFramed)
-                                skipBytes = posO + 5; // Skip up to CS (inclusive) -> 6 bytes total from 05
-                            else
-                                skipBytes = posO + 3; // Skip Ok and likely one null byte
-
-                            return true;
-                        }
+                        // Potential partial match at end of buffer. 
+                        // Stop here so we get more data.
+                        return false;
                     }
+
+                    // Check full sequence: 05 4F 6B 00 00
+                    reader.Advance(1); // Eat 05
+
+                    if (reader.TryRead(out byte b2) && b2 == 'O' &&
+                        reader.TryRead(out byte b3) && b3 == 'k')
+                    {
+                        // Matched!
+                        reader.Advance(1); // 00
+                        reader.Advance(1); // 00
+                        reader.Advance(1); // CS
+
+                        Logger.LogInformation("✅ Auto-detected and consumed Framed 'Ok' greeting");
+                        return true;
+                    }
+
+                    // Mismatch, this '05' was junk. Continue scan.
+                    continue;
                 }
+
+                // Candidate 2: Legacy "Ok"
+                if (b == 'O')
+                {
+                    if (reader.Remaining < 2)
+                    {
+                        // Partial legacy 'O...'
+                        return false;
+                    }
+
+                    reader.Advance(1); // Eat O
+                    if (reader.TryRead(out byte b2) && b2 == 'k')
+                    {
+                        Logger.LogInformation("✅ Auto-detected and consumed Legacy 'Ok' greeting");
+                        return true;
+                    }
+
+                    // Mismatch 'Ox'... continue
+                    continue;
+                }
+
+                // Not a start byte, consume as junk
+                reader.Advance(1);
             }
 
             return false;
@@ -240,6 +396,7 @@ namespace S7Tools.Services.Adapters.Plc
         {
             var seqReader = new SequenceReader<byte>(buffer);
             const int BlockSize = 16; // 16 bytes per line
+            int blocksProcessed = 0;
 
             while (seqReader.Remaining >= BlockSize)
             {
@@ -258,6 +415,13 @@ namespace S7Tools.Services.Adapters.Plc
 
                 currentAddress += BlockSize;
                 seqReader.Advance(BlockSize);
+                blocksProcessed++;
+            }
+
+            if (blocksProcessed > 0)
+            {
+                Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
+                    blocksProcessed, blocksProcessed * BlockSize, currentAddress);
             }
 
             return seqReader.Position;
@@ -277,7 +441,7 @@ namespace S7Tools.Services.Adapters.Plc
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error sending data through dumper stream.");
+                Logger.LogError(ex, "Error sending data through dumper stream.");
                 throw;
             }
         }

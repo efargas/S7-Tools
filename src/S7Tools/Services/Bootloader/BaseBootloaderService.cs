@@ -236,6 +236,182 @@ public abstract class BaseBootloaderService
     }
 
     /// <summary>
+    /// SIMPLIFIED multi-iteration streaming dump - keeps ONE session, loops iterations inside.
+    /// This is the user-suggested approach: start session once, loop inside, stop session once.
+    /// </summary>
+    protected async Task<List<byte[]>> PerformDumpProcessStreamingSimplifiedAsync(
+        IPlcClient client,
+        JobProfileSet profiles,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        ILogger logger,
+        double startPercent,
+        double weight,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(profiles);
+        ArgumentNullException.ThrowIfNull(progress);
+        ArgumentNullException.ThrowIfNull(logger);
+
+        List<byte[]> allDumps = [];
+        DateTime dumpStartTime = _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
+        int iterationCount = profiles.DumpCount > 0 ? profiles.DumpCount : 1;
+
+        logger.LogInformation("🚀 Starting SIMPLIFIED streaming dump ({Count} iterations) - RESTART per Segment approach", iterationCount);
+        logger.LogDebug("  Strategy: Start dumper session EACH segment → Loop iterations INSIDE → Stop session EACH segment");
+
+        // Calculate total expected bytes across all iterations
+        long totalExpectedBytes = 0;
+        var segments = profiles.MemoryMapping?.HasSelectedSegments == true
+            ? profiles.MemoryMapping.SelectedSegments.ToList()
+            : null;
+
+        if (segments != null)
+        {
+            totalExpectedBytes = iterationCount * segments.Sum(s => (long)s.Size);
+        }
+
+        try
+        {
+            // NO SESSION MANAGEMENT - Just call InvokeDumperStreamAsync multiple times
+            // The session lifecycle is handled internally by the orchestrator/client
+            logger.LogDebug("Beginning iteration loop ({Count} iterations)...", iterationCount);
+
+            for (int iter = 0; iter < iterationCount; iter++)
+            {
+                logger.LogInformation("📍 Iteration {Iter}/{Total} starting...", iter + 1, iterationCount);
+
+                if (segments != null && segments.Count > 0)
+                {
+                    // Segmented dump
+                    string iterTempFile = System.IO.Path.GetTempFileName();
+
+                    try
+                    {
+                        await using (var combinedStream = new System.IO.FileStream(
+                            iterTempFile, System.IO.FileMode.Create, System.IO.FileAccess.Write,
+                            System.IO.FileShare.None, 81920, true))
+                        {
+                            for (int i = 0; i < segments.Count; i++)
+                            {
+                                var segment = segments[i];
+                                string segStartStr = segment.StartAddress?.StartsWith("0x", StringComparison.OrdinalIgnoreCase) == true
+                                    ? segment.StartAddress[2..]
+                                    : segment.StartAddress ?? "0";
+
+                                if (!uint.TryParse(segStartStr, System.Globalization.NumberStyles.HexNumber, null, out uint segStart))
+                                {
+                                    throw new InvalidOperationException($"Invalid segment address: {segment.StartAddress}");
+                                }
+
+                                uint segLength = (uint)segment.Size;
+                                string stageName = $"Seg {i + 1}/{segments.Count} (Iter {iter + 1}/{iterationCount})";
+                                double segWeight = weight / iterationCount / segments.Count;
+                                double segStartPercent = startPercent + (weight * (iter * segments.Count + i) / (iterationCount * segments.Count));
+
+                                logger.LogInformation("  ├─ Streaming segment {Index}/{Total}: {Name} (0x{Addr:X8}, {Size:N0} bytes)",
+                                    i + 1, segments.Count, segment.Name, segStart, segLength);
+
+                                // Stream segment to file
+                                long segBytesWritten = 0;
+                                double lastReportedSegPercent = segStartPercent;
+                                var segProgress = new Progress<long>(bytes =>
+                                {
+                                    segBytesWritten = bytes;
+                                    double percent = segStartPercent + (segWeight * bytes / segLength);
+
+                                    // Calculate cumulative bytes
+                                    long bytesFromPreviousIterations = iter * segments.Sum(s => (long)s.Size);
+                                    long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
+                                    long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
+
+                                    if (Math.Abs(percent - lastReportedSegPercent) >= 1.0 || bytes == segLength)
+                                    {
+                                        progress.Report((stageName, percent, cumulativeTotalBytes, totalExpectedBytes));
+                                        lastReportedSegPercent = percent;
+                                    }
+                                });
+
+                                // Keep session active until the very last segment of the very last iteration
+                                bool isLastOperation = (iter == iterationCount - 1) && (i == segments.Count - 1);
+
+                                // OPTION A: Use synchronous InvokeDumperAsync (proven working approach)
+                                // This waits for "Ok" response BEFORE receiving data, avoiding race conditions.
+                                byte[] segmentData = await client.InvokeDumperAsync(
+                                    segStart, segLength,
+                                    segProgress,
+                                    cancellationToken).ConfigureAwait(false);
+
+                                // Write segment data to combined stream
+                                await combinedStream.WriteAsync(segmentData, cancellationToken).ConfigureAwait(false);
+
+                                logger.LogDebug("    ✓ Segment {Index} complete: {Size:N0} bytes", i + 1, segmentData.Length);
+                            }
+                        }
+
+                        // Read, trim, save iteration dump file
+                        byte[] dumpData = await System.IO.File.ReadAllBytesAsync(iterTempFile, cancellationToken).ConfigureAwait(false);
+                        long expectedSize = segments.Sum(s => (long)s.Size);
+
+                        if (dumpData.Length > expectedSize)
+                        {
+                            byte[] trimmed = new byte[expectedSize];
+                            Array.Copy(dumpData, 0, trimmed, 0, expectedSize);
+                            logger.LogDebug("  Trimmed from {Original} to {Expected} bytes (removed {Padding} padding)",
+                                dumpData.Length, expectedSize, dumpData.Length - expectedSize);
+                            dumpData = trimmed;
+                        }
+
+                        allDumps.Add(dumpData);
+
+                        // Save .bin file
+                        string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
+                        string jobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
+                        string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}_{timestamp}.bin";
+                        string dumpsDir = "./dumps";
+
+                        if (!System.IO.Directory.Exists(dumpsDir))
+                        {
+                            System.IO.Directory.CreateDirectory(dumpsDir);
+                        }
+
+                        string dumpFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
+                        await System.IO.File.WriteAllBytesAsync(dumpFilePath, dumpData, cancellationToken).ConfigureAwait(false);
+                        logger.LogInformation("  ✓ Iteration {Iter}/{Total} complete: {File} ({Size:N0} bytes)",
+                            iter + 1, iterationCount, dumpFileName, dumpData.Length);
+                    }
+                    finally
+                    {
+                        // Clean up temp file
+                        if (System.IO.File.Exists(iterTempFile))
+                        {
+                            System.IO.File.Delete(iterTempFile);
+                        }
+                    }
+                }
+                else
+                {
+                    // Single-region dump (no segments)
+                    throw new NotImplementedException("Simplified single-region dump not yet implemented - add if needed");
+                }
+            }
+
+            logger.LogInformation("✓ All {Count} iterations processed successfully", iterationCount);
+            return allDumps;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during simplified streaming dump");
+            throw;
+        }
+        finally
+        {
+            // Ensure session is closed in case of error or completion
+            await client.StopDumperSessionAsync().ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
     /// Performs memory dump using streaming (writes to temp files, reads back as byte arrays).
     /// Provides 80% memory reduction during dump phase while maintaining interface compatibility.
     /// </summary>
@@ -302,26 +478,63 @@ public abstract class BaseBootloaderService
                             long segBytesWritten = 0;
                             double lastReportedSegPercent = segStartPercent;
                             var segProgress = new Progress<long>(bytes =>
-                            {
-                                segBytesWritten = bytes;
-                                double percent = segStartPercent + (segWeight * bytes / segLength);
+                                    {
+                                        segBytesWritten = bytes;
+                                        double percent = segStartPercent + (segWeight * bytes / segLength);
 
-                                if (Math.Abs(percent - lastReportedSegPercent) >= 1.0 || bytes == segLength)
-                                {
-                                    progress.Report((stageName, percent, bytes, segLength));
-                                    lastReportedSegPercent = percent;
-                                }
-                            });
+                                        // Calculate cumulative bytes across all iterations
+                                        long bytesFromPreviousIterations = iter * segments.Sum(s => (long)s.Size);
+                                        long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
+                                        long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
+                                        long grandTotalBytes = iterationCount * segments.Sum(s => (long)s.Size);
+
+                                        if (Math.Abs(percent - lastReportedSegPercent) >= 1.0 || bytes == segLength)
+                                        {
+                                            progress.Report((stageName, percent, cumulativeTotalBytes, grandTotalBytes));
+                                            lastReportedSegPercent = percent;
+                                        }
+                                    });
 
                             await client.InvokeDumperStreamAsync(
                                 segStart, segLength,
                                 async data => await combinedStream.WriteAsync(data, cancellationToken),
                                 segProgress,
-                                cancellationToken).ConfigureAwait(false);
+                                cancellationToken,
+                                logger: logger).ConfigureAwait(false);
 
                             logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, segBytesWritten);
                         }
                     }
+
+                    // Read temp file, trim to exact size, and create dump .bin file immediately
+                    byte[] dumpData = await System.IO.File.ReadAllBytesAsync(iterTempFile, cancellationToken).ConfigureAwait(false);
+
+                    // Calculate expected total size for all segments
+                    long expectedSize = segments.Sum(s => (long)s.Size);
+                    if (dumpData.Length > expectedSize)
+                    {
+                        byte[] trimmed = new byte[expectedSize];
+                        Array.Copy(dumpData, 0, trimmed, 0, expectedSize);
+                        logger.LogDebug("Trimmed dump from {Original} to {Expected} bytes (removed {Padding} padding bytes)",
+                            dumpData.Length, expectedSize, dumpData.Length - expectedSize);
+                        dumpData = trimmed;
+                    }
+
+                    allDumps.Add(dumpData);
+
+                    // Create output dump file
+                    string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
+                    // Use first segment name or generic name for dump file
+                    string jobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
+                    string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}_{timestamp}.bin";
+                    string dumpsDir = "./dumps";
+                    if (!System.IO.Directory.Exists(dumpsDir))
+                    {
+                        System.IO.Directory.CreateDirectory(dumpsDir);
+                    }
+                    string dumpFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
+                    await System.IO.File.WriteAllBytesAsync(dumpFilePath, dumpData, cancellationToken).ConfigureAwait(false);
+                    logger.LogInformation("✓ Dump file created: {File} ({Size:N0} bytes)", dumpFileName, dumpData.Length);
                 }
                 else
                 {
@@ -347,6 +560,34 @@ public abstract class BaseBootloaderService
                         iterWeight,
                         stageName,
                         cancellationToken).ConfigureAwait(false);
+
+                    // Read temp file, trim if needed, and create dump .bin file immediately
+                    byte[] dumpData = await System.IO.File.ReadAllBytesAsync(iterTempFile, cancellationToken).ConfigureAwait(false);
+
+                    // Validate and trim if we have extra padding bytes
+                    if (dumpData.Length > profiles.Memory.Length)
+                    {
+                        byte[] trimmed = new byte[profiles.Memory.Length];
+                        Array.Copy(dumpData, 0, trimmed, 0, profiles.Memory.Length);
+                        logger.LogDebug("Trimmed dump from {Original} to {Expected} bytes (removed {Padding} padding bytes)",
+                            dumpData.Length, profiles.Memory.Length, dumpData.Length - profiles.Memory.Length);
+                        dumpData = trimmed;
+                    }
+
+                    allDumps.Add(dumpData);
+
+                    // Create output dump file
+                    string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
+                    // Use generic name for single-region dumps
+                    string dumpFileName = $"MemoryDump_iter{iter + 1}_of_{iterationCount}_{timestamp}.bin";
+                    string dumpsDir = "./dumps";
+                    if (!System.IO.Directory.Exists(dumpsDir))
+                    {
+                        System.IO.Directory.CreateDirectory(dumpsDir);
+                    }
+                    string dumpFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
+                    await System.IO.File.WriteAllBytesAsync(dumpFilePath, dumpData, cancellationToken).ConfigureAwait(false);
+                    logger.LogInformation("✓ Dump file created: {File} ({Size:N0} bytes)", dumpFileName, dumpData.Length);
                 }
             }
 
@@ -452,6 +693,8 @@ public abstract class BaseBootloaderService
                 // Report if changed by >= 1.0%
                 if (Math.Abs(percent - lastReportedPercent) >= 1.0 || bytesReceived == length)
                 {
+                    // For multi-iteration, report cumulative total
+                    // Note: caller should track iteration count, here we report per-segment
                     progress.Report((stageName, percent, bytesReceived, length));
                     lastReportedPercent = percent;
                 }
@@ -476,7 +719,8 @@ public abstract class BaseBootloaderService
                 length,
                 OnDataReceivedAsync,
                 streamProgress,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                logger: logger).ConfigureAwait(false);
 
             await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
@@ -699,6 +943,7 @@ public abstract class BaseBootloaderService
                     progress,
                     16.0, 18.0,
                     "stager_install",
+                    isStagerInstall: true,  // Uses IRAM write protocol
                     stagerCts.Token);
 
                 try
@@ -729,6 +974,7 @@ public abstract class BaseBootloaderService
                     progress,
                     18.0, 20.0,
                     "dumper_install",
+                    isStagerInstall: false,  // Uses stager protocol
                     dumperCts.Token);
 
                 try
@@ -748,13 +994,11 @@ public abstract class BaseBootloaderService
             // Stage 11: Memory Dump (20% - 95% progress) - 75% weight
             effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump (Streaming) ---");
 
-            var allDumps = await PerformDumpProcessStreamingAsync(
-                client,
-                profiles,
-                progress,
-                effectiveTaskLogger,
-                20.0,
-                75.0,
+            // Use SIMPLIFIED streaming approach - no session restarts between iterations
+            var allDumps = await PerformDumpProcessStreamingSimplifiedAsync(
+                client, profiles,
+                progress, effectiveTaskLogger,
+                startPercent: 20.0, weight: 75.0,  // 20% to 95%
                 cancellationToken).ConfigureAwait(false);
 
             // Stage 12: Teardown (95% progress)
@@ -798,6 +1042,18 @@ public abstract class BaseBootloaderService
         }
     }
 
+    /// <summary>
+    /// Simulates progress for payload transfer with ACCURATE protocol overhead calculation.
+    /// Accounts for: packet framing (length+checksum), chunking, and protocol-specific delays.
+    /// </summary>
+    /// <param name="payloadSize">Raw payload size in bytes</param>
+    /// <param name="baudRate">UART baud rate (bits per second)</param>
+    /// <param name="progress">Progress reporter</param>
+    /// <param name="startPercent">Starting progress percentage</param>
+    /// <param name="targetPercent">Target progress percentage</param>
+    /// <param name="stage">Stage name for progress reporting</param>
+    /// <param name="isStagerInstall">True for stager (uses IRAM write protocol), false for dumper (uses stager protocol)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     protected async Task SimulateProgressAsync(
         long payloadSize,
         int baudRate,
@@ -805,23 +1061,77 @@ public abstract class BaseBootloaderService
         double startPercent,
         double targetPercent,
         string stage,
+        bool isStagerInstall,
         CancellationToken cancellationToken)
     {
-        // 10 bits per byte (8 data + 1 start + 1 stop). Baud rate is bits/sec.
-        double durationSeconds = ((double)payloadSize * 10.0) / (double)baudRate;
-        int delayMs = (int)(durationSeconds * 1000);
+        // UART: 10 bits per byte (8 data + 1 start + 1 stop)
+        const int bitsPerByte = 10;
 
-        // Add 10% buffering for overhead
-        delayMs = (int)(delayMs * 1.1);
+        long totalWireBytes;
+        int totalDelayMs;
 
-        // Force a minimum delay of 1 second to ensure the progress bar animation is visible
-        if (delayMs < 1000)
+        if (isStagerInstall)
         {
-            delayMs = 1000;
+            // Stager uses WriteToIramAsync with 16-byte chunks
+            // Each chunk requires 2 packets (mask + write)
+            // Protocol overhead: length(1) + payload(N) + checksum(1) = N+2 bytes per packet
+            const int chunkSize = 16;
+            int numChunks = (int)Math.Ceiling((double)payloadSize / chunkSize);
+
+            // Wire bytes calculation:
+            // - Enter subprotocol: ~10 bytes (0x80 command + magic)
+            // - Per chunk: 2 packets × (1 length + 16 payload + 1 checksum) = 36 bytes
+            // - Leave subprotocol: ~5 bytes (0x81 command)
+            // - Hook write: 2 packets × (1 + 6 + 1) = 16 bytes
+            totalWireBytes = 10 + (numChunks * 36) + 5 + 16;
+
+            // Delay calculation from SendPacketAsync:
+            // - 10ms initial delay per packet
+            // - Sends in 2-byte chunks with 10ms between
+            // - Total packets = numChunks * 2 (mask+write) + 2 (enter+leave) + 2 (hook)
+            int totalPackets = (numChunks * 2) + 4;
+            int avgPacketSize = (int)(totalWireBytes / totalPackets);
+            int chunksPerPacket = (avgPacketSize + 1) / 2; // 2-byte chunks
+            totalDelayMs = totalPackets * (10 + (chunksPerPacket * 10));
+        }
+        else
+        {
+            // Dumper install uses stager protocol (different chunking/framing)
+            // Typically uses larger packets sent via stager's protocol handler
+            // Protocol overhead: length(1) + payload(N) + checksum(1)
+            // Assuming 64-byte max chunks for stager protocol
+            const int maxPacketPayload = 64;
+            int numPackets = (int)Math.Ceiling((double)payloadSize / maxPacketPayload);
+
+            // Wire bytes: num_packets × (1 length + avg_payload + 1 checksum)
+            int avgPayloadPerPacket = (int)((payloadSize + numPackets - 1) / numPackets);
+            totalWireBytes = numPackets * (1 + avgPayloadPerPacket + 1);
+
+            // Delay: 10ms initial + 2-byte chunks with 10ms delay
+            int avgChunksPerPacket = (avgPayloadPerPacket + 2 + 1) / 2;
+            totalDelayMs = numPackets * (10 + (avgChunksPerPacket * 10));
         }
 
+        // Calculate transfer duration in milliseconds
+        double transferTimeMs = ((double)totalWireBytes * bitsPerByte * 1000.0) / (double)baudRate;
+
+        // Total time = UART transfer time + protocol delays
+        int totalTimeMs = (int)(transferTimeMs + totalDelayMs);
+
+        // Add 10% buffering for other overhead (processing, etc.)
+        totalTimeMs = (int)(totalTimeMs * 1.1);
+
+        // Force minimum 1 second for progress bar visibility
+        if (totalTimeMs < 1000)
+        {
+            totalTimeMs = 1000;
+        }
+
+        // Note: detailed debug logging of transfer calculation removed since base class has no logger
+        // Derived classes can add their own logging if needed
+
         await WaitWithProgressAsync(
-            delayMs,
+            totalTimeMs,
             progress,
             startPercent,
             targetPercent,

@@ -265,10 +265,29 @@ public static class ServiceCollectionExtensions
 
         services.AddLogging(builder => builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.CombinedFileLoggerConfiguration>(options =>
         {
-            options.DefaultLogPath = "s7tools.log";
-            options.TaskMainLogPath = "task-main.log";
-            options.TaskProcessLogPath = "task-process.log";
-            options.TaskProtocolLogPath = "task-protocol.log";
+            // Use absolute paths by resolving PathService from DI
+            // The logger provider will resolve these paths when it's created
+            var serviceProvider = builder.Services.BuildServiceProvider();
+            var pathService = serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IPathService>();
+
+            if (pathService != null)
+            {
+                // Use absolute paths from PathService with timestamp
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                options.DefaultLogPath = System.IO.Path.Combine(pathService.MainLogsDirectory, $"s7tools_{timestamp}.log");
+                options.TaskMainLogPath = "task-main.log";  // These are relative to task directory
+                options.TaskProcessLogPath = "task-process.log";
+                options.TaskProtocolLogPath = "task-protocol.log";
+            }
+            else
+            {
+                // Fallback to relative paths if PathService not available yet
+                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                options.DefaultLogPath = $"s7tools_{timestamp}.log";
+                options.TaskMainLogPath = "task-main.log";
+                options.TaskProcessLogPath = "task-process.log";
+                options.TaskProtocolLogPath = "task-protocol.log";
+            }
         }));
 
         return services;

@@ -458,10 +458,16 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
 
                 await writer.WriteLineAsync(logLine);
 
-                // Flush periodically (every 10 entries) or on Critical/Error
-                if (entry.Level >= LogLevel.Error ||
-                    (_logChannel.Reader.CanCount && _logChannel.Reader.Count == 0))
+                // Flush on every Error/Critical, or after each write to ensure logs are persisted
+                // CanCount is unreliable on unbounded channels, so we flush more aggressively
+                if (entry.Level >= LogLevel.Error)
                 {
+                    await writer.FlushAsync();
+                }
+                else
+                {
+                    // Flush after every entry to ensure logs are written immediately
+                    // This prevents log loss and ensures files are created
                     await writer.FlushAsync();
                 }
             }
@@ -494,8 +500,9 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
 
         try
         {
-            // Wait for writer task to complete with timeout
-            await _writerTask.WaitAsync(TimeSpan.FromSeconds(5));
+            // Wait for writer task to complete with longer timeout for large log files
+            // (e.g., verbose socat output can be 30+ MB)
+            await _writerTask.WaitAsync(TimeSpan.FromSeconds(30));
         }
         catch (TimeoutException)
         {

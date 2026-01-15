@@ -102,7 +102,9 @@ namespace S7Tools.Services.Adapters.Plc
             IProgress<long> progress,
             string? socatHost,
             int socatPort,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool keepSessionOpen = false,
+            ILogger? logger = null)
         {
             // Configure orchestrator
             _orchestrator.Configure(socatHost ?? "127.0.0.1", socatPort);
@@ -123,25 +125,40 @@ namespace S7Tools.Services.Adapters.Plc
                 Stream? currentStream = _protocol.GetStream();
                 _logger.LogDebug("Sharing existing protocol stream with dumper session.");
 
-                // Use the orchestrator to send the command AND handle the streaming
-                await _orchestrator.InvokeDumpCommandAsync(
-                    (byte)PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND,
-                    args,
-                    address,
-                    length,
-                    async block =>
+                // 2026-01-15 Refactoring: Continuous Pipeline
+                // Start Session ONCE for all iterations
+                // Correct Order: Token, Stream (to match Orchestrator old signature style), Logger
+                await _orchestrator.StartSessionAsync(cancellationToken, currentStream, logger).ConfigureAwait(false);
+
+                try
+                {
+                    // Use the orchestrator to send the command AND handle the streaming
+                    // It will now just send command and wait for segment completion
+                    await _orchestrator.InvokeDumpCommandAsync(
+                        args,
+                        address,
+                        length,
+                        async block =>
+                        {
+                            await dataCallback(block.Data).ConfigureAwait(false);
+                            totalReceived += block.Data.Length;
+                            progress?.Report(totalReceived);
+                        },
+                        cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    // Stop the session to clean up tasks ONLY if not keeping open
+                    if (!keepSessionOpen)
                     {
-                        await dataCallback(block.Data).ConfigureAwait(false);
-                        totalReceived += block.Data.Length;
-                        progress?.Report(totalReceived);
-                    },
-                    cancellationToken,
-                    currentStream).ConfigureAwait(false);
+                        await _orchestrator.StopAsync().ConfigureAwait(false);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Dumper streaming operation failed.");
-                throw;
+                throw; // RETHROW to notify upper layer (BootloaderService) to stop iterations!
             }
             finally
             {

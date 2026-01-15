@@ -89,33 +89,80 @@ public sealed class MemoryDumpOrchestrator : IDisposable
     }
 
     /// <summary>
-    /// Starts the persistent memory dump session if not already running.
+    /// Sets the batch size for UI updates.
     /// </summary>
-    public async Task StartSessionAsync(CancellationToken cancellationToken = default, Stream? existingStream = null)
+    /// <param name="size">The new batch size.</param>
+    public void SetBatchSize(int size)
     {
-        if (IsActive)
-            return;
+        _batchSize = size;
+    }
+
+    /// <summary>
+    /// Starts a memory dump session for ONE segment/iteration.
+    /// IMPORTANT: For multi-iteration dumps, this will stop any existing session
+    /// and start fresh to ensure proper greeting detection and data separation.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the session.</param>
+    /// <param name="stream">Optional existing stream. If null, a new socket connection is created.</param>
+    public async Task StartSessionAsync(CancellationToken cancellationToken = default, Stream? stream = null, ILogger? logger = null)
+    {
+        // CRITICAL: Always stop previous session to ensure clean pipeline for each iteration.
+        // The working version (pre-refactoring) used synchronous request-response for each dump.
+        // We must replicate that behavior: complete stop → fresh start → wait for "Ok" → receive data.
+        await StopAsync().ConfigureAwait(false);
 
         await _uiThreadService.InvokeOnUIThreadAsync(() => MemoryBlocks.Clear()).ConfigureAwait(false);
         TotalBytesReceived = 0;
 
         _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        _logger.LogInformation("Starting persistent memory dump session");
+        _logger.LogInformation("🚀 Starting memory dump session (fresh pipeline)");
 
-        // Start dumper service (producer) - no fixed start address here
-        _dumpTask = _dumperService.StartDumpingAsync(_host, _port, _cts.Token, existingStream);
+        // Start dumper service (producer) - this sets _expectGreeting = true
+        _dumpTask = _dumperService.StartDumpingAsync(_host, _port, _cts.Token, stream, logger);
 
         // Start consumption and UI dispatch (consumer)
         _consumptionTask = ConsumeAndDispatchAsync(_dumperService.DataReader, _cts.Token);
     }
 
     /// <summary>
+    /// Stops the current memory dump session.
+    /// </summary>
+    public async Task StopAsync()
+    {
+        _logger.LogInformation("🛑 Stopping continuous memory dump session");
+        if (_cts != null)
+        {
+            _cts.Cancel();
+            try
+            {
+                await Task.WhenAll(_dumpTask ?? Task.CompletedTask, _consumptionTask ?? Task.CompletedTask).ConfigureAwait(false);
+            }
+            catch { }
+
+            _cts.Dispose();
+            _cts = null;
+        }
+    }
+
+    // Gate for controlling data consumption between segments
+    private volatile TaskCompletionSource _consumptionGate = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>
     /// Waits for a specific amount of data to be received for a segment.
     /// </summary>
     public async Task WaitForSegmentAsync(uint startAddress, long length, Func<MemoryBlock, Task>? callback, CancellationToken ct)
     {
-        await _segmentLock.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            await _segmentLock.WaitAsync(ct).ConfigureAwait(false);
+        }
+        catch (ObjectDisposedException)
+        {
+            // If the lock is disposed, the orchestrator is shutting down.
+            // Treat as cancellation to allow graceful unwind.
+            throw new OperationCanceledException("Session usage cancelled (ObjectDisposed).");
+        }
         try
         {
             _currentSegmentAddress = startAddress;
@@ -124,6 +171,9 @@ public sealed class MemoryDumpOrchestrator : IDisposable
             _segmentTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
             using var reg = ct.Register(() => _segmentTcs.TrySetCanceled());
+
+            // Open the gate to allow consumption
+            _consumptionGate.TrySetResult();
 
             _logger.LogDebug("Waiting for segment: 0x{Addr:X8}, {Len} bytes", startAddress, length);
             await _segmentTcs.Task.ConfigureAwait(false);
@@ -134,30 +184,34 @@ public sealed class MemoryDumpOrchestrator : IDisposable
         }
     }
 
+    // ... (InvokeDumpCommandAsync remains unchanged) ...
     /// <summary>
-    /// Invokes the dumper command and waits for the segment.
-    /// This method handles framing and sending the command through the dump connection.
+    /// Sends a dump command and waits for the specific segment to complete.
+    /// Assumes StartSessionAsync has already been called.
     /// </summary>
-    public async Task InvokeDumpCommandAsync(byte handlerIndex, byte[] args, uint startAddress, long length, Func<MemoryBlock, Task>? callback, CancellationToken ct, Stream? existingStream = null)
+    public async Task InvokeDumpCommandAsync(byte[] args, uint startAddress, long length, Func<MemoryBlock, Task>? callback, CancellationToken ct)
     {
-        // Ensure session is started
-        await StartSessionAsync(ct, existingStream).ConfigureAwait(false);
+        if (!IsActive)
+        {
+            throw new InvalidOperationException("Session not active. Call StartSessionAsync first.");
+        }
+
+        // --- CRITICAL: Flush any leftover data from previous segment ---
+        // This must happen BEFORE resetting state to avoid data corruption
+        await _dumperService.FlushRemainingDataAsync(ct).ConfigureAwait(false);
+
+        // --- CRITICAL: Reset parser state BEFORE sending command ---
+        // The PLC responds immediately. We must be in greeting-mode before
+        // any response bytes can arrive, otherwise greeting is consumed as data.
+        _dumperService.ResetForNewSegment();
 
         // --- RELIABILITY FIX ---
-        // Add a small settling delay to allow the PLC to clear its state 
-        // and its UART buffers before the next command.
-        _logger.LogDebug("Settling for 100ms before next iteration...");
-        await Task.Delay(100, ct).ConfigureAwait(false);
-
-        // Settlements and greetings are now handled exclusively by timing and Pipe logic
-
-        // Tell dumper service to skip the next greeting
-        _dumperService.ExpectGreeting();
+        // Add settling delay to let pipeline stabilize
+        await Task.Delay(200, ct).ConfigureAwait(false);
 
         // Frame and send command
-        // Wrapping in Hook framing: HookNo + Args
         byte[] hookPayload = new byte[1 + args.Length];
-        hookPayload[0] = handlerIndex;
+        hookPayload[0] = (byte)PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND;
         Array.Copy(args, 0, hookPayload, 1, args.Length);
 
         // Wrapping in Primary Handler framing: HandlerIndex (0x1C) + Payload
@@ -174,7 +228,7 @@ public sealed class MemoryDumpOrchestrator : IDisposable
         // For now, we assume the command succeeded if it was sent.
         // The DumperService will skip the "Ok" in its background loop.
 
-        _logger.LogInformation("Dump command sent. Starting segment reception.");
+        _logger.LogInformation("Dump command sent. Waiting for segment data...");
 
         // Now wait for the segment data
         await WaitForSegmentAsync(startAddress, length, callback, ct).ConfigureAwait(false);
@@ -188,26 +242,39 @@ public sealed class MemoryDumpOrchestrator : IDisposable
 
         try
         {
+            // Initial gate state: If we started with 0 bytes expectation, we should be closed.
+            // But StartSessionAsync might be called before WaitForSegmentAsync.
+            // Let's assume gate is closed by default (initialized above).
+
             await foreach (MemoryBlock rawBlock in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
             {
+                // Wait for the gate to open (i.e. valid segment expectation)
+                // This prevents consuming data destined for the next segment/iteration
+                // and effectively applies backpressure to the pipe/socket.
+                // WE MUST USE WaitAsync(token) TO AVOID DEADLOCK ON STOP
+                await _consumptionGate.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+
                 // Map to absolute address if we are in a segment
                 MemoryBlock block = rawBlock;
-                if (_remainingSegmentBytes > 0)
+
+                // Note: _remainingSegmentBytes is positive here because gate is open
+
+                block = new MemoryBlock(_currentSegmentAddress, rawBlock.Data);
+
+                if (_segmentCallback != null)
                 {
-                    block = new MemoryBlock(_currentSegmentAddress, rawBlock.Data);
+                    await _segmentCallback(block).ConfigureAwait(false);
+                }
 
-                    if (_segmentCallback != null)
-                    {
-                        await _segmentCallback(block).ConfigureAwait(false);
-                    }
+                _currentSegmentAddress += (uint)rawBlock.Size;
+                _remainingSegmentBytes -= rawBlock.Size;
 
-                    _currentSegmentAddress += (uint)rawBlock.Size;
-                    _remainingSegmentBytes -= rawBlock.Size;
+                if (_remainingSegmentBytes <= 0)
+                {
+                    // Segment complete. Close the gate immediately for the NEXT block.
+                    _consumptionGate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                    if (_remainingSegmentBytes <= 0)
-                    {
-                        _segmentTcs?.TrySetResult();
-                    }
+                    _segmentTcs?.TrySetResult();
                 }
 
                 batch.Add(block);
@@ -248,33 +315,6 @@ public sealed class MemoryDumpOrchestrator : IDisposable
         }).ConfigureAwait(false);
 
         _logger.LogTrace("Dispatched batch of {Count} blocks to UI", batch.Length);
-    }
-
-    /// <summary>
-    /// Stops the current memory dump session.
-    /// </summary>
-    public async Task StopAsync()
-    {
-        _cts?.Cancel();
-
-        if (_consumptionTask != null)
-        {
-            try
-            {
-                await _consumptionTask.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected
-            }
-
-            _consumptionTask = null;
-        }
-
-        await _dumperService.StopAsync().ConfigureAwait(false);
-
-        _cts?.Dispose();
-        _cts = null;
     }
 
     /// <summary>
