@@ -113,25 +113,30 @@ public class FileLogSink : IFileLogSink, IDisposable
         }
 
         // Flush remaining logs on exit
-        if (!_logQueue.IsEmpty)
+        try
         {
-            try
-            {
-                batch.Clear();
-                while (_logQueue.TryDequeue(out var entry))
-                {
-                    batch.Add(entry);
-                }
+            batch.Clear();
 
-                if (batch.Count > 0)
+            while (_logQueue.TryDequeue(out var entry))
+            {
+                batch.Add(entry);
+
+                if (batch.Count >= MaxBatchSize)
                 {
                     await WriteBatchAsync(batch);
+                    batch.Clear();
                 }
             }
-            catch
+
+            if (batch.Count > 0)
             {
-                // Best effort
+                await WriteBatchAsync(batch);
+                batch.Clear();
             }
+        }
+        catch
+        {
+            // Best effort
         }
     }
 
