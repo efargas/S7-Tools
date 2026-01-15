@@ -330,8 +330,7 @@ namespace S7Tools.Services.Adapters.Plc
 
             while (reader.Remaining > 0)
             {
-                long startOfCandidate = reader.Consumed;
-
+                var originalPosition = reader.Position;
                 if (!reader.TryPeek(out byte b))
                     break;
 
@@ -340,28 +339,20 @@ namespace S7Tools.Services.Adapters.Plc
                 {
                     if (reader.Remaining < 5)
                     {
-                        // Potential partial match at end of buffer. 
-                        // Stop here so we get more data.
-                        return false;
+                        return false; // Potential partial match
                     }
 
-                    // Check full sequence: 05 4F 6B 00 00
-                    reader.Advance(1); // Eat 05
+                    var tempReader = reader; // Create a copy to peek ahead
+                    tempReader.Advance(1); // Skip 0x05
 
-                    if (reader.TryRead(out byte b2) && b2 == 'O' &&
-                        reader.TryRead(out byte b3) && b3 == 'k')
+                    if (tempReader.TryRead(out byte b2) && b2 == 'O' &&
+                        tempReader.TryRead(out byte b3) && b3 == 'k')
                     {
-                        // Matched!
-                        reader.Advance(1); // 00
-                        reader.Advance(1); // 00
-                        reader.Advance(1); // CS
-
+                        // Matched! Advance the original reader
+                        reader.Advance(6); // 05, O, k, 00, 00, CS
                         Logger.LogInformation("✅ Auto-detected and consumed Framed 'Ok' greeting");
                         return true;
                     }
-
-                    // Mismatch, this '05' was junk. Continue scan.
-                    continue;
                 }
 
                 // Candidate 2: Legacy "Ok"
@@ -369,22 +360,21 @@ namespace S7Tools.Services.Adapters.Plc
                 {
                     if (reader.Remaining < 2)
                     {
-                        // Partial legacy 'O...'
-                        return false;
+                        return false; // Potential partial match
                     }
 
-                    reader.Advance(1); // Eat O
-                    if (reader.TryRead(out byte b2) && b2 == 'k')
+                    var tempReader = reader; // Create a copy to peek ahead
+                    tempReader.Advance(1); // Skip O
+                    if (tempReader.TryRead(out byte b2) && b2 == 'k')
                     {
+                        // Matched! Advance the original reader
+                        reader.Advance(2);
                         Logger.LogInformation("✅ Auto-detected and consumed Legacy 'Ok' greeting");
                         return true;
                     }
-
-                    // Mismatch 'Ox'... continue
-                    continue;
                 }
 
-                // Not a start byte, consume as junk
+                // Not a start of a known greeting, or a failed partial match. Consume as junk.
                 reader.Advance(1);
             }
 
