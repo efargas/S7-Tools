@@ -409,12 +409,9 @@ public partial class App : Application
             }
 
             // Ensure dialog creation and showing happens on UI thread
-            return await Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                Window dialog = dialogFactory();
-                T? result = await dialog.ShowDialog<T>(mainWindow);
-                return DialogResult<T>.Success(result);
-            });
+            Window dialog = await Dispatcher.UIThread.InvokeAsync(() => dialogFactory());
+            T? result = await dialog.ShowDialog<T>(mainWindow);
+            return DialogResult<T>.Success(result);
         }
         catch (Exception ex)
         {
