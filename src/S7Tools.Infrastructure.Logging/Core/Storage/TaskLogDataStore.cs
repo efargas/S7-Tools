@@ -45,15 +45,12 @@ public class TaskLogDataStore : ITaskLogDataStore
         // UI updates must happen on the UI thread or synchronized context
         _uiDispatch(() =>
         {
-            lock (_lock)
-            {
-                _logs.Add(entry);
+            _logs.Add(entry);
 
-                // Enforce circular buffer limit
-                while (_logs.Count > _maxEntries)
-                {
-                    _logs.RemoveAt(0);
-                }
+            // Enforce circular buffer limit
+            while (_logs.Count > _maxEntries)
+            {
+                _logs.RemoveAt(0);
             }
         });
     }
