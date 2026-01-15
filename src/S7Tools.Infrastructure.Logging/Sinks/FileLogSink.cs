@@ -17,7 +17,7 @@ namespace S7Tools.Infrastructure.Logging.Sinks;
 /// <summary>
 /// A log sink that writes log entries to a file.
 /// </summary>
-public class FileLogSink : IFileLogSink, IDisposable
+public class FileLogSink : IFileLogSink, IAsyncDisposable
 {
     private readonly CombinedFileLoggerConfiguration _configuration;
     private readonly IPathService _pathService;
@@ -32,17 +32,6 @@ public class FileLogSink : IFileLogSink, IDisposable
 
     // Cache for resolved paths to avoid resolving on every write
     // Using a limited cache to prevent memory leaks from dynamic categories (e.g. Task.{Guid})
-    // In practice, file paths are determined by the log configuration, not the dynamic category parts usually.
-    // However, if configuration maps specific categories to files, we need to be careful.
-    // _configuration.GetFilePathForCategory usually maps predefined categories.
-    // We will use a bounded cache with LRU-like behavior if needed, or just rely on the fact that
-    // GetFilePathForCategory collapses categories.
-    //
-    // Let's inspect `GetFilePathForCategory`. It likely maps "Task.*" to a specific file.
-    // If so, the returned relativePath is stable. We should key off the *result* of GetFilePathForCategory?
-    // No, we key off the category string because that's the input.
-    // To prevent leaks, we will only cache the first 50 unique categories encountered.
-    // Most apps have a finite set of high-volume categories. Dynamic ones usually map to a default or wildcard.
     private readonly ConcurrentDictionary<string, string> _pathCache = new();
     private const int MaxCacheSize = 50;
 
@@ -75,7 +64,8 @@ public class FileLogSink : IFileLogSink, IDisposable
     private async Task ProcessQueueAsync()
     {
         var batch = new List<LogEntry>(MaxBatchSize);
-        var flushTimer = Task.Delay(FlushIntervalMs, _cts.Token);
+        // Initial timer
+        Task flushTimer = Task.Delay(FlushIntervalMs, _cts.Token);
 
         while (!_cts.Token.IsCancellationRequested)
         {
@@ -93,6 +83,7 @@ public class FileLogSink : IFileLogSink, IDisposable
                     batch.Clear();
 
                     // Reset timer since we just flushed
+                    // Important: Ensure we don't leak the old timer if it wasn't awaited
                     flushTimer = Task.Delay(FlushIntervalMs, _cts.Token);
                 }
                 else
@@ -106,37 +97,37 @@ public class FileLogSink : IFileLogSink, IDisposable
             {
                 break;
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore processing errors to keep loop alive
+                // Last resort logging
+                try
+                {
+                    Console.Error.WriteLine($"[S7Tools] Critical error in FileLogSink: {ex}");
+                }
+                catch { /* ignore */ }
             }
         }
 
         // Flush remaining logs on exit
-        try
+        if (!_logQueue.IsEmpty)
         {
-            batch.Clear();
-
-            while (_logQueue.TryDequeue(out var entry))
+            try
             {
-                batch.Add(entry);
+                batch.Clear();
+                while (_logQueue.TryDequeue(out var entry))
+                {
+                    batch.Add(entry);
+                }
 
-                if (batch.Count >= MaxBatchSize)
+                if (batch.Count > 0)
                 {
                     await WriteBatchAsync(batch);
-                    batch.Clear();
                 }
             }
-
-            if (batch.Count > 0)
+            catch
             {
-                await WriteBatchAsync(batch);
-                batch.Clear();
+                // Best effort
             }
-        }
-        catch
-        {
-            // Best effort
         }
     }
 
@@ -172,45 +163,41 @@ public class FileLogSink : IFileLogSink, IDisposable
                     sb.AppendLine();
                 }
 
-                await File.AppendAllTextAsync(fullPath, sb.ToString(), _cts.Token);
+                await File.AppendAllTextAsync(fullPath, sb.ToString(), CancellationToken.None);
             }
-            catch
+            catch (Exception ex)
             {
-                // Fallback or ignore
+                // Fallback logging
+                try
+                {
+                    Console.Error.WriteLine($"[S7Tools] Failed to write logs to {fullPath}: {ex.Message}");
+                }
+                catch { /* ignore */ }
             }
         }
     }
 
-    private readonly object _cacheLock = new();
-
     private string GetFullPath(string category)
     {
-        // Use TryGetValue for a fast path to avoid locking if the key already exists.
+        // Use TryGetValue to avoid closure allocation in GetOrAdd if key exists
         if (_pathCache.TryGetValue(category, out var path))
         {
             return path;
         }
 
-        lock (_cacheLock)
+        // Bounded cache: if full, resolve directly without caching to prevent leak
+        if (_pathCache.Count >= MaxCacheSize)
         {
-            // Double-check if another thread added the item while waiting for the lock.
-            if (_pathCache.TryGetValue(category, out path))
-            {
-                return path;
-            }
-
-            // Bounded cache: if full, resolve directly without caching to prevent leak.
-            if (_pathCache.Count >= MaxCacheSize)
-            {
-                var relativePath = _configuration.GetFilePathForCategory(category);
-                return _pathService.ResolvePath(relativePath);
-            }
-
-            // Add to cache.
-            var newPath = _pathService.ResolvePath(_configuration.GetFilePathForCategory(category));
-            _pathCache.TryAdd(category, newPath);
-            return newPath;
+             var relativePath = _configuration.GetFilePathForCategory(category);
+             return _pathService.ResolvePath(relativePath);
         }
+
+        // Add to cache
+        return _pathCache.GetOrAdd(category, cat =>
+        {
+            var relativePath = _configuration.GetFilePathForCategory(cat);
+            return _pathService.ResolvePath(relativePath);
+        });
     }
 
     private void EnsureDirectoryExists(string fullPath)
@@ -252,7 +239,9 @@ public class FileLogSink : IFileLogSink, IDisposable
             _cts.Cancel();
             try
             {
-                _processTask.Wait(1000);
+                // Wait briefly for the task to complete (flush)
+                // Reduced timeout to avoid blocking UI threads significantly
+                _processTask.Wait(100);
             }
             catch
             {
@@ -263,5 +252,32 @@ public class FileLogSink : IFileLogSink, IDisposable
         }
 
         _disposed = true;
+    }
+
+    /// <summary>
+    /// Disposes the resources asynchronously.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _cts.Cancel();
+
+        try
+        {
+            // Await the process task to ensure flush completes
+            await _processTask.ConfigureAwait(false);
+        }
+        catch
+        {
+            // Ignore errors
+        }
+
+        _cts.Dispose();
+        _disposed = true;
+        GC.SuppressFinalize(this);
     }
 }

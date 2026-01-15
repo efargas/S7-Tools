@@ -39,8 +39,17 @@ public class TaskLogDataStore : ITaskLogDataStore
         _maxEntries = maxEntries;
 
         // Default: marshal back to the creating thread if possible (typically UI thread).
-        // Don't capture context in constructor - rely on explicit uiDispatch parameter
-        _uiDispatch = uiDispatch ?? (action => action());
+        var ctx = SynchronizationContext.Current;
+        _uiDispatch = uiDispatch ?? (action =>
+        {
+            if (ctx != null)
+            {
+                ctx.Post(_ => action(), null);
+                return;
+            }
+
+            action();
+        });
 
         _logs.CollectionChanged += (s, e) => CollectionChanged?.Invoke(s, e);
     }

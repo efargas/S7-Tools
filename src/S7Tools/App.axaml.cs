@@ -400,18 +400,21 @@ public partial class App : Application
     {
         try
         {
-            Window? mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-
-            if (mainWindow == null)
-            {
-                logger.LogWarning("Main window not available for {DialogType}", dialogType);
-                return DialogResult<T>.Failure("Main window not available");
-            }
-
             // Ensure dialog creation and showing happens on UI thread
-            Window dialog = await Dispatcher.UIThread.InvokeAsync(() => dialogFactory());
-            T? result = await dialog.ShowDialog<T>(mainWindow);
-            return DialogResult<T>.Success(result);
+            return await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                Window? mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+
+                if (mainWindow == null)
+                {
+                    logger.LogWarning("Main window not available for {DialogType}", dialogType);
+                    return DialogResult<T>.Failure("Main window not available");
+                }
+
+                Window dialog = dialogFactory();
+                T? result = await dialog.ShowDialog<T>(mainWindow);
+                return DialogResult<T>.Success(result);
+            });
         }
         catch (Exception ex)
         {
