@@ -104,6 +104,7 @@ public sealed class MemoryDumpOrchestrator : IDisposable
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the session.</param>
     /// <param name="stream">Optional existing stream. If null, a new socket connection is created.</param>
+    /// <param name="logger">Logger for the dump session.</param>
     public async Task StartSessionAsync(CancellationToken cancellationToken = default, Stream? stream = null, ILogger? logger = null)
     {
         // CRITICAL: Always stop previous session to ensure clean pipeline for each iteration.

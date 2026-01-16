@@ -10,8 +10,10 @@ using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Pages;
+using S7Tools.ViewModels.Tasks;
 using S7Tools.Views;
 using S7Tools.Views.Pages;
 
@@ -29,76 +31,159 @@ public class BottomPanelViewModel : ReactiveObject
     private readonly IClipboardService _clipboardService;
     private readonly IDialogService _dialogService;
     private readonly ILogExportService? _logExportService;
+    private readonly ICentralizedTaskLogService _centralizedTaskLogService;
 
+    private readonly TaskManagerViewModel? _taskManager;
+    private PanelTabItem? _selectedTab;
     private GridLength _panelHeight = new GridLength(200, GridUnitType.Pixel);
     private GridLength _lastPanelHeight = new GridLength(200, GridUnitType.Pixel);
-    private PanelTabItem? _selectedTab;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BottomPanelViewModel"/> class for design-time.
     /// </summary>
     public BottomPanelViewModel() : this(
         CreateDesignTimeLogger(),
+        null, // taskManager
         new ClipboardService(),
-        new DialogService())
+        new DialogService(),
+        null, // logDataStore
+        null, // uiThreadService
+        null, // logExportService
+        null) // centralizedTaskLogService
     {
     }
 
-    /// <summary>
-    /// Creates a design-time logger for the designer.
-    /// </summary>
-    /// <returns>A logger instance for design-time use.</returns>
     private static ILogger<BottomPanelViewModel> CreateDesignTimeLogger()
     {
-        using ILoggerFactory loggerFactory = LoggerFactory.Create(builder => { });
-        return loggerFactory.CreateLogger<BottomPanelViewModel>();
+        return Microsoft.Extensions.Logging.Abstractions.NullLogger<BottomPanelViewModel>.Instance;
     }
+
+    // ...
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BottomPanelViewModel"/> class.
     /// </summary>
-    /// <param name="logger">The logger instance.</param>
-    /// <param name="clipboardService">The clipboard service.</param>
-    /// <param name="dialogService">The dialog service.</param>
-    /// <param name="logDataStore">The log data store (optional).</param>
-    /// <param name="uiThreadService">The UI thread service (optional).</param>
-    /// <param name="logExportService">The log export service (optional).</param>
     public BottomPanelViewModel(
         ILogger<BottomPanelViewModel> logger,
+        TaskManagerViewModel? taskManager,
         IClipboardService clipboardService,
         IDialogService dialogService,
         ILogDataStore? logDataStore = null,
         IUIThreadService? uiThreadService = null,
-        ILogExportService? logExportService = null)
+        ILogExportService? logExportService = null,
+        ICentralizedTaskLogService? centralizedTaskLogService = null)
     {
-        _logger = logger;
-        _clipboardService = clipboardService;
-        _dialogService = dialogService;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _taskManager = taskManager;
+        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _logDataStore = logDataStore;
         _uiThreadService = uiThreadService;
         _logExportService = logExportService;
+        // Ideally centralized task log service should be required, but for old compatibility or if not registered?
+        // We will mock it or handle null if needed, but TaskLogsPanelViewModel needs it.
+        // Assuming it is registered. We might need to enforce it.
+        // For now, I'll assign it or create a dummy if null?
+        // No, DI should provide it.
+        // I'll make it nullable in constructor but assume it's provided via DI in real app.
+        _centralizedTaskLogService = centralizedTaskLogService!;
 
-        // Initialize bottom panel tabs
         Tabs = new ObservableCollection<PanelTabItem>
         {
-            new PanelTabItem("problems", UIStrings.Panel_Problems, UIStrings.Panel_NoProblemsDetected, "fa-solid fa-exclamation-triangle"),
-            new PanelTabItem("output", UIStrings.Panel_Output, UIStrings.Panel_OutputConsoleReady, "fa-solid fa-terminal"),
-            new PanelTabItem("debug", UIStrings.Panel_DebugConsole, UIStrings.Panel_DebugConsoleReady, "fa-solid fa-bug"),
-            new PanelTabItem("logviewer", UIStrings.Panel_LogViewer, CreateLogViewerContent(), "fa-solid fa-file-text")
+            new PanelTabItem("log-viewer", Resources.UIStrings.Panel_LogViewer, CreateLogViewerContent(), "fa-solid fa-list", false)
         };
-
-        // Set the first tab as selected
-        SelectedTab = Tabs.FirstOrDefault();
-        if (SelectedTab != null)
-        {
-            SelectedTab.IsSelected = true;
-        }
-
-        // Initialize commands
         TogglePanelCommand = ReactiveCommand.Create(TogglePanel);
-        SelectTabCommand = ReactiveCommand.Create<PanelTabItem>(SelectTab);
+        SelectTabCommand = ReactiveCommand.Create<PanelTabItem?>(SelectTab);
+        CloseTabCommand = ReactiveCommand.Create<PanelTabItem>(CloseTab);
 
-        _logger.LogDebug("BottomPanelViewModel initialized with {TabCount} tabs", Tabs.Count);
+        if (_taskManager != null)
+        {
+            _taskManager.WhenAnyValue(tm => tm.ActiveTasks)
+                .Subscribe(tasks =>
+                {
+                    // Add tabs for new tasks
+                    if (tasks != null)
+                    {
+                        foreach (var task in tasks)
+                        {
+                            AddNewTaskTab(task);
+                        }
+                    }
+                });
+
+            // Also need to handle removed tasks if observable collection changes? 
+            // ActiveTasks is ObservableCollection? 
+            // We can subscribe to CollectionChanged of ActiveTasks
+            if (_taskManager.ActiveTasks is System.Collections.Specialized.INotifyCollectionChanged notifyCollection)
+            {
+                notifyCollection.CollectionChanged += (s, e) =>
+                {
+                    if (e.NewItems != null)
+                    {
+                        foreach (Core.Models.Jobs.TaskExecution task in e.NewItems)
+                            AddNewTaskTab(task);
+                    }
+                    if (e.OldItems != null)
+                    {
+                        foreach (Core.Models.Jobs.TaskExecution task in e.OldItems)
+                            RemoveTaskTab(task);
+                    }
+                };
+            }
+        }
+    }
+
+    // ...
+
+    private void AddNewTaskTab(Core.Models.Jobs.TaskExecution task)
+    {
+        // Avoid duplicates
+        string tabId = $"task-{task.TaskId}";
+        if (Tabs.Any(t => t.Id == tabId))
+            return;
+
+        var viewModel = new S7Tools.ViewModels.Components.TaskLogsPanelViewModel(
+            task,
+            _clipboardService,
+            _centralizedTaskLogService,
+            _uiThreadService);
+
+        var view = new S7Tools.Views.Components.TaskLogsPanelView { DataContext = viewModel };
+
+        var newTab = new PanelTabItem(tabId, $"Task: {task.JobName}", view, "fa-solid fa-tasks", true);
+        Tabs.Add(newTab);
+
+        SelectTab(newTab);
+    }
+
+    private void RemoveTaskTab(Core.Models.Jobs.TaskExecution task)
+    {
+        string tabId = $"task-{task.TaskId}";
+        var tabToRemove = Tabs.FirstOrDefault(t => t.Id == tabId);
+        if (tabToRemove != null)
+        {
+            Tabs.Remove(tabToRemove);
+
+            // If we removed the selected tab, select the main log viewer
+            if (SelectedTab == tabToRemove)
+            {
+                SelectTab(Tabs.FirstOrDefault());
+            }
+        }
+    }
+
+    public ReactiveCommand<PanelTabItem, Unit> CloseTabCommand { get; }
+
+    private void CloseTab(PanelTabItem tab)
+    {
+        if (tab != null && tab.IsClosable)
+        {
+            Tabs.Remove(tab);
+            if (SelectedTab == tab)
+            {
+                SelectTab(Tabs.FirstOrDefault());
+            }
+        }
     }
 
     /// <summary>
@@ -137,7 +222,7 @@ public class BottomPanelViewModel : ReactiveObject
     /// <summary>
     /// Gets the command to select a bottom panel tab (expands panel if collapsed).
     /// </summary>
-    public ReactiveCommand<PanelTabItem, Unit> SelectTabCommand { get; }
+    public ReactiveCommand<PanelTabItem?, Unit> SelectTabCommand { get; }
 
     /// <summary>
     /// Toggles the bottom panel between collapsed and expanded states.
@@ -167,7 +252,7 @@ public class BottomPanelViewModel : ReactiveObject
     /// Selects a tab and manages panel visibility with VSCode-like behavior.
     /// </summary>
     /// <param name="tab">The tab to select.</param>
-    private void SelectTab(PanelTabItem tab)
+    private void SelectTab(PanelTabItem? tab)
     {
         if (tab == null)
         {

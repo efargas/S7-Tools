@@ -1,3 +1,4 @@
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
 
@@ -17,8 +18,8 @@ public interface IEnhancedBootloaderService : IBootloaderService
     /// <param name="taskExecution">The task execution to update with progress and state changes.</param>
     /// <param name="profiles">Job profile set containing all configuration parameters.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <returns>The dumped memory data.</returns>
-    Task<IList<byte[]>> DumpWithTaskTrackingAsync(
+    /// <returns>The result containing dump data and saved file paths.</returns>
+    Task<BootloaderResult> DumpWithTaskTrackingAsync(
         TaskExecution taskExecution,
         JobProfileSet profiles,
         CancellationToken cancellationToken = default);

@@ -41,15 +41,9 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ISerialPortProfileService _serialPortProfileService;
     private readonly ISocatProfileService _socatProfileService;
     private readonly IJobProfileSetFactory _jobProfileSetFactory;
-    private readonly ICentralizedTaskLogService _centralizedTaskLogService;
-    private readonly IClipboardService _clipboardService;
     private readonly CompositeDisposable _disposables = [];
     private readonly SemaphoreSlim _operationSemaphore = new(1, 1);
-    private readonly S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
-    private ITaskLogDataStore _mainLogDataStore;
-    private ITaskLogDataStore _processLogDataStore;
-    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _mainHandler;
-    private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
+
 
     private TaskExecution? _taskExecution;
     private string _validationResultText = "No validation data";
@@ -97,7 +91,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         ISerialPortProfileService serialPortProfileService,
         ISocatProfileService socatProfileService,
         IJobProfileSetFactory jobProfileSetFactory,
-        ICentralizedTaskLogService centralizedTaskLogService,
         IClipboardService clipboardService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -111,37 +104,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         _serialPortProfileService = serialPortProfileService ?? throw new ArgumentNullException(nameof(serialPortProfileService));
         _socatProfileService = socatProfileService ?? throw new ArgumentNullException(nameof(socatProfileService));
         _jobProfileSetFactory = jobProfileSetFactory ?? throw new ArgumentNullException(nameof(jobProfileSetFactory));
-        _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
-        _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
 
-        // Initialize log entry collections
-        MainLogEntries = [];
-        ProcessLogEntries = [];
-
-        _mainLogDataStore = null!;
-        _processLogDataStore = null!;
-
-        _logUpdater = new S7Tools.Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)>(items =>
-        {
-            var mainBatch = new List<LogEntry>();
-            var processBatch = new List<LogEntry>();
-
-            foreach ((string logType, LogEntry entry) in items)
-            {
-                if (logType == "Main")
-                    mainBatch.Add(entry);
-                else if (logType == "Process")
-                    processBatch.Add(entry);
-            }
-
-            if (mainBatch.Count > 0)
-                MainLogEntries.AddRange(mainBatch);
-            if (processBatch.Count > 0)
-                ProcessLogEntries.AddRange(processBatch);
-        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
-
-        _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
-        _processHandler = (s, e) => HandleLogCollectionChanged(s, e, "Process");
 
         SetupCommands();
         UpdatePowerConnectionState();
@@ -212,51 +175,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         get => _taskExecution;
         set
         {
-            if (_taskExecution != null)
-            {
-                // Detach from old task's log stores
-                if (_mainLogDataStore != null)
-                {
-                    _mainLogDataStore.CollectionChanged -= _mainHandler;
-                }
-                if (_processLogDataStore != null)
-                {
-                    _processLogDataStore.CollectionChanged -= _processHandler;
-                }
-            }
-
             this.RaiseAndSetIfChanged(ref _taskExecution, value);
-
-            if (value == null || value.TaskId == Guid.Empty)
-            {
-                _mainLogDataStore = null!;
-                _processLogDataStore = null!;
-            }
-            else
-            {
-                // Get persistent stores for the new task
-                (_mainLogDataStore, _processLogDataStore, _) = _centralizedTaskLogService.GetOrCreateStoresForTask(value.TaskId);
-
-                // Attach to new task's log stores
-                _mainLogDataStore.CollectionChanged += _mainHandler;
-                _processLogDataStore.CollectionChanged += _processHandler;
-            }
-
-            // Clear and repopulate logs from DataStore
-            ClearAndRepopulateLogs();
         }
     }
 
 
-    /// <summary>
-    /// Gets the collection of parsed main log entries.
-    /// </summary>
-    public FastObservableCollection<LogEntry> MainLogEntries { get; }
 
-    /// <summary>
-    /// Gets the collection of parsed process/socat log entries.
-    /// </summary>
-    public FastObservableCollection<LogEntry> ProcessLogEntries { get; }
 
 
 
@@ -377,34 +301,13 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         private set => this.RaiseAndSetIfChanged(ref _canStartManualProcess, value);
     }
 
-    private bool _autoScroll = true;
-    /// <summary>
-    /// Gets or sets whether auto-scroll is enabled.
-    /// </summary>
-    public bool AutoScroll
-    {
-        get => _autoScroll;
-        set => this.RaiseAndSetIfChanged(ref _autoScroll, value);
-    }
 
-    private bool _isStuckToBottom = true;
-    /// <summary>
-    /// Gets or sets whether the view is currently stuck to the bottom.
-    /// </summary>
-    public bool IsStuckToBottom
-    {
-        get => _isStuckToBottom;
-        set => this.RaiseAndSetIfChanged(ref _isStuckToBottom, value);
-    }
 
     #endregion
 
     #region Commands
 
-    /// <summary>
-    /// Gets the command to copy a log entry to clipboard.
-    /// </summary>
-    public ReactiveCommand<LogEntry, Unit> CopyLogEntryCommand { get; private set; } = null!;
+
 
     /// <summary>
     /// Gets the command to manually start socat server.
@@ -517,56 +420,11 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             ExecuteStartManualProcessAsync,
             this.WhenAnyValue(x => x.CanStartManualProcess));
 
-        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<LogEntry>(async logEntry =>
-        {
-            if (logEntry != null)
-            {
-                // Format: [Timestamp] [Level] Category: Message
-                string logText = $"[{logEntry.Timestamp.ToString(DateTimeFormats.LongDateTime)}] [{logEntry.Level}] {logEntry.Category}: {logEntry.FormattedMessage}";
-                await _clipboardService.SetTextAsync(logText);
-            }
-        });
+
     }
 
 
-    private void ClearAndRepopulateLogs()
-    {
-        MainLogEntries.Clear();
-        ProcessLogEntries.Clear();
 
-        // Repopulate from existing DataStore entries
-        if (_mainLogDataStore != null)
-        {
-            var batch = new List<LogEntry>();
-            foreach (S7Tools.Core.Models.LogModel logModel in _mainLogDataStore)
-            {
-                batch.Add(new LogEntry
-                {
-                    Timestamp = logModel.Timestamp,
-                    Level = logModel.Level.ToString(),
-                    Category = logModel.Category,
-                    Message = logModel.Message
-                });
-            }
-            MainLogEntries.AddRange(batch);
-        }
-
-        if (_processLogDataStore != null)
-        {
-            var batch = new List<LogEntry>();
-            foreach (S7Tools.Core.Models.LogModel logModel in _processLogDataStore)
-            {
-                batch.Add(new LogEntry
-                {
-                    Timestamp = logModel.Timestamp,
-                    Level = logModel.Level.ToString(),
-                    Category = logModel.Category,
-                    Message = logModel.Message
-                });
-            }
-            ProcessLogEntries.AddRange(batch);
-        }
-    }
 
 
     private void UpdatePowerConnectionState()
@@ -637,9 +495,6 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            // Initialized when a task is set
-            _mainLogDataStore = null!;
-            _processLogDataStore = null!;
 
             // View creation helperofile
             SocatProfile? socatProfile = await _socatProfileService.GetByIdAsync(jobProfile.SocatProfileId);
@@ -1222,37 +1077,28 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
             // 9. Dump memory
             // 10. Teardown
             // 11. Complete
-            IList<byte[]> dumpedDataList = await _bootloaderService.DumpWithTaskTrackingAsync(
+            BootloaderResult result = await _bootloaderService.DumpWithTaskTrackingAsync(
                 TaskExecution,
                 profileSet,
                 CancellationToken.None);
 
-            long totalSize = dumpedDataList.Sum(x => (long)x.Length);
+            long totalSize = result.Data.Sum(x => (long)x.Length);
             string outputDescription;
 
-            Directory.CreateDirectory(jobProfile.OutputPath);
-
-            if (dumpedDataList.Count == 1)
+            if (result.SavedFiles.Count == 1)
             {
-                string outputFile = Path.Combine(jobProfile.OutputPath, $"dump_{DateTime.UtcNow.ToLocalTime():yyyyMMdd_HHmmss}.bin");
-                await File.WriteAllBytesAsync(outputFile, dumpedDataList[0]);
-                outputDescription = outputFile;
+                outputDescription = result.SavedFiles[0];
             }
             else
             {
-                string timestamp = DateTime.UtcNow.ToLocalTime().ToString("yyyyMMdd_HHmmss");
-                string baseFileName = $"dump_{timestamp}";
-                var savedFiles = new List<string>();
-
                 System.Text.StringBuilder sb = new();
-                sb.AppendLine($"Generated {dumpedDataList.Count} files:");
+                sb.AppendLine($"Generated {result.SavedFiles.Count} files:");
 
-                for (int i = 0; i < dumpedDataList.Count; i++)
+                for (int i = 0; i < result.SavedFiles.Count; i++)
                 {
-                    string outputFile = Path.Combine(jobProfile.OutputPath, $"{baseFileName}_iter{i + 1}.bin");
-                    await File.WriteAllBytesAsync(outputFile, dumpedDataList[i]);
-                    savedFiles.Add(outputFile);
-                    sb.AppendLine($"{i + 1}. {outputFile} ({dumpedDataList[i].Length:N0} bytes)");
+                    string outputFile = result.SavedFiles[i];
+                    long size = i < result.Data.Count ? result.Data[i].Length : 0;
+                    sb.AppendLine($"{i + 1}. {outputFile} ({size:N0} bytes)");
                 }
                 outputDescription = sb.ToString();
             }
@@ -1282,40 +1128,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void HandleLogCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs args, string logType)
-    {
-        if (args.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && args.NewItems != null)
-        {
-            foreach (S7Tools.Core.Models.LogModel item in args.NewItems)
-            {
-                _logUpdater.Enqueue((logType, new LogEntry { Timestamp = item.Timestamp.ToLocalTime(), Level = item.Level.ToString(), Category = item.Category, Message = item.Message }));
-            }
-        }
-        else if (sender is S7Tools.Infrastructure.Logging.Core.Storage.TaskLogDataStore dataStore)
-        {
-            // For Reset or any other action, clear and repopulate the corresponding collection on the UI thread.
-            _uiThreadService.InvokeOnUIThread(() =>
-            {
-                ObservableCollection<LogEntry> collection;
-                switch (logType)
-                {
-                    case "Main":
-                        collection = MainLogEntries;
-                        break;
-                    case "Process":
-                        collection = ProcessLogEntries;
-                        break;
-                    default:
-                        return;
-                }
-                collection.Clear();
-                foreach (LogModel item in dataStore)
-                {
-                    collection.Add(new S7Tools.Models.LogEntry { Timestamp = item.Timestamp.ToLocalTime(), Level = item.Level.ToString(), Category = item.Category, Message = item.Message });
-                }
-            });
-        }
-    }
+
 
     private void UpdateCanStartManualProcess()
     {
@@ -1346,18 +1159,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     {
         if (disposing)
         {
-            _logUpdater?.Dispose();
 
-            // Perform null checks before unsubscribing
-            if (_mainLogDataStore != null)
-            {
-                _mainLogDataStore.CollectionChanged -= _mainHandler;
-            }
-
-            if (_processLogDataStore != null)
-            {
-                _processLogDataStore.CollectionChanged -= _processHandler;
-            }
 
 
             _socatTcpClient?.Dispose();

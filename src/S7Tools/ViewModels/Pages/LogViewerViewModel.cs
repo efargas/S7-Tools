@@ -254,7 +254,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the command to copy selected log entry to clipboard.
     /// </summary>
-    public ReactiveCommand<LogModel?, Unit> CopyLogEntryCommand { get; private set; } = null!;
+    public ReactiveCommand<object?, Unit> CopyLogEntryCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to refresh the log display.
@@ -354,13 +354,36 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             }
         });
 
-        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<LogModel?>(async logEntry =>
+        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<object?>(async parameter =>
         {
-            var entry = logEntry ?? SelectedLogEntry;
-            if (entry != null)
+            var sb = new System.Text.StringBuilder();
+
+            if (parameter is System.Collections.IList items && items.Count > 0)
             {
-                string logText = $"[{entry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{entry.Timestamp.Millisecond:000}] [{entry.Level}] {entry.Category}: {entry.FormattedMessage}";
-                await _clipboardService.SetTextAsync(logText);
+                foreach (var item in items)
+                {
+                    if (item is LogModel entry)
+                    {
+                        sb.AppendLine($"[{entry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{entry.Timestamp.Millisecond:000}] [{entry.Level}] {entry.Category}: {entry.FormattedMessage}");
+                    }
+                }
+            }
+            else if (parameter is LogModel entry)
+            {
+                sb.AppendLine($"[{entry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{entry.Timestamp.Millisecond:000}] [{entry.Level}] {entry.Category}: {entry.FormattedMessage}");
+            }
+            else
+            {
+                var fallbackEntry = SelectedLogEntry;
+                if (fallbackEntry != null)
+                {
+                    sb.AppendLine($"[{fallbackEntry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{fallbackEntry.Timestamp.Millisecond:000}] [{fallbackEntry.Level}] {fallbackEntry.Category}: {fallbackEntry.FormattedMessage}");
+                }
+            }
+
+            if (sb.Length > 0)
+            {
+                await _clipboardService.SetTextAsync(sb.ToString().TrimEnd());
             }
         });
 

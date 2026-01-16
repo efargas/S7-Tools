@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+    x:Class="S7Tools.Views.Components.LogListControl"
+    x:Name="Root">
+
+    <Grid>
+        <ScrollViewer x:Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled">
+            <ListBox x:Name="LogListBox"
+                ItemsSource="{Binding #Root.ItemsSource}"
+                ItemTemplate="{Binding #Root.ItemTemplate}"
+                Background="Transparent"
+                BorderThickness="0"
+                SelectionMode="Multiple">
+                <ListBox.KeyBindings>
+                    <KeyBinding Gesture="Ctrl+C"
+                        Command="{Binding #Root.CopyCommand}"
+                        CommandParameter="{Binding #LogListBox.SelectedItems}" />
+                </ListBox.KeyBindings>
+            </ListBox>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

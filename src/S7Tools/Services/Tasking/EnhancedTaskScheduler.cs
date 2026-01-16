@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Extensions;
@@ -1071,7 +1072,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             taskLogger.MainLogger?.LogInformation("Starting bootloader execution");
             Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile.Id, CancellationToken.None).ConfigureAwait(false);
 
-            IList<byte[]> dumpDataList = await _bootloaderService.DumpAsync(
+            BootloaderResult result = await _bootloaderService.DumpAsync(
                 executionJob.ProfileSet,
                 progress,
                 taskLogger.MainLogger,
@@ -1079,38 +1080,16 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 CancellationToken.None)
                 .ConfigureAwait(false);
 
-            long totalSize = dumpDataList.Sum(x => (long)x.Length);
+            long totalSize = result.Data.Sum(x => (long)x.Length);
             taskLogger.MainLogger?.LogInformation("Bootloader dump completed. Total size: {Size} bytes. Files: {Count}",
-                totalSize, dumpDataList.Count);
+                totalSize, result.SavedFiles.Count);
 
-            string primaryOutputFile = string.Empty;
+            string primaryOutputFile = result.SavedFiles.FirstOrDefault() ?? string.Empty;
 
-            if (dumpDataList.Count > 0)
+            if (result.SavedFiles.Count > 0)
             {
-                Directory.CreateDirectory(jobProfile.OutputPath);
-
-                if (dumpDataList.Count == 1)
-                {
-                    string outputFile = Path.Combine(jobProfile.OutputPath, $"dump-{task.TaskId:N}.bin");
-                    await File.WriteAllBytesAsync(outputFile, dumpDataList[0], CancellationToken.None).ConfigureAwait(false);
-                    primaryOutputFile = outputFile;
-                    taskLogger.MainLogger?.LogInformation("Output saved to: {OutputFile}", outputFile);
-                }
-                else
-                {
-                    string baseFileName = $"dump-{task.TaskId:N}";
-                    var savedFiles = new List<string>();
-
-                    for (int i = 0; i < dumpDataList.Count; i++)
-                    {
-                        string outputFile = Path.Combine(jobProfile.OutputPath, $"{baseFileName}_iter{i + 1}.bin");
-                        await File.WriteAllBytesAsync(outputFile, dumpDataList[i], CancellationToken.None).ConfigureAwait(false);
-                        savedFiles.Add(outputFile);
-                    }
-
-                    primaryOutputFile = savedFiles[0];
-                    taskLogger.MainLogger?.LogInformation("Outputs saved to: {OutputPath} ({Count} files)", jobProfile.OutputPath, savedFiles.Count);
-                }
+                taskLogger.MainLogger?.LogInformation("Outputs saved to: {OutputPath} ({Count} files)",
+                    Path.GetDirectoryName(primaryOutputFile), result.SavedFiles.Count);
             }
 
             // Mark as completed

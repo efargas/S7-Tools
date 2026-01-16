@@ -420,12 +420,10 @@ public class TaskExecution : INotifyPropertyChanged
                 TotalBytes = totalBytes;
             }
 
-            // Calculate Speed and ETC - Optimized: Average Speed, Throttled to 1%
+            // Calculate Speed and ETC - Optimized: Average Speed, Throttled to 0.1%
             if (hasBytes && TotalBytes.HasValue && TotalBytes.Value > 0)
             {
-                // Only update speed/ETC if progress has moved significantly (1%) or finished
-                // This prevents UI thrashing and provides a more stable ETC based on average speed
-                bool shouldUpdate = (Math.Abs(ProgressPercentage - _lastSpeedUpdatePercentage) >= 1.0) ||
+                bool shouldUpdate = (Math.Abs(ProgressPercentage - _lastSpeedUpdatePercentage) >= 0.1) ||
                                     (ProgressPercentage >= 100) ||
                                     (_lastSpeedUpdatePercentage < 0);
 
@@ -437,23 +435,20 @@ public class TaskExecution : INotifyPropertyChanged
                     if (elapsed.TotalSeconds > 1) // Wait 1 second for stability
                     {
                         // Calculate Average Speed: Total Bytes / Total Time
-                        // This naturally smoothes out spikes and provides better long-term ETC
                         double averageSpeed = currentBytesRead / elapsed.TotalSeconds;
 
-                        // Removed 1024 divisor: Speed property expects Bytes/Second, and the Converter handles scaling
                         Speed = averageSpeed;
                         OnPropertyChanged(nameof(Speed));
 
                         if (Speed > 0)
                         {
                             long remainingBytes = Math.Max(0, TotalBytes.Value - currentBytesRead);
-                            // Standard calculation: Bytes / (Bytes/Second) = Seconds
                             double remainingSeconds = remainingBytes / Speed;
 
                             if (remainingSeconds < 86400) // Sanity check: < 24 hours
                             {
                                 EstimatedTimeRemaining = TimeSpan.FromSeconds(remainingSeconds);
-                                EstimatedTimeCompletion = Now.AddSeconds(remainingSeconds);
+                                EstimatedTimeCompletion = now.AddSeconds(remainingSeconds);
                             }
                             else
                             {

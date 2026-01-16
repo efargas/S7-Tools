@@ -12,11 +12,16 @@
     <!-- Header -->
     <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
       CornerRadius="4,4,0,0" Padding="12,8">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" Text="Recently Completed Tasks" FontWeight="Medium" />
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <TextBlock Grid.Column="0" Text="Recently Completed Tasks" FontWeight="Medium"
+          VerticalAlignment="Center" />
         <TextBlock Grid.Column="1"
           Text="{Binding Manager.FinishedTasks.Count, StringFormat='{}{0} tasks'}"
-          FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+          FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}"
+          VerticalAlignment="Center" Margin="0,0,12,0" />
+        <Button Grid.Column="2" Content="Clear History"
+          Command="{Binding Manager.ClearFinishedTasksCommand}"
+          FontSize="11" Padding="8,4" ToolTip.Tip="Clear all finished tasks" />
       </Grid>
     </Border>
 

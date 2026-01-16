@@ -11,7 +11,6 @@ namespace S7Tools.Core.Models;
 /// </summary>
 public readonly struct MemoryBlock : IEquatable<MemoryBlock>
 {
-    private const int BytesPerLine = 16;
 
     /// <summary>
     /// Gets the starting memory address of this block.

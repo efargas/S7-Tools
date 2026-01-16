@@ -13,16 +13,17 @@
 
   <UserControl.Resources>
     <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    <converters:ByteSpeedConverter x:Key="ByteSpeedConverter" />
   </UserControl.Resources>
 
   <Grid RowDefinitions="Auto,Auto,*">
     <!-- Header with Task Name -->
     <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
-      BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
+      BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="12,6">
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock Grid.Column="0"
           Text="{Binding TaskExecution.JobName, FallbackValue='No Task Selected'}"
-          FontWeight="SemiBold" FontSize="16" VerticalAlignment="Center" />
+          FontWeight="SemiBold" FontSize="14" VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
           <Border Background="{DynamicResource SystemAccentBrush}" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding TaskExecution.State, FallbackValue='Unknown'}"
@@ -33,153 +34,116 @@
     </Border>
 
     <!-- Task Info Panel with Progress Bar -->
-    <Border Grid.Row="1" Background="#252526" Padding="16" Margin="0,0,0,8">
-      <StackPanel Spacing="8">
-        <!-- Progress Bar -->
-        <Grid RowDefinitions="Auto,Auto">
-          <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-            <TextBlock Text="Task Progress:" FontSize="12" FontWeight="SemiBold" />
+    <Border Grid.Row="1" Background="#252526" Padding="12,8" Margin="0,0,0,4">
+      <StackPanel Spacing="6">
+        <!-- Progress Bar and Operation -->
+        <Grid ColumnDefinitions="Auto,*,Auto" VerticalAlignment="Center">
+          <TextBlock Grid.Column="0" Text="Progress:" FontSize="11" FontWeight="SemiBold"
+            VerticalAlignment="Center" Margin="0,0,8,0" />
+          <ProgressBar Grid.Column="1" Minimum="0" Maximum="100"
+            Value="{Binding TaskExecution.ProgressPercentage, FallbackValue=0}"
+            Height="6" VerticalAlignment="Center" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" Margin="8,0,0,0"
+            VerticalAlignment="Center">
             <TextBlock
               Text="{Binding TaskExecution.ProgressPercentage, StringFormat='{}{0:F1}%', FallbackValue='0%'}"
-              FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentBrush}" />
+              FontSize="11" FontWeight="Bold" Foreground="{DynamicResource SystemAccentBrush}" />
+            <TextBlock Text="|" Foreground="#444444" FontSize="11" />
+            <TextBlock Text="{Binding TaskExecution.CurrentOperation, FallbackValue='Idle'}"
+              FontSize="11" Foreground="{DynamicResource SystemBaseMediumBrush}"
+              FontStyle="Italic" />
           </StackPanel>
-          <ProgressBar Grid.Row="1" Minimum="0" Maximum="100"
-            Value="{Binding TaskExecution.ProgressPercentage, FallbackValue=0}"
-            Height="8" Margin="0,4,0,0" />
         </Grid>
 
-        <!-- Current Operation -->
-        <TextBlock Text="{Binding TaskExecution.CurrentOperation, FallbackValue='Idle'}"
-          FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}"
-          FontStyle="Italic" />
-
-        <!-- Task Details Grid -->
-        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="120,*" Margin="0,8,0,0">
-          <TextBlock Grid.Row="0" Grid.Column="0" Text="Task ID:" FontSize="12"
-            Foreground="{DynamicResource SystemBaseMediumBrush}" />
-          <TextBlock Grid.Row="0" Grid.Column="1"
-            Text="{Binding TaskExecution.TaskId, FallbackValue='-'}" FontSize="12" />
-
-          <TextBlock Grid.Row="1" Grid.Column="0" Text="Started:" FontSize="12"
-            Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-          <TextBlock Grid.Row="1" Grid.Column="1"
-            Text="{Binding TaskExecution.StartedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}"
-            FontSize="12" Margin="0,4,0,0" />
-
-          <TextBlock Grid.Row="2" Grid.Column="0" Text="Duration:" FontSize="12"
-            Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-          <TextBlock Grid.Row="2" Grid.Column="1"
-            Text="{Binding TaskExecution.ExecutionTime, StringFormat='{}{0:mm\\:ss}', FallbackValue='-'}"
-            FontSize="12" Margin="0,4,0,0" />
-        </Grid>
+        <!-- Inline Metadata -->
+        <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,4,0,0">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="ID:" FontSize="11" Foreground="{DynamicResource SystemBaseMediumBrush}" />
+            <TextBlock Text="{Binding TaskExecution.TaskId, FallbackValue='-'}" FontSize="11" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="Started:" FontSize="11"
+              Foreground="{DynamicResource SystemBaseMediumBrush}" />
+            <TextBlock
+              Text="{Binding TaskExecution.StartedAt, StringFormat='HH:mm:ss', FallbackValue='-'}"
+              FontSize="11" />
+          </StackPanel>
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="Duration:" FontSize="11"
+              Foreground="{DynamicResource SystemBaseMediumBrush}" />
+            <TextBlock
+              Text="{Binding TaskExecution.ExecutionTime, StringFormat='{}{0:mm\\:ss}', FallbackValue='-'}"
+              FontSize="11" />
+          </StackPanel>
+          <!-- Velocity -->
+          <StackPanel Orientation="Horizontal" Spacing="4"
+            IsVisible="{Binding TaskExecution.Speed, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <TextBlock Text="Speed:" FontSize="11"
+              Foreground="{DynamicResource SystemBaseMediumBrush}" />
+            <TextBlock
+              Text="{Binding TaskExecution.Speed, Converter={StaticResource ByteSpeedConverter}}"
+              FontSize="11" FontWeight="SemiBold" />
+          </StackPanel>
+          <!-- ETC -->
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="ETC:" FontSize="11"
+              Foreground="{DynamicResource SystemBaseMediumBrush}" />
+            <TextBlock
+              Text="{Binding TaskExecution.EstimatedTimeRemaining, StringFormat='{}{0:mm\\:ss}', FallbackValue='--:--'}"
+              FontSize="11" />
+          </StackPanel>
+        </StackPanel>
       </StackPanel>
     </Border>
 
     <!-- Tabs for Logs and Controls -->
-    <Grid Grid.Row="2" RowDefinitions="Auto,*">
+    <Grid Grid.Row="2">
+      <TabControl SelectedIndex="{Binding SelectedTabIndex}" Padding="0">
+        <TabControl.Styles>
+          <!-- Custom TabItem Style to match bottom panel -->
+          <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="MinHeight" Value="35" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="#858585" />
+            <Setter Property="Template">
+              <ControlTemplate>
+                <Grid Background="Transparent">
+                  <ContentPresenter Name="PART_ContentPresenter"
+                    Content="{TemplateBinding Header}"
+                    ContentTemplate="{TemplateBinding HeaderTemplate}"
+                    HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                    VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                    Margin="{TemplateBinding Padding}"
+                    TextBlock.Foreground="{TemplateBinding Foreground}" />
+                  <Border Name="SelectionIndicator"
+                    Height="2"
+                    Background="#007ACC"
+                    VerticalAlignment="Bottom"
+                    IsVisible="False" />
+                </Grid>
+              </ControlTemplate>
+            </Setter>
+          </Style>
+          <Style Selector="TabItem:selected">
+            <Setter Property="Foreground" Value="White" />
+          </Style>
+          <Style Selector="TabItem:selected /template/ Border#SelectionIndicator">
+            <Setter Property="IsVisible" Value="True" />
+          </Style>
+          <Style Selector="TabItem:pointerover">
+            <Setter Property="Foreground" Value="White" />
+          </Style>
 
-      <!-- Toolbar Row with Auto Scroll Toggle -->
-      <Border Grid.Row="0" Background="#2D2D30" BorderBrush="#3F3F46" BorderThickness="0,0,0,1"
-        Padding="12,8">
-        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-          <ToggleButton Content="Auto Scroll"
-            IsChecked="{Binding AutoScroll, Mode=TwoWay}"
-            FontSize="12" Padding="8,4" CornerRadius="4">
-            <ToggleButton.Styles>
-              <Style Selector="ToggleButton:checked">
-                <Setter Property="Background" Value="#007ACC" />
-                <Setter Property="Foreground" Value="White" />
-              </Style>
-            </ToggleButton.Styles>
-          </ToggleButton>
-        </StackPanel>
-      </Border>
-
-      <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}">
-        <!-- Main Log Tab -->
-        <TabItem Header="Main Log">
-          <Grid RowDefinitions="Auto,*">
-            <!-- Header -->
-            <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="#2D2D30">
-              <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold" FontSize="12"
-                Foreground="#CCCCCC" Padding="8,4" />
-              <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold" FontSize="12"
-                Foreground="#CCCCCC" Padding="8,4" />
-              <TextBlock Grid.Column="2" Text="Message" FontWeight="SemiBold" FontSize="12"
-                Foreground="#CCCCCC" Padding="8,4" />
-            </Grid>
-            <!-- Log List -->
-            <ScrollViewer Grid.Row="1" Name="MainLogScrollViewer"
-              HorizontalScrollBarVisibility="Disabled">
-              <ListBox ItemsSource="{Binding MainLogEntries}" Background="Transparent"
-                BorderThickness="0">
-                <ListBox.ItemTemplate>
-                  <DataTemplate DataType="models:LogEntry">
-                    <Grid ColumnDefinitions="160,80,*">
-                      <TextBlock Grid.Column="0"
-                        Text="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
-                        FontSize="12" Padding="8,4" Foreground="#CCCCCC" VerticalAlignment="Top" />
-                      <Border Grid.Column="1"
-                        Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}"
-                        CornerRadius="3" Margin="8,4" Padding="4,2" VerticalAlignment="Top"
-                        HorizontalAlignment="Left">
-                        <TextBlock Text="{Binding Level}" Foreground="White" FontSize="10"
-                          FontWeight="SemiBold" />
-                      </Border>
-                      <TextBlock Grid.Column="2" Text="{Binding FormattedMessage}"
-                        FontSize="12" Padding="8,4" TextWrapping="Wrap" Foreground="#CCCCCC"
-                        VerticalAlignment="Top" />
-                    </Grid>
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>
-            </ScrollViewer>
-          </Grid>
-        </TabItem>
-
-        <!-- Process/Socat Log Tab -->
-        <TabItem Header="Socat Log">
-          <Grid RowDefinitions="Auto,*">
-            <!-- Header -->
-            <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="#2D2D30">
-              <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold" FontSize="12"
-                Foreground="#CCCCCC" Padding="8,4" />
-              <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold" FontSize="12"
-                Foreground="#CCCCCC" Padding="8,4" />
-              <TextBlock Grid.Column="2" Text="Message" FontWeight="SemiBold" FontSize="12"
-                Foreground="#CCCCCC" Padding="8,4" />
-            </Grid>
-            <!-- Log List -->
-            <ScrollViewer Grid.Row="1" Name="SocatLogScrollViewer"
-              HorizontalScrollBarVisibility="Disabled">
-              <ListBox ItemsSource="{Binding ProcessLogEntries}" Background="Transparent"
-                BorderThickness="0">
-                <ListBox.ItemTemplate>
-                  <DataTemplate DataType="models:LogEntry">
-                    <Grid ColumnDefinitions="160,80,*">
-                      <TextBlock Grid.Column="0"
-                        Text="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
-                        FontSize="12" Padding="8,4" Foreground="#CCCCCC" VerticalAlignment="Top" />
-                      <Border Grid.Column="1"
-                        Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}"
-                        CornerRadius="3" Margin="8,4" Padding="4,2" VerticalAlignment="Top"
-                        HorizontalAlignment="Left">
-                        <TextBlock Text="{Binding Level}" Foreground="White" FontSize="10"
-                          FontWeight="SemiBold" />
-                      </Border>
-                      <TextBlock Grid.Column="2" Text="{Binding FormattedMessage}"
-                        FontSize="12" Padding="8,4" TextWrapping="Wrap" Foreground="#CCCCCC"
-                        VerticalAlignment="Top" />
-                    </Grid>
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>
-            </ScrollViewer>
-          </Grid>
-        </TabItem>
-
-        <!-- Protocol Log Tab -->
-
+          <!-- Remove default TabControl padding and border -->
+          <Style Selector="TabControl">
+            <Setter Property="Padding" Value="0" />
+          </Style>
+          <Style Selector="TabControl /template/ Grid#PART_TabHeader">
+            <Setter Property="Background" Value="#2D2D30" />
+          </Style>
+        </TabControl.Styles>
 
         <!-- Manual Controls Tab -->
         <TabItem Header="Manual Controls">
@@ -369,6 +333,8 @@
           </ScrollViewer>
         </TabItem>
       </TabControl>
+
+
     </Grid>
   </Grid>
 

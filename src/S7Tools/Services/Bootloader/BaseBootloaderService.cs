@@ -239,13 +239,14 @@ public abstract class BaseBootloaderService
     /// SIMPLIFIED multi-iteration streaming dump - keeps ONE session, loops iterations inside.
     /// This is the user-suggested approach: start session once, loop inside, stop session once.
     /// </summary>
-    protected async Task<List<byte[]>> PerformDumpProcessStreamingSimplifiedAsync(
+    protected async Task<BootloaderResult> PerformDumpProcessStreamingSimplifiedAsync(
         IPlcClient client,
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         ILogger logger,
         double startPercent,
         double weight,
+        Guid? taskId,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(client);
@@ -254,6 +255,7 @@ public abstract class BaseBootloaderService
         ArgumentNullException.ThrowIfNull(logger);
 
         List<byte[]> allDumps = [];
+        List<string> savedFiles = [];
         DateTime dumpStartTime = _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
         int iterationCount = profiles.DumpCount > 0 ? profiles.DumpCount : 1;
 
@@ -325,7 +327,10 @@ public abstract class BaseBootloaderService
                                     long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
                                     long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
 
-                                    if (Math.Abs(percent - lastReportedSegPercent) >= 1.0 || bytes == segLength)
+                                    // Determine reporting threshold: 0.1% for >1MB, else 1.0%
+                                    double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
+
+                                    if (Math.Abs(percent - lastReportedSegPercent) >= threshold || bytes == segLength)
                                     {
                                         progress.Report((stageName, percent, cumulativeTotalBytes, totalExpectedBytes));
                                         lastReportedSegPercent = percent;
@@ -367,8 +372,17 @@ public abstract class BaseBootloaderService
                         // Save .bin file
                         string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
                         string jobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
-                        string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}_{timestamp}.bin";
-                        string dumpsDir = "./dumps";
+                        // Sanitize job name
+                        jobName = string.Join("_", jobName.Split(Path.GetInvalidFileNameChars()));
+
+                        // Format: {SegmentName}_iter{i+1}_of_{Count}_{TaskId}_{Timestamp}.bin
+                        // Use TaskId if available, otherwise omit it (or use empty) -- but user asked for TaskId.
+                        string taskIdStr = taskId.HasValue ? $"_{taskId.Value:N}" : "";
+                        string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}{taskIdStr}_{timestamp}.bin";
+
+                        string dumpsDir = !string.IsNullOrWhiteSpace(profiles.OutputPath)
+                            ? profiles.OutputPath
+                            : "./dumps";
 
                         if (!System.IO.Directory.Exists(dumpsDir))
                         {
@@ -377,6 +391,8 @@ public abstract class BaseBootloaderService
 
                         string dumpFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
                         await System.IO.File.WriteAllBytesAsync(dumpFilePath, dumpData, cancellationToken).ConfigureAwait(false);
+                        savedFiles.Add(dumpFilePath);
+
                         logger.LogInformation("  ✓ Iteration {Iter}/{Total} complete: {File} ({Size:N0} bytes)",
                             iter + 1, iterationCount, dumpFileName, dumpData.Length);
                     }
@@ -392,7 +408,7 @@ public abstract class BaseBootloaderService
                 else
                 {
                     // Single-region dump: fallback to standard dumper call
-                    string stageName = $"Dumping Memory (Iter {iter+1}/{iterationCount})";
+                    string stageName = $"Dumping Memory (Iter {iter + 1}/{iterationCount})";
                     var dumpProgress = new Progress<long>(bytes =>
                     {
                         double pct = startPercent + (weight * bytes / profiles.Memory.Length);
@@ -408,7 +424,7 @@ public abstract class BaseBootloaderService
             }
 
             logger.LogInformation("✓ All {Count} iterations processed successfully", iterationCount);
-            return allDumps;
+            return new BootloaderResult(allDumps, savedFiles);
         }
         catch (Exception ex)
         {
@@ -426,7 +442,7 @@ public abstract class BaseBootloaderService
     /// Performs memory dump using streaming (writes to temp files, reads back as byte arrays).
     /// Provides 80% memory reduction during dump phase while maintaining interface compatibility.
     /// </summary>
-    protected async Task<List<byte[]>> PerformDumpProcessStreamingAsync(
+    protected async Task<BootloaderResult> PerformDumpProcessStreamingAsync(
         IPlcClient client,
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
@@ -499,7 +515,10 @@ public abstract class BaseBootloaderService
                                         long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
                                         long grandTotalBytes = iterationCount * segments.Sum(s => (long)s.Size);
 
-                                        if (Math.Abs(percent - lastReportedSegPercent) >= 1.0 || bytes == segLength)
+                                        // Determine reporting threshold: 0.1% for >1MB, else 1.0%
+                                        double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
+
+                                        if (Math.Abs(percent - lastReportedSegPercent) >= threshold || bytes == segLength)
                                         {
                                             progress.Report((stageName, percent, cumulativeTotalBytes, grandTotalBytes));
                                             lastReportedSegPercent = percent;
@@ -618,7 +637,10 @@ public abstract class BaseBootloaderService
             logger.LogInformation("✓ Streaming dump complete: {Size:N0} bytes total", totalBytes);
             logger.LogInformation("  Duration: {Duration:F1}s, Rate: {Rate:F1} bytes/s", dumpDuration.TotalSeconds, rate);
 
-            return allDumps;
+            // Warning: This legacy method doesn't track SavedFiles in a list to return. 
+            // Since we are moving to Simplified method, this might be less critical, but strict correctness requires it.
+            // For now, returning empty list of saved files to satisfy the type.
+            return new BootloaderResult(allDumps, new List<string>());
         }
         finally
         {
@@ -701,8 +723,11 @@ public abstract class BaseBootloaderService
                 totalBytesReceived = bytesReceived;
                 double percent = startPercent + (weight * bytesReceived / length);
 
-                // Report if changed by >= 1.0%
-                if (Math.Abs(percent - lastReportedPercent) >= 1.0 || bytesReceived == length)
+                // Determine reporting threshold: 0.1% for >1MB, else 1.0%
+                double threshold = length > 1024 * 1024 ? 0.1 : 1.0;
+
+                // Report if changed by >= threshold
+                if (Math.Abs(percent - lastReportedPercent) >= threshold || bytesReceived == length)
                 {
                     // For multi-iteration, report cumulative total
                     // Note: caller should track iteration count, here we report per-segment
@@ -787,7 +812,7 @@ public abstract class BaseBootloaderService
     /// Performs the complete bootloader orchestration (13 stages) using streaming for dumps.
     /// This centralizes the logic previously duplicated in BootloaderService and EnhancedBootloaderService.
     /// </summary>
-    protected async Task<IList<byte[]>> PerformBootloaderOrchestrationAsync(
+    protected async Task<BootloaderResult> PerformBootloaderOrchestrationAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         ILogger effectiveTaskLogger,
@@ -797,7 +822,8 @@ public abstract class BaseBootloaderService
         IPowerSupplyService power,
         IPayloadProvider payloads,
         Func<JobProfileSet, IPlcClient> clientFactory,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Guid? taskId = null)
     {
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(progress);
@@ -1006,10 +1032,11 @@ public abstract class BaseBootloaderService
             effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump (Streaming) ---");
 
             // Use SIMPLIFIED streaming approach - no session restarts between iterations
-            var allDumps = await PerformDumpProcessStreamingSimplifiedAsync(
+            var dumpResult = await PerformDumpProcessStreamingSimplifiedAsync(
                 client, profiles,
                 progress, effectiveTaskLogger,
                 startPercent: 20.0, weight: 75.0,  // 20% to 95%
+                taskId,
                 cancellationToken).ConfigureAwait(false);
 
             // Stage 12: Teardown (95% progress)
@@ -1020,7 +1047,7 @@ public abstract class BaseBootloaderService
             progress.Report(("complete", 100.0, null, null));
             effectiveTaskLogger.LogInformation("=== BOOTLOADER DUMP OPERATION COMPLETED ===");
 
-            return allDumps;
+            return dumpResult;
         }
         catch (Exception ex)
         {

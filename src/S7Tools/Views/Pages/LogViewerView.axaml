@@ -6,6 +6,7 @@
     xmlns:models="using:S7Tools.Core.Models"
     xmlns:icons="using:Projektanker.Icons.Avalonia"
     xmlns:converters="clr-namespace:S7Tools.Converters"
+    xmlns:components="using:S7Tools.Views.Components"
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
     x:Class="S7Tools.Views.Pages.LogViewerView"
     x:DataType="vm:LogViewerViewModel"
@@ -186,41 +187,12 @@
             </Border>
 
             <!-- ListBox -->
-            <ListBox Grid.Row="1"
+            <components:LogListControl Grid.Row="1"
                 Name="LogListBox"
                 ItemsSource="{Binding FilteredLogEntries}"
-                SelectedItem="{Binding SelectedLogEntry}"
-                Background="#1E1E1E"
-                Foreground="#CCCCCC">
-                <ListBox.KeyBindings>
-                    <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyLogEntryCommand}" />
-                </ListBox.KeyBindings>
-                <ListBox.Styles>
-                    <Style Selector="ListBoxItem">
-                        <Setter Property="Padding" Value="0" />
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="ContextMenu">
-                            <ContextMenu>
-                                <MenuItem Header="Copy Entry"
-                                    Command="{Binding $parent[UserControl].DataContext.CopyLogEntryCommand}"
-                                    CommandParameter="{Binding}">
-                                    <MenuItem.Icon>
-                                        <icons:Icon Value="fa-solid fa-copy" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <Separator />
-                                <MenuItem Header="Copy Message"
-                                    Command="{Binding $parent[UserControl].DataContext.CopyLogEntryCommand}"
-                                    CommandParameter="{Binding}">
-                                    <MenuItem.Icon>
-                                        <icons:Icon Value="fa-solid fa-clipboard" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </Setter>
-                    </Style>
-                </ListBox.Styles>
-                <ListBox.ItemTemplate>
+                AutoScroll="{Binding AutoScroll, Mode=TwoWay}"
+                CopyCommand="{Binding CopyLogEntryCommand}">
+                <components:LogListControl.ItemTemplate>
                     <DataTemplate DataType="models:LogModel">
                         <Grid ColumnDefinitions="160,80,150,*">
                             <!-- Timestamp -->
@@ -261,8 +233,8 @@
                                 TextTrimming="CharacterEllipsis" />
                         </Grid>
                     </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
+                </components:LogListControl.ItemTemplate>
+            </components:LogListControl>
         </Grid>
 
     </Grid>

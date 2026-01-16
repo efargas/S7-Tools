@@ -1,3 +1,4 @@
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
 
@@ -18,8 +19,8 @@ public interface IBootloaderService
     /// <param name="taskLogger">Optional logger for main task operations and workflow steps.</param>
     /// <param name="processLogger">Optional logger for capturing socat process stdout/stderr output.</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    /// <returns>The dumped memory data.</returns>
-    Task<IList<byte[]>> DumpAsync(
+    /// <returns>The result containing dump data and saved file paths.</returns>
+    Task<BootloaderResult> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,

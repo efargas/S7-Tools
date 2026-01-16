@@ -126,6 +126,24 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         MemoryRegionStepViewModel = _vmFactory.Create<JobWizardMemoryRegionStepViewModel>();
         _logger.LogInformation("Created JobWizardMemoryRegionStepViewModel via factory");
 
+        // Keep main wizard in sync with step selection
+        MemoryRegionStepViewModel.WhenAnyValue(x => x.SelectedProfile)
+            .Subscribe(stepProfile =>
+            {
+                if (stepProfile != null)
+                {
+                    // Update main wizard selection to match
+                    // We must find the matching profile instance in our own collection
+                    var match = MemoryProfiles.FirstOrDefault(p => p.Id == stepProfile.Id);
+                    if (match != null && SelectedMemoryRegion?.Id != match.Id)
+                    {
+                        _logger.LogDebug("Syncing wizard SelectedMemoryRegion to match step profile {Id}", stepProfile.Id);
+                        SelectedMemoryRegion = match;
+                    }
+                }
+            })
+            .DisposeWith(_disposables);
+
         // Commands
         IObservable<bool> canBack = this.WhenAnyValue(x => x.CurrentStep)
             .Select(step => step != WizardStep.Serial);

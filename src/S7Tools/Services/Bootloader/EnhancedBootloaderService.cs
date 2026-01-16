@@ -36,7 +36,7 @@ public sealed class EnhancedBootloaderService(
     private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
     private bool _disposed;
 
-    public async Task<IList<byte[]>> DumpAsync(
+    public async Task<BootloaderResult> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
@@ -73,7 +73,7 @@ public sealed class EnhancedBootloaderService(
     }
 
     /// <inheritdoc />
-    public async Task<IList<byte[]>> DumpWithTaskTrackingAsync(
+    public async Task<BootloaderResult> DumpWithTaskTrackingAsync(
         TaskExecution taskExecution,
         JobProfileSet profiles,
         CancellationToken cancellationToken = default)
@@ -105,8 +105,8 @@ public sealed class EnhancedBootloaderService(
 
                 taskExecution.UpdateProgress(percent, operation, extraData);
 
-                // Throttle logging to avoid spam (log every 1% change or if bytes are involved/important stages)
-                if (Math.Abs(percent - lastLoggedPercent) >= 1.0 || percent >= 100.0 || percent <= 0.0)
+                // Throttle logging to avoid spam (log every 0.1% change or if bytes are involved/important stages)
+                if (Math.Abs(percent - lastLoggedPercent) >= 0.1 || percent >= 100.0 || percent <= 0.0)
                 {
                     lastLoggedPercent = percent;
                     if (bytesRead.HasValue && totalBytes.HasValue)
@@ -137,27 +137,37 @@ public sealed class EnhancedBootloaderService(
                 Microsoft.Extensions.Logging.ILogger? processLogger = taskExecution.Logger?.ProcessLogger;
 
                 // Execute the memory dump with retry logic
-                IList<byte[]> memoryDataList = await ExecuteWithRetryAsync(
-                    () => DumpAsync(profiles, progressReporter, taskLogger, processLogger, cancellationToken),
+                // Execute the memory dump with retry logic
+                // Directly call Orchestration to get both data and file paths
+                var result = await ExecuteWithRetryAsync(
+                    () => PerformBootloaderOrchestrationAsync(
+                        profiles,
+                        progressReporter,
+                        taskLogger ?? _logger,
+                        processLogger,
+                        _serialPort,
+                        _socat,
+                        _power,
+                        _payloads,
+                        _clientFactory,
+                        cancellationToken,
+                        taskExecution.TaskId),
                     RetryableOperations.All,
                     taskExecution,
                     cancellationToken).ConfigureAwait(false);
 
-                // Save the output file(s)
-                string outputFilePath = await SaveMemoryDumpAsync(
-                    memoryDataList,
-                    profiles.OutputPath,
-                    taskExecution.TaskId,
-                    cancellationToken).ConfigureAwait(false);
+                // No need to save manually, Orchestration handled it.
+                // Output paths are in available in result.SavedFiles
+                string outputFilePath = result.SavedFiles?.FirstOrDefault() ?? string.Empty;
 
                 // Mark task as completed
-                long totalLength = memoryDataList.Sum(x => (long)x.Length);
+                long totalLength = result.Data.Sum(x => (long)x.Length);
                 taskExecution.MarkAsCompleted(outputFilePath, totalLength);
 
                 _logger.LogInformation("Enhanced bootloader dump completed successfully for task {TaskId}. " +
                     "Output saved to: {OutputPath}", taskExecution.TaskId, outputFilePath);
 
-                return memoryDataList;
+                return result;
             }
             catch (OperationCanceledException)
             {
@@ -428,48 +438,7 @@ public sealed class EnhancedBootloaderService(
         };
     }
 
-    private async Task<string> SaveMemoryDumpAsync(
-        IList<byte[]> memoryDataList,
-        string outputPath,
-        Guid taskId,
-        CancellationToken cancellationToken)
-    {
-        if (memoryDataList == null || memoryDataList.Count == 0)
-        {
-            return string.Empty;
-        }
 
-        Directory.CreateDirectory(outputPath);
-
-        // If only one dump, use standard naming
-        if (memoryDataList.Count == 1)
-        {
-            string fileName = $"dump-{taskId:N}.bin";
-            string fullPath = Path.Combine(outputPath, fileName);
-            await File.WriteAllBytesAsync(fullPath, memoryDataList[0], cancellationToken).ConfigureAwait(false);
-
-            _logger.LogInformation("Memory dump saved to: {FilePath} ({FileSize} bytes)",
-                fullPath, memoryDataList[0].Length);
-
-            return fullPath;
-        }
-
-        // Multi-dump: save files with iteration index
-        string baseFileName = $"dump-{taskId:N}";
-        var savedPaths = new List<string>();
-
-        for (int i = 0; i < memoryDataList.Count; i++)
-        {
-            string fileName = $"{baseFileName}_iter{i + 1}.bin";
-            string fullPath = Path.Combine(outputPath, fileName);
-            await File.WriteAllBytesAsync(fullPath, memoryDataList[i], cancellationToken).ConfigureAwait(false);
-            savedPaths.Add(fullPath);
-        }
-
-        _logger.LogInformation("Saved {Count} dump files to {BasePath}", memoryDataList.Count, outputPath);
-
-        return savedPaths[0];
-    }
 
 
     private static ResourceKey[] ExtractResourceKeys(JobProfileSet profiles)

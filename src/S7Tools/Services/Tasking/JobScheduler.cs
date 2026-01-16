@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Extensions;
@@ -338,40 +339,33 @@ public sealed class JobScheduler(
 
             // Execute bootloader dump
             // Execute bootloader dump
-            IList<byte[]> dumpDataList = await _bootloader.DumpAsync(
+            // Execute bootloader dump
+            BootloaderResult result = await _bootloader.DumpAsync(
                 job.ProfileSet,
                 progress,
                 null, // No task logger in JobScheduler (legacy path)
                 null, // No process logger in JobScheduler (legacy path)
                 cancellationToken).ConfigureAwait(false);
 
-            // STEP 2: Save dump data to output path
+            // STEP 2: Log dump data saving (files already saved by service)
             string outputPath = job.ProfileSet.OutputPath;
-            Directory.CreateDirectory(outputPath); // Ensure directory exists
+            // Directory creation handled by service
 
-            long totalSize = dumpDataList.Sum(x => (long)x.Length);
+            long totalSize = result.Data.Sum(x => (long)x.Length);
 
-            if (dumpDataList.Count == 1)
+            if (result.SavedFiles.Count > 0)
             {
-                string filename = $"dump_{job.Id}_{_timeProvider.GetLocalNow():yyyyMMdd_HHmmss}.bin";
-                string fullPath = Path.Combine(outputPath, filename);
-                await File.WriteAllBytesAsync(fullPath, dumpDataList[0], cancellationToken).ConfigureAwait(false);
-                _logger.LogInformation("Job {JobId} dump saved to {Path} ({Size} bytes)",
-                    job.Id, fullPath, totalSize);
-            }
-            else
-            {
-                string timestamp = _timeProvider.GetLocalNow().ToString("yyyyMMdd_HHmmss");
-                string baseFileName = $"dump_{job.Id}_{timestamp}";
-
-                for (int i = 0; i < dumpDataList.Count; i++)
+                string primaryFile = result.SavedFiles[0];
+                if (result.SavedFiles.Count == 1)
                 {
-                    string fullPath = Path.Combine(outputPath, $"{baseFileName}_iter{i + 1}.bin");
-                    await File.WriteAllBytesAsync(fullPath, dumpDataList[i], cancellationToken).ConfigureAwait(false);
+                    _logger.LogInformation("Job {JobId} dump saved to {Path} ({Size} bytes)",
+                       job.Id, primaryFile, totalSize);
                 }
-
-                _logger.LogInformation("Job {JobId} saved {Count} dump files to {Path} (Total {Size} bytes)",
-                    job.Id, dumpDataList.Count, outputPath, totalSize);
+                else
+                {
+                    _logger.LogInformation("Job {JobId} saved {Count} dump files to {Path} (Total {Size} bytes)",
+                       job.Id, result.SavedFiles.Count, Path.GetDirectoryName(primaryFile), totalSize);
+                }
             }
 
             // STEP 3: Transition to Completed state

@@ -28,7 +28,7 @@ public sealed class BootloaderService(
     private readonly Func<JobProfileSet, IPlcClient> _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
 
 
-    public async Task<IList<byte[]>> DumpAsync(
+    public async Task<BootloaderResult> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         Microsoft.Extensions.Logging.ILogger? taskLogger = null,
