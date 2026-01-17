@@ -46,8 +46,10 @@ Adopt Avalonia UI for cross-platform desktop UI and ReactiveUI as the MVVM frame
 
 ## Related Documentation
 
+- [_Index](_index.md)
 - [Mvvm Patterns](../mvvm-patterns.md)
 - [Overview](../overview.md)
+- [Documentation Templates](../../guides/documentation-templates.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

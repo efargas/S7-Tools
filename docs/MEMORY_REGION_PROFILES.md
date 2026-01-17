@@ -360,13 +360,11 @@ public interface IMemoryMappingProfileService
 
 ## Related Documentation
 
-- [Profile Management Pattern](patterns/profile-management.md)
+- [Job_Wizard_Segment_Persistence](JOB_WIZARD_SEGMENT_PERSISTENCE.md)
+- [Overview](architecture/overview.md)
 - [Development Workflow](guides/development-workflow.md)
-- [Architecture Overview](architecture/overview.md)
+- [Profile Management](patterns/profile-management.md)
 - [System Patterns](patterns/system-patterns.md)
 
 ---
-
-**Last Updated**: 2025-11-12
-**Status**: Current
-**Maintainer**: Development Team
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

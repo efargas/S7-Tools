@@ -308,15 +308,22 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 
 ## Related Documentation
 
+- [Readme](README.md)
 - [_Index](architecture/_index.md)
 - [Clean Architecture](architecture/clean-architecture.md)
 - [_Index](architecture/decisions/_index.md)
+- [Dependency Injection](architecture/dependency-injection.md)
 - [Diagrams](architecture/diagrams.md)
 - [Mvvm Patterns](architecture/mvvm-patterns.md)
 - [Overview](architecture/overview.md)
+- [_Index](archive/_index.md)
+- [_Index](guides/_index.md)
 - [Ai Agent Guide](guides/ai-agent-guide.md)
+- [Archive Management](guides/archive-management.md)
 - [Code Style](guides/code-style.md)
+- [Contributing To Docs](guides/contributing-to-docs.md)
 - [Development Workflow](guides/development-workflow.md)
+- [Frontmatter Schema](guides/frontmatter-schema.md)
 - [Memory Bank Usage](guides/memory-bank-usage.md)
 - [Deprecated Patterns](guides/migration/deprecated-patterns.md)
 - [Onboarding](guides/onboarding.md)
@@ -334,6 +341,9 @@ See [scripts/README.md](../scripts/README.md) for detailed usage.
 - [_Index](reviews/_index.md)
 - [Adr Template](templates/adr-template.md)
 - [Pattern Template](templates/pattern-template.md)
+- [Service Template](templates/service-template.md)
+- [Test Template](templates/test-template.md)
+- [Viewmodel Template](templates/viewmodel-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

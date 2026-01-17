@@ -119,8 +119,11 @@ public async Task TestExample()
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Contributing To Docs](../guides/contributing-to-docs.md)
+- [Documentation Templates](../guides/documentation-templates.md)
 - [Versioning Guide](../guides/versioning-guide.md)
 - [_Index](../patterns/_index.md)
+- [Guide Template](guide-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

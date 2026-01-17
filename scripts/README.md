@@ -279,6 +279,9 @@ echo $?  # 0 = success, 1 = errors, 2 = warnings (if --strict)
 ## Related Documentation
 
 - [Index](../docs/INDEX.md)
+- [Readme](../docs/README.md)
+- [Contributing To Docs](../docs/guides/contributing-to-docs.md)
+- [Documentation Templates](../docs/guides/documentation-templates.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

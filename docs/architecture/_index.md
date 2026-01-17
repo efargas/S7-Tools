@@ -195,11 +195,13 @@ All architecture documents must:
 - [Index](../INDEX.md)
 - [Clean Architecture](clean-architecture.md)
 - [_Index](decisions/_index.md)
+- [Dependency Injection](dependency-injection.md)
 - [Diagrams](diagrams.md)
 - [Mvvm Patterns](mvvm-patterns.md)
 - [Overview](overview.md)
+- [_Index](../guides/_index.md)
 - [_Index](../patterns/_index.md)
 - [System Patterns](../patterns/system-patterns.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

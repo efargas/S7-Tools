@@ -7316,3 +7316,11 @@ If you have any questions, please post below and I would be more than happy to a
 *   29th March, 2023 - v1.20 = Added support for [Apache Log4Net](https://logging.apache.org/log4net/) logging Services + **WinForms**, **WPF**, and **Avalonia** sample DI & no-DI applications (x6); various code cleanup and optimizations
 *   20th April, 2023 - v1.20a - rezipped project using Microsoft's File Explorer "Compress to Zip"
 *   12th September, 2023 - v1.30 - Added [LoggerMessageAttribute (C# only)](https://www.codeproject.com/Articles/5357417/LogViewer-Control-for-WinForms-WPF-and-Avalonia-in#loggermessageattribute) section
+
+## Related Documentation
+
+- [Overview](../architecture/overview.md)
+- [Codeproject Logviewer.Markitdown](codeproject-logviewer.markitdown.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

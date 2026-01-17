@@ -2224,17 +2224,27 @@ public async Task InitializeAsync(CancellationToken ct = default)
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Task_Logging_System](../TASK_LOGGING_SYSTEM.md)
 - [_Index](../architecture/_index.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
+- [Dependency Injection](../architecture/dependency-injection.md)
 - [Diagrams](../architecture/diagrams.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
 - [Overview](../architecture/overview.md)
+- [Codeproject Logviewer.Markitdown](../external/codeproject-logviewer.markitdown.md)
+- [Development Standards](../guides/development-standards.md)
 - [_Index](_index.md)
 - [Custom Exceptions](custom-exceptions.md)
+- [Profile Manager Example](examples/profile-manager-example.md)
+- [Semaphore Pattern Example](examples/semaphore-pattern-example.md)
 - [Internal Method](internal-method.md)
 - [Profile Management](profile-management.md)
 - [Resource Coordination](resource-coordination.md)
 - [Reusable Controls](reusable-controls.md)
+- [_Index](../templates/_index.md)
+- [Service Template](../templates/service-template.md)
+- [Test Template](../templates/test-template.md)
+- [Viewmodel Template](../templates/viewmodel-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

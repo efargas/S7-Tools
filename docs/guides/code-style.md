@@ -653,11 +653,15 @@ dotnet format src/S7Tools.sln --verify-no-changes
 
 - [Index](../INDEX.md)
 - [Overview](../architecture/overview.md)
+- [_Index](_index.md)
+- [Contributing To Docs](contributing-to-docs.md)
+- [Development Standards](development-standards.md)
 - [Development Workflow](development-workflow.md)
+- [Documentation Templates](documentation-templates.md)
 - [Testing Guide](testing-guide.md)
 - [_Index](../patterns/_index.md)
 - [Semaphore Pattern Example](../patterns/examples/semaphore-pattern-example.md)
 - [_Index](../templates/_index.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

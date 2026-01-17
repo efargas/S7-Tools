@@ -723,3 +723,15 @@ public class NewFeatureViewModel : ReactiveObject, IDisposable
 **Owner**: Development Team with AI Assistance
 
 **Key Reminder**: These patterns and rules are established and working. Follow them consistently to maintain application quality and architecture integrity.
+
+## Related Documentation
+
+- [Overview](../architecture/overview.md)
+- [Technology Stack](../architecture/technology-stack.md)
+- [_Index](_index.md)
+- [Ai Agent Guide](ai-agent-guide.md)
+- [Code Style](code-style.md)
+- [System Patterns](../patterns/system-patterns.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

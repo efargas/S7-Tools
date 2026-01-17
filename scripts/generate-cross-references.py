@@ -257,22 +257,37 @@ class CrossReferenceGenerator:
             "orphans": []
         }
 
+        # Get absolute path to docs root for consistent relative path calculation
+        docs_root_abs = self.docs_root.resolve()
+        repo_root = docs_root_abs.parent
+
         # Add nodes
         for file_path in self.graph.keys():
-            graph_data["nodes"].append({
-                "file": str(Path(file_path).relative_to(self.docs_root.parent)),
-                "outgoing_links": len(self.graph[file_path])
-            })
+            try:
+                abs_path = Path(file_path).resolve()
+                rel_path = abs_path.relative_to(repo_root)
+                graph_data["nodes"].append({
+                    "file": str(rel_path),
+                    "outgoing_links": len(self.graph[file_path])
+                })
+            except ValueError:
+                # File is outside repo root, skip
+                pass
 
         # Add edges
         for ref in self.cross_refs:
             try:
+                source_abs = Path(ref.source).resolve()
+                target_abs = Path(ref.target).resolve()
+                source_rel = source_abs.relative_to(repo_root)
+                target_rel = target_abs.relative_to(repo_root)
                 graph_data["edges"].append({
-                    "source": str(Path(ref.source).relative_to(self.docs_root.parent)),
-                    "target": str(Path(ref.target).relative_to(self.docs_root.parent)),
+                    "source": str(source_rel),
+                    "target": str(target_rel),
                     "type": ref.link_type
                 })
             except ValueError:
+                # Path is outside repo root, skip
                 pass
 
         # Write to file

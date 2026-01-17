@@ -132,11 +132,16 @@ Found a template improvement? See [Development Workflow](../guides/development-w
 
 ## Related Documentation
 
+- [Ui_Integration_Workflow](../UI_INTEGRATION_WORKFLOW.md)
 - [_Index](../architecture/decisions/_index.md)
+- [Mvvm Patterns](../architecture/mvvm-patterns.md)
+- [_Index](../guides/_index.md)
 - [Code Style](../guides/code-style.md)
+- [Contributing To Docs](../guides/contributing-to-docs.md)
 - [Development Workflow](../guides/development-workflow.md)
 - [Testing Guide](../guides/testing-guide.md)
 - [_Index](../patterns/_index.md)
+- [System Patterns](../patterns/system-patterns.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

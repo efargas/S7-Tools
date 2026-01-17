@@ -595,6 +595,7 @@ public void DeleteCommand_HasSelection_CanExecute()
 
 - [Index](../INDEX.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
+- [_Index](_index.md)
 - [Code Style](code-style.md)
 - [Development Workflow](development-workflow.md)
 - [Onboarding](onboarding.md)
@@ -606,4 +607,4 @@ public void DeleteCommand_HasSelection_CanExecute()
 - [Test Template](../templates/test-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

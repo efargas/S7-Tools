@@ -47,7 +47,8 @@ Implement a custom in-memory log DataStore provider integrated with `Microsoft.E
 ## Related Documentation
 
 - [Clean Architecture](../clean-architecture.md)
+- [_Index](_index.md)
 - [Overview](../overview.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

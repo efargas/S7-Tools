@@ -144,3 +144,12 @@ Build a professional-grade desktop application for **Siemens S7-1200 PLC memory 
 - ⏳ Deployment Automation
 
 This project brief serves as the foundation for all memory bank documentation and guides architectural decisions throughout development.
+
+## Related Documentation
+
+- [Overview](overview.md)
+- [Product Context](product-context.md)
+- [Technology Stack](technology-stack.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

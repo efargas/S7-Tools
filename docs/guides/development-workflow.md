@@ -450,10 +450,17 @@ dotnet build src/S7Tools.sln --configuration Debug
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Memory_Region_Profiles](../MEMORY_REGION_PROFILES.md)
+- [Readme](../README.md)
 - [Settings_Schema](../SETTINGS_SCHEMA.md)
+- [Task_Logging_System](../TASK_LOGGING_SYSTEM.md)
 - [Overview](../architecture/overview.md)
+- [Validation_Quick_Reference](VALIDATION_QUICK_REFERENCE.md)
+- [_Index](_index.md)
 - [Ai Agent Guide](ai-agent-guide.md)
 - [Code Style](code-style.md)
+- [Contributing To Docs](contributing-to-docs.md)
+- [Documentation Templates](documentation-templates.md)
 - [Memory Bank Usage](memory-bank-usage.md)
 - [_Index](migration/_index.md)
 - [Onboarding](onboarding.md)
@@ -469,4 +476,4 @@ dotnet build src/S7Tools.sln --configuration Debug
 - [Viewmodel Template](../templates/viewmodel-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

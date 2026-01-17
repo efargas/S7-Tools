@@ -105,7 +105,11 @@ public class [FEATURE]Tests : IDisposable
 
 ## Related Documentation
 
+- [Index](../INDEX.md)
+- [Documentation Templates](../guides/documentation-templates.md)
+- [Onboarding](../guides/onboarding.md)
 - [Testing Guide](../guides/testing-guide.md)
+- [System Patterns](../patterns/system-patterns.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

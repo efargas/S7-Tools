@@ -296,7 +296,10 @@ When implementing new features, always:
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Readme](../README.md)
 - [Overview](../architecture/overview.md)
+- [_Index](_index.md)
+- [Development Standards](development-standards.md)
 - [Development Workflow](development-workflow.md)
 - [Onboarding](onboarding.md)
 - [_Index](../patterns/_index.md)
@@ -306,4 +309,4 @@ When implementing new features, always:
 - [Latest](../reviews/LATEST.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

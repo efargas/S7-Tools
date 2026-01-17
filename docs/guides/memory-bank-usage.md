@@ -590,10 +590,12 @@ git log --follow docs/new/location.md
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Readme](../README.md)
 - [Overview](../architecture/overview.md)
+- [_Index](_index.md)
 - [Development Workflow](development-workflow.md)
 - [Versioning Guide](versioning-guide.md)
 - [_Index](../patterns/_index.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

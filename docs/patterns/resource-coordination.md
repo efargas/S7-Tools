@@ -611,4 +611,4 @@ public async Task TryAcquire_Should_Prevent_Concurrent_Access()
 - [_Index](../reviews/_index.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

@@ -288,13 +288,9 @@ Stored in `Jobs.json`:
 
 ## Related Documentation
 
-- [Memory Region Profiling Guide](MEMORY_REGION_PROFILES.md)
-- [Wizard Patterns](patterns/_index.md#wizard-patterns)
-- [Profile Management Pattern](patterns/profile-management.md)
+- [Memory_Region_Profiles](MEMORY_REGION_PROFILES.md)
+- [_Index](patterns/_index.md)
+- [Profile Management](patterns/profile-management.md)
 
 ---
-
-**Version**: 1.1.0  
-**Last Updated**: 2026-01-09  
-**Status**: Current  
-**Maintainer**: Development Team
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

@@ -637,6 +637,7 @@ When adding new features, verify:
 - [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
 - [_Index](_index.md)
 - [0002 Logging Provider](decisions/0002-logging-provider.md)
+- [Dependency Injection](dependency-injection.md)
 - [Diagrams](diagrams.md)
 - [Mvvm Patterns](mvvm-patterns.md)
 - [Overview](overview.md)
@@ -653,4 +654,4 @@ When adding new features, verify:
 - [Service Template](../templates/service-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

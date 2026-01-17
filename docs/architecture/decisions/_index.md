@@ -28,10 +28,13 @@ This index lists the key architectural decisions for S7Tools. New decisions shou
 
 - [Index](../../INDEX.md)
 - [_Index](../_index.md)
+- [0001 Ui Framework](0001-ui-framework.md)
+- [0002 Logging Provider](0002-logging-provider.md)
 - [_Template](_template.md)
 - [Overview](../overview.md)
+- [Contributing To Docs](../../guides/contributing-to-docs.md)
 - [_Index](../../templates/_index.md)
 - [Adr Template](../../templates/adr-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

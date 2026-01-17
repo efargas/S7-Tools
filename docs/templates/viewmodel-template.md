@@ -228,9 +228,13 @@ this.WhenAnyValue(x => x.Property)
 
 ## Related Documentation
 
+- [Index](../INDEX.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
 - [Development Workflow](../guides/development-workflow.md)
+- [Documentation Templates](../guides/documentation-templates.md)
+- [Onboarding](../guides/onboarding.md)
 - [Profile Manager Example](../patterns/examples/profile-manager-example.md)
+- [System Patterns](../patterns/system-patterns.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

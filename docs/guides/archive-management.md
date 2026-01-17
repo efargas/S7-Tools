@@ -313,12 +313,6 @@ Provide clear, actionable reasons:
 - **Check**: Run `python scripts/archive-inventory.py docs/ | grep "days remaining"`
 - **Sort**: Find earliest removal date manually
 
-## Related Documentation
-
-- [Settings Schema](../SETTINGS_SCHEMA.md) - Frontmatter field definitions
-- [Architecture Decisions](../architecture/decisions/_index.md) - ADR index
-- [System Patterns](../patterns/system-patterns.md) - Pattern documentation
-
 ## Appendix: Script Reference
 
 ### validate-archive.py
@@ -356,3 +350,17 @@ Provide clear, actionable reasons:
 
 ---
 *This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+
+## Related Documentation
+
+- [Index](../INDEX.md)
+- [Settings_Schema](../SETTINGS_SCHEMA.md)
+- [_Index](../architecture/decisions/_index.md)
+- [_Index](../archive/_index.md)
+- [_Index](_index.md)
+- [Contributing To Docs](contributing-to-docs.md)
+- [Deprecated Patterns](migration/deprecated-patterns.md)
+- [System Patterns](../patterns/system-patterns.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

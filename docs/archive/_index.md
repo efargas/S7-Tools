@@ -59,10 +59,11 @@ Archived documentation remains available for:
 
 ## Related Documentation
 
-- [Archive Management Guide](../guides/archive-management.md)
-- [Documentation Index](../INDEX.md)
-- [Migration Tracking](../.metadata/migration-tracking.json)
+- [Index](../INDEX.md)
+- [Attribute_Based_Display](ATTRIBUTE_BASED_DISPLAY.md)
+- [Project_Architecture_Blueprint](Project_Architecture_Blueprint.md)
+- [Project_Folders_Structure_Blueprint](Project_Folders_Structure_Blueprint.md)
+- [Archive Management](../guides/archive-management.md)
 
 ---
-
-Last updated: 2025-11-12
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

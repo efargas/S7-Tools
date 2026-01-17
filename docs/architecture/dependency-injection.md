@@ -379,11 +379,12 @@ public static IServiceCollection AddS7ToolsServices(...)
 
 ## Related Documentation
 
-- [Architecture Overview](overview.md) - System architecture
-- [Clean Architecture](clean-architecture.md) - Layer boundaries
-- [System Patterns](../patterns/system-patterns.md) - Service patterns
-- [Development Workflow](../guides/development-workflow.md) - Daily workflow
+- [Index](../INDEX.md)
+- [_Index](_index.md)
+- [Clean Architecture](clean-architecture.md)
+- [Overview](overview.md)
+- [Development Workflow](../guides/development-workflow.md)
+- [System Patterns](../patterns/system-patterns.md)
 
 ---
-
-Last updated: 2025-11-12
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

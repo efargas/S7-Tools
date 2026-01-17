@@ -350,12 +350,19 @@ find docs -name "*.md" -exec markdown-link-check {} \;
 
 ## Related Documentation
 
-- [Frontmatter Schema](frontmatter-schema.md) - Complete metadata specification
-- [Versioning Guide](versioning-guide.md) - Semantic versioning for documentation
-- [Contributing to Documentation](contributing-to-docs.md) - Contribution workflow
-- [Code Style Guide](code-style.md) - Coding conventions
-- [Pattern Template](../templates/pattern-template.md) - Pattern documentation template
-- [ADR Template](../templates/adr-template.md) - Architecture decision record template
+- [0001 Ui Framework](../architecture/decisions/0001-ui-framework.md)
+- [_Index](_index.md)
+- [Code Style](code-style.md)
+- [Contributing To Docs](contributing-to-docs.md)
+- [Development Workflow](development-workflow.md)
+- [Frontmatter Schema](frontmatter-schema.md)
+- [Versioning Guide](versioning-guide.md)
+- [Profile Management](../patterns/profile-management.md)
+- [Adr Template](../templates/adr-template.md)
+- [Pattern Template](../templates/pattern-template.md)
+- [Service Template](../templates/service-template.md)
+- [Test Template](../templates/test-template.md)
+- [Viewmodel Template](../templates/viewmodel-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

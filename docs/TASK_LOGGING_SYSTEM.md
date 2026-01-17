@@ -1,3 +1,16 @@
+---
+title: "Task-Specific Logging System"
+version: "1.0.0"
+created: "2025-11-13"
+last-updated: "2025-11-13"
+status: "current"
+tags: ["logging", "architecture", "task-management", "monitoring"]
+related:
+  - docs/architecture/overview.md
+  - docs/patterns/system-patterns.md
+  - docs/guides/development-workflow.md
+---
+
 # Task-Specific Logging System
 
 ## Overview
@@ -144,12 +157,11 @@ if (mainStore != null)
 ### Enable/Disable Log Channels
 
 ```csharp
-// Create logger with specific channels
+// Create logger with optional process output capture
 var logger = await taskLoggerFactory.CreateTaskLoggerAsync(
     taskId,
     taskName,
-    captureProtocol: true,        // Enable protocol logging
-    captureProcessOutput: true,   // Enable process logging
+    captureProcessOutput: true,   // Enable process logging (default: true)
     cancellationToken);
 ```
 
@@ -346,13 +358,9 @@ This implementation follows S7Tools architectural principles:
 
 ## Related Documentation
 
-- [Task Execution Model](../src/S7Tools.Core/Models/Jobs/TaskExecution.cs)
-- [Task Scheduler](../src/S7Tools/Services/Tasking/EnhancedTaskScheduler.cs)
-- [LogDataStore](../src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs)
-- [System Patterns](./patterns/system-patterns.md)
+- [Overview](architecture/overview.md)
+- [Development Workflow](guides/development-workflow.md)
+- [System Patterns](patterns/system-patterns.md)
 
 ---
-
-**Created**: 2025-11-13
-**Status**: ✅ Core Implementation Complete
-**Next Phase**: UI Integration & Process Capture
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

@@ -62,6 +62,7 @@ public interface IPlcClient : IAsyncDisposable
     /// <param name="progress">Progress reporter for dump operation (bytes received).</param>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>
     /// <param name="keepSessionOpen">If true, the underlying dumper session remains active after completion, allowing subsequent calls to reuse the connection.</param>
+    /// <param name="logger">Optional logger for diagnostic output during the dump operation.</param>
     /// <returns>A task representing the asynchronous streaming operation.</returns>
     Task InvokeDumperStreamAsync(
         uint address,

@@ -281,11 +281,7 @@ This architecture enables rapid development while maintaining clean separation o
 
 ## Related Documentation
 
-- **Architecture Overview**: [docs/architecture/overview.md](../docs/architecture/overview.md)
-- **System Patterns**: [docs/patterns/system-patterns.md](../docs/patterns/system-patterns.md)
-- **Development Standards**: [docs/guides/development-standards.md](../docs/guides/development-standards.md)
-- **AI Agent Guide**: [docs/guides/ai-agent-guide.md](../docs/guides/ai-agent-guide.md)
-- **Documentation Index**: [docs/INDEX.md](../docs/INDEX.md)
+- [Project_Folders_Structure_Blueprint](../docs/Project_Folders_Structure_Blueprint.md)
 
 ---
-*Last updated: 2025-11-11 (Documentation consolidation complete)*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

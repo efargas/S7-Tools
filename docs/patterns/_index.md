@@ -2410,18 +2410,23 @@ This reference provides patterns for:
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Job_Wizard_Segment_Persistence](../JOB_WIZARD_SEGMENT_PERSISTENCE.md)
+- [Readme](../README.md)
 - [_Index](../architecture/_index.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
 - [Overview](../architecture/overview.md)
+- [_Index](../guides/_index.md)
 - [Ai Agent Guide](../guides/ai-agent-guide.md)
 - [Code Style](../guides/code-style.md)
+- [Contributing To Docs](../guides/contributing-to-docs.md)
 - [Development Workflow](../guides/development-workflow.md)
 - [Memory Bank Usage](../guides/memory-bank-usage.md)
 - [_Index](../guides/migration/_index.md)
 - [Deprecated Patterns](../guides/migration/deprecated-patterns.md)
 - [Onboarding](../guides/onboarding.md)
 - [Testing Guide](../guides/testing-guide.md)
+- [Versioning Guide](../guides/versioning-guide.md)
 - [Custom Exceptions](custom-exceptions.md)
 - [Internal Method](internal-method.md)
 - [Profile Management](profile-management.md)
@@ -2433,4 +2438,4 @@ This reference provides patterns for:
 - [Pattern Template](../templates/pattern-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

@@ -729,8 +729,10 @@ public class JobListViewModelTests
 - [Profile Management](../patterns/profile-management.md)
 - [Reusable Controls](../patterns/reusable-controls.md)
 - [System Patterns](../patterns/system-patterns.md)
+- [_Index](../templates/_index.md)
+- [Integration_Checklist](../templates/ui-integration/INTEGRATION_CHECKLIST.md)
 - [Readme](../templates/ui-integration/README.md)
 - [Viewmodel Template](../templates/viewmodel-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

@@ -629,11 +629,14 @@ public class StandardProfileManagerTests
 
 ## Related Documentation
 
-- [Cross Ref Source](../.test-fixtures/cross-ref-source.md)
 - [Index](../INDEX.md)
+- [Job_Wizard_Segment_Persistence](../JOB_WIZARD_SEGMENT_PERSISTENCE.md)
+- [Memory_Region_Profiles](../MEMORY_REGION_PROFILES.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
 - [Mvvm Patterns](../architecture/mvvm-patterns.md)
 - [Ai Agent Guide](../guides/ai-agent-guide.md)
+- [Contributing To Docs](../guides/contributing-to-docs.md)
+- [Documentation Templates](../guides/documentation-templates.md)
 - [Onboarding](../guides/onboarding.md)
 - [_Index](_index.md)
 - [Custom Exceptions](custom-exceptions.md)
@@ -645,4 +648,4 @@ public class StandardProfileManagerTests
 - [_Index](../reviews/_index.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

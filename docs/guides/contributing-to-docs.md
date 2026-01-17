@@ -474,11 +474,22 @@ python scripts/detect-duplicates.py docs/ --threshold=80
 
 ## Related Documentation
 
-- [Documentation Templates Guide](documentation-templates.md) - Template usage
-- [Frontmatter Schema](frontmatter-schema.md) - Metadata specification
-- [Versioning Guide](versioning-guide.md) - Version numbering rules
-- [Code Style Guide](code-style.md) - Coding conventions
-- [INDEX.md](../INDEX.md) - Documentation navigation
+- [Index](../INDEX.md)
+- [Readme](../README.md)
+- [_Index](../architecture/decisions/_index.md)
+- [Validation_Quick_Reference](VALIDATION_QUICK_REFERENCE.md)
+- [_Index](_index.md)
+- [Archive Management](archive-management.md)
+- [Code Style](code-style.md)
+- [Development Workflow](development-workflow.md)
+- [Documentation Templates](documentation-templates.md)
+- [Frontmatter Schema](frontmatter-schema.md)
+- [Versioning Guide](versioning-guide.md)
+- [_Index](../patterns/_index.md)
+- [Profile Management](../patterns/profile-management.md)
+- [_Index](../templates/_index.md)
+- [Guide Template](../templates/guide-template.md)
+- [Pattern Template](../templates/pattern-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

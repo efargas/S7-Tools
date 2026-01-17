@@ -12,7 +12,6 @@ public interface ITaskLoggerFactory
     /// </summary>
     /// <param name="taskId">The unique identifier for the task.</param>
     /// <param name="taskName">The name of the task.</param>
-    /// <param name="captureProtocol">Whether to capture protocol communication logs.</param>
     /// <param name="captureProcessOutput">Whether to capture process stdout/stderr.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A TaskLogger instance with all configured loggers.</returns>

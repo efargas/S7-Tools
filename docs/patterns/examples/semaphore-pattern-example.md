@@ -326,6 +326,7 @@ This pattern is used in:
 - [Development Workflow](../../guides/development-workflow.md)
 - [Resource Coordinator Example](resource-coordinator-example.md)
 - [Internal Method](../internal-method.md)
+- [System Patterns](../system-patterns.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

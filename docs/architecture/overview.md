@@ -781,18 +781,27 @@ sequenceDiagram
 - [Index](../INDEX.md)
 - [Project_Architecture_Blueprint](../Project_Architecture_Blueprint.md)
 - [Project_Folders_Structure_Blueprint](../Project_Folders_Structure_Blueprint.md)
+- [Readme](../README.md)
 - [Settings_Schema](../SETTINGS_SCHEMA.md)
+- [Task_Logging_System](../TASK_LOGGING_SYSTEM.md)
 - [_Index](_index.md)
 - [Clean Architecture](clean-architecture.md)
 - [0001 Ui Framework](decisions/0001-ui-framework.md)
 - [0002 Logging Provider](decisions/0002-logging-provider.md)
 - [_Index](decisions/_index.md)
+- [Dependency Injection](dependency-injection.md)
 - [Diagrams](diagrams.md)
 - [Mvvm Patterns](mvvm-patterns.md)
+- [Product Context](product-context.md)
+- [Project Brief](project-brief.md)
+- [Technology Stack](technology-stack.md)
 - [Project_Architecture_Blueprint](../archive/Project_Architecture_Blueprint.md)
 - [Project_Folders_Structure_Blueprint](../archive/Project_Folders_Structure_Blueprint.md)
+- [Codeproject Logviewer.Markitdown.Full](../external/codeproject-logviewer.markitdown.full.md)
+- [Codeproject Logviewer.Markitdown](../external/codeproject-logviewer.markitdown.md)
 - [Ai Agent Guide](../guides/ai-agent-guide.md)
 - [Code Style](../guides/code-style.md)
+- [Development Standards](../guides/development-standards.md)
 - [Development Workflow](../guides/development-workflow.md)
 - [Memory Bank Usage](../guides/memory-bank-usage.md)
 - [Onboarding](../guides/onboarding.md)
@@ -805,4 +814,4 @@ sequenceDiagram
 - [Pattern Template](../templates/pattern-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

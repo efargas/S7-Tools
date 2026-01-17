@@ -183,3 +183,21 @@ Documentation validation runs automatically on every PR:
 **Consolidated From**: `.copilot-tracking/`, root-level docs, `reviews/` (see [guides/migration/deprecated-patterns.md](guides/migration/deprecated-patterns.md) for migration details)
 
 For questions about this documentation system, see [guides/memory-bank-usage.md](guides/memory-bank-usage.md).
+
+## Related Documentation
+
+- [Index](INDEX.md)
+- [Overview](architecture/overview.md)
+- [Ai Agent Guide](guides/ai-agent-guide.md)
+- [Contributing To Docs](guides/contributing-to-docs.md)
+- [Development Workflow](guides/development-workflow.md)
+- [Frontmatter Schema](guides/frontmatter-schema.md)
+- [Memory Bank Usage](guides/memory-bank-usage.md)
+- [Deprecated Patterns](guides/migration/deprecated-patterns.md)
+- [Onboarding](guides/onboarding.md)
+- [_Index](patterns/_index.md)
+- [2025 11 10 Quality Improvements](reviews/2025-11-10-quality-improvements.md)
+- [Latest](reviews/LATEST.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

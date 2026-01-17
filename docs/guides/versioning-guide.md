@@ -443,11 +443,16 @@ See `docs/.metadata/schema.json` for the complete frontmatter JSON Schema.
 
 - [Deprecated_Property_Migration](../DEPRECATED_PROPERTY_MIGRATION.md)
 - [Index](../INDEX.md)
+- [_Index](_index.md)
+- [Contributing To Docs](contributing-to-docs.md)
 - [Development Workflow](development-workflow.md)
+- [Documentation Templates](documentation-templates.md)
+- [Frontmatter Schema](frontmatter-schema.md)
 - [Memory Bank Usage](memory-bank-usage.md)
 - [_Index](migration/_index.md)
 - [Breaking Changes](migration/breaking-changes.md)
 - [Deprecated Patterns](migration/deprecated-patterns.md)
+- [_Index](../patterns/_index.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

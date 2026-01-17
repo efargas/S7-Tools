@@ -155,18 +155,9 @@ A: Answer.
 
 ## Related Documentation
 
-- [Guides Index](../guides/_index.md)
-- [Related Guide 1](./related-guide.md)
-- [Related Pattern](../patterns/related-pattern.md)
+- [_Index](../guides/_index.md)
+- [Contributing To Docs](../guides/contributing-to-docs.md)
+- [Pattern Template](pattern-template.md)
 
 ---
-
-**Maintenance Notes**:
-- Update `last-updated` field when making changes
-- Increment `version` according to semantic versioning rules:
-  - **PATCH** (x.y.Z): Typos, clarifications, updated commands
-  - **MINOR** (x.Y.0): New sections, new workflows, backward compatible
-  - **MAJOR** (X.0.0): Breaking changes, workflow redesign
-- Add entry to Version History section for each version bump
-- Test all command examples before publishing
-- Keep screenshots up-to-date if included
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

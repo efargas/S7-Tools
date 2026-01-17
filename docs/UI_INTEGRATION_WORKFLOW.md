@@ -542,7 +542,9 @@ See the `docs/templates/ui-integration/` folder for complete scaffolded template
 
 - [Mvvm Patterns](architecture/mvvm-patterns.md)
 - [Reusable Controls](patterns/reusable-controls.md)
+- [_Index](templates/_index.md)
+- [Integration_Checklist](templates/ui-integration/INTEGRATION_CHECKLIST.md)
 - [Readme](templates/ui-integration/README.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

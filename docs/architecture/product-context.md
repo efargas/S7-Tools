@@ -229,3 +229,12 @@ The industrial automation and PLC security research market lacks:
 **Document Status**: Living document reflecting current product vision
 **Next Review**: After user feedback collection
 **Owner**: Product Team and UX Design
+
+## Related Documentation
+
+- [Overview](overview.md)
+- [Project Brief](project-brief.md)
+- [Technology Stack](technology-stack.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

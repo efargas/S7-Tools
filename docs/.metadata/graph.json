@@ -1,0 +1,5892 @@
+{
+  "nodes": [
+    {
+      "file": "docs/README.md",
+      "outgoing_links": 13
+    },
+    {
+      "file": "docs/INDEX.md",
+      "outgoing_links": 43
+    },
+    {
+      "file": "docs/Project_Architecture_Blueprint.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/SETTINGS_SCHEMA.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/TASK_LOGGING_SYSTEM.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/MEMORY_REGION_PROFILES.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/Project_Folders_Structure_Blueprint.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/archive/Project_Architecture_Blueprint.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/archive/_index.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/guides/ai-agent-guide.md",
+      "outgoing_links": 14
+    },
+    {
+      "file": "docs/guides/memory-bank-usage.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/guides/testing-guide.md",
+      "outgoing_links": 11
+    },
+    {
+      "file": "docs/guides/_index.md",
+      "outgoing_links": 18
+    },
+    {
+      "file": "docs/guides/archive-management.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/guides/contributing-to-docs.md",
+      "outgoing_links": 17
+    },
+    {
+      "file": "docs/guides/onboarding.md",
+      "outgoing_links": 18
+    },
+    {
+      "file": "docs/guides/development-workflow.md",
+      "outgoing_links": 26
+    },
+    {
+      "file": "docs/guides/development-standards.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/guides/documentation-templates.md",
+      "outgoing_links": 14
+    },
+    {
+      "file": "docs/guides/code-style.md",
+      "outgoing_links": 11
+    },
+    {
+      "file": "docs/guides/versioning-guide.md",
+      "outgoing_links": 14
+    },
+    {
+      "file": "docs/guides/frontmatter-schema.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/reviews/2025-11-10-quality-improvements.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/reviews/2025-11-10-quality-improvements.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/reviews/_index.md",
+      "outgoing_links": 10
+    },
+    {
+      "file": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/templates/adr-template.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/templates/service-template.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/templates/_index.md",
+      "outgoing_links": 10
+    },
+    {
+      "file": "docs/templates/test-template.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/templates/pattern-template.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/templates/viewmodel-template.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/templates/guide-template.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/patterns/system-patterns.md",
+      "outgoing_links": 24
+    },
+    {
+      "file": "docs/patterns/internal-method.md",
+      "outgoing_links": 13
+    },
+    {
+      "file": "docs/patterns/_index.md",
+      "outgoing_links": 27
+    },
+    {
+      "file": "docs/patterns/resource-coordination.md",
+      "outgoing_links": 9
+    },
+    {
+      "file": "docs/patterns/reusable-controls.md",
+      "outgoing_links": 11
+    },
+    {
+      "file": "docs/patterns/custom-exceptions.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/patterns/profile-management.md",
+      "outgoing_links": 17
+    },
+    {
+      "file": "docs/architecture/product-context.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture/technology-stack.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/architecture/mvvm-patterns.md",
+      "outgoing_links": 18
+    },
+    {
+      "file": "docs/architecture/clean-architecture.md",
+      "outgoing_links": 19
+    },
+    {
+      "file": "docs/architecture/_index.md",
+      "outgoing_links": 10
+    },
+    {
+      "file": "docs/architecture/project-brief.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture/diagrams.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/architecture/dependency-injection.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/architecture/overview.md",
+      "outgoing_links": 33
+    },
+    {
+      "file": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/external/codeproject-logviewer.markitdown.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture/decisions/0001-ui-framework.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/architecture/decisions/_index.md",
+      "outgoing_links": 10
+    },
+    {
+      "file": "docs/architecture/decisions/0002-logging-provider.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture/decisions/_template.md",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/patterns/examples/profile-manager-example.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/patterns/examples/resource-coordinator-example.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/patterns/examples/semaphore-pattern-example.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/templates/ui-integration/README.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/guides/migration/_index.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/guides/migration/breaking-changes.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/guides/migration/deprecated-patterns.md",
+      "outgoing_links": 12
+    },
+    {
+      "file": "docs/patterns/_index.md",
+      "outgoing_links": 27
+    },
+    {
+      "file": "docs/guides/ai-agent-guide.md",
+      "outgoing_links": 12
+    },
+    {
+      "file": "docs/guides/memory-bank-usage.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/guides/migration/deprecated-patterns.md",
+      "outgoing_links": 12
+    },
+    {
+      "file": "docs/guides/frontmatter-schema.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/INDEX.md",
+      "outgoing_links": 36
+    },
+    {
+      "file": "docs/reviews/2025-11-10-quality-improvements.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/architecture/overview.md",
+      "outgoing_links": 34
+    },
+    {
+      "file": "docs/templates",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/guides/contributing-to-docs.md",
+      "outgoing_links": 16
+    },
+    {
+      "file": "scripts/README.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/guides/onboarding.md",
+      "outgoing_links": 16
+    },
+    {
+      "file": "docs/guides/development-workflow.md",
+      "outgoing_links": 25
+    },
+    {
+      "file": "docs/archive/_index.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/reviews/_index.md",
+      "outgoing_links": 10
+    },
+    {
+      "file": "docs/patterns/system-patterns.md",
+      "outgoing_links": 22
+    },
+    {
+      "file": "docs/templates/pattern-template.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/patterns/internal-method.md",
+      "outgoing_links": 13
+    },
+    {
+      "file": "docs/templates/adr-template.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "README.md",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/guides/testing-guide.md",
+      "outgoing_links": 12
+    },
+    {
+      "file": "docs/reviews/archive",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/architecture/clean-architecture.md",
+      "outgoing_links": 19
+    },
+    {
+      "file": "docs/templates/service-template.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/architecture/_index.md",
+      "outgoing_links": 10
+    },
+    {
+      "file": "docs/templates/ui-integration",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/guides/archive-management.md",
+      "outgoing_links": 8
+    },
+    {
+      "file": "docs/README.md",
+      "outgoing_links": 12
+    },
+    {
+      "file": "docs/patterns/reusable-controls.md",
+      "outgoing_links": 11
+    },
+    {
+      "file": "docs/patterns/examples",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/architecture/mvvm-patterns.md",
+      "outgoing_links": 18
+    },
+    {
+      "file": "docs/templates/viewmodel-template.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/architecture/decisions",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/guides/_index.md",
+      "outgoing_links": 17
+    },
+    {
+      "file": "docs/patterns/resource-coordination.md",
+      "outgoing_links": 9
+    },
+    {
+      "file": "docs/guides/versioning-guide.md",
+      "outgoing_links": 12
+    },
+    {
+      "file": "docs/architecture/decisions/_index.md",
+      "outgoing_links": 9
+    },
+    {
+      "file": "docs/guides/code-style.md",
+      "outgoing_links": 11
+    },
+    {
+      "file": "docs/architecture/diagrams.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/templates/test-template.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/patterns/profile-management.md",
+      "outgoing_links": 17
+    },
+    {
+      "file": "docs/patterns/custom-exceptions.md",
+      "outgoing_links": 7
+    },
+    {
+      "file": "docs/reviews",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/architecture/dependency-injection.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/archive/Project_Architecture_Blueprint.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/templates/ui-integration/README.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/templates/_index.md",
+      "outgoing_links": 10
+    },
+    {
+      "file": "src/S7Tools/Services/Tasking/EnhancedTaskScheduler.cs",
+      "outgoing_links": 1
+    },
+    {
+      "file": "src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs",
+      "outgoing_links": 1
+    },
+    {
+      "file": "src/S7Tools.Core/Models/Jobs/TaskExecution.cs",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/MEMORY_REGION_PROFILES.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": ".github/copilot-instructions.md",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/Project_Architecture_Blueprint.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/Project_Folders_Structure_Blueprint.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/guides/development-standards.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/patterns",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/patterns/examples/resource-coordinator-example.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/templates/guide-template.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/guides/documentation-templates.md",
+      "outgoing_links": 13
+    },
+    {
+      "file": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/guides/migration/_index.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/patterns/examples/profile-manager-example.md",
+      "outgoing_links": 6
+    },
+    {
+      "file": "docs/patterns/examples/semaphore-pattern-example.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/TASK_LOGGING_SYSTEM.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/SETTINGS_SCHEMA.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/architecture/technology-stack.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/architecture/decisions/0001-ui-framework.md",
+      "outgoing_links": 4
+    },
+    {
+      "file": "docs/.metadata/schema.json",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/guides/migration/breaking-changes.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "outgoing_links": 5
+    },
+    {
+      "file": "docs/external/codeproject-logviewer.markitdown.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture/project-brief.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture/product-context.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/architecture/decisions/0002-logging-provider.md",
+      "outgoing_links": 3
+    },
+    {
+      "file": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "outgoing_links": 2
+    },
+    {
+      "file": "docs/architecture/decisions/_template.md",
+      "outgoing_links": 1
+    },
+    {
+      "file": "docs/.metadata/migration-log.json",
+      "outgoing_links": 1
+    }
+  ],
+  "edges": [
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/templates",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "scripts/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "docs/templates",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/README.md",
+      "target": "scripts/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/examples",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/dependency-injection.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/decisions",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/examples",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/service-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/test-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/adr-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/ui-integration",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/archive",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/archive/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/examples",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "scripts/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/archive/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/adr-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/INDEX.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/archive/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/archive/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Architecture_Blueprint.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/SETTINGS_SCHEMA.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/SETTINGS_SCHEMA.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/SETTINGS_SCHEMA.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/SETTINGS_SCHEMA.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/SETTINGS_SCHEMA.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/templates/ui-integration/README.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "target": "docs/templates/ui-integration/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "src/S7Tools.Core/Models/Jobs/TaskExecution.cs",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/TASK_LOGGING_SYSTEM.md",
+      "target": "src/S7Tools/Services/Tasking/EnhancedTaskScheduler.cs",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/MEMORY_REGION_PROFILES.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/MEMORY_REGION_PROFILES.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/MEMORY_REGION_PROFILES.md",
+      "target": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "target": "docs/MEMORY_REGION_PROFILES.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "target": "docs/MEMORY_REGION_PROFILES.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": ".github/copilot-instructions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Architecture_Blueprint.md",
+      "target": "docs/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Architecture_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Architecture_Blueprint.md",
+      "target": "docs/archive/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/_index.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/_index.md",
+      "target": "docs/archive/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/_index.md",
+      "target": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/_index.md",
+      "target": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "target": "docs/archive/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/archive/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/architecture",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/templates",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/ai-agent-guide.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/memory-bank-usage.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/patterns/examples/resource-coordinator-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/testing-guide.md",
+      "target": "docs/templates/test-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/templates",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/_index.md",
+      "target": "docs/templates/guide-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/archive-management.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/archive-management.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/archive-management.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/archive-management.md",
+      "target": "docs/archive/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/archive-management.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/code-style.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "scripts/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/templates/guide-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/contributing-to-docs.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/templates",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/templates/test-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/examples",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/templates",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/decisions",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/onboarding.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/code-style.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/MEMORY_REGION_PROFILES.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/SETTINGS_SCHEMA.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/TASK_LOGGING_SYSTEM.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/architecture/dependency-injection.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/VALIDATION_QUICK_REFERENCE.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/patterns/examples/profile-manager-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/patterns/examples/resource-coordinator-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/patterns/examples/semaphore-pattern-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/templates/adr-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/templates/service-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-workflow.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-standards.md",
+      "target": "docs/guides/code-style.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-standards.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-standards.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-standards.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/development-standards.md",
+      "target": "docs/architecture/technology-stack.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/development-standards.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/templates/adr-template.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/templates/adr-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/architecture/decisions/0001-ui-framework.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/templates/service-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/templates/test-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "scripts/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/documentation-templates.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/patterns/examples/semaphore-pattern-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/code-style.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/.metadata/schema.json",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/versioning-guide.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/frontmatter-schema.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/reviews/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/reviews/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-10-quality-improvements.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/archive",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/_index.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "target": "docs/reviews/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/adr-template.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/adr-template.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/adr-template.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/adr-template.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/adr-template.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/adr-template.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/service-template.md",
+      "target": "docs/patterns/examples/profile-manager-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/test-template.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/test-template.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/test-template.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/test-template.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/test-template.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/test-template.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/test-template.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/guides/frontmatter-schema.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/pattern-template.md",
+      "target": "docs/templates/guide-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/viewmodel-template.md",
+      "target": "docs/patterns/examples/profile-manager-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/guide-template.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/guide-template.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/guide-template.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/guide-template.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/guide-template.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/MEMORY_REGION_PROFILES.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/TASK_LOGGING_SYSTEM.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/dependency-injection.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/external/codeproject-logviewer.markitdown.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/examples/profile-manager-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/examples/semaphore-pattern-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/templates/service-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/templates/test-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/system-patterns.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/examples/semaphore-pattern-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/examples/profile-manager-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/examples/resource-coordinator-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/examples/semaphore-pattern-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/internal-method.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/_index.md",
+      "target": "docs/templates/pattern-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/examples/resource-coordinator-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/examples/resource-coordinator-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/resource-coordination.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/reusable-controls.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/custom-exceptions.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/examples/profile-manager-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/JOB_WIZARD_SEGMENT_PERSISTENCE.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/MEMORY_REGION_PROFILES.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/examples/profile-manager-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/profile-management.md",
+      "target": "docs/reviews/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/product-context.md",
+      "target": "docs/architecture/project-brief.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/product-context.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/product-context.md",
+      "target": "docs/architecture/technology-stack.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/product-context.md",
+      "target": "docs/architecture/project-brief.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/technology-stack.md",
+      "target": "docs/architecture/project-brief.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/technology-stack.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/technology-stack.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/technology-stack.md",
+      "target": "docs/architecture/product-context.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/technology-stack.md",
+      "target": "docs/architecture/project-brief.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/architecture/decisions/0001-ui-framework.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/archive/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/templates/ui-integration/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/mvvm-patterns.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/decisions/0002-logging-provider.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/dependency-injection.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/archive/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/patterns/custom-exceptions.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/clean-architecture.md",
+      "target": "docs/templates/service-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/dependency-injection.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/_index.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/project-brief.md",
+      "target": "docs/architecture/product-context.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/project-brief.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/project-brief.md",
+      "target": "docs/architecture/technology-stack.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/project-brief.md",
+      "target": "docs/architecture/product-context.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/project-brief.md",
+      "target": "docs/architecture/technology-stack.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/diagrams.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/dependency-injection.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/dependency-injection.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/dependency-injection.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/dependency-injection.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/dependency-injection.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/MEMORY_REGION_PROFILES.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/SETTINGS_SCHEMA.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/TASK_LOGGING_SYSTEM.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/decisions/0001-ui-framework.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/decisions/0002-logging-provider.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/dependency-injection.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/diagrams.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/product-context.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/project-brief.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/architecture/technology-stack.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/archive/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/archive/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/external/codeproject-logviewer.markitdown.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/guides/ai-agent-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/guides/development-standards.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/guides/memory-bank-usage.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/guides/onboarding.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/patterns/reusable-controls.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/reviews/2025-11-07-comprehensive-review.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/overview.md",
+      "target": "docs/reviews/2025-11-10-quality-improvements.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "target": "docs/external/codeproject-logviewer.markitdown.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "target": "docs/external/codeproject-logviewer.markitdown.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/external/codeproject-logviewer.markitdown.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/external/codeproject-logviewer.markitdown.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/external/codeproject-logviewer.markitdown.md",
+      "target": "docs/external/codeproject-logviewer.markitdown.full.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/0001-ui-framework.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/decisions/0001-ui-framework.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/decisions/0001-ui-framework.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/0001-ui-framework.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/0001-ui-framework.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/0001-ui-framework.md",
+      "target": "docs/guides/documentation-templates.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/architecture/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/architecture/decisions/0001-ui-framework.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/architecture/decisions/0002-logging-provider.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/architecture/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/architecture/decisions/_template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/guides/contributing-to-docs.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/templates/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_index.md",
+      "target": "docs/templates/adr-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/0002-logging-provider.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/decisions/0002-logging-provider.md",
+      "target": "docs/architecture/overview.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/decisions/0002-logging-provider.md",
+      "target": "docs/architecture/clean-architecture.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/0002-logging-provider.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/0002-logging-provider.md",
+      "target": "docs/architecture/overview.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/architecture/decisions/_template.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/architecture/decisions/_template.md",
+      "target": "docs/architecture/decisions/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/templates/service-template.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/templates/service-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/patterns/profile-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/templates/service-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/profile-manager-example.md",
+      "target": "docs/templates/viewmodel-template.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/examples/semaphore-pattern-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/guides/testing-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/examples/semaphore-pattern-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/resource-coordinator-example.md",
+      "target": "docs/patterns/resource-coordination.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/patterns/system-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/patterns/examples/resource-coordinator-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/guides/code-style.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/patterns/examples/resource-coordinator-example.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/patterns/examples/semaphore-pattern-example.md",
+      "target": "docs/patterns/internal-method.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/ui-integration/README.md",
+      "target": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/ui-integration/README.md",
+      "target": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/ui-integration/README.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/ui-integration/README.md",
+      "target": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/ui-integration/README.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/ui-integration/README.md",
+      "target": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "target": "docs/UI_INTEGRATION_WORKFLOW.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "target": "docs/templates/ui-integration/README.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "target": "docs/architecture/mvvm-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/templates/ui-integration/INTEGRATION_CHECKLIST.md",
+      "target": "docs/templates/ui-integration/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/.metadata/migration-log.json",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/development-workflow.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/_index.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/migration/deprecated-patterns.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/breaking-changes.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/patterns/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "frontmatter-related"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/ATTRIBUTE_BASED_DISPLAY.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/DEPRECATED_PROPERTY_MIGRATION.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/INDEX.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/Project_Architecture_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/Project_Folders_Structure_Blueprint.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/README.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/archive-management.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/migration/_index.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/migration/breaking-changes.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/guides/versioning-guide.md",
+      "type": "markdown-link"
+    },
+    {
+      "source": "docs/guides/migration/deprecated-patterns.md",
+      "target": "docs/patterns/_index.md",
+      "type": "markdown-link"
+    }
+  ],
+  "orphans": []
+}

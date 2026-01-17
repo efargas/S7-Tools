@@ -359,3 +359,13 @@ dotnet publish src/S7Tools/S7Tools.csproj -c Release -r win-x64 --self-contained
 **Document Status**: Living document reflecting current technical state
 **Next Review**: After major technology updates
 **Owner**: Development Team and DevOps
+
+## Related Documentation
+
+- [Overview](overview.md)
+- [Product Context](product-context.md)
+- [Project Brief](project-brief.md)
+- [Development Standards](../guides/development-standards.md)
+
+---
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

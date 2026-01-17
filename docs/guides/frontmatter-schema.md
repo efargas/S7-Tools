@@ -452,10 +452,12 @@ status: "current"  # Not "active" or "published"
 
 ## Related Documentation
 
-- [Documentation Templates Guide](documentation-templates.md) - How to use templates
-- [Versioning Guide](versioning-guide.md) - Semantic versioning for documentation
-- [Contributing to Documentation](contributing-to-docs.md) - Contribution workflow
-- [Pattern Template](../templates/pattern-template.md) - Pattern documentation template
+- [Index](../INDEX.md)
+- [Readme](../README.md)
+- [Contributing To Docs](contributing-to-docs.md)
+- [Documentation Templates](documentation-templates.md)
+- [Versioning Guide](versioning-guide.md)
+- [Pattern Template](../templates/pattern-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

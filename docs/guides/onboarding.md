@@ -354,8 +354,10 @@ Welcome to the team! 🚀
 ## Related Documentation
 
 - [Index](../INDEX.md)
+- [Readme](../README.md)
 - [Clean Architecture](../architecture/clean-architecture.md)
 - [Overview](../architecture/overview.md)
+- [_Index](_index.md)
 - [Ai Agent Guide](ai-agent-guide.md)
 - [Development Workflow](development-workflow.md)
 - [Testing Guide](testing-guide.md)
@@ -365,6 +367,8 @@ Welcome to the team! 🚀
 - [Resource Coordination](../patterns/resource-coordination.md)
 - [2025 11 10 Quality Improvements](../reviews/2025-11-10-quality-improvements.md)
 - [Latest](../reviews/LATEST.md)
+- [Test Template](../templates/test-template.md)
+- [Viewmodel Template](../templates/viewmodel-template.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*

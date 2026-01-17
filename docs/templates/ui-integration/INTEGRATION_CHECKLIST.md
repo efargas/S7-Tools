@@ -298,7 +298,9 @@ Special Considerations: _______________
 
 ## Related Documentation
 
+- [Ui_Integration_Workflow](../../UI_INTEGRATION_WORKFLOW.md)
+- [Mvvm Patterns](../../architecture/mvvm-patterns.md)
 - [Readme](README.md)
 
 ---
-*This section is auto-generated. Do not edit manually. Last updated: 2025-11-10*
+*This section is auto-generated. Do not edit manually. Last updated: 2026-01-17*
