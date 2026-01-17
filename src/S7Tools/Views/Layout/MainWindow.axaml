@@ -13,6 +13,8 @@
     xmlns:local="clr-namespace:S7Tools"
     xmlns:icons="using:Projektanker.Icons.Avalonia"
     xmlns:converters="clr-namespace:S7Tools.Converters"
+    xmlns:vmPages="using:S7Tools.ViewModels.Pages"
+    xmlns:viewsPages="clr-namespace:S7Tools.Views.Pages"
     mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
     x:Class="S7Tools.Views.Layout.MainWindow"
     x:DataType="vm:MainWindowViewModel"
@@ -279,6 +281,9 @@
                                 </DataTemplate>
                                 <DataTemplate DataType="vm:TaskManagerShellViewModel">
                                     <viewsTasks:TaskManagerSidebarView />
+                                </DataTemplate>
+                                <DataTemplate DataType="vmPages:MemoryDumpViewerViewModel">
+                                    <viewsPages:MemoryDumpSidebarView />
                                 </DataTemplate>
                             </ContentControl.DataTemplates>
                         </ContentControl>

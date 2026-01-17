@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:S7Tools.ViewModels.Pages"
+    xmlns:icons="using:Projektanker.Icons.Avalonia"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+    x:Class="S7Tools.Views.Pages.FileMemoryDumpView"
+    x:DataType="vm:FileMemoryDumpViewModel">
+
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
+        <StackPanel Spacing="20">
+            <icons:Icon Value="fa-solid fa-file-code" Width="64" Height="64" Foreground="#569CD6" />
+            <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"
+                HorizontalAlignment="Center" />
+            <TextBlock Text="{Binding Description}" FontSize="16" Foreground="#858585"
+                TextWrapping="Wrap" MaxWidth="400" TextAlignment="Center" />
+
+            <Button Background="#0E639C" Foreground="White" HorizontalAlignment="Center"
+                Padding="20,10">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <icons:Icon Value="fa-solid fa-folder-open" />
+                    <TextBlock Text="Open Memory Dump File..." />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

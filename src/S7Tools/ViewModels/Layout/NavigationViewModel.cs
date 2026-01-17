@@ -362,7 +362,7 @@ public class NavigationViewModel : ReactiveObject
                     MainContentTitle = "PLC Memory Dump Viewer";
                     ShowMainContentHeader = true;
                     MemoryDumpViewerViewModel? memoryDumpViewModel = CreateViewModel<MemoryDumpViewerViewModel>();
-                    CurrentContent = null; // No sidebar content for memory dump
+                    CurrentContent = memoryDumpViewModel; // Enable sidebar content for memory dump
                     MainContent = memoryDumpViewModel;
                     DetailContent = memoryDumpViewModel;
                     ShowLogStats = false;

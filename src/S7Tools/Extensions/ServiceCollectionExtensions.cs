@@ -415,6 +415,8 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
         // Add Memory Dump Viewer ViewModel
+        services.TryAddTransient<StreamedMemoryDumpViewModel>();
+        services.TryAddTransient<FileMemoryDumpViewModel>();
         services.TryAddTransient<MemoryDumpViewerViewModel>();
 
         // Add Profile Management ViewModels as Singletons to persist state across navigation
