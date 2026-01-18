@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:S7Tools.ViewModels.Hex"
+    xmlns:avHex="clr-namespace:AvaloniaHex;assembly=S7Tools"
+    xmlns:avRend="clr-namespace:AvaloniaHex.Rendering;assembly=S7Tools"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+    x:Class="S7Tools.Views.Hex.HexViewerControl"
+    x:DataType="vm:HexViewerViewModel">
+
+    <UserControl.Styles>
+        <!-- Include the theme for HexEditor. Assumes files are resources. -->
+        <StyleInclude Source="avares://S7Tools/Controls/AvaloniaHex/Themes/Fluent/AvaloniaHex.axaml" />
+    </UserControl.Styles>
+
+    <Grid>
+        <!-- Empty State -->
+        <StackPanel IsVisible="{Binding !IsFileOpen}"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="20">
+            <TextBlock Text="No file loaded" Foreground="#858585" FontSize="16"
+                HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <!-- Hex Content -->
+        <Grid IsVisible="{Binding IsFileOpen}" RowDefinitions="Auto,*">
+
+            <!-- Toolbar / Info Header -->
+            <Border Grid.Row="0" Background="#2D2D30" Padding="10,5" BorderBrush="#3F3F46"
+                BorderThickness="0,0,0,1">
+                <StackPanel Orientation="Horizontal" Spacing="20">
+                    <TextBlock Text="{Binding FileName}" Foreground="White" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding FileSize, StringFormat='Size: {0:N0} bytes'}"
+                        Foreground="#CCCCCC" />
+                    <Button Command="{Binding CloseFileCommand}" Background="Transparent"
+                        Foreground="#C42B1C" Content="Close" />
+                </StackPanel>
+            </Border>
+
+            <!-- Hex Editor Control -->
+            <!-- Using the ported AvaloniaHex implementation -->
+            <avHex:HexEditor Grid.Row="1"
+                Document="{Binding Document}"
+                IsHeaderVisible="True"
+                BytesPerLine="16"
+                ColumnPadding="30"
+                Background="#1E1E1E"
+                Foreground="#D4D4D4"
+                FontFamily="Cascadia Mono,Consolas,Courier New,Monospace"
+                FontSize="14">
+                <avHex:HexEditor.Columns>
+                    <avRend:OffsetColumn Header="Address" Foreground="#00CED1" />
+                    <avRend:HexColumn />
+                    <avRend:AsciiColumn Header="ASCII" IsHeaderVisible="True" Foreground="#00CED1" />
+                </avHex:HexEditor.Columns>
+            </avHex:HexEditor>
+
+        </Grid>
+    </Grid>
+</UserControl>

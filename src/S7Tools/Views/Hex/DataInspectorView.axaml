@@ -1,0 +1,91 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:S7Tools.ViewModels.Hex"
+    mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
+    x:Class="S7Tools.Views.Hex.DataInspectorView"
+    x:DataType="vm:DataInspectorViewModel"
+    Background="#252526" BorderBrush="#3F3F46" BorderThickness="1">
+
+    <Grid RowDefinitions="Auto,*">
+        <TextBlock Text="Data Inspector" FontSize="14" FontWeight="SemiBold" Margin="10"
+            Foreground="#CCCCCC" />
+
+        <ScrollViewer Grid.Row="1" Padding="10">
+            <StackPanel Spacing="15">
+
+                <!-- Endianness Toggle -->
+                <Border Background="#2D2D30" CornerRadius="4" Padding="8">
+                    <DockPanel>
+                        <TextBlock Text="Endianness" VerticalAlignment="Center" Foreground="#999999" />
+                        <StackPanel Orientation="Horizontal" Spacing="10"
+                            HorizontalAlignment="Right">
+                            <RadioButton Content="Big" IsChecked="{Binding IsBigEndian}"
+                                GroupName="Endianness" Foreground="White" />
+                            <RadioButton Content="Little" IsChecked="{Binding !IsBigEndian}"
+                                GroupName="Endianness" Foreground="White" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Data Grid -->
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                    ColumnDefinitions="Auto,*">
+                    <Grid.Styles>
+                        <Style Selector="TextBlock.label">
+                            <Setter Property="Foreground" Value="#858585" />
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                            <Setter Property="Margin" Value="0,0,10,0" />
+                        </Style>
+                        <Style Selector="TextBox.value">
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="IsReadOnly" Value="True" />
+                            <Setter Property="Foreground" Value="#D4D4D4" />
+                            <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,Courier New" />
+                        </Style>
+                    </Grid.Styles>
+
+                    <!-- Binary -->
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Binary (8)" Classes="label" />
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Binary8}" Classes="value" />
+
+                    <!-- Int8 -->
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Int8" Classes="label" />
+                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Int8}" Classes="value" />
+
+                    <!-- UInt8 -->
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="UInt8" Classes="label" />
+                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding UInt8}" Classes="value" />
+
+                    <!-- Int16 -->
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Int16" Classes="label" />
+                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Int16}" Classes="value" />
+
+                    <!-- UInt16 -->
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="UInt16" Classes="label" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding UInt16}" Classes="value" />
+
+                    <!-- Int32 -->
+                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Int32" Classes="label" />
+                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Int32}" Classes="value" />
+
+                    <!-- UInt32 -->
+                    <TextBlock Grid.Row="6" Grid.Column="0" Text="UInt32" Classes="label" />
+                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding UInt32}" Classes="value" />
+
+                    <!-- Float -->
+                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Float32" Classes="label" />
+                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding Float32}" Classes="value" />
+
+                    <!-- Double -->
+                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Double64" Classes="label" />
+                    <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Double64}" Classes="value" />
+
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

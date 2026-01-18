@@ -77,5 +77,6 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDisposable
     public void Dispose()
     {
         _streamedViewModel?.Dispose();
+        _fileViewModel?.Dispose();
     }
 }

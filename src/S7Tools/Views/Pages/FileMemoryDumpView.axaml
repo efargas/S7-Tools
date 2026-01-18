@@ -3,26 +3,48 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:S7Tools.ViewModels.Pages"
+    xmlns:hex="using:S7Tools.Views.Hex"
     xmlns:icons="using:Projektanker.Icons.Avalonia"
-    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+    mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
     x:Class="S7Tools.Views.Pages.FileMemoryDumpView"
     x:DataType="vm:FileMemoryDumpViewModel">
 
-    <Grid VerticalAlignment="Center" HorizontalAlignment="Center">
-        <StackPanel Spacing="20">
-            <icons:Icon Value="fa-solid fa-file-code" Width="64" Height="64" Foreground="#569CD6" />
-            <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"
-                HorizontalAlignment="Center" />
-            <TextBlock Text="{Binding Description}" FontSize="16" Foreground="#858585"
-                TextWrapping="Wrap" MaxWidth="400" TextAlignment="Center" />
+    <Grid>
+        <!-- Placeholder / Open File Button -->
+        <Grid IsVisible="{Binding !HexViewer.IsFileOpen}"
+            VerticalAlignment="Center" HorizontalAlignment="Center">
+            <StackPanel Spacing="20">
+                <icons:Icon Value="fa-solid fa-file-code" Width="64" Height="64"
+                    Foreground="#569CD6" />
+                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"
+                    HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding Description}" FontSize="16" Foreground="#858585"
+                    TextWrapping="Wrap" MaxWidth="400" TextAlignment="Center" />
 
-            <Button Background="#0E639C" Foreground="White" HorizontalAlignment="Center"
-                Padding="20,10">
-                <StackPanel Orientation="Horizontal" Spacing="10">
-                    <icons:Icon Value="fa-solid fa-folder-open" />
-                    <TextBlock Text="Open Memory Dump File..." />
-                </StackPanel>
-            </Button>
-        </StackPanel>
+                <Button Command="{Binding OpenFileCommand}" Background="#0E639C" Foreground="White"
+                    HorizontalAlignment="Center" Padding="20,10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <icons:Icon Value="fa-solid fa-folder-open" />
+                        <TextBlock Text="Open Memory Dump File..." />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Hex Viewer Layout -->
+        <Grid IsVisible="{Binding HexViewer.IsFileOpen}" ColumnDefinitions="*, 300">
+
+            <!-- Main Hex Grid (Left) -->
+            <!-- We bind the HexViewerViewModel directly to the control's DataContext 
+                 so the control can work independently if needed. -->
+            <hex:HexViewerControl Grid.Column="0" DataContext="{Binding HexViewer}" />
+
+            <!-- Data Inspector (Right) -->
+            <Border Grid.Column="1" BorderBrush="#3F3F46" BorderThickness="1,0,0,0"
+                Background="#252526">
+                <hex:DataInspectorView DataContext="{Binding HexViewer.DataInspector}" />
+            </Border>
+
+        </Grid>
     </Grid>
 </UserControl>

@@ -29,6 +29,7 @@ using S7Tools.ViewModels.Pages;
 using S7Tools.ViewModels.Profiles;
 using S7Tools.ViewModels.Settings;
 using S7Tools.ViewModels.Tasks;
+using S7Tools.ViewModels.Hex;
 
 namespace S7Tools.Extensions;
 
@@ -418,6 +419,11 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<StreamedMemoryDumpViewModel>();
         services.TryAddTransient<FileMemoryDumpViewModel>();
         services.TryAddTransient<MemoryDumpViewerViewModel>();
+
+        // Hex Viewer
+        services.TryAddTransient<HexViewerViewModel>();
+        services.TryAddTransient<DataInspectorViewModel>(); // Actually this is usually created by HexViewerViewModel, but transient is fine if injected
+
 
         // Add Profile Management ViewModels as Singletons to persist state across navigation
         services.TryAddSingleton<SerialPortsSettingsViewModel>();

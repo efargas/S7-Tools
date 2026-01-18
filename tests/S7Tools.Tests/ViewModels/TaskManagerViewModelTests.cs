@@ -6,6 +6,7 @@ using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
 using S7Tools.ViewModels.Tasks;
+using S7Tools.Core.Commands;
 using Xunit;
 
 namespace S7Tools.Tests.ViewModels;
@@ -29,7 +30,6 @@ public class TaskManagerViewModelTests
             new Mock<ISerialPortProfileService>().Object,
             new Mock<ISocatProfileService>().Object,
             new Mock<IJobProfileSetFactory>().Object,
-            new Mock<ICentralizedTaskLogService>().Object,
             new Mock<IClipboardService>().Object);
     }
 
@@ -49,7 +49,13 @@ public class TaskManagerViewModelTests
             (uiThreadService ?? new Mock<IUIThreadService>()).Object,
             dialogService.Object,
             (taskDetailsViewModel ?? CreateMockTaskDetailsViewModel()).Object,
-            new TaskStatisticsViewModel());
+            new TaskStatisticsViewModel(),
+            new TaskCommandManager(
+                new Mock<ILogger<TaskCommandManager>>().Object,
+                taskScheduler.Object,
+                jobManager.Object,
+                dialogService.Object
+            ));
     }
 
     [Fact]
