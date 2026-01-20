@@ -147,12 +147,17 @@ public partial class HexViewerControl : UserControl
             // Ensure we at least cover the basic 16 bytes + address + ascii
             if (totalWidth < 800) totalWidth = 800;
 
-            // Update Width if significantly different just to ensure scrollbar can appear
-            // This syncs the visual size with the content size for the outer ScrollViewer
-            // Fix: Check for NaN (initial state) or significant difference
-            if (double.IsNaN(MainHexEditor.Width) || Math.Abs(MainHexEditor.Width - totalWidth) > 5)
+            // Update MinWidth instead of Width to allow stretching.
+            // This ensures the control is at least as wide as content (scrolling happens if container < MinWidth)
+            // but stretches if container > MinWidth.
+            if (double.IsNaN(MainHexEditor.MinWidth) || Math.Abs(MainHexEditor.MinWidth - totalWidth) > 5)
             {
-                MainHexEditor.Width = totalWidth;
+                MainHexEditor.MinWidth = totalWidth;
+                // Clear Width if it was set (just in case) to ensure Stretch works
+                if (!double.IsNaN(MainHexEditor.Width))
+                {
+                    MainHexEditor.Width = double.NaN;
+                }
             }
         }
         finally
