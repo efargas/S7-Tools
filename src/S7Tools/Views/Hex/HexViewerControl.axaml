@@ -95,22 +95,30 @@
             </Border>
 
             <!-- Hex Editor Control -->
-            <avHex:HexEditor Grid.Row="2"
-                x:Name="MainHexEditor"
-                Document="{Binding Document}"
-                ColumnPadding="30"
-                HorizontalScrollBarVisibility="Auto"
-                VerticalScrollBarVisibility="Auto"
-                Background="#1E1E1E"
-                Foreground="#D4D4D4"
-                FontFamily="Fira Code, Hack, DejaVu Sans Mono, Consolas, Courier New, Monospace">
-                <avHex:HexEditor.Columns>
-                    <avRend:OffsetColumn Header="Address" Foreground="#00CED1" />
-                    <avRend:HexColumn />
-                    <avRend:BinaryColumn IsVisible="False" />
-                    <avRend:AsciiColumn Header="ASCII" Foreground="#00CED1" />
-                </avHex:HexEditor.Columns>
-            </avHex:HexEditor>
+            <!-- Wrapped in ScrollViewer and Border to force physical horizontal scrolling 
+                 because HexEditor logic doesn't support it natively -->
+            <!-- Hex Editor Control -->
+            <!-- Wrapped in ScrollViewer and Border to force physical horizontal scrolling 
+                 because HexEditor logic doesn't support it natively -->
+            <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Disabled">
+                <Border>
+                    <avHex:HexEditor
+                        x:Name="MainHexEditor"
+                        Document="{Binding Document}"
+                        ColumnPadding="30"
+                        Background="#1E1E1E"
+                        Foreground="#D4D4D4"
+                        FontFamily="Fira Code, Hack, DejaVu Sans Mono, Consolas, Courier New, Monospace">
+                        <avHex:HexEditor.Columns>
+                            <avRend:OffsetColumn Header="Address" Foreground="#00CED1" />
+                            <avRend:HexColumn />
+                            <avRend:BinaryColumn IsVisible="False" />
+                            <avRend:AsciiColumn Header="ASCII" Foreground="#00CED1" />
+                        </avHex:HexEditor.Columns>
+                    </avHex:HexEditor>
+                </Border>
+            </ScrollViewer>
 
         </Grid>
     </Grid>

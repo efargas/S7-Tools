@@ -6,6 +6,7 @@ using AvaloniaHex.Document;
 using Avalonia.Markup.Xaml;
 using S7Tools.ViewModels.Hex;
 using AvaloniaHex.Rendering;
+using Avalonia.Threading;
 
 namespace S7Tools.Views.Hex;
 
@@ -20,6 +21,13 @@ public partial class HexViewerControl : UserControl
 
         // Set up event handlers
         MainHexEditor.Selection.RangeChanged += OnSelectionRangeChanged;
+        
+        // Use code-behind layout calculation to enable horizontal scrolling
+        MainHexEditor.LayoutUpdated += MainHexEditor_LayoutUpdated;
+        MainHexEditor.HexView.BytesPerLine = 16;
+        
+        // Initial width calculation trigger
+        Dispatcher.UIThread.Post(() => MainHexEditor.InvalidateMeasure(), DispatcherPriority.Loaded);
     }
 
     protected override void OnDataContextChanged(EventArgs e)
@@ -105,6 +113,51 @@ public partial class HexViewerControl : UserControl
             double.TryParse(param.ToString(), out double size))
         {
             MainHexEditor.HexView.FontSize = size;
+        }
+    }
+
+    private bool _isResizing;
+    private void MainHexEditor_LayoutUpdated(object? sender, EventArgs e)
+    {
+        if (_isResizing) return;
+        
+        try
+        {
+            _isResizing = true;
+            
+            // Calculate total required width based on columns
+            double totalWidth = 0;
+            double padding = MainHexEditor.ColumnPadding;
+            int visibleColumns = 0;
+            
+            foreach (var column in MainHexEditor.Columns)
+            {
+                if (column.IsVisible)
+                {
+                    totalWidth += column.Width;
+                    visibleColumns++;
+                }
+            }
+
+            if (visibleColumns > 0)
+            {
+                totalWidth += (visibleColumns - 1) * padding + 100; // Increase buffer to 100
+            }
+
+            // Ensure we at least cover the basic 16 bytes + address + ascii
+            if (totalWidth < 800) totalWidth = 800;
+
+            // Update Width if significantly different just to ensure scrollbar can appear
+            // This syncs the visual size with the content size for the outer ScrollViewer
+            // Fix: Check for NaN (initial state) or significant difference
+            if (double.IsNaN(MainHexEditor.Width) || Math.Abs(MainHexEditor.Width - totalWidth) > 5)
+            {
+                MainHexEditor.Width = totalWidth;
+            }
+        }
+        finally
+        {
+            _isResizing = false;
         }
     }
 }
