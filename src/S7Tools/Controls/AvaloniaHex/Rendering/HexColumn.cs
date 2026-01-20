@@ -226,8 +226,7 @@ public class HexColumn : CellBasedColumn
                 if (byteIndex >= _line.Data.Length - 1)
                     return null;
 
-                // Extra spacing after 8th byte (index 7)
-                return new TextCharacters(byteIndex == 7 ? "  " : " ", _properties);
+                return new TextCharacters(" ", _properties);
             }
 
             // Find current segment we're in.

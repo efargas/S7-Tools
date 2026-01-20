@@ -45,7 +45,7 @@
                 Document="{Binding Document}"
                 IsHeaderVisible="True"
                 BytesPerLine="16"
-                ColumnPadding="30"
+                ColumnPadding="15"
                 Background="#1E1E1E"
                 Foreground="#D4D4D4"
                 FontFamily="Cascadia Mono,Consolas,Courier New,Monospace"
