@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace S7Tools.ViewModels.Hex;
 
@@ -11,6 +12,51 @@ namespace S7Tools.ViewModels.Hex;
 /// </summary>
 public partial class DataInspectorViewModel : ObservableObject
 {
+    // Navigation & Editing Actions
+    public Action<long>? RequestGoToOffset { get; set; }
+    public Action<byte[]>? RequestFillSelection { get; set; }
+
+    [ObservableProperty]
+    private string _targetOffset = "";
+
+    [ObservableProperty]
+    private string _fillPattern = "00";
+
+    [RelayCommand]
+    private void GoToOffset()
+    {
+        if (string.IsNullOrWhiteSpace(TargetOffset))
+            return;
+
+        // Try parsing hex
+        // Support prefixes like 0x
+        var scrubbed = TargetOffset.Replace("0x", "").Trim();
+        if (long.TryParse(scrubbed, System.Globalization.NumberStyles.HexNumber, null, out long offset))
+        {
+            RequestGoToOffset?.Invoke(offset);
+        }
+    }
+
+    [RelayCommand]
+    private void FillSelection()
+    {
+        if (string.IsNullOrWhiteSpace(FillPattern))
+            return;
+
+        try
+        {
+            // Convert hex string "00 01 AB" to byte[]
+            // Using Convert.FromHexString which expects "0001AB" (no spaces) or manually parsing.
+            // We'll strip common separators.
+            var scrubbed = FillPattern.Replace(" ", "").Replace("-", "").Replace(",", "").Replace("0x", "");
+            byte[] bytes = Convert.FromHexString(scrubbed);
+            RequestFillSelection?.Invoke(bytes);
+        }
+        catch
+        {
+            // Ignore parse errors for now, or bind a validation message
+        }
+    }
     private string _binary8 = "";
     public string Binary8
     {

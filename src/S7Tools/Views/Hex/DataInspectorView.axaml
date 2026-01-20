@@ -85,6 +85,25 @@
 
                 </Grid>
 
+                <!-- Tools -->
+                <Border Background="#2D2D30" CornerRadius="4" Padding="8" Margin="0,15,0,0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Navigation &amp; Edit" FontWeight="SemiBold"
+                            Foreground="#CCCCCC" />
+                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                            <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding TargetOffset}"
+                                Watermark="Offset (Hex)" Margin="0,0,5,5" />
+                            <Button Grid.Row="0" Grid.Column="1"
+                                Command="{Binding GoToOffsetCommand}" Content="Go" Margin="0,0,0,5" />
+
+                            <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding FillPattern}"
+                                Watermark="Fill (Hex)" Margin="0,0,5,0" />
+                            <Button Grid.Row="1" Grid.Column="1"
+                                Command="{Binding FillSelectionCommand}" Content="Fill" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
             </StackPanel>
         </ScrollViewer>
     </Grid>

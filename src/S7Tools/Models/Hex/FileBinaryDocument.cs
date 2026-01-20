@@ -14,7 +14,7 @@ namespace S7Tools.Models.Hex
             _fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             Length = (ulong)_fileStream.Length;
 
-            ValidRanges = new BitRangeUnion(new[] { new BitRange(0, (ulong)Length * 8) });
+            _validRanges = new BitRangeUnion(new[] { new BitRange(0, (ulong)Length * 8) });
         }
 
         public event EventHandler<BinaryDocumentChange>? Changed;
@@ -27,7 +27,9 @@ namespace S7Tools.Models.Hex
 
         public bool CanRemove => false;
 
-        public IReadOnlyBitRangeUnion ValidRanges { get; }
+        public IReadOnlyBitRangeUnion ValidRanges => _validRanges;
+
+        private readonly BitRangeUnion _validRanges;
 
         public void Dispose()
         {

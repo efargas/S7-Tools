@@ -24,6 +24,48 @@ namespace S7Tools.ViewModels.Hex
 
             this.WhenAnyValue(x => x.SelectionStart, x => x.SelectionLength)
                 .Subscribe(_ => UpdateInspector());
+
+            // Initialize DataInspector and wire up events
+            DataInspector = new DataInspectorViewModel();
+            DataInspector.RequestFillSelection += OnRequestFillSelection;
+            DataInspector.RequestGoToOffset += OnRequestGoToOffset;
+        }
+
+        public event Action<long>? NavigateTo;
+
+        private void OnRequestGoToOffset(long offset)
+        {
+            NavigateTo?.Invoke(offset);
+        }
+
+        private void OnRequestFillSelection(byte[] pattern)
+        {
+            if (Document == null || SelectionLength <= 0)
+                return;
+
+            // Simple fill: Repeat pattern over the selection
+            // We need to implement write logic.
+            // Check if document supports writing.
+            if (Document is not IBinaryDocument doc)
+                return;
+
+            try
+            {
+                // Create full buffer
+                var length = (int)SelectionLength;
+                var buffer = new byte[length];
+                for (int i = 0; i < length; i++)
+                {
+                    buffer[i] = pattern[i % pattern.Length];
+                }
+
+                // Write
+                doc.WriteBytes((ulong)SelectionStart, buffer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fill Error: {ex.Message}");
+            }
         }
 
         public DataInspectorViewModel? DataInspector { get; set; }
@@ -66,7 +108,95 @@ namespace S7Tools.ViewModels.Hex
             set => this.RaiseAndSetIfChanged(ref _selectionLength, value);
         }
 
+        // View Configuration
+        private int _bytesPerLine = 16;
+        public int BytesPerLine
+        {
+            get => _bytesPerLine;
+            set => this.RaiseAndSetIfChanged(ref _bytesPerLine, value);
+        }
+
+        private double _fontSize = 14;
+        public double FontSize
+        {
+            get => _fontSize;
+            set => this.RaiseAndSetIfChanged(ref _fontSize, value);
+        }
+
+        private double _columnPadding = 15;
+        public double ColumnPadding
+        {
+            get => _columnPadding;
+            set => this.RaiseAndSetIfChanged(ref _columnPadding, value);
+        }
+
+        private bool _isHeaderVisible = true;
+        public bool IsHeaderVisible
+        {
+            get => _isHeaderVisible;
+            set => this.RaiseAndSetIfChanged(ref _isHeaderVisible, value);
+        }
+
+        // Column Visibility
+        private bool _isOffsetColumnVisible = true;
+        public bool IsOffsetColumnVisible
+        {
+            get => _isOffsetColumnVisible;
+            set => this.RaiseAndSetIfChanged(ref _isOffsetColumnVisible, value);
+        }
+
+        private bool _isHexColumnVisible = true;
+        public bool IsHexColumnVisible
+        {
+            get => _isHexColumnVisible;
+            set => this.RaiseAndSetIfChanged(ref _isHexColumnVisible, value);
+        }
+
+        private bool _isAsciiColumnVisible = true;
+        public bool IsAsciiColumnVisible
+        {
+            get => _isAsciiColumnVisible;
+            set => this.RaiseAndSetIfChanged(ref _isAsciiColumnVisible, value);
+        }
+
+        private bool _isBinaryColumnVisible = false;
+        public bool IsBinaryColumnVisible
+        {
+            get => _isBinaryColumnVisible;
+            set => this.RaiseAndSetIfChanged(ref _isBinaryColumnVisible, value);
+        }
+
+        // Header Visibility
+        private bool _isOffsetHeaderVisible = true;
+        public bool IsOffsetHeaderVisible
+        {
+            get => _isOffsetHeaderVisible;
+            set => this.RaiseAndSetIfChanged(ref _isOffsetHeaderVisible, value);
+        }
+
+        private bool _isHexHeaderVisible = true;
+        public bool IsHexHeaderVisible
+        {
+            get => _isHexHeaderVisible;
+            set => this.RaiseAndSetIfChanged(ref _isHexHeaderVisible, value);
+        }
+
+        private bool _isAsciiHeaderVisible = true;
+        public bool IsAsciiHeaderVisible
+        {
+            get => _isAsciiHeaderVisible;
+            set => this.RaiseAndSetIfChanged(ref _isAsciiHeaderVisible, value);
+        }
+
+        private bool _isBinaryHeaderVisible = true;
+        public bool IsBinaryHeaderVisible
+        {
+            get => _isBinaryHeaderVisible;
+            set => this.RaiseAndSetIfChanged(ref _isBinaryHeaderVisible, value);
+        }
+
         public ReactiveCommand<Unit, Unit> CloseFileCommand { get; }
+        public ReactiveCommand<Unit, Unit> CopyCommand { get; set; } = null!; // Set by View or initialized later if we move logic here
 
         public void OpenStream(string path)
         {
