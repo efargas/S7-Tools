@@ -165,4 +165,5 @@ public partial class HexViewerControl : UserControl
             _isResizing = false;
         }
     }
+
 }

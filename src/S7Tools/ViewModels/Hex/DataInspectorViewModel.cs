@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using S7Tools.Services.Hex;
 
 namespace S7Tools.ViewModels.Hex;
 
@@ -223,6 +224,24 @@ public partial class DataInspectorViewModel : ObservableObject
     }
 
     // Helpers not strictly needed with the array logic above but good for clarity if reused
-    private static byte[] ReverseIfLittle(byte[] b) { if (BitConverter.IsLittleEndian) Array.Reverse(b); return b; }
     private static byte[] ReverseIfBig(byte[] b) { if (!BitConverter.IsLittleEndian) Array.Reverse(b); return b; }
+
+    public SearchViewModel Search { get; }
+
+    public DataInspectorViewModel()
+    {
+        // Initialize SearchViewModel
+        Search = new SearchViewModel(new BinarySearchService());
+        Search.RequestNavigation += OnSearchRequestNavigation;
+    }
+
+    private void OnSearchRequestNavigation(long offset)
+    {
+        RequestGoToOffset?.Invoke(offset);
+    }
+
+    public void SetDocument(AvaloniaHex.Document.IBinaryDocument? document)
+    {
+        Search.SetDocument(document);
+    }
 }

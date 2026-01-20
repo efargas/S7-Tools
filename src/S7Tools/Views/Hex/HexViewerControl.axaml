@@ -24,7 +24,7 @@
         </StackPanel>
 
         <!-- Hex Content -->
-        <Grid IsVisible="{Binding IsFileOpen}" RowDefinitions="Auto,Auto,*">
+        <Grid IsVisible="{Binding IsFileOpen}" RowDefinitions="Auto,Auto,Auto,*">
 
             <!-- Menu -->
             <Menu Grid.Row="0" Background="#252526" IsVisible="{Binding IsFileOpen}">
@@ -94,13 +94,15 @@
                 </StackPanel>
             </Border>
 
+
+            <!-- Hex Editor Control -->
             <!-- Hex Editor Control -->
             <!-- Wrapped in ScrollViewer and Border to force physical horizontal scrolling 
                  because HexEditor logic doesn't support it natively -->
             <!-- Hex Editor Control -->
             <!-- Wrapped in ScrollViewer and Border to force physical horizontal scrolling 
                  because HexEditor logic doesn't support it natively -->
-            <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"
+            <ScrollViewer Grid.Row="3" HorizontalScrollBarVisibility="Auto"
                 VerticalScrollBarVisibility="Disabled">
                 <Border>
                     <avHex:HexEditor

@@ -12,99 +12,170 @@
         <TextBlock Text="Data Inspector" FontSize="14" FontWeight="SemiBold" Margin="10"
             Foreground="#CCCCCC" />
 
-        <ScrollViewer Grid.Row="1" Padding="10">
-            <StackPanel Spacing="15">
+        <TabControl Grid.Row="1" Margin="0,10,0,0">
+            <!-- Values Tab -->
+            <TabItem Header="Values" FontSize="12">
+                <ScrollViewer Padding="10">
+                    <StackPanel Spacing="15">
 
-                <!-- Endianness Toggle -->
-                <Border Background="#2D2D30" CornerRadius="4" Padding="8">
-                    <DockPanel>
-                        <TextBlock Text="Endianness" VerticalAlignment="Center" Foreground="#999999" />
-                        <StackPanel Orientation="Horizontal" Spacing="10"
-                            HorizontalAlignment="Right">
-                            <RadioButton Content="Big" IsChecked="{Binding IsBigEndian}"
-                                GroupName="Endianness" Foreground="White" />
-                            <RadioButton Content="Little" IsChecked="{Binding !IsBigEndian}"
-                                GroupName="Endianness" Foreground="White" />
-                        </StackPanel>
-                    </DockPanel>
-                </Border>
+                        <!-- Endianness Toggle -->
+                        <Border Background="#2D2D30" CornerRadius="4" Padding="8">
+                            <DockPanel>
+                                <TextBlock Text="Endianness" VerticalAlignment="Center"
+                                    Foreground="#999999" />
+                                <StackPanel Orientation="Horizontal" Spacing="10"
+                                    HorizontalAlignment="Right">
+                                    <RadioButton Content="Big" IsChecked="{Binding IsBigEndian}"
+                                        GroupName="Endianness" Foreground="White" />
+                                    <RadioButton Content="Little" IsChecked="{Binding !IsBigEndian}"
+                                        GroupName="Endianness" Foreground="White" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
 
-                <!-- Data Grid -->
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                    ColumnDefinitions="Auto,*">
-                    <Grid.Styles>
-                        <Style Selector="TextBlock.label">
-                            <Setter Property="Foreground" Value="#858585" />
-                            <Setter Property="VerticalAlignment" Value="Center" />
-                            <Setter Property="Margin" Value="0,0,10,0" />
-                        </Style>
-                        <Style Selector="TextBox.value">
-                            <Setter Property="Background" Value="Transparent" />
-                            <Setter Property="BorderThickness" Value="0" />
-                            <Setter Property="IsReadOnly" Value="True" />
-                            <Setter Property="Foreground" Value="#D4D4D4" />
-                            <Setter Property="FontFamily" Value="Cascadia Mono,Consolas,Courier New" />
-                        </Style>
-                    </Grid.Styles>
+                        <!-- Data Grid -->
+                        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                            ColumnDefinitions="Auto,*">
+                            <Grid.Styles>
+                                <Style Selector="TextBlock.label">
+                                    <Setter Property="Foreground" Value="#858585" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="Margin" Value="0,0,10,0" />
+                                </Style>
+                                <Style Selector="TextBox.value">
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Setter Property="IsReadOnly" Value="True" />
+                                    <Setter Property="Foreground" Value="#D4D4D4" />
+                                    <Setter Property="FontFamily"
+                                        Value="Cascadia Mono,Consolas,Courier New" />
+                                </Style>
+                            </Grid.Styles>
 
-                    <!-- Binary -->
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Binary (8)" Classes="label" />
-                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Binary8}" Classes="value" />
+                            <!-- Binary -->
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Binary (8)"
+                                Classes="label" />
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Binary8}"
+                                Classes="value" />
 
-                    <!-- Int8 -->
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Int8" Classes="label" />
-                    <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Int8}" Classes="value" />
+                            <!-- Int8 -->
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Int8" Classes="label" />
+                            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Int8}"
+                                Classes="value" />
 
-                    <!-- UInt8 -->
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="UInt8" Classes="label" />
-                    <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding UInt8}" Classes="value" />
+                            <!-- UInt8 -->
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="UInt8" Classes="label" />
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding UInt8}"
+                                Classes="value" />
 
-                    <!-- Int16 -->
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Int16" Classes="label" />
-                    <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Int16}" Classes="value" />
+                            <!-- Int16 -->
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Int16" Classes="label" />
+                            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Int16}"
+                                Classes="value" />
 
-                    <!-- UInt16 -->
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="UInt16" Classes="label" />
-                    <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding UInt16}" Classes="value" />
+                            <!-- UInt16 -->
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="UInt16" Classes="label" />
+                            <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding UInt16}"
+                                Classes="value" />
 
-                    <!-- Int32 -->
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Int32" Classes="label" />
-                    <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Int32}" Classes="value" />
+                            <!-- Int32 -->
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Int32" Classes="label" />
+                            <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Int32}"
+                                Classes="value" />
 
-                    <!-- UInt32 -->
-                    <TextBlock Grid.Row="6" Grid.Column="0" Text="UInt32" Classes="label" />
-                    <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding UInt32}" Classes="value" />
+                            <!-- UInt32 -->
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="UInt32" Classes="label" />
+                            <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding UInt32}"
+                                Classes="value" />
 
-                    <!-- Float -->
-                    <TextBlock Grid.Row="7" Grid.Column="0" Text="Float32" Classes="label" />
-                    <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding Float32}" Classes="value" />
+                            <!-- Float -->
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="Float32" Classes="label" />
+                            <TextBox Grid.Row="7" Grid.Column="1" Text="{Binding Float32}"
+                                Classes="value" />
 
-                    <!-- Double -->
-                    <TextBlock Grid.Row="8" Grid.Column="0" Text="Double64" Classes="label" />
-                    <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Double64}" Classes="value" />
+                            <!-- Double -->
+                            <TextBlock Grid.Row="8" Grid.Column="0" Text="Double64" Classes="label" />
+                            <TextBox Grid.Row="8" Grid.Column="1" Text="{Binding Double64}"
+                                Classes="value" />
 
-                </Grid>
-
-                <!-- Tools -->
-                <Border Background="#2D2D30" CornerRadius="4" Padding="8" Margin="0,15,0,0">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Navigation &amp; Edit" FontWeight="SemiBold"
-                            Foreground="#CCCCCC" />
-                        <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
-                            <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding TargetOffset}"
-                                Watermark="Offset (Hex)" Margin="0,0,5,5" />
-                            <Button Grid.Row="0" Grid.Column="1"
-                                Command="{Binding GoToOffsetCommand}" Content="Go" Margin="0,0,0,5" />
-
-                            <TextBox Grid.Row="1" Grid.Column="0" Text="{Binding FillPattern}"
-                                Watermark="Fill (Hex)" Margin="0,0,5,0" />
-                            <Button Grid.Row="1" Grid.Column="1"
-                                Command="{Binding FillSelectionCommand}" Content="Fill" />
                         </Grid>
-                    </StackPanel>
-                </Border>
 
-            </StackPanel>
-        </ScrollViewer>
+                        <!-- Tools -->
+                        <Border Background="#2D2D30" CornerRadius="4" Padding="8" Margin="0,15,0,0">
+                            <StackPanel Spacing="10">
+                                <TextBlock Text="Navigation &amp; Edit" FontWeight="SemiBold"
+                                    Foreground="#CCCCCC" />
+                                <Grid ColumnDefinitions="*, Auto" RowDefinitions="Auto, Auto">
+                                    <TextBox Grid.Row="0" Grid.Column="0"
+                                        Text="{Binding TargetOffset}"
+                                        Watermark="Offset (Hex)" Margin="0,0,5,5" />
+                                    <Button Grid.Row="0" Grid.Column="1"
+                                        Command="{Binding GoToOffsetCommand}" Content="Go"
+                                        Margin="0,0,0,5" />
+
+                                    <TextBox Grid.Row="1" Grid.Column="0"
+                                        Text="{Binding FillPattern}"
+                                        Watermark="Fill (Hex)" Margin="0,0,5,0" />
+                                    <Button Grid.Row="1" Grid.Column="1"
+                                        Command="{Binding FillSelectionCommand}" Content="Fill" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- Search Tab -->
+            <TabItem Header="Search" FontSize="12">
+                <Grid RowDefinitions="Auto,Auto,*" Margin="10">
+                    <!-- Search Input -->
+                    <StackPanel Grid.Row="0" Spacing="8">
+                        <TextBox Text="{Binding Search.QueryText}" Watermark="Search..." />
+                        <ComboBox SelectedIndex="{Binding Search.SearchMode}"
+                            HorizontalAlignment="Stretch">
+                            <ComboBoxItem>Hex</ComboBoxItem>
+                            <ComboBoxItem>String</ComboBoxItem>
+                            <ComboBoxItem>Binary</ComboBoxItem>
+                        </ComboBox>
+                        <Grid ColumnDefinitions="*,*,*">
+                            <Button Grid.Column="0" Content="Find All"
+                                Command="{Binding Search.FindCommand}"
+                                HorizontalAlignment="Stretch" Margin="0,0,5,0" />
+                            <Button Grid.Column="1" Content="Prev"
+                                Command="{Binding Search.FindPreviousCommand}"
+                                HorizontalAlignment="Stretch" Margin="0,0,5,0" />
+                            <Button Grid.Column="2" Content="Next"
+                                Command="{Binding Search.FindNextCommand}"
+                                HorizontalAlignment="Stretch" />
+                        </Grid>
+                        <TextBlock Text="{Binding Search.StatusMessage}" Foreground="#AAAAAA"
+                            FontStyle="Italic"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Separator Grid.Row="1" Margin="0,10" Background="#3F3F46" />
+
+                    <!-- Results List -->
+                    <DockPanel Grid.Row="2">
+                        <TextBlock DockPanel.Dock="Top" Text="Results" FontWeight="SemiBold"
+                            Margin="0,0,0,5" />
+                        <ListBox ItemsSource="{Binding Search.SearchResults}"
+                            SelectedIndex="{Binding Search.CurrentResultIndex}"
+                            Background="#2D2D30" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="10">
+                                        <TextBlock Text="Offset:" Foreground="Gray" />
+                                        <TextBlock Text="{Binding StringFormat='0x{0:X8}'}"
+                                            FontFamily="Consolas" Foreground="#DCDCDC" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </DockPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

@@ -6,6 +6,7 @@ using AvaloniaHex.Document;
 using ReactiveUI;
 using S7Tools.Core.Interfaces;
 using S7Tools.Models.Hex;
+using S7Tools.Services.Hex;
 
 namespace S7Tools.ViewModels.Hex
 {
@@ -125,6 +126,8 @@ namespace S7Tools.ViewModels.Hex
                 FileName = Path.GetFileName(path);
                 FileSize = (long)doc.Length;
 
+                DataInspector?.SetDocument(doc);
+                
                 this.RaisePropertyChanged(nameof(IsFileOpen));
             }
             catch (Exception ex)
@@ -139,6 +142,7 @@ namespace S7Tools.ViewModels.Hex
             {
                 Document.Dispose();
                 Document = null;
+                DataInspector?.SetDocument(null);
             }
             FileName = string.Empty;
             FileSize = 0;
@@ -169,7 +173,16 @@ namespace S7Tools.ViewModels.Hex
 
         public void Dispose()
         {
-            CloseFile();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                CloseFile();
+            }
         }
     }
 }

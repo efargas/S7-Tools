@@ -18,6 +18,8 @@ namespace S7Tools.Models.Hex
         }
 
         public event EventHandler<BinaryDocumentChange>? Changed;
+#pragma warning disable CS0067 // El evento no se usa
+#pragma warning restore CS0067
 
         public ulong Length { get; }
 
@@ -33,7 +35,16 @@ namespace S7Tools.Models.Hex
 
         public void Dispose()
         {
-            _fileStream.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _fileStream.Dispose();
+            }
         }
 
         public void Flush()
@@ -51,7 +62,7 @@ namespace S7Tools.Models.Hex
                     return;
 
                 _fileStream.Position = (long)offset;
-                _fileStream.Read(buffer);
+                int bytesRead = _fileStream.Read(buffer);
             }
         }
 
