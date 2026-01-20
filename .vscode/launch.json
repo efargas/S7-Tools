@@ -15,7 +15,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: 2-build",
-            "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net8.0/S7Tools.dll",
+            "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net9.0/S7Tools.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
@@ -26,14 +26,14 @@
             "type": "dotnet-meteor.debugger",
             "request": "launch",
             "preLaunchTask": "dotnet-meteor: 2-Build",
-            "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net8.0/S7Tools.dll",
+            "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net9.0/S7Tools.dll",
         },
         {
             "name": ".NET Core Launch (console)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "dotnet: 2-build",
-            "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net8.0/S7Tools.dll",
+            "program": "${workspaceFolder}/src/S7Tools/bin/Debug/net9.0/S7Tools.dll",
         }
     ]
 }

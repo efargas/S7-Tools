@@ -10,7 +10,7 @@
     x:DataType="vm:HexViewerViewModel">
 
     <UserControl.Styles>
-        <StyleInclude Source="avares://AvaloniaHex/Themes/Simple/AvaloniaHex.axaml" />
+        <StyleInclude Source="avares://AvaloniaHex/Themes/Fluent/AvaloniaHex.axaml" />
     </UserControl.Styles>
 
     <Grid>
@@ -51,26 +51,26 @@
                     </MenuItem>
                     <MenuItem Header="Columns">
                         <MenuItem Header="Offset" Click="ToggleOffsetColumnOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsOffsetColumnVisible}" />
+                            ToggleType="CheckBox" IsChecked="True" />
                         <MenuItem Header="Hex" Click="ToggleHexColumnOnClick" ToggleType="CheckBox"
-                            IsChecked="{Binding IsHexColumnVisible}" />
+                            IsChecked="True" />
                         <MenuItem Header="Binary" Click="ToggleBinaryColumnOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsBinaryColumnVisible}" />
+                            ToggleType="CheckBox" IsChecked="False" />
                         <MenuItem Header="ASCII" Click="ToggleAsciiColumnOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsAsciiColumnVisible}" />
+                            ToggleType="CheckBox" IsChecked="True" />
                     </MenuItem>
                     <MenuItem Header="Column Headers">
                         <MenuItem Header="Visible" Click="ToggleHeaderVisibleOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsHeaderVisible}" />
+                            ToggleType="CheckBox" IsChecked="True" />
                         <Separator />
                         <MenuItem Header="Offset" Click="ToggleOffsetHeaderVisibleOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsOffsetHeaderVisible}" />
+                            ToggleType="CheckBox" IsChecked="True" />
                         <MenuItem Header="Hex" Click="ToggleHexHeaderVisibleOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsHexHeaderVisible}" />
+                            ToggleType="CheckBox" IsChecked="True" />
                         <MenuItem Header="Binary" Click="ToggleBinaryHeaderVisibleOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsBinaryHeaderVisible}" />
+                            ToggleType="CheckBox" IsChecked="True" />
                         <MenuItem Header="ASCII" Click="ToggleAsciiHeaderVisibleOnClick"
-                            ToggleType="CheckBox" IsChecked="{Binding IsAsciiHeaderVisible}" />
+                            ToggleType="CheckBox" IsChecked="True" />
                     </MenuItem>
                     <MenuItem Header="Column Padding">
                         <MenuItem Header="5" Click="ColumnPaddingOnClick" CommandParameter="5" />
@@ -98,23 +98,17 @@
             <avHex:HexEditor Grid.Row="2"
                 x:Name="MainHexEditor"
                 Document="{Binding Document}"
-                IsHeaderVisible="{Binding IsHeaderVisible}"
-                ColumnPadding="{Binding ColumnPadding}"
+                ColumnPadding="30"
+                HorizontalScrollBarVisibility="Auto"
+                VerticalScrollBarVisibility="Auto"
                 Background="#1E1E1E"
                 Foreground="#D4D4D4"
-                FontFamily="Cascadia Mono,Consolas,Courier New,Monospace"
-                FontSize="{Binding FontSize}">
+                FontFamily="Fira Code, Hack, DejaVu Sans Mono, Consolas, Courier New, Monospace">
                 <avHex:HexEditor.Columns>
-                    <avRend:OffsetColumn Header="Address" Foreground="#00CED1"
-                        IsVisible="{Binding IsOffsetColumnVisible}"
-                        IsHeaderVisible="{Binding IsOffsetHeaderVisible}" />
-                    <avRend:HexColumn IsVisible="{Binding IsHexColumnVisible}"
-                        IsHeaderVisible="{Binding IsHexHeaderVisible}" />
-                    <avRend:BinaryColumn IsVisible="{Binding IsBinaryColumnVisible}"
-                        IsHeaderVisible="{Binding IsBinaryHeaderVisible}" />
-                    <avRend:AsciiColumn Header="ASCII" Foreground="#00CED1"
-                        IsVisible="{Binding IsAsciiColumnVisible}"
-                        IsHeaderVisible="{Binding IsAsciiHeaderVisible}" />
+                    <avRend:OffsetColumn Header="Address" Foreground="#00CED1" />
+                    <avRend:HexColumn />
+                    <avRend:BinaryColumn IsVisible="False" />
+                    <avRend:AsciiColumn Header="ASCII" Foreground="#00CED1" />
                 </avHex:HexEditor.Columns>
             </avHex:HexEditor>
 

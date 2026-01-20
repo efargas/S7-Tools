@@ -5,6 +5,7 @@ using Avalonia.Data;
 using AvaloniaHex.Document;
 using Avalonia.Markup.Xaml;
 using S7Tools.ViewModels.Hex;
+using AvaloniaHex.Rendering;
 
 namespace S7Tools.Views.Hex;
 
@@ -51,46 +52,59 @@ public partial class HexViewerControl : UserControl
         await MainHexEditor.Copy();
     }
 
-    private void FontSizeOnClick(object? sender, RoutedEventArgs e)
+    // Toggle Column Visibility
+    private void ToggleColumn<TColumn>() where TColumn : Column
     {
-        if (DataContext is HexViewerViewModel vm &&
-            sender is MenuItem { CommandParameter: { } param } &&
-            double.TryParse(param.ToString(), out double size))
+        var column = MainHexEditor.Columns.Get<TColumn>(); 
+        column.IsVisible = !column.IsVisible;
+    }
+
+    private void ToggleOffsetColumnOnClick(object? sender, RoutedEventArgs e) => ToggleColumn<OffsetColumn>();
+    private void ToggleHexColumnOnClick(object? sender, RoutedEventArgs e) => ToggleColumn<HexColumn>();
+    private void ToggleBinaryColumnOnClick(object? sender, RoutedEventArgs e) => ToggleColumn<BinaryColumn>();
+    private void ToggleAsciiColumnOnClick(object? sender, RoutedEventArgs e) => ToggleColumn<AsciiColumn>();
+
+    // Toggle Header Visibility
+    private void ToggleHeaderVisibleOnClick(object? sender, RoutedEventArgs e)
+    {
+        MainHexEditor.IsHeaderVisible = !MainHexEditor.IsHeaderVisible;
+    }
+
+    private void ToggleColumnHeader<TColumn>() where TColumn : Column
+    {
+        var column = MainHexEditor.Columns.Get<TColumn>();
+        column.IsHeaderVisible = !column.IsHeaderVisible;
+    }
+
+    private void ToggleOffsetHeaderVisibleOnClick(object? sender, RoutedEventArgs e) => ToggleColumnHeader<OffsetColumn>();
+    private void ToggleHexHeaderVisibleOnClick(object? sender, RoutedEventArgs e) => ToggleColumnHeader<HexColumn>();
+    private void ToggleBinaryHeaderVisibleOnClick(object? sender, RoutedEventArgs e) => ToggleColumnHeader<BinaryColumn>();
+    private void ToggleAsciiHeaderVisibleOnClick(object? sender, RoutedEventArgs e) => ToggleColumnHeader<AsciiColumn>();
+
+    private void ColumnPaddingOnClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is MenuItem { CommandParameter: { } param } &&
+            double.TryParse(param.ToString(), out double padding))
         {
-            vm.FontSize = size;
+            MainHexEditor.ColumnPadding = padding;
         }
     }
 
     private void BytesPerLineOnClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is HexViewerViewModel vm &&
-            sender is MenuItem { CommandParameter: { } param } &&
+        if (sender is MenuItem { CommandParameter: { } param } &&
             int.TryParse(param.ToString(), out int count))
         {
-            vm.BytesPerLine = count;
+            MainHexEditor.HexView.BytesPerLine = count;
         }
     }
 
-    private void ColumnPaddingOnClick(object? sender, RoutedEventArgs e)
+    private void FontSizeOnClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is HexViewerViewModel vm &&
-            sender is MenuItem { CommandParameter: { } param } &&
-            double.TryParse(param.ToString(), out double padding))
+        if (sender is MenuItem { CommandParameter: { } param } &&
+            double.TryParse(param.ToString(), out double size))
         {
-            vm.ColumnPadding = padding;
+            MainHexEditor.HexView.FontSize = size;
         }
     }
-
-    // Toggle handlers are managed via Binding IsChecked in XAML, 
-    // but we need these methods to satisfy the Click event handlers defined in XAML.
-    private void ToggleOffsetColumnOnClick(object? sender, RoutedEventArgs e) { }
-    private void ToggleHexColumnOnClick(object? sender, RoutedEventArgs e) { }
-    private void ToggleBinaryColumnOnClick(object? sender, RoutedEventArgs e) { }
-    private void ToggleAsciiColumnOnClick(object? sender, RoutedEventArgs e) { }
-
-    private void ToggleHeaderVisibleOnClick(object? sender, RoutedEventArgs e) { }
-    private void ToggleOffsetHeaderVisibleOnClick(object? sender, RoutedEventArgs e) { }
-    private void ToggleHexHeaderVisibleOnClick(object? sender, RoutedEventArgs e) { }
-    private void ToggleBinaryHeaderVisibleOnClick(object? sender, RoutedEventArgs e) { }
-    private void ToggleAsciiHeaderVisibleOnClick(object? sender, RoutedEventArgs e) { }
 }
