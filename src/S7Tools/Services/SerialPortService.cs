@@ -46,12 +46,16 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         _monitoringService = monitoringService ?? throw new ArgumentNullException(nameof(monitoringService));
 
         // Wire up events from monitoring service
-        _monitoringService.PortAdded += (s, e) => PortAdded?.Invoke(this, e);
-        _monitoringService.PortRemoved += (s, e) => PortRemoved?.Invoke(this, e);
-        _monitoringService.PortStatusChanged += (s, e) => PortStatusChanged?.Invoke(this, e);
+        _monitoringService.PortAdded += OnPortAdded;
+        _monitoringService.PortRemoved += OnPortRemoved;
+        _monitoringService.PortStatusChanged += OnPortStatusChanged;
 
         _logger.LogDebug("SerialPortService facade initialized with specialized services");
     }
+
+    private void OnPortAdded(object? sender, SerialPortEventArgs e) => PortAdded?.Invoke(this, e);
+    private void OnPortRemoved(object? sender, SerialPortEventArgs e) => PortRemoved?.Invoke(this, e);
+    private void OnPortStatusChanged(object? sender, SerialPortStatusChangedEventArgs e) => PortStatusChanged?.Invoke(this, e);
 
     #region Events
 
@@ -206,7 +210,15 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// </summary>
     public void Dispose()
     {
+        if (_monitoringService != null)
+        {
+            _monitoringService.PortAdded -= OnPortAdded;
+            _monitoringService.PortRemoved -= OnPortRemoved;
+            _monitoringService.PortStatusChanged -= OnPortStatusChanged;
+        }
+
         _monitoringService?.Dispose();
+
         GC.SuppressFinalize(this);
     }
 
