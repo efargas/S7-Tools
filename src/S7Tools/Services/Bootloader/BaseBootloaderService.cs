@@ -621,14 +621,9 @@ public abstract class BaseBootloaderService
                 }
             }
 
-            // Read all temp files back as byte arrays
-            logger.LogInformation("Reading {Count} dump files into memory...", tempFiles.Count);
-            foreach (string tempFile in tempFiles)
-            {
-                byte[] data = await System.IO.File.ReadAllBytesAsync(tempFile, cancellationToken).ConfigureAwait(false);
-                allDumps.Add(data);
-                logger.LogDebug("  Read {Size:N0} bytes from temp file", data.Length);
-            }
+            // The data from temp files has already been added to allDumps within the iteration loop.
+            // The redundant loop that re-reads the files has been removed.
+            logger.LogInformation("All {Count} dump files have been processed.", tempFiles.Count);
 
             TimeSpan dumpDuration = (_timeProvider?.GetUtcNow() ?? DateTime.UtcNow) - dumpStartTime;
             long totalBytes = allDumps.Sum(d => d.Length);
