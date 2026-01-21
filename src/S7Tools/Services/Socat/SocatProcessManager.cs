@@ -305,9 +305,27 @@ public partial class SocatProcessManager : IDisposable
                         await _shellExecutor.ExecuteCommandAsync($"kill -TERM {processId}", cancellationToken).ConfigureAwait(false);
                         exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
                     }
+                    else if (OperatingSystem.IsWindows())
+                    {
+                        // On Windows, for console apps, sending CTRL_C_EVENT is the graceful way.
+                        if (S7Tools.Interop.NativeMethods.GenerateConsoleCtrlEvent(S7Tools.Interop.NativeMethods.CtrlTypes.CTRL_C_EVENT, process.Id))
+                        {
+                            exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                        }
+
+                        if (!exited)
+                        {
+                            // Fallback to CloseMainWindow if CTRL_C_EVENT failed or didn't work
+                            if (process.MainWindowHandle != IntPtr.Zero)
+                            {
+                                process.CloseMainWindow();
+                                exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
+                            }
+                        }
+                    }
                     else
                     {
-                        // On Windows, try CloseMainWindow
+                        // Other OS or fallback
                         if (process.MainWindowHandle != IntPtr.Zero)
                         {
                             process.CloseMainWindow();
