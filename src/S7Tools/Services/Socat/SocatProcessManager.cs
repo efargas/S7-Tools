@@ -150,14 +150,16 @@ public partial class SocatProcessManager : IDisposable
             // Set up process exit handler
             process.Exited += (sender, args) =>
             {
+                int pid = process.Id;
+                int exitCode = process.ExitCode;
+
                 Task.Run(async () =>
                 {
                     await _semaphore.WaitAsync().ConfigureAwait(false);
                     try
                     {
-                        int pid = process.Id;
                         _logger.LogInformation("Socat process {ProcessId} exited with code {ExitCode}",
-                            pid, process.ExitCode);
+                            pid, exitCode);
 
                         // Clean up references
                         _activeProcesses.Remove(pid);
@@ -168,7 +170,7 @@ public partial class SocatProcessManager : IDisposable
                         }
 
                         // Raise event for facade to handle
-                        ProcessExited?.Invoke(this, new ProcessExitedEventArgs(pid, process.ExitCode));
+                        ProcessExited?.Invoke(this, new ProcessExitedEventArgs(pid, exitCode));
                     }
                     finally
                     {
