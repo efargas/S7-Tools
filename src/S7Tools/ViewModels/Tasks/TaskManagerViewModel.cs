@@ -784,10 +784,13 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             var result = await _taskCommandManager.RestartTaskAsync(targetTask);
             UpdateCommandResult(result);
-            if (result.IsSuccess)
+            if (result.IsSuccess && result.Data is TaskExecution newRestartedTask)
             {
-                // Logic to select new task? Manager doesn't return the new task ID explicitly in Result message
-                // But we have auto-refresh.
+                // Select the new task to provide immediate user feedback
+                await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                {
+                    SelectedTask = newRestartedTask;
+                });
             }
         }
         catch (Exception ex)

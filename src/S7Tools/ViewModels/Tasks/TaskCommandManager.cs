@@ -198,7 +198,7 @@ public class TaskCommandManager
             {
                 // Auto-start the restarted task
                 await _taskScheduler.EnqueueTaskAsync(newTask.TaskId).ConfigureAwait(false);
-                return CommandResult.Success($"Task '{task.JobName}' restarted");
+                return CommandResult.Success($"Task '{task.JobName}' restarted", newTask);
             }
             else
             {
@@ -390,15 +390,17 @@ public readonly record struct CommandResult
     public bool IsSuccess { get; }
     public bool IsCancelled { get; }
     public string Message { get; }
+    public object? Data { get; }
 
-    private CommandResult(bool isSuccess, bool isCancelled, string message)
+    private CommandResult(bool isSuccess, bool isCancelled, string message, object? data = null)
     {
         IsSuccess = isSuccess;
         IsCancelled = isCancelled;
         Message = message;
+        Data = data;
     }
 
-    public static CommandResult Success(string message) => new(true, false, message);
+    public static CommandResult Success(string message, object? data = null) => new(true, false, message, data);
     public static CommandResult Failure(string message) => new(false, false, message);
     public static CommandResult Cancelled() => new(false, true, string.Empty);
 }
