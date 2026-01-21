@@ -764,12 +764,17 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
         try
         {
+            IsLoading = true;
             var result = await _taskCommandManager.ScheduleTaskAsync(SelectedTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
         {
             HandleCommandException(ex, "scheduling task");
+        }
+        finally
+        {
+            IsLoading = false;
         }
     }
 
