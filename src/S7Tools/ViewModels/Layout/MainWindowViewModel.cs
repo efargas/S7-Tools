@@ -282,24 +282,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         {
             _logger.LogInformation("Initiating application exit sequence via command");
 
-            // Show confirmation dialog
-            bool result = await ShowExitConfirmationAsync();
-
-            if (result)
-            {
-                _logger.LogInformation("Application exit confirmed by user");
-
-                // Perform shutdown
-                await PerformShutdownAsync();
-
-                // Close the application window
-                await CloseApplicationInteraction.Handle(Unit.Default).FirstAsync();
-                _logger.LogInformation("Application closed successfully");
-            }
-            else
-            {
-                _logger.LogDebug("Application exit cancelled by user");
-            }
+            // Just request close; the View's OnClosing handler will manage confirmation and shutdown
+            // This prevents the double-dialog issue where ExitAsync shows one and OnClosing shows another
+            await CloseApplicationInteraction.Handle(Unit.Default).FirstAsync();
         }
         catch (Exception ex)
         {
