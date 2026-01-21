@@ -92,6 +92,11 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     /// <inheritdoc />
     public async Task<SerialPortInfo?> GetPortInfoAsync(string portPath, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(portPath))
+        {
+            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
+        }
+
         // Get port test timeout from settings and clamp to a safe range
         int configuredTimeoutMs = _settingsService.GetSetting("serial.portTestTimeoutMs", 1000);
         int portTestTimeoutMs = Math.Clamp(configuredTimeoutMs, 100, 10_000);
