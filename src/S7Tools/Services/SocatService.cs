@@ -54,6 +54,8 @@ public partial class SocatService : ISocatService, IDisposable
     /// <param name="processManager">Service for process lifecycle management.</param>
     /// <param name="portManager">Service for port checking and connection testing.</param>
     /// <param name="configService">Service for serial device configuration.</param>
+    /// <param name="serialPortService">Service for serial port communications.</param>
+    /// <param name="timeProvider">Provider for time-related operations.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     public SocatService(
         ILogger<SocatService> logger,
@@ -61,7 +63,9 @@ public partial class SocatService : ISocatService, IDisposable
         Socat.SocatCommandBuilder commandBuilder,
         Socat.SocatProcessManager processManager,
         Socat.SocatPortManager portManager,
-        Socat.SocatConfigurationService configService)
+        Socat.SocatConfigurationService configService,
+        ISerialPortService serialPortService,
+        ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
@@ -69,20 +73,12 @@ public partial class SocatService : ISocatService, IDisposable
         _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
         _portManager = portManager ?? throw new ArgumentNullException(nameof(portManager));
         _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
+        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
-        // Extract dependencies from specialized services for facade coordination
-        _serialPortService = configService.GetType()
-            .GetField("_serialPortService", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(configService) as ISerialPortService
-            ?? throw new InvalidOperationException("Cannot extract ISerialPortService");
-
-        _timeProvider = processManager.GetType()
-            .GetField("_timeProvider", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-            ?.GetValue(processManager) as ITimeProvider
-            ?? throw new InvalidOperationException("Cannot extract ITimeProvider");
         _processManager.ProcessExited += OnProcessExited;
 
-        _logger.LogDebug("SocatService initialized as facade with 4 specialized services");
+        _logger.LogDebug("SocatService initialized as facade with 4 specialized services and 2 injected dependencies");
     }
 
     private void OnProcessExited(object? sender, Socat.ProcessExitedEventArgs e)

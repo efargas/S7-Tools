@@ -159,7 +159,9 @@ public static class ServiceCollectionExtensions
                 provider.GetRequiredService<Services.Socat.SocatCommandBuilder>(),
                 provider.GetRequiredService<Services.Socat.SocatProcessManager>(),
                 provider.GetRequiredService<Services.Socat.SocatPortManager>(),
-                provider.GetRequiredService<Services.Socat.SocatConfigurationService>()
+                provider.GetRequiredService<Services.Socat.SocatConfigurationService>(),
+                provider.GetRequiredService<ISerialPortService>(),
+                provider.GetRequiredService<ITimeProvider>()
             )
         );
 
