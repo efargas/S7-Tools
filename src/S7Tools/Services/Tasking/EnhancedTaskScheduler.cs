@@ -870,7 +870,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             }
             else
             {
-                _scheduleTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                _scheduleTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+
 
                 _ = Task.Run(async () =>
                 {
