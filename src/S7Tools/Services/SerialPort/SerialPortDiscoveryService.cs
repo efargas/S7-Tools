@@ -173,7 +173,7 @@ public sealed class SerialPortDiscoveryService
             }
 
             // Test accessibility by trying to read port status with stty
-            string command = $"stty -F {portPath} -a";
+            string command = $"stty -F '{portPath.Replace("'", "'\"'\"'")}' -a";
             var result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, timeoutMs, cancellationToken).ConfigureAwait(false);
             return result.Success;
         }
@@ -307,7 +307,7 @@ public sealed class SerialPortDiscoveryService
         try
         {
             // Try to use lsof to check if port is in use
-            string command = $"lsof {portPath}";
+            string command = $"lsof '{portPath.Replace("'", "'\"'\"'")}'";
             var result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, 2000, cancellationToken).ConfigureAwait(false);
             return result.Success && !string.IsNullOrWhiteSpace(result.Output);
         }

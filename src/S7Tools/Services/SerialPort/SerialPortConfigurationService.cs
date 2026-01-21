@@ -55,7 +55,7 @@ public sealed partial class SerialPortConfigurationService
 
         try
         {
-            string command = $"stty -F {portPath} -a";
+            string command = $"stty -F '{portPath.Replace("'", "'\"'\"'")}' -a";
             SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
 
             if (!result.Success)
@@ -235,7 +235,7 @@ public sealed partial class SerialPortConfigurationService
         ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
 
         var sb = new StringBuilder();
-        sb.Append($"stty -F {portPath}");
+        sb.Append($"stty -F '{portPath.Replace("'", "'\"'\"'")}'");
 
         // Character size
         sb.Append($" cs{configuration.CharacterSize}");
