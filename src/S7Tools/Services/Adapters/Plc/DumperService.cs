@@ -337,7 +337,7 @@ namespace S7Tools.Services.Adapters.Plc
                 // Candidate 1: Framed "\x05", "O", "k"
                 if (b == 0x05)
                 {
-                    if (reader.Remaining < 5)
+                    if (reader.Remaining < 6) // Check for full framed greeting length
                     {
                         return false; // Potential partial match
                     }
@@ -346,7 +346,10 @@ namespace S7Tools.Services.Adapters.Plc
                     tempReader.Advance(1); // Skip 0x05
 
                     if (tempReader.TryRead(out byte b2) && b2 == 'O' &&
-                        tempReader.TryRead(out byte b3) && b3 == 'k')
+                        tempReader.TryRead(out byte b3) && b3 == 'k' &&
+                        tempReader.TryRead(out _) && // Skip byte 4 (don't care value)
+                        tempReader.TryRead(out _) && // Skip byte 5 (don't care value)
+                        tempReader.TryRead(out _))   // Skip byte 6 (checksum)
                     {
                         // Matched! Advance the original reader
                         reader.Advance(6); // 05, O, k, 00, 00, CS
