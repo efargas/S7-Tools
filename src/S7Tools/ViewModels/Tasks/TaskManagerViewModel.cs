@@ -714,6 +714,16 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         if (targetTask == null || targetTask.TaskId == Guid.Empty)
             return;
 
+        if (targetTask.State != TaskState.Created)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot start task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be Created)";
+            });
+            _logger.LogWarning("Cannot start task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
+            return;
+        }
+
         try
         {
             IsLoading = true;
@@ -737,6 +747,16 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         TaskExecution? targetTask = task ?? SelectedTask;
         if (targetTask == null)
             return;
+
+        if (!targetTask.CanCancel)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot stop task '{targetTask.JobName}' - task is in '{targetTask.State}' state";
+            });
+            _logger.LogWarning("Cannot stop task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
+            return;
+        }
 
         try
         {
@@ -782,6 +802,16 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         TaskExecution? targetTask = task ?? SelectedTask;
         if (targetTask == null)
             return;
+
+        if (!targetTask.CanRestart)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot restart task '{targetTask.JobName}' - task is in '{targetTask.State}' state";
+            });
+            _logger.LogWarning("Cannot restart task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
+            return;
+        }
 
         try
         {
