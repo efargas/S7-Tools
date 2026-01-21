@@ -67,14 +67,23 @@ public partial class SocatService : ISocatService, IDisposable
         ISerialPortService serialPortService,
         ITimeProvider timeProvider)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-        _commandBuilder = commandBuilder ?? throw new ArgumentNullException(nameof(commandBuilder));
-        _processManager = processManager ?? throw new ArgumentNullException(nameof(processManager));
-        _portManager = portManager ?? throw new ArgumentNullException(nameof(portManager));
-        _configService = configService ?? throw new ArgumentNullException(nameof(configService));
-        _serialPortService = serialPortService ?? throw new ArgumentNullException(nameof(serialPortService));
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(settingsService);
+        ArgumentNullException.ThrowIfNull(commandBuilder);
+        ArgumentNullException.ThrowIfNull(processManager);
+        ArgumentNullException.ThrowIfNull(portManager);
+        ArgumentNullException.ThrowIfNull(configService);
+        ArgumentNullException.ThrowIfNull(serialPortService);
+        ArgumentNullException.ThrowIfNull(timeProvider);
+
+        _logger = logger;
+        _settingsService = settingsService;
+        _commandBuilder = commandBuilder;
+        _processManager = processManager;
+        _portManager = portManager;
+        _configService = configService;
+        _serialPortService = serialPortService;
+        _timeProvider = timeProvider;
 
         _processManager.ProcessExited += OnProcessExited;
 
@@ -499,7 +508,9 @@ public partial class SocatService : ISocatService, IDisposable
         }
 
         if (managedUsage)
+        {
             return true;
+        }
 
         // Delegate systemwide check to PortManager
         return await _portManager.IsPortInUseAsync(tcpPort, cancellationToken).ConfigureAwait(false);
@@ -998,7 +1009,7 @@ public partial class SocatService : ISocatService, IDisposable
                 }
             }
 
-            var childPids = new List<int>();
+            List<int> childPids = [];
             string[] lines = stdout.Split(NewLines, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (string line in lines)

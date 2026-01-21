@@ -84,12 +84,4 @@ public class SettingsManagementViewModelTests
         Assert.Equal("Debug", viewModel.MinimumLogLevel);
         Assert.False(viewModel.AutoScrollLogs);
     }
-
-    // TODO: Re-enable and add more comprehensive tests for IApplicationSettingsService integration
-    [Fact(Skip = "Test disabled - needs update for IApplicationSettingsService")]
-    public void Placeholder_Test()
-    {
-        // This test is a placeholder to prevent test discovery errors
-        Assert.True(true);
-    }
 }

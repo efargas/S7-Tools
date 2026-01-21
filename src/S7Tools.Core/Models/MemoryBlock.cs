@@ -1,7 +1,4 @@
-using System;
-using System.Buffers.Binary;
-using System.Linq;
-using System.Text;
+
 
 namespace S7Tools.Core.Models;
 
@@ -20,7 +17,9 @@ public readonly struct MemoryBlock : IEquatable<MemoryBlock>
     /// <summary>
     /// Gets the raw memory data.
     /// </summary>
+#pragma warning disable CA1819 // Properties should not return arrays
     public byte[] Data { get; }
+#pragma warning restore CA1819
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MemoryBlock"/> struct.

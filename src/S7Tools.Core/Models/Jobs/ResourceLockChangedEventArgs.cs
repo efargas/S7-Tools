@@ -33,7 +33,7 @@ public class ResourceLockChangedEventArgs : EventArgs
     /// <param name="jobId">The job ID (optional).</param>
     public ResourceLockChangedEventArgs(ResourceKey resource, ResourceLockAction action, int? jobId = null)
     {
-        ArgumentNullException.ThrowIfNull(resource);
+
         Resource = resource;
         Action = action;
         JobId = jobId;

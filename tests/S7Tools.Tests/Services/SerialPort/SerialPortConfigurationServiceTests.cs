@@ -48,7 +48,7 @@ public class SerialPortConfigurationServiceTests
         string command = _service.GenerateSttyCommand(portPath, config);
 
         // Assert
-        Assert.Contains("stty -F /dev/ttyUSB0", command);
+        Assert.Contains("stty -F '/dev/ttyUSB0'", command);
         Assert.Contains("115200", command);
         Assert.Contains("cs8", command);
         Assert.Contains("raw", command);

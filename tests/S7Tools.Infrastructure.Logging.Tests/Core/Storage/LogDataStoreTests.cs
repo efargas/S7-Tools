@@ -3,6 +3,7 @@ using System.ComponentModel;
 using Microsoft.Extensions.Logging;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Infrastructure.Logging.Tests.Core.Storage;
 

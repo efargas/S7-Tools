@@ -62,10 +62,13 @@ public class JobSchedulerTests
         // Arrange
         var mockResources = new Mock<IResourceCoordinator>();
         var mockBootloader = new Mock<IBootloaderService>();
+        var mockTime = new Mock<ITimeProvider>();
+        mockTime.Setup(t => t.GetLocalNow()).Returns(() => DateTime.Now);
         var scheduler = new JobScheduler(
             NullLogger<JobScheduler>.Instance,
             mockResources.Object,
-            mockBootloader.Object
+            mockBootloader.Object,
+            mockTime.Object
         );
 
         Job testJob = new()
@@ -91,7 +94,7 @@ public class JobSchedulerTests
         enqueuedJob.Should().NotBeNull();
         enqueuedJob.State.Should().Be(JobState.Queued);
         enqueuedJob.QueuedAt.Should().NotBeNull();
-        enqueuedJob.QueuedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        enqueuedJob.QueuedAt.Should().BeCloseTo(DateTime.Now, TimeSpan.FromSeconds(1));
 
         eventArgs.Should().NotBeNull();
         eventArgs!.JobId.Should().Be(1);
@@ -109,10 +112,13 @@ public class JobSchedulerTests
         // Arrange
         var mockResources = new Mock<IResourceCoordinator>();
         var mockBootloader = new Mock<IBootloaderService>();
+        var mockTime = new Mock<ITimeProvider>();
+        mockTime.Setup(t => t.GetLocalNow()).Returns(() => DateTime.Now);
         var scheduler = new JobScheduler(
             NullLogger<JobScheduler>.Instance,
             mockResources.Object,
-            mockBootloader.Object
+            mockBootloader.Object,
+            mockTime.Object
         );
 
         // Act

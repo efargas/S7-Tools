@@ -72,19 +72,21 @@ public class SchedulerParallelExecutionTests
         // Simulate 2-second execution time
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
-            It.IsAny<IProgress<(string stage, double percent)>>(),
-            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
+            It.IsAny<IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
             It.IsAny<CancellationToken>()))
-            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, Microsoft.Extensions.Logging.ILogger? logger, CancellationToken ct) =>
+            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress, Microsoft.Extensions.Logging.ILogger? taskLogger, Microsoft.Extensions.Logging.ILogger? processLogger, CancellationToken ct) =>
             {
                 await Task.Delay(2000, ct);
-                return new byte[0x1000];
+                return new BootloaderResult([new byte[0x1000]], []);
             });
 
         var scheduler = new JobScheduler(
             NullLogger<JobScheduler>.Instance,
             coordinator,
-            mockBootloader.Object
+            mockBootloader.Object,
+            new Mock<ITimeProvider>().Object
         );
 
         Job job1 = new()
@@ -159,19 +161,21 @@ public class SchedulerParallelExecutionTests
         // Simulate 1-second execution time
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
-            It.IsAny<IProgress<(string stage, double percent)>>(),
-            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
+            It.IsAny<IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
             It.IsAny<CancellationToken>()))
-            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, Microsoft.Extensions.Logging.ILogger? logger, CancellationToken ct) =>
+            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress, Microsoft.Extensions.Logging.ILogger? taskLogger, Microsoft.Extensions.Logging.ILogger? processLogger, CancellationToken ct) =>
             {
                 await Task.Delay(1000, ct);
-                return new byte[0x1000];
+                return new BootloaderResult([new byte[0x1000]], []);
             });
 
         var scheduler = new JobScheduler(
             NullLogger<JobScheduler>.Instance,
             coordinator,
-            mockBootloader.Object
+            mockBootloader.Object,
+            new Mock<ITimeProvider>().Object
         );
 
         Job job1 = new()
@@ -290,15 +294,17 @@ public class SchedulerParallelExecutionTests
         // Simulate job failure with exception
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
-            It.IsAny<IProgress<(string stage, double percent)>>(),
-            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
+            It.IsAny<IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
             It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Simulated bootloader failure"));
 
         var scheduler = new JobScheduler(
             NullLogger<JobScheduler>.Instance,
             coordinator,
-            mockBootloader.Object
+            mockBootloader.Object,
+            new Mock<ITimeProvider>().Object
         );
 
         Job failingJob = new()
@@ -354,19 +360,21 @@ public class SchedulerParallelExecutionTests
         // Simulate 2-second execution time
         mockBootloader.Setup(b => b.DumpAsync(
             It.IsAny<JobProfileSet>(),
-            It.IsAny<IProgress<(string stage, double percent)>>(),
-            It.IsAny<Microsoft.Extensions.Logging.ILogger>(),
+            It.IsAny<IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)>>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
+            It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
             It.IsAny<CancellationToken>()))
-            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent)> progress, Microsoft.Extensions.Logging.ILogger? logger, CancellationToken ct) =>
+            .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress, Microsoft.Extensions.Logging.ILogger? taskLogger, Microsoft.Extensions.Logging.ILogger? processLogger, CancellationToken ct) =>
             {
                 await Task.Delay(2000, ct);
-                return new byte[0x1000];
+                return new BootloaderResult([new byte[0x1000]], []);
             });
 
         var scheduler = new JobScheduler(
             NullLogger<JobScheduler>.Instance,
             coordinator,
-            mockBootloader.Object
+            mockBootloader.Object,
+            new Mock<ITimeProvider>().Object
         );
 
         // Create 4 jobs with unique serial ports, TCP ports, AND modbus hosts

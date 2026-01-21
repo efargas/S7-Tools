@@ -10,18 +10,12 @@ using S7Tools.Core.Resources;
 
 namespace S7Tools.ViewModels;
 
-public class SplashScreenViewModel : ViewModelBase
+public class SplashScreenViewModel(IServiceProvider serviceProvider, ILogger<SplashScreenViewModel> logger) : ViewModelBase
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<SplashScreenViewModel> _logger;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly ILogger<SplashScreenViewModel> _logger = logger;
     private string _statusText = "Initializing...";
     private double _progress;
-
-    public SplashScreenViewModel(IServiceProvider serviceProvider, ILogger<SplashScreenViewModel> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
 
     public string StatusText
     {

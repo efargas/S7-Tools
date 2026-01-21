@@ -1,12 +1,6 @@
-using System;
 using System.Reactive;
-using System.Threading.Tasks;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Resources;
@@ -14,9 +8,7 @@ using S7Tools.Extensions;
 using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels;
 using S7Tools.ViewModels.Dialogs;
-using S7Tools.Views;
 using S7Tools.Views.Dialogs;
 using S7Tools.Views.Layout;
 

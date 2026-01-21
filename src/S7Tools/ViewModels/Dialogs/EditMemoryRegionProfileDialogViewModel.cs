@@ -34,7 +34,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
 
     private string _profileName = string.Empty;
     private string _description = string.Empty;
-    private ObservableCollection<EditableMemorySegment> _segments = new();
+    private ObservableCollection<EditableMemorySegment> _segments = [];
     private EditableMemorySegment? _selectedSegment;
     private bool _isValid = true;
     private string _validationMessage = string.Empty;
@@ -490,7 +490,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     /// </summary>
     private List<string> ValidateSegments()
     {
-        var errors = new List<string>();
+        List<string> errors = [];
 
         try
         {
@@ -540,7 +540,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
     /// </summary>
     private List<string> GetOverlapWarnings()
     {
-        var warnings = new List<string>();
+        List<string> warnings = [];
 
         try
         {

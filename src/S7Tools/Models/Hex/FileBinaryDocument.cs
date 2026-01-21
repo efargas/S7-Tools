@@ -17,8 +17,8 @@ namespace S7Tools.Models.Hex
             _validRanges = new BitRangeUnion(new[] { new BitRange(0, (ulong)Length * 8) });
         }
 
-        public event EventHandler<BinaryDocumentChange>? Changed;
 #pragma warning disable CS0067 // El evento no se usa
+        public event EventHandler<BinaryDocumentChange>? Changed;
 #pragma warning restore CS0067
 
         public ulong Length { get; }
@@ -59,7 +59,9 @@ namespace S7Tools.Models.Hex
             lock (_lock)
             {
                 if (offset >= Length)
+                {
                     return;
+                }
 
                 _fileStream.Position = (long)offset;
                 int bytesRead = _fileStream.Read(buffer);

@@ -180,11 +180,17 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         IFileDialogService? fileDialogService = null)
         : base(logger, profileDialogService, dialogService, uiThreadService)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
-        _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
-        _unifiedDialogService = profileDialogService ?? throw new ArgumentNullException(nameof(profileDialogService));
-        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(jobManager);
+        ArgumentNullException.ThrowIfNull(uiThreadService);
+        ArgumentNullException.ThrowIfNull(profileDialogService);
+        ArgumentNullException.ThrowIfNull(dialogService);
+
+        _logger = logger;
+        _jobManager = jobManager;
+        _uiThreadService = uiThreadService;
+        _unifiedDialogService = profileDialogService;
+        _dialogService = dialogService;
         _viewModelFactory = viewModelFactory;
         _taskScheduler = taskScheduler;
         _activityBarService = activityBarService;

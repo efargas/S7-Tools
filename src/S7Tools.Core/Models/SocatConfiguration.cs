@@ -332,7 +332,7 @@ public class SocatConfiguration
         }
 
         // Build TCP-LISTEN part
-        var tcpOptions = new List<string>();
+        List<string> tcpOptions = [];
         if (EnableFork)
         {
             tcpOptions.Add("fork");
@@ -352,7 +352,7 @@ public class SocatConfiguration
         command.Append($" {tcpPart}");
 
         // Build serial device part
-        var serialOptions = new List<string>();
+        List<string> serialOptions = [];
         if (SerialRawMode)
         {
             serialOptions.Add("raw");
@@ -382,7 +382,7 @@ public class SocatConfiguration
     /// <returns>A list of validation error messages, or empty list if valid.</returns>
     public List<string> Validate()
     {
-        var errors = new List<string>();
+        List<string> errors = [];
 
         if (TcpPort is < 1 or > 65535)
         {
@@ -423,7 +423,7 @@ public class SocatConfiguration
     /// <returns>A string describing the key configuration parameters.</returns>
     public override string ToString()
     {
-        var features = new List<string>();
+        List<string> features = [];
 
         if (Verbose)
         {

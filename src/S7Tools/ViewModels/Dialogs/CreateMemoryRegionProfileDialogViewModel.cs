@@ -35,7 +35,7 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     private string _description = string.Empty;
     private MemoryRegionTemplate? _selectedTemplate;
     private bool _useTemplate = true;
-    private ObservableCollection<MemorySegment> _customSegments = new();
+    private ObservableCollection<MemorySegment> _customSegments = [];
     private MemorySegment? _selectedSegment;
     private bool _isValid;
     private string _validationMessage = string.Empty;
@@ -154,7 +154,7 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// <summary>
     /// Gets the collection of available templates.
     /// </summary>
-    public ObservableCollection<MemoryRegionTemplate> AvailableTemplates { get; } = new();
+    public ObservableCollection<MemoryRegionTemplate> AvailableTemplates { get; } = [];
 
     #endregion
 
@@ -317,7 +317,7 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
         {
             Name = "S7-1200 Firmware v4",
             Description = "Standard memory regions for Siemens S7-1200 PLC firmware version 4.x",
-            Segments = new List<MemorySegment>
+            Segments =
             {
                 new()
                 {
@@ -519,7 +519,7 @@ public class MemoryRegionTemplate
     /// <summary>
     /// Gets or sets the template segments.
     /// </summary>
-    public List<MemorySegment> Segments { get; set; } = new();
+    public List<MemorySegment> Segments { get; set; } = [];
 
     /// <summary>
     /// Returns the template name for display.

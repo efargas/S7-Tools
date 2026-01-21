@@ -590,7 +590,7 @@ public static class ServiceCollectionExtensions
         // Initialize Profile Services in parallel using unified IProfileManager<T> pattern
         // All profile services implement the same interface and can be initialized consistently
         // This parallel approach improves startup time by loading profiles concurrently
-        var profileInitTasks = new List<Task>();
+        List<Task> profileInitTasks = [];
 
         // Initialize Serial Port Profiles
         ISerialPortProfileService? serialProfileService = serviceProvider.GetService<ISerialPortProfileService>();

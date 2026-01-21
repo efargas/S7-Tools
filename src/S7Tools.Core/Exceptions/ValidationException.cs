@@ -27,7 +27,7 @@ public class ValidationException : S7ToolsException
     public ValidationException(string message)
         : base(message)
     {
-        ValidationErrors = new List<string> { message };
+        ValidationErrors = [message];
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public class ValidationException : S7ToolsException
     public ValidationException(IEnumerable<string> validationErrors)
         : base(BuildMessage(validationErrors))
     {
-        ValidationErrors = validationErrors?.ToList() ?? new List<string>();
+        ValidationErrors = validationErrors?.ToList() ?? [];
     }
 
     /// <summary>
@@ -49,7 +49,7 @@ public class ValidationException : S7ToolsException
         : base($"{propertyName}: {message}")
     {
         PropertyName = propertyName;
-        ValidationErrors = new List<string> { message };
+        ValidationErrors = [message];
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ public class ValidationException : S7ToolsException
     public ValidationException(string message, Exception innerException)
         : base(message, innerException)
     {
-        ValidationErrors = new List<string> { message };
+        ValidationErrors = [message];
     }
 
     /// <summary>

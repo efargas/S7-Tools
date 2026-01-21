@@ -58,7 +58,7 @@ public sealed class SerialPortDiscoveryService
     {
         _logger.LogDebug("Starting serial port scan");
 
-        var ports = new List<SerialPortInfo>();
+        List<SerialPortInfo> ports = [];
 
         try
         {
@@ -280,7 +280,7 @@ public sealed class SerialPortDiscoveryService
         int maxPorts,
         CancellationToken cancellationToken)
     {
-        var ports = new List<SerialPortInfo>();
+        List<SerialPortInfo> ports = [];
 
         for (int i = 0; i < maxPorts; i++)
         {

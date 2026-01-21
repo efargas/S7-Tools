@@ -34,7 +34,7 @@ public abstract class BaseValidator<T> : IValidator<T>
     protected BaseValidator(ILogger logger)
     {
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        Rules = new List<ValidationRule<T>>();
+        Rules = [];
         ConfigureRules();
     }
 
@@ -47,7 +47,7 @@ public abstract class BaseValidator<T> : IValidator<T>
             return ValidationResult.Failure("Instance", "Instance cannot be null", "NULL_INSTANCE");
         }
 
-        var errors = new List<ValidationError>();
+        List<ValidationError> errors = [];
 
         Logger.LogDebug("Starting validation for {Type}", typeof(T).Name);
 
@@ -84,7 +84,7 @@ public abstract class BaseValidator<T> : IValidator<T>
             return ValidationResult.Failure("Instance", "Instance cannot be null", "NULL_INSTANCE");
         }
 
-        var errors = new List<ValidationError>();
+        List<ValidationError> errors = [];
 
         Logger.LogDebug("Starting async validation for {Type}", typeof(T).Name);
 

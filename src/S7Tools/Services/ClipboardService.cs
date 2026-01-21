@@ -24,7 +24,7 @@ public class ClipboardService : IClipboardService
     public async Task<string?> GetTextAsync()
     {
         IClipboard? clipboard = GetClipboard();
-        return clipboard != null ? await clipboard.GetTextAsync().ConfigureAwait(false) : null;
+        return clipboard != null ? await clipboard.TryGetTextAsync().ConfigureAwait(false) : null;
     }
 
     /// <inheritdoc/>
