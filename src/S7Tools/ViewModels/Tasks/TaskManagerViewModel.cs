@@ -514,10 +514,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
     private void SubscribeToTaskEvents()
     {
-        // Subscribe to task state changes from the scheduler for real-time updates
-        _taskScheduler.TaskStateChanged += OnTaskStateChanged;
         // Subscribe to progress updates
         _taskScheduler.TaskProgressUpdated += OnTaskProgressUpdated;
+        _taskScheduler.TaskStateChanged += OnTaskStateChanged;
 
         // Setup throttling for state changes to prevent UI freezing
         _taskStateChangedSubject
