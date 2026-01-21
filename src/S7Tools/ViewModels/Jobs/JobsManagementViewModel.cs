@@ -599,6 +599,20 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                         })
                         .DisposeWith(_localDisposables);
 
+                    // Subscribe to cancellation to navigate back
+                    wizard.WhenAnyValue(w => w.CancelRequested)
+                        .Where(cancel => cancel)
+                        .Take(1)
+                        .Subscribe(async _ =>
+                        {
+                            _logger.LogInformation("Wizard cancelled");
+                            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                            {
+                                SelectedSideMenuItem = "Main View";
+                            });
+                        })
+                        .DisposeWith(_localDisposables);
+
                     return wizard;
                 }
                 catch (Exception ex)
@@ -670,6 +684,20 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
                             {
                                 _logger.LogError(ex, "Failed to handle edit wizard completion");
                             }
+                        })
+                        .DisposeWith(_localDisposables);
+
+                    // Subscribe to cancellation to navigate back
+                    wizard.WhenAnyValue(w => w.CancelRequested)
+                        .Where(cancel => cancel)
+                        .Take(1)
+                        .Subscribe(async _ =>
+                        {
+                            _logger.LogInformation("Edit wizard cancelled");
+                            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+                            {
+                                SelectedSideMenuItem = "Main View";
+                            });
                         })
                         .DisposeWith(_localDisposables);
 

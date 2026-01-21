@@ -258,7 +258,12 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     public ReactiveCommand<Unit, Unit> BrowseOutputPathCommand { get; }
     public ReactiveCommand<Unit, Unit> ScanPortsCommand { get; }
 
-    public bool CancelRequested { get; private set; }
+    private bool _cancelRequested;
+    public bool CancelRequested
+    {
+        get => _cancelRequested;
+        private set => this.RaiseAndSetIfChanged(ref _cancelRequested, value);
+    }
 
     public WizardStep CurrentStep
     {
