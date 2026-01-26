@@ -283,7 +283,7 @@ public abstract class BaseBootloaderService
                 await using (var fileStream = new System.IO.FileStream(
                     finalFilePath,
                     System.IO.FileMode.Create,
-                    System.IO.FileAccess.ReadWrite,
+                    System.IO.FileAccess.Write,
                     System.IO.FileShare.None,
                     81920,
                     true))
