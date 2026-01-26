@@ -60,24 +60,19 @@ public class CircularStringLog
                 return string.Empty;
             }
 
-            var builder = new StringBuilder();
-            if (_count < _capacity)
+            var sb = new StringBuilder();
+
+            // If the buffer is not full, start at 0.
+            // If the buffer IS full, start at _head (which is the oldest element after wrap-around).
+            int start = (_count < _capacity) ? 0 : _head;
+
+            for (int i = 0; i < _count; i++)
             {
-                // Buffer is not full, items are from 0 to _count-1
-                for (int i = 0; i < _count; i++)
-                {
-                    builder.AppendLine(_buffer[i]);
-                }
+                int index = (start + i) % _capacity;
+                sb.AppendLine(_buffer[index]);
             }
-            else // Buffer is full
-            {
-                // Items are ordered from _head to end, then 0 to _head-1
-                for (int i = 0; i < _capacity; i++)
-                {
-                    builder.AppendLine(_buffer[(_head + i) % _capacity]);
-                }
-            }
-            return builder.ToString();
+
+            return sb.ToString();
         }
     }
 }

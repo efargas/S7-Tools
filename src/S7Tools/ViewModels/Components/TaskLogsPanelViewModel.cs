@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reactive;
 using System.Text;
 using ReactiveUI;
@@ -18,8 +17,6 @@ namespace S7Tools.ViewModels.Components;
 
 public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 {
-    private const int MaxLogEntries = 1000;
-
     private TaskExecution _task;
     private readonly IClipboardService _clipboardService;
     private readonly ICentralizedTaskLogService _centralizedTaskLogService;
@@ -89,21 +86,11 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             {
                 foreach (var item in mainBatch)
                     MainLogEntries.Add(item);
-
-                while (MainLogEntries.Count > MaxLogEntries)
-                {
-                    MainLogEntries.RemoveAt(0);
-                }
             }
             if (processBatch.Count > 0)
             {
                 foreach (var item in processBatch)
                     ProcessLogEntries.Add(item);
-
-                while (ProcessLogEntries.Count > MaxLogEntries)
-                {
-                    ProcessLogEntries.RemoveAt(0);
-                }
             }
         }, TimeSpan.FromMilliseconds(500), _uiThreadService!);
 
@@ -124,35 +111,21 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         // Populate initial
         if (_mainLogDataStore != null)
         {
-            // Optimize: Only load the last N entries initially to prevent UI freezing
-            foreach (S7Tools.Core.Models.LogModel logModel in _mainLogDataStore.TakeLast(MaxLogEntries))
+            // Optimize: Only load the last 1000 entries initially to prevent UI freezing
+            foreach (S7Tools.Core.Models.LogModel logModel in _mainLogDataStore.TakeLast(1000))
             {
                 MainLogEntries.Add(MapToLogEntry(logModel));
             }
-
-            // Trim just in case
-            while (MainLogEntries.Count > MaxLogEntries)
-            {
-                MainLogEntries.RemoveAt(0);
-            }
-
             _mainLogDataStore.CollectionChanged += _mainHandler;
         }
 
         if (_processLogDataStore != null)
         {
-            // Optimize: Only load the last N entries initially to prevent UI freezing
-            foreach (S7Tools.Core.Models.LogModel logModel in _processLogDataStore.TakeLast(MaxLogEntries))
+            // Optimize: Only load the last 1000 entries initially to prevent UI freezing
+            foreach (S7Tools.Core.Models.LogModel logModel in _processLogDataStore.TakeLast(1000))
             {
                 ProcessLogEntries.Add(MapToLogEntry(logModel));
             }
-
-            // Trim just in case
-            while (ProcessLogEntries.Count > MaxLogEntries)
-            {
-                ProcessLogEntries.RemoveAt(0);
-            }
-
             _processLogDataStore.CollectionChanged += _processHandler;
         }
     }
