@@ -260,7 +260,7 @@ public abstract class BaseBootloaderService
         int iterationCount = profiles.DumpCount > 0 ? profiles.DumpCount : 1;
 
         logger.LogInformation("🚀 Starting SIMPLIFIED streaming dump ({Count} iterations) - RESTART per Segment approach", iterationCount);
-        logger.LogDebug("  Strategy: Start dumper session EACH segment → Loop iterations INSIDE → Stop session EACH segment");
+        logger.LogDebug("  Strategy: True Streaming (Direct-to-Disk) using persistent session");
 
         // Calculate total expected bytes across all iterations
         long totalExpectedBytes = 0;
@@ -275,8 +275,6 @@ public abstract class BaseBootloaderService
 
         try
         {
-            // NO SESSION MANAGEMENT - Just call InvokeDumperStreamAsync multiple times
-            // The session lifecycle is handled internally by the orchestrator/client
             logger.LogDebug("Beginning iteration loop ({Count} iterations)...", iterationCount);
 
             for (int iter = 0; iter < iterationCount; iter++)
@@ -286,144 +284,137 @@ public abstract class BaseBootloaderService
                 if (segments != null && segments.Count > 0)
                 {
                     // Segmented dump
-                    string iterTempFile = System.IO.Path.GetTempFileName();
 
-                    try
+                    // Create output dump file immediately
+                    string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
+                    string jobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
+                    jobName = string.Join("_", jobName.Split(Path.GetInvalidFileNameChars()));
+                    string taskIdStr = taskId.HasValue ? $"_{taskId.Value:N}" : "";
+                    string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}{taskIdStr}_{timestamp}.bin";
+
+                    string dumpsDir = !string.IsNullOrWhiteSpace(profiles.OutputPath)
+                        ? profiles.OutputPath
+                        : "./dumps";
+
+                    if (!System.IO.Directory.Exists(dumpsDir))
                     {
-                        await using (var combinedStream = new System.IO.FileStream(
-                            iterTempFile, System.IO.FileMode.Create, System.IO.FileAccess.Write,
-                            System.IO.FileShare.None, 81920, true))
+                        System.IO.Directory.CreateDirectory(dumpsDir);
+                    }
+
+                    string dumpFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
+                    savedFiles.Add(dumpFilePath);
+
+                    // Open file stream for writing
+                    await using (var fileStream = new System.IO.FileStream(
+                        dumpFilePath, System.IO.FileMode.Create, System.IO.FileAccess.Write,
+                        System.IO.FileShare.None, 81920, true))
+                    {
+                        for (int i = 0; i < segments.Count; i++)
                         {
-                            for (int i = 0; i < segments.Count; i++)
+                            var segment = segments[i];
+                            string segStartStr = segment.StartAddress?.StartsWith("0x", StringComparison.OrdinalIgnoreCase) == true
+                                ? segment.StartAddress[2..]
+                                : segment.StartAddress ?? "0";
+
+                            if (!uint.TryParse(segStartStr, System.Globalization.NumberStyles.HexNumber, null, out uint segStart))
                             {
-                                var segment = segments[i];
-                                string segStartStr = segment.StartAddress?.StartsWith("0x", StringComparison.OrdinalIgnoreCase) == true
-                                    ? segment.StartAddress[2..]
-                                    : segment.StartAddress ?? "0";
-
-                                if (!uint.TryParse(segStartStr, System.Globalization.NumberStyles.HexNumber, null, out uint segStart))
-                                {
-                                    throw new InvalidOperationException($"Invalid segment address: {segment.StartAddress}");
-                                }
-
-                                uint segLength = (uint)segment.Size;
-                                string stageName = $"Seg {i + 1}/{segments.Count} (Iter {iter + 1}/{iterationCount})";
-                                double segWeight = weight / iterationCount / segments.Count;
-                                double segStartPercent = startPercent + (weight * (iter * segments.Count + i) / (iterationCount * segments.Count));
-
-                                logger.LogInformation("  ├─ Streaming segment {Index}/{Total}: {Name} (0x{Addr:X8}, {Size:N0} bytes)",
-                                    i + 1, segments.Count, segment.Name, segStart, segLength);
-
-                                // Stream segment to file
-                                long segBytesWritten = 0;
-                                double lastReportedSegPercent = segStartPercent;
-                                var segProgress = new Progress<long>(bytes =>
-                                {
-                                    segBytesWritten = bytes;
-                                    double percent = segStartPercent + (segWeight * bytes / segLength);
-
-                                    // Calculate cumulative bytes
-                                    long bytesFromPreviousIterations = iter * segments.Sum(s => (long)s.Size);
-                                    long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
-                                    long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
-
-                                    // Determine reporting threshold: 0.1% for >1MB, else 1.0%
-                                    double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
-
-                                    if (Math.Abs(percent - lastReportedSegPercent) >= threshold || bytes == segLength)
-                                    {
-                                        progress.Report((stageName, percent, cumulativeTotalBytes, totalExpectedBytes));
-                                        lastReportedSegPercent = percent;
-                                    }
-                                });
-
-                                // Keep session active until the very last segment of the very last iteration
-                                bool isLastOperation = (iter == iterationCount - 1) && (i == segments.Count - 1);
-
-                                // OPTION A: Use synchronous InvokeDumperAsync (proven working approach)
-                                // This waits for "Ok" response BEFORE receiving data, avoiding race conditions.
-                                byte[] segmentData = await client.InvokeDumperAsync(
-                                    segStart, segLength,
-                                    segProgress,
-                                    cancellationToken).ConfigureAwait(false);
-
-                                // Write segment data to combined stream
-                                await combinedStream.WriteAsync(segmentData, cancellationToken).ConfigureAwait(false);
-
-                                logger.LogDebug("    ✓ Segment {Index} complete: {Size:N0} bytes", i + 1, segmentData.Length);
+                                throw new InvalidOperationException($"Invalid segment address: {segment.StartAddress}");
                             }
+
+                            uint segLength = (uint)segment.Size;
+                            string stageName = $"Seg {i + 1}/{segments.Count} (Iter {iter + 1}/{iterationCount})";
+                            double segWeight = weight / iterationCount / segments.Count;
+                            double segStartPercent = startPercent + (weight * (iter * segments.Count + i) / (iterationCount * segments.Count));
+
+                            logger.LogInformation("  ├─ Streaming segment {Index}/{Total}: {Name} (0x{Addr:X8}, {Size:N0} bytes)",
+                                i + 1, segments.Count, segment.Name, segStart, segLength);
+
+                            long segBytesWritten = 0;
+                            double lastReportedSegPercent = segStartPercent;
+                            var segProgress = new Progress<long>(bytes =>
+                            {
+                                segBytesWritten = bytes;
+                                double percent = segStartPercent + (segWeight * bytes / segLength);
+
+                                long bytesFromPreviousIterations = iter * segments.Sum(s => (long)s.Size);
+                                long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
+                                long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
+
+                                double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
+
+                                if (Math.Abs(percent - lastReportedSegPercent) >= threshold || bytes == segLength)
+                                {
+                                    progress.Report((stageName, percent, cumulativeTotalBytes, totalExpectedBytes));
+                                    lastReportedSegPercent = percent;
+                                }
+                            });
+
+                            // Callback for direct streaming
+                            async ValueTask OnDataReceivedAsync(ReadOnlyMemory<byte> data)
+                            {
+                                await fileStream.WriteAsync(data, cancellationToken).ConfigureAwait(false);
+                            }
+
+                            // Keep session open unless it's the absolute last operation
+                            // (Though orchestrator handles lifecycle, explicit hint helps)
+                            bool keepSessionOpen = !((iter == iterationCount - 1) && (i == segments.Count - 1));
+
+                            await client.InvokeDumperStreamAsync(
+                                segStart,
+                                segLength,
+                                OnDataReceivedAsync,
+                                segProgress,
+                                cancellationToken,
+                                keepSessionOpen, // Hint to keep connection alive
+                                logger).ConfigureAwait(false);
+
+                            logger.LogDebug("    ✓ Segment {Index} complete: {Size:N0} bytes", i + 1, segBytesWritten);
                         }
 
-                        // Read, trim, save iteration dump file
-                        byte[] dumpData = await System.IO.File.ReadAllBytesAsync(iterTempFile, cancellationToken).ConfigureAwait(false);
-                        long expectedSize = segments.Sum(s => (long)s.Size);
-
-                        if (dumpData.Length > expectedSize)
-                        {
-                            byte[] trimmed = new byte[expectedSize];
-                            Array.Copy(dumpData, 0, trimmed, 0, expectedSize);
-                            logger.LogDebug("  Trimmed from {Original} to {Expected} bytes (removed {Padding} padding)",
-                                dumpData.Length, expectedSize, dumpData.Length - expectedSize);
-                            dumpData = trimmed;
-                        }
-
-                        allDumps.Add(dumpData);
-
-                        // Save .bin file
-                        string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
-                        string jobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
-                        // Sanitize job name
-                        jobName = string.Join("_", jobName.Split(Path.GetInvalidFileNameChars()));
-
-                        // Format: {SegmentName}_iter{i+1}_of_{Count}_{TaskId}_{Timestamp}.bin
-                        // Use TaskId if available, otherwise omit it (or use empty) -- but user asked for TaskId.
-                        string taskIdStr = taskId.HasValue ? $"_{taskId.Value:N}" : "";
-                        string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}{taskIdStr}_{timestamp}.bin";
-
-                        string dumpsDir = !string.IsNullOrWhiteSpace(profiles.OutputPath)
-                            ? profiles.OutputPath
-                            : "./dumps";
-
-                        if (!System.IO.Directory.Exists(dumpsDir))
-                        {
-                            System.IO.Directory.CreateDirectory(dumpsDir);
-                        }
-
-                        string dumpFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
-                        await System.IO.File.WriteAllBytesAsync(dumpFilePath, dumpData, cancellationToken).ConfigureAwait(false);
-                        savedFiles.Add(dumpFilePath);
-
-                        logger.LogInformation("  ✓ Iteration {Iter}/{Total} complete: {File} ({Size:N0} bytes)",
-                            iter + 1, iterationCount, dumpFileName, dumpData.Length);
+                        // Ensure all data is flushed to disk for this iteration
+                        await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
                     }
-                    finally
-                    {
-                        // Clean up temp file
-                        if (System.IO.File.Exists(iterTempFile))
-                        {
-                            System.IO.File.Delete(iterTempFile);
-                        }
-                    }
+
+                    // Log file completion
+                    long fileSize = new System.IO.FileInfo(dumpFilePath).Length;
+                    logger.LogInformation("  ✓ Iteration {Iter}/{Total} saved: {File} ({Size:N0} bytes)",
+                        iter + 1, iterationCount, dumpFileName, fileSize);
+
+                    // NOTE: allDumps list is NOT populated in streaming mode to save memory.
+                    // If downstream code requires it, we would need to read it back, defeating the purpose.
+                    // BootloaderResult is updated to allow null/empty byte lists if files are present.
                 }
                 else
                 {
-                    // Single-region dump: fallback to standard dumper call
+                    // Single-region dump: Use standard dumper but stream to file if possible
+                    // For now, fallback to buffered for single-region simpler case or implement similarly
+                    // Implementing simplified streaming for single region:
+
                     string stageName = $"Dumping Memory (Iter {iter + 1}/{iterationCount})";
-                    var dumpProgress = new Progress<long>(bytes =>
-                    {
-                        double pct = startPercent + (weight * bytes / profiles.Memory.Length);
-                        progress.Report((stageName, pct, bytes, profiles.Memory.Length));
-                    });
-                    byte[] data = await client.InvokeDumperAsync(
+                    string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
+                    string dumpFileName = $"MemoryDump_iter{iter + 1}_of_{iterationCount}_{timestamp}.bin";
+                    string dumpsDir = !string.IsNullOrWhiteSpace(profiles.OutputPath) ? profiles.OutputPath : "./dumps";
+
+                    if (!System.IO.Directory.Exists(dumpsDir)) System.IO.Directory.CreateDirectory(dumpsDir);
+                    string dumpFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
+                    savedFiles.Add(dumpFilePath);
+
+                    await PerformStreamingDumpToFileAsync(
+                        client,
                         profiles.Memory.Start,
                         (uint)profiles.Memory.Length,
-                        dumpProgress,
+                        dumpFilePath,
+                        progress,
+                        logger,
+                        startPercent + (weight * iter / iterationCount),
+                        weight / iterationCount,
+                        stageName,
                         cancellationToken).ConfigureAwait(false);
-                    allDumps.Add(data);
                 }
             }
 
             logger.LogInformation("✓ All {Count} iterations processed successfully", iterationCount);
+            // Return empty list for byte arrays to indicate data is on disk
             return new BootloaderResult(allDumps, savedFiles);
         }
         catch (Exception ex)
@@ -433,7 +424,6 @@ public abstract class BaseBootloaderService
         }
         finally
         {
-            // Ensure session is closed in case of error or completion
             await client.StopDumperSessionAsync().ConfigureAwait(false);
         }
     }
@@ -526,7 +516,8 @@ public abstract class BaseBootloaderService
                                     });
 
                             await client.InvokeDumperStreamAsync(
-                                segStart, segLength,
+                                segStart,
+                                segLength,
                                 async data => await combinedStream.WriteAsync(data, cancellationToken),
                                 segProgress,
                                 cancellationToken,

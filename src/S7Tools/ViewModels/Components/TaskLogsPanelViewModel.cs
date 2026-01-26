@@ -28,6 +28,10 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
     private readonly Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
 
+    // Hard limit for UI logs to prevent memory leaks
+    // Core logs are already limited by LogDataStore options, but this ensures UI doesn't drift
+    private const int MaxUiLogEntries = 10000;
+
     public bool AutoScroll
     {
         get => _autoScroll;
@@ -86,11 +90,23 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             {
                 foreach (var item in mainBatch)
                     MainLogEntries.Add(item);
+
+                // Enforce circular buffer limit
+                while (MainLogEntries.Count > MaxUiLogEntries)
+                {
+                    MainLogEntries.RemoveAt(0);
+                }
             }
             if (processBatch.Count > 0)
             {
                 foreach (var item in processBatch)
                     ProcessLogEntries.Add(item);
+
+                // Enforce circular buffer limit
+                while (ProcessLogEntries.Count > MaxUiLogEntries)
+                {
+                    ProcessLogEntries.RemoveAt(0);
+                }
             }
         }, TimeSpan.FromMilliseconds(500), _uiThreadService!);
 
@@ -115,6 +131,9 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             {
                 MainLogEntries.Add(MapToLogEntry(logModel));
             }
+            // Ensure initial load respects limit
+            while (MainLogEntries.Count > MaxUiLogEntries) MainLogEntries.RemoveAt(0);
+
             _mainLogDataStore.CollectionChanged += _mainHandler;
         }
 
@@ -124,6 +143,9 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             {
                 ProcessLogEntries.Add(MapToLogEntry(logModel));
             }
+            // Ensure initial load respects limit
+            while (ProcessLogEntries.Count > MaxUiLogEntries) ProcessLogEntries.RemoveAt(0);
+
             _processLogDataStore.CollectionChanged += _processHandler;
         }
     }

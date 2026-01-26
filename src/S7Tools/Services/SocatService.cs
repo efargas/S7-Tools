@@ -15,6 +15,7 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using System.Net.Sockets;
 using S7Tools.Extensions;
+using S7Tools.Collections;
 
 namespace S7Tools.Services;
 
@@ -780,18 +781,17 @@ public partial class SocatService : ISocatService, IDisposable
 
             int processId = 0;
 
-            StringBuilder? outputBuilder = null;
-            StringBuilder? errorBuilder = null;
+            // Use CircularStringLog instead of unbounded StringBuilder
+            var outputLog = new CircularStringLog(1000);
+            var errorLog = new CircularStringLog(1000);
+
             if (captureProcessOutput)
             {
-                outputBuilder = new StringBuilder();
-                errorBuilder = new StringBuilder();
-
                 process.OutputDataReceived += (_, e) =>
                 {
                     if (e.Data != null)
                     {
-                        outputBuilder!.AppendLine(e.Data);
+                        outputLog.AddLine(e.Data);
                         _logger.LogTrace("Socat output: {Output}", e.Data);
 
                         // Log to task-specific process logger if provided
@@ -803,7 +803,7 @@ public partial class SocatService : ISocatService, IDisposable
                 {
                     if (e.Data != null)
                     {
-                        errorBuilder!.AppendLine(e.Data);
+                        errorLog.AddLine(e.Data);
 
                         // Clean up the log message by removing the timestamp if present
                         // Format: 2026/01/09 03:05:33 socat[113280] N ...
@@ -854,7 +854,7 @@ public partial class SocatService : ISocatService, IDisposable
             if (process.HasExited)
             {
                 int exitCode = process.ExitCode;
-                string? stderr = captureProcessOutput ? errorBuilder?.ToString() : string.Empty;
+                string? stderr = captureProcessOutput ? errorLog.ToString() : string.Empty;
                 throw new ConnectionException(
                     $"{configuration.TcpHost}:{configuration.TcpPort}",
                     "Socat",
@@ -924,21 +924,21 @@ public partial class SocatService : ISocatService, IDisposable
             process.StartInfo.RedirectStandardError = true;
             process.StartInfo.CreateNoWindow = true;
 
-            var outputBuilder = new StringBuilder();
-            var errorBuilder = new StringBuilder();
+            var outputLog = new CircularStringLog(500); // 500 lines for temp commands
+            var errorLog = new CircularStringLog(500);
 
             process.OutputDataReceived += (_, e) =>
             {
                 if (e.Data != null)
                 {
-                    outputBuilder.AppendLine(e.Data);
+                    outputLog.AddLine(e.Data);
                 }
             };
             process.ErrorDataReceived += (_, e) =>
             {
                 if (e.Data != null)
                 {
-                    errorBuilder.AppendLine(e.Data);
+                    errorLog.AddLine(e.Data);
                 }
             };
 
@@ -962,8 +962,8 @@ public partial class SocatService : ISocatService, IDisposable
                 throw;
             }
 
-            string output = outputBuilder.ToString().Trim();
-            string error = errorBuilder.ToString().Trim();
+            string output = outputLog.ToString().Trim();
+            string error = errorLog.ToString().Trim();
 
             return (true, process.ExitCode, output, error);
         }

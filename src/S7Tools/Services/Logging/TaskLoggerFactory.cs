@@ -435,6 +435,7 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
 
     /// <summary>
     /// Background task that processes the log queue and writes to file.
+    /// Uses periodic flushing to optimize I/O performance.
     /// </summary>
     private async Task ProcessLogQueueAsync(string filePath)
     {
@@ -444,6 +445,10 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
             {
                 AutoFlush = false // Batch writes for better performance
             };
+
+            // Use periodic timer for flushing
+            using var flushTimer = new PeriodicTimer(TimeSpan.FromSeconds(2));
+            Task flushTask = WaitForFlushTickAsync(flushTimer, writer);
 
             // Process entries until channel is completed
             await foreach (var entry in _logChannel.Reader.ReadAllAsync(_shutdownCts.Token))
@@ -458,19 +463,16 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
 
                 await writer.WriteLineAsync(logLine);
 
-                // Flush on every Error/Critical, or after each write to ensure logs are persisted
-                // CanCount is unreliable on unbounded channels, so we flush more aggressively
+                // Flush immediately only for Error/Critical logs to ensure visibility
                 if (entry.Level >= LogLevel.Error)
                 {
                     await writer.FlushAsync();
                 }
-                else
-                {
-                    // Flush after every entry to ensure logs are written immediately
-                    // This prevents log loss and ensures files are created
-                    await writer.FlushAsync();
-                }
             }
+
+            // Cancel flush timer loop when channel closes
+            _shutdownCts.Cancel();
+            try { await flushTask; } catch { /* ignore cancellation */ }
 
             // Final flush on shutdown
             await writer.FlushAsync();
@@ -484,6 +486,19 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
             // Log to console as last resort (can't use logger from logger)
             Console.Error.WriteLine($"FileLogger background task failed: {ex}");
         }
+    }
+
+    private async Task WaitForFlushTickAsync(PeriodicTimer timer, StreamWriter writer)
+    {
+        try
+        {
+            while (await timer.WaitForNextTickAsync(_shutdownCts.Token))
+            {
+                await writer.FlushAsync();
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception) { }
     }
 
     public async ValueTask DisposeAsync()
