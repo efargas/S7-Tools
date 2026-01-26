@@ -185,17 +185,22 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
 
         if (disposing)
         {
-            // Sync dispose triggers cancellation
+            // Sync dispose triggers cancellation and completes the channel.
             _cts.Cancel();
-
-            // We can't await the task here in synchronous Dispose,
-            // so we rely on the background task responding to cancellation
-            // and cleaning up its own resources (StreamWriters) in the finally block.
             _logChannel.Writer.Complete();
 
-            // Do not dispose _cts here, as the background task might still be using its token.
-            // This prevents an ObjectDisposedException. The CancellationTokenSource
-            // will be garbage collected. The DisposeAsync path handles this correctly.
+            // Block and wait for the processing task to finish to ensure all logs are flushed.
+            // This is critical for preventing log loss during synchronous shutdown.
+            try
+            {
+                _processTask.GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // Ignore exceptions during shutdown, as the task may be cancelled.
+            }
+
+            _cts.Dispose();
         }
 
         _disposed = true;

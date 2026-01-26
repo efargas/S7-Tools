@@ -125,21 +125,41 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         // Populate initial
         if (_mainLogDataStore != null)
         {
-            // Optimize: Only load the last 1000 entries initially to prevent UI freezing
-            foreach (S7Tools.Core.Models.LogModel logModel in _mainLogDataStore.TakeLast(1000))
+            // Optimize: Load the last entries without iterating the whole collection with TakeLast.
+            var initialEntries = new List<LogEntry>();
+            int skipCount = Math.Max(0, _mainLogDataStore.Count - MaxLogEntries);
+
+            // LogDataStore should ideally expose an indexer or optimized enumerator
+            // Since it exposes IReadOnlyList, this is already better than LINQ TakeLast for lists
+            for (int i = skipCount; i < _mainLogDataStore.Count; i++)
             {
-                MainLogEntries.Add(MapToLogEntry(logModel));
+                initialEntries.Add(MapToLogEntry(_mainLogDataStore[i]));
             }
+
+            foreach (var entry in initialEntries)
+            {
+                MainLogEntries.Add(entry);
+            }
+
             _mainLogDataStore.CollectionChanged += _mainHandler;
         }
 
         if (_processLogDataStore != null)
         {
-            // Optimize: Only load the last 1000 entries initially to prevent UI freezing
-            foreach (S7Tools.Core.Models.LogModel logModel in _processLogDataStore.TakeLast(1000))
+            // Optimize: Load the last entries without iterating the whole collection with TakeLast.
+            var initialEntries = new List<LogEntry>();
+            int skipCount = Math.Max(0, _processLogDataStore.Count - MaxLogEntries);
+
+            for (int i = skipCount; i < _processLogDataStore.Count; i++)
             {
-                ProcessLogEntries.Add(MapToLogEntry(logModel));
+                initialEntries.Add(MapToLogEntry(_processLogDataStore[i]));
             }
+
+            foreach (var entry in initialEntries)
+            {
+                ProcessLogEntries.Add(entry);
+            }
+
             _processLogDataStore.CollectionChanged += _processHandler;
         }
     }
