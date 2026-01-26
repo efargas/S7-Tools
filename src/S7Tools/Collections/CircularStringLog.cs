@@ -60,19 +60,27 @@ public class CircularStringLog
                 return string.Empty;
             }
 
-            var sb = new StringBuilder();
-
-            // If the buffer is not full, start at 0.
-            // If the buffer IS full, start at _head (which is the oldest element after wrap-around).
-            int start = (_count < _capacity) ? 0 : _head;
-
-            for (int i = 0; i < _count; i++)
+            // If buffer is not full, items are from index 0 to _count-1
+            if (_count < _capacity)
             {
-                int index = (start + i) % _capacity;
-                sb.AppendLine(_buffer[index]);
+                return string.Join(Environment.NewLine, _buffer, 0, _count) + Environment.NewLine;
             }
 
-            return sb.ToString();
+            // If buffer is full, the oldest item is at _head.
+            // If _head is 0, the array is not wrapped, so just join everything.
+            if (_head == 0)
+            {
+                return string.Join(Environment.NewLine, _buffer, 0, _capacity) + Environment.NewLine;
+            }
+
+            // The items wrap around.
+            // Part 1: from _head to the end of the array.
+            // Part 2: from the start of the array to _head-1.
+            var part1 = string.Join(Environment.NewLine, _buffer, _head, _capacity - _head);
+            var part2 = string.Join(Environment.NewLine, _buffer, 0, _head);
+
+            // Combine the two parts, ensuring a newline separates them.
+            return $"{part1}{Environment.NewLine}{part2}{Environment.NewLine}";
         }
     }
 }
