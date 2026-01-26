@@ -193,7 +193,9 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
             // and cleaning up its own resources (StreamWriters) in the finally block.
             _logChannel.Writer.Complete();
 
-            _cts.Dispose();
+            // Do not dispose _cts here, as the background task might still be using its token.
+            // This prevents an ObjectDisposedException. The CancellationTokenSource
+            // will be garbage collected. The DisposeAsync path handles this correctly.
         }
 
         _disposed = true;

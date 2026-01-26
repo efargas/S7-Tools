@@ -458,11 +458,11 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
 
                 await writer.WriteLineAsync(logLine);
 
-                // Flush on every Error/Critical to ensure logs are persisted
+                // Flush on every Warning/Error/Critical to ensure logs are persisted
                 // For normal logs, let the StreamWriter's internal buffer handle it
                 // or flush periodically if needed.
                 // Removing aggressive flush on every message to fix I/O bottleneck.
-                if (entry.Level >= LogLevel.Error)
+                if (entry.Level >= LogLevel.Warning)
                 {
                     await writer.FlushAsync();
                 }

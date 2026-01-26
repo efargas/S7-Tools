@@ -279,150 +279,47 @@ public abstract class BaseBootloaderService
                 string finalFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
                 long bytesWrittenInIter = 0;
 
-                // Open FileStream with ReadWrite access to allow reading back into memory if needed
-                await using (var fileStream = new System.IO.FileStream(
-                    finalFilePath,
-                    System.IO.FileMode.Create,
-                    System.IO.FileAccess.ReadWrite,
-                    System.IO.FileShare.None,
-                    81920,
-                    true))
+                // Pass context object to helper methods
+                var context = new StreamingContext(
+                    client,
+                    progress,
+                    logger,
+                    startPercent,
+                    weight,
+                    iterationCount,
+                    iter,
+                    totalExpectedBytes,
+                    cancellationToken
+                );
+
+                if (segments.Count > 0)
                 {
-                    if (segments.Count > 0)
-                    {
-                        // Segmented Dump
-                        for (int i = 0; i < segments.Count; i++)
-                        {
-                            var segment = segments[i];
-                            string segStartStr = segment.StartAddress?.StartsWith("0x", StringComparison.OrdinalIgnoreCase) == true
-                                ? segment.StartAddress[2..]
-                                : segment.StartAddress ?? "0";
-
-                            if (!uint.TryParse(segStartStr, System.Globalization.NumberStyles.HexNumber, null, out uint segStart))
-                            {
-                                throw new InvalidOperationException($"Invalid segment address: {segment.StartAddress}");
-                            }
-
-                            uint segLength = (uint)segment.Size;
-
-                            // Security check for zero-length segments
-                            if (segLength == 0)
-                            {
-                                logger.LogWarning("Skipping zero-length segment {Name}", segment.Name);
-                                continue;
-                            }
-
-                            string stageName = $"Seg {i + 1}/{segments.Count} (Iter {iter + 1}/{iterationCount})";
-                            double segWeight = weight / iterationCount / segments.Count;
-                            double segStartPercent = startPercent + (weight * (iter * segments.Count + i) / (iterationCount * segments.Count));
-
-                            logger.LogInformation("  Streaming segment {Index}: {Name} (0x{Addr:X8}, {Size:N0} bytes)",
-                                i + 1, segment.Name, segStart, segLength);
-
-                            long segBytesWritten = 0;
-                            double lastReportedSegPercent = segStartPercent;
-
-                            var segProgress = new Progress<long>(bytes =>
-                            {
-                                segBytesWritten = bytes;
-                                double percent = segStartPercent + (segWeight * bytes / segLength);
-
-                                // Calculate cumulative bytes
-                                long bytesFromPreviousIterations = iter * segments.Sum(s => (long)s.Size);
-                                long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
-                                long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
-
-                                double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
-
-                                if (Math.Abs(percent - lastReportedSegPercent) >= threshold || bytes == segLength)
-                                {
-                                    progress.Report((stageName, percent, cumulativeTotalBytes, totalExpectedBytes));
-                                    lastReportedSegPercent = percent;
-                                }
-                            });
-
-                            await client.InvokeDumperStreamAsync(
-                                segStart, segLength,
-                                async data => await fileStream.WriteAsync(data, cancellationToken),
-                                segProgress,
-                                cancellationToken,
-                                logger: logger).ConfigureAwait(false);
-
-                            bytesWrittenInIter += segBytesWritten;
-                            logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, segBytesWritten);
-                        }
-                    }
-                    else
-                    {
-                        // Single Region Dump
-                        uint segStart = profiles.Memory.Start;
-                        uint segLength = (uint)profiles.Memory.Length;
-
-                        if (segLength == 0)
-                        {
-                            logger.LogWarning("Skipping zero-length memory region");
-                        }
-                        else
-                        {
-                            string stageName = $"Memory Dump (Iter {iter + 1}/{iterationCount})";
-                            double iterWeight = weight / iterationCount;
-                            double iterStartPercent = startPercent + (weight * iter / iterationCount);
-
-                            logger.LogInformation("  Streaming memory: 0x{Start:X8}, {Length:N0} bytes", segStart, segLength);
-
-                            long regionBytesWritten = 0;
-                            double lastReportedPercent = iterStartPercent;
-
-                            var regionProgress = new Progress<long>(bytes =>
-                            {
-                                regionBytesWritten = bytes;
-                                double percent = iterStartPercent + (iterWeight * bytes / segLength);
-                                long cumulativeBytes = (iter * segLength) + bytes;
-
-                                double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
-                                if (Math.Abs(percent - lastReportedPercent) >= threshold || bytes == segLength)
-                                {
-                                    progress.Report((stageName, percent, cumulativeBytes, totalExpectedBytes));
-                                    lastReportedPercent = percent;
-                                }
-                            });
-
-                            await client.InvokeDumperStreamAsync(
-                                segStart, segLength,
-                                async data => await fileStream.WriteAsync(data, cancellationToken),
-                                regionProgress,
-                                cancellationToken,
-                                logger: logger).ConfigureAwait(false);
-
-                            bytesWrittenInIter += regionBytesWritten;
-                        }
-                    }
-
-                    // Flush all data to disk
-                    await fileStream.FlushAsync(cancellationToken).ConfigureAwait(false);
-
-                    // Ensure file is trimmed if we received padding
-                    long expectedSize = segments.Count > 0 ? segments.Sum(s => (long)s.Size) : (long)profiles.Memory.Length;
-                    if (fileStream.Length > expectedSize)
-                    {
-                        logger.LogDebug("Trimmed dump from {Original} to {Expected} bytes", fileStream.Length, expectedSize);
-                        fileStream.SetLength(expectedSize);
-                    }
-
-                    // The data is now saved to the file at finalFilePath.
-                    // To honor the memory-saving goal of streaming, we avoid reading the entire file back into memory.
-                    // The file path is already added to the `savedFiles` list.
-                    // We add an empty byte array to `allDumps` to maintain the iteration count for consumers
-                    // that might check `allDumps.Count`, while keeping memory usage low.
-                    allDumps.Add(Array.Empty<byte>());
+                    bytesWrittenInIter = await StreamSegmentedDumpToFileAsync(
+                        context,
+                        segments,
+                        finalFilePath).ConfigureAwait(false);
                 }
+                else
+                {
+                    bytesWrittenInIter = await StreamSingleRegionDumpToFileAsync(
+                        context,
+                        profiles.Memory,
+                        finalFilePath).ConfigureAwait(false);
+                }
+
+                // The data is now saved to the file at finalFilePath.
+                // To honor the memory-saving goal of streaming, we avoid reading the entire file back into memory.
+                // The file path is already added to the `savedFiles` list.
+                // We add an empty byte array to `allDumps` to maintain the iteration count for consumers
+                // that might check `allDumps.Count`, while keeping memory usage low.
+                allDumps.Add(Array.Empty<byte>());
 
                 savedFiles.Add(finalFilePath);
                 logger.LogInformation("✓ Dump file created: {File} ({Size:N0} bytes)", dumpFileName, bytesWrittenInIter);
             }
 
             TimeSpan dumpDuration = (_timeProvider?.GetUtcNow() ?? DateTime.UtcNow) - dumpStartTime;
-            long totalBytes = allDumps.Sum(d => d.Length);
+            long totalBytes = allDumps.Sum(d => d.Length); // Note: This will be 0 since we return empty arrays
             double rate = totalBytes > 0 && dumpDuration.TotalSeconds > 0 ? totalBytes / dumpDuration.TotalSeconds : 0;
 
             logger.LogInformation("✓ Streaming dump complete: {Size:N0} bytes total", totalBytes);
@@ -434,6 +331,172 @@ public abstract class BaseBootloaderService
         {
             await client.StopDumperSessionAsync().ConfigureAwait(false);
         }
+    }
+
+    private record StreamingContext(
+        IPlcClient Client,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> Progress,
+        ILogger Logger,
+        double StartPercent,
+        double Weight,
+        int IterationCount,
+        int CurrentIteration,
+        long TotalExpectedBytes,
+        CancellationToken CancellationToken);
+
+    private async Task<long> StreamSegmentedDumpToFileAsync(
+        StreamingContext ctx,
+        List<MemorySegment> segments,
+        string finalFilePath)
+    {
+        long bytesWrittenInIter = 0;
+
+        await using (var fileStream = new System.IO.FileStream(
+            finalFilePath,
+            System.IO.FileMode.Create,
+            System.IO.FileAccess.ReadWrite,
+            System.IO.FileShare.None,
+            81920,
+            true))
+        {
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var segment = segments[i];
+                string segStartStr = segment.StartAddress?.StartsWith("0x", StringComparison.OrdinalIgnoreCase) == true
+                    ? segment.StartAddress[2..]
+                    : segment.StartAddress ?? "0";
+
+                if (!uint.TryParse(segStartStr, System.Globalization.NumberStyles.HexNumber, null, out uint segStart))
+                {
+                    throw new InvalidOperationException($"Invalid segment address: {segment.StartAddress}");
+                }
+
+                uint segLength = (uint)segment.Size;
+
+                if (segLength == 0)
+                {
+                    ctx.Logger.LogWarning("Skipping zero-length segment {Name}", segment.Name);
+                    continue;
+                }
+
+                string stageName = $"Seg {i + 1}/{segments.Count} (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
+                double segWeight = ctx.Weight / ctx.IterationCount / segments.Count;
+                double segStartPercent = ctx.StartPercent + (ctx.Weight * (ctx.CurrentIteration * segments.Count + i) / (ctx.IterationCount * segments.Count));
+
+                ctx.Logger.LogInformation("  Streaming segment {Index}: {Name} (0x{Addr:X8}, {Size:N0} bytes)",
+                    i + 1, segment.Name, segStart, segLength);
+
+                long segBytesWritten = 0;
+                double lastReportedSegPercent = segStartPercent;
+
+                var segProgress = new Progress<long>(bytes =>
+                {
+                    segBytesWritten = bytes;
+                    double percent = segStartPercent + (segWeight * bytes / segLength);
+
+                    // Calculate cumulative bytes
+                    long bytesFromPreviousIterations = ctx.CurrentIteration * segments.Sum(s => (long)s.Size);
+                    long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
+                    long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
+
+                    double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
+
+                    if (Math.Abs(percent - lastReportedSegPercent) >= threshold || bytes == segLength)
+                    {
+                        ctx.Progress.Report((stageName, percent, cumulativeTotalBytes, ctx.TotalExpectedBytes));
+                        lastReportedSegPercent = percent;
+                    }
+                });
+
+                await ctx.Client.InvokeDumperStreamAsync(
+                    segStart, segLength,
+                    async data => await fileStream.WriteAsync(data, ctx.CancellationToken),
+                    segProgress,
+                    ctx.CancellationToken,
+                    logger: ctx.Logger).ConfigureAwait(false);
+
+                bytesWrittenInIter += segBytesWritten;
+                ctx.Logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, segBytesWritten);
+            }
+
+            await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
+
+            // Trim if needed
+            long expectedSize = segments.Sum(s => (long)s.Size);
+            if (fileStream.Length > expectedSize)
+            {
+                ctx.Logger.LogDebug("Trimmed dump from {Original} to {Expected} bytes", fileStream.Length, expectedSize);
+                fileStream.SetLength(expectedSize);
+            }
+        }
+
+        return bytesWrittenInIter;
+    }
+
+    private async Task<long> StreamSingleRegionDumpToFileAsync(
+        StreamingContext ctx,
+        MemoryRegionProfile memoryRegion,
+        string finalFilePath)
+    {
+        long bytesWrittenInIter = 0;
+        uint segStart = memoryRegion.Start;
+        uint segLength = (uint)memoryRegion.Length;
+
+        if (segLength == 0)
+        {
+            ctx.Logger.LogWarning("Skipping zero-length memory region");
+            return 0;
+        }
+
+        await using (var fileStream = new System.IO.FileStream(
+            finalFilePath,
+            System.IO.FileMode.Create,
+            System.IO.FileAccess.ReadWrite,
+            System.IO.FileShare.None,
+            81920,
+            true))
+        {
+            string stageName = $"Memory Dump (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
+            double iterWeight = ctx.Weight / ctx.IterationCount;
+            double iterStartPercent = ctx.StartPercent + (ctx.Weight * ctx.CurrentIteration / ctx.IterationCount);
+
+            ctx.Logger.LogInformation("  Streaming memory: 0x{Start:X8}, {Length:N0} bytes", segStart, segLength);
+
+            double lastReportedPercent = iterStartPercent;
+
+            var regionProgress = new Progress<long>(bytes =>
+            {
+                bytesWrittenInIter = bytes;
+                double percent = iterStartPercent + (iterWeight * bytes / segLength);
+                long cumulativeBytes = (ctx.CurrentIteration * segLength) + bytes;
+
+                double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
+                if (Math.Abs(percent - lastReportedPercent) >= threshold || bytes == segLength)
+                {
+                    ctx.Progress.Report((stageName, percent, cumulativeBytes, ctx.TotalExpectedBytes));
+                    lastReportedPercent = percent;
+                }
+            });
+
+            await ctx.Client.InvokeDumperStreamAsync(
+                segStart, segLength,
+                async data => await fileStream.WriteAsync(data, ctx.CancellationToken),
+                regionProgress,
+                ctx.CancellationToken,
+                logger: ctx.Logger).ConfigureAwait(false);
+
+            await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
+
+            // Trim if needed
+            long expectedSize = (long)memoryRegion.Length;
+            if (fileStream.Length > expectedSize)
+            {
+                ctx.Logger.LogDebug("Trimmed dump from {Original} to {Expected} bytes", fileStream.Length, expectedSize);
+                fileStream.SetLength(expectedSize);
+            }
+        }
+
+        return bytesWrittenInIter;
     }
 
     /// <summary>
