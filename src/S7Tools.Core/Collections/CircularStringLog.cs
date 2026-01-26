@@ -3,8 +3,11 @@
         /// </summary>
         public override string ToString()
         {
+            string[] snapshot;
             lock (_lock)
             {
-                return string.Join(Environment.NewLine, _queue);
+                snapshot = _queue.ToArray();
             }
+
+            return string.Join(Environment.NewLine, snapshot);
         }
