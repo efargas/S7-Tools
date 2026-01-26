@@ -409,19 +409,12 @@ public abstract class BaseBootloaderService
                         fileStream.SetLength(expectedSize);
                     }
 
-                    // Read back into memory for the result object
-                    // Note: This maintains API compatibility but still requires memory.
-                    // Ideally, we'd update BootloaderResult to support file paths exclusively.
-                    fileStream.Position = 0;
-                    byte[] dumpData = new byte[fileStream.Length];
-                    int totalRead = 0;
-                    while (totalRead < dumpData.Length)
-                    {
-                        int read = await fileStream.ReadAsync(dumpData, totalRead, dumpData.Length - totalRead, cancellationToken).ConfigureAwait(false);
-                        if (read == 0) break;
-                        totalRead += read;
-                    }
-                    allDumps.Add(dumpData);
+                    // The data is now saved to the file at finalFilePath.
+                    // To honor the memory-saving goal of streaming, we avoid reading the entire file back into memory.
+                    // The file path is already added to the `savedFiles` list.
+                    // We add an empty byte array to `allDumps` to maintain the iteration count for consumers
+                    // that might check `allDumps.Count`, while keeping memory usage low.
+                    allDumps.Add(Array.Empty<byte>());
                 }
 
                 savedFiles.Add(finalFilePath);

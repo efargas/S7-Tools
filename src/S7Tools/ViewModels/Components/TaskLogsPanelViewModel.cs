@@ -17,6 +17,8 @@ namespace S7Tools.ViewModels.Components;
 
 public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 {
+    private const int MaxLogEntries = 1000;
+
     private TaskExecution _task;
     private readonly IClipboardService _clipboardService;
     private readonly ICentralizedTaskLogService _centralizedTaskLogService;
@@ -86,11 +88,23 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             {
                 foreach (var item in mainBatch)
                     MainLogEntries.Add(item);
+
+                // Trim to prevent indefinite growth during long running tasks
+                while (MainLogEntries.Count > MaxLogEntries)
+                {
+                    MainLogEntries.RemoveAt(0);
+                }
             }
             if (processBatch.Count > 0)
             {
                 foreach (var item in processBatch)
                     ProcessLogEntries.Add(item);
+
+                // Trim to prevent indefinite growth during long running tasks
+                while (ProcessLogEntries.Count > MaxLogEntries)
+                {
+                    ProcessLogEntries.RemoveAt(0);
+                }
             }
         }, TimeSpan.FromMilliseconds(500), _uiThreadService!);
 

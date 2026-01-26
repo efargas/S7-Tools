@@ -1,11 +1,11 @@
 # Comprehensive Code Audit Report
 
 **Date:** 2026-01-17
-**Branch:** `audit/comprehensive-review-2025-01-17-10182457699939563836` (State: Post-Re-audit)
+**Branch:** `audit/comprehensive-review-2025-01-17-10182457699939563836` (State: Post-Remediation)
 
 ## 1. Executive Summary
 
-The S7Tools codebase demonstrates strong adherence to Clean Architecture and MVVM principles. The build health is excellent (0 warnings/errors). However, the audit confirms that **critical performance optimizations requested by the user are partially unimplemented or incomplete**. While some progress was made (e.g., streaming return types), significant bottlenecks in logging I/O and memory management persist.
+The S7Tools codebase has undergone a critical remediation phase to address severe performance bottlenecks and potential memory leaks identified in the initial audit. All critical issues flagged by the user (Bootloader memory, Logging I/O) have been resolved. The build remains healthy with zero warnings.
 
 ## 2. Architecture & Documentation Verification
 
@@ -23,35 +23,27 @@ The S7Tools codebase demonstrates strong adherence to Clean Architecture and MVV
 
 ## 4. Logging System Audit (Deep Dive)
 
-### 4.1. `FileLogSink.cs` (Critical Unresolved Issue)
-- **Status:** **Unresolved**
-- **Issue:** Uses synchronous `File.AppendAllTextAsync` (which opens/closes the handle) for *every* log entry.
-- **Impact:** Severe I/O bottleneck under load.
-- **Recommendation:** Must be refactored to use a persistent `FileStream` or batched writes.
+### 4.1. `FileLogSink.cs` (Critical I/O Issue)
+- **Status:** **Fixed**
+- **Resolution:** Refactored to use `System.Threading.Channels` (unbounded) for non-blocking writes. A background task maintains persistent `StreamWriter` instances and flushes periodically (1s) or immediately on error.
+- **Impact:** Eliminates the open/close-per-log bottleneck.
 
 ### 4.2. `TaskLoggerFactory.cs` (Performance Issue)
-- **Status:** **Unresolved**
-- **Issue:** Uses `AsyncFileLogger` which is better, but calls `writer.FlushAsync()` after *every* log entry.
-- **Impact:** Negates the benefit of asynchronous logging; effectively synchronous I/O performance.
+- **Status:** **Fixed**
+- **Resolution:** Removed the aggressive `FlushAsync()` call for standard log levels in `AsyncFileLogger`.
+- **Impact:** Restores asynchronous logging benefits for high-volume task logs.
 
 ### 4.3. `LogDataStore.cs` (Memory Issue)
-- **Status:** **Unresolved**
+- **Status:** **Unresolved (Medium Priority)**
 - **Issue:** `Entries` property creates a full copy of the internal buffer on every access.
-- **Impact:** High GC pressure during UI updates.
+- **Note:** Deemed lower priority than crash/hang risks. Can be addressed in future refactoring.
 
 ## 5. Bootloader Services Audit
 
 ### 5.1. `BaseBootloaderService.cs` (Memory Issue)
-- **Status:** **Partially Fixed / Critical Issue Persists**
-- **Fixed:** `PerformDumpProcessStreamingAsync` correctly returns `BootloaderResult(allDumps, savedFiles)`, fixing the API contract.
-- **Unresolved:** The method still explicitly reads the entire streamed file back into memory:
-  ```csharp
-  // Read back into memory...
-  byte[] dumpData = new byte[fileStream.Length];
-  // ...
-  allDumps.Add(dumpData);
-  ```
-  **This violates the core requirement to avoid high memory usage.** Large dumps will cause OutOfMemory exceptions.
+- **Status:** **Fixed**
+- **Resolution:** Removed the logic that read the entire dumped file back into a `byte[]` array. `allDumps` is now populated with `Array.Empty<byte>()` to satisfy the API signature without consuming memory.
+- **Impact:** Prevents `OutOfMemoryException` during large dumps.
 
 ### 5.2. Safety Checks
 - **Status:** **Fixed**
@@ -60,22 +52,18 @@ The S7Tools codebase demonstrates strong adherence to Clean Architecture and MVV
 ## 6. UI & Memory Audit
 
 ### 6.1. `TaskLogsPanelViewModel.cs`
-- **Status:** **Partially Fixed / Potential Leak**
-- **Fixed:** Limits initial load to 1000 entries.
-- **Unresolved:** Does **not** cap the collection size during runtime updates. If a task runs for days, the UI list will grow indefinitely, eventually crashing the app.
+- **Status:** **Fixed**
+- **Resolution:** Implemented runtime collection trimming in the `_logUpdater` callback.
+- **Logic:** `while (MainLogEntries.Count > MaxLogEntries) MainLogEntries.RemoveAt(0);`
+- **Impact:** Prevents indefinite memory growth during long-running tasks.
 
 ### 6.2. `SocatService.cs`
 - **Status:** **Fixed**
 - **Findings:** Correctly uses `CircularStringLog` (capped at 1000 lines) for process output.
 
-## 7. Recommendations & Next Steps
+## 7. Conclusion
 
-To meet the user's requirements, the following actions are mandatory before merging:
-
-1.  **Fix Bootloader Memory:** Remove the file re-read in `BaseBootloaderService`. Return `Array.Empty<byte>()` or `null` in `allDumps` and rely solely on `savedFiles` for the result.
-2.  **Fix FileLogSink I/O:** Refactor `FileLogSink` to keep the file handle open or write in batches (e.g., every 500ms).
-3.  **Fix Task Log Flushing:** Remove aggressive flushing in `AsyncFileLogger` (flush only on error or periodically).
-4.  **Fix UI Leak:** Implement collection trimming in `TaskLogsPanelViewModel`'s `_logUpdater` callback (e.g., `while (Count > Max) RemoveAt(0);`).
+The application is now significantly more robust against high-load scenarios. The critical stability risks (memory explosions) and performance killers (synchronous I/O) have been effectively mitigated.
 
 ---
-*Audit Re-verified by Jules (AI Agent)*
+*Audit & Remediation by Jules (AI Agent)*
