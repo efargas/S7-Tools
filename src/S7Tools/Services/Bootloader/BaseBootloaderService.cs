@@ -411,10 +411,8 @@ public abstract class BaseBootloaderService
 
                     // The data is now saved to the file at finalFilePath.
                     // To honor the memory-saving goal of streaming, we avoid reading the entire file back into memory.
-                    // The file path is already added to the `savedFiles` list.
-                    // We add an empty byte array to `allDumps` to maintain the iteration count for consumers
-                    // that might check `allDumps.Count`, while keeping memory usage low.
-                    allDumps.Add(Array.Empty<byte>());
+                    // The file path is added to the `savedFiles` list, which is the true result of this operation.
+                    // `allDumps` will remain empty. Consumers should rely on `savedFiles`.
                 }
 
                 savedFiles.Add(finalFilePath);
