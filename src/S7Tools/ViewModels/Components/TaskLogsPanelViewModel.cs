@@ -9,7 +9,7 @@
         // Populate initial
         if (_mainLogDataStore != null)
         {
-            var initialMainLogs = _mainLogDataStore.Skip(Math.Max(0, _mainLogDataStore.Count() - MaxUiLogEntries));
+            var initialMainLogs = _mainLogDataStore.TakeLast(MaxUiLogEntries);
             foreach (S7Tools.Core.Models.LogModel logModel in initialMainLogs)
             {
                 MainLogEntries.Add(MapToLogEntry(logModel));
@@ -19,7 +19,7 @@
 
         if (_processLogDataStore != null)
         {
-            var initialProcessLogs = _processLogDataStore.Skip(Math.Max(0, _processLogDataStore.Count() - MaxUiLogEntries));
+            var initialProcessLogs = _processLogDataStore.TakeLast(MaxUiLogEntries);
             foreach (S7Tools.Core.Models.LogModel logModel in initialProcessLogs)
             {
                 ProcessLogEntries.Add(MapToLogEntry(logModel));
