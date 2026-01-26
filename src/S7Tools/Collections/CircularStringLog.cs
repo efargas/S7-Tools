@@ -60,7 +60,10 @@ public class CircularStringLog
                 return string.Empty;
             }
 
-            var sb = new StringBuilder();
+            // Pre-allocate StringBuilder capacity assuming an average line length
+            // to reduce re-allocations.
+            const int averageLineLength = 120;
+            var sb = new StringBuilder(_count * averageLineLength);
 
             // If the buffer is not full, start at 0.
             // If the buffer IS full, start at _head (which is the oldest element after wrap-around).

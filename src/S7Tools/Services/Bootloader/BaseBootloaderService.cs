@@ -319,7 +319,7 @@ public abstract class BaseBootloaderService
             }
 
             TimeSpan dumpDuration = (_timeProvider?.GetUtcNow() ?? DateTime.UtcNow) - dumpStartTime;
-            long totalBytes = allDumps.Sum(d => d.Length); // Note: This will be 0 since we return empty arrays
+            long totalBytes = savedFiles.Sum(path => new System.IO.FileInfo(path).Length);
             double rate = totalBytes > 0 && dumpDuration.TotalSeconds > 0 ? totalBytes / dumpDuration.TotalSeconds : 0;
 
             logger.LogInformation("✓ Streaming dump complete: {Size:N0} bytes total", totalBytes);
@@ -376,6 +376,18 @@ public abstract class BaseBootloaderService
                 if (segLength == 0)
                 {
                     ctx.Logger.LogWarning("Skipping zero-length segment {Name}", segment.Name);
+
+                    // Report progress for the skipped segment to avoid UI stalls.
+                    long bytesFromPreviousIterations = ctx.CurrentIteration * segments.Sum(s => (long)s.Size);
+                    long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
+                    long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter;
+                    double percent = ctx.TotalExpectedBytes > 0
+                        ? ctx.StartPercent + (ctx.Weight * cumulativeTotalBytes / ctx.TotalExpectedBytes)
+                        : ctx.StartPercent;
+
+                    string stageName = $"Seg {i + 1}/{segments.Count} (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
+                    ctx.Progress.Report((stageName, percent, cumulativeTotalBytes, ctx.TotalExpectedBytes));
+
                     continue;
                 }
 
