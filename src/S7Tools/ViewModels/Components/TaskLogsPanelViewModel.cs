@@ -136,9 +136,17 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
                 initialEntries.Add(MapToLogEntry(_mainLogDataStore[i]));
             }
 
-            foreach (var entry in initialEntries)
+            // Use batched update on UI thread to prevent excessive notifications
+            if (initialEntries.Count > 0)
             {
-                MainLogEntries.Add(entry);
+                // Dispatch as a single block to UI thread if possible,
+                // essentially batching the Add operations visually
+                _uiThreadService?.Post(() => {
+                    foreach (var entry in initialEntries)
+                    {
+                        MainLogEntries.Add(entry);
+                    }
+                });
             }
 
             _mainLogDataStore.CollectionChanged += _mainHandler;

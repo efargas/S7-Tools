@@ -231,7 +231,6 @@ public abstract class BaseBootloaderService
         ArgumentNullException.ThrowIfNull(progress);
         ArgumentNullException.ThrowIfNull(logger);
 
-        List<byte[]> allDumps = [];
         List<string> savedFiles = [];
 
         try
@@ -308,12 +307,8 @@ public abstract class BaseBootloaderService
                 }
 
                 // The data is now saved to the file at finalFilePath.
-                // To honor the memory-saving goal of streaming, we avoid reading the entire file back into memory.
-                // The file path is already added to the `savedFiles` list.
-                // We add an empty byte array to `allDumps` to maintain the iteration count for consumers
-                // that might check `allDumps.Count`, while keeping memory usage low.
-                allDumps.Add(Array.Empty<byte>());
-
+                // We no longer populate the deprecated `allDumps` list with empty arrays.
+                // Consumers should rely on `savedFiles` for data access.
                 savedFiles.Add(finalFilePath);
                 logger.LogInformation("✓ Dump file created: {File} ({Size:N0} bytes)", dumpFileName, bytesWrittenInIter);
             }
@@ -325,7 +320,7 @@ public abstract class BaseBootloaderService
             logger.LogInformation("✓ Streaming dump complete: {Size:N0} bytes total", totalBytes);
             logger.LogInformation("  Duration: {Duration:F1}s, Rate: {Rate:F1} bytes/s", dumpDuration.TotalSeconds, rate);
 
-            return new BootloaderResult(allDumps, savedFiles);
+            return new BootloaderResult(savedFiles);
         }
         finally
         {
@@ -378,7 +373,9 @@ public abstract class BaseBootloaderService
                     ctx.Logger.LogWarning("Skipping zero-length segment {Name}", segment.Name);
 
                     // Report progress for the skipped segment to avoid UI stalls.
-                    long bytesFromPreviousIterations = ctx.CurrentIteration * segments.Sum(s => (long)s.Size);
+                    // Calculate total size once to avoid recalculation in loop (though relatively cheap for small lists)
+                    long totalSegmentsSize = segments.Sum(s => (long)s.Size);
+                    long bytesFromPreviousIterations = ctx.CurrentIteration * totalSegmentsSize;
                     long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
                     long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter;
                     double percent = ctx.TotalExpectedBytes > 0

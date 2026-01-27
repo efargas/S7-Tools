@@ -105,9 +105,10 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
                             await writer.FlushAsync();
                         }
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Ignore individual write errors
+                        // Log write errors to debug output to help diagnosis
+                        System.Diagnostics.Debug.WriteLine($"FileLogSink write error: {ex}");
                     }
                 }
 
