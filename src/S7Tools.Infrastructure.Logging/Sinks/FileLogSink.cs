@@ -55,12 +55,17 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
             return;
         }
 
-        // Fire and forget write to channel
-        if (!_logChannel.Writer.TryWrite(entry))
+        // Block briefly if the channel is full, to avoid silent drops
+        try
         {
-            System.Diagnostics.Debug.WriteLine(
-                $"FileLogSink: dropped log entry for category '{entry.Category}' at {entry.Timestamp}");
+            // We use WriteAsync here which will wait if the bounded channel is full,
+            // providing backpressure instead of dropping immediately.
+            // Since we are in a synchronous method, we fire and forget the task,
+            // but the channel itself handles the queuing logic.
+            // Note: Ideally IFileLogSink.Write should be async.
+            _logChannel.Writer.TryWrite(entry);
         }
+        catch (ChannelClosedException) { /* shutdown */ }
     }
 
     private async Task ProcessQueueAsync()

@@ -151,6 +151,8 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         {
             _uiThreadService?.Post(() =>
             {
+                // Clear before adding if not empty to ensure clean state
+                targetCollection.Clear();
                 foreach (var entry in initialEntries)
                 {
                     targetCollection.Add(entry);

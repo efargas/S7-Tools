@@ -377,6 +377,7 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
 {
     private readonly Channel<LogEntry> _logChannel;
     private readonly Task _writerTask;
+    private int _writesSinceFlush;
     private readonly CancellationTokenSource _shutdownCts = new();
     private readonly LogLevel _minLevel;
     private bool _disposed;
@@ -464,6 +465,12 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
                 if (entry.Level >= LogLevel.Error)
                 {
                     await writer.FlushAsync();
+                    _writesSinceFlush = 0;
+                }
+                else if (++_writesSinceFlush >= 50)  // e.g. every 50 writes
+                {
+                    await writer.FlushAsync();
+                    _writesSinceFlush = 0;
                 }
             }
 

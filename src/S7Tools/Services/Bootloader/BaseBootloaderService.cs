@@ -339,12 +339,34 @@ public abstract class BaseBootloaderService
         long TotalExpectedBytes,
         CancellationToken CancellationToken);
 
+    private static uint ParseSegmentAddress(MemorySegment segment)
+    {
+        string? startStr = segment.StartAddress;
+        if (string.IsNullOrEmpty(startStr))
+        {
+            throw new InvalidOperationException($"Memory segment '{segment.Name}' has a null or empty start address.");
+        }
+
+        if (startStr.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            startStr = startStr[2..];
+        }
+
+        if (!uint.TryParse(startStr, System.Globalization.NumberStyles.HexNumber, null, out uint segmentStart))
+        {
+            throw new InvalidOperationException($"Invalid memory segment start address '{segment.StartAddress}'.");
+        }
+        return segmentStart;
+    }
+
     private async Task<long> StreamSegmentedDumpToFileAsync(
         StreamingContext ctx,
         List<MemorySegment> segments,
         string finalFilePath)
     {
         long bytesWrittenInIter = 0;
+        long totalSegmentsSize = segments.Sum(s => (long)s.Size);
+        long bytesFromPreviousSegmentsThisIter = 0;
 
         await using (var fileStream = new System.IO.FileStream(
             finalFilePath,
@@ -357,15 +379,7 @@ public abstract class BaseBootloaderService
             for (int i = 0; i < segments.Count; i++)
             {
                 var segment = segments[i];
-                string segStartStr = segment.StartAddress?.StartsWith("0x", StringComparison.OrdinalIgnoreCase) == true
-                    ? segment.StartAddress[2..]
-                    : segment.StartAddress ?? "0";
-
-                if (!uint.TryParse(segStartStr, System.Globalization.NumberStyles.HexNumber, null, out uint segStart))
-                {
-                    throw new InvalidOperationException($"Invalid segment address: {segment.StartAddress}");
-                }
-
+                uint segStart = ParseSegmentAddress(segment);
                 uint segLength = (uint)segment.Size;
 
                 if (segLength == 0)
@@ -373,10 +387,7 @@ public abstract class BaseBootloaderService
                     ctx.Logger.LogWarning("Skipping zero-length segment {Name}", segment.Name);
 
                     // Report progress for the skipped segment to avoid UI stalls.
-                    // Calculate total size once to avoid recalculation in loop (though relatively cheap for small lists)
-                    long totalSegmentsSize = segments.Sum(s => (long)s.Size);
                     long bytesFromPreviousIterations = ctx.CurrentIteration * totalSegmentsSize;
-                    long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
                     long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter;
                     double percent = ctx.TotalExpectedBytes > 0
                         ? ctx.StartPercent + (ctx.Weight * cumulativeTotalBytes / ctx.TotalExpectedBytes)
@@ -404,8 +415,7 @@ public abstract class BaseBootloaderService
                     double percent = segStartPercent + (segWeight * bytes / segLength);
 
                     // Calculate cumulative bytes
-                    long bytesFromPreviousIterations = ctx.CurrentIteration * segments.Sum(s => (long)s.Size);
-                    long bytesFromPreviousSegmentsThisIter = segments.Take(i).Sum(s => (long)s.Size);
+                    long bytesFromPreviousIterations = ctx.CurrentIteration * totalSegmentsSize;
                     long cumulativeTotalBytes = bytesFromPreviousIterations + bytesFromPreviousSegmentsThisIter + bytes;
 
                     double threshold = segLength > 1024 * 1024 ? 0.1 : 1.0;
@@ -425,6 +435,7 @@ public abstract class BaseBootloaderService
                     logger: ctx.Logger).ConfigureAwait(false);
 
                 bytesWrittenInIter += segBytesWritten;
+                bytesFromPreviousSegmentsThisIter += segLength;
                 ctx.Logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, segBytesWritten);
             }
 
