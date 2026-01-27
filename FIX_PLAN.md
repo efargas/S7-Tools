@@ -12,7 +12,7 @@ This document tracks the remediation of critical issues identified in the `COMPR
 **Target:** `src/S7Tools/Services/Bootloader/BaseBootloaderService.cs`
 **Action:**
 - [x] Remove `File.ReadAllBytes` logic in `PerformDumpProcessStreamingAsync`.
-- [x] Populate `allDumps` with `Array.Empty<byte>()` to preserve `List<byte[]>` signature compatibility.
+- [x] Refactored `BootloaderResult` to return `List<string>` (file paths) instead of `List<byte[]>` to permanently fix the API design flaw.
 - [x] Ensure `savedFiles` list is correctly populated (already verified, but double-check).
 
 ## 2. Critical Performance Fixes (I/O Bottlenecks)
@@ -24,13 +24,15 @@ This document tracks the remediation of critical issues identified in the `COMPR
 - [x] Implement `System.Threading.Channels` for non-blocking queuing.
 - [x] Use a long-running background task with a persistent `FileStream`.
 - [x] Implement batching/periodic flushing (e.g., every 1s) to reduce disk syscalls.
+- [x] Use `BoundedChannel` with `DropOldest` policy to prevent memory exhaustion under extreme load.
+- [x] Ensure `Dispose` waits for background task completion to prevent log loss.
 
 ### [x] Optimize Task Logging (`AsyncFileLogger`)
 **Issue:** `FlushAsync()` called after *every* log entry, degrading async benefits.
 **Target:** `src/S7Tools/Services/Logging/TaskLoggerFactory.cs`
 **Action:**
 - [x] Remove `FlushAsync` from the per-message loop for standard logs.
-- [x] Implement periodic flush or flush-on-error policy.
+- [x] Implement periodic flush or flush-on-error policy (changed to flush on `Warning` or higher).
 
 ## 3. Medium Stability/Performance Fixes (Memory Leaks)
 
@@ -40,6 +42,7 @@ This document tracks the remediation of critical issues identified in the `COMPR
 **Action:**
 - [x] In the `_logUpdater` callback, implement trimming logic.
 - [x] `while (Entries.Count > MaxEntries) Entries.RemoveAt(0);`
+- [x] Optimize initial log loading to avoid iterating entire collection and batch UI updates.
 
 ## 4. Verification
 
