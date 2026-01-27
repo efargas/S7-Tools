@@ -122,53 +122,40 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         // Get persistent stores for the task
         (_mainLogDataStore, _processLogDataStore, _) = _centralizedTaskLogService.GetOrCreateStoresForTask(_task.TaskId);
 
-        // Populate initial
+        // Populate initial logs safely on the UI thread
+        PopulateInitialLogEntries(_mainLogDataStore, MainLogEntries);
+        PopulateInitialLogEntries(_processLogDataStore, ProcessLogEntries);
+
         if (_mainLogDataStore != null)
-        {
-            // Optimize: Load the last entries without iterating the whole collection with TakeLast.
-            var initialEntries = new List<LogEntry>();
-            int skipCount = Math.Max(0, _mainLogDataStore.Count - MaxLogEntries);
-
-            // LogDataStore should ideally expose an indexer or optimized enumerator
-            // Since it exposes IReadOnlyList, this is already better than LINQ TakeLast for lists
-            for (int i = skipCount; i < _mainLogDataStore.Count; i++)
-            {
-                initialEntries.Add(MapToLogEntry(_mainLogDataStore[i]));
-            }
-
-            // Use batched update on UI thread to prevent excessive notifications
-            if (initialEntries.Count > 0)
-            {
-                // Dispatch as a single block to UI thread if possible,
-                // essentially batching the Add operations visually
-                _uiThreadService?.Post(() => {
-                    foreach (var entry in initialEntries)
-                    {
-                        MainLogEntries.Add(entry);
-                    }
-                });
-            }
-
             _mainLogDataStore.CollectionChanged += _mainHandler;
-        }
 
         if (_processLogDataStore != null)
-        {
-            // Optimize: Load the last entries without iterating the whole collection with TakeLast.
-            var initialEntries = new List<LogEntry>();
-            int skipCount = Math.Max(0, _processLogDataStore.Count - MaxLogEntries);
-
-            for (int i = skipCount; i < _processLogDataStore.Count; i++)
-            {
-                initialEntries.Add(MapToLogEntry(_processLogDataStore[i]));
-            }
-
-            foreach (var entry in initialEntries)
-            {
-                ProcessLogEntries.Add(entry);
-            }
-
             _processLogDataStore.CollectionChanged += _processHandler;
+    }
+
+    private void PopulateInitialLogEntries(ITaskLogDataStore? store, ObservableCollection<LogEntry> targetCollection)
+    {
+        if (store == null || store.Count == 0)
+            return;
+
+        var initialEntries = new List<LogEntry>();
+        int skipCount = Math.Max(0, store.Count - MaxLogEntries);
+
+        // Access via IReadOnlyList indexer
+        for (int i = skipCount; i < store.Count; i++)
+        {
+            initialEntries.Add(MapToLogEntry(store[i]));
+        }
+
+        if (initialEntries.Count > 0)
+        {
+            _uiThreadService?.Post(() =>
+            {
+                foreach (var entry in initialEntries)
+                {
+                    targetCollection.Add(entry);
+                }
+            });
         }
     }
 

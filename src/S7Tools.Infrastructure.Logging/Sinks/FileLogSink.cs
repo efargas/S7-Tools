@@ -35,9 +35,11 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
         _configuration = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
-        // Create unbounded channel to ensure producers (loggers) are never blocked
-        _logChannel = Channel.CreateUnbounded<LogEntry>(new UnboundedChannelOptions
+        // Use a bounded channel to prevent unbounded memory growth
+        // If the channel is full, the oldest log entry will be dropped.
+        _logChannel = Channel.CreateBounded<LogEntry>(new BoundedChannelOptions(10000)
         {
+            FullMode = BoundedChannelFullMode.DropOldest,
             SingleReader = true,
             SingleWriter = false
         });
@@ -54,7 +56,11 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
         }
 
         // Fire and forget write to channel
-        _logChannel.Writer.TryWrite(entry);
+        if (!_logChannel.Writer.TryWrite(entry))
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"FileLogSink: dropped log entry for category '{entry.Category}' at {entry.Timestamp}");
+        }
     }
 
     private async Task ProcessQueueAsync()
