@@ -67,3 +67,43 @@ The application is now significantly more robust against high-load scenarios. Th
 
 ---
 *Audit & Remediation by Jules (AI Agent)*
+# Comprehensive Code Audit & Refactoring Proposal
+
+**Date:** $(date +%Y-%m-%d)
+**Goal:** Simplify codebase, remove dead code, fix bugs, optimize performance, and implement missing features/placeholders.
+
+## 1. Dead Code Elimination
+*   **File:** `src/S7Tools/ViewModels/Layout/NavigationViewModel.cs`
+    *   **Finding:** The method `CreateSettingsConfigViewModel()` is never called. Navigation handles the `"settings"` case directly by creating a `SettingsViewModel`.
+    *   **Action:** Remove `CreateSettingsConfigViewModel()`.
+
+## 2. Unfinished Features & Placeholders
+*   **File:** `src/S7Tools/ViewModels/Layout/NavigationViewModel.cs`
+    *   **Finding:** Comment states `TODO: Create a proper SettingsConfigViewModel`. Based on current navigation logic, this appears obsolete, or a separate refactor is needed if the UI requires distinct ViewModels for settings categories.
+*   **File:** `src/S7Tools/ViewModels/Dialogs/CreateMemoryRegionProfileDialogViewModel.cs`
+    *   **Finding:** The `ExecuteEditSegment()` method is an empty placeholder: `// TODO: Open segment edit dialog when available`.
+    *   **Action:** Implement the segment edit dialog or a mechanism to edit segment properties inline.
+*   **File:** `src/S7Tools/Services/Jobs/JobManager.cs`
+    *   **Finding:** Around line 533, the code only uses the first selected memory segment: `// TODO: Support multiple segments in JobProfileSet`.
+    *   **Action:** Refactor `JobProfileSet` to handle a collection of `MemoryRegionProfile` instead of a single instance, allowing multi-segment dumps.
+*   **File:** `src/S7Tools/ViewModels/Profiles/PowerSupplyProfileViewModel.cs`
+    *   **Finding:** `CreateConfigurationForType` throws `NotImplementedException` for `SerialRs232`, `SerialRs485`, and `EthernetIp`.
+    *   **Action:** Since these are planned for future releases, the current implementation is acceptable, but the UI might need to disable these options to prevent crashes when selected.
+
+## 3. Performance Optimizations
+*   **File:** `src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs`
+    *   **Finding (Medium Priority):** The `Entries` property creates a full array copy (`new LogModel[_count]`) on every access. Since this is frequently accessed by UI bindings, it introduces significant memory allocation pressure and GC overhead.
+    *   **Action:** Change the property to yield elements via an enumerator rather than returning a newly allocated array, or expose an `ObservableCollection` wrapper that only updates deltas.
+
+## 4. UI/UX Improvements
+*   **File:** `src/S7Tools/ViewModels/Layout/NavigationViewModel.cs`
+    *   **Finding:** The `DetailContent` and `MainContent` are set to raw strings in some cases (e.g., `"Settings configuration - needs dedicated ViewModel"`, `UIStrings.Navigation_LogViewerComingSoon`).
+    *   **Action:** Use proper dedicated placeholder ViewModels for these states instead of raw strings to ensure robust data binding and consistent visual styling.
+
+## 5. Potential Bugs & Error Handling
+*   **File:** `src/S7Tools/Converters/GridLengthToDoubleConverter.cs` & `BooleanToVisibilityConverter.cs`
+    *   **Finding:** `ConvertBack` throws `NotImplementedException`. While typical for one-way bindings, if these are accidentally used in `TwoWay` bindings, the app will crash.
+    *   **Action:** Return `BindingOperations.DoNothing` instead of throwing an exception, which is a safer pattern for Avalonia/WPF converters.
+
+---
+**Next Steps:** Please review this audit proposal. Once approved, I will proceed with applying these modifications sequentially.
