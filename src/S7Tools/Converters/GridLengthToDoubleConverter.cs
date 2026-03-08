@@ -39,9 +39,9 @@ public class GridLengthToDoubleConverter : IValueConverter
     /// <param name="parameter">An optional parameter.</param>
     /// <param name="culture">The culture information.</param>
     /// <returns>This method is not supported.</returns>
-
+    /// <exception cref="NotImplementedException">This converter does not support ConvertBack.</exception>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        return Avalonia.Data.BindingOperations.DoNothing;
+        throw new NotImplementedException(UIStrings.Exception_GridLengthToDoubleConverterNoConvertBack);
     }
 }

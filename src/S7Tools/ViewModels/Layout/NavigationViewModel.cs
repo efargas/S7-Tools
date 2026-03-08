@@ -313,8 +313,8 @@ public class NavigationViewModel : ReactiveObject
                     MainContentTitle = UIStrings.Navigation_LogViewerTitle;
                     ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
-                    MainContent = new S7Tools.ViewModels.Jobs.JobWizardPlaceholderViewModel(UIStrings.Navigation_LogViewerTitle, UIStrings.Navigation_LogViewerComingSoon);
-                    DetailContent = MainContent;
+                    MainContent = UIStrings.Navigation_LogViewerComingSoon;
+                    DetailContent = UIStrings.Navigation_LogViewerComingSoon;
                     ShowLogStats = true;
                     UpdateLogStats();
                     _logger.LogDebug("Navigated to Log Viewer");
@@ -389,8 +389,8 @@ public class NavigationViewModel : ReactiveObject
             MainContentTitle = UIStrings.Navigation_ErrorTitle;
             ShowMainContentHeader = true;
             CurrentContent = null;
-            MainContent = new S7Tools.ViewModels.Jobs.JobWizardPlaceholderViewModel(UIStrings.Navigation_ErrorTitle, UIStrings.Navigation_NavigationFailed(ex.Message));
-            DetailContent = MainContent;
+            MainContent = UIStrings.Navigation_NavigationFailed(ex.Message);
+            DetailContent = UIStrings.Navigation_NavigationFailed(ex.Message);
             ShowLogStats = false;
         }
     }
@@ -422,7 +422,18 @@ public class NavigationViewModel : ReactiveObject
         return CreateViewModel<LoggingTestViewModel>();
     }
 
-
+    /// <summary>
+    /// Creates a ViewModel for settings configuration.
+    /// This returns a reference to the parent MainWindowViewModel for now.
+    /// In a proper implementation, this would be a separate SettingsConfigViewModel.
+    /// </summary>
+    /// <returns>A ViewModel representing the settings configuration.</returns>
+    private object CreateSettingsConfigViewModel()
+    {
+        // TODO: Create a proper SettingsConfigViewModel
+        // For now, we'll need to get this from the parent or create a placeholder
+        return "Settings configuration - needs dedicated ViewModel";
+    }
 
     /// <summary>
     /// Updates the log statistics message.

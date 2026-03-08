@@ -12,7 +12,6 @@ using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Resources;
-using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Dialogs;
@@ -31,7 +30,6 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
 
     private readonly CompositeDisposable _disposables = new();
     private readonly ILogger<CreateMemoryRegionProfileDialogViewModel> _logger;
-    private readonly IDialogService? _dialogService;
 
     private string _profileName = string.Empty;
     private string _description = string.Empty;
@@ -50,12 +48,9 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// Initializes a new instance of the CreateMemoryRegionProfileDialogViewModel class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public CreateMemoryRegionProfileDialogViewModel(
-        ILogger<CreateMemoryRegionProfileDialogViewModel> logger,
-        IDialogService? dialogService = null)
+    public CreateMemoryRegionProfileDialogViewModel(ILogger<CreateMemoryRegionProfileDialogViewModel> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dialogService = dialogService;
 
         InitializeCommands();
         InitializeValidation();
@@ -476,40 +471,14 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// <summary>
     /// Executes the edit segment command.
     /// </summary>
-    private async void ExecuteEditSegment()
+    private void ExecuteEditSegment()
     {
         try
         {
-            if (SelectedSegment != null && _dialogService != null)
+            if (SelectedSegment != null)
             {
+                // TODO: Open segment edit dialog when available
                 _logger.LogDebug("Edit segment requested for: {SegmentName}", SelectedSegment.Name);
-
-                // For now, use a simple input dialog to change the start address as a placeholder
-                // for a full segment edit dialog
-                var result = await _dialogService.ShowInputAsync(
-                    $"Edit Segment: {SelectedSegment.Name}",
-                    "Enter new start address (hex):",
-                    SelectedSegment.StartAddress ?? "0x00000000",
-                    "0x00000000");
-
-                if (!result.IsCancelled && !string.IsNullOrWhiteSpace(result.Value))
-                {
-                    SelectedSegment.StartAddress = result.Value;
-
-                    // Force a UI refresh of the segment
-                    int index = CustomSegments.IndexOf(SelectedSegment);
-                    if (index >= 0)
-                    {
-                        var temp = SelectedSegment;
-                        CustomSegments.RemoveAt(index);
-                        CustomSegments.Insert(index, temp);
-                        SelectedSegment = temp;
-                    }
-                }
-            }
-            else if (_dialogService == null)
-            {
-                _logger.LogWarning("IDialogService is not available to edit segment");
             }
         }
         catch (Exception ex)
