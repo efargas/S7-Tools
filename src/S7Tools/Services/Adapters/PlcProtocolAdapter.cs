@@ -104,7 +104,10 @@ namespace S7Tools.Services.Adapters
             await Task.Delay(10, cancellationToken).ConfigureAwait(false);
 
             var packet = EncodePacket(payload);
-            _logger.LogTrace("-> SEND: {Hex}", BitConverter.ToString(packet).Replace("-", ""));
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace("-> SEND: {Hex}", BitConverter.ToString(packet).Replace("-", ""));
+            }
 
             int step = maxChunk ?? 2;
             int sleepMs = 10;
@@ -155,7 +158,10 @@ namespace S7Tools.Services.Adapters
                 bytesRead += currentBytesRead;
             }
 
-            _logger.LogTrace("<- RECV: {Hex}", BitConverter.ToString(fullPacket).Replace("-", ""));
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace("<- RECV: {Hex}", BitConverter.ToString(fullPacket).Replace("-", ""));
+            }
             return DecodePacket(fullPacket);
         }
 

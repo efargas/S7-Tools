@@ -228,9 +228,12 @@ namespace S7Tools.Services.Adapters.Plc
                 if (buffer.Length > 0)
                 {
                     // VERBOSE TRACE: Print buffer head to diagnose alignment issues
-                    var hexDump = BitConverter.ToString(buffer.Slice(0, Math.Min(buffer.Length, 16)).ToArray());
-                    Logger.LogTrace("Buffer state: Length={Len}, Head=[{Hex}]",
-                        buffer.Length, hexDump);
+                    if (Logger.IsEnabled(LogLevel.Trace))
+                    {
+                        var hexDump = BitConverter.ToString(buffer.Slice(0, Math.Min(buffer.Length, 16)).ToArray());
+                        Logger.LogTrace("Buffer state: Length={Len}, Head=[{Hex}]",
+                            buffer.Length, hexDump);
+                    }
 
                     var seqReader = new SequenceReader<byte>(buffer);
                     bool processed = false;
@@ -254,7 +257,10 @@ namespace S7Tools.Services.Adapters.Plc
                             // Check if we consumed everything or have leftovers
                             if (seqReader.Remaining > 0)
                             {
-                                Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
+                                if (Logger.IsEnabled(LogLevel.Trace))
+                                {
+                                    Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
+                                }
 
                                 // Re-slice to strip the greeting we just ate
                                 buffer = buffer.Slice(consumed);
@@ -411,7 +417,7 @@ namespace S7Tools.Services.Adapters.Plc
                 blocksProcessed++;
             }
 
-            if (blocksProcessed > 0)
+            if (blocksProcessed > 0 && Logger.IsEnabled(LogLevel.Trace))
             {
                 Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
                     blocksProcessed, blocksProcessed * BlockSize, currentAddress);
