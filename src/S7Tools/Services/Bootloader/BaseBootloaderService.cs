@@ -78,11 +78,13 @@ public abstract class BaseBootloaderService
 
         // Pre-calculate data for efficiency
         string[] iterStageNames = new string[profiles.DumpCount];
-        string[][] segStageNames = new string[profiles.DumpCount][];
+        string[][]? segStageNames = null;
+        List<MemorySegment>? selectedSegments = null;
 
         if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
         {
-            var selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
+            selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
+            segStageNames = new string[profiles.DumpCount][];
             for (int iter = 0; iter < profiles.DumpCount; iter++)
             {
                 segStageNames[iter] = new string[selectedSegments.Count];
@@ -104,9 +106,8 @@ public abstract class BaseBootloaderService
         {
             logger.LogInformation("Starting Dump Iteration {Iter}/{Total}", iter + 1, profiles.DumpCount);
 
-            if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
+            if (selectedSegments != null && segStageNames != null)
             {
-                var selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
                 List<byte[]> segmentDataList = [];
 
                 for (int i = 0; i < selectedSegments.Count; i++)
@@ -285,29 +286,27 @@ public abstract class BaseBootloaderService
                 totalExpectedBytes = iterationCount * (long)profiles.Memory.Length;
             }
 
+            // Determine directory and sanitized job name once
+            string dumpsDir = !string.IsNullOrWhiteSpace(profiles.OutputPath)
+                ? profiles.OutputPath
+                : "./dumps";
+
+            if (!System.IO.Directory.Exists(dumpsDir))
+            {
+                System.IO.Directory.CreateDirectory(dumpsDir);
+            }
+
+            string rawJobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
+            string jobName = string.Join("_", rawJobName.Split(System.IO.Path.GetInvalidFileNameChars()));
+            string taskIdStr = taskId.HasValue ? $"_{taskId.Value:N}" : "";
+
             for (int iter = 0; iter < iterationCount; iter++)
             {
                 logger.LogInformation("Iteration {Iter}/{Total}", iter + 1, iterationCount);
 
                 // Determine final file path up-front
                 string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
-                string rawJobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
-
-                // Sanitize job name to prevent path traversal or invalid char errors
-                string jobName = string.Join("_", rawJobName.Split(System.IO.Path.GetInvalidFileNameChars()));
-
-                string taskIdStr = taskId.HasValue ? $"_{taskId.Value:N}" : "";
                 string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}{taskIdStr}_{timestamp}.bin";
-
-                string dumpsDir = !string.IsNullOrWhiteSpace(profiles.OutputPath)
-                    ? profiles.OutputPath
-                    : "./dumps";
-
-                if (!System.IO.Directory.Exists(dumpsDir))
-                {
-                    System.IO.Directory.CreateDirectory(dumpsDir);
-                }
-
                 string finalFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
                 long bytesWrittenInIter = 0;
 
