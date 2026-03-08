@@ -9,6 +9,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Services.Interfaces;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Resources;
@@ -30,6 +31,7 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
 
     private readonly CompositeDisposable _disposables = new();
     private readonly ILogger<CreateMemoryRegionProfileDialogViewModel> _logger;
+    private readonly IDialogService _dialogService;
 
     private string _profileName = string.Empty;
     private string _description = string.Empty;
@@ -48,9 +50,11 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// Initializes a new instance of the CreateMemoryRegionProfileDialogViewModel class.
     /// </summary>
     /// <param name="logger">The logger instance.</param>
-    public CreateMemoryRegionProfileDialogViewModel(ILogger<CreateMemoryRegionProfileDialogViewModel> logger)
+    /// <param name="dialogService">The dialog service instance.</param>
+    public CreateMemoryRegionProfileDialogViewModel(ILogger<CreateMemoryRegionProfileDialogViewModel> logger, IDialogService? dialogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _dialogService = dialogService!; // Allow null for design-time, but mark as non-nullable internally
 
         InitializeCommands();
         InitializeValidation();
@@ -62,7 +66,9 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// <summary>
     /// Design-time constructor for XAML preview.
     /// </summary>
-    public CreateMemoryRegionProfileDialogViewModel() : this(Microsoft.Extensions.Logging.Abstractions.NullLogger<CreateMemoryRegionProfileDialogViewModel>.Instance)
+    public CreateMemoryRegionProfileDialogViewModel() : this(
+        Microsoft.Extensions.Logging.Abstractions.NullLogger<CreateMemoryRegionProfileDialogViewModel>.Instance,
+        null!)
     {
         // Design-time data
         ProfileName = "Example Profile";
@@ -276,7 +282,7 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
         RemoveSegmentCommand = ReactiveCommand.Create(ExecuteRemoveSegment, canRemoveSegment)
             .DisposeWith(_disposables);
 
-        EditSegmentCommand = ReactiveCommand.Create(ExecuteEditSegment, canRemoveSegment)
+        EditSegmentCommand = ReactiveCommand.CreateFromTask(ExecuteEditSegmentAsync, canRemoveSegment)
             .DisposeWith(_disposables);
     }
 
@@ -471,14 +477,30 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// <summary>
     /// Executes the edit segment command.
     /// </summary>
-    private void ExecuteEditSegment()
+    private async Task ExecuteEditSegmentAsync()
     {
         try
         {
-            if (SelectedSegment != null)
+            if (SelectedSegment != null && _dialogService != null)
             {
-                // TODO: Open segment edit dialog when available
-                _logger.LogDebug("Edit segment requested for: {SegmentName}", SelectedSegment.Name);
+                var result = await _dialogService.ShowInputAsync(
+                    UIStrings.Navigation_Explorer, // Reusing title from UIStrings for now
+                    $"Edit name for segment {SelectedSegment.Name}:",
+                    SelectedSegment.Name,
+                    "Enter segment name");
+
+                if (!result.IsCancelled && !string.IsNullOrWhiteSpace(result.Value))
+                {
+                    SelectedSegment.Name = result.Value.Trim();
+                    _logger.LogDebug("Renamed custom segment to: {SegmentName}", SelectedSegment.Name);
+
+                    // Trigger refresh of list display
+                    int index = CustomSegments.IndexOf(SelectedSegment);
+                    if (index >= 0)
+                    {
+                        CustomSegments[index] = SelectedSegment;
+                    }
+                }
             }
         }
         catch (Exception ex)

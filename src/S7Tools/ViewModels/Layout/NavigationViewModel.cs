@@ -423,19 +423,6 @@ public class NavigationViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Creates a ViewModel for settings configuration.
-    /// This returns a reference to the parent MainWindowViewModel for now.
-    /// In a proper implementation, this would be a separate SettingsConfigViewModel.
-    /// </summary>
-    /// <returns>A ViewModel representing the settings configuration.</returns>
-    private object CreateSettingsConfigViewModel()
-    {
-        // TODO: Create a proper SettingsConfigViewModel
-        // For now, we'll need to get this from the parent or create a placeholder
-        return "Settings configuration - needs dedicated ViewModel";
-    }
-
-    /// <summary>
     /// Updates the log statistics message.
     /// </summary>
     private void UpdateLogStats()
