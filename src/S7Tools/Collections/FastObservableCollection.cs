@@ -33,7 +33,9 @@ namespace S7Tools.Collections
         public void AddRange(IEnumerable<T> items)
         {
             if (items == null)
+            {
                 throw new ArgumentNullException(nameof(items));
+            }
 
             _isAddingRange = true;
             try

@@ -14,7 +14,6 @@ using S7Tools.Resources;
 namespace S7Tools.ViewModels.Profiles;
 
 /// <summary>
-/// ViewModel for editing PowerSupply profiles.
 /// Handles creation, editing, and validation of PowerSupply profile configurations.
 /// </summary>
 public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged, IDisposable
@@ -27,23 +26,19 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
 
     private PowerSupplyProfile? _originalProfile;
 
-    // Profile properties
     private string _profileName = string.Empty;
     private string _profileDescription = string.Empty;
     private bool _isDefault;
     private bool _isReadOnly;
 
-    // Configuration properties
     private PowerSupplyType _powerSupplyType = PowerSupplyType.ModbusTcp;
 
-    // ModbusTcp configuration properties
     private string _modbusTcpHost = "192.168.1.100";
     private int _modbusTcpPort = 502;
     private int _modbusTcpDeviceId = 1;
     private int _modbusTcpOnOffCoil;
     private ModbusAddressingMode _modbusTcpAddressingMode = ModbusAddressingMode.Base1; // Default to Base-1 (user-friendly)
 
-    // Status properties
     private bool _isValid = true;
     private bool _hasChanges;
     private string _statusMessage = string.Empty;
@@ -129,7 +124,7 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// Gets whether the current power supply type is ModbusTcp.
     /// Used to control visibility of ModbusTcp configuration fields.
     /// </summary>
-    public bool IsModbusTcp => PowerSupplyType == PowerSupplyType.ModbusTcp;
+    public bool IsModbusTcp => PowerSupplyType is PowerSupplyType.ModbusTcp;
 
     /// <summary>
     /// Gets or sets the power supply type as ComboBox index.
@@ -255,16 +250,12 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
 
         _originalProfile = profile.ClonePreserveId();
 
-        // Load profile properties
         ProfileName = profile.Name;
         ProfileDescription = profile.Description;
         IsDefault = profile.IsDefault;
         IsReadOnly = profile.IsReadOnly;
-
-        // Load configuration properties
         PowerSupplyType = profile.Configuration.Type;
 
-        // Load ModbusTcp specific configuration if applicable
         if (profile.Configuration is ModbusTcpConfiguration modbusTcpConfig)
         {
             ModbusTcpHost = modbusTcpConfig.Host;
@@ -274,10 +265,13 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             ModbusTcpAddressingMode = modbusTcpConfig.AddressingMode;
         }
 
-        // Reset status
         HasChanges = false;
         StatusMessage = UIStrings.Status_ProfileLoaded;
-        _logger.LogDebug("Loaded power supply profile: {ProfileName}", profile.Name);
+
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("Loaded power supply profile: {ProfileName}", profile.Name);
+        }
     }
 
     /// <summary>
@@ -311,27 +305,20 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// which are planned for future implementation.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when an unknown power supply type is provided.</exception>
-    private PowerSupplyConfiguration CreateConfigurationForType(PowerSupplyType type)
+    private PowerSupplyConfiguration CreateConfigurationForType(PowerSupplyType type) => type switch
     {
-        return type switch
+        PowerSupplyType.ModbusTcp => new ModbusTcpConfiguration
         {
-            PowerSupplyType.ModbusTcp => new ModbusTcpConfiguration
-            {
-                Host = ModbusTcpHost,
-                Port = ModbusTcpPort,
-                DeviceId = (byte)ModbusTcpDeviceId,
-                OnOffCoil = (ushort)ModbusTcpOnOffCoil,
-                AddressingMode = ModbusTcpAddressingMode
-            },
-            PowerSupplyType.SerialRs232 => throw new NotImplementedException(
-                "Serial RS232 power supply configuration is planned for a future release. Currently, only Modbus TCP is supported."),
-            PowerSupplyType.SerialRs485 => throw new NotImplementedException(
-                "Serial RS485 power supply configuration is planned for a future release. Currently, only Modbus TCP is supported."),
-            PowerSupplyType.EthernetIp => throw new NotImplementedException(
-                "Ethernet/IP power supply configuration is planned for a future release. Currently, only Modbus TCP is supported."),
-            _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown power supply type")
-        };
-    }
+            Host = ModbusTcpHost,
+            Port = ModbusTcpPort,
+            DeviceId = (byte)ModbusTcpDeviceId,
+            OnOffCoil = (ushort)ModbusTcpOnOffCoil,
+            AddressingMode = ModbusTcpAddressingMode
+        },
+        PowerSupplyType.SerialRs232 or PowerSupplyType.SerialRs485 or PowerSupplyType.EthernetIp =>
+            throw new NotImplementedException($"{type} power supply configuration is planned for a future release. Currently, only Modbus TCP is supported."),
+        _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown power supply type")
+    };
 
     #endregion
 
@@ -370,18 +357,20 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             ValidateConfiguration();
         }
 
-        // Individual subscriptions for each property that affects validation/changes
-        this.WhenAnyValue(x => x.ProfileName).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-        this.WhenAnyValue(x => x.ProfileDescription).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-        this.WhenAnyValue(x => x.IsDefault).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-        this.WhenAnyValue(x => x.PowerSupplyType).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-
-        // ModbusTcp configuration property subscriptions
-        this.WhenAnyValue(x => x.ModbusTcpHost).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-        this.WhenAnyValue(x => x.ModbusTcpPort).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-        this.WhenAnyValue(x => x.ModbusTcpDeviceId).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-        this.WhenAnyValue(x => x.ModbusTcpOnOffCoil).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
-        this.WhenAnyValue(x => x.ModbusTcpAddressingMode).Skip(1).Subscribe(_ => OnPropertyChanged()).DisposeWith(_disposables);
+        Observable.Merge(
+            this.WhenAnyValue(x => x.ProfileName).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.ProfileDescription).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.IsDefault).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.PowerSupplyType).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.ModbusTcpHost).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.ModbusTcpPort).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.ModbusTcpDeviceId).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.ModbusTcpOnOffCoil).Select(_ => Unit.Default),
+            this.WhenAnyValue(x => x.ModbusTcpAddressingMode).Select(_ => Unit.Default)
+        )
+        .Skip(1)
+        .Subscribe(_ => OnPropertyChanged())
+        .DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -448,33 +437,24 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// <returns>A task that represents the asynchronous save operation.</returns>
     public async Task SaveAsync()
     {
-        System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfileViewModel.SaveAsync called");
-
         try
         {
             StatusMessage = UIStrings.Status_SavingProfile;
-            System.Diagnostics.Debug.WriteLine($"DEBUG: Creating profile from ViewModel data");
 
             PowerSupplyProfile profile = CreateProfile();
-            System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created with name: {profile.Name}, ID: {profile.Id}");
 
             if (_originalProfile != null)
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Updating existing profile ID: {_originalProfile.Id}");
                 profile.Id = _originalProfile.Id;
                 profile.CreatedAt = _originalProfile.CreatedAt;
                 profile.ModifiedAt = DateTime.UtcNow;
                 await _profileService.UpdateAsync(profile).ConfigureAwait(false);
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Profile updated successfully");
                 _logger.LogInformation("Profile updated successfully: {ProfileName} (ID: {ProfileId})", profile.Name, profile.Id);
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Creating new profile");
                 _logger.LogInformation("Creating new profile: {ProfileName}", profile.Name);
-                System.Diagnostics.Debug.WriteLine($"Calling _profileService.CreateAsync...");
                 PowerSupplyProfile createdProfile = await _profileService.CreateAsync(profile).ConfigureAwait(false);
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Profile created successfully with ID: {createdProfile.Id}");
                 _logger.LogInformation("Profile created successfully: {ProfileName} (ID: {ProfileId})", createdProfile.Name, createdProfile.Id);
 
                 // Update _originalProfile with the created profile so subsequent saves are updates
@@ -484,26 +464,21 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
             HasChanges = false;
             StatusMessage = UIStrings.Status_ProfileSaved;
             _logger.LogInformation("Profile save operation completed: {ProfileName}", profile.Name);
-            System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfileViewModel.SaveAsync completed successfully");
         }
         catch (InvalidOperationException ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ERROR: Invalid operation in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
             _logger.LogError(ex, "Invalid operation while saving profile: {ProfileName}", ProfileName);
             StatusMessage = string.Format(UIStrings.Status_SaveFailed, ex.Message);
             throw;
         }
         catch (ArgumentException ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ERROR: Invalid argument in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
             _logger.LogError(ex, "Invalid profile data while saving: {ProfileName}", ProfileName);
             StatusMessage = string.Format(UIStrings.Status_InvalidProfileData, ex.Message);
             throw;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplyProfileViewModel.SaveAsync: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             _logger.LogError(ex, "Unexpected error saving profile: {ProfileName}", ProfileName);
             StatusMessage = string.Format(UIStrings.Status_SaveFailed, ex.Message);
             throw;
@@ -572,15 +547,17 @@ public class PowerSupplyProfileViewModel : ViewModelBase, INotifyPropertyChanged
     /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
+        if (_disposed)
         {
-            if (disposing)
-            {
-                _disposables?.Dispose();
-                _logger.LogInformation("PowerSupplyProfileViewModel disposed");
-            }
-            _disposed = true;
+            return;
         }
+
+        if (disposing)
+        {
+            _disposables?.Dispose();
+            _logger.LogInformation("PowerSupplyProfileViewModel disposed");
+        }
+        _disposed = true;
     }
 
     #endregion

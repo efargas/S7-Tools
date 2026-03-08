@@ -1,11 +1,10 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
 using S7Tools.ViewModels.Pages;
-
-using System.Diagnostics;
 
 namespace S7Tools.Views.Pages;
 

@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic; // Added for IEnumerable<LogModel>
 using System.Collections.Specialized;
 using S7Tools.Core.Models;
-using System.Collections.Generic; // Added for IEnumerable<LogModel>
 
 namespace S7Tools.Core.Services.Interfaces;
 
