@@ -22,16 +22,16 @@ public class GreetingServiceTests
     }
 
     [Theory]
-    [InlineData(5, "Greeting_Morning")]
-    [InlineData(8, "Greeting_Morning")]
-    [InlineData(11, "Greeting_Morning")]
-    [InlineData(12, "Greeting_Afternoon")]
-    [InlineData(15, "Greeting_Afternoon")]
-    [InlineData(17, "Greeting_Afternoon")]
-    [InlineData(18, "Greeting_Evening")]
-    [InlineData(21, "Greeting_Evening")]
-    [InlineData(0, "Greeting_Evening")]
-    [InlineData(4, "Greeting_Evening")]
+    [InlineData(5, nameof(UIStrings.Greeting_Morning))]
+    [InlineData(8, nameof(UIStrings.Greeting_Morning))]
+    [InlineData(11, nameof(UIStrings.Greeting_Morning))]
+    [InlineData(12, nameof(UIStrings.Greeting_Afternoon))]
+    [InlineData(15, nameof(UIStrings.Greeting_Afternoon))]
+    [InlineData(17, nameof(UIStrings.Greeting_Afternoon))]
+    [InlineData(18, nameof(UIStrings.Greeting_Evening))]
+    [InlineData(21, nameof(UIStrings.Greeting_Evening))]
+    [InlineData(0, nameof(UIStrings.Greeting_Evening))]
+    [InlineData(4, nameof(UIStrings.Greeting_Evening))]
     public void Greet_ShouldReturnLocalizedGreeting_BasedOnTimeOfDay(int hour, string expectedKey)
     {
         // Arrange
@@ -39,8 +39,8 @@ public class GreetingServiceTests
         DateTime testTime = new DateTime(2023, 1, 1, hour, 0, 0);
         _timeProviderMock.Setup(x => x.GetLocalNow()).Returns(testTime);
 
-        // Mocking ILocalizationService with explicit params matching to avoid fragility
-        _localizationServiceMock.Setup(x => x.GetString(expectedKey, It.Is<object[]>(args => args.Length == 1 && (string)args[0] == name)))
+        // Explicit params matching for ILocalizationService.GetString(string, params object[] args)
+        _localizationServiceMock.Setup(x => x.GetString(expectedKey, It.Is<object[]>(args => args.Length == 1 && Equals(args[0], name))))
                                 .Returns($"Localized {expectedKey} {name}");
 
         // Act
@@ -48,14 +48,14 @@ public class GreetingServiceTests
 
         // Assert
         result.Should().Be($"Localized {expectedKey} {name}");
-        _localizationServiceMock.Verify(x => x.GetString(expectedKey, It.Is<object[]>(args => args.Length == 1 && (string)args[0] == name)), Times.Once);
+        _localizationServiceMock.Verify(x => x.GetString(expectedKey, It.Is<object[]>(args => args.Length == 1 && Equals(args[0], name))), Times.Once);
     }
 
     [Fact]
     public void Greet_ShouldUseRealResources_WhenUsingIntegrationTestPattern()
     {
         // This test validates that the resource keys actually exist in the resx file
-        // by checking the generated designer class properties
+        // and contain the expected placeholder format.
         UIStrings.Greeting_Morning.Should().NotBeNullOrEmpty();
         UIStrings.Greeting_Afternoon.Should().NotBeNullOrEmpty();
         UIStrings.Greeting_Evening.Should().NotBeNullOrEmpty();

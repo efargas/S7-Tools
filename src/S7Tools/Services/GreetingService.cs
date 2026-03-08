@@ -1,4 +1,5 @@
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
@@ -19,9 +20,9 @@ public sealed class GreetingService(ITimeProvider timeProvider, ILocalizationSer
         DateTime now = _timeProvider.GetLocalNow();
         string greetingKey = now.Hour switch
         {
-            >= 5 and < 12 => "Greeting_Morning",
-            >= 12 and < 18 => "Greeting_Afternoon",
-            _ => "Greeting_Evening"
+            >= 5 and < 12 => nameof(UIStrings.Greeting_Morning),
+            >= 12 and < 18 => nameof(UIStrings.Greeting_Afternoon),
+            _ => nameof(UIStrings.Greeting_Evening)
         };
 
         return _localizationService.GetString(greetingKey, name);
