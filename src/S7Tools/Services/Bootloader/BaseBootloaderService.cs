@@ -410,7 +410,7 @@ public abstract class BaseBootloaderService
 
         for (int i = 0; i < segments.Count; i++)
         {
-            stageNames[i] = prefix + (i + 1).ToString() + suffix;
+            stageNames[i] = $"{prefix}{i + 1}{suffix}";
             segmentOffsets[i] = currentOffset;
             currentOffset += segments[i].Size;
         }
