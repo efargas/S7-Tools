@@ -46,16 +46,16 @@ public class GreetingServiceTests
     }
 
     [Theory]
-    [InlineData(5, "Greeting_Morning")]
-    [InlineData(8, "Greeting_Morning")]
-    [InlineData(11, "Greeting_Morning")]
-    [InlineData(12, "Greeting_Afternoon")]
-    [InlineData(15, "Greeting_Afternoon")]
-    [InlineData(17, "Greeting_Afternoon")]
-    [InlineData(18, "Greeting_Evening")]
-    [InlineData(21, "Greeting_Evening")]
-    [InlineData(0, "Greeting_Evening")]
-    [InlineData(4, "Greeting_Evening")]
+    [InlineData(5, GreetingService.MorningGreetingKey)]
+    [InlineData(8, GreetingService.MorningGreetingKey)]
+    [InlineData(11, GreetingService.MorningGreetingKey)]
+    [InlineData(12, GreetingService.AfternoonGreetingKey)]
+    [InlineData(15, GreetingService.AfternoonGreetingKey)]
+    [InlineData(17, GreetingService.AfternoonGreetingKey)]
+    [InlineData(18, GreetingService.EveningGreetingKey)]
+    [InlineData(21, GreetingService.EveningGreetingKey)]
+    [InlineData(0, GreetingService.EveningGreetingKey)]
+    [InlineData(4, GreetingService.EveningGreetingKey)]
     public void Greet_ShouldReturnLocalizedGreeting_BasedOnTimeOfDay(int hour, string expectedKey)
     {
         // Arrange
