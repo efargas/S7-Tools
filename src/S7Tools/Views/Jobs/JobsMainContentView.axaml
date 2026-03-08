@@ -601,8 +601,8 @@
     <!-- GridSplitter for resizing -->
     <GridSplitter Grid.Column="1"
                   x:Name="JobInfoSplitter"
-                  Background="#464647"
-                  Width="4"
+                  Background="Transparent"
+                  Width="8"
                   IsVisible="False"
                   VerticalAlignment="Stretch"
                   ResizeDirection="Columns"

@@ -127,7 +127,7 @@ namespace S7Tools.ViewModels.Hex
                 FileSize = (long)doc.Length;
 
                 DataInspector?.SetDocument(doc);
-                
+
                 this.RaisePropertyChanged(nameof(IsFileOpen));
             }
             catch (Exception ex)
