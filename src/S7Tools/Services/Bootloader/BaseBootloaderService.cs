@@ -92,7 +92,7 @@ public abstract class BaseBootloaderService
                 string suffix = $"/{selectedSegments.Count} (Iter {iter + 1}/{profiles.DumpCount})";
                 for (int i = 0; i < selectedSegments.Count; i++)
                 {
-                    segStageNames[iter][i] = prefix + (i + 1).ToString() + suffix;
+                    segStageNames[iter][i] = $"{prefix}{i + 1}{suffix}";
                 }
             }
         }
