@@ -33,7 +33,7 @@ namespace S7Tools.ViewModels.Hex
         {
             _searchService = searchService;
 
-            FindCommand = ReactiveCommand.CreateFromTask(ExecuteFind, 
+            FindCommand = ReactiveCommand.CreateFromTask(ExecuteFind,
                 this.WhenAnyValue(x => x.QueryText, x => x.IsBusy, (q, b) => !string.IsNullOrWhiteSpace(q) && !b));
 
             FindNextCommand = ReactiveCommand.Create(ExecuteFindNext,
@@ -41,7 +41,7 @@ namespace S7Tools.ViewModels.Hex
 
             FindPreviousCommand = ReactiveCommand.Create(ExecuteFindPrevious,
                  this.WhenAnyValue(x => x.SearchResults.Count, c => c > 0));
-                 
+
             CloseCommand = ReactiveCommand.Create(() => { IsVisible = false; });
         }
 
@@ -129,7 +129,7 @@ namespace S7Tools.ViewModels.Hex
                 }
 
                 var results = await _searchService.FindAllAsync(_document, pattern, ct);
-                
+
                 foreach (var res in results)
                 {
                     SearchResults.Add(res);

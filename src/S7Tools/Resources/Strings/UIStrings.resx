@@ -1627,6 +1627,18 @@
     <value>About S7Tools.</value>
     <comment>Greeting message in About view</comment>
   </data>
+  <data name="Greeting_Morning" xml:space="preserve">
+    <value>Good morning, {0}!</value>
+    <comment>Morning greeting message, {0} is the name</comment>
+  </data>
+  <data name="Greeting_Afternoon" xml:space="preserve">
+    <value>Good afternoon, {0}!</value>
+    <comment>Afternoon greeting message, {0} is the name</comment>
+  </data>
+  <data name="Greeting_Evening" xml:space="preserve">
+    <value>Good evening, {0}!</value>
+    <comment>Evening greeting message, {0} is the name</comment>
+  </data>
 
   <!-- Bottom Panel Tab Labels -->
   <data name="Panel_Problems" xml:space="preserve">

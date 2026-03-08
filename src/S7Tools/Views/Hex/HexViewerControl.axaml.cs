@@ -21,11 +21,11 @@ public partial class HexViewerControl : UserControl
 
         // Set up event handlers
         MainHexEditor.Selection.RangeChanged += OnSelectionRangeChanged;
-        
+
         // Use code-behind layout calculation to enable horizontal scrolling
         MainHexEditor.LayoutUpdated += MainHexEditor_LayoutUpdated;
         MainHexEditor.HexView.BytesPerLine = 16;
-        
+
         // Initial width calculation trigger
         Dispatcher.UIThread.Post(() => MainHexEditor.InvalidateMeasure(), DispatcherPriority.Loaded);
     }
@@ -63,7 +63,7 @@ public partial class HexViewerControl : UserControl
     // Toggle Column Visibility
     private void ToggleColumn<TColumn>() where TColumn : Column
     {
-        var column = MainHexEditor.Columns.Get<TColumn>(); 
+        var column = MainHexEditor.Columns.Get<TColumn>();
         column.IsVisible = !column.IsVisible;
     }
 
@@ -120,16 +120,16 @@ public partial class HexViewerControl : UserControl
     private void MainHexEditor_LayoutUpdated(object? sender, EventArgs e)
     {
         if (_isResizing) return;
-        
+
         try
         {
             _isResizing = true;
-            
+
             // Calculate total required width based on columns
             double totalWidth = 0;
             double padding = MainHexEditor.ColumnPadding;
             int visibleColumns = 0;
-            
+
             foreach (var column in MainHexEditor.Columns)
             {
                 if (column.IsVisible)

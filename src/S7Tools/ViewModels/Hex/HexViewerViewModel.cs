@@ -3,6 +3,7 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Disposables;
 using AvaloniaHex.Document;
+using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces;
 using S7Tools.Models.Hex;
@@ -12,6 +13,7 @@ namespace S7Tools.ViewModels.Hex
 {
     public class HexViewerViewModel : ReactiveObject, IDisposable
     {
+        private readonly ILogger<HexViewerViewModel> _logger;
         private IBinaryDocument? _document;
         private string _fileName = string.Empty;
         private long _fileSize;
@@ -19,8 +21,16 @@ namespace S7Tools.ViewModels.Hex
         private long _selectionStart;
         private long _selectionLength;
 
-        public HexViewerViewModel()
+        /// <summary>
+        /// Design-time constructor.
+        /// </summary>
+        public HexViewerViewModel() : this(Microsoft.Extensions.Logging.Abstractions.NullLogger<HexViewerViewModel>.Instance)
         {
+        }
+
+        public HexViewerViewModel(ILogger<HexViewerViewModel> logger)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             CloseFileCommand = ReactiveCommand.Create(CloseFile);
 
             this.WhenAnyValue(x => x.SelectionStart, x => x.SelectionLength)
@@ -65,7 +75,7 @@ namespace S7Tools.ViewModels.Hex
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fill Error: {ex.Message}");
+                _logger.LogError(ex, "Fill Error at {SelectionStart} with length {SelectionLength} (PatternLength: {PatternLength})", SelectionStart, SelectionLength, pattern?.Length ?? 0);
             }
         }
 
@@ -127,12 +137,12 @@ namespace S7Tools.ViewModels.Hex
                 FileSize = (long)doc.Length;
 
                 DataInspector?.SetDocument(doc);
-                
+
                 this.RaisePropertyChanged(nameof(IsFileOpen));
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error opening hex view: {ex.Message}");
+                _logger.LogError(ex, "Error opening hex view for {Path}", path);
             }
         }
 
@@ -167,7 +177,7 @@ namespace S7Tools.ViewModels.Hex
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error updating inspector: {ex.Message}");
+                _logger.LogError(ex, "Error updating inspector at {SelectionStart} with length {SelectionLength}", SelectionStart, SelectionLength);
             }
         }
 

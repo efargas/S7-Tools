@@ -16,7 +16,7 @@ namespace S7Tools.Services.Hex
     public class BinarySearchService : IBinarySearchService
     {
         // 64KB buffer size for reading
-        private const int BufferSize = 64 * 1024; 
+        private const int BufferSize = 64 * 1024;
 
         public async Task<IEnumerable<long>> FindAllAsync(IBinaryDocument doc, byte[] pattern, CancellationToken ct = default)
         {
@@ -31,11 +31,11 @@ namespace S7Tools.Services.Hex
             // We will read in chunks. 
             // To handle matches crossing chunk boundaries, we need to overlap reading.
             // Overlap size should be pattern.Length - 1.
-            
+
             int patternLength = pattern.Length;
             int overlap = patternLength - 1;
-            int effectiveBufferSize = BufferSize; 
-            
+            int effectiveBufferSize = BufferSize;
+
             // Allocate buffer
             byte[] buffer = new byte[effectiveBufferSize];
             long currentOffset = 0;
@@ -44,7 +44,7 @@ namespace S7Tools.Services.Hex
             // but for typical hex search (short patterns), naive is usually fine.
             // We can optimize later if needed.
 
-            await Task.Run(() => 
+            await Task.Run(() =>
             {
                 while (currentOffset < docLength && !ct.IsCancellationRequested)
                 {
@@ -54,18 +54,18 @@ namespace S7Tools.Services.Hex
 
                     // Read into buffer
                     var span = buffer.AsSpan(0, readSize);
-                    
+
                     // Since IBinaryDocument.ReadBytes is synchronous in the interface (typically), we wrap in Task.Run just in case
                     // or just call it if it's fast. FileBinaryDocument uses FileStream.Read which is sync but might block.
                     // The interface provided in context shows ReadBytes(ulong offset, Span<byte> buffer).
-                    
+
                     doc.ReadBytes((ulong)currentOffset, span);
 
                     // Search in buffer
                     // We only search up to readSize - patternLength + 1 within this buffer
                     // UNLESS it's the last chunk. 
                     // However, because we overlap, we can search the whole 'safe' area.
-                    
+
                     // Actually, a simpler strategy for overlap:
                     // Read chunk. Search. 
                     // Next chunk starts at currentOffset + readSize - overlap.
@@ -86,7 +86,7 @@ namespace S7Tools.Services.Hex
                     // Bytes at 97,98,99, (need 100 which is outside).
                     // So we can only search up to readSize - patternLength.
                     // Matches start at index i where i + patternLength <= readSize.
-                    
+
                     // Loop for searching in buffer
                     for (int i = 0; i <= readSize - patternLength; i++)
                     {
@@ -102,7 +102,7 @@ namespace S7Tools.Services.Hex
                         // End of file
                         break;
                     }
-                    
+
                     // Move forward, but back up by overlap to catch boundary cases
                     currentOffset += (readSize - overlap);
                 }
@@ -117,12 +117,12 @@ namespace S7Tools.Services.Hex
                 return -1;
 
             long docLength = (long)doc.Length;
-            if (startOffset >= docLength) 
+            if (startOffset >= docLength)
                 return -1;
 
             int patternLength = pattern.Length;
             int overlap = patternLength - 1;
-            
+
             byte[] buffer = new byte[BufferSize];
             long currentOffset = startOffset;
 
@@ -133,7 +133,7 @@ namespace S7Tools.Services.Hex
                     long remaining = docLength - currentOffset;
                     int readSize = (int)Math.Min(remaining, BufferSize);
                     var span = buffer.AsSpan(0, readSize);
-                    
+
                     doc.ReadBytes((ulong)currentOffset, span);
 
                     for (int i = 0; i <= readSize - patternLength; i++)

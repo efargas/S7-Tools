@@ -46,6 +46,18 @@ public class ProgressByteSizeConverter : IMultiValueConverter
         return 0;
     }
 
+    private static string FormatSize(long bytes)
+    {
+        const long KB = 1024;
+        const long MB = KB * 1024;
+        const long GB = MB * 1024;
+
+        if (bytes >= GB) return $"{(bytes / (double)GB).ToString("F2", CultureInfo.InvariantCulture)} GB";
+        if (bytes >= MB) return $"{(bytes / (double)MB).ToString("F2", CultureInfo.InvariantCulture)} MB";
+        if (bytes >= KB) return $"{(bytes / (double)KB).ToString("F2", CultureInfo.InvariantCulture)} KB";
+        return $"{bytes} B";
+    }
+
     private static string FormatProgress(long current, long total)
     {
         const long KB = 1024;
