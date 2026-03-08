@@ -173,8 +173,7 @@ public sealed class SerialPortDiscoveryService
             }
 
             // Test accessibility by trying to read port status with stty
-            string command = $"stty -F '{portPath.Replace("'", "'\"'\"'")}' -a";
-            var result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, timeoutMs, cancellationToken).ConfigureAwait(false);
+            var result = await _shellExecutor.ExecuteDirectAsync("stty", ["-F", portPath, "-a"], timeoutMs, cancellationToken).ConfigureAwait(false);
             return result.Success;
         }
         catch (Exception ex)
@@ -307,8 +306,7 @@ public sealed class SerialPortDiscoveryService
         try
         {
             // Try to use lsof to check if port is in use
-            string command = $"lsof '{portPath.Replace("'", "'\"'\"'")}'";
-            var result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, 2000, cancellationToken).ConfigureAwait(false);
+            var result = await _shellExecutor.ExecuteDirectAsync("lsof", [portPath], 2000, cancellationToken).ConfigureAwait(false);
             return result.Success && !string.IsNullOrWhiteSpace(result.Output);
         }
         catch
@@ -334,64 +332,6 @@ public sealed class SerialPortDiscoveryService
         };
     }
 
-    /// <summary>
-    /// Executes a command and returns the result.
-    /// </summary>
-    /// <param name="command">The command to execute.</param>
-    /// <param name="timeoutMs">The timeout in milliseconds.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>The command execution result.</returns>
-    private async Task<(bool Success, int ExitCode, string StandardOutput, string StandardError)> ExecuteCommandAsync(
-        string command,
-        int timeoutMs,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            using var process = new Process();
-            _logger.LogInformation("Executing: {Command}", command);
-            process.StartInfo.FileName = "/bin/bash";
-            process.StartInfo.Arguments = $"-c \"{command}\"";
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.CreateNoWindow = true;
-
-            var outputBuilder = new StringBuilder();
-            var errorBuilder = new StringBuilder();
-
-            process.OutputDataReceived += (_, e) => { if (e.Data != null) { outputBuilder.AppendLine(e.Data); } };
-            process.ErrorDataReceived += (_, e) => { if (e.Data != null) { errorBuilder.AppendLine(e.Data); } };
-
-            process.Start();
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            using var timeoutCts = new CancellationTokenSource(timeoutMs);
-            using var combinedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-            try
-            {
-                await process.WaitForExitAsync(combinedCts.Token).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                if (!process.HasExited)
-                {
-                    process.Kill();
-                }
-                throw;
-            }
-
-            bool success = process.ExitCode == 0;
-            return (success, process.ExitCode, outputBuilder.ToString().Trim(), errorBuilder.ToString().Trim());
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to execute command: {Command}", command);
-            return (false, -1, "", ex.Message);
-        }
-    }
 
     /// <summary>
     /// Tries to read a sysfs file and apply the value using the provided action.

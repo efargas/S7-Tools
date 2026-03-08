@@ -905,20 +905,25 @@ public partial class SocatService : ISocatService, IDisposable
     /// <summary>
     /// Executes a system command and returns the result.
     /// </summary>
-    /// <param name="command">The command to execute.</param>
+    /// <param name="fileName">The executable to run.</param>
+    /// <param name="arguments">The arguments to pass to the executable.</param>
     /// <param name="timeoutMs">The timeout in milliseconds.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>The command execution result.</returns>
-    private async Task<(bool Success, int ExitCode, string StandardOutput, string StandardError)> ExecuteCommandAsync(
-        string command,
+    private async Task<(bool Success, int ExitCode, string StandardOutput, string StandardError)> ExecuteDirectAsync(
+        string fileName,
+        IEnumerable<string> arguments,
         int timeoutMs,
         CancellationToken cancellationToken)
     {
         try
         {
             using var process = new Process();
-            process.StartInfo.FileName = "/bin/bash";
-            process.StartInfo.Arguments = $"-c \"{command}\"";
+            process.StartInfo.FileName = fileName;
+            foreach (string arg in arguments)
+            {
+                process.StartInfo.ArgumentList.Add(arg);
+            }
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
@@ -969,12 +974,12 @@ public partial class SocatService : ISocatService, IDisposable
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("Command execution timed out: {Command}", command);
+            _logger.LogWarning("Command execution timed out: {FileName}", fileName);
             return (false, -1, string.Empty, "Command timed out");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to execute command: {Command}", command);
+            _logger.LogError(ex, "Failed to execute command: {FileName}", fileName);
             return (false, -1, string.Empty, ex.Message);
         }
     }
@@ -996,12 +1001,12 @@ public partial class SocatService : ISocatService, IDisposable
         {
             // Use pgrep to find child processes (portable enough on modern Linux/macOS)
             // -P matches Parent Process ID
-            (bool success, int _, string stdout, string _) = await ExecuteCommandAsync($"pgrep -P {parentId}", 1000, cancellationToken).ConfigureAwait(false);
+            (bool success, int _, string stdout, string _) = await ExecuteDirectAsync("pgrep", ["-P", parentId.ToString()], 1000, cancellationToken).ConfigureAwait(false);
 
             if (!success || string.IsNullOrWhiteSpace(stdout))
             {
                 // Fallback to ps if pgrep fails or returns distinct exit code for "no matches"
-                (success, _, stdout, _) = await ExecuteCommandAsync($"ps -o pid --ppid {parentId} --no-headers", 1000, cancellationToken).ConfigureAwait(false);
+                (success, _, stdout, _) = await ExecuteDirectAsync("ps", ["-o", "pid", "--ppid", parentId.ToString(), "--no-headers"], 1000, cancellationToken).ConfigureAwait(false);
 
                 if (!success || string.IsNullOrWhiteSpace(stdout))
                 {
