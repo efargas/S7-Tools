@@ -260,21 +260,21 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
 /// <summary>
 /// Mock Overview ViewModel for design-time and initial implementation.
 /// </summary>
-internal class [FEATURE_NAME]OverviewViewModel : ViewModelBase
+internal sealed class [FEATURE_NAME]OverviewViewModel : ViewModelBase
 {
 }
 
 /// <summary>
 /// Mock Details ViewModel for design-time and initial implementation.
 /// </summary>
-internal class [FEATURE_NAME]DetailsViewModel : ViewModelBase
+internal sealed class [FEATURE_NAME]DetailsViewModel : ViewModelBase
 {
 }
 
 /// <summary>
 /// Mock Settings ViewModel for design-time and initial implementation.
 /// </summary>
-internal class [FEATURE_NAME]SettingsViewModel : ViewModelBase
+internal sealed class [FEATURE_NAME]SettingsViewModel : ViewModelBase
 {
 }
 
