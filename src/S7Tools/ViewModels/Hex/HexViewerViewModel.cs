@@ -21,6 +21,13 @@ namespace S7Tools.ViewModels.Hex
         private long _selectionStart;
         private long _selectionLength;
 
+        /// <summary>
+        /// Design-time constructor.
+        /// </summary>
+        public HexViewerViewModel() : this(Microsoft.Extensions.Logging.Abstractions.NullLogger<HexViewerViewModel>.Instance)
+        {
+        }
+
         public HexViewerViewModel(ILogger<HexViewerViewModel> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -68,7 +75,7 @@ namespace S7Tools.ViewModels.Hex
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Fill Error");
+                _logger.LogError(ex, "Fill Error at {SelectionStart} with length {SelectionLength} (PatternLength: {PatternLength})", SelectionStart, SelectionLength, pattern?.Length ?? 0);
             }
         }
 
@@ -135,7 +142,7 @@ namespace S7Tools.ViewModels.Hex
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error opening hex view");
+                _logger.LogError(ex, "Error opening hex view for {Path}", path);
             }
         }
 
@@ -170,7 +177,7 @@ namespace S7Tools.ViewModels.Hex
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating inspector");
+                _logger.LogError(ex, "Error updating inspector at {SelectionStart} with length {SelectionLength}", SelectionStart, SelectionLength);
             }
         }
 
