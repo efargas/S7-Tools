@@ -351,7 +351,7 @@ public sealed class JobScheduler(
             string outputPath = job.ProfileSet.OutputPath;
             // Directory creation handled by service
 
-            long totalSize = result.Data.Sum(x => (long)x.Length);
+            long totalSize = result.SavedFiles.Sum(x => (long)x.Length);
 
             if (result.SavedFiles.Count > 0)
             {

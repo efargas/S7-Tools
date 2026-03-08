@@ -118,9 +118,14 @@ public abstract class BaseBootloaderService
 
                     string startStr = segment.StartAddress;
                     if (string.IsNullOrEmpty(startStr))
+                    {
                         throw new InvalidOperationException("Memory segment start address is null.");
+                    }
+
                     if (startStr.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+                    {
                         startStr = startStr[2..];
+                    }
 
                     if (!uint.TryParse(startStr, System.Globalization.NumberStyles.HexNumber, null, out uint segmentStart))
                     {
@@ -693,7 +698,9 @@ public abstract class BaseBootloaderService
 
             bool powerOff = await power.TurnOffAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
             if (!powerOff)
+            {
                 throw new InvalidOperationException("Failed to turn PLC power OFF");
+            }
 
             await WaitWithProgressAsync(
                 InitialPowerOffWaitMs,
@@ -710,7 +717,9 @@ public abstract class BaseBootloaderService
 
             bool powerOn = await power.TurnOnAsync(effectiveTaskLogger, cancellationToken).ConfigureAwait(false);
             if (!powerOn)
+            {
                 throw new InvalidOperationException("Failed to turn PLC power ON");
+            }
 
             effectiveTaskLogger.LogInformation("✓ PLC powered ON");
 
