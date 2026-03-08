@@ -88,9 +88,11 @@ public abstract class BaseBootloaderService
             for (int iter = 0; iter < profiles.DumpCount; iter++)
             {
                 segStageNames[iter] = new string[selectedSegments.Count];
+                string prefix = "Dumping Seg ";
+                string suffix = $"/{selectedSegments.Count} (Iter {iter + 1}/{profiles.DumpCount})";
                 for (int i = 0; i < selectedSegments.Count; i++)
                 {
-                    segStageNames[iter][i] = $"Dumping Seg {i + 1}/{selectedSegments.Count} (Iter {iter + 1}/{profiles.DumpCount})";
+                    segStageNames[iter][i] = $"{prefix}{i + 1}{suffix}";
                 }
             }
         }
@@ -403,10 +405,12 @@ public abstract class BaseBootloaderService
         string[] stageNames = new string[segments.Count];
         long[] segmentOffsets = new long[segments.Count];
         long currentOffset = 0;
+        string prefix = "Seg ";
+        string suffix = $"/{segments.Count} (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
 
         for (int i = 0; i < segments.Count; i++)
         {
-            stageNames[i] = $"Seg {i + 1}/{segments.Count} (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
+            stageNames[i] = $"{prefix}{i + 1}{suffix}";
             segmentOffsets[i] = currentOffset;
             currentOffset += segments[i].Size;
         }
