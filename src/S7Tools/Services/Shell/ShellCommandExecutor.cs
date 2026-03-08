@@ -46,7 +46,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
         try
         {
             // Use pgrep to find child processes on Linux/Unix
-            var result = await ExecuteCommandInternalAsync($"pgrep -P {parentPid}", 5000, cancellationToken).ConfigureAwait(false);
+            var result = await ExecuteDirectAsync("pgrep", ["-P", parentPid.ToString()], 5000, cancellationToken).ConfigureAwait(false);
 
             if (result.Success && !string.IsNullOrWhiteSpace(result.Output))
             {
@@ -67,6 +67,41 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
         return childPids;
     }
 
+    /// <inheritdoc />
+    public async Task<ShellCommandResult> ExecuteDirectAsync(string fileName, IEnumerable<string> arguments, int timeoutMs = -1, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            throw new ArgumentException("FileName cannot be null or empty.", nameof(fileName));
+        }
+
+        try
+        {
+            _logger.LogTrace("Executing direct command: {FileName} {Arguments}", fileName, string.Join(" ", arguments));
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            foreach (string arg in arguments)
+            {
+                startInfo.ArgumentList.Add(arg);
+            }
+
+            return await ExecuteProcessAsync(startInfo, timeoutMs, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error executing direct command: {FileName}", fileName);
+            return new ShellCommandResult(false, -1, string.Empty, ex.Message);
+        }
+    }
+
     private async Task<ShellCommandResult> ExecuteCommandInternalAsync(string command, int timeoutMs, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command))
@@ -81,13 +116,27 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
             var startInfo = new ProcessStartInfo
             {
                 FileName = "/bin/bash",
-                Arguments = $"-c \"{command.Replace("\"", "\\\"")}\"",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true
             };
+            startInfo.ArgumentList.Add("-c");
+            startInfo.ArgumentList.Add(command);
 
+            return await ExecuteProcessAsync(startInfo, timeoutMs, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error executing shell command: {Command}", command);
+            return new ShellCommandResult(false, -1, string.Empty, ex.Message);
+        }
+    }
+
+    private async Task<ShellCommandResult> ExecuteProcessAsync(ProcessStartInfo startInfo, int timeoutMs, CancellationToken cancellationToken)
+    {
+        try
+        {
             using var process = new Process { StartInfo = startInfo };
 
             var outputBuilder = new StringBuilder();
@@ -98,7 +147,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
 
             if (!process.Start())
             {
-                _logger.LogError("Failed to start process for command: {Command}", command);
+                _logger.LogError("Failed to start process: {FileName}", startInfo.FileName);
                 return new ShellCommandResult(false, -1, string.Empty, "Failed to start process.");
             }
 
@@ -118,8 +167,8 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.LogWarning("Command timed out after {Timeout}ms: {Command}", timeoutMs, command);
-                    errorBuilder.AppendLine($"Command timed out after {timeoutMs}ms.");
+                    _logger.LogWarning("Process timed out after {Timeout}ms: {FileName}", timeoutMs, startInfo.FileName);
+                    errorBuilder.AppendLine($"Process timed out after {timeoutMs}ms.");
 
                     try
                     {
@@ -148,7 +197,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
 
             if (exited)
             {
-                _logger.LogTrace("Command completed with exit code {ExitCode}. Output length: {OutLen}, Error length: {ErrLen}",
+                _logger.LogTrace("Process completed with exit code {ExitCode}. Output length: {OutLen}, Error length: {ErrLen}",
                     exitCode, stdout.Length, stderr.Length);
             }
 
@@ -156,7 +205,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error executing shell command: {Command}", command);
+            _logger.LogError(ex, "Unexpected error during process execution: {FileName}", startInfo.FileName);
             return new ShellCommandResult(false, -1, string.Empty, ex.Message);
         }
     }
