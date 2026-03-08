@@ -25,7 +25,10 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
     private ObservableCollection<string> _categories = new();
 
     // Main content state
-    private object? _selectedContentViewModel;
+    private [FEATURE_NAME]OverviewViewModel? _overviewVm;
+    private [FEATURE_NAME]DetailsViewModel? _detailsVm;
+    private [FEATURE_NAME]SettingsViewModel? _settingsVm;
+    private ViewModelBase? _selectedContentViewModel;
     private string _statusMessage = string.Empty;
     private bool _isLoading;
 
@@ -90,7 +93,7 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
     /// Gets or sets the ViewModel for the main content area.
     /// This switches based on sidebar selection.
     /// </summary>
-    public object? SelectedContentViewModel
+    public ViewModelBase? SelectedContentViewModel
     {
         get => _selectedContentViewModel;
         set => this.RaiseAndSetIfChanged(ref _selectedContentViewModel, value);
@@ -169,30 +172,27 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Creates the overview ViewModel for the main content area.
+    /// Creates or returns the cached overview ViewModel for the main content area.
     /// </summary>
-    private object Create[FEATURE_NAME]OverviewViewModel()
+    private [FEATURE_NAME]OverviewViewModel Create[FEATURE_NAME]OverviewViewModel()
     {
-        // Create and return the overview ViewModel
-        return new [FEATURE_NAME]OverviewViewModel();
+        return _overviewVm ??= new [FEATURE_NAME]OverviewViewModel();
     }
 
     /// <summary>
-    /// Creates the details ViewModel for the main content area.
+    /// Creates or returns the cached details ViewModel for the main content area.
     /// </summary>
-    private object Create[FEATURE_NAME]DetailsViewModel()
+    private [FEATURE_NAME]DetailsViewModel Create[FEATURE_NAME]DetailsViewModel()
     {
-        // Create and return the details ViewModel
-        return new [FEATURE_NAME]DetailsViewModel();
+        return _detailsVm ??= new [FEATURE_NAME]DetailsViewModel();
     }
 
     /// <summary>
-    /// Creates the settings ViewModel for the main content area.
+    /// Creates or returns the cached settings ViewModel for the main content area.
     /// </summary>
-    private object Create[FEATURE_NAME]SettingsViewModel()
+    private [FEATURE_NAME]SettingsViewModel Create[FEATURE_NAME]SettingsViewModel()
     {
-        // Create and return the settings ViewModel
-        return new [FEATURE_NAME]SettingsViewModel();
+        return _settingsVm ??= new [FEATURE_NAME]SettingsViewModel();
     }
 
     /// <summary>
@@ -246,6 +246,12 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
         if (disposing)
         {
             _disposables.Dispose();
+
+            // Dispose cached ViewModels if they implement IDisposable
+            (_overviewVm as IDisposable)?.Dispose();
+            (_detailsVm as IDisposable)?.Dispose();
+            (_settingsVm as IDisposable)?.Dispose();
+
             _logger.LogDebug("[FEATURE_NAME]ViewModel disposed");
         }
 
