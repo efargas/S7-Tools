@@ -173,9 +173,8 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
     /// </summary>
     private object Create[FEATURE_NAME]OverviewViewModel()
     {
-        // TODO: Create and return the overview ViewModel
-        // Example: return new [FEATURE_NAME]OverviewViewModel();
-        return new ViewModelBase(); // Placeholder
+        // Create and return the overview ViewModel
+        return new [FEATURE_NAME]OverviewViewModel();
     }
 
     /// <summary>
@@ -183,8 +182,8 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
     /// </summary>
     private object Create[FEATURE_NAME]DetailsViewModel()
     {
-        // TODO: Create and return the details ViewModel
-        return new ViewModelBase(); // Placeholder
+        // Create and return the details ViewModel
+        return new [FEATURE_NAME]DetailsViewModel();
     }
 
     /// <summary>
@@ -192,8 +191,8 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
     /// </summary>
     private object Create[FEATURE_NAME]SettingsViewModel()
     {
-        // TODO: Create and return the settings ViewModel
-        return new ViewModelBase(); // Placeholder
+        // Create and return the settings ViewModel
+        return new [FEATURE_NAME]SettingsViewModel();
     }
 
     /// <summary>
@@ -255,3 +254,28 @@ public class [FEATURE_NAME]ViewModel : ViewModelBase, IDisposable
 
     #endregion
 }
+
+#region Mock ViewModels
+
+/// <summary>
+/// Mock Overview ViewModel for design-time and initial implementation.
+/// </summary>
+public class [FEATURE_NAME]OverviewViewModel : ViewModelBase
+{
+}
+
+/// <summary>
+/// Mock Details ViewModel for design-time and initial implementation.
+/// </summary>
+public class [FEATURE_NAME]DetailsViewModel : ViewModelBase
+{
+}
+
+/// <summary>
+/// Mock Settings ViewModel for design-time and initial implementation.
+/// </summary>
+public class [FEATURE_NAME]SettingsViewModel : ViewModelBase
+{
+}
+
+#endregion
