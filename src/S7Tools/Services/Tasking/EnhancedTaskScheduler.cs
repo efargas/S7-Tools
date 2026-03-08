@@ -1081,7 +1081,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 CancellationToken.None)
                 .ConfigureAwait(false);
 
-            long totalSize = result.Data.Sum(x => (long)x.Length);
+            long totalSize = result.SavedFiles.Sum(x => (long)x.Length);
             taskLogger.MainLogger?.LogInformation("Bootloader dump completed. Total size: {Size} bytes. Files: {Count}",
                 totalSize, result.SavedFiles.Count);
 

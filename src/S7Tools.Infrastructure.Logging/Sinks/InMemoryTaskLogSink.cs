@@ -1,8 +1,8 @@
 using System;
 using System.Linq;
 using S7Tools.Core.Models;
-using S7Tools.Infrastructure.Logging.Providers.Microsoft;
 using S7Tools.Core.Services.Interfaces;
+using S7Tools.Infrastructure.Logging.Providers.Microsoft;
 
 namespace S7Tools.Infrastructure.Logging.Sinks;
 

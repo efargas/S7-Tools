@@ -133,7 +133,9 @@ namespace S7Tools.Services.Adapters.Plc
         public async Task FlushRemainingDataAsync(CancellationToken token)
         {
             if (_outputChannel == null)
+            {
                 return;
+            }
 
             int flushedCount = 0;
             while (_outputChannel.Reader.TryRead(out _))
@@ -220,7 +222,9 @@ namespace S7Tools.Services.Adapters.Plc
                 ReadOnlySequence<byte> buffer = result.Buffer;
 
                 if (result.IsCanceled)
+                {
                     break;
+                }
 
                 SequencePosition consumed = buffer.Start;
                 SequencePosition examined = buffer.End;
@@ -325,7 +329,9 @@ namespace S7Tools.Services.Adapters.Plc
             {
                 var originalPosition = reader.Position;
                 if (!reader.TryPeek(out byte b))
+                {
                     break;
+                }
 
                 // Candidate 1: Framed "\x05", "O", "k"
                 if (b == 0x05)
