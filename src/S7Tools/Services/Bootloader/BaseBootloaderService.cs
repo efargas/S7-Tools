@@ -76,6 +76,30 @@ public abstract class BaseBootloaderService
         long globalBytesRead = 0;
         DateTime dumpStartTime = _timeProvider?.GetUtcNow() ?? DateTime.UtcNow;
 
+        // Pre-calculate data for efficiency
+        string[] iterStageNames = new string[profiles.DumpCount];
+        string[][] segStageNames = new string[profiles.DumpCount][];
+
+        if (profiles.MemoryMapping != null && profiles.MemoryMapping.HasSelectedSegments)
+        {
+            var selectedSegments = profiles.MemoryMapping.SelectedSegments.ToList();
+            for (int iter = 0; iter < profiles.DumpCount; iter++)
+            {
+                segStageNames[iter] = new string[selectedSegments.Count];
+                for (int i = 0; i < selectedSegments.Count; i++)
+                {
+                    segStageNames[iter][i] = $"Dumping Seg {i + 1}/{selectedSegments.Count} (Iter {iter + 1}/{profiles.DumpCount})";
+                }
+            }
+        }
+        else
+        {
+            for (int iter = 0; iter < profiles.DumpCount; iter++)
+            {
+                iterStageNames[iter] = $"Dumping Memory (Iter {iter + 1}/{profiles.DumpCount})";
+            }
+        }
+
         for (int iter = 0; iter < profiles.DumpCount; iter++)
         {
             logger.LogInformation("Starting Dump Iteration {Iter}/{Total}", iter + 1, profiles.DumpCount);
@@ -101,7 +125,7 @@ public abstract class BaseBootloaderService
                     }
 
                     uint segmentSize = (uint)segment.Size;
-                    string stageName = $"Dumping Seg {i + 1}/{selectedSegments.Count} (Iter {iter + 1}/{profiles.DumpCount})";
+                    string stageName = segStageNames[iter][i];
 
                     double currentBasePercent = startPercent + (weight * globalBytesRead / totalDumpBytes);
 
@@ -147,11 +171,20 @@ public abstract class BaseBootloaderService
                     logger.LogInformation("  ✓ Segment dumped: {Size:N0} bytes", segmentData.Length);
                 }
 
-                allDumps.Add([.. segmentDataList.SelectMany(arr => arr)]);
+                // High-performance flattening using Buffer.BlockCopy
+                int totalIterSize = segmentDataList.Sum(s => s.Length);
+                byte[] flattenedData = new byte[totalIterSize];
+                int currentPos = 0;
+                foreach (byte[] segData in segmentDataList)
+                {
+                    Buffer.BlockCopy(segData, 0, flattenedData, currentPos, segData.Length);
+                    currentPos += segData.Length;
+                }
+                allDumps.Add(flattenedData);
             }
             else
             {
-                string stageName = $"Dumping Memory (Iter {iter + 1}/{profiles.DumpCount})";
+                string stageName = iterStageNames[iter];
 
                 double currentBasePercent = startPercent + (weight * globalBytesRead / totalDumpBytes);
                 progress.Report((stageName, currentBasePercent, globalBytesRead, totalDumpBytes));
@@ -366,7 +399,18 @@ public abstract class BaseBootloaderService
     {
         long bytesWrittenInIter = 0;
         long totalSegmentsSize = segments.Sum(s => (long)s.Size);
-        long bytesFromPreviousSegmentsThisIter = 0;
+
+        // Pre-calculate data for efficiency
+        string[] stageNames = new string[segments.Count];
+        long[] segmentOffsets = new long[segments.Count];
+        long currentOffset = 0;
+
+        for (int i = 0; i < segments.Count; i++)
+        {
+            stageNames[i] = $"Seg {i + 1}/{segments.Count} (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
+            segmentOffsets[i] = currentOffset;
+            currentOffset += segments[i].Size;
+        }
 
         await using (var fileStream = new System.IO.FileStream(
             finalFilePath,
@@ -381,6 +425,8 @@ public abstract class BaseBootloaderService
                 var segment = segments[i];
                 uint segStart = ParseSegmentAddress(segment);
                 uint segLength = (uint)segment.Size;
+                string stageName = stageNames[i];
+                long bytesFromPreviousSegmentsThisIter = segmentOffsets[i];
 
                 if (segLength == 0)
                 {
@@ -393,25 +439,22 @@ public abstract class BaseBootloaderService
                         ? ctx.StartPercent + (ctx.Weight * cumulativeTotalBytes / ctx.TotalExpectedBytes)
                         : ctx.StartPercent;
 
-                    string stageName = $"Seg {i + 1}/{segments.Count} (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
                     ctx.Progress.Report((stageName, percent, cumulativeTotalBytes, ctx.TotalExpectedBytes));
-
                     continue;
                 }
 
-                string stageName = $"Seg {i + 1}/{segments.Count} (Iter {ctx.CurrentIteration + 1}/{ctx.IterationCount})";
                 double segWeight = ctx.Weight / ctx.IterationCount / segments.Count;
                 double segStartPercent = ctx.StartPercent + (ctx.Weight * (ctx.CurrentIteration * segments.Count + i) / (ctx.IterationCount * segments.Count));
 
                 ctx.Logger.LogInformation("  Streaming segment {Index}: {Name} (0x{Addr:X8}, {Size:N0} bytes)",
                     i + 1, segment.Name, segStart, segLength);
 
-                long segBytesWritten = 0;
+                long segBytesWrittenLocal = 0;
                 double lastReportedSegPercent = segStartPercent;
 
                 var segProgress = new Progress<long>(bytes =>
                 {
-                    segBytesWritten = bytes;
+                    segBytesWrittenLocal = bytes;
                     double percent = segStartPercent + (segWeight * bytes / segLength);
 
                     // Calculate cumulative bytes
@@ -434,19 +477,21 @@ public abstract class BaseBootloaderService
                     ctx.CancellationToken,
                     logger: ctx.Logger).ConfigureAwait(false);
 
-                bytesWrittenInIter += segBytesWritten;
-                bytesFromPreviousSegmentsThisIter += segLength;
-                ctx.Logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, segBytesWritten);
+                // Use the local variable that was updated by the progress callback
+                // or fall back to segLength if the callback didn't fire for some reason
+                long bytesCompleted = segBytesWrittenLocal > 0 ? segBytesWrittenLocal : segLength;
+                bytesWrittenInIter += bytesCompleted;
+
+                ctx.Logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, bytesCompleted);
             }
 
             await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
 
             // Trim if needed
-            long expectedSize = segments.Sum(s => (long)s.Size);
-            if (fileStream.Length > expectedSize)
+            if (fileStream.Length > totalSegmentsSize)
             {
-                ctx.Logger.LogDebug("Trimmed dump from {Original} to {Expected} bytes", fileStream.Length, expectedSize);
-                fileStream.SetLength(expectedSize);
+                ctx.Logger.LogDebug("Trimmed dump from {Original} to {Expected} bytes", fileStream.Length, totalSegmentsSize);
+                fileStream.SetLength(totalSegmentsSize);
             }
         }
 
