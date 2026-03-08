@@ -42,13 +42,17 @@ namespace S7Tools.ViewModels.Hex
         private void OnRequestFillSelection(byte[] pattern)
         {
             if (Document == null || SelectionLength <= 0)
+            {
                 return;
+            }
 
             // Simple fill: Repeat pattern over the selection
             // We need to implement write logic.
             // Check if document supports writing.
             if (Document is not IBinaryDocument doc)
+            {
                 return;
+            }
 
             try
             {
@@ -127,7 +131,7 @@ namespace S7Tools.ViewModels.Hex
                 FileSize = (long)doc.Length;
 
                 DataInspector?.SetDocument(doc);
-                
+
                 this.RaisePropertyChanged(nameof(IsFileOpen));
             }
             catch (Exception ex)

@@ -19,14 +19,18 @@ public class ProgressByteSizeConverter : IMultiValueConverter
     public object? Convert(IList<object?>? values, Type targetType, object? parameter, CultureInfo culture)
     {
         if (values == null || values.Count < 2)
+        {
             return "0 / 0 B";
+        }
 
         long current = ParseLong(values[0]);
         long total = ParseLong(values[1]);
 
         // Prevent total from being 0 to avoid division errors in logic if needed, though we just formatting here.
         if (total == 0)
+        {
             total = 1;
+        }
 
         return FormatProgress(current, total);
     }
@@ -34,15 +38,30 @@ public class ProgressByteSizeConverter : IMultiValueConverter
     private static long ParseLong(object? value)
     {
         if (value == null)
+        {
             return 0;
+        }
+
         if (value is long l)
+        {
             return l;
+        }
+
         if (value is int i)
+        {
             return i;
+        }
+
         if (value is double d)
+        {
             return (long)d;
+        }
+
         if (long.TryParse(value.ToString(), out var result))
+        {
             return result;
+        }
+
         return 0;
     }
 

@@ -33,7 +33,7 @@ namespace S7Tools.ViewModels.Hex
         {
             _searchService = searchService;
 
-            FindCommand = ReactiveCommand.CreateFromTask(ExecuteFind, 
+            FindCommand = ReactiveCommand.CreateFromTask(ExecuteFind,
                 this.WhenAnyValue(x => x.QueryText, x => x.IsBusy, (q, b) => !string.IsNullOrWhiteSpace(q) && !b));
 
             FindNextCommand = ReactiveCommand.Create(ExecuteFindNext,
@@ -41,7 +41,7 @@ namespace S7Tools.ViewModels.Hex
 
             FindPreviousCommand = ReactiveCommand.Create(ExecuteFindPrevious,
                  this.WhenAnyValue(x => x.SearchResults.Count, c => c > 0));
-                 
+
             CloseCommand = ReactiveCommand.Create(() => { IsVisible = false; });
         }
 
@@ -112,7 +112,10 @@ namespace S7Tools.ViewModels.Hex
 
         private async Task ExecuteFind(CancellationToken ct)
         {
-            if (_document == null) return;
+            if (_document == null)
+            {
+                return;
+            }
 
             IsBusy = true;
             StatusMessage = "Searching...";
@@ -129,7 +132,7 @@ namespace S7Tools.ViewModels.Hex
                 }
 
                 var results = await _searchService.FindAllAsync(_document, pattern, ct);
-                
+
                 foreach (var res in results)
                 {
                     SearchResults.Add(res);
@@ -158,19 +161,33 @@ namespace S7Tools.ViewModels.Hex
 
         private void ExecuteFindNext()
         {
-            if (SearchResults.Count == 0) return;
+            if (SearchResults.Count == 0)
+            {
+                return;
+            }
+
             CurrentResultIndex++;
             if (CurrentResultIndex >= SearchResults.Count)
+            {
                 CurrentResultIndex = 0; // Wrap around
+            }
+
             NavigateToCurrent();
         }
 
         private void ExecuteFindPrevious()
         {
-            if (SearchResults.Count == 0) return;
+            if (SearchResults.Count == 0)
+            {
+                return;
+            }
+
             CurrentResultIndex--;
             if (CurrentResultIndex < 0)
+            {
                 CurrentResultIndex = SearchResults.Count - 1; // Wrap around
+            }
+
             NavigateToCurrent();
         }
 
@@ -194,14 +211,22 @@ namespace S7Tools.ViewModels.Hex
                         // "AB CD" -> [0xAB, 0xCD]
                         // Remove spaces
                         var hex = text.Replace(" ", "").Replace("-", "");
-                        if (hex.Length % 2 != 0) return null; // Invalid
+                        if (hex.Length % 2 != 0)
+                        {
+                            return null; // Invalid
+                        }
+
                         return Convert.FromHexString(hex);
                     case SearchMode.Binary:
                         // "01000001" -> byte
                         // Must be groups of 8? Or just sequence of bits?
                         // Implementing strict byte alignment for now.
                         var bin = text.Replace(" ", "");
-                        if (bin.Length % 8 != 0) return null;
+                        if (bin.Length % 8 != 0)
+                        {
+                            return null;
+                        }
+
                         var bytes = new List<byte>();
                         for (int i = 0; i < bin.Length; i += 8)
                         {

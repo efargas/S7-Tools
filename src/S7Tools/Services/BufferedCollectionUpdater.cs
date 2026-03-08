@@ -67,7 +67,9 @@ public sealed class BufferedCollectionUpdater<T> : IDisposable
     private void ProcessQueue()
     {
         if (_queue.IsEmpty)
+        {
             return;
+        }
 
         var items = new List<T>();
         while (_queue.TryDequeue(out var item))
@@ -85,7 +87,9 @@ public sealed class BufferedCollectionUpdater<T> : IDisposable
     public void Dispose()
     {
         if (_disposed)
+        {
             return;
+        }
 
         _cts.Cancel();
         _timer.Dispose();

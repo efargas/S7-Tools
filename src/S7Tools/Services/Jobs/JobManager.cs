@@ -529,10 +529,10 @@ public class JobManager(
             var selectedSegments = memoryProfile.Segments.Where(s => s.IsSelected).ToList();
             if (selectedSegments.Count > 0)
             {
-                // Use the first selected segment as base configuration
-                // TODO: Support multiple segments in JobProfileSet
+                // The MemoryRegionProfile property is maintained for legacy single-segment compatibility.
+                // Modern multi-segment operations use the MemoryMapping property passed below.
                 MemorySegment firstSegment = selectedSegments.First();
-                memoryRegion = new MemoryRegionProfile(firstSegment.StartAddress, (uint)firstSegment.Size);
+                memoryRegion = new MemoryRegionProfile(firstSegment.StartAddress ?? "0x20000000", (uint)firstSegment.Size);
             }
             else
             {

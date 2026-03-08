@@ -1,12 +1,12 @@
 using System;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Data;
-using AvaloniaHex.Document;
+using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using S7Tools.ViewModels.Hex;
-using AvaloniaHex.Rendering;
 using Avalonia.Threading;
+using AvaloniaHex.Document;
+using AvaloniaHex.Rendering;
+using S7Tools.ViewModels.Hex;
 
 namespace S7Tools.Views.Hex;
 
@@ -21,11 +21,11 @@ public partial class HexViewerControl : UserControl
 
         // Set up event handlers
         MainHexEditor.Selection.RangeChanged += OnSelectionRangeChanged;
-        
+
         // Use code-behind layout calculation to enable horizontal scrolling
         MainHexEditor.LayoutUpdated += MainHexEditor_LayoutUpdated;
         MainHexEditor.HexView.BytesPerLine = 16;
-        
+
         // Initial width calculation trigger
         Dispatcher.UIThread.Post(() => MainHexEditor.InvalidateMeasure(), DispatcherPriority.Loaded);
     }
@@ -63,7 +63,7 @@ public partial class HexViewerControl : UserControl
     // Toggle Column Visibility
     private void ToggleColumn<TColumn>() where TColumn : Column
     {
-        var column = MainHexEditor.Columns.Get<TColumn>(); 
+        var column = MainHexEditor.Columns.Get<TColumn>();
         column.IsVisible = !column.IsVisible;
     }
 
@@ -119,17 +119,20 @@ public partial class HexViewerControl : UserControl
     private bool _isResizing;
     private void MainHexEditor_LayoutUpdated(object? sender, EventArgs e)
     {
-        if (_isResizing) return;
-        
+        if (_isResizing)
+        {
+            return;
+        }
+
         try
         {
             _isResizing = true;
-            
+
             // Calculate total required width based on columns
             double totalWidth = 0;
             double padding = MainHexEditor.ColumnPadding;
             int visibleColumns = 0;
-            
+
             foreach (var column in MainHexEditor.Columns)
             {
                 if (column.IsVisible)
@@ -145,7 +148,10 @@ public partial class HexViewerControl : UserControl
             }
 
             // Ensure we at least cover the basic 16 bytes + address + ascii
-            if (totalWidth < 800) totalWidth = 800;
+            if (totalWidth < 800)
+            {
+                totalWidth = 800;
+            }
 
             // Update MinWidth instead of Width to allow stretching.
             // This ensures the control is at least as wide as content (scrolling happens if container < MinWidth)
