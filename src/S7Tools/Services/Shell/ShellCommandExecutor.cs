@@ -113,24 +113,70 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
         {
             _logger.LogTrace("Executing shell command: {Command}", command);
 
-            var startInfo = new ProcessStartInfo
+            // To prevent shell injection, we don't use /bin/bash -c.
+            // Instead, we split the command into executable and arguments while respecting quotes.
+            var parts = SplitCommandLine(command);
+            if (parts.Count == 0)
             {
-                FileName = "/bin/bash",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true
-            };
-            startInfo.ArgumentList.Add("-c");
-            startInfo.ArgumentList.Add(command);
+                return new ShellCommandResult(false, -1, string.Empty, "Empty command.");
+            }
 
-            return await ExecuteProcessAsync(startInfo, timeoutMs, cancellationToken).ConfigureAwait(false);
+            string fileName = parts[0];
+            var arguments = parts.GetRange(1, parts.Count - 1);
+
+            return await ExecuteDirectAsync(fileName, arguments, timeoutMs, cancellationToken).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error executing shell command: {Command}", command);
             return new ShellCommandResult(false, -1, string.Empty, ex.Message);
         }
+    }
+
+    private static List<string> SplitCommandLine(string commandLine)
+    {
+        var result = new List<string>();
+        if (string.IsNullOrWhiteSpace(commandLine)) return result;
+
+        var currentArg = new StringBuilder();
+        bool inDoubleQuotes = false;
+        bool inSingleQuotes = false;
+
+        for (int i = 0; i < commandLine.Length; i++)
+        {
+            char c = commandLine[i];
+
+            if (c == '\"' && !inSingleQuotes)
+            {
+                inDoubleQuotes = !inDoubleQuotes;
+                continue;
+            }
+
+            if (c == '\'' && !inDoubleQuotes)
+            {
+                inSingleQuotes = !inSingleQuotes;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(c) && !inDoubleQuotes && !inSingleQuotes)
+            {
+                if (currentArg.Length > 0)
+                {
+                    result.Add(currentArg.ToString());
+                    currentArg.Clear();
+                }
+                continue;
+            }
+
+            currentArg.Append(c);
+        }
+
+        if (currentArg.Length > 0)
+        {
+            result.Add(currentArg.ToString());
+        }
+
+        return result;
     }
 
     private async Task<ShellCommandResult> ExecuteProcessAsync(ProcessStartInfo startInfo, int timeoutMs, CancellationToken cancellationToken)

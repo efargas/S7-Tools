@@ -55,8 +55,8 @@ public sealed partial class SerialPortConfigurationService
 
         try
         {
-            string command = $"stty -F '{portPath.Replace("'", "'\"'\"'")}' -a";
-            SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
+            var arguments = new List<string> { "-F", portPath, "-a" };
+            SttyCommandResult result = await ExecuteSttyDirectAsync(arguments, cancellationToken).ConfigureAwait(false);
 
             if (!result.Success)
             {
@@ -99,17 +99,10 @@ public sealed partial class SerialPortConfigurationService
 
         try
         {
-            string command = GenerateSttyCommand(portPath, configuration);
-            effectiveLogger.LogDebug("Executing stty command: {Command}", command);
+            var arguments = GenerateSttyArguments(portPath, configuration);
+            effectiveLogger.LogDebug("Executing stty command: stty {Arguments}", string.Join(" ", arguments));
 
-            SttyCommandValidationResult validationResult = ValidateSttyCommand(command);
-
-            if (!validationResult.IsValid)
-            {
-                throw new ValidationException(validationResult.Errors);
-            }
-
-            SttyCommandResult result = await ExecuteSttyCommandAsync(command, cancellationToken).ConfigureAwait(false);
+            SttyCommandResult result = await ExecuteSttyDirectAsync(arguments, cancellationToken).ConfigureAwait(false);
 
             if (result.Success)
             {
@@ -297,11 +290,70 @@ public sealed partial class SerialPortConfigurationService
     }
 
     /// <summary>
+    /// Generates stty arguments for a serial port configuration.
+    /// </summary>
+    /// <param name="portPath">The path to the port.</param>
+    /// <param name="configuration">The configuration to generate the arguments for.</param>
+    /// <returns>A list of stty arguments.</returns>
+    public IEnumerable<string> GenerateSttyArguments(string portPath, SerialPortConfiguration configuration)
+    {
+        if (string.IsNullOrWhiteSpace(portPath))
+        {
+            throw new ArgumentException("Port path cannot be null or empty", nameof(portPath));
+        }
+
+        ArgumentNullException.ThrowIfNull(configuration, nameof(configuration));
+
+        var args = new List<string> { "-F", portPath };
+
+        // Character size
+        args.Add($"cs{configuration.CharacterSize}");
+
+        // Baud rate
+        args.Add(configuration.BaudRate.ToString());
+
+        // Input flags
+        args.Add(configuration.IgnoreBreak ? "ignbrk" : "-ignbrk");
+        args.Add(configuration.DisableBreakInterrupt ? "-brkint" : "brkint");
+        args.Add(configuration.DisableMapCRtoNL ? "-icrnl" : "icrnl");
+        args.Add(configuration.DisableBellOnQueueFull ? "-imaxbel" : "imaxbel");
+        args.Add(configuration.DisableXonXoffFlowControl ? "-ixon" : "ixon");
+
+        // Output flags
+        args.Add(configuration.DisableOutputProcessing ? "-opost" : "opost");
+        args.Add(configuration.DisableMapNLtoCRNL ? "-onlcr" : "onlcr");
+
+        // Local flags
+        args.Add(configuration.DisableSignalGeneration ? "-isig" : "isig");
+        args.Add(configuration.DisableCanonicalMode ? "-icanon" : "icanon");
+        args.Add(configuration.DisableExtendedProcessing ? "-iexten" : "iexten");
+        args.Add(configuration.DisableEcho ? "-echo" : "echo");
+        args.Add(configuration.DisableEchoErase ? "-echoe" : "echoe");
+        args.Add(configuration.DisableEchoKill ? "-echok" : "echok");
+        args.Add(configuration.DisableEchoControl ? "-echoctl" : "echoctl");
+        args.Add(configuration.DisableEchoKillErase ? "-echoke" : "echoke");
+
+        // Control flags
+        args.Add(configuration.DisableHardwareFlowControl ? "-crtscts" : "crtscts");
+        args.Add(configuration.OddParity ? "parodd" : "-parodd");
+        args.Add(configuration.ParityEnabled ? "parenb" : "-parenb");
+
+        // Special modes
+        if (configuration.RawMode)
+        {
+            args.Add("raw");
+        }
+
+        return args;
+    }
+
+    /// <summary>
     /// Executes an stty command.
     /// </summary>
     /// <param name="command">The command to execute.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>The command execution result.</returns>
+    [Obsolete("Use ExecuteSttyDirectAsync instead to avoid shell injection vulnerabilities.")]
     public async Task<SttyCommandResult> ExecuteSttyCommandAsync(
         string command,
         CancellationToken cancellationToken = default)
@@ -341,6 +393,50 @@ public sealed partial class SerialPortConfigurationService
                 StandardError = ex.Message,
                 ExecutionTime = stopwatch.Elapsed,
                 Command = command
+            };
+        }
+    }
+
+    /// <summary>
+    /// Executes an stty command directly without a shell.
+    /// </summary>
+    /// <param name="arguments">The arguments for the stty command.</param>
+    /// <param name="cancellationToken">Token to cancel the operation.</param>
+    /// <returns>The command execution result.</returns>
+    public async Task<SttyCommandResult> ExecuteSttyDirectAsync(
+        IEnumerable<string> arguments,
+        CancellationToken cancellationToken = default)
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            var result = await _shellExecutor.ExecuteDirectAsync("stty", arguments, 5000, cancellationToken).ConfigureAwait(false);
+            stopwatch.Stop();
+
+            return new SttyCommandResult
+            {
+                Success = result.Success,
+                ExitCode = result.ExitCode,
+                StandardOutput = result.Output.Trim(),
+                StandardError = result.Error.Trim(),
+                ExecutionTime = stopwatch.Elapsed,
+                Command = $"stty {string.Join(" ", arguments)}"
+            };
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(ex, "Failed to execute stty command: stty {Arguments}", string.Join(" ", arguments));
+
+            return new SttyCommandResult
+            {
+                Success = false,
+                ExitCode = -1,
+                StandardOutput = "",
+                StandardError = ex.Message,
+                ExecutionTime = stopwatch.Elapsed,
+                Command = $"stty {string.Join(" ", arguments)}"
             };
         }
     }

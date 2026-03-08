@@ -304,7 +304,7 @@ public partial class SocatProcessManager : IDisposable
                 {
                     if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                     {
-                        await _shellExecutor.ExecuteCommandAsync($"kill -TERM {processId}", cancellationToken).ConfigureAwait(false);
+                        await _shellExecutor.ExecuteDirectAsync("kill", ["-TERM", processId.ToString()], cancellationToken: cancellationToken).ConfigureAwait(false);
                         exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
                     }
                     else if (OperatingSystem.IsWindows())
@@ -356,11 +356,11 @@ public partial class SocatProcessManager : IDisposable
                     try
                     {
                         // Check if child is still alive
-                        var result = await _shellExecutor.ExecuteCommandAsync($"kill -0 {childPid}", cancellationToken).ConfigureAwait(false);
+                        var result = await _shellExecutor.ExecuteDirectAsync("kill", ["-0", childPid.ToString()], cancellationToken: cancellationToken).ConfigureAwait(false);
                         if (result.Success)
                         {
                             _logger.LogInformation("Cleaning up child process {ChildPid} for socat {ProcessId}", childPid, processId);
-                            await _shellExecutor.ExecuteCommandAsync($"kill -9 {childPid}", cancellationToken).ConfigureAwait(false);
+                            await _shellExecutor.ExecuteDirectAsync("kill", ["-9", childPid.ToString()], cancellationToken: cancellationToken).ConfigureAwait(false);
                         }
                     }
                     catch (Exception ex)
