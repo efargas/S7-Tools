@@ -19,9 +19,9 @@ public sealed class GreetingService(ITimeProvider timeProvider, ILocalizationSer
         DateTime now = _timeProvider.GetLocalNow();
         string greetingKey = now.Hour switch
         {
-            >= MorningStartHour and < AfternoonStartHour => MorningGreetingKey,
-            >= AfternoonStartHour and < EveningStartHour => AfternoonGreetingKey,
-            _ => EveningGreetingKey
+            >= 5 and < 12 => "Greeting_Morning",
+            >= 12 and < 18 => "Greeting_Afternoon",
+            _ => "Greeting_Evening"
         };
 
         return _localizationService.GetString(greetingKey, name);

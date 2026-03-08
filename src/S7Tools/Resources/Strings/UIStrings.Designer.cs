@@ -1432,5 +1432,38 @@ namespace S7Tools.Resources.Strings
                 return ResourceManager.GetString("Value_PowerOff", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Good morning, {0}!.
+        /// </summary>
+        public static string Greeting_Morning
+        {
+            get
+            {
+                return ResourceManager.GetString("Greeting_Morning", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Good afternoon, {0}!.
+        /// </summary>
+        public static string Greeting_Afternoon
+        {
+            get
+            {
+                return ResourceManager.GetString("Greeting_Afternoon", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Good evening, {0}!.
+        /// </summary>
+        public static string Greeting_Evening
+        {
+            get
+            {
+                return ResourceManager.GetString("Greeting_Evening", resourceCulture);
+            }
+        }
     }
 }

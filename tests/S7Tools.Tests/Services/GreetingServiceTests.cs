@@ -1,6 +1,7 @@
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.Resources.Strings;
 
 namespace S7Tools.Tests.Services;
 
@@ -9,10 +10,6 @@ namespace S7Tools.Tests.Services;
 /// </summary>
 public class GreetingServiceTests
 {
-    private const string MorningGreetingKey = "Greeting_Morning";
-    private const string AfternoonGreetingKey = "Greeting_Afternoon";
-    private const string EveningGreetingKey = "Greeting_Evening";
-
     private readonly Mock<ITimeProvider> _timeProviderMock;
     private readonly Mock<ILocalizationService> _localizationServiceMock;
     private readonly GreetingService _greetingService;
@@ -25,44 +22,25 @@ public class GreetingServiceTests
     }
 
     [Theory]
-    [InlineData(5, MorningGreetingKey)]
-    [InlineData(8, MorningGreetingKey)]
-    [InlineData(11, MorningGreetingKey)]
-    [InlineData(12, AfternoonGreetingKey)]
-    [InlineData(15, AfternoonGreetingKey)]
-    [InlineData(17, AfternoonGreetingKey)]
-    [InlineData(18, EveningGreetingKey)]
-    [InlineData(21, EveningGreetingKey)]
-    [InlineData(0, EveningGreetingKey)]
-    [InlineData(4, EveningGreetingKey)]
-    private readonly Mock<ILocalizationService> _localizationServiceMock;
-    private readonly GreetingService _greetingService;
-
-    public GreetingServiceTests()
-    {
-        _timeProviderMock = new Mock<ITimeProvider>();
-        _localizationServiceMock = new Mock<ILocalizationService>();
-        _greetingService = new GreetingService(_timeProviderMock.Object, _localizationServiceMock.Object);
-    }
-
-    [Theory]
-    [InlineData(5, GreetingService.MorningGreetingKey)]
-    [InlineData(8, GreetingService.MorningGreetingKey)]
-    [InlineData(11, GreetingService.MorningGreetingKey)]
-    [InlineData(12, GreetingService.AfternoonGreetingKey)]
-    [InlineData(15, GreetingService.AfternoonGreetingKey)]
-    [InlineData(17, GreetingService.AfternoonGreetingKey)]
-    [InlineData(18, GreetingService.EveningGreetingKey)]
-    [InlineData(21, GreetingService.EveningGreetingKey)]
-    [InlineData(0, GreetingService.EveningGreetingKey)]
-    [InlineData(4, GreetingService.EveningGreetingKey)]
+    [InlineData(5, "Greeting_Morning")]
+    [InlineData(8, "Greeting_Morning")]
+    [InlineData(11, "Greeting_Morning")]
+    [InlineData(12, "Greeting_Afternoon")]
+    [InlineData(15, "Greeting_Afternoon")]
+    [InlineData(17, "Greeting_Afternoon")]
+    [InlineData(18, "Greeting_Evening")]
+    [InlineData(21, "Greeting_Evening")]
+    [InlineData(0, "Greeting_Evening")]
+    [InlineData(4, "Greeting_Evening")]
     public void Greet_ShouldReturnLocalizedGreeting_BasedOnTimeOfDay(int hour, string expectedKey)
     {
         // Arrange
         string name = "User";
         DateTime testTime = new DateTime(2023, 1, 1, hour, 0, 0);
         _timeProviderMock.Setup(x => x.GetLocalNow()).Returns(testTime);
-        _localizationServiceMock.Setup(x => x.GetString(expectedKey, name))
+
+        // Mocking ILocalizationService with explicit params matching to avoid fragility
+        _localizationServiceMock.Setup(x => x.GetString(expectedKey, It.Is<object[]>(args => args.Length == 1 && (string)args[0] == name)))
                                 .Returns($"Localized {expectedKey} {name}");
 
         // Act
@@ -70,7 +48,21 @@ public class GreetingServiceTests
 
         // Assert
         result.Should().Be($"Localized {expectedKey} {name}");
-        _localizationServiceMock.Verify(x => x.GetString(expectedKey, name), Times.Once);
+        _localizationServiceMock.Verify(x => x.GetString(expectedKey, It.Is<object[]>(args => args.Length == 1 && (string)args[0] == name)), Times.Once);
+    }
+
+    [Fact]
+    public void Greet_ShouldUseRealResources_WhenUsingIntegrationTestPattern()
+    {
+        // This test validates that the resource keys actually exist in the resx file
+        // by checking the generated designer class properties
+        UIStrings.Greeting_Morning.Should().NotBeNullOrEmpty();
+        UIStrings.Greeting_Afternoon.Should().NotBeNullOrEmpty();
+        UIStrings.Greeting_Evening.Should().NotBeNullOrEmpty();
+
+        UIStrings.Greeting_Morning.Should().Contain("{0}");
+        UIStrings.Greeting_Afternoon.Should().Contain("{0}");
+        UIStrings.Greeting_Evening.Should().Contain("{0}");
     }
 
     [Fact]
