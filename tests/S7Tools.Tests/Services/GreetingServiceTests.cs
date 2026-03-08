@@ -9,7 +9,32 @@ namespace S7Tools.Tests.Services;
 /// </summary>
 public class GreetingServiceTests
 {
+    private const string MorningGreetingKey = "Greeting_Morning";
+    private const string AfternoonGreetingKey = "Greeting_Afternoon";
+    private const string EveningGreetingKey = "Greeting_Evening";
+
     private readonly Mock<ITimeProvider> _timeProviderMock;
+    private readonly Mock<ILocalizationService> _localizationServiceMock;
+    private readonly GreetingService _greetingService;
+
+    public GreetingServiceTests()
+    {
+        _timeProviderMock = new Mock<ITimeProvider>();
+        _localizationServiceMock = new Mock<ILocalizationService>();
+        _greetingService = new GreetingService(_timeProviderMock.Object, _localizationServiceMock.Object);
+    }
+
+    [Theory]
+    [InlineData(5, MorningGreetingKey)]
+    [InlineData(8, MorningGreetingKey)]
+    [InlineData(11, MorningGreetingKey)]
+    [InlineData(12, AfternoonGreetingKey)]
+    [InlineData(15, AfternoonGreetingKey)]
+    [InlineData(17, AfternoonGreetingKey)]
+    [InlineData(18, EveningGreetingKey)]
+    [InlineData(21, EveningGreetingKey)]
+    [InlineData(0, EveningGreetingKey)]
+    [InlineData(4, EveningGreetingKey)]
     private readonly Mock<ILocalizationService> _localizationServiceMock;
     private readonly GreetingService _greetingService;
 
