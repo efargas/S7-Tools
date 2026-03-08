@@ -316,12 +316,6 @@ namespace S7Tools.Services.Adapters.Plc
         /// Returns true if full greeting consumed.
         /// Returns false if greeting not found (reader positioned at start of potential partial match or end).
         /// </summary>
-        /// <summary>
-        /// Scans the buffer for the 'Ok' greeting. 
-        /// Consumes (skips) any garbage bytes before the greeting.
-        /// Returns true if full greeting consumed.
-        /// Returns false if greeting not found (reader positioned at start of potential partial match or end).
-        /// </summary>
         private bool TryConsumeGreeting(ref SequenceReader<byte> reader)
         {
             // We need to look for 0x05 (Framed) or 'O' (Legacy)
