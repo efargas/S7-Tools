@@ -99,9 +99,7 @@ public partial class LogListControl : UserControl
     private void ScrollToBottom()
     {
         if (!AutoScroll || !_isStuckToBottom || _scrollViewer == null)
-        {
             return;
-        }
 
         // Use ScrollToEnd which is more reliable for ScrollViewer than ScrollIntoView for listbox usually,
         // but ScrollIntoView is good for knowing WHICH item.
@@ -112,9 +110,7 @@ public partial class LogListControl : UserControl
     private void OnScrollViewerScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
         if (_scrollViewer == null)
-        {
             return;
-        }
 
         // Tolerance for floating point comparison
         bool isAtBottom = _scrollViewer.Offset.Y >= (_scrollViewer.Extent.Height - _scrollViewer.Viewport.Height - 5.0);

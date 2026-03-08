@@ -497,23 +497,16 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     {
         // 1. Log Level
         if (entry.Level < SelectedLogLevel)
-        {
             return false;
-        }
 
         // 2. Date Range
         if (StartDate.HasValue && entry.Timestamp < StartDate.Value)
-        {
             return false;
-        }
-
         if (EndDate.HasValue)
         {
             DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
             if (entry.Timestamp > endDateOffset)
-            {
                 return false;
-            }
         }
 
         // 3. Search Text
@@ -525,9 +518,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
                            (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
 
             if (!matches)
-            {
                 return false;
-            }
         }
 
         return true;

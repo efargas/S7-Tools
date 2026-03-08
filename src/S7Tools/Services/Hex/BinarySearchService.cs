@@ -22,15 +22,11 @@ namespace S7Tools.Services.Hex
         {
             var results = new List<long>();
             if (doc == null || pattern == null || pattern.Length == 0)
-            {
                 return results;
-            }
 
             long docLength = (long)doc.Length;
             if (pattern.Length > docLength)
-            {
                 return results;
-            }
 
             // We will read in chunks. 
             // To handle matches crossing chunk boundaries, we need to overlap reading.
@@ -118,15 +114,11 @@ namespace S7Tools.Services.Hex
         public async Task<long> FindNextAsync(IBinaryDocument doc, byte[] pattern, long startOffset, CancellationToken ct = default)
         {
             if (doc == null || pattern == null || pattern.Length == 0)
-            {
                 return -1;
-            }
 
             long docLength = (long)doc.Length;
             if (startOffset >= docLength)
-            {
                 return -1;
-            }
 
             int patternLength = pattern.Length;
             int overlap = patternLength - 1;
@@ -152,11 +144,7 @@ namespace S7Tools.Services.Hex
                         }
                     }
 
-                    if (remaining <= BufferSize)
-                    {
-                        break;
-                    }
-
+                    if (remaining <= BufferSize) break;
                     currentOffset += (readSize - overlap);
                 }
                 return -1;

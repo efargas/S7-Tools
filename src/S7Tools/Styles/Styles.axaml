@@ -32,8 +32,6 @@
     <!-- GridSplitter Styles for VSCode-like appearance -->
     <Style Selector="GridSplitter">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Width" Value="8" />
-        <Setter Property="Height" Value="8" />
         <Setter Property="Transitions">
             <Transitions>
                 <BrushTransition Property="Background" Duration="0:0:0.15" />

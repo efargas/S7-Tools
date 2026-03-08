@@ -6,11 +6,12 @@ using System.Reactive;
 using System.Text;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
-using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
-using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.Infrastructure.Logging.Core.Storage;
+using S7Tools.Services;
+
+using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Components;
 
@@ -56,9 +57,7 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         CopyCommand = ReactiveCommand.CreateFromTask<IList>(async items =>
         {
             if (items == null || items.Count == 0)
-            {
                 return;
-            }
 
             var sb = new StringBuilder();
             foreach (var item in items)
@@ -80,21 +79,15 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             foreach ((string logType, LogEntry entry) in items)
             {
                 if (logType == "Main")
-                {
                     mainBatch.Add(entry);
-                }
                 else if (logType == "Process")
-                {
                     processBatch.Add(entry);
-                }
             }
 
             if (mainBatch.Count > 0)
             {
                 foreach (var item in mainBatch)
-                {
                     MainLogEntries.Add(item);
-                }
 
                 // Trim to prevent indefinite growth during long running tasks
                 while (MainLogEntries.Count > MaxLogEntries)
@@ -105,9 +98,7 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             if (processBatch.Count > 0)
             {
                 foreach (var item in processBatch)
-                {
                     ProcessLogEntries.Add(item);
-                }
 
                 // Trim to prevent indefinite growth during long running tasks
                 while (ProcessLogEntries.Count > MaxLogEntries)
@@ -126,9 +117,7 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
     private void InitializeLogs()
     {
         if (_task == null || _task.TaskId == Guid.Empty)
-        {
             return;
-        }
 
         // Get persistent stores for the task
         (_mainLogDataStore, _processLogDataStore, _) = _centralizedTaskLogService.GetOrCreateStoresForTask(_task.TaskId);
@@ -138,22 +127,16 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         PopulateInitialLogEntries(_processLogDataStore, ProcessLogEntries);
 
         if (_mainLogDataStore != null)
-        {
             _mainLogDataStore.CollectionChanged += _mainHandler;
-        }
 
         if (_processLogDataStore != null)
-        {
             _processLogDataStore.CollectionChanged += _processHandler;
-        }
     }
 
     private void PopulateInitialLogEntries(ITaskLogDataStore? store, ObservableCollection<LogEntry> targetCollection)
     {
         if (store == null || store.Count == 0)
-        {
             return;
-        }
 
         var initialEntries = new List<LogEntry>();
         int skipCount = Math.Max(0, store.Count - MaxLogEntries);
@@ -211,15 +194,9 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         if (disposing)
         {
             if (_mainLogDataStore != null)
-            {
                 _mainLogDataStore.CollectionChanged -= _mainHandler;
-            }
-
             if (_processLogDataStore != null)
-            {
                 _processLogDataStore.CollectionChanged -= _processHandler;
-            }
-
             _logUpdater.Dispose();
         }
     }

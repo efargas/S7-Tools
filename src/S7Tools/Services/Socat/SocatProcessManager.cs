@@ -499,9 +499,7 @@ public partial class SocatProcessManager : IDisposable
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed)
-        {
             return;
-        }
 
         if (disposing)
         {

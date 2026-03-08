@@ -712,9 +712,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         TaskExecution? targetTask = task ?? SelectedTask;
         if (targetTask == null || targetTask.TaskId == Guid.Empty)
-        {
             return;
-        }
 
         if (targetTask.State != TaskState.Created)
         {
@@ -748,9 +746,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         TaskExecution? targetTask = task ?? SelectedTask;
         if (targetTask == null)
-        {
             return;
-        }
 
         if (!targetTask.CanCancel)
         {
@@ -783,9 +779,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteScheduleTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
 
         try
         {
@@ -807,9 +801,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         TaskExecution? targetTask = task ?? SelectedTask;
         if (targetTask == null)
-        {
             return;
-        }
 
         if (!targetTask.CanRestart)
         {
@@ -848,9 +840,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecutePauseTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
 
         try
         {
@@ -871,9 +861,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteResumeTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
 
         try
         {
@@ -894,9 +882,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private async Task ExecuteDeleteTaskAsync()
     {
         if (SelectedTask == null)
-        {
             return;
-        }
 
         try
         {
@@ -996,9 +982,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private void UpdateCommandResult(CommandResult result)
     {
         if (result.IsCancelled)
-        {
             return;
-        }
 
         if (!string.IsNullOrEmpty(result.Message))
         {

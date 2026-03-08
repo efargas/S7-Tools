@@ -22,9 +22,7 @@ public class CircularStringLog
     public CircularStringLog(int capacity)
     {
         if (capacity <= 0)
-        {
             throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
-        }
 
         _capacity = capacity;
         _buffer = new string[capacity];

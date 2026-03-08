@@ -27,9 +27,7 @@ public partial class DataInspectorViewModel : ObservableObject
     private void GoToOffset()
     {
         if (string.IsNullOrWhiteSpace(TargetOffset))
-        {
             return;
-        }
 
         // Try parsing hex
         // Support prefixes like 0x
@@ -44,9 +42,7 @@ public partial class DataInspectorViewModel : ObservableObject
     private void FillSelection()
     {
         if (string.IsNullOrWhiteSpace(FillPattern))
-        {
             return;
-        }
 
         try
         {
@@ -191,14 +187,9 @@ public partial class DataInspectorViewModel : ObservableObject
             // If we want BE float, and system is LE, we must reverse.
             byte[] fBytes = data[0..4];
             if (IsBigEndian && BitConverter.IsLittleEndian)
-            {
                 Array.Reverse(fBytes);
-            }
-
             if (!IsBigEndian && !BitConverter.IsLittleEndian)
-            {
                 Array.Reverse(fBytes);
-            }
 
             Float32 = BitConverter.ToSingle(fBytes).ToString("G");
         }
@@ -210,15 +201,9 @@ public partial class DataInspectorViewModel : ObservableObject
         {
             byte[] dBytes = data[0..8];
             if (IsBigEndian && BitConverter.IsLittleEndian)
-            {
                 Array.Reverse(dBytes);
-            }
-
             if (!IsBigEndian && !BitConverter.IsLittleEndian)
-            {
                 Array.Reverse(dBytes);
-            }
-
             Double64 = BitConverter.ToDouble(dBytes).ToString("G");
         }
         else
@@ -239,7 +224,7 @@ public partial class DataInspectorViewModel : ObservableObject
     }
 
     // Helpers not strictly needed with the array logic above but good for clarity if reused
-    private static byte[] ReverseIfBig(byte[] b) { if (!BitConverter.IsLittleEndian) { Array.Reverse(b); } return b; }
+    private static byte[] ReverseIfBig(byte[] b) { if (!BitConverter.IsLittleEndian) Array.Reverse(b); return b; }
 
     public SearchViewModel Search { get; }
 

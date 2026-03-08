@@ -6,8 +6,8 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Extensions;
 using S7Tools.Resources;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Bootloader;
 

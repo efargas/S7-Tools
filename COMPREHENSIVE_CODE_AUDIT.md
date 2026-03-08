@@ -67,3 +67,41 @@ The application is now significantly more robust against high-load scenarios. Th
 
 ---
 *Audit & Remediation by Jules (AI Agent)*
+
+# Comprehensive Code Audit & Refactoring Proposal
+
+**Date:** 2026-03-08
+**Goal:** Simplify codebase, remove dead code, fix bugs, optimize performance, and implement missing features/placeholders.
+
+## 1. Dead Code Elimination
+*   **File:** `src/S7Tools/ViewModels/Layout/NavigationViewModel.cs`
+    *   **Finding:** The method `CreateSettingsConfigViewModel()` is never called. Navigation handles the `"settings"` case directly by creating a `SettingsViewModel`.
+    *   **Action:** Removed `CreateSettingsConfigViewModel()`.
+
+## 2. Unfinished Features & Placeholders
+*   **File:** `src/S7Tools/ViewModels/Layout/NavigationViewModel.cs`
+    *   **Finding:** Comment states `TODO: Create a proper SettingsConfigViewModel`. Based on current navigation logic, this appears obsolete.
+*   **File:** `src/S7Tools/ViewModels/Dialogs/CreateMemoryRegionProfileDialogViewModel.cs`
+    *   **Finding:** The `ExecuteEditSegment()` method was an empty placeholder: `// TODO: Open segment edit dialog when available`.
+    *   **Action:** Implemented the segment edit dialog via `IDialogService.ShowInputAsync`.
+*   **File:** `src/S7Tools/Services/Jobs/JobManager.cs`
+    *   **Finding:** Around line 533, an obsolete comment said: `// TODO: Support multiple segments in JobProfileSet`.
+    *   **Action:** Removed the comment, clarifying that modern multi-segment operations use the newly passed `MemoryMapping` property.
+*   **File:** `src/S7Tools/ViewModels/Profiles/PowerSupplyProfileViewModel.cs`
+    *   **Finding:** `CreateConfigurationForType` throws `NotImplementedException` for `SerialRs232`, `SerialRs485`, and `EthernetIp`.
+    *   **Action:** Since these are planned for future releases, the current implementation is acceptable.
+
+## 3. Performance Optimizations
+*   **File:** `src/S7Tools.Infrastructure.Logging/Core/Storage/LogDataStore.cs`
+    *   **Finding (Medium Priority):** The `Entries` property creates a full array copy (`new LogModel[_count]`) on every access. Since this is frequently accessed by UI bindings, it introduces significant memory allocation pressure and GC overhead.
+    *   **Action:** Optimize the underlying storage without breaking the `IReadOnlyList<LogModel>` interface contract. Returning an enumerator directly is not an option as it would break the API. A custom `IReadOnlyList<LogModel>` wrapper mapping directly to the circular buffer could be a viable solution for future refactoring.
+
+## 4. UI/UX Improvements
+*   **File:** `src/S7Tools/ViewModels/Layout/NavigationViewModel.cs`
+    *   **Finding:** The `DetailContent` and `MainContent` were set to raw strings in some cases.
+    *   **Action:** Used the `JobWizardPlaceholderViewModel` for these states instead of raw strings to ensure robust data binding.
+
+## 5. Potential Bugs & Error Handling
+*   **File:** `src/S7Tools/Converters/GridLengthToDoubleConverter.cs` & `BooleanToVisibilityConverter.cs`
+    *   **Finding:** `ConvertBack` threw `NotImplementedException`.
+    *   **Action:** Returned `Avalonia.Data.BindingOperations.DoNothing` instead of throwing an exception, which is a safer pattern.

@@ -1,12 +1,12 @@
 using System;
 using Avalonia.Controls;
-using Avalonia.Data;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
-using Avalonia.Threading;
+using Avalonia.Data;
 using AvaloniaHex.Document;
-using AvaloniaHex.Rendering;
+using Avalonia.Markup.Xaml;
 using S7Tools.ViewModels.Hex;
+using AvaloniaHex.Rendering;
+using Avalonia.Threading;
 
 namespace S7Tools.Views.Hex;
 
@@ -119,10 +119,7 @@ public partial class HexViewerControl : UserControl
     private bool _isResizing;
     private void MainHexEditor_LayoutUpdated(object? sender, EventArgs e)
     {
-        if (_isResizing)
-        {
-            return;
-        }
+        if (_isResizing) return;
 
         try
         {
@@ -148,10 +145,7 @@ public partial class HexViewerControl : UserControl
             }
 
             // Ensure we at least cover the basic 16 bytes + address + ascii
-            if (totalWidth < 800)
-            {
-                totalWidth = 800;
-            }
+            if (totalWidth < 800) totalWidth = 800;
 
             // Update MinWidth instead of Width to allow stretching.
             // This ensures the control is at least as wide as content (scrolling happens if container < MinWidth)

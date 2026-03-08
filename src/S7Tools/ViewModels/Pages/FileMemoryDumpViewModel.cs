@@ -6,9 +6,9 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ReactiveUI;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Hex;
+using ReactiveUI;
 
 namespace S7Tools.ViewModels.Pages;
 

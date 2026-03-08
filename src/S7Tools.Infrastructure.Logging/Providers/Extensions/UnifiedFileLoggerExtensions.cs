@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Providers.Microsoft;
+using S7Tools.Infrastructure.Logging.Core.Configuration;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Extensions;
 

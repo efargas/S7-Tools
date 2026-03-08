@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Infrastructure.Logging.Providers.Microsoft;
+using S7Tools.Extensions;
 
 namespace S7Tools.Services.Logging;
 
