@@ -378,7 +378,39 @@ namespace S7Tools.Services.Adapters.Plc
         }
 
 
-        private void ParseProtocol(ref SequenceReader<byte> reader, ref uint currentAddress, ChannelWriter<MemoryBlock> writer)
+        private void ParseProtocol(ref SequenceReader<byte> reader, ref uint currentAddress, ChannelWriter<MemoryBlock> writer, CancellationToken token)
+        {
+            const int BlockSize = 16; // 16 bytes per line
+            int blocksProcessed = 0;
+
+            while (reader.Remaining >= BlockSize)
+            {
+                token.ThrowIfCancellationRequested();
+
+                ReadOnlySequence<byte> blockSeq = reader.Sequence.Slice(reader.Position, BlockSize);
+
+                // Copy to array for UI consumption (crosses thread boundary)
+                byte[] data = blockSeq.ToArray();
+
+                var memoryBlock = new MemoryBlock(currentAddress, data);
+
+                if (!writer.TryWrite(memoryBlock))
+                {
+                    var task = writer.WriteAsync(memoryBlock).AsTask();
+                    task.Wait();
+                }
+
+                currentAddress += BlockSize;
+                reader.Advance(BlockSize);
+                blocksProcessed++;
+            }
+
+            if (blocksProcessed > 0)
+            {
+                Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
+                    blocksProcessed, blocksProcessed * BlockSize, currentAddress);
+            }
+        }
         {
             const int BlockSize = 16; // 16 bytes per line
             int blocksProcessed = 0;
