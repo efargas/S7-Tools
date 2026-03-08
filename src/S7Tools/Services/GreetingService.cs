@@ -6,21 +6,12 @@ namespace S7Tools.Services;
 /// <summary>
 /// A service that provides greeting messages.
 /// </summary>
-public class GreetingService : IGreetingService
+/// <param name="timeProvider">The time provider.</param>
+/// <param name="localizationService">The localization service.</param>
+public sealed class GreetingService(ITimeProvider timeProvider, ILocalizationService localizationService) : IGreetingService
 {
-    private readonly ITimeProvider _timeProvider;
-    private readonly ILocalizationService _localizationService;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="GreetingService"/> class.
-    /// </summary>
-    /// <param name="timeProvider">The time provider.</param>
-    /// <param name="localizationService">The localization service.</param>
-    public GreetingService(ITimeProvider timeProvider, ILocalizationService localizationService)
-    {
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-        _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
-    }
+    private readonly ITimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+    private readonly ILocalizationService _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
 
     /// <inheritdoc/>
     public string Greet(string name)
