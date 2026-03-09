@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
+using Avalonia.Data;
 using Avalonia.Data.Converters;
-using S7Tools.Resources;
 
 namespace S7Tools.Converters;
 
@@ -35,10 +35,9 @@ public class BooleanToVisibilityConverter : IValueConverter
     /// <param name="targetType">The target type.</param>
     /// <param name="parameter">An optional parameter.</param>
     /// <param name="culture">The culture information.</param>
-    /// <returns>This method is not supported.</returns>
-    /// <exception cref="NotImplementedException">This converter does not support ConvertBack.</exception>
+    /// <returns>BindingOperations.DoNothing.</returns>
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        throw new NotImplementedException(UIStrings.Exception_BooleanToVisibilityConverterNoConvertBack);
+        return BindingOperations.DoNothing;
     }
 }
