@@ -6,8 +6,8 @@ using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
 using S7Tools.Core.Services.Interfaces;
-using S7Tools.Resources;
 using S7Tools.Extensions;
+using S7Tools.Resources;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -161,7 +161,7 @@ public sealed class EnhancedBootloaderService(
                 string outputFilePath = result.SavedFiles?.FirstOrDefault() ?? string.Empty;
 
                 // Mark task as completed
-                long totalLength = result.Data.Sum(x => (long)x.Length);
+                long totalLength = result.SavedFiles.Sum(x => (long)x.Length);
                 taskExecution.MarkAsCompleted(outputFilePath, totalLength);
 
                 _logger.LogInformation("Enhanced bootloader dump completed successfully for task {TaskId}. " +

@@ -128,7 +128,9 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
                 {
                     foreach (var writer in writers.Values)
                     {
-                        try { await writer.FlushAsync(); } catch { }
+                        try
+                        { await writer.FlushAsync(); }
+                        catch { }
                     }
                     lastFlush = DateTime.UtcNow;
                 }
@@ -166,7 +168,10 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
     /// </summary>
     public async ValueTask DisposeAsync()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
 
         _disposed = true;
         _cts.Cancel();

@@ -6,11 +6,11 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
 using S7Tools.Resources;
 using S7Tools.Services;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Pages;
 using S7Tools.ViewModels.Tasks;
@@ -121,12 +121,16 @@ public class BottomPanelViewModel : ReactiveObject
                     if (e.NewItems != null)
                     {
                         foreach (Core.Models.Jobs.TaskExecution task in e.NewItems)
+                        {
                             AddNewTaskTab(task);
+                        }
                     }
                     if (e.OldItems != null)
                     {
                         foreach (Core.Models.Jobs.TaskExecution task in e.OldItems)
+                        {
                             RemoveTaskTab(task);
+                        }
                     }
                 };
             }
@@ -140,7 +144,9 @@ public class BottomPanelViewModel : ReactiveObject
         // Avoid duplicates
         string tabId = $"task-{task.TaskId}";
         if (Tabs.Any(t => t.Id == tabId))
+        {
             return;
+        }
 
         var viewModel = new S7Tools.ViewModels.Components.TaskLogsPanelViewModel(
             task,

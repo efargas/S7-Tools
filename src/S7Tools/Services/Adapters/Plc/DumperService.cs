@@ -133,7 +133,9 @@ namespace S7Tools.Services.Adapters.Plc
         public async Task FlushRemainingDataAsync(CancellationToken token)
         {
             if (_outputChannel == null)
+            {
                 return;
+            }
 
             int flushedCount = 0;
             while (_outputChannel.Reader.TryRead(out _))
@@ -220,7 +222,9 @@ namespace S7Tools.Services.Adapters.Plc
                 ReadOnlySequence<byte> buffer = result.Buffer;
 
                 if (result.IsCanceled)
+                {
                     break;
+                }
 
                 SequencePosition consumed = buffer.Start;
                 SequencePosition examined = buffer.End;
@@ -266,7 +270,8 @@ namespace S7Tools.Services.Adapters.Plc
                                 buffer = buffer.Slice(consumed);
 
                                 // Parse remaining as data protocol
-                                ParseProtocol(buffer, ref currentAddress, writer);
+                                ParseProtocol(ref seqReader, ref currentAddress, writer);
+                                consumed = seqReader.Position;
                             }
                         }
                         else
@@ -287,7 +292,8 @@ namespace S7Tools.Services.Adapters.Plc
                     {
                         // Data Mode
                         processed = true;
-                        consumed = ParseProtocol(buffer, ref currentAddress, writer);
+                        ParseProtocol(ref seqReader, ref currentAddress, writer);
+                        consumed = seqReader.Position;
                     }
 
                     if (!processed && buffer.Length > 0 && buffer.Length < 16)
@@ -323,12 +329,6 @@ namespace S7Tools.Services.Adapters.Plc
         /// Returns true if full greeting consumed.
         /// Returns false if greeting not found (reader positioned at start of potential partial match or end).
         /// </summary>
-        /// <summary>
-        /// Scans the buffer for the 'Ok' greeting. 
-        /// Consumes (skips) any garbage bytes before the greeting.
-        /// Returns true if full greeting consumed.
-        /// Returns false if greeting not found (reader positioned at start of potential partial match or end).
-        /// </summary>
         private bool TryConsumeGreeting(ref SequenceReader<byte> reader)
         {
             // We need to look for 0x05 (Framed) or 'O' (Legacy)
@@ -338,7 +338,9 @@ namespace S7Tools.Services.Adapters.Plc
             {
                 var originalPosition = reader.Position;
                 if (!reader.TryPeek(out byte b))
+                {
                     break;
+                }
 
                 // Candidate 1: Framed "\x05", "O", "k"
                 if (b == 0x05)
@@ -391,15 +393,16 @@ namespace S7Tools.Services.Adapters.Plc
         }
 
 
-        private SequencePosition ParseProtocol(ReadOnlySequence<byte> buffer, ref uint currentAddress, ChannelWriter<MemoryBlock> writer)
+        private void ParseProtocol(ref SequenceReader<byte> reader, ref uint currentAddress, ChannelWriter<MemoryBlock> writer, CancellationToken token)
         {
-            var seqReader = new SequenceReader<byte>(buffer);
             const int BlockSize = 16; // 16 bytes per line
             int blocksProcessed = 0;
 
-            while (seqReader.Remaining >= BlockSize)
+            while (reader.Remaining >= BlockSize)
             {
-                ReadOnlySequence<byte> blockSeq = seqReader.Sequence.Slice(seqReader.Position, BlockSize);
+                token.ThrowIfCancellationRequested();
+
+                ReadOnlySequence<byte> blockSeq = reader.Sequence.Slice(reader.Position, BlockSize);
 
                 // Copy to array for UI consumption (crosses thread boundary)
                 byte[] data = blockSeq.ToArray();
@@ -413,7 +416,7 @@ namespace S7Tools.Services.Adapters.Plc
                 }
 
                 currentAddress += BlockSize;
-                seqReader.Advance(BlockSize);
+                reader.Advance(BlockSize);
                 blocksProcessed++;
             }
 
@@ -422,8 +425,36 @@ namespace S7Tools.Services.Adapters.Plc
                 Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
                     blocksProcessed, blocksProcessed * BlockSize, currentAddress);
             }
+        }
+        {
+            const int BlockSize = 16; // 16 bytes per line
+            int blocksProcessed = 0;
 
-            return seqReader.Position;
+            while (reader.Remaining >= BlockSize)
+            {
+                ReadOnlySequence<byte> blockSeq = reader.Sequence.Slice(reader.Position, BlockSize);
+
+                // Copy to array for UI consumption (crosses thread boundary)
+                byte[] data = blockSeq.ToArray();
+
+                var memoryBlock = new MemoryBlock(currentAddress, data);
+
+                if (!writer.TryWrite(memoryBlock))
+                {
+                    var task = writer.WriteAsync(memoryBlock).AsTask();
+                    task.Wait();
+                }
+
+                currentAddress += BlockSize;
+                reader.Advance(BlockSize);
+                blocksProcessed++;
+            }
+
+            if (blocksProcessed > 0)
+            {
+                Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
+                    blocksProcessed, blocksProcessed * BlockSize, currentAddress);
+            }
         }
 
         public async Task WriteAsync(byte[] data, CancellationToken token)

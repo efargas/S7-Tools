@@ -142,8 +142,8 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
 
-            process.OutputDataReceived += (_, e) => { if (e.Data != null) outputBuilder.AppendLine(e.Data); };
-            process.ErrorDataReceived += (_, e) => { if (e.Data != null) errorBuilder.AppendLine(e.Data); };
+            process.OutputDataReceived += (_, e) => { if (e.Data != null) { outputBuilder.AppendLine(e.Data); } };
+            process.ErrorDataReceived += (_, e) => { if (e.Data != null) { errorBuilder.AppendLine(e.Data); } };
 
             if (!process.Start())
             {
