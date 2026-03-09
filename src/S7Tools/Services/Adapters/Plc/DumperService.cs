@@ -266,6 +266,9 @@ namespace S7Tools.Services.Adapters.Plc
                                     Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
                                 }
 
+                                // Re-slice to strip the greeting we just ate
+                                buffer = buffer.Slice(consumed);
+
                                 // Parse remaining as data protocol
                                 ParseProtocol(ref seqReader, ref currentAddress, writer);
                                 consumed = seqReader.Position;

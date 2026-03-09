@@ -51,10 +51,10 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// </summary>
     /// <param name="logger">The logger instance.</param>
     /// <param name="dialogService">The dialog service instance.</param>
-    public CreateMemoryRegionProfileDialogViewModel(ILogger<CreateMemoryRegionProfileDialogViewModel> logger, IDialogService? dialogService)
+    public CreateMemoryRegionProfileDialogViewModel(ILogger<CreateMemoryRegionProfileDialogViewModel> logger, IDialogService dialogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _dialogService = dialogService!; // Allow null for design-time, but mark as non-nullable internally
+        _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
 
         InitializeCommands();
         InitializeValidation();
@@ -68,7 +68,7 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
     /// </summary>
     public CreateMemoryRegionProfileDialogViewModel() : this(
         Microsoft.Extensions.Logging.Abstractions.NullLogger<CreateMemoryRegionProfileDialogViewModel>.Instance,
-        null!)
+        new S7Tools.Services.DesignTimeDialogService())
     {
         // Design-time data
         ProfileName = "Example Profile";
@@ -493,13 +493,6 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
                 {
                     SelectedSegment.Name = result.Value.Trim();
                     _logger.LogDebug("Renamed custom segment to: {SegmentName}", SelectedSegment.Name);
-
-                    // Trigger refresh of list display
-                    int index = CustomSegments.IndexOf(SelectedSegment);
-                    if (index >= 0)
-                    {
-                        CustomSegments[index] = SelectedSegment;
-                    }
                 }
             }
         }

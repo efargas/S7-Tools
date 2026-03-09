@@ -35,6 +35,7 @@ public class MemorySegment : INotifyPropertyChanged
     #region Fields
 
     private bool _isSelected;
+    private string _name = string.Empty;
 
     #endregion
 
@@ -47,7 +48,18 @@ public class MemorySegment : INotifyPropertyChanged
     [Required(ErrorMessage = "Segment name is required")]
     [StringLength(50, ErrorMessage = "Segment name cannot exceed 50 characters")]
     [Display(Name = "Segment Name")]
-    public string Name { get; set; } = string.Empty;
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            if (_name != value)
+            {
+                _name = value;
+                OnPropertyChanged(nameof(Name));
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the hexadecimal start address.
