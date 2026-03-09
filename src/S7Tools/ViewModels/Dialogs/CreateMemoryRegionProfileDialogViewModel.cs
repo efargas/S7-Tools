@@ -483,16 +483,17 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
         {
             if (SelectedSegment != null && _dialogService != null)
             {
+                var segmentToEdit = SelectedSegment;
                 var result = await _dialogService.ShowInputAsync(
                     UIStrings.Navigation_Explorer, // Reusing title from UIStrings for now
-                    $"Edit name for segment {SelectedSegment.Name}:",
-                    SelectedSegment.Name,
+                    $"Edit name for segment {segmentToEdit.Name}:",
+                    segmentToEdit.Name,
                     "Enter segment name");
 
                 if (!result.IsCancelled && !string.IsNullOrWhiteSpace(result.Value))
                 {
-                    SelectedSegment.Name = result.Value.Trim();
-                    _logger.LogDebug("Renamed custom segment to: {SegmentName}", SelectedSegment.Name);
+                    segmentToEdit.Name = result.Value.Trim();
+                    _logger.LogDebug("Renamed custom segment to: {SegmentName}", segmentToEdit.Name);
                 }
             }
         }

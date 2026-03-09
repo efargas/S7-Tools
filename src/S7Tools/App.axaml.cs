@@ -380,7 +380,7 @@ public partial class App : Application
     }
 
     /// <summary>
-    /// Helper method to show dialogs with proper error handling and main window context.
+    /// Helper method to show dialogs with proper error handling and active window context.
     /// </summary>
     /// <typeparam name="T">The dialog result type.</typeparam>
     /// <param name="dialogFactory">Factory function to create the dialog.</param>
@@ -391,16 +391,19 @@ public partial class App : Application
     {
         try
         {
-            Window? mainWindow = (ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+            var desktop = ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
 
-            if (mainWindow == null)
+            // Get the active window as owner if possible, otherwise fall back to MainWindow
+            Window? owner = desktop?.Windows.FirstOrDefault(w => w.IsActive) ?? desktop?.MainWindow;
+
+            if (owner == null)
             {
-                logger.LogWarning("Main window not available for {DialogType}", dialogType);
-                return DialogResult<T>.Failure("Main window not available");
+                logger.LogWarning("No owner window available for {DialogType}", dialogType);
+                return DialogResult<T>.Failure("No owner window available");
             }
 
             Window dialog = dialogFactory();
-            T? result = await dialog.ShowDialog<T>(mainWindow);
+            T? result = await dialog.ShowDialog<T>(owner);
             return DialogResult<T>.Success(result);
         }
         catch (Exception ex)
