@@ -1,10 +1,10 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
+using S7Tools.Core.Services.Interfaces;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 

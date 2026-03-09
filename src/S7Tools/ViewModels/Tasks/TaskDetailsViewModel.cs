@@ -10,13 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Collections;
+using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
-using S7Tools.Collections;
-using S7Tools.Core.Constants;
 using S7Tools.Models;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
@@ -1082,7 +1082,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 profileSet,
                 CancellationToken.None);
 
-            long totalSize = result.Data.Sum(x => (long)x.Length);
+            long totalSize = result.SavedFiles.Sum(x => (long)x.Length);
             string outputDescription;
 
             if (result.SavedFiles.Count == 1)
@@ -1097,7 +1097,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
                 for (int i = 0; i < result.SavedFiles.Count; i++)
                 {
                     string outputFile = result.SavedFiles[i];
-                    long size = i < result.Data.Count ? result.Data[i].Length : 0;
+                    long size = i < result.SavedFiles.Count ? result.SavedFiles[i].Length : 0;
                     sb.AppendLine($"{i + 1}. {outputFile} ({size:N0} bytes)");
                 }
                 outputDescription = sb.ToString();

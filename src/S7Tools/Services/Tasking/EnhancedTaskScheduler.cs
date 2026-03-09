@@ -38,11 +38,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly ConcurrentDictionary<Guid, Task> _activeExecutions = new(); // Track active execution tasks
     private readonly SemaphoreSlim _schedulerSemaphore = new(1, 1);
     private readonly SemaphoreSlim _persistenceSemaphore = new(1, 1);
-    // private readonly TimeSpan _scheduleInterval = TimeSpan.FromSeconds(1); // Unused
-    // Automatic cleanup disabled as per user request - manual only
-    // private readonly TimeSpan _cleanupInterval = TimeSpan.FromMinutes(5);
     private readonly Timer _scheduleTimer;
-    private DateTime _lastCleanupTime;
     private bool _isRunning;
     private bool _disposed;
     private int _maxConcurrentTasks = Environment.ProcessorCount;
@@ -112,7 +108,6 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         // Initialize schedule timer (disabled initially)
         _scheduleTimer = new Timer(ProcessTasks, null, Timeout.Infinite, Timeout.Infinite);
-        _lastCleanupTime = _timeProvider.GetUtcNow();
 
         // Load existing tasks from persistence
         _ = LoadTasksAsync();
@@ -871,40 +866,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             else
             {
                 _scheduleTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
-
-
-                _ = Task.Run(async () =>
-                {
-                    await Task.Yield(); // Satisfy async requirement caused by disabling cleanup
-                    try
-                    {
-                        // Cleanup old tasks
-                        // Disabled auto-cleanup as per user request
-                        /*
-                        int removed = await CleanupOldTasksAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
-                        if (removed > 0)
-                        {
-                            await SaveTasksAsync().ConfigureAwait(false);
-                        }
-                        */
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Background cleanup failed");
-                    }
-                }, CancellationToken.None);
             }
-
-            // Disabled auto-cleanup check
-            /*
-            if (nowUtc - _lastCleanupTime > _cleanupInterval)
-            {
-                _lastCleanupTime = nowUtc;
-                // Run cleanup in background without awaiting here to not block processing
-                _ = Task.Run(() => CleanupOldTasksAsync(TimeSpan.FromHours(24)), CancellationToken.None)
-                    .ContinueWith(t => { if (t.Result > 0) { _ = SaveTasksAsync(); } });
-            }
-            */
 
             int runningCount = _tasks.Values.Count(t => t.State == TaskState.Running);
             int availableSlots = _maxConcurrentTasks - runningCount;
@@ -1081,7 +1043,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 CancellationToken.None)
                 .ConfigureAwait(false);
 
-            long totalSize = result.Data.Sum(x => (long)x.Length);
+            long totalSize = result.SavedFiles.Sum(x => (long)x.Length);
             taskLogger.MainLogger?.LogInformation("Bootloader dump completed. Total size: {Size} bytes. Files: {Count}",
                 totalSize, result.SavedFiles.Count);
 
@@ -1163,37 +1125,6 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             _resourceCoordinator.Release(task.LockedResources);
             _logger.LogDebug("Released {Count} resources for task {TaskId}", task.LockedResources.Count, taskId);
         }
-    }
-
-    /// <summary>
-    /// Timer callback for periodic cleanup operations.
-    /// </summary>
-    /// <param name="state">Timer state (unused).</param>
-    private void PerformCleanup(object? state)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                // Clean up tasks older than 24 hours
-                int cleanedCount = await CleanupOldTasksAsync(TimeSpan.FromHours(24)).ConfigureAwait(false);
-
-                // Persist changes after cleanup
-                if (cleanedCount > 0)
-                {
-                    await SaveTasksAsync().ConfigureAwait(false);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during periodic cleanup");
-            }
-        });
     }
 
     /// <summary>
