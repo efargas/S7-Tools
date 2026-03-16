@@ -3,6 +3,7 @@ using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.ReactiveUI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Projektanker.Icons.Avalonia;
@@ -164,6 +165,29 @@ sealed class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        var basePath = AppDomain.CurrentDomain.BaseDirectory;
+        var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+            .AddJsonFile(Path.Combine(basePath, "appsettings.json"), optional: true, reloadOnChange: true)
+            .AddJsonFile(Path.Combine(basePath, "Resources", "AppSettings", "UserSettings.json"), optional: true, reloadOnChange: true)
+            .Build();
+
+        services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
+
+        // Bind strongly typed options
+        var appSection = configuration.GetSection("App");
+        services.AddOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>()
+            .Bind(appSection)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        // Register WritableOptions factory
+        services.AddTransient<S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(provider => 
+            new S7Tools.Services.WritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>(
+                basePath,
+                provider.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(),
+                "App",
+                Path.Combine("Resources", "AppSettings", "UserSettings.json")));
+
         // Add logging with DataStore provider
         services.AddLogging(builder =>
         {

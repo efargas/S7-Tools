@@ -67,9 +67,19 @@ public class SettingsManagementViewModel : ReactiveObject
         services.AddLogging();
         var serviceProvider = services.BuildServiceProvider();
 
-        // Create a mock path service for design time
-        var pathService = new Services.PathService(serviceProvider);
-        return new Services.ApplicationSettingsService(settingsLogger, pathService);
+        // Create a mock options for design time
+        var dummyOptions = new DummyOptions();
+        return new Services.ApplicationSettingsService(settingsLogger, dummyOptions);
+    }
+
+    private class DummyOptions : S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>
+    {
+        public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings CurrentValue { get; } = new();
+        public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Value => CurrentValue;
+        public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Get(string? name) => CurrentValue;
+        public IDisposable? OnChange(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string?> listener) => null;
+        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) {}
+        public Task UpdateAsync(Func<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, Task> applyChanges) => Task.CompletedTask;
     }
 
     /// <summary>

@@ -38,6 +38,7 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.5" />
     <PackageReference Include="NModbus" Version="3.0.72" />
     <PackageReference Include="ReactiveUI" Version="20.1.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
@@ -53,7 +54,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\S7Tools.Core\S7Tools.Core.csproj" />
-    <ProjectReference
-      Include="..\S7Tools.Infrastructure.Logging\S7Tools.Infrastructure.Logging.csproj" />
+    <ProjectReference Include="..\S7Tools.Infrastructure.Logging\S7Tools.Infrastructure.Logging.csproj" />
   </ItemGroup>
 </Project>
