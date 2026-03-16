@@ -270,7 +270,7 @@ namespace S7Tools.Services.Adapters.Plc
                                 buffer = buffer.Slice(consumed);
 
                                 // Parse remaining as data protocol
-                                ParseProtocol(ref seqReader, ref currentAddress, writer);
+                                ParseProtocol(ref seqReader, ref currentAddress, writer, token);
                                 consumed = seqReader.Position;
                             }
                         }
@@ -292,7 +292,7 @@ namespace S7Tools.Services.Adapters.Plc
                     {
                         // Data Mode
                         processed = true;
-                        ParseProtocol(ref seqReader, ref currentAddress, writer);
+                        ParseProtocol(ref seqReader, ref currentAddress, writer, token);
                         consumed = seqReader.Position;
                     }
 
@@ -421,36 +421,6 @@ namespace S7Tools.Services.Adapters.Plc
             }
 
             if (blocksProcessed > 0 && Logger.IsEnabled(LogLevel.Trace))
-            {
-                Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
-                    blocksProcessed, blocksProcessed * BlockSize, currentAddress);
-            }
-        }
-        {
-            const int BlockSize = 16; // 16 bytes per line
-            int blocksProcessed = 0;
-
-            while (reader.Remaining >= BlockSize)
-            {
-                ReadOnlySequence<byte> blockSeq = reader.Sequence.Slice(reader.Position, BlockSize);
-
-                // Copy to array for UI consumption (crosses thread boundary)
-                byte[] data = blockSeq.ToArray();
-
-                var memoryBlock = new MemoryBlock(currentAddress, data);
-
-                if (!writer.TryWrite(memoryBlock))
-                {
-                    var task = writer.WriteAsync(memoryBlock).AsTask();
-                    task.Wait();
-                }
-
-                currentAddress += BlockSize;
-                reader.Advance(BlockSize);
-                blocksProcessed++;
-            }
-
-            if (blocksProcessed > 0)
             {
                 Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
                     blocksProcessed, blocksProcessed * BlockSize, currentAddress);
