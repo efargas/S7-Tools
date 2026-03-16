@@ -1640,6 +1640,39 @@
     <comment>Evening greeting message, {0} is the name</comment>
   </data>
 
+  <data name="DialogTitle_SystemError" xml:space="preserve">
+    <value>System Error</value>
+    <comment>Generic error dialog title</comment>
+  </data>
+  <data name="DialogTitle_PortTestResult" xml:space="preserve">
+    <value>Port Test Result</value>
+    <comment>Title for port test result dialog</comment>
+  </data>
+  <data name="DialogTitle_ProfileDetails" xml:space="preserve">
+    <value>Profile Details {0}</value>
+    <comment>Title for profile details dialog, {0} is optional profile name</comment>
+  </data>
+  <data name="DialogTitle_ImportError" xml:space="preserve">
+    <value>Import Error</value>
+    <comment>Title for import error dialog</comment>
+  </data>
+  <data name="DialogTitle_ExportError" xml:space="preserve">
+    <value>Export Error</value>
+    <comment>Title for export error dialog</comment>
+  </data>
+  <data name="DialogTitle_ClipboardError" xml:space="preserve">
+    <value>Clipboard Error</value>
+    <comment>Title for clipboard error dialog</comment>
+  </data>
+  <data name="DialogTitle_InvalidTime" xml:space="preserve">
+    <value>Invalid Time</value>
+    <comment>Title for invalid time input dialog</comment>
+  </data>
+  <data name="Status_InvalidTimeMessage" xml:space="preserve">
+    <value>Please enter a valid number of minutes or a time format (HH:mm)</value>
+    <comment>Error message for invalid time format</comment>
+  </data>
+
   <!-- Bottom Panel Tab Labels -->
   <data name="Panel_Problems" xml:space="preserve">
     <value>PROBLEMS</value>

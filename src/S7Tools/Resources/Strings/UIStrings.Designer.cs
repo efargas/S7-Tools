@@ -1465,5 +1465,15 @@ namespace S7Tools.Resources.Strings
                 return ResourceManager.GetString("Greeting_Evening", resourceCulture);
             }
         }
+        
+        public static string DialogTitle_SystemError => ResourceManager.GetString("DialogTitle_SystemError", resourceCulture);
+        public static string DialogTitle_PortTestResult => ResourceManager.GetString("DialogTitle_PortTestResult", resourceCulture);
+        public static string DialogTitle_ProfileDetails => ResourceManager.GetString("DialogTitle_ProfileDetails", resourceCulture);
+        public static string DialogTitle_ImportError => ResourceManager.GetString("DialogTitle_ImportError", resourceCulture);
+        public static string DialogTitle_ExportError => ResourceManager.GetString("DialogTitle_ExportError", resourceCulture);
+        public static string DialogTitle_ClipboardError => ResourceManager.GetString("DialogTitle_ClipboardError", resourceCulture);
+        public static string DialogTitle_InvalidTime => ResourceManager.GetString("DialogTitle_InvalidTime", resourceCulture);
+        public static string Status_InvalidTimeMessage => ResourceManager.GetString("Status_InvalidTimeMessage", resourceCulture);
+        public static string Status_ErrorCopyingToClipboard => ResourceManager.GetString("Status_ErrorCopyingToClipboard", resourceCulture);
     }
 }

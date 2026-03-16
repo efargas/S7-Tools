@@ -207,7 +207,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to cut text to clipboard");
-            await _dialogService.ShowErrorAsync("Clipboard Error", $"Failed to cut text: {ex.Message}");
+            await _dialogService.ShowErrorAsync("Clipboard Error", string.Format(UIStrings.Status_ErrorCopyingToClipboard, ex.Message));
         }
     }
 
@@ -226,7 +226,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to copy text to clipboard");
-            await _dialogService.ShowErrorAsync("Clipboard Error", $"Failed to copy text: {ex.Message}");
+            await _dialogService.ShowErrorAsync("Clipboard Error", string.Format(UIStrings.Status_ErrorCopyingToClipboard, ex.Message));
         }
     }
 
@@ -249,7 +249,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to paste text from clipboard");
-            await _dialogService.ShowErrorAsync("Clipboard Error", $"Failed to paste text: {ex.Message}");
+            await _dialogService.ShowErrorAsync("Clipboard Error", string.Format(UIStrings.Status_ErrorCopyingToClipboard, ex.Message));
         }
     }
 
@@ -285,7 +285,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to export logs");
-            await _dialogService.ShowErrorAsync("Export Error", $"Failed to export logs: {ex.Message}");
+            await _dialogService.ShowErrorAsync("Export Error", string.Format(UIStrings.Status_ExportFailed, ex.Message));
         }
     }
 

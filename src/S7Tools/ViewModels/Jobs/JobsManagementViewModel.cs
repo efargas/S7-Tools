@@ -1025,7 +1025,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         {
             StatusMessage = string.Format(UIStrings.Status_ErrorImportingJobs, ex.Message);
             _logger.LogError(ex, "Error importing job");
-            await _dialogService.ShowErrorAsync("Import Error", $"Failed to import job: {ex.Message}");
+            await _dialogService.ShowErrorAsync("Import Error", string.Format(UIStrings.Status_ImportFailed, ex.Message));
         }
         finally
         {
@@ -1081,7 +1081,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         {
             StatusMessage = string.Format(UIStrings.Status_ErrorExportingJob, ex.Message);
             _logger.LogError(ex, "Error exporting job {JobId}", SelectedProfile?.Id);
-            await _dialogService.ShowErrorAsync("Export Error", $"Failed to export job: {ex.Message}");
+            await _dialogService.ShowErrorAsync("Export Error", string.Format(UIStrings.Status_ExportFailed, ex.Message));
         }
         finally
         {

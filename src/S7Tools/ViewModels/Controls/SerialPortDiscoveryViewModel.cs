@@ -912,14 +912,26 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
-    /// Handles timer elapsed events for automatic scanning.
+    /// Handles timer elapsed events for automatic scanning safely on a background thread.
     /// </summary>
     /// <param name="state">Timer state (unused).</param>
     private async void OnTimerElapsed(object? state)
     {
-        if (!IsScanning && AutoScanEnabled)
+        if (IsScanning || !AutoScanEnabled)
         {
+            return;
+        }
+
+        try
+        {
+            // The method logic is already async, but an unhandled synchronous exception 
+            // before the first await would crash the application.
             await ScanPortsAsync();
+        }
+        catch (Exception ex)
+        {
+            // Prevent the async void from tearing down the application process.
+            _logger.LogError(ex, "Unhandled exception in background autoscan timer.");
         }
     }
 
