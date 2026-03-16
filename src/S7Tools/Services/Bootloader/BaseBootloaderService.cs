@@ -860,7 +860,7 @@ public abstract class BaseBootloaderService
                     await socat.StopSocatAsync(socatProcess, cancellationToken).ConfigureAwait(false);
                     effectiveTaskLogger.LogDebug("✓ Socat process stopped");
                 }
-                catch (Exception ex) { effectiveTaskLogger.LogWarning("Failed to stop socat: {Message}", ex.Message); }
+                catch (Exception ex) { effectiveTaskLogger.LogWarning(ex, "Failed to stop socat"); }
             }
 
             if (isPowerConnected)
@@ -870,7 +870,7 @@ public abstract class BaseBootloaderService
                     await power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
                     effectiveTaskLogger.LogDebug("✓ Disconnected from power supply");
                 }
-                catch (Exception ex) { effectiveTaskLogger.LogWarning("Failed to disconnect power: {Message}", ex.Message); }
+                catch (Exception ex) { effectiveTaskLogger.LogWarning(ex, "Failed to disconnect power"); }
             }
         }
     }

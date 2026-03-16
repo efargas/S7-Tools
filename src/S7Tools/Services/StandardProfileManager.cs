@@ -523,7 +523,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// Gets the next available profile ID without acquiring the semaphore.
     /// This method assumes the caller already holds the semaphore lock.
     /// </summary>
-    private int GetNextAvailableIdCore()
+    protected int GetNextAvailableIdCore()
     {
         if (_profiles.Count == 0)
         {
@@ -633,7 +633,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <summary>
     /// Ensures that profiles are loaded from storage.
     /// </summary>
-    private async Task EnsureLoadedAsync(CancellationToken cancellationToken)
+    protected async Task EnsureLoadedAsync(CancellationToken cancellationToken = default)
     {
         if (!_isLoaded)
         {
@@ -685,6 +685,21 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load {ProfileType} profiles from: {Path}", ProfileTypeName, _profilesPath);
+            
+            // Backup corrupted profile file before starting with an empty collection
+            try
+            {
+                if (File.Exists(_profilesPath))
+                {
+                    string backupPath = $"{_profilesPath}.bak_{DateTime.Now:yyyyMMddHHmmss}";
+                    File.Move(_profilesPath, backupPath);
+                    _logger.LogWarning("Corrupted profile file backed up to: {BackupPath}", backupPath);
+                }
+            }
+            catch (Exception backupEx)
+            {
+                _logger.LogError(backupEx, "Failed to backup corrupted profile file: {Path}", _profilesPath);
+            }
             // Don't rethrow - start with empty collection
         }
     }
@@ -692,7 +707,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <summary>
     /// Saves profiles to the JSON file.
     /// </summary>
-    private async Task SaveProfilesAsync(CancellationToken cancellationToken)
+    protected async Task SaveProfilesAsync(CancellationToken cancellationToken = default)
     {
         try
         {
@@ -712,7 +727,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <summary>
     /// Clears the default flag from all profiles.
     /// </summary>
-    private async Task ClearAllDefaultFlagsAsync(CancellationToken cancellationToken)
+    protected async Task ClearAllDefaultFlagsAsync(CancellationToken cancellationToken = default)
     {
         await Task.Run(() =>
         {
@@ -727,7 +742,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
     /// <summary>
     /// Creates a deep clone of a profile using JSON serialization.
     /// </summary>
-    private static T CloneProfile(T profile)
+    protected static T CloneProfile(T profile)
     {
         string json = JsonSerializer.Serialize(profile, WriteOptions);
         return JsonSerializer.Deserialize<T>(json, ReadOptions)!;

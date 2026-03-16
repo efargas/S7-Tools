@@ -386,106 +386,6 @@ public class JobManager(
 
     #endregion
 
-    #region Helper Methods
-
-    /// <summary>
-    /// Creates a deep clone of a job profile.
-    /// </summary>
-    /// <param name="source">The source job profile to clone.</param>
-    /// <returns>A deep clone of the job profile.</returns>
-    protected static JobProfile CloneProfile(JobProfile source)
-    {
-        return source.ClonePreserveId();
-    }
-
-    /// <summary>
-    /// Gets the next available ID without acquiring the semaphore (assumes already held).
-    /// </summary>
-    /// <returns>The next available ID.</returns>
-    private int GetNextAvailableIdCore()
-    {
-        var existingIds = _profiles.Select(p => p.Id).ToHashSet();
-        int nextId = 1;
-        while (existingIds.Contains(nextId))
-        {
-            nextId++;
-        }
-        return nextId;
-    }
-
-    /// <summary>
-    /// Clears all default flags from existing profiles.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    private async Task ClearAllDefaultFlagsAsync()
-    {
-        foreach (JobProfile? profile in _profiles.Where(p => p.IsDefault))
-        {
-            profile.IsDefault = false;
-            profile.Touch();
-        }
-        await SaveProfilesAsync().ConfigureAwait(false);
-        await Task.Yield();
-    }
-
-    /// <summary>
-    /// Saves all profiles to the persistent storage.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    private async Task SaveProfilesAsync()
-    {
-        // This method should be implemented by the base class
-        // For now, just log that saving would happen
-        _logger.LogDebug("Saving {Count} job profiles to {Path}", _profiles.Count, _profilesPath);
-        await Task.Yield();
-    }
-
-    /// <summary>
-    /// Ensures profiles are loaded from persistent storage.
-    /// </summary>
-    /// <param name="cancellationToken">Cancellation token for the operation.</param>
-    private async Task EnsureLoadedAsync(CancellationToken cancellationToken)
-    {
-        if (_isLoaded)
-        {
-            return;
-        }
-
-        _logger.LogDebug("Loading job profiles from {Path}", _profilesPath);
-
-        // Load profiles from file if it exists
-        if (File.Exists(_profilesPath))
-        {
-            try
-            {
-                string json = await File.ReadAllTextAsync(_profilesPath, cancellationToken).ConfigureAwait(false);
-                List<JobProfile>? profiles = System.Text.Json.JsonSerializer.Deserialize<List<JobProfile>>(json);
-
-                if (profiles != null)
-                {
-                    _profiles.Clear();
-                    _profiles.AddRange(profiles);
-                    _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error loading job profiles from {Path}", _profilesPath);
-            }
-        }
-
-        // Ensure at least one default profile exists
-        if (!_profiles.Any(p => p.IsDefault))
-        {
-            JobProfile defaultProfile = CreateSystemDefault();
-            _profiles.Add(defaultProfile);
-            await SaveProfilesAsync().ConfigureAwait(false);
-        }
-
-        _isLoaded = true;
-        _logger.LogInformation("Loaded {Count} job profiles", _profiles.Count);
-    }
-
     /// <summary>
     /// Creates an execution job from a job profile with resolved memory region configuration.
     /// </summary>
@@ -648,6 +548,4 @@ public class JobManager(
             OutputPath = jobProfile.OutputPath ?? string.Empty
         };
     }
-
-    #endregion
 }
