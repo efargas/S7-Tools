@@ -11,6 +11,7 @@ using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Dialogs;
 using S7Tools.Views.Dialogs;
 using S7Tools.Views.Layout;
+using Avalonia.Styling;
 
 namespace S7Tools;
 
@@ -96,7 +97,19 @@ public partial class App : Application
                         // 3. Start Schedulers
                         await StartSchedulersAsync(logger);
 
-                        // 4. Switch to Main Window on UI Thread
+                        // 4. Set Initial Theme and Subscribe to Changes
+                        var settingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(settingsService.GetSetting("ui.theme", "System")));
+                        
+                        settingsService.SettingsChanged += (s, e) =>
+                        {
+                            if (e.Key.Equals("ui.theme", StringComparison.OrdinalIgnoreCase))
+                            {
+                                Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(e.NewValue?.ToString() ?? "System"));
+                            }
+                        };
+
+                        // 5. Switch to Main Window on UI Thread
                         await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                         {
                             logger.LogInformation("✅ Initialization complete. Switching to Main Window.");
@@ -153,6 +166,19 @@ public partial class App : Application
         {
             ILogger<App>? logger = _serviceProvider.GetService<ILogger<App>>();
             logger?.LogError(e.ExceptionObject as Exception, "Unhandled application exception");
+        };
+    }
+
+    /// <summary>
+    /// Applies the specified theme string to the Avalonia Application.
+    /// </summary>
+    private void ApplyThemeVariant(string theme)
+    {
+        RequestedThemeVariant = theme.ToLowerInvariant() switch
+        {
+            "dark" => ThemeVariant.Dark,
+            "light" => ThemeVariant.Light,
+            _ => ThemeVariant.Default // System default
         };
     }
 

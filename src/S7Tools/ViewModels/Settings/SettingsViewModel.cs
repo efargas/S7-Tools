@@ -95,7 +95,7 @@ public class SettingsViewModel : ViewModelBase
             {
                 "Logging" => CreateLoggingSettingsViewModel(),
                 "General" => new GeneralSettingsViewModel(),
-                "Appearance" => new AppearanceSettingsViewModel(),
+                "Appearance" => CreateAppearanceSettingsViewModel(),
                 "Advanced" => new AdvancedSettingsViewModel(),
                 "Serial Ports" => CreateSerialPortsSettingsViewModel(),
                 "Servers" => CreateSocatSettingsViewModel(),
@@ -128,6 +128,12 @@ public class SettingsViewModel : ViewModelBase
         ILogger<LoggingSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
 
         return new LoggingSettingsViewModel(settingsService, pathService, fileDialogService, logger);
+    }
+
+    private AppearanceSettingsViewModel CreateAppearanceSettingsViewModel()
+    {
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
+        return new AppearanceSettingsViewModel(settingsService);
     }
 
     private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()

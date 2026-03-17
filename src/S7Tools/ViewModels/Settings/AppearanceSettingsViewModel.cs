@@ -1,4 +1,6 @@
+using System.Reactive;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.ViewModels.Settings;
 
@@ -7,18 +9,57 @@ namespace S7Tools.ViewModels.Settings;
 /// </summary>
 public class AppearanceSettingsViewModel : ViewModelBase
 {
+    private readonly IApplicationSettingsService _settingsService;
+    private string _theme;
+
     /// <summary>
     /// Initializes a new instance of the AppearanceSettingsViewModel class.
     /// </summary>
-    public AppearanceSettingsViewModel()
+    public AppearanceSettingsViewModel(IApplicationSettingsService settingsService)
     {
-        // Placeholder for future appearance settings
+        _settingsService = settingsService;
+        _theme = _settingsService.GetSetting("ui.theme", "System");
+
+        RestoreDefaultsCommand = ReactiveCommand.Create(RestoreDefaults);
+
+        // When Theme property changes, auto-save to configuration
+        this.WhenAnyValue(x => x.Theme)
+            .Subscribe(newTheme =>
+            {
+                if (newTheme != _settingsService.GetSetting("ui.theme", "System"))
+                {
+                    _ = _settingsService.SetSettingAsync("ui.theme", newTheme);
+                }
+            });
     }
 
-    private string _message = "Appearance settings will be available in a future update.";
-    public string Message
+    /// <summary>
+    /// Design-time constructor
+    /// </summary>
+    public AppearanceSettingsViewModel()
     {
-        get => _message;
-        set => this.RaiseAndSetIfChanged(ref _message, value);
+        _settingsService = null!; // Dummy for designer
+        _theme = "Dark";
+        RestoreDefaultsCommand = ReactiveCommand.Create(() => {});
+    }
+
+    /// <summary>
+    /// Gets or sets the application Theme variant.
+    /// Can be 'Dark', 'Light', or 'System'.
+    /// </summary>
+    public string Theme
+    {
+        get => _theme;
+        set => this.RaiseAndSetIfChanged(ref _theme, value);
+    }
+
+    /// <summary>
+    /// Command to restore the default theme (System).
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> RestoreDefaultsCommand { get; }
+
+    private void RestoreDefaults()
+    {
+        Theme = "System";
     }
 }

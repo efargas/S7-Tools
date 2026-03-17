@@ -9,41 +9,77 @@
              Background="{DynamicResource AppBackgroundBrush}">
 
     <ScrollViewer>
-        <StackPanel Margin="20" Spacing="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Margin="20" Spacing="24">
             <!-- Header -->
             <TextBlock Text="Appearance Settings" 
                        FontSize="24" 
-                       FontWeight="Bold" 
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" 
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,20" />
+                       FontWeight="SemiBold" 
+                       Foreground="{DynamicResource TextForegroundBrush}" 
+                       Margin="0,0,0,10" />
 
-            <!-- Coming Soon Message -->
+            <!-- Theming Section -->
             <Border Background="{DynamicResource PanelBackgroundBrush}" 
                     BorderBrush="{DynamicResource ControlBorderBrush}" 
                     BorderThickness="1" 
                     CornerRadius="8" 
-                    Padding="40"
-                    MaxWidth="400">
-                <StackPanel Spacing="16" HorizontalAlignment="Center">
-                    <TextBlock Text="🎨" 
-                               FontSize="48" 
-                               HorizontalAlignment="Center" />
+                    Padding="24">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Application Theme" 
+                               FontSize="16" 
+                               FontWeight="Bold" 
+                               Foreground="{DynamicResource TextForegroundBrush}" />
                     
-                    <TextBlock Text="Coming Soon" 
-                               FontSize="20" 
-                               FontWeight="SemiBold" 
-                               Foreground="{DynamicResource TextForegroundSecondaryBrush}" 
-                               HorizontalAlignment="Center" />
+                    <TextBlock Text="Choose the preferred color theme for the interface."
+                               FontSize="13"
+                               Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                               TextWrapping="Wrap" />
+
+                    <!-- Theme Selection (Combobox) -->
+                    <StackPanel Orientation="Horizontal" Spacing="16" Margin="0,10,0,0">
+                        <TextBlock Text="Theme:" VerticalAlignment="Center" Foreground="{DynamicResource TextForegroundSecondaryBrush}"/>
+                        <ComboBox SelectedItem="{Binding Theme}" Width="200" HorizontalAlignment="Left" Padding="12,6">
+                            <x:String>System</x:String>
+                            <x:String>Dark</x:String>
+                            <x:String>Light</x:String>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Theme Preview Colors -->
+                    <Border Background="{DynamicResource AppBackgroundBrush}" 
+                            BorderBrush="{DynamicResource ControlBorderBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="6" 
+                            Padding="16"
+                            Margin="0,15,0,0">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Live Preview" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                            
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Border Width="40" Height="40" Background="{DynamicResource BrandAccentBrush}" CornerRadius="4" ToolTip.Tip="Accent Theme Color" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                                <Border Width="40" Height="40" Background="{DynamicResource PanelBackgroundBrush}" CornerRadius="4" ToolTip.Tip="Panel Background" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                                <Border Width="40" Height="40" Background="{DynamicResource ControlBackgroundBrush}" CornerRadius="4" ToolTip.Tip="Control Background" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                                <Border Width="40" Height="40" Background="{DynamicResource ButtonBackgroundBrush}" CornerRadius="4" ToolTip.Tip="Button Background" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1"/>
+                            </StackPanel>
+                            
+                            <TextBlock Text="Example standard text." Foreground="{DynamicResource TextForegroundBrush}" Margin="0,8,0,0"/>
+                            <TextBlock Text="Example muted text." Foreground="{DynamicResource TextForegroundMutedBrush}" />
+                        </StackPanel>
+                    </Border>
                     
-                    <TextBlock Text="Theme and appearance customization options will be available in a future update."
-                               FontSize="14"
-                               Foreground="{DynamicResource TextForegroundMutedBrush}"
-                               TextWrapping="Wrap"
-                               HorizontalAlignment="Center"
-                               TextAlignment="Center" />
                 </StackPanel>
             </Border>
+
+            <!-- Reset Actions -->
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Command="{Binding RestoreDefaultsCommand}" 
+                        Classes="transparent"
+                        Padding="16,8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="↺" FontSize="16" />
+                        <TextBlock Text="Restore Defaults" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
