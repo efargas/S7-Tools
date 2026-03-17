@@ -29,6 +29,10 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     private bool _disposed;
     private readonly S7Tools.Services.BufferedCollectionUpdater<LogModel> _bufferedUpdater;
 
+    // Sorting state
+    private string _sortColumn = "Timestamp";
+    private bool _sortAscending = true;
+
     /// <summary>
     /// Initializes a new instance of the LogViewerViewModel class for design-time use.
     /// </summary>
@@ -148,6 +152,16 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     }
 
     /// <summary>
+    /// Gets or sets a value indicating whether to invert auto-scroll (scroll to top).
+    /// </summary>
+    public bool InvertAutoScroll
+    {
+        get => _invertAutoScroll;
+        set => this.RaiseAndSetIfChanged(ref _invertAutoScroll, value);
+    }
+    private bool _invertAutoScroll;
+
+    /// <summary>
     /// Gets or sets a value indicating whether the view is currently stuck to the bottom.
     /// </summary>
     public bool IsStuckToBottom
@@ -254,7 +268,17 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     /// <summary>
     /// Gets the command to copy selected log entry to clipboard.
     /// </summary>
-    public ReactiveCommand<object?, Unit> CopyLogEntryCommand { get; private set; } = null!;
+    public ReactiveCommand<object?, Unit> CopySelectedEntryCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to copy selected log message to clipboard.
+    /// </summary>
+    public ReactiveCommand<object?, Unit> CopySelectedMessageCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to sort the log entries.
+    /// </summary>
+    public ReactiveCommand<string, Unit> SortCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to refresh the log display.
@@ -354,7 +378,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             }
         });
 
-        CopyLogEntryCommand = ReactiveCommand.CreateFromTask<object?>(async parameter =>
+        CopySelectedEntryCommand = ReactiveCommand.CreateFromTask<object?>(async parameter =>
         {
             var sb = new System.Text.StringBuilder();
 
@@ -387,6 +411,39 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             }
         });
 
+        CopySelectedMessageCommand = ReactiveCommand.CreateFromTask<object?>(async parameter =>
+        {
+            var sb = new System.Text.StringBuilder();
+
+            if (parameter is System.Collections.IList items && items.Count > 0)
+            {
+                foreach (var item in items)
+                {
+                    if (item is LogModel entry)
+                    {
+                        sb.AppendLine(entry.FormattedMessage ?? string.Empty);
+                    }
+                }
+            }
+            else if (parameter is LogModel entry)
+            {
+                sb.AppendLine(entry.FormattedMessage ?? string.Empty);
+            }
+            else
+            {
+                var fallbackEntry = SelectedLogEntry;
+                if (fallbackEntry != null)
+                {
+                    sb.AppendLine(fallbackEntry.FormattedMessage ?? string.Empty);
+                }
+            }
+
+            if (sb.Length > 0)
+            {
+                await _clipboardService.SetTextAsync(sb.ToString().TrimEnd());
+            }
+        });
+
         RefreshCommand = ReactiveCommand.Create(() =>
         {
             LoadLogEntries();
@@ -404,6 +461,39 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         ToggleTimestampCommand = ReactiveCommand.Create(() => { ShowTimestamp = !ShowTimestamp; });
         ToggleLevelCommand = ReactiveCommand.Create(() => { ShowLevel = !ShowLevel; });
         ToggleCategoryCommand = ReactiveCommand.Create(() => { ShowCategory = !ShowCategory; });
+
+        SortCommand = ReactiveCommand.Create<string>(SortByColumn);
+    }
+
+    private void SortByColumn(string column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+
+        if (!(_sortColumn == "Timestamp" && _sortAscending) && !(_sortColumn == "Timestamp" && !_sortAscending))
+        {
+            AutoScroll = false;
+        }
+
+        if (_sortColumn == "Timestamp" && !_sortAscending)
+        {
+            InvertAutoScroll = true;
+            // Optional: re-enable auto scroll when clicking descending timestamp for newest at top
+            if (!AutoScroll) AutoScroll = true;
+        }
+        else
+        {
+            InvertAutoScroll = false;
+        }
+
+        ApplyFiltersInternal();
     }
 
     /// <summary>
@@ -477,16 +567,33 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
 
         if (matchedItems.Any())
         {
-            // Assuming new logs are always newer, just append. 
-            // If we needed strict sorting for out-of-order logs, we'd need to insert carefully, 
-            // but for a log viewer, append is standard and performant.
-            foreach (var item in matchedItems)
-            {
-                FilteredLogEntries.Add(item);
-            }
+            bool isDefaultSort = _sortColumn == "Timestamp" && _sortAscending;
+            bool needsReSort = false;
 
-            FilteredLogCount = FilteredLogEntries.Count;
-            TotalLogCount = LogEntries.Count;
+            _uiThreadService.InvokeOnUIThread(() =>
+            {
+                foreach (var item in matchedItems)
+                {
+                    if (isDefaultSort)
+                    {
+                        FilteredLogEntries.Add(item);
+                    }
+                    else
+                    {
+                        needsReSort = true;
+                    }
+                }
+
+                if (needsReSort)
+                {
+                    ApplyFiltersInternal();
+                }
+                else
+                {
+                    FilteredLogCount = FilteredLogEntries.Count;
+                    TotalLogCount = LogEntries.Count;
+                }
+            });
         }
     }
 
@@ -567,17 +674,37 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
             filtered = filtered.Where(entry => entry.Timestamp <= endDateOffset);
         }
 
-        // Update filtered collection
-        var filteredList = filtered.OrderBy(e => e.Timestamp).ToList();
-
-        FilteredLogEntries.Clear();
-        foreach (LogModel? entry in filteredList)
+        // Use custom sort logic
+        IEnumerable<LogModel> sortedList;
+        if (_sortColumn == "Level")
         {
-            FilteredLogEntries.Add(entry);
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Level).ThenBy(e => e.Timestamp) 
+                                        : filtered.OrderByDescending(e => e.Level).ThenByDescending(e => e.Timestamp);
+        }
+        else if (_sortColumn == "Category")
+        {
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Category).ThenBy(e => e.Timestamp) 
+                                        : filtered.OrderByDescending(e => e.Category).ThenByDescending(e => e.Timestamp);
+        }
+        else if (_sortColumn == "Message")
+        {
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Message).ThenBy(e => e.Timestamp) 
+                                        : filtered.OrderByDescending(e => e.Message).ThenByDescending(e => e.Timestamp);
+        }
+        else // Timestamp
+        {
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Timestamp) 
+                                        : filtered.OrderByDescending(e => e.Timestamp);
         }
 
-        FilteredLogCount = FilteredLogEntries.Count;
-        TotalLogCount = LogEntries.Count;
+        var filteredList = sortedList.ToList();
+
+        _uiThreadService.InvokeOnUIThread(() => 
+        {
+            FilteredLogEntries = new ObservableCollection<LogModel>(filteredList);
+            FilteredLogCount = FilteredLogEntries.Count;
+            TotalLogCount = LogEntries.Count;
+        });
     }
 
     /// <summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive;
 using System.Text;
 using ReactiveUI;
@@ -29,12 +30,23 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
     private readonly System.Collections.Specialized.NotifyCollectionChangedEventHandler _processHandler;
     private readonly Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)> _logUpdater;
 
+    // Sorting state
+    private string _sortColumn = "Timestamp";
+    private bool _sortAscending = true;
+
     public bool AutoScroll
     {
         get => _autoScroll;
         set => this.RaiseAndSetIfChanged(ref _autoScroll, value);
     }
     private bool _autoScroll = true;
+
+    public bool InvertAutoScroll
+    {
+        get => _invertAutoScroll;
+        private set => this.RaiseAndSetIfChanged(ref _invertAutoScroll, value);
+    }
+    private bool _invertAutoScroll;
 
     public TaskLogsPanelViewModel(
         TaskExecution task,
@@ -47,29 +59,30 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         _centralizedTaskLogService = centralizedTaskLogService;
         _uiThreadService = uiThreadService;
 
-        // Default to autoscroll enabled
         _autoScroll = true;
 
         MainLogEntries = new ObservableCollection<LogEntry>();
         ProcessLogEntries = new ObservableCollection<LogEntry>();
+        FilteredMainLogEntries = new ObservableCollection<LogEntry>();
+        FilteredProcessLogEntries = new ObservableCollection<LogEntry>();
 
-        CopyCommand = ReactiveCommand.CreateFromTask<IList>(async items =>
+        CopySelectedEntryCommand = ReactiveCommand.CreateFromTask<LogEntry?>(async entry =>
         {
-            if (items == null || items.Count == 0)
+            if (entry != null)
             {
-                return;
+                await _clipboardService.SetTextAsync($"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.Level}] {entry.FormattedMessage}");
             }
-
-            var sb = new StringBuilder();
-            foreach (var item in items)
-            {
-                if (item is LogEntry entry)
-                {
-                    sb.AppendLine($"[{entry.Timestamp:yyyy-MM-dd HH:mm:ss.fff}] [{entry.Level}] {entry.FormattedMessage}");
-                }
-            }
-            await _clipboardService.SetTextAsync(sb.ToString());
         });
+
+        CopySelectedMessageCommand = ReactiveCommand.CreateFromTask<LogEntry?>(async entry =>
+        {
+            if (entry != null)
+            {
+                await _clipboardService.SetTextAsync(entry.FormattedMessage ?? string.Empty);
+            }
+        });
+
+        SortCommand = ReactiveCommand.Create<string>(SortByColumn);
 
         // Initialize Log Updater
         _logUpdater = new Services.BufferedCollectionUpdater<(string LogType, LogEntry Entry)>(items =>
@@ -89,38 +102,131 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
                 }
             }
 
+            bool needsMainSort = false;
+            bool needsProcessSort = false;
+            bool isDefaultSort = _sortColumn == "Timestamp" && _sortAscending;
+
             if (mainBatch.Count > 0)
             {
                 foreach (var item in mainBatch)
                 {
                     MainLogEntries.Add(item);
+                    if (isDefaultSort)
+                    {
+                        FilteredMainLogEntries.Add(item);
+                    }
                 }
 
-                // Trim to prevent indefinite growth during long running tasks
-                while (MainLogEntries.Count > MaxLogEntries)
+                // Trim to prevent indefinite growth
+                if (MainLogEntries.Count > MaxLogEntries)
                 {
-                    MainLogEntries.RemoveAt(0);
+                    while (MainLogEntries.Count > MaxLogEntries)
+                    {
+                        MainLogEntries.RemoveAt(0);
+                    }
+                    needsMainSort = true;
+                }
+                else if (!isDefaultSort)
+                {
+                    needsMainSort = true;
                 }
             }
+
             if (processBatch.Count > 0)
             {
                 foreach (var item in processBatch)
                 {
                     ProcessLogEntries.Add(item);
+                    if (isDefaultSort)
+                    {
+                        FilteredProcessLogEntries.Add(item);
+                    }
                 }
 
-                // Trim to prevent indefinite growth during long running tasks
-                while (ProcessLogEntries.Count > MaxLogEntries)
+                if (ProcessLogEntries.Count > MaxLogEntries)
                 {
-                    ProcessLogEntries.RemoveAt(0);
+                    while (ProcessLogEntries.Count > MaxLogEntries)
+                    {
+                        ProcessLogEntries.RemoveAt(0);
+                    }
+                    needsProcessSort = true;
+                }
+                else if (!isDefaultSort)
+                {
+                    needsProcessSort = true;
                 }
             }
+
+            if (needsMainSort) ApplySortToMain();
+            if (needsProcessSort) ApplySortToProcess();
+
         }, TimeSpan.FromMilliseconds(500), _uiThreadService!);
 
         _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
         _processHandler = (s, e) => HandleLogCollectionChanged(s, e, "Process");
 
         InitializeLogs();
+    }
+
+    private void SortByColumn(string column)
+    {
+        if (_sortColumn == column)
+        {
+            _sortAscending = !_sortAscending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortAscending = true;
+        }
+
+        // Disable user autoscroll if they specifically sorted to intercept live-viewing 
+        if (!(_sortColumn == "Timestamp" && _sortAscending) && !(_sortColumn == "Timestamp" && !_sortAscending))
+        {
+            AutoScroll = false;
+        }
+
+        if (_sortColumn == "Timestamp" && !_sortAscending)
+        {
+            InvertAutoScroll = true;
+            // Also enable auto scroll if moving to this default
+            if (!AutoScroll) AutoScroll = true;
+        }
+        else
+        {
+            InvertAutoScroll = false;
+        }
+
+        ApplySortToMain();
+        ApplySortToProcess();
+    }
+
+    private void ApplySortToMain()
+    {
+        var filtered = SortLogEntries(MainLogEntries).ToList();
+        _uiThreadService?.InvokeOnUIThread(() =>
+        {
+            FilteredMainLogEntries = new ObservableCollection<LogEntry>(filtered);
+        });
+    }
+
+    private void ApplySortToProcess()
+    {
+        var filtered = SortLogEntries(ProcessLogEntries).ToList();
+        _uiThreadService?.InvokeOnUIThread(() =>
+        {
+            FilteredProcessLogEntries = new ObservableCollection<LogEntry>(filtered);
+        });
+    }
+
+    private IEnumerable<LogEntry> SortLogEntries(IEnumerable<LogEntry> source)
+    {
+        if (_sortColumn == "Level")
+            return _sortAscending ? source.OrderBy(e => e.Level).ThenBy(e => e.Timestamp) : source.OrderByDescending(e => e.Level).ThenByDescending(e => e.Timestamp);
+        else if (_sortColumn == "Message")
+            return _sortAscending ? source.OrderBy(e => e.Message).ThenBy(e => e.Timestamp) : source.OrderByDescending(e => e.Message).ThenByDescending(e => e.Timestamp);
+        else // Timestamp
+            return _sortAscending ? source.OrderBy(e => e.Timestamp) : source.OrderByDescending(e => e.Timestamp);
     }
 
     private void InitializeLogs()
@@ -130,12 +236,10 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        // Get persistent stores for the task
         (_mainLogDataStore, _processLogDataStore, _) = _centralizedTaskLogService.GetOrCreateStoresForTask(_task.TaskId);
 
-        // Populate initial logs safely on the UI thread
-        PopulateInitialLogEntries(_mainLogDataStore, MainLogEntries);
-        PopulateInitialLogEntries(_processLogDataStore, ProcessLogEntries);
+        PopulateInitialLogEntries(_mainLogDataStore, MainLogEntries, FilteredMainLogEntries);
+        PopulateInitialLogEntries(_processLogDataStore, ProcessLogEntries, FilteredProcessLogEntries);
 
         if (_mainLogDataStore != null)
         {
@@ -148,12 +252,9 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private void PopulateInitialLogEntries(ITaskLogDataStore? store, ObservableCollection<LogEntry> targetCollection)
+    private void PopulateInitialLogEntries(ITaskLogDataStore? store, ObservableCollection<LogEntry> sourceCollection, ObservableCollection<LogEntry> targetCollection)
     {
-        if (store == null)
-        {
-            return;
-        }
+        if (store == null) return;
 
         int count = store.Count();
         if (count == 0) return;
@@ -161,7 +262,6 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         var initialEntries = new List<LogEntry>();
         int skipCount = Math.Max(0, count - MaxLogEntries);
 
-        // Access via Linq skip
         var logsToMap = store.Skip(skipCount);
         foreach (var log in logsToMap)
         {
@@ -172,11 +272,20 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         {
             _uiThreadService?.InvokeOnUIThreadAsync(() =>
             {
-                // Clear before adding if not empty to ensure clean state
-                targetCollection.Clear();
+                sourceCollection.Clear();
                 foreach (var entry in initialEntries)
                 {
-                    targetCollection.Add(entry);
+                    sourceCollection.Add(entry);
+                }
+
+                var sorted = SortLogEntries(sourceCollection).ToList();
+                if (targetCollection == FilteredMainLogEntries)
+                {
+                    FilteredMainLogEntries = new ObservableCollection<LogEntry>(sorted);
+                }
+                else
+                {
+                    FilteredProcessLogEntries = new ObservableCollection<LogEntry>(sorted);
                 }
             });
         }
@@ -236,6 +345,22 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<LogEntry> MainLogEntries { get; }
     public ObservableCollection<LogEntry> ProcessLogEntries { get; }
+    
+    private ObservableCollection<LogEntry> _filteredMainLogEntries = new();
+    public ObservableCollection<LogEntry> FilteredMainLogEntries
+    {
+        get => _filteredMainLogEntries;
+        private set => this.RaiseAndSetIfChanged(ref _filteredMainLogEntries, value);
+    }
 
-    public ReactiveCommand<IList, Unit> CopyCommand { get; }
+    private ObservableCollection<LogEntry> _filteredProcessLogEntries = new();
+    public ObservableCollection<LogEntry> FilteredProcessLogEntries
+    {
+        get => _filteredProcessLogEntries;
+        private set => this.RaiseAndSetIfChanged(ref _filteredProcessLogEntries, value);
+    }
+
+    public ReactiveCommand<LogEntry?, Unit> CopySelectedEntryCommand { get; }
+    public ReactiveCommand<LogEntry?, Unit> CopySelectedMessageCommand { get; }
+    public ReactiveCommand<string, Unit> SortCommand { get; }
 }

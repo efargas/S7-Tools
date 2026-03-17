@@ -7,19 +7,33 @@
     x:Name="Root">
 
     <Grid>
-        <ScrollViewer x:Name="LogScrollViewer" HorizontalScrollBarVisibility="Disabled">
-            <ListBox x:Name="LogListBox"
-                ItemsSource="{Binding #Root.ItemsSource}"
-                ItemTemplate="{Binding #Root.ItemTemplate}"
-                Background="Transparent"
-                BorderThickness="0"
-                SelectionMode="Multiple">
-                <ListBox.KeyBindings>
-                    <KeyBinding Gesture="Ctrl+C"
-                        Command="{Binding #Root.CopyCommand}"
-                        CommandParameter="{Binding #LogListBox.SelectedItems}" />
-                </ListBox.KeyBindings>
-            </ListBox>
-        </ScrollViewer>
+        <ListBox x:Name="LogListBox"
+            ItemsSource="{Binding #Root.ItemsSource}"
+            ItemTemplate="{Binding #Root.ItemTemplate}"
+            Background="Transparent"
+            BorderThickness="0"
+            SelectionMode="Single"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            ScrollViewer.VerticalScrollBarVisibility="Auto">
+            
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel Orientation="Vertical" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            
+            <ListBox.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy Selected Entry" Command="{Binding #Root.CopySelectedEntryCommand}" CommandParameter="{Binding #LogListBox.SelectedItem}"/>
+                    <MenuItem Header="Copy Message" Command="{Binding #Root.CopySelectedMessageCommand}" CommandParameter="{Binding #LogListBox.SelectedItem}"/>
+                </ContextMenu>
+            </ListBox.ContextMenu>
+            
+            <ListBox.KeyBindings>
+                <KeyBinding Gesture="Ctrl+C"
+                    Command="{Binding #Root.CopySelectedEntryCommand}"
+                    CommandParameter="{Binding #LogListBox.SelectedItem}" />
+            </ListBox.KeyBindings>
+        </ListBox>
     </Grid>
 </UserControl>

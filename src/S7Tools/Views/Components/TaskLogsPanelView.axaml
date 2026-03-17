@@ -79,21 +79,24 @@
                 <Grid RowDefinitions="Auto,*">
                     <!-- Header -->
                     <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="{DynamicResource PanelBackgroundBrush}">
-                        <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
-                        <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold" FontSize="12"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
-                        <TextBlock Grid.Column="2" Text="Message" FontWeight="SemiBold"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
+                        <Button Grid.Column="0" Content="Timestamp" Command="{Binding SortCommand}" CommandParameter="Timestamp"
+                            Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            FontWeight="SemiBold" FontSize="12" Padding="8,4" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
+                        <Button Grid.Column="1" Content="Level" Command="{Binding SortCommand}" CommandParameter="Level"
+                            Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            FontWeight="SemiBold" FontSize="12" Padding="8,4" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
+                        <Button Grid.Column="2" Content="Message" Command="{Binding SortCommand}" CommandParameter="Message"
+                            Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            FontWeight="SemiBold" FontSize="12" Padding="8,4" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
                     </Grid>
                     <!-- Log List -->
                     <!-- Log List -->
                     <c:LogListControl Grid.Row="1"
-                        ItemsSource="{Binding MainLogEntries}"
+                        ItemsSource="{Binding FilteredMainLogEntries}"
                         AutoScroll="{Binding AutoScroll, Mode=TwoWay}"
-                        CopyCommand="{Binding CopyCommand}">
+                        InvertAutoScrollDirection="{Binding InvertAutoScroll}"
+                        CopySelectedEntryCommand="{Binding CopySelectedEntryCommand}"
+                        CopySelectedMessageCommand="{Binding CopySelectedMessageCommand}">
                         <c:LogListControl.ItemTemplate>
                             <DataTemplate DataType="models:LogEntry">
                                 <Grid ColumnDefinitions="160,80,*">
@@ -126,21 +129,24 @@
                 <Grid RowDefinitions="Auto,*">
                     <!-- Header -->
                     <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="{DynamicResource PanelBackgroundBrush}">
-                        <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
-                        <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold" FontSize="12"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
-                        <TextBlock Grid.Column="2" Text="Message" FontWeight="SemiBold"
-                            FontSize="12"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
+                        <Button Grid.Column="0" Content="Timestamp" Command="{Binding SortCommand}" CommandParameter="Timestamp"
+                            Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            FontWeight="SemiBold" FontSize="12" Padding="8,4" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
+                        <Button Grid.Column="1" Content="Level" Command="{Binding SortCommand}" CommandParameter="Level"
+                            Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            FontWeight="SemiBold" FontSize="12" Padding="8,4" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
+                        <Button Grid.Column="2" Content="Message" Command="{Binding SortCommand}" CommandParameter="Message"
+                            Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            FontWeight="SemiBold" FontSize="12" Padding="8,4" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
                     </Grid>
                     <!-- Log List -->
                     <!-- Log List -->
                     <c:LogListControl Grid.Row="1"
-                        ItemsSource="{Binding ProcessLogEntries}"
+                        ItemsSource="{Binding FilteredProcessLogEntries}"
                         AutoScroll="{Binding AutoScroll, Mode=TwoWay}"
-                        CopyCommand="{Binding CopyCommand}">
+                        InvertAutoScrollDirection="{Binding InvertAutoScroll}"
+                        CopySelectedEntryCommand="{Binding CopySelectedEntryCommand}"
+                        CopySelectedMessageCommand="{Binding CopySelectedMessageCommand}">
                         <c:LogListControl.ItemTemplate>
                             <DataTemplate DataType="models:LogEntry">
                                 <Grid ColumnDefinitions="160,80,*">

@@ -172,17 +172,21 @@
             <Border Grid.Row="0" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1" Padding="4">
                 <Grid ColumnDefinitions="160,80,150,*">
-                    <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0"
+                    <Button Grid.Column="0" Content="Timestamp" Command="{Binding SortCommand}" CommandParameter="Timestamp"
+                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left"
                         IsVisible="{Binding ShowTimestamp}" />
-                    <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0"
+                    <Button Grid.Column="1" Content="Level" Command="{Binding SortCommand}" CommandParameter="Level"
+                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left"
                         IsVisible="{Binding ShowLevel}" />
-                    <TextBlock Grid.Column="2" Text="Category" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0"
+                    <Button Grid.Column="2" Content="Category" Command="{Binding SortCommand}" CommandParameter="Category"
+                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left"
                         IsVisible="{Binding ShowCategory}" />
-                    <TextBlock Grid.Column="3" Text="Message" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0" />
+                    <Button Grid.Column="3" Content="Message" Command="{Binding SortCommand}" CommandParameter="Message"
+                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
                 </Grid>
             </Border>
 
@@ -191,7 +195,9 @@
                 Name="LogListBox"
                 ItemsSource="{Binding FilteredLogEntries}"
                 AutoScroll="{Binding AutoScroll, Mode=TwoWay}"
-                CopyCommand="{Binding CopyLogEntryCommand}">
+                InvertAutoScrollDirection="{Binding InvertAutoScroll}"
+                CopySelectedEntryCommand="{Binding CopySelectedEntryCommand}"
+                CopySelectedMessageCommand="{Binding CopySelectedMessageCommand}">
                 <components:LogListControl.ItemTemplate>
                     <DataTemplate DataType="models:LogModel">
                         <Grid ColumnDefinitions="160,80,150,*">
