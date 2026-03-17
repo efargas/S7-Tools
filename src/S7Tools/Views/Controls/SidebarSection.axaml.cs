@@ -2,6 +2,7 @@ using System.Collections;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Avalonia.Interactivity;
 
 namespace S7Tools.Views.Controls;
 
@@ -104,5 +105,25 @@ public partial class SidebarSection : UserControl
     {
         InitializeComponent();
         // DataContext = this; // Removed to allow parent DataContext inheritance
+    }
+
+    /// <summary>
+    /// Called when a ListBox item is tapped. Forces SelectedItem change notification
+    /// even if the same item is clicked, which triggers dock tab reopen if closed.
+    /// </summary>
+    public void OnListBoxTapped(object? sender, RoutedEventArgs e)
+    {
+        // When the user taps a sidebar item (even the same one), signal to the
+        // NavigationViewModel that the dock tab should be re-opened if closed.
+        // NavigationViewModel subscribes to PropertyChanged on the sidebar ViewModel
+        // via OnSidebarPropertyChanged, and calls OpenDocumentAction to reopen closed tabs.
+        //
+        // We use the IReactiveObject extension method which accepts a property name.
+        // "SelectedCategoryViewModel" is the property all main views bind to.
+        if (DataContext is ReactiveUI.IReactiveObject reactiveObj)
+        {
+            reactiveObj.RaisePropertyChanged(
+                new System.ComponentModel.PropertyChangedEventArgs("SidebarItemTapped"));
+        }
     }
 }

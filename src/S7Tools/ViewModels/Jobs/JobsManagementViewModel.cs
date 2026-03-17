@@ -211,8 +211,9 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             .Subscribe(_ => UpdateJobCollections())
             .DisposeWith(_localDisposables);
 
-        // Load initial data
-        _ = Task.Run(async () => await base.InitializeAsync());
+        // Load initial data on UI thread to avoid 'Call from invalid thread' errors
+        // when updating ObservableCollections during initialization
+        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await base.InitializeAsync());
     }
 
     #region Job-Specific Properties
@@ -274,6 +275,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         get => _selectedSideMenuItem;
         set
         {
+            if (string.IsNullOrWhiteSpace(value)) return;
             this.RaiseAndSetIfChanged(ref _selectedSideMenuItem, value);
             this.RaisePropertyChanged(nameof(SelectedContentViewModel));
         }

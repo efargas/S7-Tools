@@ -395,7 +395,6 @@ public static class ServiceCollectionExtensions
         // Add Main ViewModels
         services.TryAddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel(
             provider.GetRequiredService<NavigationViewModel>(),
-            provider.GetRequiredService<BottomPanelViewModel>(),
             provider.GetRequiredService<SettingsManagementViewModel>(),
             provider.GetRequiredService<IDialogService>(),
             provider.GetRequiredService<IClipboardService>(),
@@ -406,7 +405,6 @@ public static class ServiceCollectionExtensions
 
         // Add Specialized ViewModels for MainWindow decomposition
         services.TryAddSingleton<NavigationViewModel>();
-        services.TryAddSingleton<BottomPanelViewModel>();
         services.TryAddSingleton<SettingsManagementViewModel>(provider => new SettingsManagementViewModel(
             provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<SettingsManagementViewModel>>(),
             provider.GetRequiredService<IApplicationSettingsService>(),

@@ -95,7 +95,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// <param name="serviceProvider">The service provider for dependency resolution during shutdown.</param>
     public MainWindowViewModel(
         NavigationViewModel navigation,
-        BottomPanelViewModel bottomPanel,
         SettingsManagementViewModel settings,
         IDialogService dialogService,
         IClipboardService clipboardService,
@@ -105,7 +104,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         IServiceProvider serviceProvider)
     {
         Navigation = navigation ?? throw new ArgumentNullException(nameof(navigation));
-        BottomPanel = bottomPanel ?? throw new ArgumentNullException(nameof(bottomPanel));
         Settings = settings ?? throw new ArgumentNullException(nameof(settings));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
@@ -171,11 +169,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public NavigationViewModel Navigation { get; }
 
     /// <summary>
-    /// Gets the bottom panel ViewModel that handles tab management and panel visibility.
-    /// </summary>
-    public BottomPanelViewModel BottomPanel { get; }
-
-    /// <summary>
     /// Gets the settings management ViewModel that handles all settings-related functionality.
     /// </summary>
     public SettingsManagementViewModel Settings { get; }
@@ -233,7 +226,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         {
             _factory = new MainDockFactory(this)
             {
-                LogViewerContent = BottomPanel.CreateLogViewerViewModel(),
+                LogViewerContent = _serviceProvider.GetService<ViewModels.Pages.LogViewerViewModel>() ?? new ViewModels.Pages.LogViewerViewModel(),
                 WelcomeContent = Navigation.CreateWelcomeViewModel(),
                 SettingsContent = null // will be set on first use
             };

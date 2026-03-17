@@ -68,6 +68,7 @@ public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewMode
         get => _selectedCategory;
         set
         {
+            if (string.IsNullOrWhiteSpace(value)) return;
             this.RaiseAndSetIfChanged(ref _selectedCategory, value);
             // Keep the main content in sync whenever the category changes via binding
             SelectedCategoryViewModel = GetCategoryViewModel(value);

@@ -47,7 +47,6 @@
 
     <Window.KeyBindings>
         <KeyBinding Gesture="Ctrl+B" Command="{Binding Navigation.ToggleSidebarCommand}" />
-        <KeyBinding Gesture="Ctrl+J" Command="{Binding BottomPanel.TogglePanelCommand}" />
         <KeyBinding Gesture="Alt+F4" Command="{Binding ExitCommand}" />
         <!-- Activity Bar Navigation -->
         <KeyBinding Gesture="Ctrl+Shift+E"
@@ -97,11 +96,8 @@
                 <MenuItem Header="_Command Palette..." InputGesture="Ctrl+Shift+P" />
                 <MenuItem Header="_Explorer" InputGesture="Ctrl+Shift+E" />
                 <MenuItem Header="_Search" InputGesture="Ctrl+Shift+F" />
-                <Separator />
                 <MenuItem Header="Toggle _Sidebar"
                     Command="{Binding Navigation.ToggleSidebarCommand}" InputGesture="Ctrl+B" />
-                <MenuItem Header="Toggle _Bottom Panel"
-                    Command="{Binding BottomPanel.TogglePanelCommand}" InputGesture="Ctrl+J" />
             </MenuItem>
             <MenuItem Header="_Help" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
                 <MenuItem Header="_About" />

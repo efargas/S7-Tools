@@ -31,13 +31,10 @@ public class NavigationViewModel : ReactiveObject
     private readonly ILogDataStore? _logDataStore;
 
     private object? _currentContent;
-    private object? _detailContent;
-    private object? _mainContent;
+
     private string _sidebarTitle = UIStrings.Navigation_Explorer;
-    private string _mainContentTitle = "";
     private bool _isSidebarVisible = true;
     private bool _showLogStats;
-    private bool _showMainContentHeader;
     private string _logStatsMessage = "";
 
     /// <summary>
@@ -113,18 +110,70 @@ public class NavigationViewModel : ReactiveObject
     /// <summary>
     /// Routes a ViewModel to the docking system if it implements IDockableViewModel,
     /// otherwise falls back to setting MainContent directly.
+    /// Also subscribes to property changes so that sidebar interaction
+    /// will reopen the dock tab if it was closed.
     /// </summary>
     private void OpenDockableContent(object? content)
     {
         if (content is IDockableViewModel dockable && OpenDocumentAction != null)
         {
             OpenDocumentAction(dockable);
+
+            // Subscribe to property changes so that sidebar interaction
+            // will reopen the dock tab if it was closed.
+            // Clean up any previous subscription first.
+            UnsubscribeSidebarWatcher();
+
+            if (content is System.ComponentModel.INotifyPropertyChanged notifiable)
+            {
+                _currentSidebarDockable = dockable;
+                _currentSidebarNotifiable = notifiable;
+                _currentSidebarNotifiable.PropertyChanged += OnSidebarPropertyChanged;
+            }
         }
         else
         {
-            // Fallback for non-dockable content
-            MainContent = content;
-            DetailContent = content;
+            _logger.LogWarning("Attempted to open non-dockable content: {ContentType}", content?.GetType().Name);
+        }
+    }
+
+    /// <summary>
+    /// Ensures the current dockable tab is open. Called when the user clicks
+    /// the same activity bar item or sidebar category that is already selected.
+    /// </summary>
+    public void EnsureDockTabOpen()
+    {
+        if (_currentSidebarDockable != null && OpenDocumentAction != null)
+        {
+            OpenDocumentAction(_currentSidebarDockable);
+        }
+    }
+
+    private IDockableViewModel? _currentSidebarDockable;
+    private System.ComponentModel.INotifyPropertyChanged? _currentSidebarNotifiable;
+
+    /// <summary>
+    /// Called when a property changes on the current sidebar ViewModel.
+    /// Re-invokes OpenDocumentAction to ensure the dock tab is open/active.
+    /// </summary>
+    private void OnSidebarPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (_currentSidebarDockable != null && OpenDocumentAction != null)
+        {
+            OpenDocumentAction(_currentSidebarDockable);
+        }
+    }
+
+    /// <summary>
+    /// Removes the PropertyChanged subscription from the previous sidebar ViewModel.
+    /// </summary>
+    private void UnsubscribeSidebarWatcher()
+    {
+        if (_currentSidebarNotifiable != null)
+        {
+            _currentSidebarNotifiable.PropertyChanged -= OnSidebarPropertyChanged;
+            _currentSidebarNotifiable = null;
+            _currentSidebarDockable = null;
         }
     }
 
@@ -152,48 +201,12 @@ public class NavigationViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Gets or sets the detail content displayed in the main editor area.
-    /// </summary>
-    public object? DetailContent
-    {
-        get => _detailContent;
-        set => this.RaiseAndSetIfChanged(ref _detailContent, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the main content displayed in the main editor area using ViewLocator pattern.
-    /// </summary>
-    public object? MainContent
-    {
-        get => _mainContent;
-        set => this.RaiseAndSetIfChanged(ref _mainContent, value);
-    }
-
-    /// <summary>
     /// Gets or sets the title displayed in the sidebar header.
     /// </summary>
     public string SidebarTitle
     {
         get => _sidebarTitle;
         set => this.RaiseAndSetIfChanged(ref _sidebarTitle, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the title displayed in the main content header.
-    /// </summary>
-    public string MainContentTitle
-    {
-        get => _mainContentTitle;
-        set => this.RaiseAndSetIfChanged(ref _mainContentTitle, value);
-    }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether to show the main content header.
-    /// </summary>
-    public bool ShowMainContentHeader
-    {
-        get => _showMainContentHeader;
-        set => this.RaiseAndSetIfChanged(ref _showMainContentHeader, value);
     }
 
     /// <summary>
@@ -265,16 +278,25 @@ public class NavigationViewModel : ReactiveObject
 
         ActivityBarItem? currentSelectedItem = _activityBarService.SelectedItem;
 
-        // VSCode behavior: clicking on selected item toggles sidebar
         if (currentSelectedItem != null && currentSelectedItem.Id == itemId)
         {
-            // Toggle sidebar visibility
-            IsSidebarVisible = !IsSidebarVisible;
-            _logger.LogDebug("Toggled sidebar visibility to {Visible} for item {ItemId}", IsSidebarVisible, itemId);
+            if (IsSidebarVisible)
+            {
+                // Sidebar is expanded → just collapse it, do NOT retrigger dock open
+                IsSidebarVisible = false;
+                _logger.LogDebug("Collapsed sidebar for item {ItemId}", itemId);
+            }
+            else
+            {
+                // Sidebar is collapsed → expand it and ensure dock tab is open
+                IsSidebarVisible = true;
+                EnsureDockTabOpen();
+                _logger.LogDebug("Expanded sidebar and ensured dock tab open for item {ItemId}", itemId);
+            }
         }
         else
         {
-            // Select new item and ensure sidebar is visible
+            // Different item selected → switch sidebar content and expand
             _activityBarService.SelectItem(itemId);
             IsSidebarVisible = true;
             _logger.LogDebug("Selected activity bar item {ItemId} and ensured sidebar is visible", itemId);
@@ -319,8 +341,6 @@ public class NavigationViewModel : ReactiveObject
             {
                 case "explorer":
                     SidebarTitle = UIStrings.Navigation_Explorer;
-                    MainContentTitle = UIStrings.Navigation_Welcome;
-                    ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
                     ShowLogStats = false;
                     // Open the Welcome/LoggingTest view as a dock tab
@@ -330,8 +350,6 @@ public class NavigationViewModel : ReactiveObject
 
                 case "connections":
                     SidebarTitle = UIStrings.Navigation_Connections;
-                    MainContentTitle = UIStrings.Navigation_PlcConnections;
-                    ShowMainContentHeader = true;
                     ConnectionsViewModel? connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
                     CurrentContent = connectionsViewModel;
                     ShowLogStats = false;
@@ -342,11 +360,7 @@ public class NavigationViewModel : ReactiveObject
 
                 case "logviewer":
                     SidebarTitle = UIStrings.Navigation_LogViewer;
-                    MainContentTitle = UIStrings.Navigation_LogViewerTitle;
-                    ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
-                    MainContent = UIStrings.Navigation_LogViewerComingSoon;
-                    DetailContent = UIStrings.Navigation_LogViewerComingSoon;
                     ShowLogStats = true;
                     UpdateLogStats();
                     _logger.LogDebug("Navigated to Log Viewer");
@@ -354,8 +368,6 @@ public class NavigationViewModel : ReactiveObject
 
                 case "settings":
                     SidebarTitle = UIStrings.Navigation_Settings;
-                    MainContentTitle = UIStrings.Navigation_SettingsConfiguration;
-                    ShowMainContentHeader = true;
                     SettingsViewModel? settingsViewModel = CreateViewModel<SettingsViewModel>();
                     CurrentContent = settingsViewModel; // Categories in sidebar
                     ShowLogStats = false;
@@ -366,8 +378,6 @@ public class NavigationViewModel : ReactiveObject
 
                 case "taskmanager":
                     SidebarTitle = UIStrings.Navigation_TaskManager;
-                    MainContentTitle = UIStrings.Navigation_TaskManagerTitle;
-                    ShowMainContentHeader = true;
                     TaskManagerShellViewModel? taskManagerShell = CreateViewModel<TaskManagerShellViewModel>();
                     CurrentContent = taskManagerShell; // Sidebar categories
                     ShowLogStats = false;
@@ -378,8 +388,6 @@ public class NavigationViewModel : ReactiveObject
 
                 case "jobs":
                     SidebarTitle = UIStrings.Navigation_JobsManagement;
-                    MainContentTitle = UIStrings.Navigation_JobsManagementTitle;
-                    ShowMainContentHeader = true;
                     JobsManagementViewModel? jobsViewModel = CreateViewModel<JobsManagementViewModel>();
                     CurrentContent = jobsViewModel; // Sidebar will use JobsSidebarView DataTemplate
                     ShowLogStats = false;
@@ -390,8 +398,6 @@ public class NavigationViewModel : ReactiveObject
 
                 case "memorydump":
                     SidebarTitle = "Memory Dump Viewer";
-                    MainContentTitle = "PLC Memory Dump Viewer";
-                    ShowMainContentHeader = true;
                     MemoryDumpViewerViewModel? memoryDumpViewModel = CreateViewModel<MemoryDumpViewerViewModel>();
                     CurrentContent = memoryDumpViewModel; // Enable sidebar content for memory dump
                     ShowLogStats = false;
@@ -402,11 +408,7 @@ public class NavigationViewModel : ReactiveObject
 
                 default:
                     SidebarTitle = UIStrings.Navigation_Explorer;
-                    MainContentTitle = "";
-                    ShowMainContentHeader = false;
                     CurrentContent = null;
-                    MainContent = null;
-                    DetailContent = null;
                     ShowLogStats = false;
                     _logger.LogWarning("Unknown activity bar item: {ItemId}", itemId);
                     break;
@@ -416,13 +418,9 @@ public class NavigationViewModel : ReactiveObject
         {
             _logger.LogError(ex, "Failed to navigate to activity bar item: {ItemId}", itemId);
             // Set fallback content
-            SidebarTitle = UIStrings.Navigation_Error;
-            MainContentTitle = UIStrings.Navigation_ErrorTitle;
-            ShowMainContentHeader = true;
-            CurrentContent = null;
-            MainContent = UIStrings.Navigation_NavigationFailed(ex.Message);
-            DetailContent = UIStrings.Navigation_NavigationFailed(ex.Message);
-            ShowLogStats = false;
+            SidebarTitle = UIStrings.Navigation_ErrorTitle;
+            CurrentContent = UIStrings.Navigation_NavigationFailed(ex.Message);
+            _logger.LogError(ex, "Failed to navigate to {ItemId}", itemId);
         }
     }
 
@@ -485,19 +483,18 @@ public class NavigationViewModel : ReactiveObject
             var viewModel = (ViewModelBase)_viewModelFactory.Create(viewModelType);
             CurrentContent = viewModel;
 
-            if (viewModel is HomeViewModel homeViewModel)
+            if (viewModel is HomeViewModel)
             {
-                DetailContent = homeViewModel.DetailContent;
+                // CurrentContent logic is fine
             }
-            else if (viewModel is ConnectionsViewModel connectionsViewModel)
+            else if (viewModel is ConnectionsViewModel)
             {
-                DetailContent = connectionsViewModel.DetailContent;
+                // CurrentContent logic is fine
             }
             else
             {
-                DetailContent = null;
+                // Refresh if needed
             }
-
             _logger.LogDebug("Navigated to ViewModel type: {ViewModelType}", viewModelType.Name);
         }
         catch (Exception ex)
