@@ -366,4 +366,38 @@ public class BottomPanelViewModel : ReactiveObject
             };
         }
     }
+
+    /// <summary>
+    /// Creates a LogViewerViewModel for use by the docking system's tool dock.
+    /// The dock's ViewLocator will resolve the view automatically.
+    /// </summary>
+    /// <returns>A LogViewerViewModel instance, or null if services are unavailable.</returns>
+    public object? CreateLogViewerViewModel()
+    {
+        try
+        {
+            if (_logDataStore != null && _uiThreadService != null)
+            {
+                var logViewerViewModel = new LogViewerViewModel(
+                    _logDataStore,
+                    _uiThreadService,
+                    _clipboardService,
+                    _dialogService,
+                    _logExportService
+                );
+                _logger.LogDebug("LogViewerViewModel created for dock system");
+                return logViewerViewModel;
+            }
+            else
+            {
+                _logger.LogWarning("LogViewerViewModel created with design-time services for dock system");
+                return new LogViewerViewModel();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create LogViewerViewModel for dock system");
+            return null;
+        }
+    }
 }

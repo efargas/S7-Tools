@@ -1,4 +1,5 @@
 using ReactiveUI;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Pages;
@@ -6,8 +7,14 @@ namespace S7Tools.ViewModels.Pages;
 /// <summary>
 /// ViewModel for the Connections view.
 /// </summary>
-public class ConnectionsViewModel : ViewModelBase
+public class ConnectionsViewModel : ViewModelBase, IDockableViewModel
 {
+    // IDockableViewModel implementation
+    public string DockId => "Connections";
+    public string DockTitle => "Connections";
+    public bool CanClose => true;
+    public bool CanFloat => true;
+
     private readonly IViewModelFactory _viewModelFactory;
 
     /// <summary>

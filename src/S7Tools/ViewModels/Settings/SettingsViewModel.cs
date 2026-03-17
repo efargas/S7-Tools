@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
@@ -12,8 +13,14 @@ using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels.Settings;
 
-public class SettingsViewModel : ViewModelBase
+public class SettingsViewModel : ViewModelBase, IDockableViewModel
 {
+    // IDockableViewModel implementation
+    public string DockId => "Settings";
+    public string DockTitle => "Settings";
+    public bool CanClose => true;
+    public bool CanFloat => true;
+
     private readonly IServiceProvider _serviceProvider;
     private readonly Dictionary<string, ViewModelBase> _categoryViewModels;
 

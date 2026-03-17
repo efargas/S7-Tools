@@ -15,6 +15,7 @@
     xmlns:converters="clr-namespace:S7Tools.Converters"
     xmlns:vmPages="using:S7Tools.ViewModels.Pages"
     xmlns:viewsPages="clr-namespace:S7Tools.Views.Pages"
+    xmlns:ids="clr-namespace:Dock.Avalonia.Controls;assembly=Dock.Avalonia"
     mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
     x:Class="S7Tools.Views.Layout.MainWindow"
     x:DataType="vm:MainWindowViewModel"
@@ -143,29 +144,19 @@
             </Grid>
         </Border>
 
-        <!-- Main Content Area with Bottom Panel -->
+        <!-- Main Content Area with Docking -->
         <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" MinHeight="100" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="{Binding BottomPanel.PanelHeight, Mode=TwoWay}"
-                    MinHeight="35"
-                    MaxHeight="{Binding $parent[Window].Bounds.Height, Converter={StaticResource GridLengthToDoubleConverter}, ConverterParameter=0.75}" />
-            </Grid.RowDefinitions>
-
-            <!-- Main Content Area -->
-            <Grid Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <!-- Activity Bar -->
-                    <ColumnDefinition Width="48" />
-                    <!-- Sidebar - Width changes based on visibility -->
-                    <ColumnDefinition
-                        Width="{Binding Navigation.IsSidebarVisible, Converter={x:Static converters:ObjectConverters.SidebarWidthConverter}}" />
-                    <!-- Sidebar Splitter -->
-                    <ColumnDefinition Width="Auto" />
-                    <!-- Main Content -->
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+            <Grid.ColumnDefinitions>
+                <!-- Activity Bar -->
+                <ColumnDefinition Width="48" />
+                <!-- Sidebar - Width changes based on visibility -->
+                <ColumnDefinition
+                    Width="{Binding Navigation.IsSidebarVisible, Converter={x:Static converters:ObjectConverters.SidebarWidthConverter}}" />
+                <!-- Sidebar Splitter -->
+                <ColumnDefinition Width="Auto" />
+                <!-- Main Content (DockControl) -->
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
                 <!-- Activity Bar -->
                 <Border Grid.Column="0" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
@@ -300,153 +291,8 @@
                     Cursor="SizeWestEast"
                     ShowsPreview="False" />
 
-                <!-- Main Editor Area -->
-                <Border Grid.Column="3" Background="{DynamicResource AppBackgroundBrush}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <!-- Main Content Header (Optional) -->
-                        <Border Grid.Row="0"
-                            Background="{DynamicResource PanelBackgroundBrush}"
-                            Height="35"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="0,0,0,1"
-                            IsVisible="{Binding Navigation.ShowMainContentHeader}">
-                            <TextBlock Text="{Binding Navigation.MainContentTitle}"
-                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                                FontSize="11"
-                                FontWeight="Bold"
-                                VerticalAlignment="Center"
-                                Margin="12,0" />
-                        </Border>
-
-                        <!-- Main Content Container using ViewLocator -->
-                        <ContentControl Grid.Row="1"
-                            Content="{Binding Navigation.MainContent}"
-                            Background="{DynamicResource AppBackgroundBrush}">
-                            <ContentControl.DataTemplates>
-                                <!-- Implicit DataTemplate for JobWizardViewModel -->
-                                <DataTemplate DataType="vmJobs:JobWizardViewModel">
-                                    <viewsJobs:JobWizardView />
-                                </DataTemplate>
-
-                                <!-- Implicit DataTemplate for JobsManagementViewModel (uses content
-                                switching) -->
-                                <DataTemplate DataType="vmJobs:JobsManagementViewModel">
-                                    <viewsJobs:JobsMainView />
-                                </DataTemplate>
-                            </ContentControl.DataTemplates>
-                        </ContentControl>
-                    </Grid>
-                </Border>
-            </Grid>
-
-            <!-- GridSplitter for Bottom Panel -->
-            <GridSplitter Grid.Row="1"
-                Height="8"
-                Background="Transparent"
-                HorizontalAlignment="Stretch"
-                ResizeDirection="Rows"
-                IsVisible="{Binding BottomPanel.IsExpanded}"
-                Cursor="SizeNorthSouth"
-                ShowsPreview="False" />
-
-            <!-- Bottom Panel -->
-            <Grid Grid.Row="2"
-                Background="{DynamicResource AppBackgroundBrush}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <!-- Bottom Panel Header (Always Visible) -->
-                <Border Grid.Row="0"
-                    Background="{DynamicResource PanelBackgroundBrush}"
-                    Height="35"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="0,1,0,1">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <!-- Bottom Panel Items (Activity Bar Style) -->
-                        <ItemsControl Grid.Column="0" ItemsSource="{Binding BottomPanel.Tabs}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid Height="35">
-                                        <!-- Selection indicator (bottom border) -->
-                                        <Border Height="2"
-                                            Background="{DynamicResource BrandAccentBrush}"
-                                            VerticalAlignment="Bottom"
-                                            IsVisible="{Binding IsSelected}" />
-
-                                        <!-- Button -->
-                                        <Button Background="Transparent"
-                                            BorderThickness="0"
-                                            Padding="12,8,12,8"
-                                            Command="{Binding $parent[Window].DataContext.BottomPanel.SelectTabCommand}"
-                                            CommandParameter="{Binding}"
-                                            ToolTip.Tip="{Binding Header}">
-                                            <Button.Styles>
-                                                <Style Selector="Button">
-                                                    <Setter Property="Background"
-                                                        Value="Transparent" />
-                                                </Style>
-                                                <Style Selector="Button:pointerover">
-                                                    <Setter Property="Background"
-                                                        Value="Transparent" />
-                                                </Style>
-                                                <Style Selector="Button:pressed">
-                                                    <Setter Property="Background"
-                                                        Value="Transparent" />
-                                                </Style>
-                                                <!-- TextBlock hover effect via Button hover -->
-                                                <Style Selector="Button:pointerover > TextBlock">
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
-                                                </Style>
-                                            </Button.Styles>
-                                            <TextBlock Text="{Binding Header}"
-                                                FontSize="11"
-                                                Foreground="{Binding IsSelected, Converter={StaticResource BooleanToColorConverter}, ConverterParameter='#FFFFFF|#858585'}" />
-                                        </Button>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- Collapse/Expand Button (Right Side) -->
-                        <Button Grid.Column="1"
-                            Command="{Binding BottomPanel.TogglePanelCommand}"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Height="35"
-                            Width="35"
-                            Padding="0">
-                            <icons:Icon Value="fa-solid fa-chevron-down"
-                                Width="12"
-                                Height="12"
-                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                                VerticalAlignment="Center" />
-                        </Button>
-                    </Grid>
-                </Border>
-
-                <!-- Bottom Panel Content -->
-                <Border Grid.Row="1"
-                    Background="{DynamicResource AppBackgroundBrush}"
-                    IsVisible="{Binding BottomPanel.IsExpanded}">
-                    <ContentControl Content="{Binding BottomPanel.SelectedTab.Content}" />
-                </Border>
-            </Grid>
+                <!-- Main Editor Area (DockControl) -->
+                <ids:DockControl Grid.Column="3" Layout="{Binding Layout}" />
         </Grid>
     </DockPanel>
 </Window>

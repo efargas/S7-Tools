@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Resources;
@@ -94,6 +95,37 @@ public class NavigationViewModel : ReactiveObject
         }
 
         _logger.LogDebug("NavigationViewModel initialized");
+    }
+
+    /// <summary>
+    /// Action callback set by MainWindowViewModel to open a ViewModel as a docked document tab.
+    /// </summary>
+    public Action<IDockableViewModel>? OpenDocumentAction { get; set; }
+
+    /// <summary>
+    /// Creates the welcome/initial ViewModel for the dock's default document.
+    /// </summary>
+    public object? CreateWelcomeViewModel()
+    {
+        return CreateViewModel<LoggingTestViewModel>();
+    }
+
+    /// <summary>
+    /// Routes a ViewModel to the docking system if it implements IDockableViewModel,
+    /// otherwise falls back to setting MainContent directly.
+    /// </summary>
+    private void OpenDockableContent(object? content)
+    {
+        if (content is IDockableViewModel dockable && OpenDocumentAction != null)
+        {
+            OpenDocumentAction(dockable);
+        }
+        else
+        {
+            // Fallback for non-dockable content
+            MainContent = content;
+            DetailContent = content;
+        }
     }
 
     /// <summary>
@@ -290,9 +322,9 @@ public class NavigationViewModel : ReactiveObject
                     MainContentTitle = UIStrings.Navigation_Welcome;
                     ShowMainContentHeader = true;
                     CurrentContent = CreateViewModel<HomeViewModel>();
-                    MainContent = CreateLoggingTestViewModel();
-                    DetailContent = CreateLoggingTestViewModel();
                     ShowLogStats = false;
+                    // Open the Welcome/LoggingTest view as a dock tab
+                    OpenDockableContent(CreateLoggingTestViewModel());
                     _logger.LogDebug("Navigated to Explorer");
                     break;
 
@@ -302,9 +334,9 @@ public class NavigationViewModel : ReactiveObject
                     ShowMainContentHeader = true;
                     ConnectionsViewModel? connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
                     CurrentContent = connectionsViewModel;
-                    MainContent = connectionsViewModel?.DetailContent;
-                    DetailContent = connectionsViewModel?.DetailContent;
                     ShowLogStats = false;
+                    // Open connections view as a dock tab
+                    OpenDockableContent(connectionsViewModel);
                     _logger.LogDebug("Navigated to Connections");
                     break;
 
@@ -326,9 +358,9 @@ public class NavigationViewModel : ReactiveObject
                     ShowMainContentHeader = true;
                     SettingsViewModel? settingsViewModel = CreateViewModel<SettingsViewModel>();
                     CurrentContent = settingsViewModel; // Categories in sidebar
-                    MainContent = settingsViewModel; // Content in main area
-                    DetailContent = settingsViewModel;
                     ShowLogStats = false;
+                    // Open settings as a dock tab
+                    OpenDockableContent(settingsViewModel);
                     _logger.LogDebug("Navigated to Settings");
                     break;
 
@@ -338,9 +370,9 @@ public class NavigationViewModel : ReactiveObject
                     ShowMainContentHeader = true;
                     TaskManagerShellViewModel? taskManagerShell = CreateViewModel<TaskManagerShellViewModel>();
                     CurrentContent = taskManagerShell; // Sidebar categories
-                    MainContent = taskManagerShell; // Main content resolved via ViewLocator
-                    DetailContent = taskManagerShell;
                     ShowLogStats = false;
+                    // Open task manager as a dock tab
+                    OpenDockableContent(taskManagerShell);
                     _logger.LogDebug("Navigated to Task Manager");
                     break;
 
@@ -349,11 +381,10 @@ public class NavigationViewModel : ReactiveObject
                     MainContentTitle = UIStrings.Navigation_JobsManagementTitle;
                     ShowMainContentHeader = true;
                     JobsManagementViewModel? jobsViewModel = CreateViewModel<JobsManagementViewModel>();
-                    // Show Jobs-specific sidebar (menu) and main content
                     CurrentContent = jobsViewModel; // Sidebar will use JobsSidebarView DataTemplate
-                    MainContent = jobsViewModel; // Jobs management in main area
-                    DetailContent = jobsViewModel;
                     ShowLogStats = false;
+                    // Open jobs as a dock tab
+                    OpenDockableContent(jobsViewModel);
                     _logger.LogDebug("Navigated to Jobs Management");
                     break;
 
@@ -363,9 +394,9 @@ public class NavigationViewModel : ReactiveObject
                     ShowMainContentHeader = true;
                     MemoryDumpViewerViewModel? memoryDumpViewModel = CreateViewModel<MemoryDumpViewerViewModel>();
                     CurrentContent = memoryDumpViewModel; // Enable sidebar content for memory dump
-                    MainContent = memoryDumpViewModel;
-                    DetailContent = memoryDumpViewModel;
                     ShowLogStats = false;
+                    // Open memory dump as a dock tab
+                    OpenDockableContent(memoryDumpViewModel);
                     _logger.LogDebug("Navigated to Memory Dump Viewer");
                     break;
 

@@ -66,6 +66,9 @@ public static class ServiceCollectionExtensions
         // Add Layout Service
         services.TryAddSingleton<ILayoutService, LayoutService>();
 
+        // Add Docking Service
+        services.TryAddSingleton<DockingService>();
+
         // Add Activity Bar Service
         services.TryAddSingleton<IActivityBarService, ActivityBarService>();
 

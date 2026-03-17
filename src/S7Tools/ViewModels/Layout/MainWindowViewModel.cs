@@ -3,13 +3,17 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Dock.Model.Controls;
+using Dock.Model.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Extensions;
+using S7Tools.Factories;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
@@ -34,6 +38,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private string _testInputText = UIStrings.TestClipboardText;
     private string _statusMessage = UIStrings.StatusReady;
     private string _lastButtonPressed = "";
+    private IRootDock? _layout;
+    private IFactory? _factory;
 
     #region Constructor
 
@@ -146,7 +152,13 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             })
             .DisposeWith(_disposables);
 
-        _logger.LogDebug("MainWindowViewModel initialized with specialized ViewModels");
+        // Initialize Docking System
+        InitializeDocking();
+
+        // Wire navigation to open content in dock tabs
+        Navigation.OpenDocumentAction = vm => OpenDocumentTab(vm);
+
+        _logger.LogDebug("MainWindowViewModel initialized with specialized ViewModels and docking system");
     }
 
     #endregion
@@ -197,6 +209,93 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         get => _lastButtonPressed;
         set => this.RaiseAndSetIfChanged(ref _lastButtonPressed, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the root dock layout used by DockControl in the view.
+    /// </summary>
+    public IRootDock? Layout
+    {
+        get => _layout;
+        set => this.RaiseAndSetIfChanged(ref _layout, value);
+    }
+
+    #endregion
+
+    #region Docking
+
+    /// <summary>
+    /// Initializes the docking system with factory and layout.
+    /// </summary>
+    private void InitializeDocking()
+    {
+        try
+        {
+            _factory = new MainDockFactory(this)
+            {
+                LogViewerContent = BottomPanel.CreateLogViewerViewModel(),
+                WelcomeContent = Navigation.CreateWelcomeViewModel(),
+                SettingsContent = null // will be set on first use
+            };
+
+            Layout = _factory.CreateLayout();
+            if (Layout is { })
+            {
+                _factory.InitLayout(Layout);
+            }
+
+            _logger.LogDebug("Docking system initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize docking system");
+        }
+    }
+
+    /// <summary>
+    /// Opens a dockable ViewModel as a Document tab in the main editor area.
+    /// </summary>
+    public void OpenDocumentTab(IDockableViewModel docVm)
+    {
+        if (_factory is MainDockFactory mainFactory)
+        {
+            mainFactory.OpenDocument(docVm);
+        }
+    }
+
+    /// <summary>
+    /// Opens a dockable ViewModel as a Tool window in the bottom panel.
+    /// </summary>
+    public void OpenToolTab(IDockableViewModel toolVm)
+    {
+        if (_factory is MainDockFactory mainFactory)
+        {
+            mainFactory.OpenTool(toolVm);
+        }
+    }
+
+    /// <summary>
+    /// Closes the currently active document tab.
+    /// </summary>
+    public void CloseActiveDocument()
+    {
+        _logger.LogDebug("Closing current active dockable");
+        if (Layout?.ActiveDockable is Dock.Model.Controls.IDocument document)
+        {
+            _factory?.CloseDockable(document);
+        }
+    }
+
+    /// <summary>
+    /// Opens the Settings view as a docked document tab.
+    /// </summary>
+    public void OpenSettings()
+    {
+        if (_factory is MainDockFactory mainDockFactory)
+        {
+            mainDockFactory.RestoreSettings();
+        }
+        _logger.LogDebug("Settings view opened via dock");
     }
 
     #endregion

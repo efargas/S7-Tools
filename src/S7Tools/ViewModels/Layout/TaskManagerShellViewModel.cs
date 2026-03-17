@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Tasks;
 
@@ -12,8 +13,14 @@ namespace S7Tools.ViewModels.Layout;
 /// - Sidebar shows categories
 /// - Main content is driven via ViewLocator from SelectedCategoryViewModel
 /// </summary>
-public sealed class TaskManagerShellViewModel : ViewModelBase
+public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewModel
 {
+    // IDockableViewModel implementation
+    public string DockId => "TaskManager";
+    public string DockTitle => "Task Manager";
+    public bool CanClose => true;
+    public bool CanFloat => true;
+
     private readonly IServiceProvider _serviceProvider;
     private readonly TaskManagerViewModel _taskManagerViewModel;
     private readonly ActiveTasksViewModel _activeTasksViewModel;

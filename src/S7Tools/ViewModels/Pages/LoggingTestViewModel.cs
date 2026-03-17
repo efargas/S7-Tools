@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 
@@ -16,8 +17,14 @@ namespace S7Tools.ViewModels.Pages;
 /// ViewModel for the Logging Test page, handling logging test commands and clipboard operations.
 /// Follows Single Responsibility Principle by focusing only on logging and clipboard testing.
 /// </summary>
-public sealed class LoggingTestViewModel : ViewModelBase, IDisposable
+public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, IDisposable
 {
+    // IDockableViewModel implementation
+    public string DockId => "Welcome";
+    public string DockTitle => "Welcome";
+    public bool CanClose => true;
+    public bool CanFloat => true;
+
     private readonly IDialogService _dialogService;
     private readonly IClipboardService _clipboardService;
     private readonly ILogger<LoggingTestViewModel> _logger;

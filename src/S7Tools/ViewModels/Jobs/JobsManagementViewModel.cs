@@ -7,6 +7,7 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
@@ -133,8 +134,14 @@ public class JobsMainContentViewModel : ViewModelBase, IDisposable
 /// - Integrates with existing dialog services for create/edit operations
 /// - Follows established S7Tools patterns for profile management
 /// </remarks>
-public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile>
+public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile>, IDockableViewModel
 {
+    // IDockableViewModel implementation
+    public string DockId => "Jobs";
+    public string DockTitle => "Jobs Management";
+    public bool CanClose => true;
+    public bool CanFloat => true;
+
     private readonly IJobManager _jobManager;
     private readonly ILogger<JobsManagementViewModel> _logger;
     private readonly IUIThreadService _uiThreadService;

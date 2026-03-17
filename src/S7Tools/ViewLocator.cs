@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Dock.Model.Core;
 using S7Tools.ViewModels;
 
 namespace S7Tools;
@@ -19,6 +20,14 @@ public class ViewLocator : IDataTemplate
     /// Key: ViewModel Type, Value: View Type (or null if not found)
     /// </summary>
     private static readonly ConcurrentDictionary<Type, Type?> ViewTypeCache = new();
+
+    /// <summary>
+    /// Explicit ViewModel → View mappings for cases where naming convention doesn't match.
+    /// </summary>
+    private static readonly Dictionary<Type, Type> ExplicitMappings = new()
+    {
+        [typeof(ViewModels.Jobs.JobsManagementViewModel)] = typeof(Views.Jobs.JobsMainView),
+    };
     /// <summary>
     /// Builds a control instance for the specified view model.
     /// </summary>
@@ -29,6 +38,13 @@ public class ViewLocator : IDataTemplate
         if (param is null)
         {
             return null;
+        }
+
+        // If the param is an IDockable, wrap its Context (the actual application ViewModel)
+        // into a ContentControl so Avalonia resolves the View via this ViewLocator recursively.
+        if (param is IDockable dockable && dockable.Context != null && param is not ViewModelBase)
+        {
+            return new ContentControl { Content = dockable.Context };
         }
 
         Type vmType = param.GetType();
@@ -67,6 +83,12 @@ public class ViewLocator : IDataTemplate
     /// <returns>The View type if found, otherwise null.</returns>
     private static Type? ResolveViewType(Type vmType)
     {
+        // Check explicit mappings first (for ViewModels that don't follow naming conventions)
+        if (ExplicitMappings.TryGetValue(vmType, out var explicitType))
+        {
+            return explicitType;
+        }
+
         string vmFullName = vmType.FullName ?? string.Empty;
 
         string name = vmFullName
@@ -100,6 +122,6 @@ public class ViewLocator : IDataTemplate
     /// <returns>True if the data is a ViewModelBase; otherwise, false.</returns>
     public bool Match(object? data)
     {
-        return data is ViewModelBase;
+        return data is ViewModelBase || data is IDockable;
     }
 }

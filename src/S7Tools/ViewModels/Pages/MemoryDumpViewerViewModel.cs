@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.ViewModels;
 
 namespace S7Tools.ViewModels.Pages;
 
@@ -11,8 +12,14 @@ namespace S7Tools.ViewModels.Pages;
 /// - Streamed PLC Memory Viewer
 /// - File PLC Memory Viewer
 /// </summary>
-public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDisposable
+public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewModel, IDisposable
 {
+    // IDockableViewModel implementation
+    public string DockId => "MemoryDump";
+    public string DockTitle => "Memory Dump Viewer";
+    public bool CanClose => true;
+    public bool CanFloat => true;
+
     private readonly IServiceProvider _serviceProvider;
     private readonly StreamedMemoryDumpViewModel _streamedViewModel;
     private readonly FileMemoryDumpViewModel _fileViewModel;
