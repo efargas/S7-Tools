@@ -71,10 +71,10 @@ public partial class App : Application
                 logger.LogInformation("🚀 Launching Splash Screen...");
 
                 // Resolve correct logger for ViewModel
-                var splashLogger = _serviceProvider.GetRequiredService<ILogger<ViewModels.SplashScreenViewModel>>();
-                var splashViewModel = new ViewModels.SplashScreenViewModel(_serviceProvider, splashLogger);
+                var splashLogger = _serviceProvider.GetRequiredService<ILogger<ViewModels.Layout.SplashScreenViewModel>>();
+                var splashViewModel = new ViewModels.Layout.SplashScreenViewModel(_serviceProvider, splashLogger);
 
-                var splashScreen = new Views.SplashScreenWindow
+                var splashScreen = new Views.Layout.SplashScreenWindow
                 {
                     DataContext = splashViewModel
                 };

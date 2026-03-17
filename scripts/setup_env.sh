@@ -6,22 +6,22 @@ echo "Setting up environment..."
 # Ensure scripts directory exists
 mkdir -p scripts
 
-# Install .NET 9.0 if not already available
-if ! dotnet --list-sdks | grep -q "9.0"; then
-    echo "Installing .NET 9.0 SDK..."
+# Install .NET 10.0 if not already available
+if ! dotnet --list-sdks | grep -q "10.0"; then
+    echo "Installing .NET 10.0 SDK..."
     # Check if dotnet-install.sh exists in root, else download it
     if [ -f "./dotnet-install.sh" ]; then
-        ./dotnet-install.sh --channel 9.0
+        ./dotnet-install.sh --channel 10.0
     else
         wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
         chmod +x dotnet-install.sh
-        ./dotnet-install.sh --channel 9.0
+        ./dotnet-install.sh --channel 10.0
     fi
 
     export DOTNET_ROOT=$HOME/.dotnet
     export PATH=$PATH:$HOME/.dotnet:$HOME/.dotnet/tools
 else
-    echo ".NET 9.0 SDK already installed."
+    echo ".NET 10.0 SDK already installed."
 fi
 
 dotnet --version
