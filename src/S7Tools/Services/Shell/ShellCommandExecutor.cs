@@ -113,8 +113,6 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
 
         try
         {
-            // Basic check to see if we really need shell evaluation (contains pipe, redirect, or logical operators)
-            // If not, we can safely split and execute it directly.
             bool needsShell = command.Contains('|') || command.Contains('>') || command.Contains('<') || command.Contains('&') || command.Contains(';');
 
             if (needsShell)
@@ -205,8 +203,16 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.LogWarning("Process timed out after {Timeout}ms: {FileName}", timeoutMs, startInfo.FileName);
-                    errorBuilder.AppendLine($"Process timed out after {timeoutMs}ms.");
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        _logger.LogWarning("Process execution cancelled externally: {FileName}", startInfo.FileName);
+                        errorBuilder.AppendLine("Process execution cancelled.");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Process timed out after {Timeout}ms: {FileName}", timeoutMs, startInfo.FileName);
+                        errorBuilder.AppendLine($"Process timed out after {timeoutMs}ms.");
+                    }
 
                     try
                     {
@@ -217,7 +223,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
                     }
                     catch (Exception killEx)
                     {
-                        _logger.LogWarning(killEx, "Error killing timed out process {Pid}", process.Id);
+                        _logger.LogWarning(killEx, "Error killing process {Pid}", process.Id);
                     }
 
                     exited = false;
@@ -225,8 +231,30 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
             }
             else
             {
-                await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-                exited = true;
+                try
+                {
+                    await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                    exited = true;
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogWarning("Process execution cancelled externally: {FileName}", startInfo.FileName);
+                    errorBuilder.AppendLine("Process execution cancelled.");
+
+                    try
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill(true); // Kill entire process tree
+                        }
+                    }
+                    catch (Exception killEx)
+                    {
+                        _logger.LogWarning(killEx, "Error killing process {Pid}", process.Id);
+                    }
+
+                    exited = false;
+                }
             }
 
             int exitCode = exited ? process.ExitCode : -1;
@@ -272,7 +300,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
                 continue;
             }
 
-            if (c == '\\')
+            if (c == '\\' && !inSingleQuote)
             {
                 escapeNext = true;
                 continue;
