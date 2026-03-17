@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
              x:Class="S7Tools.Views.Settings.SettingsView"
              x:DataType="vm:SettingsViewModel"
-             Background="#1E1E1E">
+             Background="{DynamicResource AppBackgroundBrush}">
   
   <!-- Main Content Only - Categories are handled by the sidebar -->
   <ContentControl Content="{Binding SelectedCategoryViewModel}" />

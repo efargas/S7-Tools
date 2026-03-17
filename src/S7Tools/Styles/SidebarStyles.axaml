@@ -54,7 +54,7 @@
   <!-- Border styling for sections -->
   <Style Selector="Border.CategorySection">
     <Setter Property="Background" Value="Transparent" />
-    <Setter Property="BorderBrush" Value="#464647" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
     <Setter Property="BorderThickness" Value="0,0,0,1" />
     <Setter Property="Padding" Value="0" />
     <Setter Property="Margin" Value="0" />
@@ -64,7 +64,7 @@
   <Style Selector="TextBlock.CategoryHeader">
     <Setter Property="FontWeight" Value="Normal" />
     <Setter Property="FontSize" Value="12" />
-    <Setter Property="Foreground" Value="#CCCCCC" />
+    <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
 
@@ -72,7 +72,7 @@
   <Style Selector="icons|Icon.CategoryIcon">
     <Setter Property="Width" Value="14" />
     <Setter Property="Height" Value="14" />
-    <Setter Property="Foreground" Value="#CCCCCC" />
+    <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     <Setter Property="VerticalAlignment" Value="Center" />
     <Setter Property="Margin" Value="4,0" />
   </Style>
@@ -81,7 +81,7 @@
   <Style Selector="icons|Icon.BulletIcon">
     <Setter Property="Width" Value="12" />
     <Setter Property="Height" Value="12" />
-    <Setter Property="Foreground" Value="#CCCCCC" />
+    <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     <Setter Property="Value" Value="fa-solid fa-circle" />
   </Style>
 
@@ -104,15 +104,15 @@
   </Style>
 
   <Style Selector="Border.CategoryItem:pointerover" x:DataType="Border">
-    <Setter Property="Background" Value="#2A2D2E" />
+    <Setter Property="Background" Value="{DynamicResource ListItemBackgroundHoverBrush}" />
   </Style>
 
   <Style Selector="Border.CategoryItem.selected" x:DataType="Border">
-    <Setter Property="Background" Value="#37373D" />
+    <Setter Property="Background" Value="{DynamicResource ListItemBackgroundSelectedBrush}" />
   </Style>
 
   <Style Selector="Border.CategoryItem TextBlock">
-    <Setter Property="Foreground" Value="#CCCCCC" />
+    <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     <Setter Property="FontSize" Value="13" />
   </Style>
 
@@ -126,17 +126,17 @@
     <Setter Property="Padding" Value="8,6"/>
     <Setter Property="Margin" Value="0,2"/>
     <Setter Property="Background" Value="Transparent"/>
-    <Setter Property="Foreground" Value="#CCCCCC"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}"/>
     <Setter Property="CornerRadius" Value="4"/>
   </Style>
 
   <Style Selector="ListBox.SidebarList > ListBoxItem:selected">
-    <Setter Property="Background" Value="#37373D"/>
-    <Setter Property="Foreground" Value="#CCCCCC"/>
+    <Setter Property="Background" Value="{DynamicResource ListItemBackgroundSelectedBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}"/>
   </Style>
 
   <Style Selector="ListBox.SidebarList > ListBoxItem:pointerover">
-    <Setter Property="Background" Value="#2A2D2E"/>
+    <Setter Property="Background" Value="{DynamicResource ListItemBackgroundHoverBrush}"/>
   </Style>
 
 </Styles>

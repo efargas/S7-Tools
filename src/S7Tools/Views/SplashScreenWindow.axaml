@@ -13,7 +13,7 @@
     CanResize="False"
     Title="S7-Tools Starting...">
 
-    <Border BorderThickness="1" BorderBrush="#333333" Background="#1E1E1E">
+    <Border BorderThickness="1" BorderBrush="{DynamicResource ControlBackgroundBrush}" Background="{DynamicResource AppBackgroundBrush}">
         <Grid RowDefinitions="*,Auto,Auto" Margin="40">
 
             <!-- Logo / Title Area -->
@@ -23,7 +23,7 @@
                 <TextBlock Text="S7-TOOLS"
                     FontSize="48"
                     FontWeight="Bold"
-                    Foreground="White"
+                    Foreground="{DynamicResource TextForegroundBrush}"
                     HorizontalAlignment="Center"
                     LetterSpacing="2" />
                 <TextBlock Text="Advanced Bootloader &amp; Diagnostics"
@@ -42,8 +42,8 @@
                 <ProgressBar Value="{Binding Progress}"
                     Maximum="100"
                     Height="4"
-                    Background="#333333"
-                    Foreground="#007ACC" />
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource BrandAccentBrush}" />
             </StackPanel>
 
             <!-- Footer -->

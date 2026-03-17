@@ -21,7 +21,7 @@
     Icon="/Assets/avalonia-logo.ico"
     Title="S7Tools"
     WindowStartupLocation="CenterScreen"
-    Background="#1E1E1E">
+    Background="{DynamicResource AppBackgroundBrush}">
 
     <Design.DataContext>
         <vm:MainWindowViewModel />
@@ -66,9 +66,9 @@
     <!-- VSCode-style layout structure -->
     <DockPanel>
         <!-- Menu Bar -->
-        <Menu DockPanel.Dock="Top" Background="#2D2D30" Foreground="#CCCCCC" Height="40"
+        <Menu DockPanel.Dock="Top" Background="{DynamicResource PanelBackgroundBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Height="40"
             FontSize="14">
-            <MenuItem Header="_File" Foreground="#CCCCCC">
+            <MenuItem Header="_File" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
                 <MenuItem Header="_New File" InputGesture="Ctrl+N" />
                 <MenuItem Header="_Load Configuration..." InputGesture="Ctrl+O"
                     Command="{Binding LoadConfigurationCommand}" />
@@ -78,7 +78,7 @@
                 <Separator />
                 <MenuItem Header="_Exit" Command="{Binding ExitCommand}" InputGesture="Alt+F4" />
             </MenuItem>
-            <MenuItem Header="_Edit" Foreground="#CCCCCC" StaysOpenOnClick="True">
+            <MenuItem Header="_Edit" Foreground="{DynamicResource TextForegroundSecondaryBrush}" StaysOpenOnClick="True">
                 <MenuItem Header="_Undo" InputGesture="Ctrl+Z" />
                 <MenuItem Header="_Redo" InputGesture="Ctrl+Y" />
                 <Separator />
@@ -92,7 +92,7 @@
                 <MenuItem Header="_Find" InputGesture="Ctrl+F" />
                 <MenuItem Header="_Replace" InputGesture="Ctrl+H" />
             </MenuItem>
-            <MenuItem Header="_View" Foreground="#CCCCCC">
+            <MenuItem Header="_View" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
                 <MenuItem Header="_Command Palette..." InputGesture="Ctrl+Shift+P" />
                 <MenuItem Header="_Explorer" InputGesture="Ctrl+Shift+E" />
                 <MenuItem Header="_Search" InputGesture="Ctrl+Shift+F" />
@@ -102,13 +102,13 @@
                 <MenuItem Header="Toggle _Bottom Panel"
                     Command="{Binding BottomPanel.TogglePanelCommand}" InputGesture="Ctrl+J" />
             </MenuItem>
-            <MenuItem Header="_Help" Foreground="#CCCCCC">
+            <MenuItem Header="_Help" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
                 <MenuItem Header="_About" />
             </MenuItem>
         </Menu>
 
         <!-- Status Bar anchored to window bottom -->
-        <Border DockPanel.Dock="Bottom" Background="#007ACC" Height="24">
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource BrandAccentBrush}" Height="24">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -118,26 +118,26 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="8,0" Spacing="8">
-                    <TextBlock Text="{Binding StatusMessage}" Foreground="White"
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource TextForegroundBrush}"
                         VerticalAlignment="Center" FontSize="12" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0" Spacing="8"
                     IsVisible="{Binding Navigation.ShowLogStats}">
-                    <TextBlock Text="|" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                    <TextBlock Text="{Binding Navigation.LogStatsMessage}" Foreground="White"
+                    <TextBlock Text="|" Foreground="{DynamicResource TextForegroundBrush}" VerticalAlignment="Center" FontSize="12" />
+                    <TextBlock Text="{Binding Navigation.LogStatsMessage}" Foreground="{DynamicResource TextForegroundBrush}"
                         VerticalAlignment="Center" FontSize="12" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0" Spacing="8"
                     IsVisible="{Binding LastButtonPressed, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <TextBlock Text="|" Foreground="White" VerticalAlignment="Center" FontSize="12" />
-                    <TextBlock Text="{Binding LastButtonPressed}" Foreground="White"
+                    <TextBlock Text="|" Foreground="{DynamicResource TextForegroundBrush}" VerticalAlignment="Center" FontSize="12" />
+                    <TextBlock Text="{Binding LastButtonPressed}" Foreground="{DynamicResource TextForegroundBrush}"
                         VerticalAlignment="Center" FontSize="12" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="8,0">
-                    <TextBlock Text="S7Tools" Foreground="White" VerticalAlignment="Center"
+                    <TextBlock Text="S7Tools" Foreground="{DynamicResource TextForegroundBrush}" VerticalAlignment="Center"
                         FontSize="12" />
                 </StackPanel>
             </Grid>
@@ -168,7 +168,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Activity Bar -->
-                <Border Grid.Column="0" Background="#333333" BorderBrush="#464647"
+                <Border Grid.Column="0" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="0,0,1,0">
                     <ItemsControl ItemsSource="{Binding Navigation.ActivityBarItems}">
                         <ItemsControl.ItemsPanel>
@@ -182,7 +182,7 @@
                                     <!-- Selection indicator (left border) -->
                                     <Border Width="2"
                                         Height="48"
-                                        Background="#007ACC"
+                                        Background="{DynamicResource BrandAccentBrush}"
                                         HorizontalAlignment="Left"
                                         IsVisible="{Binding IsSelected}" />
 
@@ -208,7 +208,7 @@
                                             </Style>
                                             <!-- Icon hover effect via Button hover -->
                                             <Style Selector="Button:pointerover > icons|Icon">
-                                                <Setter Property="Foreground" Value="#FFFFFF" />
+                                                <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
                                             </Style>
                                         </Button.Styles>
                                         <icons:Icon Width="40"
@@ -224,8 +224,8 @@
 
                 <!-- Sidebar -->
                 <Border Grid.Column="1"
-                    Background="#252526"
-                    BorderBrush="#464647"
+                    Background="{DynamicResource PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="0,0,1,0"
                     IsVisible="{Binding Navigation.IsSidebarVisible}">
                     <Grid>
@@ -236,9 +236,9 @@
 
                         <!-- Sidebar Header - Darker background for better hierarchy -->
                         <Border Grid.Row="0"
-                            Background="#1E1E1E"
+                            Background="{DynamicResource AppBackgroundBrush}"
                             Height="35"
-                            BorderBrush="#464647"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="0,0,0,1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -248,7 +248,7 @@
 
                                 <TextBlock Grid.Column="0"
                                     Text="{Binding Navigation.SidebarTitle}"
-                                    Foreground="#CCCCCC"
+                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                     FontSize="11"
                                     FontWeight="Bold"
                                     VerticalAlignment="Center"
@@ -265,7 +265,7 @@
                                     <icons:Icon Value="fa-solid fa-times"
                                         Width="12"
                                         Height="12"
-                                        Foreground="#CCCCCC" />
+                                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                                 </Button>
                             </Grid>
                         </Border>
@@ -301,7 +301,7 @@
                     ShowsPreview="False" />
 
                 <!-- Main Editor Area -->
-                <Border Grid.Column="3" Background="#1E1E1E">
+                <Border Grid.Column="3" Background="{DynamicResource AppBackgroundBrush}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -310,13 +310,13 @@
 
                         <!-- Main Content Header (Optional) -->
                         <Border Grid.Row="0"
-                            Background="#2D2D30"
+                            Background="{DynamicResource PanelBackgroundBrush}"
                             Height="35"
-                            BorderBrush="#464647"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="0,0,0,1"
                             IsVisible="{Binding Navigation.ShowMainContentHeader}">
                             <TextBlock Text="{Binding Navigation.MainContentTitle}"
-                                Foreground="#CCCCCC"
+                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                 FontSize="11"
                                 FontWeight="Bold"
                                 VerticalAlignment="Center"
@@ -326,7 +326,7 @@
                         <!-- Main Content Container using ViewLocator -->
                         <ContentControl Grid.Row="1"
                             Content="{Binding Navigation.MainContent}"
-                            Background="#1E1E1E">
+                            Background="{DynamicResource AppBackgroundBrush}">
                             <ContentControl.DataTemplates>
                                 <!-- Implicit DataTemplate for JobWizardViewModel -->
                                 <DataTemplate DataType="vmJobs:JobWizardViewModel">
@@ -356,7 +356,7 @@
 
             <!-- Bottom Panel -->
             <Grid Grid.Row="2"
-                Background="#1E1E1E">
+                Background="{DynamicResource AppBackgroundBrush}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -364,9 +364,9 @@
 
                 <!-- Bottom Panel Header (Always Visible) -->
                 <Border Grid.Row="0"
-                    Background="#2D2D30"
+                    Background="{DynamicResource PanelBackgroundBrush}"
                     Height="35"
-                    BorderBrush="#464647"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="0,1,0,1">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -385,7 +385,7 @@
                                     <Grid Height="35">
                                         <!-- Selection indicator (bottom border) -->
                                         <Border Height="2"
-                                            Background="#007ACC"
+                                            Background="{DynamicResource BrandAccentBrush}"
                                             VerticalAlignment="Bottom"
                                             IsVisible="{Binding IsSelected}" />
 
@@ -411,7 +411,7 @@
                                                 </Style>
                                                 <!-- TextBlock hover effect via Button hover -->
                                                 <Style Selector="Button:pointerover > TextBlock">
-                                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
                                                 </Style>
                                             </Button.Styles>
                                             <TextBlock Text="{Binding Header}"
@@ -434,7 +434,7 @@
                             <icons:Icon Value="fa-solid fa-chevron-down"
                                 Width="12"
                                 Height="12"
-                                Foreground="#CCCCCC"
+                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                 VerticalAlignment="Center" />
                         </Button>
                     </Grid>
@@ -442,7 +442,7 @@
 
                 <!-- Bottom Panel Content -->
                 <Border Grid.Row="1"
-                    Background="#1E1E1E"
+                    Background="{DynamicResource AppBackgroundBrush}"
                     IsVisible="{Binding BottomPanel.IsExpanded}">
                     <ContentControl Content="{Binding BottomPanel.SelectedTab.Content}" />
                 </Border>

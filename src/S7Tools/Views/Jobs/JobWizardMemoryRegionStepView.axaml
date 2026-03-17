@@ -34,7 +34,7 @@
         </StackPanel>
         <TextBlock Text="For this job, you must select EXACTLY ONE memory segment to dump."
                    FontSize="12"
-                   Foreground="#FFFFFF"
+                   Foreground="{DynamicResource TextForegroundBrush}"
                    TextWrapping="Wrap" />
         <TextBlock Text="After selecting a profile below, click the checkbox in the 'Sel' column to choose which segment to dump. Selecting a segment will automatically deselect any previously selected segments."
                    FontSize="11"
@@ -47,7 +47,7 @@
     <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
       <TextBlock Grid.Column="0"
                  Text="Memory Profile:"
-                 Foreground="#CCCCCC"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                  FontWeight="SemiBold"
                  FontSize="13"
                  VerticalAlignment="Center" />
@@ -69,13 +69,13 @@
                 IsVisible="{Binding IsBusy}">
       <ProgressBar Width="200" IsIndeterminate="True" />
       <TextBlock Text="{Binding Status}"
-                 Foreground="#CCCCCC"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                  VerticalAlignment="Center" />
     </StackPanel>
 
     <!-- 2. Segment Selection Section (primary action) -->
-    <Border Background="#2D2D2D"
-            BorderBrush="#464647"
+    <Border Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="1"
             CornerRadius="4"
             Padding="16"
@@ -104,26 +104,26 @@
             <TextBlock Text="📋 How to select a segment:"
                        FontSize="12"
                        FontWeight="SemiBold"
-                       Foreground="#FFFFFF" />
+                       Foreground="{DynamicResource TextForegroundBrush}" />
             <TextBlock Text="1. Find the segment you want to dump in the table below"
                        FontSize="11"
-                       Foreground="#CCCCCC"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                        Margin="15,0,0,0" />
             <TextBlock Text="2. Click the checkbox in the 'Sel' column for that segment"
                        FontSize="11"
-                       Foreground="#CCCCCC"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                        Margin="15,0,0,0" />
             <TextBlock Text="3. The previously selected segment (if any) will be automatically deselected"
                        FontSize="11"
-                       Foreground="#CCCCCC"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                        Margin="15,0,0,0" />
           </StackPanel>
         </Border>
 
         <!-- Segments DataGrid -->
         <DataGrid ItemsSource="{Binding SelectedProfile.Segments}"
-                  Background="#3C3C3C"
-                  Foreground="#CCCCCC"
+                  Background="{DynamicResource ControlBackgroundBrush}"
+                  Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                   GridLinesVisibility="Horizontal"
                   HeadersVisibility="Column"
                   CanUserReorderColumns="False"
@@ -204,8 +204,8 @@
     </Border>
 
     <!-- 3. Dump Configuration (Loop Count) -->
-    <Border Background="#2D2D2D"
-            BorderBrush="#464647"
+    <Border Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="1"
             CornerRadius="4"
             Padding="16"
@@ -226,7 +226,7 @@
         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16">
           <StackPanel Grid.Column="0" Spacing="4">
             <TextBlock Text="Dump Count:" 
-                       Foreground="#CCCCCC" 
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" 
                        VerticalAlignment="Center" />
             <NumericUpDown Value="{Binding DumpCount}" 
                            Minimum="1" 
@@ -249,8 +249,8 @@
     </Border>
 
     <!-- 3. Profile Details Summary (informational) -->
-    <Border Background="#2D2D2D"
-            BorderBrush="#464647"
+    <Border Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="1"
             CornerRadius="4"
             Padding="16"
@@ -261,12 +261,12 @@
           <icons:Icon Value="fa-solid fa-microchip"
                       Width="16"
                       Height="16"
-                      Foreground="#CCCCCC"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                       VerticalAlignment="Center" />
           <TextBlock Text="MEMORY REGION CONFIGURATION"
                      FontWeight="SemiBold"
                      FontSize="13"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
         </StackPanel>
 
         <!-- Profile Information Grid -->
@@ -276,29 +276,29 @@
               RowSpacing="6">
           <TextBlock Grid.Row="0" Grid.Column="0"
                      Text="Profile Name:"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
           <TextBlock Grid.Row="0" Grid.Column="1"
                      Text="{Binding SelectedProfile.Name}"
-                     Foreground="#FFFFFF" />
+                     Foreground="{DynamicResource TextForegroundBrush}" />
 
           <TextBlock Grid.Row="1" Grid.Column="0"
                      Text="Description:"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
           <TextBlock Grid.Row="1" Grid.Column="1"
                      Text="{Binding SelectedProfile.Description, FallbackValue='No description'}"
-                     Foreground="#FFFFFF"
+                     Foreground="{DynamicResource TextForegroundBrush}"
                      TextWrapping="Wrap" />
 
           <TextBlock Grid.Row="2" Grid.Column="0"
                      Text="Total Segments:"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
           <TextBlock Grid.Row="2" Grid.Column="1"
                      Text="{Binding SegmentCount}"
-                     Foreground="#FFFFFF" />
+                     Foreground="{DynamicResource TextForegroundBrush}" />
 
           <TextBlock Grid.Row="3" Grid.Column="0"
                      Text="Selected for Dump:"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
           <TextBlock Grid.Row="3" Grid.Column="1"
                      Text="{Binding SelectedSegmentCount}"
                      Foreground="#4CAF50" />
@@ -307,8 +307,8 @@
     </Border>
 
     <!-- 4. Detailed Configuration Summary (moved below segment selection) -->
-    <Border Background="#2D2D2D"
-            BorderBrush="#464647"
+    <Border Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="1"
             CornerRadius="4"
             Padding="16"
@@ -319,12 +319,12 @@
           <icons:Icon Value="fa-solid fa-info-circle"
                       Width="16"
                       Height="16"
-                      Foreground="#CCCCCC"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                       VerticalAlignment="Center" />
           <TextBlock Text="Memory Region Configuration Summary"
                      FontWeight="SemiBold"
                      FontSize="14"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
         </StackPanel>
 
         <!-- Summary Information -->
@@ -334,9 +334,9 @@
               RowSpacing="6">
           <TextBlock Grid.Row="0" Grid.Column="0"
                      Text="Selected:"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
           <TextBlock Grid.Row="0" Grid.Column="1"
-                     Foreground="#FFFFFF">
+                     Foreground="{DynamicResource TextForegroundBrush}">
             <Run Text="{Binding SelectedSegmentCount}" />
             <Run Text=" of " />
             <Run Text="{Binding SegmentCount}" />
@@ -345,7 +345,7 @@
 
           <TextBlock Grid.Row="1" Grid.Column="0"
                      Text="Valid Selection:"
-                     Foreground="#CCCCCC" />
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
           <TextBlock Grid.Row="1" Grid.Column="1"
                      Text="{Binding ValidationMessage}"
                      Foreground="#4CAF50"
@@ -357,8 +357,8 @@
         </Grid>
 
         <!-- Selected Segments Details -->
-        <Border Background="#1E1E1E"
-                BorderBrush="#464647"
+        <Border Background="{DynamicResource AppBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="12"
@@ -366,13 +366,13 @@
           <StackPanel Spacing="8">
             <TextBlock Text="Selected Segments Details"
                        FontWeight="SemiBold"
-                       Foreground="#CCCCCC" />
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
             <!-- Individual segment breakdown -->
             <ItemsControl ItemsSource="{Binding SelectedSegments}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="models:MemorySegment">
-                  <Border Background="#3C3C3C"
+                  <Border Background="{DynamicResource ControlBackgroundBrush}"
                           BorderBrush="#555555"
                           BorderThickness="1"
                           CornerRadius="3"
@@ -393,7 +393,7 @@
                         <StackPanel Orientation="Horizontal" Spacing="10">
                           <TextBlock Text="{Binding Name}"
                                      FontWeight="SemiBold"
-                                     Foreground="#FFFFFF" />
+                                     Foreground="{DynamicResource TextForegroundBrush}" />
                           <TextBlock Text="{Binding Type}"
                                      FontSize="10"
                                      Foreground="#AAAAAA"
@@ -412,7 +412,7 @@
                                    FontSize="10"
                                    Foreground="#888888" />
                         <TextBlock Text="{Binding StartAddress}"
-                                   Foreground="#CCCCCC"
+                                   Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                    FontFamily="Consolas"
                                    FontSize="11" />
                       </StackPanel>
@@ -423,7 +423,7 @@
                                    FontSize="10"
                                    Foreground="#888888" />
                         <TextBlock Text="{Binding Size, Mode=OneWay, Converter={x:Static converters:ByteSizeConverter.Instance}}"
-                                   Foreground="#CCCCCC"
+                                   Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                    FontWeight="SemiBold"
                                    FontSize="11" />
                       </StackPanel>
@@ -437,15 +437,15 @@
 
         <!-- Validation Status -->
         <!-- Validation Status -->
-        <Border Background="#1E1E1E"
-                BorderBrush="#464647"
+        <Border Background="{DynamicResource AppBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="12">
           <StackPanel Spacing="8">
             <TextBlock Text="Validation"
                        FontWeight="SemiBold"
-                       Foreground="#CCCCCC" />
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
             <Grid RowDefinitions="Auto,Auto"
                   ColumnDefinitions="140,*"
@@ -453,7 +453,7 @@
                   RowSpacing="4">
               <TextBlock Grid.Row="0" Grid.Column="0"
                          Text="Status:"
-                         Foreground="#CCCCCC" />
+                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
               <TextBlock Grid.Row="0" Grid.Column="1"
                          Text="{Binding ValidationMessage}"
                          Foreground="#4CAF50"
@@ -465,13 +465,13 @@
 
               <TextBlock Grid.Row="1" Grid.Column="0"
                          Text="Contiguous:"
-                         Foreground="#CCCCCC" />
+                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
               <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8">
                 <TextBlock Text="{Binding HasContiguousSelection}"
-                           Foreground="#CCCCCC" />
+                           Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                 <TextBlock Text="(Warning: Non-contiguous segments may require multiple dump operations)"
                            FontSize="10"
-                           Foreground="#FFA500"
+                           Foreground="{DynamicResource LogColorWarnBrush}"
                            IsVisible="{Binding HasContiguousSelection, Converter={StaticResource InvBool}}" />
               </StackPanel>
             </Grid>
@@ -481,8 +481,8 @@
     </Border>
 
     <!-- No profile selected message -->
-    <Border Background="#2D2D2D"
-            BorderBrush="#464647"
+    <Border Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="1"
             CornerRadius="4"
             Padding="20"
@@ -496,7 +496,7 @@
         <TextBlock Text="Select Memory Region Profile"
                    FontSize="16"
                    FontWeight="SemiBold"
-                   Foreground="#CCCCCC"
+                   Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                    HorizontalAlignment="Center" />
         <TextBlock Text="Choose a memory region profile to configure which memory segments will be dumped during job execution."
                    Foreground="#AAAAAA"

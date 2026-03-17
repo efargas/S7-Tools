@@ -11,7 +11,7 @@
   mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
   x:Class="S7Tools.Views.Settings.SocatSettingsView"
   x:DataType="vm:SocatSettingsViewModel"
-  Background="#1E1E1E">
+  Background="{DynamicResource AppBackgroundBrush}">
 
   <UserControl.Resources>
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
@@ -23,12 +23,12 @@
       <TextBlock Text="Servers Settings"
         FontSize="24"
         FontWeight="Bold"
-        Foreground="#CCCCCC"
+        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
         Margin="0,0,0,10" />
 
       <!-- Profile Management Section -->
-      <Border Background="#252526"
-        BorderBrush="#464647"
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlBorderBrush}"
         BorderThickness="1"
         CornerRadius="4"
         Padding="16">
@@ -36,7 +36,7 @@
           <TextBlock Text="socat Profile Management"
             FontSize="18"
             FontWeight="SemiBold"
-            Foreground="#CCCCCC" />
+            Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
 
           <!-- Profiles List -->
@@ -44,23 +44,23 @@
             <!-- Toolbar above the DataGrid -->
             <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
               <Button Width="110" Height="34" Command="{Binding StartSocatCommand}"
-                Background="#28A745" Foreground="White">
+                Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-play" Width="14" Height="14" />
                   <TextBlock Text="Start Server" />
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#0E639C"
-                Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="{DynamicResource ButtonBackgroundBrush}"
+                Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
                   <TextBlock Text="Create" />
                 </StackPanel>
               </Button>
 
-              <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="#0E639C"
-                Foreground="White">
+              <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="{DynamicResource ButtonBackgroundBrush}"
+                Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
                   <TextBlock Text="Edit" />
@@ -68,7 +68,7 @@
               </Button>
 
               <Button Width="110" Height="34" Command="{Binding DuplicateCommand}"
-                Background="#0E639C" Foreground="White">
+                Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
                   <TextBlock Text="Duplicate" />
@@ -76,7 +76,7 @@
               </Button>
 
               <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}"
-                Background="#0E639C" Foreground="White">
+                Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
                   <TextBlock Text="Set Default" />
@@ -84,7 +84,7 @@
               </Button>
 
               <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438"
-                Foreground="White">
+                Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
                   <TextBlock Text="Delete" />
@@ -92,7 +92,7 @@
               </Button>
 
               <Button Width="110" Height="34" Command="{Binding RefreshCommand}"
-                Background="Transparent" BorderBrush="#464647" Foreground="#CCCCCC">
+                Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
                   <TextBlock Text="Refresh" />
@@ -108,8 +108,8 @@
               <DataGrid Grid.Column="0"
                 ItemsSource="{Binding Profiles}"
                 SelectedItem="{Binding SelectedProfile}"
-                Background="#3C3C3C"
-                Foreground="#CCCCCC"
+                Background="{DynamicResource ControlBackgroundBrush}"
+                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 GridLinesVisibility="Horizontal"
                 HeadersVisibility="Column"
                 CanUserReorderColumns="False"
@@ -263,17 +263,17 @@
 
             <TextBlock Grid.Column="0"
               Text="{Binding Profiles.Count, StringFormat='Total Profiles: {0}'}"
-              Foreground="#858585"
+              Foreground="{DynamicResource TextForegroundMutedBrush}"
               FontSize="12" />
 
             <TextBlock Grid.Column="1"
               Text="{Binding StatusMessage}"
-              Foreground="#858585"
+              Foreground="{DynamicResource TextForegroundMutedBrush}"
               FontSize="12" />
 
             <TextBlock Grid.Column="2"
               Text=""
-              Foreground="#858585"
+              Foreground="{DynamicResource TextForegroundMutedBrush}"
               FontSize="12" />
           </Grid>
         </StackPanel>
@@ -286,12 +286,12 @@
         CornerRadius="4"
         Padding="12,10">
         <StackPanel Orientation="Horizontal" Spacing="10">
-          <icons:Icon Value="fa-solid fa-info-circle" Width="18" Height="18" Foreground="#9CDCFE"
+          <icons:Icon Value="fa-solid fa-info-circle" Width="18" Height="18" Foreground="{DynamicResource BrandAccentBrush}"
             VerticalAlignment="Top" Margin="0,2,0,0" />
           <StackPanel Spacing="4">
             <TextBlock Text="Serial Configuration Workflow" FontWeight="SemiBold"
-              Foreground="#FFFFFF" FontSize="12" />
-            <TextBlock TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="11">
+              Foreground="{DynamicResource TextForegroundBrush}" FontSize="12" />
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontSize="11">
               <Run Text="1. Configure your serial port " />
               <Run Text="first" FontWeight="Bold" />
               <Run Text=" using " />
@@ -306,8 +306,8 @@
       </Border>
 
       <!-- Port Discovery Section -->
-      <Border Background="#252526"
-        BorderBrush="#464647"
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlBorderBrush}"
         BorderThickness="1"
         CornerRadius="4"
         Padding="16"
@@ -316,8 +316,8 @@
       </Border>
 
       <!-- Port Test Section -->
-      <Border Background="#252526"
-        BorderBrush="#464647"
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlBorderBrush}"
         BorderThickness="1"
         CornerRadius="4"
         Padding="16"
@@ -326,7 +326,7 @@
           <TextBlock Text="Port Testing"
             FontSize="18"
             FontWeight="SemiBold"
-            Foreground="#CCCCCC" />
+            Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
           <Grid>
             <Grid.ColumnDefinitions>
@@ -337,12 +337,12 @@
 
             <TextBlock Grid.Column="0"
               Text="Selected Port:"
-              Foreground="#CCCCCC"
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
               VerticalAlignment="Center" />
 
             <TextBlock Grid.Column="1"
               Text="{Binding SelectedPort.PortName, FallbackValue='No port selected', TargetNullValue='No port selected'}"
-              Foreground="#9CDCFE"
+              Foreground="{DynamicResource BrandAccentBrush}"
               FontWeight="SemiBold"
               VerticalAlignment="Center"
               Margin="8,0" />
@@ -351,8 +351,8 @@
               Width="140"
               Height="34"
               Command="{Binding TestSelectedPortCommand}"
-              Background="#0E639C"
-              Foreground="White">
+              Background="{DynamicResource ButtonBackgroundBrush}"
+              Foreground="{DynamicResource TextForegroundBrush}">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
                 <TextBlock Text="Test Port" />
@@ -360,25 +360,25 @@
             </Button>
           </Grid>
 
-          <Border Background="#1E1E1E"
-            BorderBrush="#464647"
+          <Border Background="{DynamicResource AppBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="1"
             CornerRadius="3"
             Padding="12"
             MinHeight="80">
             <StackPanel Spacing="6">
               <TextBlock Text="Test Result:"
-                Foreground="#9CDCFE"
+                Foreground="{DynamicResource BrandAccentBrush}"
                 FontSize="12"
                 FontWeight="SemiBold" />
               <TextBlock
                 Text="{Binding SelectedPort.LastTestResult, FallbackValue='No test performed yet', TargetNullValue='No test performed yet'}"
-                Foreground="#CCCCCC"
+                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 FontSize="12"
                 TextWrapping="Wrap" />
               <TextBlock
                 Text="{Binding SelectedPort.LastTested, StringFormat='Last tested: {0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Not tested yet', TargetNullValue='Not tested yet'}"
-                Foreground="#858585"
+                Foreground="{DynamicResource TextForegroundMutedBrush}"
                 FontSize="11"
                 Margin="0,4,0,0" />
             </StackPanel>
@@ -387,14 +387,14 @@
           <TextBlock
             Text="Select a port from the discovery list above and click 'Test Port' to verify accessibility and perform basic communication tests"
             FontSize="11"
-            Foreground="#858585"
+            Foreground="{DynamicResource TextForegroundMutedBrush}"
             TextWrapping="Wrap" />
         </StackPanel>
       </Border>
 
       <!-- Process Management Section -->
-      <Border Background="#252526"
-        BorderBrush="#464647"
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlBorderBrush}"
         BorderThickness="1"
         CornerRadius="4"
         Padding="16">
@@ -410,12 +410,12 @@
               Text="Running Processes"
               FontSize="18"
               FontWeight="SemiBold"
-              Foreground="#CCCCCC"
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
               VerticalAlignment="Center" />
 
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
               <Button Background="#D13438"
-                Foreground="White"
+                Foreground="{DynamicResource TextForegroundBrush}"
                 BorderThickness="0"
                 Padding="12,8"
                 Command="{Binding StopSocatCommand}">
@@ -426,7 +426,7 @@
               </Button>
 
               <Button Background="#D13438"
-                Foreground="White"
+                Foreground="{DynamicResource TextForegroundBrush}"
                 BorderThickness="0"
                 Padding="12,8"
                 Command="{Binding StopAllSocatCommand}">
@@ -437,8 +437,8 @@
               </Button>
 
               <Button Background="Transparent"
-                BorderBrush="#464647"
-                Foreground="#CCCCCC"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 BorderThickness="1"
                 Padding="12,8"
                 Command="{Binding RefreshProcessesCommand}">
@@ -453,8 +453,8 @@
           <!-- Running Processes List -->
           <DataGrid ItemsSource="{Binding RunningProcesses}"
             SelectedItem="{Binding SelectedProcess}"
-            Background="#3C3C3C"
-            Foreground="#CCCCCC"
+            Background="{DynamicResource ControlBackgroundBrush}"
+            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
             GridLinesVisibility="Horizontal"
             HeadersVisibility="Column"
             CanUserReorderColumns="False"
@@ -531,13 +531,13 @@
 
             <TextBlock Grid.Column="0"
               Text="{Binding RunningProcessCount, StringFormat='Running: {0} socat processes'}"
-              Foreground="#858585"
+              Foreground="{DynamicResource TextForegroundMutedBrush}"
               FontSize="12"
               VerticalAlignment="Center" />
 
             <Button Grid.Column="1"
-              Background="#0E639C"
-              Foreground="White"
+              Background="{DynamicResource ButtonBackgroundBrush}"
+              Foreground="{DynamicResource TextForegroundBrush}"
               BorderThickness="0"
               Padding="12,6"
               Command="{Binding TestConnectionCommand}">
@@ -551,8 +551,8 @@
       </Border>
 
       <!-- Import/Export Section -->
-      <Border Background="#252526"
-        BorderBrush="#464647"
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlBorderBrush}"
         BorderThickness="1"
         CornerRadius="4"
         Padding="16">
@@ -560,7 +560,7 @@
           <TextBlock Text="Import / Export"
             FontSize="18"
             FontWeight="SemiBold"
-            Foreground="#CCCCCC" />
+            Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
           <!-- Profiles Path -->
           <Grid>
@@ -574,23 +574,23 @@
 
             <TextBlock Grid.Column="0"
               Text="Profiles Path:"
-              Foreground="#CCCCCC"
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
               VerticalAlignment="Center" />
 
             <TextBox Grid.Column="1"
               Text="{Binding ProfilesPath}"
               IsReadOnly="True"
-              Background="#3C3C3C"
-              Foreground="#CCCCCC"
-              BorderBrush="#464647"
+              Background="{DynamicResource ControlBackgroundBrush}"
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
               Margin="8,0" />
 
             <Button Grid.Column="2"
               Width="110"
               Height="34"
               Command="{Binding BrowseProfilesPathCommand}"
-              Background="#0E639C"
-              Foreground="White"
+              Background="{DynamicResource ButtonBackgroundBrush}"
+              Foreground="{DynamicResource TextForegroundBrush}"
               Margin="4,0">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
@@ -603,8 +603,8 @@
               Height="34"
               Command="{Binding OpenProfilesPathCommand}"
               Background="Transparent"
-              BorderBrush="#464647"
-              Foreground="#CCCCCC"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
               Margin="4,0">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
@@ -617,8 +617,8 @@
               Height="34"
               Command="{Binding ResetProfilesPathCommand}"
               Background="Transparent"
-              BorderBrush="#464647"
-              Foreground="#CCCCCC"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
               Margin="4,0,0,0">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" />
@@ -631,8 +631,8 @@
           <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
             <Button Width="150" Height="38"
               Command="{Binding ExportProfilesCommand}"
-              Background="#0E639C"
-              Foreground="White">
+              Background="{DynamicResource ButtonBackgroundBrush}"
+              Foreground="{DynamicResource TextForegroundBrush}">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
                 <TextBlock Text="Export Profiles" />
@@ -641,8 +641,8 @@
 
             <Button Width="150" Height="38"
               Command="{Binding ImportProfilesCommand}"
-              Background="#0E639C"
-              Foreground="White">
+              Background="{DynamicResource ButtonBackgroundBrush}"
+              Foreground="{DynamicResource TextForegroundBrush}">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <icons:Icon Value="fa-solid fa-file-import" Width="14" Height="14" />
                 <TextBlock Text="Import Profiles" />
@@ -653,14 +653,14 @@
           <TextBlock
             Text="Export profiles to share configurations or import profiles from backup files (JSON format)"
             FontSize="11"
-            Foreground="#858585"
+            Foreground="{DynamicResource TextForegroundMutedBrush}"
             Margin="0,4,0,0" />
         </StackPanel>
       </Border>
 
       <!-- Status Section -->
-      <Border Background="#252526"
-        BorderBrush="#464647"
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+        BorderBrush="{DynamicResource ControlBorderBrush}"
         BorderThickness="1"
         CornerRadius="4"
         Padding="16">
@@ -668,7 +668,7 @@
           <TextBlock Text="Status Information"
             FontSize="18"
             FontWeight="SemiBold"
-            Foreground="#CCCCCC" />
+            Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
           <Grid>
             <Grid.ColumnDefinitions>
@@ -678,26 +678,26 @@
 
             <StackPanel Grid.Column="0" Spacing="4">
               <TextBlock Text="Profile Management:"
-                Foreground="#CCCCCC"
+                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 FontWeight="SemiBold" />
               <TextBlock Text="{Binding Profiles.Count, StringFormat='• {0} profiles loaded'}"
-                Foreground="#858585"
+                Foreground="{DynamicResource TextForegroundMutedBrush}"
                 FontSize="12" />
               <TextBlock Text="{Binding StatusMessage, StringFormat='• {0}'}"
-                Foreground="#858585"
+                Foreground="{DynamicResource TextForegroundMutedBrush}"
                 FontSize="12" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Spacing="4">
               <TextBlock Text="socat Operations:"
-                Foreground="#CCCCCC"
+                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 FontWeight="SemiBold" />
               <TextBlock Text="{Binding DeviceCount, StringFormat='• {0} devices discovered'}"
-                Foreground="#858585"
+                Foreground="{DynamicResource TextForegroundMutedBrush}"
                 FontSize="12" />
               <TextBlock
                 Text="{Binding RunningProcessCount, StringFormat='• {0} processes running'}"
-                Foreground="#858585"
+                Foreground="{DynamicResource TextForegroundMutedBrush}"
                 FontSize="12" />
             </StackPanel>
           </Grid>
@@ -709,16 +709,16 @@
             <icons:Icon Value="fa-solid fa-spinner"
               Width="16"
               Height="16"
-              Foreground="#0E639C"
+              Foreground="{DynamicResource ButtonBackgroundBrush}"
               Classes="spin" />
             <TextBlock Text="Loading..."
-              Foreground="#858585"
+              Foreground="{DynamicResource TextForegroundMutedBrush}"
               FontSize="12" />
           </StackPanel>
 
           <!-- Status Message -->
           <TextBlock Text="{Binding StatusMessage}"
-            Foreground="#858585"
+            Foreground="{DynamicResource TextForegroundMutedBrush}"
             FontSize="12"
             TextWrapping="Wrap" />
         </StackPanel>

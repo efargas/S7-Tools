@@ -14,7 +14,7 @@
   mc:Ignorable="d"
   x:Class="S7Tools.Views.Jobs.JobWizardView"
   x:DataType="vm:JobWizardViewModel"
-  Background="#1E1E1E">
+  Background="{DynamicResource AppBackgroundBrush}">
 
   <UserControl.Resources>
     <converters:EnumEqualsConverter x:Key="EnumEqualsConverter" />
@@ -28,21 +28,21 @@
     <!-- Property table styling for better appearance -->
     <Style Selector="Border.PropertyTable">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Margin" Value="0,4" />
     </Style>
 
     <!-- Property header styling -->
     <Style Selector="Border.PropertyHeader">
-      <Setter Property="Background" Value="#2D2D30" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="0,0,0,1" />
       <Setter Property="Padding" Value="8,4" />
     </Style>
 
     <Style Selector="TextBlock.PropertyHeaderText">
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="FontSize" Value="12" />
     </Style>
@@ -50,24 +50,24 @@
     <!-- Property row styling with alternating background -->
     <Style Selector="Border.PropertyRow">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="0,0,0,1" />
       <Setter Property="Padding" Value="8,4" />
       <Setter Property="MinHeight" Value="24" />
     </Style>
 
     <Style Selector="Border.PropertyRow:nth-child(even)">
-      <Setter Property="Background" Value="#2A2A2B" />
+      <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
     </Style>
 
     <Style Selector="TextBlock.PropertyName">
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
       <Setter Property="FontWeight" Value="Normal" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <Style Selector="TextBlock.PropertyValue">
-      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
       <Setter Property="FontWeight" Value="Normal" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="TextWrapping" Value="Wrap" />
@@ -75,8 +75,8 @@
 
     <!-- Profile section styling -->
     <Style Selector="Border.ProfileSection">
-      <Setter Property="Background" Value="#2D2D2D" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="Margin" Value="0,8" />
@@ -88,11 +88,11 @@
     </Style>
 
     <Style Selector="Border.ProfileSection Expander Grid icons|Icon">
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     </Style>
 
     <Style Selector="Border.ProfileSection Expander Grid TextBlock">
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     </Style>
 
     <Style Selector="Border.ProfileSection Expander ToggleButton">
@@ -146,7 +146,7 @@
       <Setter Property="Margin" Value="8,0,0,0" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="FontSize" Value="12" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     </Style>
 
     <Style Selector="icons|Icon.ExpanderIcon">
@@ -154,7 +154,7 @@
       <Setter Property="Height" Value="16" />
       <Setter Property="Margin" Value="8,0" />
       <Setter Property="VerticalAlignment" Value="Center" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     </Style>
 
     <Style Selector="icons|Icon.ExpanderArrow">
@@ -175,7 +175,7 @@
     </Style>
 
     <Style Selector="Expander ToggleButton:pointerover">
-      <Setter Property="Background" Value="#404040" />
+      <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
 
     <Style Selector="Expander ToggleButton:pressed">
@@ -187,7 +187,7 @@
     </Style>
 
     <Style Selector="Expander ToggleButton:checked:pointerover">
-      <Setter Property="Background" Value="#404040" />
+      <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
   </UserControl.Styles>
 
@@ -202,37 +202,37 @@
           </Grid.ColumnDefinitions>
           <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
             <TextBlock Text="{Binding WizardTitle}" FontSize="24" FontWeight="Bold"
-              Foreground="#CCCCCC" />
-            <TextBlock Text="—" Foreground="#CCCCCC" />
-            <TextBlock Text="{Binding CurrentStep}" Foreground="#CCCCCC" />
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+            <TextBlock Text="—" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+            <TextBlock Text="{Binding CurrentStep}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
           </StackPanel>
           <ProgressBar Grid.Column="1" Width="140" IsVisible="{Binding IsBusy}"
             IsIndeterminate="True" />
         </Grid>
 
         <!-- Step 1: Serial Configuration -->
-        <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+        <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
           Padding="16"
           IsVisible="{Binding IsSerialStep}">
           <StackPanel Spacing="12">
             <TextBlock Text="Step 1: Job Details &amp; Serial Profile" FontSize="18"
-              FontWeight="SemiBold" Foreground="#CCCCCC" />
+              FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
             <!-- Job Name and Description -->
             <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto" ColumnSpacing="12"
               RowSpacing="8">
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="Job Name:" Foreground="#CCCCCC"
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Job Name:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding JobName}" Watermark="job name" />
 
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="#CCCCCC"
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding JobDescription}"
                 Watermark="optional description" />
             </Grid>
             <!-- Serial Profile Selection -->
             <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
-              <TextBlock Grid.Column="0" Text="Serial Profile:" Foreground="#CCCCCC"
+              <TextBlock Grid.Column="0" Text="Serial Profile:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <ComboBox Grid.Column="1" ItemsSource="{Binding SerialProfiles}"
                 SelectedItem="{Binding SelectedSerial}">
@@ -249,13 +249,13 @@
               IsVisible="{Binding SelectedSerial, Converter={x:Static ObjectConverters.IsNotNull}}">
               <StackPanel Spacing="8">
                 <!-- Header -->
-                <Border Background="#2D2D30" BorderBrush="#464647" BorderThickness="0,0,0,1"
+                <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,0,0,1"
                   Padding="8,6">
                   <StackPanel Orientation="Horizontal" Spacing="8">
-                    <icons:Icon Value="fa-solid fa-plug" Width="16" Height="16" Foreground="#CCCCCC"
+                    <icons:Icon Value="fa-solid fa-plug" Width="16" Height="16" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                       VerticalAlignment="Center" />
                     <TextBlock Text="SERIAL PORT CONFIGURATION" FontWeight="SemiBold" FontSize="12"
-                      Foreground="#CCCCCC" VerticalAlignment="Center" />
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
                   </StackPanel>
                 </Border>
                 <!-- Details -->
@@ -269,7 +269,7 @@
               </StackPanel>
             </Border>
             <!-- Port Discovery Section -->
-            <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+            <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
               Padding="12"
               DataContext="{Binding PortScanner}">
               <controls:SerialPortDiscoveryControl Height="210" />
@@ -277,15 +277,15 @@
           </StackPanel>
         </Border>
         <!-- Step 2: Socat Profile Selection -->
-        <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+        <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
           Padding="16"
           IsVisible="{Binding IsSocatStep}">
           <StackPanel Spacing="12">
             <TextBlock Text="Step 2: Socat Network Profile" FontSize="18" FontWeight="SemiBold"
-              Foreground="#CCCCCC" />
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
             <!-- Socat Profile Selection -->
             <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
-              <TextBlock Grid.Column="0" Text="Socat Profile:" Foreground="#CCCCCC"
+              <TextBlock Grid.Column="0" Text="Socat Profile:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <ComboBox Grid.Column="1" ItemsSource="{Binding SocatProfiles}"
                 SelectedItem="{Binding SelectedSocat}">
@@ -301,13 +301,13 @@
               IsVisible="{Binding SelectedSocat, Converter={x:Static ObjectConverters.IsNotNull}}">
               <StackPanel Spacing="8">
                 <!-- Header -->
-                <Border Background="#2D2D30" BorderBrush="#464647" BorderThickness="0,0,0,1"
+                <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,0,0,1"
                   Padding="8,6">
                   <StackPanel Orientation="Horizontal" Spacing="8">
                     <icons:Icon Value="fa-solid fa-network-wired" Width="16" Height="16"
-                      Foreground="#CCCCCC" VerticalAlignment="Center" />
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
                     <TextBlock Text="SOCAT NETWORK BRIDGE" FontWeight="SemiBold" FontSize="12"
-                      Foreground="#CCCCCC" VerticalAlignment="Center" />
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
                   </StackPanel>
                 </Border>
                 <!-- Details -->
@@ -323,15 +323,15 @@
           </StackPanel>
         </Border>
         <!-- Step 3: Power Supply Profile Selection -->
-        <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+        <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
           Padding="16"
           IsVisible="{Binding IsPowerStep}">
           <StackPanel Spacing="12">
             <TextBlock Text="Step 3: Power Supply Profile" FontSize="18" FontWeight="SemiBold"
-              Foreground="#CCCCCC" />
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
             <!-- Power Supply Profile Selection -->
             <Grid ColumnDefinitions="150,*" ColumnSpacing="12">
-              <TextBlock Grid.Column="0" Text="Power Profile:" Foreground="#CCCCCC"
+              <TextBlock Grid.Column="0" Text="Power Profile:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <ComboBox Grid.Column="1" ItemsSource="{Binding PowerProfiles}"
                 SelectedItem="{Binding SelectedPower}">
@@ -347,13 +347,13 @@
               IsVisible="{Binding SelectedPower, Converter={x:Static ObjectConverters.IsNotNull}}">
               <StackPanel Spacing="8">
                 <!-- Header -->
-                <Border Background="#2D2D30" BorderBrush="#464647" BorderThickness="0,0,0,1"
+                <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,0,0,1"
                   Padding="8,6">
                   <StackPanel Orientation="Horizontal" Spacing="8">
-                    <icons:Icon Value="fa-solid fa-bolt" Width="16" Height="16" Foreground="#CCCCCC"
+                    <icons:Icon Value="fa-solid fa-bolt" Width="16" Height="16" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                       VerticalAlignment="Center" />
                     <TextBlock Text="POWER SUPPLY CONTROL" FontWeight="SemiBold" FontSize="12"
-                      Foreground="#CCCCCC" VerticalAlignment="Center" />
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
                   </StackPanel>
                 </Border>
                 <!-- Details -->
@@ -370,34 +370,34 @@
         </Border>
 
         <!-- Step 4: Memory Region Configuration -->
-        <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+        <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
           Padding="16"
           IsVisible="{Binding IsMemoryStep}">
           <jobviews:JobWizardMemoryRegionStepView DataContext="{Binding MemoryRegionStepViewModel}" />
         </Border>
 
         <!-- Step 5: Timing and Output Configuration -->
-        <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+        <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
           Padding="16"
           IsVisible="{Binding IsTimingOutputStep}">
           <StackPanel Spacing="12">
             <TextBlock Text="Step 5: Timing &amp; Output Configuration" FontSize="18"
-              FontWeight="SemiBold" Foreground="#CCCCCC" />
+              FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
             <!-- Timing Configuration -->
             <Grid ColumnDefinitions="150,*,150,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12"
               RowSpacing="8">
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="Power On Time:" Foreground="#CCCCCC"
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="Power On Time:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding PowerOnTimeMs}"
                 Watermark="milliseconds" />
 
-              <TextBlock Grid.Row="0" Grid.Column="2" Text="Power Off Delay:" Foreground="#CCCCCC"
+              <TextBlock Grid.Row="0" Grid.Column="2" Text="Power Off Delay:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding PowerOffDelayMs}"
                 Watermark="milliseconds" />
 
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="Payloads Path:" Foreground="#CCCCCC"
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="Payloads Path:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <Grid Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" ColumnDefinitions="*,Auto">
                 <TextBox Grid.Column="0" Text="{Binding PayloadsBasePath}"
@@ -406,7 +406,7 @@
                   Command="{Binding BrowsePayloadsPathCommand}" Margin="8,0,0,0" />
               </Grid>
 
-              <TextBlock Grid.Row="2" Grid.Column="0" Text="Output Path:" Foreground="#CCCCCC"
+              <TextBlock Grid.Row="2" Grid.Column="0" Text="Output Path:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 VerticalAlignment="Center" />
               <Grid Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" ColumnDefinitions="*,Auto">
                 <TextBox Grid.Column="0" Text="{Binding OutputPath}" Watermark="output directory" />
@@ -418,73 +418,73 @@
         </Border>
 
         <!-- Step 6: Review and Confirm -->
-        <Border Background="#252526" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+        <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
           Padding="16"
           IsVisible="{Binding IsReviewStep}">
           <StackPanel Spacing="12">
             <TextBlock Text="Step 6: Review &amp; Confirm" FontSize="18" FontWeight="SemiBold"
-              Foreground="#CCCCCC" />
+              Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
             <!-- Job Summary -->
-            <Border Background="#2D2D2D" BorderBrush="#464647" BorderThickness="1" CornerRadius="4"
+            <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
               Padding="12">
               <StackPanel Spacing="8">
                 <TextBlock Text="Job Configuration Summary" FontWeight="SemiBold"
-                  Foreground="#CCCCCC" />
+                  Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                 <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                   ColumnDefinitions="150,*" ColumnSpacing="12" RowSpacing="6">
-                  <TextBlock Grid.Row="0" Grid.Column="0" Text="Job Name:" Foreground="#CCCCCC"
+                  <TextBlock Grid.Row="0" Grid.Column="0" Text="Job Name:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                     FontWeight="SemiBold" />
                   <TextBlock Grid.Row="0" Grid.Column="1"
-                    Text="{Binding JobName, FallbackValue='Unnamed Job'}" Foreground="#FFFFFF" />
+                    Text="{Binding JobName, FallbackValue='Unnamed Job'}" Foreground="{DynamicResource TextForegroundBrush}" />
 
-                  <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="#CCCCCC"
+                  <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                     FontWeight="SemiBold" />
                   <TextBlock Grid.Row="1" Grid.Column="1"
                     Text="{Binding JobDescription, FallbackValue='No description'}"
-                    Foreground="#FFFFFF" TextWrapping="Wrap" />
+                    Foreground="{DynamicResource TextForegroundBrush}" TextWrapping="Wrap" />
 
                   <TextBlock Grid.Row="2" Grid.Column="0" Text="Serial Profile:"
-                    Foreground="#CCCCCC" FontWeight="SemiBold" />
+                    Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
                   <TextBlock Grid.Row="2" Grid.Column="1"
                     Text="{Binding SelectedSerial.Name, FallbackValue='Not selected'}"
-                    Foreground="#FFFFFF" />
+                    Foreground="{DynamicResource TextForegroundBrush}" />
 
-                  <TextBlock Grid.Row="3" Grid.Column="0" Text="Socat Profile:" Foreground="#CCCCCC"
+                  <TextBlock Grid.Row="3" Grid.Column="0" Text="Socat Profile:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                     FontWeight="SemiBold" />
                   <TextBlock Grid.Row="3" Grid.Column="1"
                     Text="{Binding SelectedSocat.Name, FallbackValue='Not selected'}"
-                    Foreground="#FFFFFF" />
+                    Foreground="{DynamicResource TextForegroundBrush}" />
 
-                  <TextBlock Grid.Row="4" Grid.Column="0" Text="Power Profile:" Foreground="#CCCCCC"
+                  <TextBlock Grid.Row="4" Grid.Column="0" Text="Power Profile:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                     FontWeight="SemiBold" />
                   <TextBlock Grid.Row="4" Grid.Column="1"
                     Text="{Binding SelectedPower.Name, FallbackValue='Not selected'}"
-                    Foreground="#FFFFFF" />
+                    Foreground="{DynamicResource TextForegroundBrush}" />
 
                   <TextBlock Grid.Row="5" Grid.Column="0" Text="Memory Profile:"
-                    Foreground="#CCCCCC" FontWeight="SemiBold" />
+                    Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
                   <TextBlock Grid.Row="5" Grid.Column="1"
                     Text="{Binding MemoryRegionSummary, FallbackValue='Not configured'}"
-                    Foreground="#FFFFFF" />
+                    Foreground="{DynamicResource TextForegroundBrush}" />
 
-                  <TextBlock Grid.Row="6" Grid.Column="0" Text="Power Timing:" Foreground="#CCCCCC"
+                  <TextBlock Grid.Row="6" Grid.Column="0" Text="Power Timing:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                     FontWeight="SemiBold" />
                   <TextBlock Grid.Row="6" Grid.Column="1"
                     Text="{Binding PowerTimingSummary, FallbackValue='Not configured'}"
-                    Foreground="#FFFFFF" />
+                    Foreground="{DynamicResource TextForegroundBrush}" />
 
-                  <TextBlock Grid.Row="7" Grid.Column="0" Text="Payloads:" Foreground="#CCCCCC"
+                  <TextBlock Grid.Row="7" Grid.Column="0" Text="Payloads:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                     FontWeight="SemiBold" />
                   <TextBlock Grid.Row="7" Grid.Column="1"
                     Text="{Binding PayloadsBasePath, FallbackValue='Not specified'}"
-                    Foreground="#FFFFFF" TextTrimming="CharacterEllipsis" />
+                    Foreground="{DynamicResource TextForegroundBrush}" TextTrimming="CharacterEllipsis" />
 
-                  <TextBlock Grid.Row="8" Grid.Column="0" Text="Output:" Foreground="#CCCCCC"
+                  <TextBlock Grid.Row="8" Grid.Column="0" Text="Output:" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                     FontWeight="SemiBold" />
                   <TextBlock Grid.Row="8" Grid.Column="1"
-                    Text="{Binding OutputPath, FallbackValue='Not specified'}" Foreground="#FFFFFF"
+                    Text="{Binding OutputPath, FallbackValue='Not specified'}" Foreground="{DynamicResource TextForegroundBrush}"
                     TextTrimming="CharacterEllipsis" />
                 </Grid>
               </StackPanel>
@@ -495,14 +495,14 @@
     </ScrollViewer>
 
     <!-- 4) Wizard Buttons + Status -->
-    <Border Grid.Row="1" BorderBrush="#464647" BorderThickness="0,1,0,0" Background="#1E1E1E"
+    <Border Grid.Row="1" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,1,0,0" Background="{DynamicResource AppBackgroundBrush}"
       Padding="20">
       <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <TextBlock Grid.Column="0" Text="{Binding Status}" Foreground="#858585"
+        <TextBlock Grid.Column="0" Text="{Binding Status}" Foreground="{DynamicResource TextForegroundMutedBrush}"
           VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
           <Button Content="Cancel" Command="{Binding CancelCommand}" />

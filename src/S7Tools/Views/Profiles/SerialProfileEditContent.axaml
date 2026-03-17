@@ -10,13 +10,13 @@
     <UserControl.Styles>
         <!-- VSCode-style dark theme -->
         <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
         </Style>
 
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#3C3C3C" />
-            <Setter Property="Foreground" Value="#CCCCCC" />
-            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="8,6" />
@@ -24,9 +24,9 @@
         </Style>
 
         <Style Selector="ComboBox">
-            <Setter Property="Background" Value="#3C3C3C" />
-            <Setter Property="Foreground" Value="#CCCCCC" />
-            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="8,6" />
@@ -34,18 +34,18 @@
         </Style>
 
         <Style Selector="ComboBox:pointerover">
-            <Setter Property="BorderBrush" Value="#007ACC" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
         </Style>
 
         <Style Selector="CheckBox">
-            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
             <Setter Property="FontSize" Value="13" />
         </Style>
 
         <Style Selector="NumericUpDown">
-            <Setter Property="Background" Value="#3C3C3C" />
-            <Setter Property="Foreground" Value="#CCCCCC" />
-            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="8,6" />
@@ -54,8 +54,8 @@
 
         <!-- Group styling -->
         <Style Selector="Border.group">
-            <Setter Property="Background" Value="#252526" />
-            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="12" />
@@ -65,15 +65,15 @@
         <Style Selector="TextBlock.group-title">
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="#E8E8E8" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
             <Setter Property="Margin" Value="0,0,0,8" />
         </Style>
 
         <!-- Command preview styling -->
         <Style Selector="TextBox.command-preview">
-            <Setter Property="Background" Value="#0C0C0C" />
-            <Setter Property="Foreground" Value="#D4D4D4" />
-            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Background" Value="{DynamicResource AppBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="FontFamily" Value="Consolas, 'Courier New', monospace" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="IsReadOnly" Value="True" />

@@ -8,7 +8,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
              x:Class="S7Tools.Views.Layout.TaskManagerShellView"
              x:DataType="vm:TaskManagerShellViewModel"
-             Background="#1E1E1E">
+             Background="{DynamicResource AppBackgroundBrush}">
 
   <!-- Main Content Only - categories handled by sidebar; view resolved via ViewLocator -->
   <ContentControl Content="{Binding SelectedCategoryViewModel}">

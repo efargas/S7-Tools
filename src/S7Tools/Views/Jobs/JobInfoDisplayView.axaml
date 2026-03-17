@@ -19,21 +19,21 @@
     <!-- Property table styling for better appearance -->
     <Style Selector="Border.PropertyTable">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="Margin" Value="0,4" />
     </Style>
 
     <!-- Property header styling -->
     <Style Selector="Border.PropertyHeader">
-      <Setter Property="Background" Value="#2D2D30" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="0,0,0,1" />
       <Setter Property="Padding" Value="8,4" />
     </Style>
 
     <Style Selector="TextBlock.PropertyHeaderText">
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
       <Setter Property="FontWeight" Value="SemiBold" />
       <Setter Property="FontSize" Value="12" />
     </Style>
@@ -41,26 +41,26 @@
     <!-- Property row styling with alternating background -->
     <Style Selector="Border.PropertyRow">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="0,0,0,1" />
       <Setter Property="Padding" Value="8,4" />
       <Setter Property="MinHeight" Value="24" />
     </Style>
 
     <Style Selector="Border.PropertyRow:nth-child(even)">
-      <Setter Property="Background" Value="#2A2A2B" />
+      <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
     </Style>
 
     <!-- Property text styling -->
     <Style Selector="TextBlock.PropertyName">
       <Setter Property="FontWeight" Value="Medium" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
     <Style Selector="TextBlock.PropertyValue">
-      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="TextWrapping" Value="Wrap" />
       <Setter Property="VerticalAlignment" Value="Center" />
@@ -70,19 +70,19 @@
     <Style Selector="TextBlock.InfoLabel">
       <Setter Property="FontWeight" Value="Medium" />
       <Setter Property="Margin" Value="0,2" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     </Style>
 
     <Style Selector="TextBlock.InfoValue">
       <Setter Property="Margin" Value="8,2,0,2" />
       <Setter Property="TextWrapping" Value="Wrap" />
-      <Setter Property="Foreground" Value="#FFFFFF" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
     </Style>
 
     <!-- Section borders - VS Code style -->
     <Style Selector="Border.ProfileSection">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="1,1,1,1" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="0" />
@@ -113,7 +113,7 @@
 
     <Style Selector="Border.WarningSection">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#464647" />
+      <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
       <Setter Property="BorderThickness" Value="0,1,0,0" />
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="0" />
@@ -192,7 +192,7 @@
     <Style Selector="TextBlock.ExpanderHeader">
       <Setter Property="FontWeight" Value="Normal" />
       <Setter Property="FontSize" Value="12" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Margin" Value="0" />
       <Setter Property="Padding" Value="0" />
@@ -202,7 +202,7 @@
     <Style Selector="icons|Icon.ExpanderIcon">
       <Setter Property="Width" Value="12" />
       <Setter Property="Height" Value="12" />
-      <Setter Property="Foreground" Value="#CCCCCC" />
+      <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
       <Setter Property="VerticalAlignment" Value="Center" />
       <Setter Property="Margin" Value="4,0,4,0" />
       <Setter Property="Padding" Value="0" />
@@ -239,7 +239,7 @@
           <StackPanel Spacing="4">
             <TextBlock Text="{Binding JobBasicInfo}"
                        TextWrapping="Wrap"
-                       Foreground="#FFFFFF"
+                       Foreground="{DynamicResource TextForegroundBrush}"
                        Margin="0" />
           </StackPanel>
         </Expander>
@@ -926,8 +926,8 @@
         <Button Content="🔄 Refresh Job Details"
                 Command="{Binding RefreshCommand}"
                 HorizontalAlignment="Center"
-                Background="#0E639C"
-                Foreground="White"
+                Background="{DynamicResource ButtonBackgroundBrush}"
+                Foreground="{DynamicResource TextForegroundBrush}"
                 BorderThickness="0"
                 Padding="16,8"
                 CornerRadius="4" />

@@ -55,11 +55,11 @@
                                     </Border>
                                     <Border Background="#4CAF50" CornerRadius="8" Padding="6,2"
                                         IsVisible="{Binding IsTemplate}">
-                                        <TextBlock Text="Template" FontSize="10" Foreground="White" />
+                                        <TextBlock Text="Template" FontSize="10" Foreground="{DynamicResource TextForegroundBrush}" />
                                     </Border>
                                     <Border Background="#FF9800" CornerRadius="8" Padding="6,2"
                                         IsVisible="{Binding IsReadOnly}">
-                                        <TextBlock Text="Read-Only" FontSize="10" Foreground="White" />
+                                        <TextBlock Text="Read-Only" FontSize="10" Foreground="{DynamicResource TextForegroundBrush}" />
                                     </Border>
                                 </StackPanel>
 
@@ -67,7 +67,7 @@
                                 <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                     Text="{Binding Description}"
                                     FontSize="12"
-                                    Foreground="#CCCCCC"
+                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                     TextWrapping="Wrap" Margin="0,4,0,0"
                                     IsVisible="{Binding Description, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
@@ -75,12 +75,12 @@
                                 <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                                     Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
                                     <TextBlock FontSize="11"
-                                        Foreground="#CCCCCC">
+                                        Foreground="{DynamicResource TextForegroundSecondaryBrush}">
                                         <Run Text="Device: " />
                                         <Run Text="{Binding SerialDevice}" FontWeight="Medium" />
                                     </TextBlock>
                                     <TextBlock FontSize="11"
-                                        Foreground="#CCCCCC">
+                                        Foreground="{DynamicResource TextForegroundSecondaryBrush}">
                                         <Run Text="Output: " />
                                         <Run Text="{Binding OutputPath}" FontWeight="Medium" />
                                     </TextBlock>

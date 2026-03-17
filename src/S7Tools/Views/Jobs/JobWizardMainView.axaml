@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Jobs.JobWizardMainView"
              x:DataType="vm:JobWizardViewModel"
-             Background="#1E1E1E">
+             Background="{DynamicResource AppBackgroundBrush}">
 
   <Design.DataContext>
     <vm:JobWizardViewModel />

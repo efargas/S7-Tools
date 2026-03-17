@@ -7,7 +7,7 @@
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
     x:Class="S7Tools.Views.Pages.MemoryDumpViewerView"
     x:DataType="vm:MemoryDumpViewerViewModel"
-    Background="#1E1E1E">
+    Background="{DynamicResource AppBackgroundBrush}">
 
     <ContentControl Content="{Binding SelectedCategoryViewModel}">
         <ContentControl.DataTemplates>

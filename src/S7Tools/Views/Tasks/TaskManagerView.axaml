@@ -25,11 +25,11 @@
             VerticalAlignment="Center" Margin="0,0,8,0" />
           <Border Background="#43A047" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding Statistics.RunningTasksCount, StringFormat='Active: {0}'}"
-              Foreground="White" FontSize="12" FontWeight="Medium" />
+              Foreground="{DynamicResource TextForegroundBrush}" FontSize="12" FontWeight="Medium" />
           </Border>
           <Border Background="#1976D2" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding CreatedTasks.Count, StringFormat='Created: {0}'}"
-              Foreground="White" FontSize="12" />
+              Foreground="{DynamicResource TextForegroundBrush}" FontSize="12" />
           </Border>
           <Border Background="#FBC02D" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding QueuedTasks.Count, StringFormat='Queued: {0}'}"
@@ -37,16 +37,16 @@
           </Border>
           <Border Background="#EF6C00" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding ScheduledTasks.Count, StringFormat='Scheduled: {0}'}"
-              Foreground="White" FontSize="12" />
+              Foreground="{DynamicResource TextForegroundBrush}" FontSize="12" />
           </Border>
           <Border Background="#616161" CornerRadius="12" Padding="8,4">
             <TextBlock Text="{Binding Statistics.TotalTasksCount, StringFormat='Total: {0}'}"
-              Foreground="White" FontSize="12" />
+              Foreground="{DynamicResource TextForegroundBrush}" FontSize="12" />
           </Border>
           <Border Background="#D32F2F" CornerRadius="12" Padding="8,4"
             IsVisible="{Binding Statistics.FailedTasksCount, Converter={x:Static ObjectConverters.IsNotNull}}">
             <TextBlock Text="{Binding Statistics.FailedTasksCount, StringFormat='Failed: {0}'}"
-              Foreground="White" FontSize="12" />
+              Foreground="{DynamicResource TextForegroundBrush}" FontSize="12" />
           </Border>
         </StackPanel>
 
@@ -97,7 +97,7 @@
                   Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
                   IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}" />
                 <TextBlock Grid.Column="1" FontSize="11"
-                  Foreground="White"
+                  Foreground="{DynamicResource TextForegroundBrush}"
                   VerticalAlignment="Center" TextAlignment="Right"
                   IsVisible="{Binding TotalBytes, Converter={x:Static ObjectConverters.IsNotNull}}">
                   <TextBlock.Text>
@@ -145,7 +145,7 @@
 
 
     <!-- Task Details (Row 2) -->
-    <Border Grid.Row="2" Background="#252526" CornerRadius="4" Padding="0" ClipToBounds="True">
+    <Border Grid.Row="2" Background="{DynamicResource PanelBackgroundBrush}" CornerRadius="4" Padding="0" ClipToBounds="True">
       <views:TaskDetailsView DataContext="{Binding TaskDetailsViewModel}" />
     </Border>
 

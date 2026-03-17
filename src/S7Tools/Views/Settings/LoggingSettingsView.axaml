@@ -8,7 +8,7 @@
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
     x:Class="S7Tools.Views.Settings.LoggingSettingsView"
     x:DataType="vm:LoggingSettingsViewModel"
-    Background="#1E1E1E">
+    Background="{DynamicResource AppBackgroundBrush}">
 
     <ScrollViewer>
         <StackPanel Margin="20" Spacing="20">
@@ -16,12 +16,12 @@
             <TextBlock Text="Logging Settings"
                 FontSize="24"
                 FontWeight="Bold"
-                Foreground="#CCCCCC"
+                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 Margin="0,0,0,10" />
 
             <!-- Logging Settings Section -->
-            <Border Background="#252526"
-                BorderBrush="#464647"
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="16">
@@ -29,7 +29,7 @@
                     <TextBlock Text="Logging Configuration"
                         FontSize="18"
                         FontWeight="SemiBold"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <!-- Default Log Path -->
                     <Grid>
@@ -46,22 +46,22 @@
 
                         <TextBlock Grid.Column="0" Grid.Row="0"
                             Text="Default Log Path:"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             VerticalAlignment="Center" />
 
                         <TextBox Grid.Column="1" Grid.Row="0"
                             Text="{Binding DefaultLogPath}"
-                            Background="#3C3C3C"
-                            Foreground="#CCCCCC"
-                            BorderBrush="#464647"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
                             Width="110"
                             Height="34"
                             Content="Browse..."
-                            Background="#0E639C"
-                            Foreground="White"
+                            Background="{DynamicResource ButtonBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundBrush}"
                             BorderThickness="0"
                             Margin="4,0"
                             Command="{Binding BrowseDefaultLogPathCommand}" />
@@ -70,8 +70,8 @@
                             Width="110"
                             Height="34"
                             Background="Transparent"
-                            Foreground="#CCCCCC"
-                            BorderBrush="#464647"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             Margin="4,0"
                             ToolTip.Tip="Open in Explorer"
@@ -86,7 +86,7 @@
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
                             Text="Directory where log files will be stored by default"
                             FontSize="11"
-                            Foreground="#858585"
+                            Foreground="{DynamicResource TextForegroundMutedBrush}"
                             Margin="8,4,0,0" />
                     </Grid>
 
@@ -105,22 +105,22 @@
 
                         <TextBlock Grid.Column="0" Grid.Row="0"
                             Text="Export Path:"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             VerticalAlignment="Center" />
 
                         <TextBox Grid.Column="1" Grid.Row="0"
                             Text="{Binding ExportPath}"
-                            Background="#3C3C3C"
-                            Foreground="#CCCCCC"
-                            BorderBrush="#464647"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
                             Width="110"
                             Height="34"
                             Content="Browse..."
-                            Background="#0E639C"
-                            Foreground="White"
+                            Background="{DynamicResource ButtonBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundBrush}"
                             BorderThickness="0"
                             Margin="4,0"
                             Command="{Binding BrowseExportPathCommand}" />
@@ -129,8 +129,8 @@
                             Width="110"
                             Height="34"
                             Background="Transparent"
-                            Foreground="#CCCCCC"
-                            BorderBrush="#464647"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             Margin="4,0"
                             ToolTip.Tip="Open in Explorer"
@@ -145,7 +145,7 @@
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
                             Text="Directory where exported log files will be saved"
                             FontSize="11"
-                            Foreground="#858585"
+                            Foreground="{DynamicResource TextForegroundMutedBrush}"
                             Margin="8,4,0,0" />
                     </Grid>
 
@@ -159,21 +159,21 @@
 
                         <TextBlock Grid.Column="0"
                             Text="Minimum Log Level:"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             VerticalAlignment="Center" />
 
                         <ComboBox Grid.Column="1"
                             ItemsSource="{Binding LogLevels}"
                             SelectedItem="{Binding MinimumLogLevel}"
-                            Background="#3C3C3C"
-                            Foreground="#CCCCCC"
-                            BorderBrush="#464647"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             Margin="8,0" />
 
                         <TextBlock Grid.Column="2"
                             Text="Only log messages at this level or higher will be recorded"
                             FontSize="11"
-                            Foreground="#858585"
+                            Foreground="{DynamicResource TextForegroundMutedBrush}"
                             VerticalAlignment="Center"
                             Margin="8,0" />
                     </Grid>
@@ -187,13 +187,13 @@
 
                         <TextBlock Grid.Column="0"
                             Text="Auto-scroll:"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             VerticalAlignment="Center" />
 
                         <CheckBox Grid.Column="1"
                             IsChecked="{Binding AutoScrollLogs}"
                             Content="Automatically scroll to newest log entries"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             Margin="8,0" />
                     </Grid>
 
@@ -206,21 +206,21 @@
 
                         <TextBlock Grid.Column="0"
                             Text="Rolling Log Files:"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             VerticalAlignment="Center" />
 
                         <CheckBox Grid.Column="1"
                             IsChecked="{Binding EnableRollingLogs}"
                             Content="Create new log file each day (MainLog_YYYY-MM-DD_HH-mm-ss.log)"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             Margin="8,0" />
                     </Grid>
                 </StackPanel>
             </Border>
 
             <!-- Display Settings Section -->
-            <Border Background="#252526"
-                BorderBrush="#464647"
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="16">
@@ -228,28 +228,28 @@
                     <TextBlock Text="Display Options"
                         FontSize="18"
                         FontWeight="SemiBold"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <!-- Show Timestamp -->
                     <CheckBox IsChecked="{Binding ShowTimestampInLogs}"
                         Content="Show timestamp in log entries"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <!-- Show Category -->
                     <CheckBox IsChecked="{Binding ShowCategoryInLogs}"
                         Content="Show category in log entries"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <!-- Show Log Level -->
                     <CheckBox IsChecked="{Binding ShowLogLevelInLogs}"
                         Content="Show log level badges in log entries"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                 </StackPanel>
             </Border>
 
             <!-- Actions Section -->
-            <Border Background="#252526"
-                BorderBrush="#464647"
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="16">
@@ -257,7 +257,7 @@
                     <TextBlock Text="Settings Management"
                         FontSize="18"
                         FontWeight="SemiBold"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -269,8 +269,8 @@
 
                         <!-- Save Settings -->
                         <Button Grid.Column="0"
-                            Background="#0E639C"
-                            Foreground="White"
+                            Background="{DynamicResource ButtonBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundBrush}"
                             BorderThickness="0"
                             Padding="16,8"
                             Margin="0,0,8,0"
@@ -283,8 +283,8 @@
 
                         <!-- Load Settings -->
                         <Button Grid.Column="1"
-                            Background="#0E639C"
-                            Foreground="White"
+                            Background="{DynamicResource ButtonBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundBrush}"
                             BorderThickness="0"
                             Padding="16,8"
                             Margin="4,0"
@@ -298,7 +298,7 @@
                         <!-- Reset to Defaults -->
                         <Button Grid.Column="2"
                             Background="#D13438"
-                            Foreground="White"
+                            Foreground="{DynamicResource TextForegroundBrush}"
                             BorderThickness="0"
                             Padding="16,8"
                             Margin="4,0"
@@ -312,8 +312,8 @@
                         <!-- Open Settings Folder -->
                         <Button Grid.Column="3"
                             Background="Transparent"
-                            Foreground="#CCCCCC"
-                            BorderBrush="#464647"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             Padding="16,8"
                             Margin="8,0,0,0"
@@ -327,15 +327,15 @@
 
                     <!-- Status Text -->
                     <TextBlock Text="{Binding SettingsStatusMessage}"
-                        Foreground="#858585"
+                        Foreground="{DynamicResource TextForegroundMutedBrush}"
                         FontSize="12"
                         TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
             <!-- Current Settings Info -->
-            <Border Background="#252526"
-                BorderBrush="#464647"
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="1"
                 CornerRadius="4"
                 Padding="16">
@@ -343,16 +343,16 @@
                     <TextBlock Text="Current Settings File"
                         FontSize="18"
                         FontWeight="SemiBold"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <TextBlock Text="{Binding CurrentSettingsFilePath}"
-                        Foreground="#858585"
+                        Foreground="{DynamicResource TextForegroundMutedBrush}"
                         FontSize="11"
                         TextWrapping="Wrap" />
 
                     <TextBlock
                         Text="{Binding SettingsLastModified, StringFormat='Last modified: {0:yyyy-MM-dd HH:mm:ss}'}"
-                        Foreground="#858585"
+                        Foreground="{DynamicResource TextForegroundMutedBrush}"
                         FontSize="11" />
                 </StackPanel>
             </Border>

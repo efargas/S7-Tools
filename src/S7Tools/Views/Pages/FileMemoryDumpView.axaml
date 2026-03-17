@@ -15,13 +15,13 @@
             VerticalAlignment="Center" HorizontalAlignment="Center">
             <StackPanel Spacing="20">
                 <icons:Icon Value="fa-solid fa-file-code" Width="64" Height="64"
-                    Foreground="#569CD6" />
-                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="White"
+                    Foreground="{DynamicResource BrandAccentBrush}" />
+                <TextBlock Text="{Binding Title}" FontSize="24" FontWeight="Bold" Foreground="{DynamicResource TextForegroundBrush}"
                     HorizontalAlignment="Center" />
-                <TextBlock Text="{Binding Description}" FontSize="16" Foreground="#858585"
+                <TextBlock Text="{Binding Description}" FontSize="16" Foreground="{DynamicResource TextForegroundMutedBrush}"
                     TextWrapping="Wrap" MaxWidth="400" TextAlignment="Center" />
 
-                <Button Command="{Binding OpenFileCommand}" Background="#0E639C" Foreground="White"
+                <Button Command="{Binding OpenFileCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}"
                     HorizontalAlignment="Center" Padding="20,10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <icons:Icon Value="fa-solid fa-folder-open" />
@@ -40,8 +40,8 @@
             <hex:HexViewerControl Grid.Column="0" DataContext="{Binding HexViewer}" />
 
             <!-- Data Inspector (Right) -->
-            <Border Grid.Column="1" BorderBrush="#3F3F46" BorderThickness="1,0,0,0"
-                Background="#252526">
+            <Border Grid.Column="1" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1,0,0,0"
+                Background="{DynamicResource PanelBackgroundBrush}">
                 <hex:DataInspectorView DataContext="{Binding HexViewer.DataInspector}" />
             </Border>
 

@@ -4,8 +4,8 @@
 
   <!-- Port Discovery Card Style (matches mockup) -->
   <Style Selector="Border.PortCard">
-    <Setter Property="Background" Value="#2A2A2B" />
-    <Setter Property="BorderBrush" Value="#464647" />
+    <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="3" />
     <Setter Property="Padding" Value="10,8" />
@@ -25,8 +25,8 @@
 
   <!-- Property card container styling -->
   <Style Selector="Border.PropertyItem">
-    <Setter Property="Background" Value="#2A2A2B" />
-    <Setter Property="BorderBrush" Value="#464647" />
+    <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="3" />
     <Setter Property="Padding" Value="8,6" />
@@ -34,7 +34,7 @@
 
   <!-- Property label styling (blue, smaller, bold) -->
   <Style Selector="TextBlock.PropertyLabel">
-    <Setter Property="Foreground" Value="#9CDCFE" />
+    <Setter Property="Foreground" Value="{DynamicResource BrandAccentBrush}" />
     <Setter Property="FontSize" Value="11" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="TextWrapping" Value="NoWrap" />
@@ -42,7 +42,7 @@
 
   <!-- Property value styling (gray, larger, normal) -->
   <Style Selector="TextBlock.PropertyValue">
-    <Setter Property="Foreground" Value="#CCCCCC" />
+    <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     <Setter Property="FontSize" Value="12" />
     <Setter Property="TextWrapping" Value="Wrap" />
     <Setter Property="Margin" Value="0,2,0,0" />

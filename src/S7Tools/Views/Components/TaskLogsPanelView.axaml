@@ -35,7 +35,7 @@
                     <Setter Property="Padding" Value="12,8" />
                     <Setter Property="MinHeight" Value="35" />
                     <Setter Property="Background" Value="Transparent" />
-                    <Setter Property="Foreground" Value="#858585" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextForegroundMutedBrush}" />
                     <Setter Property="Template">
                         <ControlTemplate>
                             <Grid Background="Transparent">
@@ -48,7 +48,7 @@
                                     TextBlock.Foreground="{TemplateBinding Foreground}" />
                                 <Border Name="SelectionIndicator"
                                     Height="2"
-                                    Background="#007ACC"
+                                    Background="{DynamicResource BrandAccentBrush}"
                                     VerticalAlignment="Bottom"
                                     IsVisible="False" />
                             </Grid>
@@ -56,13 +56,13 @@
                     </Setter>
                 </Style>
                 <Style Selector="TabItem:selected">
-                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
                 </Style>
                 <Style Selector="TabItem:selected /template/ Border#SelectionIndicator">
                     <Setter Property="IsVisible" Value="True" />
                 </Style>
                 <Style Selector="TabItem:pointerover">
-                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
                 </Style>
 
                 <!-- Remove default TabControl padding and border -->
@@ -70,7 +70,7 @@
                     <Setter Property="Padding" Value="0" />
                 </Style>
                 <Style Selector="TabControl /template/ Grid#PART_TabHeader">
-                    <Setter Property="Background" Value="#2D2D30" />
+                    <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
                 </Style>
             </TabControl.Styles>
 
@@ -78,15 +78,15 @@
             <TabItem Header="Main Log">
                 <Grid RowDefinitions="Auto,*">
                     <!-- Header -->
-                    <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="#2D2D30">
+                    <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="{DynamicResource PanelBackgroundBrush}">
                         <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold"
                             FontSize="12"
-                            Foreground="#CCCCCC" Padding="8,4" />
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
                         <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold" FontSize="12"
-                            Foreground="#CCCCCC" Padding="8,4" />
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
                         <TextBlock Grid.Column="2" Text="Message" FontWeight="SemiBold"
                             FontSize="12"
-                            Foreground="#CCCCCC" Padding="8,4" />
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
                     </Grid>
                     <!-- Log List -->
                     <!-- Log List -->
@@ -99,20 +99,20 @@
                                 <Grid ColumnDefinitions="160,80,*">
                                     <TextBlock Grid.Column="0"
                                         Text="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
-                                        FontSize="12" Padding="8,4" Foreground="#CCCCCC"
+                                        FontSize="12" Padding="8,4" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                         VerticalAlignment="Top" />
                                     <Border Grid.Column="1"
                                         Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}"
                                         CornerRadius="3" Margin="8,4" Padding="4,2"
                                         VerticalAlignment="Top"
                                         HorizontalAlignment="Left">
-                                        <TextBlock Text="{Binding Level}" Foreground="White"
+                                        <TextBlock Text="{Binding Level}" Foreground="{DynamicResource TextForegroundBrush}"
                                             FontSize="10"
                                             FontWeight="SemiBold" />
                                     </Border>
                                     <TextBlock Grid.Column="2" Text="{Binding FormattedMessage}"
                                         FontSize="12" Padding="8,4" TextWrapping="Wrap"
-                                        Foreground="#CCCCCC"
+                                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                         VerticalAlignment="Top" />
                                 </Grid>
                             </DataTemplate>
@@ -125,15 +125,15 @@
             <TabItem Header="Socat Log">
                 <Grid RowDefinitions="Auto,*">
                     <!-- Header -->
-                    <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="#2D2D30">
+                    <Grid Grid.Row="0" ColumnDefinitions="160,80,*" Background="{DynamicResource PanelBackgroundBrush}">
                         <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold"
                             FontSize="12"
-                            Foreground="#CCCCCC" Padding="8,4" />
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
                         <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold" FontSize="12"
-                            Foreground="#CCCCCC" Padding="8,4" />
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
                         <TextBlock Grid.Column="2" Text="Message" FontWeight="SemiBold"
                             FontSize="12"
-                            Foreground="#CCCCCC" Padding="8,4" />
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" Padding="8,4" />
                     </Grid>
                     <!-- Log List -->
                     <!-- Log List -->
@@ -146,20 +146,20 @@
                                 <Grid ColumnDefinitions="160,80,*">
                                     <TextBlock Grid.Column="0"
                                         Text="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss.fff}"
-                                        FontSize="12" Padding="8,4" Foreground="#CCCCCC"
+                                        FontSize="12" Padding="8,4" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                         VerticalAlignment="Top" />
                                     <Border Grid.Column="1"
                                         Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}"
                                         CornerRadius="3" Margin="8,4" Padding="4,2"
                                         VerticalAlignment="Top"
                                         HorizontalAlignment="Left">
-                                        <TextBlock Text="{Binding Level}" Foreground="White"
+                                        <TextBlock Text="{Binding Level}" Foreground="{DynamicResource TextForegroundBrush}"
                                             FontSize="10"
                                             FontWeight="SemiBold" />
                                     </Border>
                                     <TextBlock Grid.Column="2" Text="{Binding FormattedMessage}"
                                         FontSize="12" Padding="8,4" TextWrapping="Wrap"
-                                        Foreground="#CCCCCC"
+                                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                                         VerticalAlignment="Top" />
                                 </Grid>
                             </DataTemplate>

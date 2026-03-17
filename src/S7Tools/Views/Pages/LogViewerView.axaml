@@ -10,7 +10,7 @@
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
     x:Class="S7Tools.Views.Pages.LogViewerView"
     x:DataType="vm:LogViewerViewModel"
-    Background="#1E1E1E">
+    Background="{DynamicResource AppBackgroundBrush}">
 
     <Design.DataContext>
         <vm:LogViewerViewModel />
@@ -30,8 +30,8 @@
 
         <!-- Toolbar -->
         <Border Grid.Row="0"
-            Background="#2D2D30"
-            BorderBrush="#464647"
+            Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="0,0,0,1"
             Padding="8">
             <Grid>
@@ -55,7 +55,7 @@
                     <!-- Date Range -->
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock Text="From:"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             FontSize="12"
                             VerticalAlignment="Center" />
                         <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}"
@@ -64,7 +64,7 @@
 
                     <StackPanel Orientation="Horizontal" Spacing="4">
                         <TextBlock Text="To:"
-                            Foreground="#CCCCCC"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             FontSize="12"
                             VerticalAlignment="Center" />
                         <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
@@ -87,8 +87,8 @@
                     <ToggleButton IsChecked="{Binding AutoScroll, Mode=TwoWay}"
                         Background="Transparent"
                         BorderThickness="1"
-                        BorderBrush="#464647"
-                        Foreground="#CCCCCC"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Padding="8,4"
                         ToolTip.Tip="Auto-scroll to latest entries">
                         <StackPanel Orientation="Horizontal" Spacing="4">
@@ -101,8 +101,8 @@
                     <Button Command="{Binding RefreshCommand}"
                         Background="Transparent"
                         BorderThickness="1"
-                        BorderBrush="#464647"
-                        Foreground="#CCCCCC"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Padding="8,4"
                         ToolTip.Tip="Refresh log display">
                         <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
@@ -111,8 +111,8 @@
                     <!-- Export Menu -->
                     <Button Background="Transparent"
                         BorderThickness="1"
-                        BorderBrush="#464647"
-                        Foreground="#CCCCCC"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Padding="8,4"
                         ToolTip.Tip="Export logs">
                         <Button.Flyout>
@@ -150,8 +150,8 @@
                     <Button Command="{Binding ClearLogsCommand}"
                         Background="Transparent"
                         BorderThickness="1"
-                        BorderBrush="#464647"
-                        Foreground="#CCCCCC"
+                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Padding="8,4"
                         ToolTip.Tip="Clear all log entries">
                         <StackPanel Orientation="Horizontal" Spacing="4">
@@ -169,20 +169,20 @@
         <!-- Log Entries ListBox with Header -->
         <Grid Grid.Row="2" RowDefinitions="Auto,*">
             <!-- Headers -->
-            <Border Grid.Row="0" Background="#2D2D30" BorderBrush="#464647"
+            <Border Grid.Row="0" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1" Padding="4">
                 <Grid ColumnDefinitions="160,80,150,*">
                     <TextBlock Grid.Column="0" Text="Timestamp" FontWeight="SemiBold"
-                        Foreground="#CCCCCC" Margin="4,0"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0"
                         IsVisible="{Binding ShowTimestamp}" />
                     <TextBlock Grid.Column="1" Text="Level" FontWeight="SemiBold"
-                        Foreground="#CCCCCC" Margin="4,0"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0"
                         IsVisible="{Binding ShowLevel}" />
                     <TextBlock Grid.Column="2" Text="Category" FontWeight="SemiBold"
-                        Foreground="#CCCCCC" Margin="4,0"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0"
                         IsVisible="{Binding ShowCategory}" />
                     <TextBlock Grid.Column="3" Text="Message" FontWeight="SemiBold"
-                        Foreground="#CCCCCC" Margin="4,0" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0" />
                 </Grid>
             </Border>
 
@@ -211,7 +211,7 @@
                                 IsVisible="{Binding $parent[UserControl].DataContext.ShowLevel}"
                                 Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
                                 <TextBlock Text="{Binding Level}"
-                                    Foreground="White"
+                                    Foreground="{DynamicResource TextForegroundBrush}"
                                     FontSize="10"
                                     FontWeight="SemiBold"
                                     HorizontalAlignment="Center" />

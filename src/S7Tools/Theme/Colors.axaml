@@ -1,0 +1,76 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+        <!-- VS Code style DARK Theme -->
+        <ResourceDictionary x:Key="Dark">
+            <!-- Brand & Accents -->
+            <SolidColorBrush x:Key="BrandAccentBrush" Color="#007ACC"/>
+            
+            <!-- Button Backgrounds -->
+            <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#0E639C"/>
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOverBrush" Color="#1177BB"/>
+            <SolidColorBrush x:Key="ButtonBackgroundPressedBrush" Color="#005A9E"/>
+
+            <!-- Application & Panel Backgrounds -->
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#1E1E1E"/>
+            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#2D2D2D"/>
+            
+            <!-- Standard Control Backgrounds -->
+            <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#3C3C3C"/>
+            <SolidColorBrush x:Key="ControlBackgroundPointerOverBrush" Color="#404040"/>
+            <SolidColorBrush x:Key="ControlBorderBrush" Color="#464647"/>
+            
+            <!-- Lists & Sidebars -->
+            <SolidColorBrush x:Key="ListItemBackgroundHoverBrush" Color="#2A2D2E"/>
+            <SolidColorBrush x:Key="ListItemBackgroundSelectedBrush" Color="#37373D"/>
+
+            <!-- Text & Foreground -->
+            <SolidColorBrush x:Key="TextForegroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="TextForegroundSecondaryBrush" Color="#CCCCCC"/>
+            <SolidColorBrush x:Key="TextForegroundMutedBrush" Color="Gray"/>
+
+            <!-- Contextual & Log Colors -->
+            <SolidColorBrush x:Key="LogColorInfoBrush" Color="#00AA00"/>
+            <SolidColorBrush x:Key="LogColorWarnBrush" Color="#FFA500"/>
+            <SolidColorBrush x:Key="LogColorErrorBrush" Color="#DC143C"/>
+            <SolidColorBrush x:Key="LogColorFatalBrush" Color="#8B0000"/>
+            <SolidColorBrush x:Key="SyntaxStringBrush" Color="#CE9178"/>
+        </ResourceDictionary>
+
+        <!-- VS Code style LIGHT Theme Options -->
+        <ResourceDictionary x:Key="Default">
+            <!-- Brand & Accents -->
+            <SolidColorBrush x:Key="BrandAccentBrush" Color="#007ACC"/>
+            
+            <!-- Button Backgrounds -->
+            <SolidColorBrush x:Key="ButtonBackgroundBrush" Color="#007ACC"/>
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOverBrush" Color="#1177BB"/>
+            <SolidColorBrush x:Key="ButtonBackgroundPressedBrush" Color="#005A9E"/>
+
+            <!-- Application & Panel Backgrounds -->
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#F3F3F3"/>
+            
+            <!-- Standard Control Backgrounds -->
+            <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="ControlBackgroundPointerOverBrush" Color="#E5E5E5"/>
+            <SolidColorBrush x:Key="ControlBorderBrush" Color="#CECECE"/>
+            
+            <!-- Lists & Sidebars -->
+            <SolidColorBrush x:Key="ListItemBackgroundHoverBrush" Color="#E8E8E8"/>
+            <SolidColorBrush x:Key="ListItemBackgroundSelectedBrush" Color="#D3D3D3"/>
+
+            <!-- Text & Foreground -->
+            <SolidColorBrush x:Key="TextForegroundBrush" Color="#333333"/>
+            <SolidColorBrush x:Key="TextForegroundSecondaryBrush" Color="#666666"/>
+            <SolidColorBrush x:Key="TextForegroundMutedBrush" Color="#999999"/>
+            
+            <!-- Contextual & Log Colors -->
+            <SolidColorBrush x:Key="LogColorInfoBrush" Color="#008000"/>
+            <SolidColorBrush x:Key="LogColorWarnBrush" Color="#E59400"/>
+            <SolidColorBrush x:Key="LogColorErrorBrush" Color="#CC0000"/>
+            <SolidColorBrush x:Key="LogColorFatalBrush" Color="#660000"/>
+            <SolidColorBrush x:Key="SyntaxStringBrush" Color="#A31515"/>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

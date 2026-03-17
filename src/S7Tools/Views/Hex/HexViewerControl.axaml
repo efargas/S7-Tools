@@ -19,7 +19,7 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Spacing="20">
-            <TextBlock Text="No file loaded" Foreground="#858585" FontSize="16"
+            <TextBlock Text="No file loaded" Foreground="{DynamicResource TextForegroundMutedBrush}" FontSize="16"
                 HorizontalAlignment="Center" />
         </StackPanel>
 
@@ -27,7 +27,7 @@
         <Grid IsVisible="{Binding IsFileOpen}" RowDefinitions="Auto,Auto,Auto,*">
 
             <!-- Menu -->
-            <Menu Grid.Row="0" Background="#252526" IsVisible="{Binding IsFileOpen}">
+            <Menu Grid.Row="0" Background="{DynamicResource PanelBackgroundBrush}" IsVisible="{Binding IsFileOpen}">
                 <MenuItem Header="_Edit">
                     <MenuItem Header="_Copy" Click="CopyOnClick" HotKey="Ctrl+C" />
                 </MenuItem>
@@ -83,14 +83,14 @@
             </Menu>
 
             <!-- Toolbar / Info Header -->
-            <Border Grid.Row="1" Background="#2D2D30" Padding="10,5" BorderBrush="#3F3F46"
+            <Border Grid.Row="1" Background="{DynamicResource PanelBackgroundBrush}" Padding="10,5" BorderBrush="{DynamicResource ControlBorderBrush}"
                 BorderThickness="0,0,0,1">
                 <StackPanel Orientation="Horizontal" Spacing="20">
-                    <TextBlock Text="{Binding FileName}" Foreground="White" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding FileName}" Foreground="{DynamicResource TextForegroundBrush}" FontWeight="SemiBold" />
                     <TextBlock Text="{Binding FileSize, StringFormat='Size: {0:N0} bytes'}"
-                        Foreground="#CCCCCC" />
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                     <Button Command="{Binding CloseFileCommand}" Background="Transparent"
-                        Foreground="#C42B1C" Content="Close" />
+                        Foreground="{DynamicResource LogColorErrorBrush}" Content="Close" />
                 </StackPanel>
             </Border>
 
@@ -109,8 +109,8 @@
                         x:Name="MainHexEditor"
                         Document="{Binding Document}"
                         ColumnPadding="30"
-                        Background="#1E1E1E"
-                        Foreground="#D4D4D4"
+                        Background="{DynamicResource AppBackgroundBrush}"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         FontFamily="Fira Code, Hack, DejaVu Sans Mono, Consolas, Courier New, Monospace">
                         <avHex:HexEditor.Columns>
                             <avRend:OffsetColumn Header="Address" Foreground="#00CED1" />

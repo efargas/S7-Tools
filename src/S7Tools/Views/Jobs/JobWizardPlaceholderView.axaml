@@ -6,7 +6,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Jobs.JobWizardPlaceholderView"
              x:DataType="vm:JobWizardPlaceholderViewModel"
-             Background="#1E1E1E">
+             Background="{DynamicResource AppBackgroundBrush}">
 
   <ScrollViewer>
     <StackPanel Margin="40" Spacing="20" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -15,22 +15,22 @@
       <TextBlock Text="{Binding Title}"
                  FontSize="28"
                  FontWeight="Bold"
-                 Foreground="#CCCCCC"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                  HorizontalAlignment="Center"
                  TextAlignment="Center" />
 
       <!-- Message -->
       <TextBlock Text="{Binding Message}"
                  FontSize="16"
-                 Foreground="#FFFFFF"
+                 Foreground="{DynamicResource TextForegroundBrush}"
                  HorizontalAlignment="Center"
                  TextAlignment="Center"
                  TextWrapping="Wrap"
                  MaxWidth="600" />
 
       <!-- Placeholder Content -->
-      <Border Background="#252526"
-              BorderBrush="#464647"
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
               BorderThickness="1"
               CornerRadius="8"
               Padding="40"
@@ -40,34 +40,34 @@
           <TextBlock Text="🚧 Under Construction 🚧"
                      FontSize="20"
                      FontWeight="SemiBold"
-                     Foreground="#FFA500"
+                     Foreground="{DynamicResource LogColorWarnBrush}"
                      HorizontalAlignment="Center" />
 
           <TextBlock Text="This wizard interface is currently being developed. In the meantime, you can use the main Jobs management interface to:"
                      FontSize="14"
-                     Foreground="#CCCCCC"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                      TextWrapping="Wrap"
                      TextAlignment="Center" />
 
           <StackPanel Spacing="8" Margin="0,10,0,0">
             <TextBlock Text="• Create new job profiles using the Create button"
                        FontSize="13"
-                       Foreground="#FFFFFF" />
+                       Foreground="{DynamicResource TextForegroundBrush}" />
             <TextBlock Text="• Edit existing profiles using the Edit button"
                        FontSize="13"
-                       Foreground="#FFFFFF" />
+                       Foreground="{DynamicResource TextForegroundBrush}" />
             <TextBlock Text="• Duplicate profiles for quick setup"
                        FontSize="13"
-                       Foreground="#FFFFFF" />
+                       Foreground="{DynamicResource TextForegroundBrush}" />
             <TextBlock Text="• Import/Export job configurations"
                        FontSize="13"
-                       Foreground="#FFFFFF" />
+                       Foreground="{DynamicResource TextForegroundBrush}" />
           </StackPanel>
 
           <TextBlock Text="Please return to the Main View to access these features."
                      FontSize="14"
                      FontWeight="SemiBold"
-                     Foreground="#0E639C"
+                     Foreground="{DynamicResource ButtonBackgroundBrush}"
                      HorizontalAlignment="Center"
                      Margin="0,20,0,0" />
         </StackPanel>

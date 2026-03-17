@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Pages.LoggingTestView"
              x:DataType="vm:LoggingTestViewModel"
-             Background="#1E1E1E">
+             Background="{DynamicResource AppBackgroundBrush}">
 
     <ScrollViewer>
         <StackPanel Margin="20" Spacing="20">
@@ -15,12 +15,12 @@
             <TextBlock Text="Logging and Clipboard Testing"
                        FontSize="24"
                        FontWeight="Bold"
-                       Foreground="#CCCCCC"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                        Margin="0,0,0,10" />
 
             <!-- Logging Test Section -->
-            <Border Background="#252526"
-                    BorderBrush="#464647"
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="4"
                     Padding="20">
@@ -28,18 +28,18 @@
                     <TextBlock Text="Logging Test Buttons"
                                FontSize="18"
                                FontWeight="SemiBold"
-                               Foreground="#CCCCCC" />
+                               Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <TextBlock Text="Click these buttons to test different log levels. Check the LOG VIEWER tab in the bottom panel to see the results."
                                FontSize="12"
-                               Foreground="#858585"
+                               Foreground="{DynamicResource TextForegroundMutedBrush}"
                                TextWrapping="Wrap" />
 
                     <WrapPanel Orientation="Horizontal" ItemWidth="150" ItemHeight="40">
                         <!-- Trace Log Button -->
                         <Button Command="{Binding TestTraceLogCommand}"
                                 Background="#808080"
-                                Foreground="White"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Margin="5"
@@ -53,8 +53,8 @@
 
                         <!-- Debug Log Button -->
                         <Button Command="{Binding TestDebugLogCommand}"
-                                Background="#007ACC"
-                                Foreground="White"
+                                Background="{DynamicResource BrandAccentBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Margin="5"
@@ -68,8 +68,8 @@
 
                         <!-- Info Log Button -->
                         <Button Command="{Binding TestInfoLogCommand}"
-                                Background="#00AA00"
-                                Foreground="White"
+                                Background="{DynamicResource LogColorInfoBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Margin="5"
@@ -83,8 +83,8 @@
 
                         <!-- Warning Log Button -->
                         <Button Command="{Binding TestWarningLogCommand}"
-                                Background="#FFA500"
-                                Foreground="White"
+                                Background="{DynamicResource LogColorWarnBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Margin="5"
@@ -98,8 +98,8 @@
 
                         <!-- Error Log Button -->
                         <Button Command="{Binding TestErrorLogCommand}"
-                                Background="#DC143C"
-                                Foreground="White"
+                                Background="{DynamicResource LogColorErrorBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Margin="5"
@@ -113,8 +113,8 @@
 
                         <!-- Critical Log Button -->
                         <Button Command="{Binding TestCriticalLogCommand}"
-                                Background="#8B0000"
-                                Foreground="White"
+                                Background="{DynamicResource LogColorFatalBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Margin="5"
@@ -129,10 +129,10 @@
 
                     <!-- Export Logs Button -->
                     <Button Command="{Binding ExportLogsCommand}"
-                            Background="#464647"
-                            Foreground="#CCCCCC"
+                            Background="{DynamicResource ControlBorderBrush}"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             BorderThickness="1"
-                            BorderBrush="#007ACC"
+                            BorderBrush="{DynamicResource BrandAccentBrush}"
                             CornerRadius="4"
                             Padding="15,8"
                             HorizontalAlignment="Left">
@@ -145,8 +145,8 @@
             </Border>
 
             <!-- Clipboard Test Section -->
-            <Border Background="#252526"
-                    BorderBrush="#464647"
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="4"
                     Padding="20">
@@ -154,19 +154,19 @@
                     <TextBlock Text="Clipboard Testing"
                                FontSize="18"
                                FontWeight="SemiBold"
-                               Foreground="#CCCCCC" />
+                               Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <TextBlock Text="Test clipboard operations and keyboard shortcuts (Ctrl+X, Ctrl+C, Ctrl+V):"
                                FontSize="12"
-                               Foreground="#858585"
+                               Foreground="{DynamicResource TextForegroundMutedBrush}"
                                TextWrapping="Wrap" />
 
                     <!-- Text Input -->
                     <TextBox Text="{Binding TestInputText}"
                              Watermark="Enter text to test clipboard operations..."
-                             Background="#3C3C3C"
-                             Foreground="#CCCCCC"
-                             BorderBrush="#464647"
+                             Background="{DynamicResource ControlBackgroundBrush}"
+                             Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                             BorderBrush="{DynamicResource ControlBorderBrush}"
                              BorderThickness="1"
                              CornerRadius="4"
                              Padding="10"
@@ -177,8 +177,8 @@
                     <!-- Clipboard Buttons -->
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Button Command="{Binding CutCommand}"
-                                Background="#DC143C"
-                                Foreground="White"
+                                Background="{DynamicResource LogColorErrorBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Padding="12,6">
@@ -189,8 +189,8 @@
                         </Button>
 
                         <Button Command="{Binding CopyCommand}"
-                                Background="#007ACC"
-                                Foreground="White"
+                                Background="{DynamicResource BrandAccentBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Padding="12,6">
@@ -201,8 +201,8 @@
                         </Button>
 
                         <Button Command="{Binding PasteCommand}"
-                                Background="#00AA00"
-                                Foreground="White"
+                                Background="{DynamicResource LogColorInfoBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
                                 BorderThickness="0"
                                 CornerRadius="4"
                                 Padding="12,6">
@@ -214,8 +214,8 @@
                     </StackPanel>
 
                     <!-- Instructions -->
-                    <Border Background="#2D2D30"
-                            BorderBrush="#464647"
+                    <Border Background="{DynamicResource PanelBackgroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="4"
                             Padding="15">
@@ -223,22 +223,22 @@
                             <TextBlock Text="Instructions:"
                                        FontSize="14"
                                        FontWeight="SemiBold"
-                                       Foreground="#CCCCCC" />
+                                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                             <TextBlock Text="• Type some text in the text box above"
                                        FontSize="12"
-                                       Foreground="#858585" />
+                                       Foreground="{DynamicResource TextForegroundMutedBrush}" />
                             <TextBlock Text="• Use Ctrl+C to copy or click the Copy button"
                                        FontSize="12"
-                                       Foreground="#858585" />
+                                       Foreground="{DynamicResource TextForegroundMutedBrush}" />
                             <TextBlock Text="• Use Ctrl+X to cut or click the Cut button"
                                        FontSize="12"
-                                       Foreground="#858585" />
+                                       Foreground="{DynamicResource TextForegroundMutedBrush}" />
                             <TextBlock Text="• Use Ctrl+V to paste or click the Paste button"
                                        FontSize="12"
-                                       Foreground="#858585" />
+                                       Foreground="{DynamicResource TextForegroundMutedBrush}" />
                             <TextBlock Text="• Check the LOG VIEWER tab to see logging test results"
                                        FontSize="12"
-                                       Foreground="#858585" />
+                                       Foreground="{DynamicResource TextForegroundMutedBrush}" />
                         </StackPanel>
                     </Border>
                 </StackPanel>

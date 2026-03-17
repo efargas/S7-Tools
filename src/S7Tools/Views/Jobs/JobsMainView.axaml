@@ -7,7 +7,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="650"
              x:Class="S7Tools.Views.Jobs.JobsMainView"
              x:DataType="vm:JobsManagementViewModel"
-             Background="#1E1E1E">
+             Background="{DynamicResource AppBackgroundBrush}">
 
   <!-- Content switching based on sidebar selection - follows Settings pattern exactly -->
   <ContentControl Content="{Binding SelectedContentViewModel}" />

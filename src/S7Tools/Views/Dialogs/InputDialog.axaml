@@ -22,12 +22,12 @@
 
     <Window.Styles>
         <Style Selector="TextBlock">
-            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
         </Style>
         <Style Selector="TextBox">
-            <Setter Property="Background" Value="#3C3C3C" />
-            <Setter Property="Foreground" Value="#CCCCCC" />
-            <Setter Property="BorderBrush" Value="#464647" />
+            <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
             <Setter Property="Padding" Value="8,6" />
@@ -41,18 +41,18 @@
             <Setter Property="FontWeight" Value="SemiBold" />
         </Style>
         <Style Selector="Button.primary">
-            <Setter Property="Background" Value="#007ACC" />
-            <Setter Property="BorderBrush" Value="#007ACC" />
-            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{DynamicResource BrandAccentBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
         </Style>
         <Style Selector="Button.primary:pointerover">
-            <Setter Property="Background" Value="#005A9E" />
-            <Setter Property="BorderBrush" Value="#005A9E" />
+            <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressedBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressedBrush}" />
         </Style>
         <Style Selector="Button.secondary">
-            <Setter Property="Background" Value="#464647" />
-            <Setter Property="BorderBrush" Value="#464647" />
-            <Setter Property="Foreground" Value="#CCCCCC" />
+            <Setter Property="Background" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
         </Style>
         <Style Selector="Button.secondary:pointerover">
             <Setter Property="Background" Value="#525253" />

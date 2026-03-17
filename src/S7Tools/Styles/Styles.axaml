@@ -6,17 +6,17 @@
     <Style Selector="ui|NavigationViewItem">
         <Setter Property="Padding" Value="0" />
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="Gray" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundMutedBrush}" />
         <Setter Property="VerticalAlignment" Value="Stretch" />
     </Style>
     <Style Selector="ui|NavigationViewItem:selected">
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
     </Style>
     <Style Selector="ui|NavigationViewItem:selected Border#AccentRectangle">
         <Setter Property="IsVisible" Value="True" />
     </Style>
     <Style Selector="ui|NavigationViewItem:pointerover">
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
     </Style>
 
     <Style Selector="ui|NavigationViewItem Image">
@@ -26,7 +26,7 @@
     </Style>
 
     <Style Selector="ui|NavigationView Grid#PaneContentGrid">
-        <Setter Property="Background" Value="#2D2D2D" />
+        <Setter Property="Background" Value="{DynamicResource PanelBackgroundBrush}" />
     </Style>
 
     <!-- GridSplitter Styles for VSCode-like appearance -->
@@ -40,23 +40,23 @@
     </Style>
 
     <Style Selector="GridSplitter:pointerover">
-        <Setter Property="Background" Value="#007ACC" />
+        <Setter Property="Background" Value="{DynamicResource BrandAccentBrush}" />
     </Style>
 
     <Style Selector="GridSplitter:dragging">
-        <Setter Property="Background" Value="#007ACC" />
+        <Setter Property="Background" Value="{DynamicResource BrandAccentBrush}" />
     </Style>
 
     <Style Selector="TabItem">
-        <Setter Property="Foreground" Value="Gray" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundMutedBrush}" />
     </Style>
 
     <Style Selector="TabItem:selected">
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
     </Style>
 
     <Style Selector="TabItem:pointerover">
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
     </Style>
 
     <!-- Smooth transitions for panel animations -->
@@ -79,9 +79,9 @@
 
     <!-- DatePicker Styles for dark theme -->
     <Style Selector="DatePicker">
-        <Setter Property="Background" Value="#3C3C3C" />
-        <Setter Property="Foreground" Value="#CCCCCC" />
-        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="8,4" />
@@ -89,32 +89,32 @@
     </Style>
 
     <Style Selector="DatePicker:pointerover">
-        <Setter Property="BorderBrush" Value="#007ACC" />
-        <Setter Property="Background" Value="#404040" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
 
     <Style Selector="DatePicker:focus">
-        <Setter Property="BorderBrush" Value="#007ACC" />
-        <Setter Property="Background" Value="#404040" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
 
     <!-- DatePicker Button Styles -->
     <Style Selector="DatePicker Button">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="#CCCCCC" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
         <Setter Property="BorderThickness" Value="0" />
     </Style>
 
     <Style Selector="DatePicker Button:pointerover">
-        <Setter Property="Background" Value="#007ACC" />
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
     </Style>
 
     <!-- ComboBox Styles for consistency -->
     <Style Selector="ComboBox">
-        <Setter Property="Background" Value="#3C3C3C" />
-        <Setter Property="Foreground" Value="#CCCCCC" />
-        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="8,4" />
@@ -122,43 +122,43 @@
     </Style>
 
     <Style Selector="ComboBox:pointerover">
-        <Setter Property="BorderBrush" Value="#007ACC" />
-        <Setter Property="Background" Value="#404040" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
 
     <Style Selector="ComboBox:focus">
-        <Setter Property="BorderBrush" Value="#007ACC" />
-        <Setter Property="Background" Value="#404040" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
 
     <!-- TextBox Styles for consistency -->
     <Style Selector="TextBox">
-        <Setter Property="Background" Value="#3C3C3C" />
-        <Setter Property="Foreground" Value="#CCCCCC" />
-        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="8,4" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="SelectionBrush" Value="#007ACC" />
-        <Setter Property="CaretBrush" Value="#CCCCCC" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="CaretBrush" Value="{DynamicResource TextForegroundSecondaryBrush}" />
     </Style>
 
     <Style Selector="TextBox:pointerover">
-        <Setter Property="BorderBrush" Value="#007ACC" />
-        <Setter Property="Background" Value="#404040" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
 
     <Style Selector="TextBox:focus">
-        <Setter Property="BorderBrush" Value="#007ACC" />
-        <Setter Property="Background" Value="#404040" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
     </Style>
 
     <!-- Button Styles for consistency -->
     <Style Selector="Button">
-        <Setter Property="Background" Value="#0E639C" />
-        <Setter Property="Foreground" Value="White" />
-        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="{DynamicResource ButtonBackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="3" />
         <Setter Property="Padding" Value="8,4" />
@@ -166,25 +166,25 @@
     </Style>
 
     <Style Selector="Button:pointerover">
-        <Setter Property="Background" Value="#1177BB" />
-        <Setter Property="BorderBrush" Value="#1177BB" />
+        <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPointerOverBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPointerOverBrush}" />
     </Style>
 
     <Style Selector="Button:pressed">
-        <Setter Property="Background" Value="#005A9E" />
-        <Setter Property="BorderBrush" Value="#005A9E" />
+        <Setter Property="Background" Value="{DynamicResource ButtonBackgroundPressedBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ButtonBackgroundPressedBrush}" />
     </Style>
 
     <!-- Transparent Button Override -->
     <Style Selector="Button.transparent">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="#CCCCCC" />
-        <Setter Property="BorderBrush" Value="#464647" />
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
     </Style>
 
     <Style Selector="Button.transparent:pointerover">
-        <Setter Property="Background" Value="#404040" />
-        <Setter Property="BorderBrush" Value="#007ACC" />
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
     </Style>
 
     <Style Selector="viewsPages|LogViewerView TextBox">
