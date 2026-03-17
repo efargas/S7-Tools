@@ -153,15 +153,15 @@ public class SocatPortManager
 
         try
         {
-            // Use pgrep to find socat processes
+            // Use pgrep to find socat processes safely
             var startInfo = new ProcessStartInfo
             {
                 FileName = "pgrep",
-                Arguments = "socat",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true
             };
+            startInfo.ArgumentList.Add("socat");
 
             using var process = Process.Start(startInfo);
             if (process != null)

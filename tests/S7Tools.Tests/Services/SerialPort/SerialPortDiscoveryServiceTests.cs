@@ -66,10 +66,11 @@ public class SerialPortDiscoveryServiceTests : IDisposable
         string portPath = Path.Combine(_tempPath, "ttyUSB0");
         File.WriteAllText(portPath, ""); // Create dummy file
 
-        _shellExecutorMock.Setup(e => e.ExecuteCommandWithTimeoutAsync(It.Is<string>(c => c.Contains("stty")), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        // Back to testing ExecuteDirectAsync
+        _shellExecutorMock.Setup(e => e.ExecuteDirectAsync("stty", It.Is<IEnumerable<string>>(args => args.Contains(portPath)), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ShellCommandResult(true, 0, "stty output", ""));
 
-        _shellExecutorMock.Setup(e => e.ExecuteCommandWithTimeoutAsync(It.Is<string>(c => c.Contains("lsof")), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _shellExecutorMock.Setup(e => e.ExecuteDirectAsync("lsof", It.Is<IEnumerable<string>>(args => args.Contains(portPath)), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ShellCommandResult(false, 1, "", "")); // Not in use
 
         // Act

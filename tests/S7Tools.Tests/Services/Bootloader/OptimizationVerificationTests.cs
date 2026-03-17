@@ -64,11 +64,11 @@ public class OptimizationVerificationTests
         var mapping = new MemoryMappingProfile { Segments = segments };
 
         var profiles = new JobProfileSet(
-            new SerialProfileRef("COM1", 115200, null),
-            new SocatProfileRef(1234, null),
-            new PowerProfileRef("127.0.0.1", 502, null),
-            new MemoryRegionProfile(0x100, 10),
-            new PayloadSetProfile("path", null),
+            new SerialProfileRef("COM1", 115200, "None", 8, "One", new SerialPortConfiguration()),
+            new SocatProfileRef(1234, true, new SocatConfiguration()),
+            new PowerProfileRef("127.0.0.1", 502, 1, 1, new S7Tools.Core.Models.ModbusTcpConfiguration()),
+            new MemoryRegionProfile("0x100", 10),
+            new PayloadSetProfile { BasePath = "path" },
             "output",
             5000, 2000,
             mapping,
@@ -118,11 +118,11 @@ public class OptimizationVerificationTests
             var mapping = new MemoryMappingProfile { Segments = segments };
 
             var profiles = new JobProfileSet(
-                new SerialProfileRef("COM1", 115200, null),
-                new SocatProfileRef(1234, null),
-                new PowerProfileRef("127.0.0.1", 502, null),
-                new MemoryRegionProfile(0x100, 10),
-                new PayloadSetProfile("path", null),
+                new SerialProfileRef("COM1", 115200, "None", 8, "One", new SerialPortConfiguration()),
+                new SocatProfileRef(1234, true, new SocatConfiguration()),
+                new PowerProfileRef("127.0.0.1", 502, 1, 1, new S7Tools.Core.Models.ModbusTcpConfiguration()),
+                new MemoryRegionProfile("0x100", 10),
+                new PayloadSetProfile { BasePath = "path" },
                 tempPath,
                 5000, 2000,
                 mapping,

@@ -79,7 +79,7 @@ public class SchedulerParallelExecutionTests
             .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress, Microsoft.Extensions.Logging.ILogger? taskLogger, Microsoft.Extensions.Logging.ILogger? processLogger, CancellationToken ct) =>
             {
                 await Task.Delay(2000, ct);
-                return new BootloaderResult([new byte[0x1000]], []);
+                return new BootloaderResult([]);
             });
 
         var scheduler = new JobScheduler(
@@ -168,7 +168,7 @@ public class SchedulerParallelExecutionTests
             .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress, Microsoft.Extensions.Logging.ILogger? taskLogger, Microsoft.Extensions.Logging.ILogger? processLogger, CancellationToken ct) =>
             {
                 await Task.Delay(1000, ct);
-                return new BootloaderResult([new byte[0x1000]], []);
+                return new BootloaderResult([]);
             });
 
         var scheduler = new JobScheduler(
@@ -367,7 +367,7 @@ public class SchedulerParallelExecutionTests
             .Returns(async (JobProfileSet profiles, IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress, Microsoft.Extensions.Logging.ILogger? taskLogger, Microsoft.Extensions.Logging.ILogger? processLogger, CancellationToken ct) =>
             {
                 await Task.Delay(2000, ct);
-                return new BootloaderResult([new byte[0x1000]], []);
+                return new BootloaderResult([]);
             });
 
         var scheduler = new JobScheduler(

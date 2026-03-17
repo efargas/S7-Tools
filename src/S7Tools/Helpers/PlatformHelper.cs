@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using S7Tools.Resources;
@@ -33,22 +34,24 @@ public static class PlatformHelper
                 if (OperatingSystem.IsWindows())
                 {
                     psi = new ProcessStartInfo(path) { UseShellExecute = true };
+                    Process.Start(psi);
+                    return;
                 }
                 else if (OperatingSystem.IsLinux())
                 {
                     // Try xdg-open first
-                    var candidates = new List<(string fileName, string args)>
+                    var candidates = new List<string>
                     {
-                        ("xdg-open", path),
-                        ("nautilus", path),
-                        ("dolphin", path),
-                        ("thunar", path),
-                        ("pcmanfm", path)
+                        "xdg-open",
+                        "nautilus",
+                        "dolphin",
+                        "thunar",
+                        "pcmanfm"
                     };
 
                     bool opened = false;
                     Exception? lastError = null;
-                    foreach ((string? fileName, string? _) in candidates)
+                    foreach (string fileName in candidates)
                     {
                         try
                         {
@@ -85,14 +88,16 @@ public static class PlatformHelper
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
-                    psi = new ProcessStartInfo("open", path) { UseShellExecute = false };
+                    psi = new ProcessStartInfo("open") { UseShellExecute = false };
+                    psi.ArgumentList.Add(path);
+                    Process.Start(psi);
+                    return;
                 }
                 else
                 {
                     throw new PlatformNotSupportedException(
                         "Opening directories in explorer is not supported on this platform");
                 }
-                Process.Start(psi);
             }
             catch (Exception ex) when (ex is not PlatformNotSupportedException)
             {
