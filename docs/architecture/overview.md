@@ -611,6 +611,38 @@ public class SocatService : ISocatService
 - **Flexibility**: Easy to swap implementations (e.g., native .NET serial instead of stty)
 - **Cross-Platform**: Adapter handles OS-specific differences
 
+### 7. Semantic Theming Engine
+
+**Problem**: Hardcoded UI colors (e.g., `Background="#0E639C"`) prevented robust light/dark mode implementations and made branding changes difficult.
+**Solution**: Avalonia `ThemeDictionaries` powered by semantic `DynamicResource` bindings tracked by the `AppearanceSettingsViewModel`.
+
+#### Theme Resource Dictionary
+```xml
+<!-- S7Tools/Theme/Colors.axaml -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui">
+    <ResourceDictionary.ThemeDictionaries>
+        <!-- Light Theme Semantic Colors -->
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="AppBackgroundBrush">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="BrandAccentBrush">#007ACC</SolidColorBrush>
+        </ResourceDictionary>
+        <!-- Dark Theme Semantic Colors -->
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="AppBackgroundBrush">#1E1E1E</SolidColorBrush>
+            <SolidColorBrush x:Key="BrandAccentBrush">#3273F6</SolidColorBrush>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>
+```
+
+#### Real-Time Switcher Wiring
+The `IApplicationSettingsService` persists the user's `ui.theme` selection ("Light", "Dark", "System"). `App.axaml.cs` subscribes to the `SettingsChanged` event and posts theme adjustments to the UI Dispatcher Thread, causing the entire UI tree to repaint instantaneously without application restarts using `Avalonia.Application.Current.RequestedThemeVariant`.
+
+**Benefits**:
+- **Accessibility**: First-class support for visual constraints (Dark/Light).
+- **Scalability**: Over 1,000 hardcoded color tokens reduced to centralized Semantic designations (`BrandAccentBrush`, `PanelBackgroundBrush`, etc).
+- **Runtime Modifiability**: Instant visual repainting hooked directly into Avalonia's runtime properties.
+
 ## User Experience Philosophy
 
 ### VSCode-Inspired Design
