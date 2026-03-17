@@ -1,11 +1,15 @@
+using System;
+using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Providers.Microsoft;
+using FluentAssertions;
+using Xunit;
 
 namespace S7Tools.Infrastructure.Logging.Tests.Providers.Microsoft;
 
-public sealed class DataStoreLoggerProviderTests
+public sealed class DataStoreLoggerProviderTests : IDisposable
 {
     private readonly Mock<ILogDataStore> _mockDataStore;
     private readonly Mock<ITimeProvider> _mockTimeProvider;
@@ -96,5 +100,10 @@ public sealed class DataStoreLoggerProviderTests
         // it should reflect the changes.
         logger.IsEnabled(LogLevel.Information).Should().BeFalse();
         logger.IsEnabled(LogLevel.Error).Should().BeTrue();
+    }
+
+    public void Dispose()
+    {
+        _provider?.Dispose();
     }
 }

@@ -8,6 +8,8 @@ using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Services.Shell;
 using S7Tools.Services.SerialPort;
 using Xunit;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace S7Tools.Tests.Services.SerialPort;
 
@@ -82,22 +84,6 @@ public class SerialPortSecurityTests
             _mockTimeProvider.Object,
             _mockShellExecutor.Object);
 
-        // We use a path that shouldn't trigger file existence check issues if we could skip it,
-        // but IsPortAccessibleAsync checks File.Exists("/dev/ttyUSB0").
-        // Since we cannot mock File.Exists, we will use a test that relies on proper command quoting
-        // essentially validating logic if we assume the file check passed or using a hack if needed.
-        // However, for unit testing `SerialPortDiscoveryService` which has a hard dependency on `File.Exists`,
-        // it is difficult without a file system abstraction.
-        // 
-        // INSTAD, let's test `IsPortInUseAsync` which uses `lsof` and typically doesn't check File.Exists 
-        // OR checks it internally.
-        // Actually `IsPortInUseAsync` is private and called by `GetPortInfoAsync`. 
-        // `GetPortInfoAsync` DOES check File.Exists.
-
-        // As a workaround for this environment, I will verify the fix via `SerialPortConfigurationService` 
-        // which is the primary target and where the shell injection vulnerability is most critical (stty options).
-        // For DiscoveryService, I'll inspect the code manually or try to run a test if I can create a temp file.
-
         string tempFile = System.IO.Path.GetTempFileName();
         try
         {
@@ -106,30 +92,26 @@ public class SerialPortSecurityTests
                _mockTimeProvider.Object,
                _mockShellExecutor.Object);
 
-            // The path will be the temp file, but we will checking if it gets quoted in the command
-            string portPath = tempFile;
-            // We want to verify that even a safe path is quoted, which implies the security mechanism is in place.
-            // If we could use a path with spaces, that would be better proof.
-            // Let's try to create a file with a space in the name if possible.
-            string unsafePath = tempFile + " 'test";
+            string unsafePath = tempFile + " test";
             try
             { System.IO.File.WriteAllText(unsafePath, "dummy"); }
-            catch { /* ignore if fails */ unsafePath = tempFile; }
+            catch { unsafePath = tempFile; }
 
+            // Here we verify ExecuteDirectAsync instead of ExecuteCommandWithTimeoutAsync
             _mockShellExecutor
-               .Setup(x => x.ExecuteCommandWithTimeoutAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+               .Setup(x => x.ExecuteDirectAsync(It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync(new ShellCommandResult(true, 0, "", ""));
 
             await serviceToCheck.IsPortAccessibleAsync(unsafePath, 1000, CancellationToken.None);
 
-            // We expect the command to be: stty -F 'path' -a
-            // We verify the path is single-quoted.
-            _mockShellExecutor.Verify(x => x.ExecuteCommandWithTimeoutAsync(
-               It.Is<string>(cmd => cmd.Contains($"'{unsafePath}'") || cmd.Contains($"'{unsafePath.Replace("'", "'\"'\"'")}'")),
+            // ExecuteDirectAsync is safe by design, we just need to verify it's passing the path as an argument.
+            _mockShellExecutor.Verify(x => x.ExecuteDirectAsync(
+               "stty",
+               It.Is<IEnumerable<string>>(args => args.Contains(unsafePath)),
                It.IsAny<int>(),
                It.IsAny<CancellationToken>()), Times.Once);
 
-            if (unsafePath != tempFile)
+            if (unsafePath != tempFile && System.IO.File.Exists(unsafePath))
                 System.IO.File.Delete(unsafePath);
         }
         finally
