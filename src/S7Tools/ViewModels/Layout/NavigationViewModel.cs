@@ -154,7 +154,14 @@ public class NavigationViewModel : ReactiveObject
     {
         if (_currentSidebarDockable != null && OpenDocumentAction != null)
         {
-            OpenDocumentAction(_currentSidebarDockable);
+            if (_currentSidebarDockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.GetDockableForOpen() is IDockableViewModel subDockable)
+            {
+                OpenDocumentAction(subDockable);
+            }
+            else
+            {
+                OpenDocumentAction(_currentSidebarDockable);
+            }
         }
     }
 

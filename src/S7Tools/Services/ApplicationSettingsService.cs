@@ -59,6 +59,7 @@ namespace S7Tools.Services
                 "profiles.socatPath" => settings.Profiles.SocatPath,
                 "profiles.powerSupplyPath" => settings.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => settings.Profiles.MemoryRegionPath,
+                "profiles.memoryMappingPath" => settings.Profiles.MemoryRegionPath,
                 "powerSupply.powerStateChangeDelayMs" => settings.PowerSupply.PowerStateChangeDelayMs,
                 "memoryDump.defaultFolder" => settings.MemoryDump.DefaultFolder,
                 _ => null
@@ -103,7 +104,11 @@ namespace S7Tools.Services
                     case "profiles.serialPath": oldValue = settings.Profiles.SerialPath; settings.Profiles.SerialPath = value.ToString() ?? ""; break;
                     case "profiles.socatPath": oldValue = settings.Profiles.SocatPath; settings.Profiles.SocatPath = value.ToString() ?? ""; break;
                     case "profiles.powerSupplyPath": oldValue = settings.Profiles.PowerSupplyPath; settings.Profiles.PowerSupplyPath = value.ToString() ?? ""; break;
-                    case "profiles.memoryRegionPath": oldValue = settings.Profiles.MemoryRegionPath; settings.Profiles.MemoryRegionPath = value.ToString() ?? ""; break;
+                    case "profiles.memoryRegionPath":
+                    case "profiles.memoryMappingPath":
+                        oldValue = settings.Profiles.MemoryRegionPath;
+                        settings.Profiles.MemoryRegionPath = value.ToString() ?? "";
+                        break;
                     case "powerSupply.powerStateChangeDelayMs": oldValue = settings.PowerSupply.PowerStateChangeDelayMs; settings.PowerSupply.PowerStateChangeDelayMs = Convert.ToInt32(value); break;
                     case "memoryDump.defaultFolder": oldValue = settings.MemoryDump.DefaultFolder; settings.MemoryDump.DefaultFolder = value.ToString() ?? ""; break;
                 }
@@ -131,6 +136,7 @@ namespace S7Tools.Services
                 "profiles.socatPath" => def.Profiles.SocatPath,
                 "profiles.powerSupplyPath" => def.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => def.Profiles.MemoryRegionPath,
+                "profiles.memoryMappingPath" => def.Profiles.MemoryRegionPath,
                 "powerSupply.powerStateChangeDelayMs" => def.PowerSupply.PowerStateChangeDelayMs,
                 "memoryDump.defaultFolder" => def.MemoryDump.DefaultFolder,
                 _ => null
