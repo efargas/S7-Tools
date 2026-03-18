@@ -59,7 +59,9 @@ namespace S7Tools.Services
                 "profiles.socatPath" => settings.Profiles.SocatPath,
                 "profiles.powerSupplyPath" => settings.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => settings.Profiles.MemoryRegionPath,
-                "profiles.memoryMappingPath" => settings.Profiles.MemoryRegionPath,
+                "profiles.socatPath" => settings.Profiles.SocatPath,
+                "profiles.powerSupplyPath" => settings.Profiles.PowerSupplyPath,
+                "profiles.memoryRegionPath" => settings.Profiles.MemoryRegionPath,
                 "powerSupply.powerStateChangeDelayMs" => settings.PowerSupply.PowerStateChangeDelayMs,
                 "memoryDump.defaultFolder" => settings.MemoryDump.DefaultFolder,
                 _ => null
