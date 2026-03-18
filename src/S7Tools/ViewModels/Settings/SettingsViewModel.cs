@@ -101,7 +101,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
             ViewModelBase viewModel = category switch
             {
                 "Logging" => CreateLoggingSettingsViewModel(),
-                "General" => new GeneralSettingsViewModel(),
+                "General" => CreateGeneralSettingsViewModel(),
                 "Appearance" => CreateAppearanceSettingsViewModel(),
                 "Advanced" => new AdvancedSettingsViewModel(),
                 "Serial Ports" => CreateSerialPortsSettingsViewModel(),
@@ -135,6 +135,15 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         ILogger<LoggingSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<LoggingSettingsViewModel>>();
 
         return new LoggingSettingsViewModel(settingsService, pathService, fileDialogService, logger);
+    }
+
+    private GeneralSettingsViewModel CreateGeneralSettingsViewModel()
+    {
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
+        S7Tools.Core.Interfaces.Services.IPathService pathService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
+        ILogger<GeneralSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<GeneralSettingsViewModel>>();
+
+        return new GeneralSettingsViewModel(settingsService, pathService, logger);
     }
 
     private AppearanceSettingsViewModel CreateAppearanceSettingsViewModel()

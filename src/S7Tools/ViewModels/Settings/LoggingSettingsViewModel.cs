@@ -43,17 +43,35 @@ public class LoggingSettingsViewModel : ViewModelBase
         BrowseExportPathCommand = ReactiveCommand.CreateFromTask(BrowseExportPathAsync);
         OpenDefaultLogPathCommand = ReactiveCommand.CreateFromTask(OpenDefaultLogPathAsync);
         OpenExportPathCommand = ReactiveCommand.CreateFromTask(OpenExportPathAsync);
-        SaveSettingsCommand = ReactiveCommand.CreateFromTask(SaveSettingsAsync);
-        LoadSettingsCommand = ReactiveCommand.CreateFromTask(LoadSettingsAsync);
-        ResetSettingsCommand = ReactiveCommand.CreateFromTask(ResetSettingsAsync);
-        OpenSettingsFolderCommand = ReactiveCommand.CreateFromTask(OpenSettingsFolderAsync);
 
         // Initialize properties from current settings
+        _isInitializing = true;
         RefreshFromSettings();
+        _isInitializing = false;
 
         // Subscribe to settings changes
-        _settingsService.SettingsChanged += (_, _) => RefreshFromSettings();
+        _settingsService.SettingsChanged += (_, _) => 
+        {
+            _isInitializing = true;
+            RefreshFromSettings();
+            _isInitializing = false;
+        };
+
+        // Auto-save when properties change
+        this.PropertyChanged += (s, e) =>
+        {
+            if (_isInitializing) return;
+
+            if (e.PropertyName is nameof(DefaultLogPath) or nameof(ExportPath) or nameof(MinimumLogLevel) or 
+                nameof(AutoScrollLogs) or nameof(EnableRollingLogs) or nameof(ShowTimestampInLogs) or 
+                nameof(ShowCategoryInLogs) or nameof(ShowLogLevelInLogs))
+            {
+                _ = SaveLoggingSettingsAsync();
+            }
+        };
     }
+
+    private bool _isInitializing;
 
     #region Properties
 
@@ -126,27 +144,6 @@ public class LoggingSettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _showLogLevelInLogs, value);
     }
 
-    private string _settingsStatusMessage = UIStrings.Status_SettingsReady;
-    public string SettingsStatusMessage
-    {
-        get => _settingsStatusMessage;
-        set => this.RaiseAndSetIfChanged(ref _settingsStatusMessage, value);
-    }
-
-    private string _currentSettingsFilePath = string.Empty;
-    public string CurrentSettingsFilePath
-    {
-        get => _currentSettingsFilePath;
-        set => this.RaiseAndSetIfChanged(ref _currentSettingsFilePath, value);
-    }
-
-    private DateTime _settingsLastModified = DateTime.UtcNow.ToLocalTime();
-    public DateTime SettingsLastModified
-    {
-        get => _settingsLastModified;
-        set => this.RaiseAndSetIfChanged(ref _settingsLastModified, value);
-    }
-
     #endregion
 
     #region Commands
@@ -155,10 +152,6 @@ public class LoggingSettingsViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit> BrowseExportPathCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenDefaultLogPathCommand { get; }
     public ReactiveCommand<Unit, Unit> OpenExportPathCommand { get; }
-    public ReactiveCommand<Unit, Unit> SaveSettingsCommand { get; }
-    public ReactiveCommand<Unit, Unit> LoadSettingsCommand { get; }
-    public ReactiveCommand<Unit, Unit> ResetSettingsCommand { get; }
-    public ReactiveCommand<Unit, Unit> OpenSettingsFolderCommand { get; }
 
     #endregion
 
@@ -175,19 +168,6 @@ public class LoggingSettingsViewModel : ViewModelBase
         ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
         ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
         ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
-
-        // Use the AppSettingsPath from the path service
-        CurrentSettingsFilePath = _pathService.AppSettingsPath;
-
-        try
-        {
-            var fileInfo = new System.IO.FileInfo(CurrentSettingsFilePath);
-            SettingsLastModified = fileInfo.Exists ? fileInfo.LastWriteTime : DateTime.UtcNow.ToLocalTime();
-        }
-        catch
-        {
-            SettingsLastModified = DateTime.UtcNow.ToLocalTime();
-        }
     }
 
     private async Task BrowseDefaultLogPathAsync()
@@ -209,7 +189,6 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error browsing for default log path");
-            SettingsStatusMessage = UIStrings.Status_ErrorSelectingDirectory;
         }
     }
 
@@ -232,17 +211,13 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error browsing for export path");
-            SettingsStatusMessage = UIStrings.Status_ErrorSelectingDirectory;
         }
     }
 
-    private async Task SaveSettingsAsync()
+    private async Task SaveLoggingSettingsAsync()
     {
         try
         {
-            SettingsStatusMessage = UIStrings.Status_SavingSettings;
-
-            // Create dictionary of settings to save
             var userSettings = new Dictionary<string, object>
             {
                 ["logging.logDirectory"] = DefaultLogPath,
@@ -256,71 +231,10 @@ public class LoggingSettingsViewModel : ViewModelBase
             };
 
             await _settingsService.SaveUserSettingsAsync(userSettings);
-            SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
-            _logger.LogInformation("Logging settings saved successfully");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error saving logging settings");
-            SettingsStatusMessage = UIStrings.Status_ErrorSavingSettings;
-        }
-    }
-
-    private async Task LoadSettingsAsync()
-    {
-        try
-        {
-            SettingsStatusMessage = UIStrings.Status_LoadingSettings;
-            await _settingsService.LoadSettingsAsync();
-            RefreshFromSettings();
-            SettingsStatusMessage = UIStrings.Status_SettingsLoadedSuccessfully;
-            _logger.LogInformation("Logging settings loaded successfully");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading logging settings");
-            SettingsStatusMessage = UIStrings.Status_ErrorLoadingSettings;
-        }
-    }
-
-    private async Task ResetSettingsAsync()
-    {
-        try
-        {
-            SettingsStatusMessage = UIStrings.Status_ResettingToDefaults;
-            await _settingsService.RestoreDefaultsAsync();
-            RefreshFromSettings();
-            SettingsStatusMessage = UIStrings.Status_SettingsResetToDefaults;
-            _logger.LogInformation("Logging settings reset to defaults successfully");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error resetting logging settings to defaults");
-            SettingsStatusMessage = UIStrings.Status_ErrorResettingSettings;
-        }
-    }
-
-    private async Task OpenSettingsFolderAsync()
-    {
-        try
-        {
-            string settingsDir = Path.GetDirectoryName(CurrentSettingsFilePath) ?? _pathService.AppSettingsPath;
-
-            // Resolve the path through the path service instead of using it directly
-            string resolvedPath = _pathService.ResolvePath(settingsDir);
-
-            if (!Directory.Exists(resolvedPath))
-            {
-                Directory.CreateDirectory(resolvedPath);
-            }
-
-            await PlatformHelper.OpenDirectoryInExplorerAsync(resolvedPath);
-            _logger.LogInformation("Opened settings directory in explorer: {Path}", resolvedPath);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error opening settings directory");
-            SettingsStatusMessage = UIStrings.Status_ErrorOpeningSettingsDirectory;
+            _logger.LogError(ex, "Error auto-saving logging settings");
         }
     }
 
@@ -330,7 +244,6 @@ public class LoggingSettingsViewModel : ViewModelBase
         {
             if (string.IsNullOrEmpty(DefaultLogPath))
             {
-                SettingsStatusMessage = UIStrings.Status_DefaultLogPathNotSet;
                 return;
             }
 
@@ -349,7 +262,6 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error opening default log path in explorer");
-            SettingsStatusMessage = UIStrings.Status_ErrorOpeningDefaultLogPath;
         }
     }
 
@@ -359,7 +271,6 @@ public class LoggingSettingsViewModel : ViewModelBase
         {
             if (string.IsNullOrEmpty(ExportPath))
             {
-                SettingsStatusMessage = UIStrings.Status_ExportPathNotSet;
                 return;
             }
 
@@ -378,7 +289,6 @@ public class LoggingSettingsViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error opening export path in explorer");
-            SettingsStatusMessage = UIStrings.Status_ErrorOpeningExportPath;
         }
     }
 
