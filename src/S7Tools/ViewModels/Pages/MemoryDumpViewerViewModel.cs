@@ -21,24 +21,20 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
     public bool CanFloat => true;
 
     private readonly IServiceProvider _serviceProvider;
-    private readonly StreamedMemoryDumpViewModel _streamedViewModel;
-    private readonly FileMemoryDumpViewModel _fileViewModel;
 
     public MemoryDumpViewerViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _streamedViewModel = _serviceProvider.GetRequiredService<StreamedMemoryDumpViewModel>();
-        _fileViewModel = _serviceProvider.GetRequiredService<FileMemoryDumpViewModel>();
+        FileExplorer = _serviceProvider.GetRequiredService<FileMemoryDumpViewModel>();
 
         Categories = new ObservableCollection<string>(new[]
         {
-            "Streamed PLC Memory Viewer",
-            "File PLC Memory Viewer"
+            "Streamed PLC Memory Viewer"
         });
 
         // Default selection
         SelectedCategory = Categories[0];
-        SelectedCategoryViewModel = GetCategoryViewModel(SelectedCategory);
+        // We don't cache instances here anymore. The dockable will be resolved on demand.
 
         SelectCategoryCommand = ReactiveCommand.Create<string>(category =>
         {
@@ -49,6 +45,8 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         });
     }
 
+    public FileMemoryDumpViewModel FileExplorer { get; }
+
     public ObservableCollection<string> Categories { get; }
 
     private string _selectedCategory = string.Empty;
@@ -58,32 +56,45 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedCategory, value);
-            SelectedCategoryViewModel = GetCategoryViewModel(value);
+            // No longer sets SelectedCategoryViewModel directly. UI/Navigation should call GetDockableForOpen()
         }
     }
 
-    private ViewModelBase? _selectedCategoryViewModel;
     public ViewModelBase? SelectedCategoryViewModel
     {
-        get => _selectedCategoryViewModel!;
-        set => this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
+        get => null; // Kept for compatibility if XAML tries to bind it, but shouldn't be used
+    }
+
+    /// <summary>
+    /// Action set by NavigationViewModel to open a docked document tab.
+    /// Propagated to child view models so they can open documents.
+    /// </summary>
+    private Action<IDockableViewModel>? _openDocumentAction;
+    public Action<IDockableViewModel>? OpenDocumentAction
+    {
+        get => _openDocumentAction;
+        set
+        {
+            _openDocumentAction = value;
+            if (FileExplorer != null)
+            {
+                FileExplorer.OpenDocumentAction = value;
+            }
+        }
     }
 
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
 
-    private ViewModelBase GetCategoryViewModel(string category)
+    public IDockableViewModel? GetDockableForOpen()
     {
-        return category switch
+        return SelectedCategory switch
         {
-            "Streamed PLC Memory Viewer" => _streamedViewModel,
-            "File PLC Memory Viewer" => _fileViewModel,
-            _ => _streamedViewModel
+            "Streamed PLC Memory Viewer" => _serviceProvider.GetRequiredService<StreamedMemoryDumpViewModel>(),
+            _ => _serviceProvider.GetRequiredService<StreamedMemoryDumpViewModel>()
         };
     }
 
     public void Dispose()
     {
-        _streamedViewModel?.Dispose();
-        _fileViewModel?.Dispose();
     }
 }

@@ -13,6 +13,7 @@ using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Jobs;
 using S7Tools.ViewModels.Pages;
+using S7Tools.ViewModels.Profiles;
 using S7Tools.ViewModels.Settings;
 using S7Tools.ViewModels.Tasks;
 using DesignTimeFactory = S7Tools.Services.DesignTimeViewModelFactory;
@@ -117,7 +118,19 @@ public class NavigationViewModel : ReactiveObject
     {
         if (content is IDockableViewModel dockable && OpenDocumentAction != null)
         {
-            OpenDocumentAction(dockable);
+            // If the content is the generic memory dump shell, open its currently selected doc instead
+            if (dockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.GetDockableForOpen() is IDockableViewModel subDockable)
+            {
+                OpenDocumentAction(subDockable);
+            }
+            else if (dockable is ProfilesViewModel profVm && profVm.GetDockableForOpen() is IDockableViewModel profDockable)
+            {
+                OpenDocumentAction(profDockable);
+            }
+            else
+            {
+                OpenDocumentAction(dockable);
+            }
 
             // Subscribe to property changes so that sidebar interaction
             // will reopen the dock tab if it was closed.
@@ -145,7 +158,18 @@ public class NavigationViewModel : ReactiveObject
     {
         if (_currentSidebarDockable != null && OpenDocumentAction != null)
         {
-            OpenDocumentAction(_currentSidebarDockable);
+            if (_currentSidebarDockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.GetDockableForOpen() is IDockableViewModel subDockable)
+            {
+                OpenDocumentAction(subDockable);
+            }
+            else if (_currentSidebarDockable is ProfilesViewModel profVm && profVm.GetDockableForOpen() is IDockableViewModel profDockable)
+            {
+                OpenDocumentAction(profDockable);
+            }
+            else
+            {
+                OpenDocumentAction(_currentSidebarDockable);
+            }
         }
     }
 
@@ -160,7 +184,21 @@ public class NavigationViewModel : ReactiveObject
     {
         if (_currentSidebarDockable != null && OpenDocumentAction != null)
         {
-            OpenDocumentAction(_currentSidebarDockable);
+            if (e.PropertyName == "SidebarItemTapped")
+            {
+                if (_currentSidebarDockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.GetDockableForOpen() is IDockableViewModel subDockable)
+                {
+                    OpenDocumentAction(subDockable);
+                }
+                else if (_currentSidebarDockable is ProfilesViewModel profVm && profVm.GetDockableForOpen() is IDockableViewModel profDockable)
+                {
+                    OpenDocumentAction(profDockable);
+                }
+                else
+                {
+                    OpenDocumentAction(_currentSidebarDockable);
+                }
+            }
         }
     }
 
@@ -396,13 +434,29 @@ public class NavigationViewModel : ReactiveObject
                     _logger.LogDebug("Navigated to Jobs Management");
                     break;
 
+                case "profiles":
+                    SidebarTitle = "Profile Management";
+                    ProfilesViewModel? profilesViewModel = CreateViewModel<ProfilesViewModel>();
+                    CurrentContent = profilesViewModel; // Sidebar categories
+                    ShowLogStats = false;
+                    OpenDockableContent(profilesViewModel);
+                    _logger.LogDebug("Navigated to Profiles");
+                    break;
+
                 case "memorydump":
                     SidebarTitle = "Memory Dump Viewer";
                     MemoryDumpViewerViewModel? memoryDumpViewModel = CreateViewModel<MemoryDumpViewerViewModel>();
-                    CurrentContent = memoryDumpViewModel; // Enable sidebar content for memory dump
+                    if (memoryDumpViewModel != null)
+                    {
+                        memoryDumpViewModel.OpenDocumentAction = OpenDocumentAction;
+                        CurrentContent = memoryDumpViewModel; // Enable sidebar content for memory dump
+                        OpenDockableContent(memoryDumpViewModel);
+                    }
+                    else
+                    {
+                        CurrentContent = null;
+                    }
                     ShowLogStats = false;
-                    // Open memory dump as a dock tab
-                    OpenDockableContent(memoryDumpViewModel);
                     _logger.LogDebug("Navigated to Memory Dump Viewer");
                     break;
 

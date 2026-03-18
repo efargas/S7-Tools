@@ -185,7 +185,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         ITaskScheduler? taskScheduler = null,
         IActivityBarService? activityBarService = null,
         IFileDialogService? fileDialogService = null)
-        : base(logger, profileDialogService, dialogService, uiThreadService)
+        : base(logger, profileDialogService, dialogService, uiThreadService, fileDialogService!)
     {
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(jobManager);

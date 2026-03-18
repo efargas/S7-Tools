@@ -42,7 +42,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
     private readonly SerialPortDiscoveryViewModel _portScanner;
-    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
+
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -77,7 +77,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         IPathService pathService,
         SerialPortDiscoveryViewModel portScanner)
-        : base(logger, unifiedDialogService, dialogService, uiThreadService)
+        : base(logger, unifiedDialogService, dialogService, uiThreadService, fileDialogService!)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _socatService = socatService ?? throw new ArgumentNullException(nameof(socatService));
@@ -103,22 +103,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         // Initialize commands
         InitializeCommands();
 
-        // Initialize path commands
-        BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
-        OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
-        ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
-
-        // Initialize ProfilesPath from settings and subscribe to changes
-        RefreshFromSettings();
-        _settingsChangedHandler = (_, args) =>
-        {
-            if (args.Key == "profiles.socatPath")
-            {
-                RefreshFromSettings();
-            }
-        };
-        _settingsService.SettingsChanged += _settingsChangedHandler;
-
+        // Path commands have been moved to PathSettingsViewModel
         // Subscribe to socat service events
         SubscribeToSocatEvents();
 
@@ -305,42 +290,13 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     public ReactiveCommand<Unit, Unit> TestConnectionCommand { get; private set; } = null!;
 
-    /// <summary>
-    /// Gets the command to export profiles.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExportProfilesCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to import profiles.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to export the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExportSelectedProfileCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to show profile details.
     /// </summary>
     public ReactiveCommand<Unit, Unit> ShowProfileDetailsCommand { get; private set; } = null!;
 
-    // Path management commands
-    /// <summary>
-    /// Command to open a folder browser to select the profiles directory.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> BrowseProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to open the profiles directory in the system file explorer.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> OpenProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to reset the profiles path to the default within the application resources.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ResetProfilesPathCommand { get; private set; } = null!;
-
+    // Path commands are in PathSettingsViewModel
     #endregion
 
     #region Private Methods
@@ -413,32 +369,12 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             .Subscribe(ex => HandleCommandException(ex, "testing connection"))
             .DisposeWith(_disposables);
 
-        // Export profiles command - enabled when there are profiles
-        IObservable<bool> canExport = this.WhenAnyValue(x => x.Profiles.Count)
-            .Select(count => count > 0);
-
-        ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExport);
-        ExportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "exporting profiles"))
-            .DisposeWith(_disposables);
-
-        // Import profiles command - always enabled
-        ImportProfilesCommand = ReactiveCommand.CreateFromTask(ImportProfilesAsync);
-        ImportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "importing profiles"))
-            .DisposeWith(_disposables);
-
-        // Export selected profile command - enabled when a profile is selected
-        IObservable<bool> canExportSelected = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null);
-
-        ExportSelectedProfileCommand = ReactiveCommand.CreateFromTask(ExportSelectedProfileAsync, canExportSelected);
-        ExportSelectedProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "exporting selected profile"))
-            .DisposeWith(_disposables);
 
         // Show profile details command - enabled when a profile is selected
-        ShowProfileDetailsCommand = ReactiveCommand.CreateFromTask(ShowProfileDetailsAsync, canExportSelected);
+        IObservable<bool> canShowProfileDetails = this.WhenAnyValue(x => x.SelectedProfile)
+            .Select(profile => profile != null);
+
+        ShowProfileDetailsCommand = ReactiveCommand.CreateFromTask(ShowProfileDetailsAsync, canShowProfileDetails);
         ShowProfileDetailsCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "showing profile details"))
             .DisposeWith(_disposables);
@@ -509,41 +445,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         };
     }
 
-    /// <summary>
-    /// Refreshes the ProfilesPath from application settings.
-    /// </summary>
-    private void RefreshFromSettings()
-    {
-        try
-        {
-            // Use the new settings service with key-value access
-            string socatProfilePath = _settingsService.GetSetting<string>("profiles.socatPath", _pathService.SocatProfilesPath);
-            string? directoryPath = Path.GetDirectoryName(socatProfilePath);
 
-            // Ensure the path is absolute by resolving relative paths against the application base directory
-            if (!string.IsNullOrEmpty(directoryPath))
-            {
-                if (Path.IsPathRooted(directoryPath))
-                {
-                    ProfilesPath = directoryPath;
-                }
-                else
-                {
-                    // Resolve relative path against application base directory
-                    ProfilesPath = _pathService.ResolvePath(directoryPath);
-                }
-            }
-            else
-            {
-                ProfilesPath = _pathService.ProfilesDirectory;
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error refreshing profiles path from settings");
-            ProfilesPath = _pathService.ProfilesDirectory;
-        }
-    }
 
     // LoadProfilesAsync is provided by base class ProfileManagementViewModelBase
 
@@ -879,126 +781,6 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
     }
 
-    /// <summary>
-    /// Exports all profiles to a file.
-    /// </summary>
-    private async Task ExportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogUnavailable;
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
-                "Export Profiles",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*",
-                null,
-                "profiles.json");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ExportingProfiles;
-
-            IEnumerable<SocatProfile> profiles = await _profileService.ExportAsync();
-            string jsonData = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(fileName, jsonData);
-
-            StatusMessage = string.Format(UIStrings.Status_ProfilesExported, Profiles.Count, Path.GetFileName(fileName));
-            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", Profiles.Count, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error exporting profiles");
-            StatusMessage = UIStrings.Status_ErrorExportingProfiles;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Imports profiles from a file.
-    /// </summary>
-    private async Task ImportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogUnavailable;
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowOpenFileDialogAsync(
-                "Import Profiles",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ImportingProfiles;
-
-            string jsonData = await File.ReadAllTextAsync(fileName);
-            List<SocatProfile> profiles = JsonSerializer.Deserialize<List<SocatProfile>>(jsonData) ?? new List<SocatProfile>();
-            IEnumerable<SocatProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
-
-            int importedCount = importedProfiles.Count();
-            await RefreshCommand.Execute(); // Refresh the list
-
-            StatusMessage = string.Format(UIStrings.Status_ProfilesImported, importedCount, Path.GetFileName(fileName));
-            _specificLogger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error importing profiles");
-            StatusMessage = UIStrings.Status_ErrorImportingProfiles;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Exports the currently selected profile to a file.
-    /// </summary>
-    private async Task ExportSelectedProfileAsync()
-    {
-        if (SelectedProfile == null)
-        {
-            return;
-        }
-
-        try
-        {
-            StatusMessage = UIStrings.Status_ExportingSelectedProfile;
-
-            SocatProfile? profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
-            string jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
-
-            await _dialogService.ShowErrorAsync("Export Profile",
-                $"Export functionality for profile '{SelectedProfile.Name}' will be implemented in the UI layer.");
-
-            StatusMessage = UIStrings.Status_ProfileExportedSuccessfully;
-            _specificLogger.LogInformation("Exported socat profile: {ProfileName}", SelectedProfile.Name);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error exporting selected profile");
-            StatusMessage = UIStrings.Status_ErrorExportingProfile;
-        }
-    }
 
     /// <summary>
     /// Shows details for the currently selected profile.
@@ -1033,119 +815,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         }
     }
 
-    /// <summary>
-    /// Opens a folder browser to select the profiles directory.
-    /// </summary>
-    private async Task BrowseProfilesPathAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogUnavailable;
-            return;
-        }
 
-        try
-        {
-            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync(
-                "Select Profiles Directory",
-                ProfilesPath);
-
-            if (!string.IsNullOrEmpty(result))
-            {
-                ProfilesPath = result;
-                await UpdateProfilesPathInSettingsAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error browsing for profiles path");
-            StatusMessage = UIStrings.Status_ErrorSelectingDirectory;
-        }
-    }
-
-    /// <summary>
-    /// Opens the profiles directory in the system file explorer.
-    /// </summary>
-    /// <summary>
-    /// Opens the profiles directory in the system file explorer.
-    /// </summary>
-    private async Task OpenProfilesPathAsync()
-    {
-        try
-        {
-            StatusMessage = UIStrings.Status_OpeningProfilesFolder;
-
-            if (string.IsNullOrEmpty(ProfilesPath))
-            {
-                StatusMessage = UIStrings.Status_ProfilesPathNotAvailable;
-                _specificLogger.LogError("Profiles path is null or empty");
-                return;
-            }
-
-            // Ensure the directory exists before trying to open it
-            if (!Directory.Exists(ProfilesPath))
-            {
-                StatusMessage = UIStrings.Status_CreatingProfilesFolder;
-                Directory.CreateDirectory(ProfilesPath);
-                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
-            }
-
-            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
-
-            // Use centralized PlatformHelper for consistent cross-platform behavior
-            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
-
-            StatusMessage = UIStrings.Status_ProfilesFolderOpened;
-            _specificLogger.LogInformation("Successfully opened profiles folder");
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error opening profiles folder");
-            StatusMessage = UIStrings.Status_ErrorOpeningProfilesFolder;
-        }
-    }
-
-    /// <summary>
-    /// Resets the profiles path to the default.
-    /// </summary>
-    private async Task ResetProfilesPathAsync()
-    {
-        try
-        {
-            // Reset to default path using PathService
-            string defaultPath = _pathService.SocatProfilesPath;
-            ProfilesPath = Path.GetDirectoryName(defaultPath) ?? _pathService.ProfilesDirectory;
-
-            // Update settings with the new key-value structure
-            await _settingsService.ResetSettingAsync("profiles.socatPath");
-
-            StatusMessage = UIStrings.Status_ProfilesPathReset;
-            _specificLogger.LogInformation("Reset socat profiles path to default");
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error resetting profiles path");
-            StatusMessage = UIStrings.Status_ErrorResettingProfilesPath;
-        }
-    }
-
-    /// <summary>
-    /// Updates the profiles path in application settings.
-    /// </summary>
-    private async Task UpdateProfilesPathInSettingsAsync()
-    {
-        try
-        {
-            // Use the new settings service with key-value structure
-            await _settingsService.SetSettingAsync("profiles.socatPath", Path.Combine(ProfilesPath, "SocatProfiles.json")).ConfigureAwait(false);
-            StatusMessage = UIStrings.Status_ProfilesPathUpdated;
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Failed to update settings with new profiles path");
-            StatusMessage = UIStrings.Status_FailedToUpdateSettings;
-        }
-    }
 
     /// <summary>
     /// Handles exceptions thrown by reactive commands.
@@ -1174,11 +844,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             if (disposing)
             {
-                // Unsubscribe from settings changes
-                if (_settingsChangedHandler != null)
-                {
-                    _settingsService.SettingsChanged -= _settingsChangedHandler;
-                }
+
 
                 // Dispose managed resources
                 _disposables?.Dispose();

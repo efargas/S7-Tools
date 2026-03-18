@@ -275,21 +275,25 @@ public sealed class ActivityBarService : IActivityBarService
             {
                 Order = 2
             },
-            new ActivityBarItem("memorydump", "Memory Dump", "Memory Dump Viewer - Real-time PLC memory visualization", "fa-solid fa-microchip")
+            new ActivityBarItem("profiles", "Profiles", "Profile Management", "fa-solid fa-address-card")
             {
                 Order = 3
             },
-            new ActivityBarItem("connections", "Connections", "PLC Connections", "fa-solid fa-plug")
+            new ActivityBarItem("memorydump", "Memory Dump", "Memory Dump Viewer - Real-time PLC memory visualization", "fa-solid fa-microchip")
             {
                 Order = 4
             },
-            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "fa-solid fa-list-alt")
+            new ActivityBarItem("connections", "Connections", "PLC Connections", "fa-solid fa-plug")
             {
                 Order = 5
             },
-            new ActivityBarItem("settings", "Settings", "Application Settings", "fa-solid fa-cog")
+            new ActivityBarItem("logviewer", "Log Viewer", "Application Logs", "fa-solid fa-list-alt")
             {
                 Order = 6
+            },
+            new ActivityBarItem("settings", "Settings", "Application Settings", "fa-solid fa-cog")
+            {
+                Order = 7
             }
         ];
     }

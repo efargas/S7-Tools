@@ -1,0 +1,15 @@
+--- src/S7Tools/ViewModels/Pages/FileTreeItemViewModel.cs
++++ src/S7Tools/ViewModels/Pages/FileTreeItemViewModel.cs
+@@ -83,11 +83,11 @@
+
+         try
+         {
+-            var directories = Directory.GetDirectories(FullPath)
++            var directories = Directory.EnumerateDirectories(FullPath)
+                 .Select(d => new FileTreeItemViewModel(d, true));
+
+-            var files = Directory.GetFiles(FullPath, "*.*")
++            var files = Directory.EnumerateFiles(FullPath, "*.*")
+                 .Where(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) ||
+                             f.EndsWith(".dmp", StringComparison.OrdinalIgnoreCase))
+                 .Select(f => new FileTreeItemViewModel(f, false));

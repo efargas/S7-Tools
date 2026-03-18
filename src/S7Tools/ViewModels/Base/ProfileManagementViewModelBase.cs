@@ -7,6 +7,8 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using System.IO;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Services.Interfaces;
@@ -39,8 +41,10 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 {
     private readonly ILogger _logger;
     private readonly IUnifiedProfileDialogService _profileDialogService;
+    protected IUnifiedProfileDialogService UnifiedDialogService => _profileDialogService;
     private readonly IDialogService _dialogService;
     private readonly IUIThreadService _uiThreadService;
+    private readonly IFileDialogService _fileDialogService;
     private readonly CompositeDisposable _disposables = new();
 
     // Profile collection and selection state
@@ -53,7 +57,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     // UI state for enhanced features
     private bool _hasChanges;
     private string _searchText = string.Empty;
-    private string _profilesPath = string.Empty;
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfileManagementViewModelBase{TProfile}"/> class.
@@ -62,16 +66,19 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     /// <param name="profileDialogService">The unified profile dialog service.</param>
     /// <param name="dialogService">The general dialog service for confirmations.</param>
     /// <param name="uiThreadService">The UI thread service for cross-thread operations.</param>
+    /// <param name="fileDialogService">The file dialog service for import/export operations.</param>
     protected ProfileManagementViewModelBase(
         ILogger logger,
         IUnifiedProfileDialogService profileDialogService,
         IDialogService dialogService,
-        IUIThreadService uiThreadService)
+        IUIThreadService uiThreadService,
+        IFileDialogService fileDialogService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _profileDialogService = profileDialogService ?? throw new ArgumentNullException(nameof(profileDialogService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
+        _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
 
         SetupCommands();
         SetupValidation();
@@ -187,19 +194,6 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         set => this.RaiseAndSetIfChanged(ref _searchText, value);
     }
 
-    /// <summary>
-    /// Gets or sets the path where profiles are stored.
-    /// </summary>
-    /// <remarks>
-    /// Displays the current storage location for user reference.
-    /// Used by Browse, Open in Explorer, and Load Default operations.
-    /// </remarks>
-    public string ProfilesPath
-    {
-        get => _profilesPath;
-        protected set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
-    }
-
     #endregion
 
     #region Commands
@@ -258,8 +252,9 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     /// </remarks>
     public ReactiveCommand<Unit, Unit> SetDefaultCommand { get; private set; } = null!;
 
-
-
+    public ReactiveCommand<Unit, Unit> ExportProfilesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
+    public ReactiveCommand<Unit, Unit> ExportSelectedProfileCommand { get; private set; } = null!;
 
     #endregion
 
@@ -387,6 +382,28 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         EditCommand.Subscribe(_ => _logger.LogDebug("Edit command executed for {ProfileType} profile {ProfileId}", GetProfileTypeName(), SelectedProfile?.Id)).DisposeWith(_disposables);
         DuplicateCommand.Subscribe(_ => _logger.LogDebug("Duplicate command executed for {ProfileType} profile {ProfileId}", GetProfileTypeName(), SelectedProfile?.Id)).DisposeWith(_disposables);
         DeleteCommand.Subscribe(_ => _logger.LogDebug("Delete command executed for {ProfileType} profile {ProfileId}", GetProfileTypeName(), SelectedProfile?.Id)).DisposeWith(_disposables);
+
+        // Export/Import commands
+        IObservable<bool> canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
+            .Select(count => count > 0);
+
+        ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
+        ExportProfilesCommand.ThrownExceptions
+            .Subscribe(ex => _logger.LogError(ex, "Error exporting profiles"))
+            .DisposeWith(_disposables);
+
+        ImportProfilesCommand = ReactiveCommand.CreateFromTask(ImportProfilesAsync);
+        ImportProfilesCommand.ThrownExceptions
+            .Subscribe(ex => _logger.LogError(ex, "Error importing profiles"))
+            .DisposeWith(_disposables);
+
+        IObservable<bool> canExportSelectedProfile = this.WhenAnyValue(x => x.SelectedProfile)
+            .Select(profile => profile != null && profile.Id > 0);
+
+        ExportSelectedProfileCommand = ReactiveCommand.CreateFromTask(ExportSelectedProfileAsync, canExportSelectedProfile);
+        ExportSelectedProfileCommand.ThrownExceptions
+            .Subscribe(ex => _logger.LogError(ex, "Error exporting selected profile"))
+            .DisposeWith(_disposables);
     }
 
     private void SetupValidation()
@@ -644,6 +661,143 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
         {
             _logger.LogError(ex, "Failed to edit {ProfileType} profile: {ProfileName}", GetProfileTypeName(), SelectedProfile?.Name);
             StatusMessage = $"Failed to edit profile: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ExportProfilesAsync()
+    {
+        if (_fileDialogService == null)
+        {
+            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
+            return;
+        }
+
+        try
+        {
+            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
+                "Export Profiles",
+                "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                null,
+                "profiles.json");
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            IsLoading = true;
+            StatusMessage = UIStrings.Status_ExportingProfiles;
+
+            IEnumerable<TProfile> profiles = await GetProfileManager().ExportAsync();
+            string jsonData = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(fileName, jsonData);
+
+            StatusMessage = $"Exported {Profiles.Count} profile(s) to {Path.GetFileName(fileName)}";
+            _logger.LogInformation("Exported {ProfileCount} profiles to {FileName}", Profiles.Count, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting profiles");
+            StatusMessage = UIStrings.Status_ErrorExportingProfiles;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ImportProfilesAsync()
+    {
+        if (_fileDialogService == null)
+        {
+            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
+            return;
+        }
+
+        try
+        {
+            string? fileName = await _fileDialogService.ShowOpenFileDialogAsync(
+                "Import Profiles",
+                "JSON files (*.json)|*.json|All files (*.*)|*.*");
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            IsLoading = true;
+            StatusMessage = UIStrings.Status_ImportingProfiles;
+
+            string jsonData = await File.ReadAllTextAsync(fileName);
+            List<TProfile> profiles = JsonSerializer.Deserialize<List<TProfile>>(jsonData) ?? new List<TProfile>();
+            IEnumerable<TProfile> importedProfiles = await GetProfileManager().ImportAsync(profiles, replaceExisting: false);
+
+            int importedCount = importedProfiles.Count();
+            await LoadProfilesAsync(); 
+
+            StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
+            _logger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error importing profiles");
+            StatusMessage = UIStrings.Status_ErrorImportingProfiles;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task ExportSelectedProfileAsync()
+    {
+        if (SelectedProfile == null || _fileDialogService == null)
+        {
+            return;
+        }
+
+        try
+        {
+            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
+                "Export Profile",
+                "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                null,
+                $"{SelectedProfile.Name}.json");
+
+            if (string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
+            IsLoading = true;
+            StatusMessage = UIStrings.Status_ExportingSelectedProfile;
+
+            string jsonData;
+
+            if (SelectedProfile.Id > 0)
+            {
+                TProfile? profile = await GetProfileManager().GetByIdAsync(SelectedProfile.Id);
+                jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
+            }
+            else
+            {
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                jsonData = JsonSerializer.Serialize(SelectedProfile, options);
+            }
+
+            await File.WriteAllTextAsync(fileName, jsonData);
+
+            StatusMessage = $"Exported profile '{SelectedProfile.Name}' to {Path.GetFileName(fileName)}";
+            _logger.LogInformation("Exported selected profile {ProfileName} to {FileName}", SelectedProfile.Name, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error exporting selected profile");
+            StatusMessage = "Error exporting selected profile";
         }
         finally
         {

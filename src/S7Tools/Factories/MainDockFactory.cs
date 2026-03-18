@@ -83,6 +83,10 @@ public class MainDockFactory : Factory
             if (_mainDocumentDock!.VisibleDockables?.Contains(existingDoc) == true)
             {
                 _mainDocumentDock.ActiveDockable = existingDoc;
+                if (vm is IDisposable disposableVm && !ReferenceEquals(existingDoc.Context, vm))
+                {
+                    disposableVm.Dispose();
+                }
                 return;
             }
             else
@@ -224,12 +228,6 @@ public class MainDockFactory : Factory
             {
                 _openDocuments.Remove(key);
             }
-
-            // Dispose heavy ViewModels to avoid memory leaks
-            if (doc.Context is IDisposable disposableVm)
-            {
-                disposableVm.Dispose();
-            }
         }
         else if (dockable is ITool tool && tool.Id != null)
         {
@@ -242,11 +240,22 @@ public class MainDockFactory : Factory
             {
                 _openTools.Remove(key);
             }
+        }
+    }
 
-            if (tool.Context is IDisposable disposableTool)
-            {
-                disposableTool.Dispose();
-            }
+    /// <inheritdoc/>
+    public override void CloseDockable(IDockable dockable)
+    {
+        base.CloseDockable(dockable);
+        
+        // When actually closing a dockable tab, dispose its resources
+        if (dockable is IDocument doc && doc.Context is IDisposable disposableVm)
+        {
+            disposableVm.Dispose();
+        }
+        else if (dockable is ITool tool && tool.Context is IDisposable disposableTool)
+        {
+            disposableTool.Dispose();
         }
     }
 

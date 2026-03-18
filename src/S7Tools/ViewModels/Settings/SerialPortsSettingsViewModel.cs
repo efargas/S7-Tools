@@ -45,7 +45,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
     private readonly SerialPortDiscoveryViewModel _portScanner;
-    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
+
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -80,7 +80,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         IPathService pathService,
         SerialPortDiscoveryViewModel portScanner,
         ILogger<SerialPortsSettingsViewModel> logger)
-        : base(logger, unifiedProfileDialogService, dialogService, uiThreadService)
+        : base(logger, unifiedProfileDialogService, dialogService, uiThreadService, fileDialogService!)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
@@ -101,21 +101,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         // Initialize serial port specific commands
         InitializeCommands();
 
-        // Initialize path commands
-        BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
-        OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
-        ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
-
-        // Initialize ProfilesPath from settings and subscribe to changes
-        RefreshFromSettings();
-        _settingsChangedHandler = (_, args) =>
-        {
-            if (args.Key == "profiles.serialPath")
-            {
-                RefreshFromSettings();
-            }
-        };
-        _settingsService.SettingsChanged += _settingsChangedHandler;
+        // Path commands have been moved to PathSettingsViewModel
 
         // Load initial data
         // Load profiles and scan ports in background but marshal collection updates to UI thread
@@ -301,42 +287,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// </summary>
     public ReactiveCommand<Unit, Unit> TestPortCommand { get; private set; } = null!;
 
-    /// <summary>
-    /// Gets the command to export profiles.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExportProfilesCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to import profiles.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to export the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExportSelectedProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to show profile details.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ShowProfileDetailsCommand { get; private set; } = null!;
-
-    // Path management commands
-    /// <summary>
-    /// Command to open a folder browser to select the profiles directory.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> BrowseProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to open the profiles directory in the system file explorer.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> OpenProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to reset the profiles path to the default within the application resources.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ResetProfilesPathCommand { get; private set; } = null!;
-
     #endregion
 
     #region Private Methods
@@ -362,39 +312,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         TestPortCommand = ReactiveCommand.CreateFromTask(TestPortAsync, canTestPort);
         TestPortCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "testing port"))
-            .DisposeWith(_disposables);
-
-        // Export profiles command - enabled when profiles exist
-        IObservable<bool> canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
-            .Select(count => count > 0);
-
-        ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
-        ExportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "exporting profiles"))
-            .DisposeWith(_disposables);
-
-        // Import profiles command - always enabled
-        ImportProfilesCommand = ReactiveCommand.CreateFromTask(ImportProfilesAsync);
-        ImportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "importing profiles"))
-            .DisposeWith(_disposables);
-
-        // Export selected profile command - enabled when a profile is selected and has a valid Id
-        IObservable<bool> canExportSelectedProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && profile.Id > 0);
-
-        ExportSelectedProfileCommand = ReactiveCommand.CreateFromTask(ExportSelectedProfileAsync, canExportSelectedProfile);
-        ExportSelectedProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "exporting selected profile"))
-            .DisposeWith(_disposables);
-
-        // Show profile details command - enabled when a profile is selected
-        IObservable<bool> canShowProfileDetails = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null);
-
-        ShowProfileDetailsCommand = ReactiveCommand.CreateFromTask(ShowProfileDetailsAsync, canShowProfileDetails);
-        ShowProfileDetailsCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "showing profile details"))
             .DisposeWith(_disposables);
 
         // Subscribe to settings changes to update ProfilesPath
@@ -482,302 +399,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     }
 
     /// <summary>
-    /// Exports all profiles to a JSON file.
-    /// </summary>
-    private async Task ExportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
-                "Export Profiles",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*",
-                null,
-                "profiles.json");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ExportingProfiles;
-
-            IEnumerable<SerialPortProfile> profiles = await _profileService.ExportAsync();
-            string jsonData = System.Text.Json.JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(fileName, jsonData);
-
-            StatusMessage = $"Exported {Profiles.Count} profile(s) to {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", Profiles.Count, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error exporting profiles");
-            StatusMessage = UIStrings.Status_ErrorExportingProfiles;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    private async Task BrowseProfilesPathAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            return;
-        }
-
-        try
-        {
-            string? result = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Profiles Directory", ProfilesPath);
-            if (!string.IsNullOrEmpty(result))
-            {
-                ProfilesPath = result;
-                await UpdateProfilesPathInSettingsAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error browsing for profiles path");
-            StatusMessage = UIStrings.Status_ErrorSelectingDirectory;
-        }
-    }
-
-    /// <summary>
-    /// Opens the profiles directory in the system file explorer.
-    /// </summary>
-    private async Task OpenProfilesPathAsync()
-    {
-        System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortsSettingsViewModel.OpenProfilesPathAsync called - Start");
-
-        try
-        {
-            StatusMessage = UIStrings.Status_OpeningProfilesFolder;
-            System.Diagnostics.Debug.WriteLine($"DEBUG: Opening profiles folder: {ProfilesPath}");
-
-            if (string.IsNullOrEmpty(ProfilesPath))
-            {
-                StatusMessage = UIStrings.Status_ProfilesPathNotConfigured;
-                _specificLogger.LogError("Profiles path is null or empty");
-                System.Diagnostics.Debug.WriteLine($"ERROR: Profiles path is null or empty");
-                return;
-            }
-
-            // Ensure the directory exists before trying to open it
-            if (!Directory.Exists(ProfilesPath))
-            {
-                StatusMessage = UIStrings.Status_CreatingProfilesFolder;
-                Directory.CreateDirectory(ProfilesPath);
-                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
-                System.Diagnostics.Debug.WriteLine($"DEBUG: Created profiles directory: {ProfilesPath}");
-            }
-
-            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
-            System.Diagnostics.Debug.WriteLine($"DEBUG: About to call PlatformHelper.OpenDirectoryInExplorerAsync");
-
-            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
-
-            StatusMessage = UIStrings.Status_ProfilesFolderOpened;
-            _specificLogger.LogInformation("Successfully opened profiles folder");
-            System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortsSettingsViewModel.OpenProfilesPathAsync completed successfully");
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error opening profiles folder");
-            StatusMessage = UIStrings.Status_ErrorOpeningProfilesFolder;
-            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in SerialPortsSettingsViewModel.OpenProfilesPathAsync: {ex.Message}");
-            System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
-        }
-
-        System.Diagnostics.Debug.WriteLine($"DEBUG: SerialPortsSettingsViewModel.OpenProfilesPathAsync called - End");
-    }
-
-    private async Task ResetProfilesPathAsync()
-    {
-        try
-        {
-            // Reset to default path using PathService
-            string defaultPath = _pathService.SerialProfilesPath;
-            ProfilesPath = Path.GetDirectoryName(defaultPath) ?? _pathService.ProfilesDirectory;
-            await UpdateProfilesPathInSettingsAsync();
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error resetting profiles path");
-            StatusMessage = UIStrings.Status_ErrorResettingProfilesPath;
-        }
-    }
-
-    private async Task UpdateProfilesPathInSettingsAsync()
-    {
-        try
-        {
-            // Use the new settings service with key-value structure
-            await _settingsService.SetSettingAsync("profiles.serialPath", Path.Combine(ProfilesPath, "SerialProfiles.json")).ConfigureAwait(false);
-            StatusMessage = UIStrings.Status_ProfilesPathUpdated;
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Failed to update settings with new profiles path");
-            StatusMessage = UIStrings.Status_FailedToUpdateSettings;
-        }
-    }
-
-
-
-    /// <summary>
-    /// Refreshes the view model properties from the persisted settings.
-    /// </summary>
-    private void RefreshFromSettings()
-    {
-        try
-        {
-            // Use the new settings service with key-value access
-            string serialProfilePath = _settingsService.GetSetting<string>("profiles.serialPath", _pathService.SerialProfilesPath);
-            string? directoryPath = Path.GetDirectoryName(serialProfilePath);
-
-            // Ensure the path is absolute by resolving relative paths against the application base directory
-            if (!string.IsNullOrEmpty(directoryPath))
-            {
-                if (Path.IsPathRooted(directoryPath))
-                {
-                    ProfilesPath = directoryPath;
-                }
-                else
-                {
-                    // Resolve relative path against application base directory
-                    ProfilesPath = _pathService.ResolvePath(directoryPath);
-                }
-            }
-            else
-            {
-                ProfilesPath = _pathService.ProfilesDirectory;
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogWarning(ex, "Failed to refresh profiles path from settings");
-            ProfilesPath = _pathService.ProfilesDirectory;
-        }
-    }
-
-    /// <summary>
-    /// Imports profiles from a JSON file.
-    /// </summary>
-    private async Task ImportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowOpenFileDialogAsync(
-                "Import Profiles",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ImportingProfiles;
-
-            string jsonData = await File.ReadAllTextAsync(fileName);
-            List<SerialPortProfile> profiles = JsonSerializer.Deserialize<List<SerialPortProfile>>(jsonData) ?? new List<SerialPortProfile>();
-            IEnumerable<SerialPortProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
-
-            int importedCount = importedProfiles.Count();
-            await RefreshCommand.Execute(); // Refresh the list
-
-            StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error importing profiles");
-            StatusMessage = UIStrings.Status_ErrorImportingProfiles;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Exports the selected profile to a JSON file.
-    /// </summary>
-    private async Task ExportSelectedProfileAsync()
-    {
-        if (SelectedProfile == null || _fileDialogService == null)
-        {
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
-                "Export Profile",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*",
-                null,
-                $"{SelectedProfile.Name}.json");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ExportingSelectedProfile;
-
-            string jsonData;
-
-            // If the selected profile has a valid persisted Id, use the profile service which performs
-            // any canonical serialization and validation. Otherwise fall back to directly serializing
-            // the in-memory profile to allow exporting unsaved/imported profiles without throwing.
-            if (SelectedProfile.Id > 0)
-            {
-                SerialPortProfile? profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
-                jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
-            }
-            else
-            {
-                var options = new System.Text.Json.JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                };
-
-                jsonData = System.Text.Json.JsonSerializer.Serialize(SelectedProfile, options);
-            }
-
-            await File.WriteAllTextAsync(fileName, jsonData);
-
-            StatusMessage = $"Exported profile '{SelectedProfile.Name}' to {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Exported profile {ProfileName} to {FileName}", SelectedProfile.Name, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error exporting profile");
-            StatusMessage = UIStrings.Status_ErrorExportingProfile;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
     /// Shows detailed information about the selected profile.
     /// </summary>
     private async Task ShowProfileDetailsAsync()
@@ -838,10 +459,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             try
             {
                 _disposables?.Dispose();
-                if (_settingsChangedHandler != null)
-                {
-                    _settingsService.SettingsChanged -= _settingsChangedHandler;
-                }
+
             }
             catch { }
         }

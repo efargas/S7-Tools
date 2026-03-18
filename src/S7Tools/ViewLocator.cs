@@ -27,6 +27,7 @@ public class ViewLocator : IDataTemplate
     private static readonly Dictionary<Type, Type> ExplicitMappings = new()
     {
         [typeof(ViewModels.Jobs.JobsManagementViewModel)] = typeof(Views.Jobs.JobsMainView),
+        [typeof(ViewModels.Profiles.ProfilesViewModel)] = typeof(Views.Profiles.ProfilesMainView),
     };
     /// <summary>
     /// Builds a control instance for the specified view model.

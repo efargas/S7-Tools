@@ -10,6 +10,8 @@
     xmlns:viewsSettings="clr-namespace:S7Tools.Views.Settings"
     xmlns:viewsJobs="clr-namespace:S7Tools.Views.Jobs"
     xmlns:viewsTasks="clr-namespace:S7Tools.Views.Tasks"
+    xmlns:vmProfiles="using:S7Tools.ViewModels.Profiles"
+    xmlns:viewsProfiles="clr-namespace:S7Tools.Views.Profiles"
     xmlns:local="clr-namespace:S7Tools"
     xmlns:icons="using:Projektanker.Icons.Avalonia"
     xmlns:converters="clr-namespace:S7Tools.Converters"
@@ -262,6 +264,9 @@
                             <ContentControl.DataTemplates>
                                 <DataTemplate DataType="vmSettings:SettingsViewModel">
                                     <viewsSettings:SettingsCategoriesView />
+                                </DataTemplate>
+                                <DataTemplate DataType="vmProfiles:ProfilesViewModel">
+                                    <viewsProfiles:ProfilesSidebarView />
                                 </DataTemplate>
                                 <DataTemplate DataType="vmJobs:JobsManagementViewModel">
                                     <viewsJobs:JobsSidebarView />

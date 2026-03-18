@@ -19,14 +19,20 @@ using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
-namespace S7Tools.ViewModels.Settings;
+using S7Tools.Core.Interfaces.ViewModels;
+namespace S7Tools.ViewModels.Profiles;
 
 /// <summary>
 /// ViewModel for the Power Supply settings category, providing comprehensive profile management
 /// and power supply control capabilities for Modbus TCP devices.
 /// </summary>
-public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<PowerSupplyProfile>
+public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<PowerSupplyProfile>, IDockableViewModel
 {
+
+    public string DockId => "PowerSupplyProfiles";
+    public string DockTitle => "Power Supply";
+    public bool CanClose => true;
+    public bool CanFloat => true;
     #region Fields
 
     private readonly IPowerSupplyProfileService _profileService;
@@ -35,11 +41,11 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     private readonly IUnifiedProfileDialogService _unifiedDialogService;
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
-    private readonly ILogger<PowerSupplySettingsViewModel> _specificLogger;
+    private readonly ILogger<PowerSupplyProfilesViewModel> _specificLogger;
     private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
-    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
+
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -47,7 +53,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     #region Constructor
 
     /// <summary>
-    /// Initializes a new instance of the PowerSupplySettingsViewModel class.
+    /// Initializes a new instance of the PowerSupplyProfilesViewModel class.
     /// </summary>
     /// <param name="unifiedDialogService">The unified profile dialog service.</param>
     /// <param name="logger">The logger.</param>
@@ -59,7 +65,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
     /// <param name="pathService">The path service for dynamic path resolution.</param>
-    public PowerSupplySettingsViewModel(
+    public PowerSupplyProfilesViewModel(
         IUnifiedProfileDialogService unifiedDialogService,
         ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>> logger,
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
@@ -70,7 +76,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         IFileDialogService? fileDialogService,
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         IPathService pathService)
-        : base(logger, unifiedDialogService, dialogService, uiThreadService)
+        : base(logger, unifiedDialogService, dialogService, uiThreadService, fileDialogService!)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _powerSupplyService = powerSupplyService ?? throw new ArgumentNullException(nameof(powerSupplyService));
@@ -83,13 +89,12 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
         // Store specific logger (use constructor parameter, not create new factory)
-        _specificLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<PowerSupplySettingsViewModel>();
+        _specificLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<PowerSupplyProfilesViewModel>();
 
         // DON'T initialize Profiles collection - base class provides it
         // Profiles collection is provided by base class ProfileManagementViewModelBase
 
-        // Initialize path commands (to be implemented in next increment)
-        InitializePathCommands();
+
 
         // Initialize profile commands (to be implemented in next increment)
         InitializeProfileCommands();
@@ -99,17 +104,8 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         // Initialize power control commands (to be implemented in next increment)
         InitializePowerControlCommands();
+        // Path commands have been moved to PathSettingsViewModel
 
-        // Initialize ProfilesPath from settings and subscribe to changes
-        RefreshFromSettings();
-        _settingsChangedHandler = (_, args) =>
-        {
-            if (args.Key.StartsWith("powerSupply.") || args.Key.StartsWith("profiles.powerSupply"))
-            {
-                RefreshFromSettings();
-            }
-        };
-        _settingsService.SettingsChanged += _settingsChangedHandler;
 
         // Setup property change subscriptions
         SetupPropertySubscriptions();
@@ -123,7 +119,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         // Reflect existing connection state if service is already connected
         UpdateConnectionStatus();
 
-        _specificLogger.LogInformation("PowerSupplySettingsViewModel initialized");
+        _specificLogger.LogInformation("PowerSupplyProfilesViewModel initialized");
     }
 
     #endregion
@@ -206,19 +202,9 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <summary>Gets the command to power cycle the power supply.</summary>
     public ReactiveCommand<Unit, Unit> PowerCycleCommand { get; private set; } = null!;
 
-    // Import/Export Commands
-    /// <summary>Gets the command to export power supply profiles.</summary>
-    public ReactiveCommand<Unit, Unit> ExportProfilesCommand { get; private set; } = null!;
-    /// <summary>Gets the command to import power supply profiles.</summary>
-    public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
 
-    // Path Management Commands (PowerSupply-specific implementations)
-    /// <summary>Gets the command to browse for profiles path.</summary>
-    public ReactiveCommand<Unit, Unit> BrowseProfilesPathCommand { get; private set; } = null!;
-    /// <summary>Gets the command to open profiles path in explorer.</summary>
-    public ReactiveCommand<Unit, Unit> OpenProfilesPathCommand { get; private set; } = null!;
-    /// <summary>Gets the command to reset profiles path to default.</summary>
-    public ReactiveCommand<Unit, Unit> ResetProfilesPathCommand { get; private set; } = null!;
+
+    // Path commands are in PathSettingsViewModel
 
     // Profile Management Commands (Create, Edit, Delete, Duplicate, etc.) are inherited from base class
 
@@ -226,28 +212,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
     #region Command Initialization Methods
 
-    /// <summary>
-    /// Initializes path management commands.
-    /// Implements PowerSupply-specific path operations while base class provides profile CRUD commands.
-    /// </summary>
-    private void InitializePathCommands()
-    {
-        // Initialize PowerSupply-specific path commands
-        BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
-        BrowseProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "browsing profiles path"))
-            .DisposeWith(_disposables);
 
-        OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
-        OpenProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "opening profiles path"))
-            .DisposeWith(_disposables);
-
-        ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
-        ResetProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "resetting profiles path"))
-            .DisposeWith(_disposables);
-    }
 
     /// <summary>
     /// Initializes profile management commands.
@@ -258,20 +223,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         // Profile management commands are provided by base class
         // No additional initialization needed for CRUD operations
 
-        // Initialize PowerSupply-specific export/import commands
-        IObservable<bool> canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
-            .Select(count => count > 0);
 
-        ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
-        ExportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "exporting profiles"))
-            .DisposeWith(_disposables);
-
-        // Import profiles command - always enabled
-        ImportProfilesCommand = ReactiveCommand.CreateFromTask(ImportProfilesAsync);
-        ImportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "importing profiles"))
-            .DisposeWith(_disposables);
     }
 
     /// <summary>
@@ -413,14 +365,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             })
             .DisposeWith(_disposables);
 
-        // Monitor profiles path changes
-        this.WhenAnyValue(x => x.ProfilesPath)
-            .Skip(1) // Skip initial value
-            .Subscribe(path =>
-            {
-                _specificLogger.LogDebug("Profiles path changed: {Path}", path);
-            })
-            .DisposeWith(_disposables);
+
     }
 
     #endregion
@@ -431,42 +376,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     // Profile loading is handled by base class ProfileManagementViewModelBase
     // Override LoadProfilesAsync is not needed - base class calls GetProfileManager().GetAllAsync()
 
-    /// <summary>
-    /// Refreshes settings from the settings service.
-    /// </summary>
-    private void RefreshFromSettings()
-    {
-        try
-        {
-            // Use the new settings service with key-value access
-            string powerSupplyProfilePath = _settingsService.GetSetting<string>("profiles.powerSupplyPath", _pathService.PowerSupplyProfilesPath);
-            string? directoryPath = Path.GetDirectoryName(powerSupplyProfilePath);
 
-            // Resolve the path using the path service, which handles both absolute and relative paths
-            string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
-
-            // If resolution results in an invalid path, fall back to the PowerSupply profiles directory
-            if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
-            {
-                // Use the directory containing the PowerSupply profiles file as fallback
-                ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
-            }
-            else
-            {
-                ProfilesPath = resolvedPath;
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Failed to refresh settings from settings service");
-            _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
-            });
-            // On exception, use the directory containing the PowerSupply profiles file as fallback
-            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
-        }
-    }
 
     #endregion
 
@@ -639,155 +549,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    /// Exports profiles to a JSON file.
-    /// </summary>
-    private async Task ExportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            });
-            _specificLogger.LogWarning("Export profiles failed: File dialog service not available");
-            return;
-        }
 
-        try
-        {
-            _specificLogger.LogDebug("Exporting power supply profiles");
-
-            string? filePath = await _fileDialogService.ShowSaveFileDialogAsync(
-                "Export Power Supply Profiles",
-                "*.json",
-                null,
-                "power-supply-profiles.json").ConfigureAwait(false);
-
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                IEnumerable<PowerSupplyProfile> profiles = await _profileService.ExportAsync().ConfigureAwait(false);
-                string json = JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
-                await System.IO.File.WriteAllTextAsync(filePath, json).ConfigureAwait(false);
-
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = string.Format(UIStrings.Status_ProfilesExportedToFile, Profiles.Count, Path.GetFileName(filePath));
-                });
-                _specificLogger.LogInformation("Exported {Count} power supply profiles to {FilePath}",
-                    Profiles.Count, filePath);
-            }
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Access denied while exporting profiles to {FilePath}", ex.Message);
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ExportFailedAccessDenied;
-            });
-        }
-        catch (IOException ex)
-        {
-            _specificLogger.LogError(ex, "I/O error while exporting profiles");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_ExportFailed, ex.Message);
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Failed to export power supply profiles");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_ExportFailed, ex.Message);
-            });
-        }
-    }
-
-    /// <summary>
-    /// Imports profiles from a JSON file.
-    /// </summary>
-    private async Task ImportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            });
-            _specificLogger.LogWarning("Import profiles failed: File dialog service not available");
-            return;
-        }
-
-        try
-        {
-            _specificLogger.LogDebug("Importing power supply profiles");
-
-            string? filePath = await _fileDialogService.ShowOpenFileDialogAsync(
-                "Import Power Supply Profiles",
-                "*.json").ConfigureAwait(false);
-
-            if (!string.IsNullOrEmpty(filePath))
-            {
-                string json = await System.IO.File.ReadAllTextAsync(filePath).ConfigureAwait(false);
-                List<PowerSupplyProfile> profiles = JsonSerializer.Deserialize<List<PowerSupplyProfile>>(json) ?? new List<PowerSupplyProfile>();
-
-                if (profiles.Count == 0)
-                {
-                    await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                    {
-                        StatusMessage = UIStrings.Status_ImportFailedNoValidProfiles;
-                    });
-                    _specificLogger.LogWarning("Import failed: No profiles found in {FilePath}", filePath);
-                    return;
-                }
-
-                IEnumerable<PowerSupplyProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false).ConfigureAwait(false);
-                int count = importedProfiles.Count();
-
-                _ = RefreshCommand.Execute();
-
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = string.Format(UIStrings.Status_ProfilesImportedFromFile, count, Path.GetFileName(filePath));
-                });
-                _specificLogger.LogInformation("Imported {Count} power supply profiles from {FilePath}",
-                    count, filePath);
-            }
-        }
-        catch (FileNotFoundException ex)
-        {
-            _specificLogger.LogError(ex, "Import failed: File not found");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ImportFailedFileNotFound;
-            });
-        }
-        catch (JsonException ex)
-        {
-            _specificLogger.LogError(ex, "Import failed: Invalid JSON format");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ImportFailedInvalidFormat;
-            });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Import failed: Access denied");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ImportFailedAccessDenied;
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Failed to import power supply profiles");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_ImportFailed, ex.Message);
-            });
-        }
-    }
 
     #endregion
 
@@ -1094,156 +856,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
     #endregion
 
-    #region Path Management Commands Implementation
 
-    /// <summary>
-    /// Browses for a profiles path.
-    /// </summary>
-    private async Task BrowseProfilesPathAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            });
-            _specificLogger.LogWarning("Browse profiles path failed: File dialog service not available");
-            return;
-        }
-
-        try
-        {
-            _specificLogger.LogDebug("Browsing for profiles path");
-
-            string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
-                "Select Power Supply Profiles Folder").ConfigureAwait(false);
-
-            if (!string.IsNullOrEmpty(folderPath))
-            {
-                ProfilesPath = folderPath;
-
-                // Use the new settings service to update the profiles path
-                await _settingsService.SetSettingAsync("profiles.powerSupplyPath", Path.Combine(folderPath, "PowerSupplyProfiles.json")).ConfigureAwait(false);
-
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = string.Format(UIStrings.Status_ProfilesPathSetTo, Path.GetFileName(folderPath));
-                });
-                _specificLogger.LogInformation("Profiles path changed to: {Path}", folderPath);
-            }
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Access denied while setting profiles path");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FailedToSetProfilesPathAccessDenied;
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error browsing profiles path");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToSetProfilesPath, ex.Message);
-            });
-        }
-    }
-
-    /// <summary>
-    /// Opens the profiles path in the file explorer.
-    /// </summary>
-    private async Task OpenProfilesPathAsync()
-    {
-        try
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_OpeningProfilesFolder;
-            });
-
-            if (string.IsNullOrEmpty(ProfilesPath))
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = UIStrings.Status_ProfilesPathNotConfigured;
-                });
-                _specificLogger.LogWarning("Cannot open profiles folder: Path is null or empty");
-                return;
-            }
-
-            // Ensure the directory exists before trying to open it
-            if (!Directory.Exists(ProfilesPath))
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = UIStrings.Status_CreatingProfilesFolder;
-                });
-                Directory.CreateDirectory(ProfilesPath);
-                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
-            }
-
-            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
-
-            // Use centralized PlatformHelper for consistent cross-platform behavior
-            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ProfilesFolderOpened;
-            });
-            _specificLogger.LogInformation("Successfully opened profiles folder");
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Access denied while opening profiles folder");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FailedToOpenFolderAccessDenied;
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error opening profiles folder: {Message}", ex.Message);
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToOpenFolder, ex.Message);
-            });
-        }
-    }
-
-    /// <summary>
-    /// Resets the profiles path to the default value.
-    /// </summary>
-    private async Task ResetProfilesPathAsync()
-    {
-        try
-        {
-            _specificLogger.LogDebug("Resetting profiles path to default");
-
-            // Reset the setting to its default value
-            await _settingsService.ResetSettingAsync("profiles.powerSupplyPath").ConfigureAwait(false);
-
-            // Explicitly refresh to ensure UI consistency
-            RefreshFromSettings();
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ProfilesPathReset;
-            });
-            _specificLogger.LogInformation("Profiles path reset to default");
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error resetting profiles path to default");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToResetProfilesPath, ex.Message);
-            });
-        }
-    }
-
-    #endregion
 
     #region Validation Methods
 
@@ -1411,18 +1024,18 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     protected override async Task<ProfileDialogResult<PowerSupplyProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
-        System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowCreateDialogAsync called with name: {request.DefaultName}");
+        System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfilesViewModel.ShowCreateDialogAsync called with name: {request.DefaultName}");
 
         try
         {
             // Use the unified dialog service to show PowerSupply create dialog
             ProfileDialogResult<PowerSupplyProfile> result = await _unifiedDialogService.ShowPowerSupplyCreateDialogAsync(request).ConfigureAwait(false);
-            System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowCreateDialogAsync result: {result.IsSuccess}");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfilesViewModel.ShowCreateDialogAsync result: {result.IsSuccess}");
             return result;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplySettingsViewModel.ShowCreateDialogAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplyProfilesViewModel.ShowCreateDialogAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             throw;
         }
@@ -1433,18 +1046,18 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     protected override async Task<ProfileDialogResult<PowerSupplyProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
-        System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowEditDialogAsync called");
+        System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfilesViewModel.ShowEditDialogAsync called");
 
         try
         {
             // Use the unified dialog service to show PowerSupply edit dialog
             ProfileDialogResult<PowerSupplyProfile> result = await _unifiedDialogService.ShowPowerSupplyEditDialogAsync(request).ConfigureAwait(false);
-            System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowEditDialogAsync result: {result.IsSuccess}");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfilesViewModel.ShowEditDialogAsync result: {result.IsSuccess}");
             return result;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplySettingsViewModel.ShowEditDialogAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplyProfilesViewModel.ShowEditDialogAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             throw;
         }
@@ -1455,18 +1068,18 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     protected override async Task<ProfileDialogResult<string>> ShowDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
-        System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowDuplicateDialogAsync called");
+        System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfilesViewModel.ShowDuplicateDialogAsync called");
 
         try
         {
             // Use the unified dialog service to show PowerSupply duplicate dialog
             ProfileDialogResult<string> result = await _unifiedDialogService.ShowPowerSupplyDuplicateDialogAsync(request).ConfigureAwait(false);
-            System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplySettingsViewModel.ShowDuplicateDialogAsync result: {result.IsSuccess}");
+            System.Diagnostics.Debug.WriteLine($"DEBUG: PowerSupplyProfilesViewModel.ShowDuplicateDialogAsync result: {result.IsSuccess}");
             return result;
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplySettingsViewModel.ShowDuplicateDialogAsync: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"ERROR: Exception in PowerSupplyProfilesViewModel.ShowDuplicateDialogAsync: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"ERROR: Exception details: {ex}");
             throw;
         }
@@ -1483,15 +1096,11 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (disposing)
         {
-            // Unsubscribe from settings changes
-            if (_settingsChangedHandler != null)
-            {
-                _settingsService.SettingsChanged -= _settingsChangedHandler;
-            }
 
-            // Dispose managed resources specific to PowerSupplySettingsViewModel
+
+            // Dispose managed resources specific to PowerSupplyProfilesViewModel
             _disposables?.Dispose();
-            _specificLogger.LogInformation("PowerSupplySettingsViewModel disposed");
+            _specificLogger.LogInformation("PowerSupplyProfilesViewModel disposed");
         }
 
         // Call base dispose

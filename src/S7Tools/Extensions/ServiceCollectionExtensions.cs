@@ -416,13 +416,15 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
         services.TryAddSingleton<SettingsViewModel>(provider => new SettingsViewModel(provider));
+        services.TryAddSingleton<ViewModels.Profiles.ProfilesViewModel>(provider => new ViewModels.Profiles.ProfilesViewModel(provider));
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
         // Add Memory Dump Viewer ViewModel
         services.TryAddTransient<StreamedMemoryDumpViewModel>();
-        services.TryAddTransient<FileMemoryDumpViewModel>();
-        services.TryAddTransient<MemoryDumpViewerViewModel>();
+        services.TryAddSingleton<FileMemoryDumpViewModel>();
+        services.TryAddTransient<FileMemoryDumpDocumentViewModel>();
+        services.TryAddSingleton<MemoryDumpViewerViewModel>();
 
         // Hex Viewer
         services.TryAddTransient<HexViewerViewModel>();
@@ -432,6 +434,7 @@ public static class ServiceCollectionExtensions
         // Add Profile Management ViewModels as Singletons to persist state across navigation
         services.TryAddSingleton<SerialPortsSettingsViewModel>();
         services.TryAddTransient<SerialPortProfileViewModel>();
+        services.TryAddTransient<SerialPortProfilesViewModel>();
 
         // Add reusable Control ViewModels
         services.TryAddTransient<ViewModels.Controls.SerialPortDiscoveryViewModel>();
@@ -439,10 +442,14 @@ public static class ServiceCollectionExtensions
         // Add Socat ViewModels (Servers Settings - socat configuration)
         services.TryAddSingleton<SocatSettingsViewModel>();
         services.TryAddTransient<SocatProfileViewModel>();
+        services.TryAddTransient<SocatProfilesViewModel>();
 
         // Add Power Supply ViewModels (Power Supply Control - Modbus TCP)
-        services.TryAddSingleton<PowerSupplySettingsViewModel>();
         services.TryAddTransient<PowerSupplyProfileViewModel>();
+        services.TryAddTransient<PowerSupplyProfilesViewModel>();
+        
+        // Add Memory Region Profiles ViewModels
+        services.TryAddTransient<MemoryRegionProfilesViewModel>();
 
         // Add Task Management ViewModels (Task Manager and Jobs Management)
         // Task Viewmodels

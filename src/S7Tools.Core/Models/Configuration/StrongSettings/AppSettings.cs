@@ -18,6 +18,12 @@ namespace S7Tools.Core.Models.Configuration.StrongSettings
         public NetworkSettings Network { get; set; } = new();
         public SocatSettings Socat { get; set; } = new();
         public PowerSupplySettings PowerSupply { get; set; } = new();
+        public MemoryDumpSettings MemoryDump { get; set; } = new();
+    }
+
+    public class MemoryDumpSettings
+    {
+        public string DefaultFolder { get; set; } = "";
     }
 
     public class LoggingSettings
