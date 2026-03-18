@@ -57,7 +57,7 @@ public partial class FileTreeItemViewModel : ViewModelBase
     {
         FullPath = path;
         Name = Path.GetFileName(path);
-        
+
         if (string.IsNullOrEmpty(Name))
         {
             Name = path; // Root drives might not have a file name
@@ -90,11 +90,11 @@ public partial class FileTreeItemViewModel : ViewModelBase
 
         try
         {
-            var directories = Directory.EnumerateDirectories(FullPath)
+            var directories = Directory.GetDirectories(FullPath)
                 .Select(d => new FileTreeItemViewModel(d, true));
 
-            var files = Directory.EnumerateFiles(FullPath, "*.*")
-                .Where(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) || 
+            var files = Directory.GetFiles(FullPath, "*.*")
+                .Where(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) ||
                             f.EndsWith(".dmp", StringComparison.OrdinalIgnoreCase))
                 .Select(f => new FileTreeItemViewModel(f, false));
 
