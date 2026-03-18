@@ -136,7 +136,10 @@ namespace S7Tools.Services
                 "profiles.socatPath" => def.Profiles.SocatPath,
                 "profiles.powerSupplyPath" => def.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => def.Profiles.MemoryRegionPath,
-                "profiles.memoryMappingPath" => def.Profiles.MemoryRegionPath,
+        {
+            get => def.Profiles.MemoryRegionPath;
+        }
+
                 "powerSupply.powerStateChangeDelayMs" => def.PowerSupply.PowerStateChangeDelayMs,
                 "memoryDump.defaultFolder" => def.MemoryDump.DefaultFolder,
                 _ => null
