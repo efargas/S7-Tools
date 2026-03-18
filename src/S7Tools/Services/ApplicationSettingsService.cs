@@ -107,7 +107,11 @@ namespace S7Tools.Services
                     case "profiles.socatPath": oldValue = settings.Profiles.SocatPath; settings.Profiles.SocatPath = value.ToString() ?? ""; break;
                     case "profiles.powerSupplyPath": oldValue = settings.Profiles.PowerSupplyPath; settings.Profiles.PowerSupplyPath = value.ToString() ?? ""; break;
                     case "profiles.memoryRegionPath":
-                    case "profiles.memoryMappingPath":
+                    {
+                        oldValue = settings.Profiles.MemoryRegionPath;
+                        settings.Profiles.MemoryRegionPath = value.ToString() ?? "";
+                        break;
+                    }
                         oldValue = settings.Profiles.MemoryRegionPath;
                         settings.Profiles.MemoryRegionPath = value.ToString() ?? "";
                         break;
