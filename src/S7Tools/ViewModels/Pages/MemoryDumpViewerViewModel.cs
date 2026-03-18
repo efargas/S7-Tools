@@ -21,12 +21,10 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
     public bool CanFloat => true;
 
     private readonly IServiceProvider _serviceProvider;
-    private readonly StreamedMemoryDumpViewModel _streamedViewModel;
 
     public MemoryDumpViewerViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _streamedViewModel = _serviceProvider.GetRequiredService<StreamedMemoryDumpViewModel>();
         FileExplorer = _serviceProvider.GetRequiredService<FileMemoryDumpViewModel>();
 
         Categories = new ObservableCollection<string>(new[]
@@ -36,7 +34,7 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
 
         // Default selection
         SelectedCategory = Categories[0];
-        SelectedCategoryViewModel = GetCategoryViewModel(SelectedCategory);
+        // We don't cache instances here anymore. The dockable will be resolved on demand.
 
         SelectCategoryCommand = ReactiveCommand.Create<string>(category =>
         {
@@ -58,15 +56,13 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         set
         {
             this.RaiseAndSetIfChanged(ref _selectedCategory, value);
-            SelectedCategoryViewModel = GetCategoryViewModel(value);
+            // No longer sets SelectedCategoryViewModel directly. UI/Navigation should call GetDockableForOpen()
         }
     }
 
-    private ViewModelBase? _selectedCategoryViewModel;
     public ViewModelBase? SelectedCategoryViewModel
     {
-        get => _selectedCategoryViewModel!;
-        set => this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
+        get => null; // Kept for compatibility if XAML tries to bind it, but shouldn't be used
     }
 
     /// <summary>
@@ -89,17 +85,16 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
 
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
 
-    private ViewModelBase GetCategoryViewModel(string category)
+    public IDockableViewModel? GetDockableForOpen()
     {
-        return category switch
+        return SelectedCategory switch
         {
-            "Streamed PLC Memory Viewer" => _streamedViewModel,
-            _ => _streamedViewModel
+            "Streamed PLC Memory Viewer" => _serviceProvider.GetRequiredService<StreamedMemoryDumpViewModel>(),
+            _ => _serviceProvider.GetRequiredService<StreamedMemoryDumpViewModel>()
         };
     }
 
     public void Dispose()
     {
-        _streamedViewModel?.Dispose();
     }
 }

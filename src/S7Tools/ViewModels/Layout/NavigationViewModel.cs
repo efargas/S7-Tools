@@ -119,7 +119,7 @@ public class NavigationViewModel : ReactiveObject
         if (content is IDockableViewModel dockable && OpenDocumentAction != null)
         {
             // If the content is the generic memory dump shell, open its currently selected doc instead
-            if (dockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.SelectedCategoryViewModel is IDockableViewModel subDockable)
+            if (dockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.GetDockableForOpen() is IDockableViewModel subDockable)
             {
                 OpenDocumentAction(subDockable);
             }
@@ -171,7 +171,7 @@ public class NavigationViewModel : ReactiveObject
         {
             if (e.PropertyName == "SidebarItemTapped")
             {
-                if (_currentSidebarDockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.SelectedCategoryViewModel is IDockableViewModel subDockable)
+                if (_currentSidebarDockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.GetDockableForOpen() is IDockableViewModel subDockable)
                 {
                     OpenDocumentAction(subDockable);
                 }

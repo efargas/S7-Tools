@@ -41,6 +41,8 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
             RootFolderPath = defaultFolder;
             LoadTree();
         }
+
+        FileTreeItems.CollectionChanged += (_, _) => this.RaisePropertyChanged(nameof(HasItems));
     }
 
     public string Title => "File PLC Memory Viewer";
@@ -53,12 +55,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _rootFolderPath, value);
     }
 
-    private bool _hasItems;
-    public bool HasItems
-    {
-        get => _hasItems;
-        private set => this.RaiseAndSetIfChanged(ref _hasItems, value);
-    }
+    public bool HasItems => FileTreeItems.Count > 0;
 
     public ObservableCollection<FileTreeItemViewModel> FileTreeItems { get; } = new();
 
@@ -97,7 +94,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     private void LoadTree()
     {
         FileTreeItems.Clear();
-        HasItems = false;
+
         if (string.IsNullOrEmpty(RootFolderPath)) return;
 
         try
@@ -105,7 +102,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
             var root = new FileTreeItemViewModel(RootFolderPath, true);
             root.IsExpanded = true;
             FileTreeItems.Add(root);
-            HasItems = true;
+
         }
         catch (Exception ex)
         {

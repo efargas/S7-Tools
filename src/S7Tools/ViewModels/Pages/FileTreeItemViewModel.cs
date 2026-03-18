@@ -72,16 +72,16 @@ public partial class FileTreeItemViewModel : ViewModelBase
         }
     }
 
-    private FileTreeItemViewModel(bool isDummy, string dummyName)
+    private FileTreeItemViewModel(string dummyName)
     {
         Name = dummyName;
         IsDirectory = false;
-        IsDummyNode = isDummy;
+        IsDummyNode = true;
     }
 
     public static FileTreeItemViewModel CreateDummyNode(string dummyName)
     {
-        return new FileTreeItemViewModel(true, dummyName);
+        return new FileTreeItemViewModel(dummyName);
     }
 
     private void LoadChildren()

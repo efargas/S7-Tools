@@ -236,9 +236,14 @@ public partial class StreamedMemoryDumpViewModel : ViewModelBase, S7Tools.Core.I
     {
         if (disposing)
         {
-            _cts?.Cancel();
-            _cts?.Dispose();
-            _cts = null;
+            if (IsConnected)
+            {
+                Task.Run(async () => await DisconnectInternalAsync()).Wait();
+            }
+            else
+            {
+                _cts?.Dispose();
+            }
         }
     }
 }
