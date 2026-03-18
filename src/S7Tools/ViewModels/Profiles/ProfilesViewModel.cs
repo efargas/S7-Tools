@@ -70,7 +70,16 @@ public class ProfilesViewModel : ViewModelBase, IDockableViewModel
     public ViewModelBase? SelectedCategoryViewModel
     {
         get => _selectedCategoryViewModel;
-        set => this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
+        set 
+        {
+            this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
+            this.RaisePropertyChanged("SidebarItemTapped");
+        }
+    }
+
+    public IDockableViewModel? GetDockableForOpen()
+    {
+        return SelectedCategoryViewModel as IDockableViewModel;
     }
 
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
@@ -91,11 +100,11 @@ public class ProfilesViewModel : ViewModelBase, IDockableViewModel
         {
             ViewModelBase viewModel = category switch
             {
-                "Serial Ports" => _serviceProvider.GetRequiredService<SerialPortsSettingsViewModel>(),
-                "Servers" => _serviceProvider.GetRequiredService<SocatSettingsViewModel>(),
-                "Power Supply" => _serviceProvider.GetRequiredService<PowerSupplySettingsViewModel>(),
-                "Memory Regions" => _serviceProvider.GetRequiredService<MemoryRegionSettingsViewModel>(),
-                _ => _serviceProvider.GetRequiredService<SerialPortsSettingsViewModel>()
+                "Serial Ports" => _serviceProvider.GetRequiredService<SerialPortProfilesViewModel>(),
+                "Servers" => _serviceProvider.GetRequiredService<SocatProfilesViewModel>(),
+                "Power Supply" => _serviceProvider.GetRequiredService<PowerSupplyProfilesViewModel>(),
+                "Memory Regions" => _serviceProvider.GetRequiredService<MemoryRegionProfilesViewModel>(),
+                _ => _serviceProvider.GetRequiredService<SerialPortProfilesViewModel>()
             };
 
             _categoryViewModels[category] = viewModel;
@@ -107,7 +116,7 @@ public class ProfilesViewModel : ViewModelBase, IDockableViewModel
             logger?.LogError(ex, "Error creating ViewModel for profile category: {Category}", category);
             
             // Fallback
-            return _serviceProvider.GetRequiredService<SerialPortsSettingsViewModel>();
+            return _serviceProvider.GetRequiredService<SerialPortProfilesViewModel>();
         }
     }
 }

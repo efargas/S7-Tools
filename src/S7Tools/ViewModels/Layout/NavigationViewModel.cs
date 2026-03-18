@@ -123,6 +123,10 @@ public class NavigationViewModel : ReactiveObject
             {
                 OpenDocumentAction(subDockable);
             }
+            else if (dockable is ProfilesViewModel profVm && profVm.GetDockableForOpen() is IDockableViewModel profDockable)
+            {
+                OpenDocumentAction(profDockable);
+            }
             else
             {
                 OpenDocumentAction(dockable);
@@ -158,6 +162,10 @@ public class NavigationViewModel : ReactiveObject
             {
                 OpenDocumentAction(subDockable);
             }
+            else if (_currentSidebarDockable is ProfilesViewModel profVm && profVm.GetDockableForOpen() is IDockableViewModel profDockable)
+            {
+                OpenDocumentAction(profDockable);
+            }
             else
             {
                 OpenDocumentAction(_currentSidebarDockable);
@@ -181,6 +189,10 @@ public class NavigationViewModel : ReactiveObject
                 if (_currentSidebarDockable is MemoryDumpViewerViewModel memDumpVm && memDumpVm.GetDockableForOpen() is IDockableViewModel subDockable)
                 {
                     OpenDocumentAction(subDockable);
+                }
+                else if (_currentSidebarDockable is ProfilesViewModel profVm && profVm.GetDockableForOpen() is IDockableViewModel profDockable)
+                {
+                    OpenDocumentAction(profDockable);
                 }
                 else
                 {

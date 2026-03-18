@@ -56,31 +56,47 @@ public sealed class SerialPortDiscoveryService
         int maxScanPorts,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogDebug("Starting serial port scan");
+        _logger.LogDebug("Starting serial port scan using System.IO.Ports");
 
         List<SerialPortInfo> ports = [];
 
         try
         {
-            // Scan USB ports
-            if (includeUsbPorts)
+            // Get available ports natively, which filters out unresponsive / unconnected nodes instantly
+            string[] availableSystemPorts = [];
+            try
             {
-                IEnumerable<SerialPortInfo> usbPorts = await ScanPortTypeAsync("/dev/ttyUSB", maxScanPorts, cancellationToken).ConfigureAwait(false);
-                ports.AddRange(usbPorts);
+                availableSystemPorts = System.IO.Ports.SerialPort.GetPortNames();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get ports from System.IO.Ports");
             }
 
-            // Scan ACM ports
-            if (includeAcmPorts)
+            var portsToScan = new List<string>();
+
+            // Filter the native list depending on user preferences
+            foreach (var port in availableSystemPorts)
             {
-                IEnumerable<SerialPortInfo> acmPorts = await ScanPortTypeAsync("/dev/ttyACM", maxScanPorts, cancellationToken).ConfigureAwait(false);
-                ports.AddRange(acmPorts);
+                if (includeUsbPorts && port.Contains("ttyUSB"))
+                    portsToScan.Add(port);
+                else if (includeAcmPorts && port.Contains("ttyACM"))
+                    portsToScan.Add(port);
+                else if (includeStandardPorts && port.Contains("ttyS") && !port.Contains("ttyUSB") && !port.Contains("ttyACM"))
+                    portsToScan.Add(port);
             }
 
-            // Scan standard ports
-            if (includeStandardPorts)
+            // Scan gathered valid hardware ports, ensuring unique and sorted sequence
+            foreach (var portPath in portsToScan.Distinct().OrderBy(p => p))
             {
-                IEnumerable<SerialPortInfo> standardPorts = await ScanPortTypeAsync("/dev/ttyS", maxScanPorts, cancellationToken).ConfigureAwait(false);
-                ports.AddRange(standardPorts);
+                if (cancellationToken.IsCancellationRequested) break;
+
+                // GetPortInfoAsync will do accessibility test (stty) BUT only for ports that actually structurally exist!
+                SerialPortInfo? portInfo = await GetPortInfoAsync(portPath, 1000, cancellationToken).ConfigureAwait(false);
+                if (portInfo != null)
+                {
+                    ports.Add(portInfo);
+                }
             }
 
             _logger.LogInformation("Found {Count} serial ports", ports.Count);
@@ -267,33 +283,7 @@ public sealed class SerialPortDiscoveryService
 
     #region Private Methods
 
-    /// <summary>
-    /// Scans for ports of a specific type.
-    /// </summary>
-    /// <param name="basePattern">The base pattern for port paths (e.g., "/dev/ttyUSB").</param>
-    /// <param name="maxPorts">The maximum number of ports to scan.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
-    /// <returns>A collection of found ports.</returns>
-    private async Task<IEnumerable<SerialPortInfo>> ScanPortTypeAsync(
-        string basePattern,
-        int maxPorts,
-        CancellationToken cancellationToken)
-    {
-        List<SerialPortInfo> ports = [];
 
-        for (int i = 0; i < maxPorts; i++)
-        {
-            string portPath = $"{basePattern}{i}";
-            SerialPortInfo? portInfo = await GetPortInfoAsync(portPath, 1000, cancellationToken).ConfigureAwait(false);
-
-            if (portInfo != null)
-            {
-                ports.Add(portInfo);
-            }
-        }
-
-        return ports;
-    }
 
     /// <summary>
     /// Checks if a port is currently in use.

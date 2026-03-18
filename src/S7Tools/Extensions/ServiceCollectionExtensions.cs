@@ -434,6 +434,7 @@ public static class ServiceCollectionExtensions
         // Add Profile Management ViewModels as Singletons to persist state across navigation
         services.TryAddSingleton<SerialPortsSettingsViewModel>();
         services.TryAddTransient<SerialPortProfileViewModel>();
+        services.TryAddTransient<SerialPortProfilesViewModel>();
 
         // Add reusable Control ViewModels
         services.TryAddTransient<ViewModels.Controls.SerialPortDiscoveryViewModel>();
@@ -441,10 +442,14 @@ public static class ServiceCollectionExtensions
         // Add Socat ViewModels (Servers Settings - socat configuration)
         services.TryAddSingleton<SocatSettingsViewModel>();
         services.TryAddTransient<SocatProfileViewModel>();
+        services.TryAddTransient<SocatProfilesViewModel>();
 
         // Add Power Supply ViewModels (Power Supply Control - Modbus TCP)
-        services.TryAddSingleton<PowerSupplySettingsViewModel>();
         services.TryAddTransient<PowerSupplyProfileViewModel>();
+        services.TryAddTransient<PowerSupplyProfilesViewModel>();
+        
+        // Add Memory Region Profiles ViewModels
+        services.TryAddTransient<MemoryRegionProfilesViewModel>();
 
         // Add Task Management ViewModels (Task Manager and Jobs Management)
         // Task Viewmodels

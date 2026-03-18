@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Resources;
@@ -27,6 +28,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     private readonly IUIThreadService _uiThreadService;
     private readonly IUIRefreshService _uiRefreshService;
     private readonly ILogger<SerialPortDiscoveryViewModel> _logger;
+    private readonly IApplicationSettingsService _settingsService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly CompositeDisposable _disposables = new();
     private readonly Timer _scanTimer;
@@ -41,18 +43,21 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
     /// Initializes a new instance of the SerialPortDiscoveryViewModel class.
     /// </summary>
     /// <param name="portService">The serial port service.</param>
+    /// <param name="settingsService">The application settings service to persist filter preferences.</param>
     /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="uiRefreshService">The UI refresh service.</param>
     /// <param name="logger">The logger.</param>
     /// <param name="fileDialogService">The optional file dialog service for export functionality.</param>
     public SerialPortDiscoveryViewModel(
         ISerialPortService portService,
+        IApplicationSettingsService settingsService,
         IUIThreadService uiThreadService,
         IUIRefreshService uiRefreshService,
         ILogger<SerialPortDiscoveryViewModel> logger,
         IFileDialogService? fileDialogService = null)
     {
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
+        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
         _uiRefreshService = uiRefreshService ?? throw new ArgumentNullException(nameof(uiRefreshService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -61,6 +66,11 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         // Initialize collections
         DiscoveredPorts = new ObservableCollection<SerialPortInfo>();
         ScanHistory = new ObservableCollection<ScanResult>();
+
+        // Load initial filter preferences from application settings
+        _includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
+        _includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
+        _includeSerialPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
 
         // Initialize commands
         InitializeCommands();
@@ -283,6 +293,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             {
                 _logger.LogDebug("Unchecking {PropertyName} would leave no filters - forcing USB to true", propertyName);
                 _includeUsbPorts = true;
+                _ = _settingsService.SetSettingAsync("serial.includeUsbPorts", true);
 
                 // The UIRefreshService will handle the property change notifications automatically
                 this.RaisePropertyChanged(nameof(IncludeUsbPorts));
@@ -292,6 +303,19 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         // Normal property change - UIRefreshService handles the rest
         if (this.RaiseAndSetIfChanged(ref field, value))
         {
+            string settingKey = propertyName switch
+            {
+                nameof(IncludeUsbPorts) => "serial.includeUsbPorts",
+                nameof(IncludeAcmPorts) => "serial.includeAcmPorts",
+                nameof(IncludeSerialPorts) => "serial.includeStandardPorts",
+                _ => string.Empty
+            };
+
+            if (!string.IsNullOrEmpty(settingKey))
+            {
+                _ = _settingsService.SetSettingAsync(settingKey, value);
+            }
+
             _logger.LogDebug("{PropertyName} changed to {Value}", propertyName, value);
             ApplyFiltersToDiscoveredPorts();
         }
@@ -455,52 +479,31 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             // Get available ports
             IEnumerable<Core.Services.Interfaces.SerialPortInfo> availablePorts = await _portService.ScanAvailablePortsAsync(cancellationToken);
 
-            // Extract port paths - store ALL ports, filtering will be done by ApplyFiltersToDiscoveredPorts
-            IEnumerable<string> portPaths = availablePorts.Select(p => p.PortPath);
-
-            // Create port info objects for ALL discovered ports
+            // Map port info objects directly from backend response to avoid double I/O testing
             var portInfos = new List<SerialPortInfo>();
-            foreach (string portName in portPaths)
+            foreach (var corePort in availablePorts)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
                     break;
                 }
 
-                PortTypeEnum portType = GetPortType(portName);
+                PortTypeEnum vmPortType = GetPortType(corePort.PortPath);
                 var portInfo = new SerialPortInfo
                 {
-                    PortName = portName,
-                    DisplayName = GetPortDisplayName(portName),
-                    PortType = portType,
-                    PortTypeDisplay = GetPortTypeDisplay(portType),
-                    IsAccessible = !CheckAccessibility || await _portService.IsPortAccessibleAsync(portName, 1000, cancellationToken),
+                    PortName = corePort.PortPath,
+                    DisplayName = GetPortDisplayName(corePort.PortPath),
+                    PortType = vmPortType,
+                    PortTypeDisplay = GetPortTypeDisplay(vmPortType),
+                    IsAccessible = corePort.IsAccessible,
+                    Description = corePort.Description ?? "Details unavailable",
                     LastChecked = DateTime.UtcNow.ToLocalTime()
                 };
 
-                // Get additional port information if accessible
-                if (portInfo.IsAccessible && CheckAccessibility)
+                if (corePort.UsbInfo != null)
                 {
-                    try
-                    {
-                        Core.Services.Interfaces.SerialPortInfo? portDetails = await _portService.GetPortInfoAsync(portName, cancellationToken).ConfigureAwait(false);
-                        if (portDetails != null)
-                        {
-                            portInfo.Description = portDetails.Description ?? "";
-                            UsbDeviceInfo? usbInfo = portDetails.UsbInfo;
-                            portInfo.Manufacturer = usbInfo?.VendorName ?? "Unknown";
-                            portInfo.SerialNumber = usbInfo?.SerialNumber ?? "Unknown";
-                        }
-                        else
-                        {
-                            portInfo.Description = "Details unavailable";
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Could not get details for port {PortName}", portName);
-                        portInfo.Description = "Details unavailable";
-                    }
+                    portInfo.Manufacturer = corePort.UsbInfo.VendorName ?? "Unknown";
+                    portInfo.SerialNumber = corePort.UsbInfo.SerialNumber ?? "Unknown";
                 }
 
                 portInfos.Add(portInfo);

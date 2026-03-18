@@ -1,0 +1,226 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Profiles"
+             xmlns:conv="using:S7Tools.Converters"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+             x:Class="S7Tools.Views.Profiles.SocatProfilesView"
+             x:DataType="vm:SocatProfilesViewModel"
+             Background="{DynamicResource AppBackgroundBrush}">
+
+  <UserControl.Resources>
+    <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
+  </UserControl.Resources>
+
+  <ScrollViewer>
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Server Profiles"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                 Margin="0,0,0,10" />
+
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <!-- Toolbar -->
+          <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+              <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                  <TextBlock Text="Create" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
+                  <TextBlock Text="Edit" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding DuplicateCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                  <TextBlock Text="Duplicate" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
+                  <TextBlock Text="Set Default" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                  <TextBlock Text="Delete" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                  <TextBlock Text="Refresh" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding ExportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
+                  <TextBlock Text="Export" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="110" Height="34" Command="{Binding ImportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-upload" Width="14" Height="14" />
+                  <TextBlock Text="Import" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
+
+          <!-- DataGrid -->
+          <DataGrid ItemsSource="{Binding Profiles}"
+                    SelectedItem="{Binding SelectedProfile}"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    IsReadOnly="True"
+                    Height="400"
+                    Margin="0,0,0,8">
+            <DataGrid.Styles>
+              <Style Selector="DataGridColumnHeader">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Padding" Value="8,4,32,4" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="Template">
+                  <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                      <DockPanel>
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          DockPanel.Dock="Left"
+                                          VerticalAlignment="Center" />
+                      </DockPanel>
+                    </Border>
+                  </ControlTemplate>
+                </Setter>
+              </Style>
+            </DataGrid.Styles>
+
+            <DataGrid.Columns>
+              <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Configuration.TcpHost}" Width="120" MinWidth="90">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="TCP Host" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Configuration.TcpPort}" Width="80" MinWidth="70">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridCheckBoxColumn Binding="{Binding Configuration.Verbose}" Width="80" MinWidth="60" IsReadOnly="True">
+                <DataGridCheckBoxColumn.Header>
+                  <TextBlock Text="Verbose" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridCheckBoxColumn.Header>
+              </DataGridCheckBoxColumn>
+
+              <DataGridCheckBoxColumn Binding="{Binding Configuration.HexDump}" Width="90" MinWidth="70" IsReadOnly="True">
+                <DataGridCheckBoxColumn.Header>
+                  <TextBlock Text="Hex Dump" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridCheckBoxColumn.Header>
+              </DataGridCheckBoxColumn>
+
+              <DataGridTextColumn Binding="{Binding Configuration.BlockSize}" Width="90" MinWidth="70">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Block Size" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Configuration.DebugLevel}" Width="100" MinWidth="80">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Debug Level" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridTextColumn Binding="{Binding Version}" Width="80" MinWidth="60">
+                <DataGridTextColumn.Header>
+                  <TextBlock Text="Version" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridTextColumn.Header>
+              </DataGridTextColumn>
+
+              <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60">
+                <DataGridCheckBoxColumn.Header>
+                  <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridCheckBoxColumn.Header>
+              </DataGridCheckBoxColumn>
+
+              <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70">
+                <DataGridCheckBoxColumn.Header>
+                  <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                </DataGridCheckBoxColumn.Header>
+              </DataGridCheckBoxColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <!-- Profile Statistics -->
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="{Binding Profiles.Count, StringFormat='Total Profiles: {0}'}"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}"
+                       FontSize="12" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding StatusMessage}"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}"
+                       FontSize="12" />
+          </Grid>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

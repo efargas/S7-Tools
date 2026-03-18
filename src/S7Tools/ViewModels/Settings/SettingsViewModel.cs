@@ -37,8 +37,6 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
             "Paths Settings",
             "Serial Ports",
             "Servers",
-            "Power Supply",
-            "Memory Regions"
         });
 
         // Initialize with Logging category
@@ -106,8 +104,6 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
                 "Paths Settings" => CreatePathSettingsViewModel(),
                 "Serial Ports" => CreateSerialPortsSettingsViewModel(),
                 "Servers" => CreateSocatSettingsViewModel(),
-                "Power Supply" => CreatePowerSupplySettingsViewModel(),
-                "Memory Regions" => CreateMemoryRegionSettingsViewModel(),
                 _ => new GeneralSettingsViewModel()
             };
 
@@ -210,34 +206,4 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
             portScanner);
     }
 
-    private PowerSupplySettingsViewModel CreatePowerSupplySettingsViewModel()
-    {
-        IPowerSupplyProfileService profileService = _serviceProvider.GetRequiredService<IPowerSupplyProfileService>();
-        IPowerSupplyService powerSupplyService = _serviceProvider.GetRequiredService<IPowerSupplyService>();
-        IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        IUnifiedProfileDialogService unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
-        IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
-        IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
-        IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>> logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>>>();
-        IPathService pathService = _serviceProvider.GetRequiredService<IPathService>();
-
-        return new PowerSupplySettingsViewModel(unifiedDialogService, logger, uiThreadService, profileService, powerSupplyService, dialogService, clipboardService, fileDialogService, settingsService, pathService);
-    }
-
-    private MemoryRegionSettingsViewModel CreateMemoryRegionSettingsViewModel()
-    {
-        IMemoryRegionProfileService profileService = _serviceProvider.GetRequiredService<IMemoryRegionProfileService>();
-        IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        IUnifiedProfileDialogService unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
-        IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
-        IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
-        IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
-        ILogger<ProfileManagementViewModelBase<MemoryMappingProfile>> logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<MemoryMappingProfile>>>();
-        IPathService pathService = _serviceProvider.GetRequiredService<IPathService>();
-
-        return new MemoryRegionSettingsViewModel(unifiedDialogService, logger, uiThreadService, profileService, dialogService, clipboardService, fileDialogService, settingsService, pathService);
-    }
 }

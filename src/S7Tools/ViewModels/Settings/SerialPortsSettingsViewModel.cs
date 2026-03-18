@@ -80,7 +80,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         IPathService pathService,
         SerialPortDiscoveryViewModel portScanner,
         ILogger<SerialPortsSettingsViewModel> logger)
-        : base(logger, unifiedProfileDialogService, dialogService, uiThreadService)
+        : base(logger, unifiedProfileDialogService, dialogService, uiThreadService, fileDialogService!)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
@@ -287,42 +287,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// </summary>
     public ReactiveCommand<Unit, Unit> TestPortCommand { get; private set; } = null!;
 
-    /// <summary>
-    /// Gets the command to export profiles.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExportProfilesCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to import profiles.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to export the selected profile.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExportSelectedProfileCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the command to show profile details.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ShowProfileDetailsCommand { get; private set; } = null!;
-
-    // Path management commands
-    /// <summary>
-    /// Command to open a folder browser to select the profiles directory.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> BrowseProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to open the profiles directory in the system file explorer.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> OpenProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to reset the profiles path to the default within the application resources.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ResetProfilesPathCommand { get; private set; } = null!;
-
     #endregion
 
     #region Private Methods
@@ -348,39 +312,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         TestPortCommand = ReactiveCommand.CreateFromTask(TestPortAsync, canTestPort);
         TestPortCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "testing port"))
-            .DisposeWith(_disposables);
-
-        // Export profiles command - enabled when profiles exist
-        IObservable<bool> canExportProfiles = this.WhenAnyValue(x => x.Profiles.Count)
-            .Select(count => count > 0);
-
-        ExportProfilesCommand = ReactiveCommand.CreateFromTask(ExportProfilesAsync, canExportProfiles);
-        ExportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "exporting profiles"))
-            .DisposeWith(_disposables);
-
-        // Import profiles command - always enabled
-        ImportProfilesCommand = ReactiveCommand.CreateFromTask(ImportProfilesAsync);
-        ImportProfilesCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "importing profiles"))
-            .DisposeWith(_disposables);
-
-        // Export selected profile command - enabled when a profile is selected and has a valid Id
-        IObservable<bool> canExportSelectedProfile = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null && profile.Id > 0);
-
-        ExportSelectedProfileCommand = ReactiveCommand.CreateFromTask(ExportSelectedProfileAsync, canExportSelectedProfile);
-        ExportSelectedProfileCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "exporting selected profile"))
-            .DisposeWith(_disposables);
-
-        // Show profile details command - enabled when a profile is selected
-        IObservable<bool> canShowProfileDetails = this.WhenAnyValue(x => x.SelectedProfile)
-            .Select(profile => profile != null);
-
-        ShowProfileDetailsCommand = ReactiveCommand.CreateFromTask(ShowProfileDetailsAsync, canShowProfileDetails);
-        ShowProfileDetailsCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "showing profile details"))
             .DisposeWith(_disposables);
 
         // Subscribe to settings changes to update ProfilesPath
@@ -464,160 +395,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         {
             _specificLogger.LogError(ex, "Error testing port");
             StatusMessage = UIStrings.Status_ErrorTestingPort;
-        }
-    }
-
-    /// <summary>
-    /// Exports all profiles to a JSON file.
-    /// </summary>
-    private async Task ExportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
-                "Export Profiles",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*",
-                null,
-                "profiles.json");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ExportingProfiles;
-
-            IEnumerable<SerialPortProfile> profiles = await _profileService.ExportAsync();
-            string jsonData = System.Text.Json.JsonSerializer.Serialize(profiles, new JsonSerializerOptions { WriteIndented = true });
-            await File.WriteAllTextAsync(fileName, jsonData);
-
-            StatusMessage = $"Exported {Profiles.Count} profile(s) to {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Exported {ProfileCount} profiles to {FileName}", Profiles.Count, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error exporting profiles");
-            StatusMessage = UIStrings.Status_ErrorExportingProfiles;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Imports profiles from a JSON file.
-    /// </summary>
-    private async Task ImportProfilesAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowOpenFileDialogAsync(
-                "Import Profiles",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ImportingProfiles;
-
-            string jsonData = await File.ReadAllTextAsync(fileName);
-            List<SerialPortProfile> profiles = JsonSerializer.Deserialize<List<SerialPortProfile>>(jsonData) ?? new List<SerialPortProfile>();
-            IEnumerable<SerialPortProfile> importedProfiles = await _profileService.ImportAsync(profiles, replaceExisting: false);
-
-            int importedCount = importedProfiles.Count();
-            await RefreshCommand.Execute(); // Refresh the list
-
-            StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error importing profiles");
-            StatusMessage = UIStrings.Status_ErrorImportingProfiles;
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Exports the selected profile to a JSON file.
-    /// </summary>
-    private async Task ExportSelectedProfileAsync()
-    {
-        if (SelectedProfile == null || _fileDialogService == null)
-        {
-            return;
-        }
-
-        try
-        {
-            string? fileName = await _fileDialogService.ShowSaveFileDialogAsync(
-                "Export Profile",
-                "JSON files (*.json)|*.json|All files (*.*)|*.*",
-                null,
-                $"{SelectedProfile.Name}.json");
-
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            IsLoading = true;
-            StatusMessage = UIStrings.Status_ExportingSelectedProfile;
-
-            string jsonData;
-
-            // If the selected profile has a valid persisted Id, use the profile service which performs
-            // any canonical serialization and validation. Otherwise fall back to directly serializing
-            // the in-memory profile to allow exporting unsaved/imported profiles without throwing.
-            if (SelectedProfile.Id > 0)
-            {
-                SerialPortProfile? profile = await _profileService.GetByIdAsync(SelectedProfile.Id);
-                jsonData = JsonSerializer.Serialize(profile, new JsonSerializerOptions { WriteIndented = true });
-            }
-            else
-            {
-                var options = new System.Text.Json.JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-                };
-
-                jsonData = System.Text.Json.JsonSerializer.Serialize(SelectedProfile, options);
-            }
-
-            await File.WriteAllTextAsync(fileName, jsonData);
-
-            StatusMessage = $"Exported profile '{SelectedProfile.Name}' to {Path.GetFileName(fileName)}";
-            _specificLogger.LogInformation("Exported profile {ProfileName} to {FileName}", SelectedProfile.Name, fileName);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error exporting profile");
-            StatusMessage = UIStrings.Status_ErrorExportingProfile;
-        }
-        finally
-        {
-            IsLoading = false;
         }
     }
 
