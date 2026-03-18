@@ -103,7 +103,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
                 "Logging" => CreateLoggingSettingsViewModel(),
                 "General" => CreateGeneralSettingsViewModel(),
                 "Appearance" => CreateAppearanceSettingsViewModel(),
-                "Paths Settings" => CreateAdvancedSettingsViewModel(),
+                "Paths Settings" => CreatePathSettingsViewModel(),
                 "Serial Ports" => CreateSerialPortsSettingsViewModel(),
                 "Servers" => CreateSocatSettingsViewModel(),
                 "Power Supply" => CreatePowerSupplySettingsViewModel(),
@@ -152,14 +152,14 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         return new AppearanceSettingsViewModel(settingsService);
     }
 
-    private AdvancedSettingsViewModel CreateAdvancedSettingsViewModel()
+    private PathSettingsViewModel CreatePathSettingsViewModel()
     {
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
         S7Tools.Core.Interfaces.Services.IPathService pathService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
         IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
-        ILogger<AdvancedSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<AdvancedSettingsViewModel>>();
+        ILogger<PathSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<PathSettingsViewModel>>();
 
-        return new AdvancedSettingsViewModel(settingsService, pathService, fileDialogService, logger);
+        return new PathSettingsViewModel(settingsService, pathService, fileDialogService, logger);
     }
 
     private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()

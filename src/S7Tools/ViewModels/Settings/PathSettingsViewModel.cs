@@ -14,19 +14,19 @@ namespace S7Tools.ViewModels.Settings;
 /// <summary>
 /// ViewModel for paths settings configuration.
 /// </summary>
-public class AdvancedSettingsViewModel : ViewModelBase
+public class PathSettingsViewModel : ViewModelBase
 {
     private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly IPathService _pathService;
     private readonly IFileDialogService? _fileDialogService;
-    private readonly ILogger<AdvancedSettingsViewModel> _logger;
+    private readonly ILogger<PathSettingsViewModel> _logger;
     private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
 
-    public AdvancedSettingsViewModel(
+    public PathSettingsViewModel(
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         IPathService pathService,
         IFileDialogService? fileDialogService,
-        ILogger<AdvancedSettingsViewModel> logger)
+        ILogger<PathSettingsViewModel> logger)
     {
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));

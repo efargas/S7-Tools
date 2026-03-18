@@ -98,8 +98,8 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
         // Initialize power control commands (to be implemented in next increment)
         InitializePowerControlCommands();
+        // Path commands have been moved to PathSettingsViewModel
 
-        // Path commands have been moved to AdvancedSettingsViewModel
 
         // Setup property change subscriptions
         SetupPropertySubscriptions();
@@ -202,7 +202,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <summary>Gets the command to import power supply profiles.</summary>
     public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
 
-    // Path commands are in AdvancedSettingsViewModel
+    // Path commands are in PathSettingsViewModel
 
     // Profile Management Commands (Create, Edit, Delete, Duplicate, etc.) are inherited from base class
 

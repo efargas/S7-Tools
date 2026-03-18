@@ -90,7 +90,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
         // Store specific logger (use constructor parameter, not create new factory)
         _specificLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<MemoryRegionSettingsViewModel>();
 
-        // Path commands have been moved to AdvancedSettingsViewModel
+        // Path commands have been moved to PathSettingsViewModel
 
         // Initialize profile commands
         InitializeProfileCommands();
@@ -181,7 +181,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
 
     #region Commands
 
-    // Path commands are in AdvancedSettingsViewModel
+    // Path commands are in PathSettingsViewModel
 
     /// <summary>
     /// Command to export all profiles to a JSON file.

@@ -103,7 +103,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         // Initialize commands
         InitializeCommands();
 
-        // Path commands have been moved to AdvancedSettingsViewModel
+        // Path commands have been moved to PathSettingsViewModel
         // Subscribe to socat service events
         SubscribeToSocatEvents();
 
@@ -310,7 +310,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     public ReactiveCommand<Unit, Unit> ShowProfileDetailsCommand { get; private set; } = null!;
 
-    // Path commands are in AdvancedSettingsViewModel
+    // Path commands are in PathSettingsViewModel
     #endregion
 
     #region Private Methods

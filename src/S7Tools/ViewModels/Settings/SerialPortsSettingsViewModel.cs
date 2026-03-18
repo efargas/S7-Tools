@@ -101,7 +101,7 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         // Initialize serial port specific commands
         InitializeCommands();
 
-        // Path commands have been moved to AdvancedSettingsViewModel
+        // Path commands have been moved to PathSettingsViewModel
 
         // Load initial data
         // Load profiles and scan ports in background but marshal collection updates to UI thread

@@ -5,8 +5,8 @@
              xmlns:vm="using:S7Tools.ViewModels.Settings"
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
-             x:Class="S7Tools.Views.Settings.AdvancedSettingsView"
-             x:DataType="vm:AdvancedSettingsViewModel"
+             x:Class="S7Tools.Views.Settings.PathSettingsView"
+             x:DataType="vm:PathSettingsViewModel"
              Background="{DynamicResource AppBackgroundBrush}">
 
     <ScrollViewer>
