@@ -3,47 +3,187 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels.Settings"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
              x:Class="S7Tools.Views.Settings.AdvancedSettingsView"
              x:DataType="vm:AdvancedSettingsViewModel"
              Background="{DynamicResource AppBackgroundBrush}">
 
     <ScrollViewer>
-        <StackPanel Margin="20" Spacing="20" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <StackPanel Margin="20" Spacing="20">
             <!-- Header -->
-            <TextBlock Text="Advanced Settings" 
+            <TextBlock Text="Paths Settings" 
                        FontSize="24" 
                        FontWeight="Bold" 
                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" 
-                       HorizontalAlignment="Center"
-                       Margin="0,0,0,20" />
+                       Margin="0,0,0,10" />
 
-            <!-- Coming Soon Message -->
+            <!-- Sub header info -->
+            <TextBlock Text="Configure the locations where different profile types and settings are stored."
+                       FontSize="13"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}"
+                       TextWrapping="Wrap" />
+
+            <!-- Serial Ports Profiles Path -->
             <Border Background="{DynamicResource PanelBackgroundBrush}" 
                     BorderBrush="{DynamicResource ControlBorderBrush}" 
                     BorderThickness="1" 
-                    CornerRadius="8" 
-                    Padding="40"
-                    MaxWidth="400">
-                <StackPanel Spacing="16" HorizontalAlignment="Center">
-                    <TextBlock Text="⚙️" 
-                               FontSize="48" 
-                               HorizontalAlignment="Center" />
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Serial Ports Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                    <TextBlock Text="Select the directory where serial port profiles (SerialProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
                     
-                    <TextBlock Text="Coming Soon" 
-                               FontSize="20" 
-                               FontWeight="SemiBold" 
-                               Foreground="{DynamicResource TextForegroundSecondaryBrush}" 
-                               HorizontalAlignment="Center" />
-                    
-                    <TextBlock Text="Advanced configuration options and developer settings will be available in a future update."
-                               FontSize="14"
-                               Foreground="{DynamicResource TextForegroundMutedBrush}"
-                               TextWrapping="Wrap"
-                               HorizontalAlignment="Center"
-                               TextAlignment="Center" />
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Profiles Path:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        
+                        <TextBox Grid.Column="1" Text="{Binding SerialProfilesPath}" IsReadOnly="True" Background="{DynamicResource ControlBackgroundBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" Margin="8,0" />
+
+                        <Button Grid.Column="2" Width="110" Height="34" Command="{Binding BrowseSerialProfilesPathCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" /><TextBlock Text="Browse" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="3" Width="110" Height="34" Command="{Binding OpenSerialProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" /><TextBlock Text="Open" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="4" Width="110" Height="34" Command="{Binding ResetSerialProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" /><TextBlock Text="Reset" /></StackPanel>
+                        </Button>
+                    </Grid>
                 </StackPanel>
             </Border>
+
+            <!-- Socat Profiles Path -->
+            <Border Background="{DynamicResource PanelBackgroundBrush}" 
+                    BorderBrush="{DynamicResource ControlBorderBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Socat Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                    <TextBlock Text="Select the directory where socat server profiles (SocatProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
+                    
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Profiles Path:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        
+                        <TextBox Grid.Column="1" Text="{Binding SocatProfilesPath}" IsReadOnly="True" Background="{DynamicResource ControlBackgroundBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" Margin="8,0" />
+
+                        <Button Grid.Column="2" Width="110" Height="34" Command="{Binding BrowseSocatProfilesPathCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" /><TextBlock Text="Browse" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="3" Width="110" Height="34" Command="{Binding OpenSocatProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" /><TextBlock Text="Open" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="4" Width="110" Height="34" Command="{Binding ResetSocatProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" /><TextBlock Text="Reset" /></StackPanel>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Power Supply Profiles Path -->
+            <Border Background="{DynamicResource PanelBackgroundBrush}" 
+                    BorderBrush="{DynamicResource ControlBorderBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Power Supply Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                    <TextBlock Text="Select the directory where power supply profiles (PowerSupplyProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
+                    
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Profiles Path:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        
+                        <TextBox Grid.Column="1" Text="{Binding PowerSupplyProfilesPath}" IsReadOnly="True" Background="{DynamicResource ControlBackgroundBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" Margin="8,0" />
+
+                        <Button Grid.Column="2" Width="110" Height="34" Command="{Binding BrowsePowerSupplyProfilesPathCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" /><TextBlock Text="Browse" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="3" Width="110" Height="34" Command="{Binding OpenPowerSupplyProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" /><TextBlock Text="Open" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="4" Width="110" Height="34" Command="{Binding ResetPowerSupplyProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" /><TextBlock Text="Reset" /></StackPanel>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Memory Regions Profiles Path -->
+            <Border Background="{DynamicResource PanelBackgroundBrush}" 
+                    BorderBrush="{DynamicResource ControlBorderBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="16">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Memory Regions Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                    <TextBlock Text="Select the directory where memory mapping profiles (MemoryMappingProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
+                    
+                    <Grid Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0" Text="Profiles Path:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        
+                        <TextBox Grid.Column="1" Text="{Binding MemoryRegionProfilesPath}" IsReadOnly="True" Background="{DynamicResource ControlBackgroundBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" Margin="8,0" />
+
+                        <Button Grid.Column="2" Width="110" Height="34" Command="{Binding BrowseMemoryRegionProfilesPathCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" /><TextBlock Text="Browse" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="3" Width="110" Height="34" Command="{Binding OpenMemoryRegionProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" /><TextBlock Text="Open" /></StackPanel>
+                        </Button>
+
+                        <Button Grid.Column="4" Width="110" Height="34" Command="{Binding ResetMemoryRegionProfilesPathCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="4,0,0,0">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" /><TextBlock Text="Reset" /></StackPanel>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Status Message -->
+            <TextBlock Text="{Binding StatusMessage}" 
+                       Foreground="{DynamicResource BrandAccentBrush}" 
+                       FontWeight="SemiBold"
+                       FontSize="13" 
+                       HorizontalAlignment="Center"
+                       TextWrapping="Wrap" />
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -34,7 +34,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
             "Logging",
             "General",
             "Appearance",
-            "Advanced",
+            "Paths Settings",
             "Serial Ports",
             "Servers",
             "Power Supply",
@@ -103,7 +103,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
                 "Logging" => CreateLoggingSettingsViewModel(),
                 "General" => CreateGeneralSettingsViewModel(),
                 "Appearance" => CreateAppearanceSettingsViewModel(),
-                "Advanced" => new AdvancedSettingsViewModel(),
+                "Paths Settings" => CreateAdvancedSettingsViewModel(),
                 "Serial Ports" => CreateSerialPortsSettingsViewModel(),
                 "Servers" => CreateSocatSettingsViewModel(),
                 "Power Supply" => CreatePowerSupplySettingsViewModel(),
@@ -150,6 +150,16 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
     {
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
         return new AppearanceSettingsViewModel(settingsService);
+    }
+
+    private AdvancedSettingsViewModel CreateAdvancedSettingsViewModel()
+    {
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
+        S7Tools.Core.Interfaces.Services.IPathService pathService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IPathService>();
+        IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
+        ILogger<AdvancedSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<AdvancedSettingsViewModel>>();
+
+        return new AdvancedSettingsViewModel(settingsService, pathService, fileDialogService, logger);
     }
 
     private SerialPortsSettingsViewModel CreateSerialPortsSettingsViewModel()

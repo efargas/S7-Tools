@@ -53,7 +53,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     // UI state for enhanced features
     private bool _hasChanges;
     private string _searchText = string.Empty;
-    private string _profilesPath = string.Empty;
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ProfileManagementViewModelBase{TProfile}"/> class.
@@ -185,19 +185,6 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     {
         get => _searchText;
         set => this.RaiseAndSetIfChanged(ref _searchText, value);
-    }
-
-    /// <summary>
-    /// Gets or sets the path where profiles are stored.
-    /// </summary>
-    /// <remarks>
-    /// Displays the current storage location for user reference.
-    /// Used by Browse, Open in Explorer, and Load Default operations.
-    /// </remarks>
-    public string ProfilesPath
-    {
-        get => _profilesPath;
-        protected set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
     }
 
     #endregion

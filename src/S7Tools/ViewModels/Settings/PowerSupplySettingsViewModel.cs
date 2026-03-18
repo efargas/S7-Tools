@@ -39,7 +39,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
-    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
+
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -88,8 +88,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         // DON'T initialize Profiles collection - base class provides it
         // Profiles collection is provided by base class ProfileManagementViewModelBase
 
-        // Initialize path commands (to be implemented in next increment)
-        InitializePathCommands();
+
 
         // Initialize profile commands (to be implemented in next increment)
         InitializeProfileCommands();
@@ -100,16 +99,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
         // Initialize power control commands (to be implemented in next increment)
         InitializePowerControlCommands();
 
-        // Initialize ProfilesPath from settings and subscribe to changes
-        RefreshFromSettings();
-        _settingsChangedHandler = (_, args) =>
-        {
-            if (args.Key.StartsWith("powerSupply.") || args.Key.StartsWith("profiles.powerSupply"))
-            {
-                RefreshFromSettings();
-            }
-        };
-        _settingsService.SettingsChanged += _settingsChangedHandler;
+        // Path commands have been moved to AdvancedSettingsViewModel
 
         // Setup property change subscriptions
         SetupPropertySubscriptions();
@@ -212,13 +202,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     /// <summary>Gets the command to import power supply profiles.</summary>
     public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
 
-    // Path Management Commands (PowerSupply-specific implementations)
-    /// <summary>Gets the command to browse for profiles path.</summary>
-    public ReactiveCommand<Unit, Unit> BrowseProfilesPathCommand { get; private set; } = null!;
-    /// <summary>Gets the command to open profiles path in explorer.</summary>
-    public ReactiveCommand<Unit, Unit> OpenProfilesPathCommand { get; private set; } = null!;
-    /// <summary>Gets the command to reset profiles path to default.</summary>
-    public ReactiveCommand<Unit, Unit> ResetProfilesPathCommand { get; private set; } = null!;
+    // Path commands are in AdvancedSettingsViewModel
 
     // Profile Management Commands (Create, Edit, Delete, Duplicate, etc.) are inherited from base class
 
@@ -226,28 +210,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
     #region Command Initialization Methods
 
-    /// <summary>
-    /// Initializes path management commands.
-    /// Implements PowerSupply-specific path operations while base class provides profile CRUD commands.
-    /// </summary>
-    private void InitializePathCommands()
-    {
-        // Initialize PowerSupply-specific path commands
-        BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
-        BrowseProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "browsing profiles path"))
-            .DisposeWith(_disposables);
 
-        OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
-        OpenProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "opening profiles path"))
-            .DisposeWith(_disposables);
-
-        ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
-        ResetProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "resetting profiles path"))
-            .DisposeWith(_disposables);
-    }
 
     /// <summary>
     /// Initializes profile management commands.
@@ -413,14 +376,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
             })
             .DisposeWith(_disposables);
 
-        // Monitor profiles path changes
-        this.WhenAnyValue(x => x.ProfilesPath)
-            .Skip(1) // Skip initial value
-            .Subscribe(path =>
-            {
-                _specificLogger.LogDebug("Profiles path changed: {Path}", path);
-            })
-            .DisposeWith(_disposables);
+
     }
 
     #endregion
@@ -431,42 +387,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     // Profile loading is handled by base class ProfileManagementViewModelBase
     // Override LoadProfilesAsync is not needed - base class calls GetProfileManager().GetAllAsync()
 
-    /// <summary>
-    /// Refreshes settings from the settings service.
-    /// </summary>
-    private void RefreshFromSettings()
-    {
-        try
-        {
-            // Use the new settings service with key-value access
-            string powerSupplyProfilePath = _settingsService.GetSetting<string>("profiles.powerSupplyPath", _pathService.PowerSupplyProfilesPath);
-            string? directoryPath = Path.GetDirectoryName(powerSupplyProfilePath);
 
-            // Resolve the path using the path service, which handles both absolute and relative paths
-            string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
-
-            // If resolution results in an invalid path, fall back to the PowerSupply profiles directory
-            if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
-            {
-                // Use the directory containing the PowerSupply profiles file as fallback
-                ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
-            }
-            else
-            {
-                ProfilesPath = resolvedPath;
-            }
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Failed to refresh settings from settings service");
-            _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
-            });
-            // On exception, use the directory containing the PowerSupply profiles file as fallback
-            ProfilesPath = Path.GetDirectoryName(_pathService.PowerSupplyProfilesPath) ?? _pathService.ProfilesDirectory;
-        }
-    }
 
     #endregion
 
@@ -1094,156 +1015,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
 
     #endregion
 
-    #region Path Management Commands Implementation
 
-    /// <summary>
-    /// Browses for a profiles path.
-    /// </summary>
-    private async Task BrowseProfilesPathAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            });
-            _specificLogger.LogWarning("Browse profiles path failed: File dialog service not available");
-            return;
-        }
-
-        try
-        {
-            _specificLogger.LogDebug("Browsing for profiles path");
-
-            string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
-                "Select Power Supply Profiles Folder").ConfigureAwait(false);
-
-            if (!string.IsNullOrEmpty(folderPath))
-            {
-                ProfilesPath = folderPath;
-
-                // Use the new settings service to update the profiles path
-                await _settingsService.SetSettingAsync("profiles.powerSupplyPath", Path.Combine(folderPath, "PowerSupplyProfiles.json")).ConfigureAwait(false);
-
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = string.Format(UIStrings.Status_ProfilesPathSetTo, Path.GetFileName(folderPath));
-                });
-                _specificLogger.LogInformation("Profiles path changed to: {Path}", folderPath);
-            }
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Access denied while setting profiles path");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FailedToSetProfilesPathAccessDenied;
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error browsing profiles path");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToSetProfilesPath, ex.Message);
-            });
-        }
-    }
-
-    /// <summary>
-    /// Opens the profiles path in the file explorer.
-    /// </summary>
-    private async Task OpenProfilesPathAsync()
-    {
-        try
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_OpeningProfilesFolder;
-            });
-
-            if (string.IsNullOrEmpty(ProfilesPath))
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = UIStrings.Status_ProfilesPathNotConfigured;
-                });
-                _specificLogger.LogWarning("Cannot open profiles folder: Path is null or empty");
-                return;
-            }
-
-            // Ensure the directory exists before trying to open it
-            if (!Directory.Exists(ProfilesPath))
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = UIStrings.Status_CreatingProfilesFolder;
-                });
-                Directory.CreateDirectory(ProfilesPath);
-                _specificLogger.LogInformation("Created profiles directory: {ProfilesPath}", ProfilesPath);
-            }
-
-            _specificLogger.LogInformation("Opening profiles folder: {ProfilesPath}", ProfilesPath);
-
-            // Use centralized PlatformHelper for consistent cross-platform behavior
-            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ProfilesFolderOpened;
-            });
-            _specificLogger.LogInformation("Successfully opened profiles folder");
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Access denied while opening profiles folder");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FailedToOpenFolderAccessDenied;
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error opening profiles folder: {Message}", ex.Message);
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToOpenFolder, ex.Message);
-            });
-        }
-    }
-
-    /// <summary>
-    /// Resets the profiles path to the default value.
-    /// </summary>
-    private async Task ResetProfilesPathAsync()
-    {
-        try
-        {
-            _specificLogger.LogDebug("Resetting profiles path to default");
-
-            // Reset the setting to its default value
-            await _settingsService.ResetSettingAsync("profiles.powerSupplyPath").ConfigureAwait(false);
-
-            // Explicitly refresh to ensure UI consistency
-            RefreshFromSettings();
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ProfilesPathReset;
-            });
-            _specificLogger.LogInformation("Profiles path reset to default");
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error resetting profiles path to default");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToResetProfilesPath, ex.Message);
-            });
-        }
-    }
-
-    #endregion
 
     #region Validation Methods
 
@@ -1483,11 +1255,7 @@ public class PowerSupplySettingsViewModel : ProfileManagementViewModelBase<Power
     {
         if (disposing)
         {
-            // Unsubscribe from settings changes
-            if (_settingsChangedHandler != null)
-            {
-                _settingsService.SettingsChanged -= _settingsChangedHandler;
-            }
+
 
             // Dispose managed resources specific to PowerSupplySettingsViewModel
             _disposables?.Dispose();

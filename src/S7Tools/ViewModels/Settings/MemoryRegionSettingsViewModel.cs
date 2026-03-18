@@ -47,7 +47,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
     private readonly S7Tools.Services.Interfaces.IUIThreadService _uiThreadService;
     private readonly IPathService _pathService;
-    private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
+
     private readonly CompositeDisposable _disposables = new();
 
     #endregion
@@ -90,8 +90,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
         // Store specific logger (use constructor parameter, not create new factory)
         _specificLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<MemoryRegionSettingsViewModel>();
 
-        // Initialize path commands
-        InitializePathCommands();
+        // Path commands have been moved to AdvancedSettingsViewModel
 
         // Initialize profile commands
         InitializeProfileCommands();
@@ -99,8 +98,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
         // Initialize export/import commands
         InitializeImportExportCommands();
 
-        // Subscribe to settings changes for path updates
-        SubscribeToSettingsChanges();
+
 
         // Subscribe to SelectedProfile changes to update computed properties
         this.WhenAnyValue(x => x.SelectedProfile)
@@ -124,8 +122,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
             })
             .DisposeWith(_disposables);
 
-        // Initialize with current settings
-        RefreshFromSettings();
+
 
         // Load initial data
         _ = Task.Run(async () =>
@@ -178,34 +175,13 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
     /// </summary>
     public int SelectedSegmentCount => SelectedProfile?.Segments?.Count(s => s.IsSelected) ?? 0;
 
-    private string _profilesPath = string.Empty;
-    /// <summary>
-    /// Gets or sets the path where memory region profiles are stored.
-    /// </summary>
-    public new string ProfilesPath
-    {
-        get => _profilesPath;
-        set => this.RaiseAndSetIfChanged(ref _profilesPath, value);
-    }
+
 
     #endregion
 
     #region Commands
 
-    /// <summary>
-    /// Command to browse for a new profiles directory.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> BrowseProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to open the profiles directory in the file manager.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> OpenProfilesPathCommand { get; private set; } = null!;
-
-    /// <summary>
-    /// Command to reset the profiles path to the default value.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ResetProfilesPathCommand { get; private set; } = null!;
+    // Path commands are in AdvancedSettingsViewModel
 
     /// <summary>
     /// Command to export all profiles to a JSON file.
@@ -422,26 +398,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
 
     #region Initialization Methods
 
-    /// <summary>
-    /// Initializes path management commands.
-    /// </summary>
-    private void InitializePathCommands()
-    {
-        BrowseProfilesPathCommand = ReactiveCommand.CreateFromTask(BrowseProfilesPathAsync);
-        BrowseProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "browsing profiles path"))
-            .DisposeWith(_disposables);
 
-        OpenProfilesPathCommand = ReactiveCommand.CreateFromTask(OpenProfilesPathAsync);
-        OpenProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "opening profiles path"))
-            .DisposeWith(_disposables);
-
-        ResetProfilesPathCommand = ReactiveCommand.CreateFromTask(ResetProfilesPathAsync);
-        ResetProfilesPathCommand.ThrownExceptions
-            .Subscribe(ex => HandleCommandException(ex, "resetting profiles path"))
-            .DisposeWith(_disposables);
-    }
 
     /// <summary>
     /// Initializes profile management commands.
@@ -472,14 +429,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
             .DisposeWith(_disposables);
     }
 
-    /// <summary>
-    /// Subscribes to settings changes for automatic path updates.
-    /// </summary>
-    private void SubscribeToSettingsChanges()
-    {
-        _settingsChangedHandler = OnSettingsChanged;
-        _settingsService.SettingsChanged += _settingsChangedHandler;
-    }
+
 
     /// <summary>
     /// Subscribes to memory segment changes to update computed properties.
@@ -535,202 +485,9 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
 
     #region Path Management
 
-    /// <summary>
-    /// Handles settings changes and refreshes path if relevant settings changed.
-    /// </summary>
-    private void OnSettingsChanged(object? sender, S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs e)
-    {
-        if (e.Key.StartsWith("memoryRegion.") || e.Key.StartsWith("profiles.memoryRegion"))
-        {
-            RefreshFromSettings();
-        }
-    }
 
-    /// <summary>
-    /// Refreshes the ViewModel state from current application settings.
-    /// </summary>
-    private void RefreshFromSettings()
-    {
-        try
-        {
-            // Use the new settings service with key-value access (following PowerSupplySettingsViewModel pattern)
-            string memoryRegionProfilePath = _settingsService.GetSetting<string>("profiles.memoryRegionPath", _pathService.MemoryRegionProfilesPath);
-            string? directoryPath = Path.GetDirectoryName(memoryRegionProfilePath);
 
-            // Resolve the path using the path service, which handles both absolute and relative paths
-            string resolvedPath = _pathService.ResolvePath(directoryPath ?? string.Empty);
 
-            // If resolution results in an invalid path, fall back to the memory region profiles directory
-            if (string.IsNullOrEmpty(resolvedPath) || !Directory.Exists(resolvedPath))
-            {
-                // Use the directory containing the memory region profiles file as fallback
-                ProfilesPath = Path.GetDirectoryName(_pathService.MemoryRegionProfilesPath) ?? _pathService.ProfilesDirectory;
-            }
-            else
-            {
-                ProfilesPath = resolvedPath;
-            }
-
-            _specificLogger.LogDebug("Refreshed memory region settings - ProfilesPath: {ProfilesPath}", ProfilesPath);
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Failed to refresh settings from settings service");
-            _ = _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_WarningFailedToLoadSettings;
-            });
-            // On exception, use the directory containing the memory region profiles file as fallback
-            ProfilesPath = Path.GetDirectoryName(_pathService.MemoryRegionProfilesPath) ?? _pathService.ProfilesDirectory;
-        }
-    }
-
-    /// <summary>
-    /// Browses for a new profiles directory and updates the setting.
-    /// </summary>
-    private async Task BrowseProfilesPathAsync()
-    {
-        if (_fileDialogService == null)
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FileDialogServiceNotAvailable;
-            });
-            _specificLogger.LogWarning("Browse profiles path failed: File dialog service not available");
-            return;
-        }
-
-        try
-        {
-            _specificLogger.LogDebug("Browsing for memory region profiles path");
-
-            string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync(
-                "Select Memory Region Profiles Folder").ConfigureAwait(false);
-
-            if (!string.IsNullOrEmpty(folderPath))
-            {
-                ProfilesPath = folderPath;
-
-                // Use the new settings service to update the profiles path
-                await _settingsService.SetSettingAsync("profiles.memoryRegionPath", Path.Combine(folderPath, "profiles.json")).ConfigureAwait(false);
-
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = string.Format(UIStrings.Status_ProfilesPathSetTo, Path.GetFileName(folderPath));
-                });
-                _specificLogger.LogInformation("Memory region profiles path changed to: {Path}", folderPath);
-            }
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Access denied while setting profiles path");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FailedToSetProfilesPathAccessDenied;
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error browsing for memory region profiles path");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToSetProfilesPath, ex.Message);
-            });
-        }
-    }
-
-    /// <summary>
-    /// Opens the profiles directory in the system file manager.
-    /// </summary>
-    private async Task OpenProfilesPathAsync()
-    {
-        try
-        {
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_OpeningProfilesFolder;
-            });
-
-            if (string.IsNullOrEmpty(ProfilesPath))
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = UIStrings.Status_ProfilesPathNotConfigured;
-                });
-                _specificLogger.LogWarning("Cannot open profiles folder: Path is null or empty");
-                return;
-            }
-
-            // Ensure the directory exists before trying to open it
-            if (!Directory.Exists(ProfilesPath))
-            {
-                await _uiThreadService.InvokeOnUIThreadAsync(() =>
-                {
-                    StatusMessage = UIStrings.Status_CreatingProfilesFolder;
-                });
-                Directory.CreateDirectory(ProfilesPath);
-                _specificLogger.LogInformation("Created memory region profiles directory: {ProfilesPath}", ProfilesPath);
-            }
-
-            _specificLogger.LogInformation("Opening memory region profiles folder: {ProfilesPath}", ProfilesPath);
-
-            // Use centralized PlatformHelper for consistent cross-platform behavior
-            await PlatformHelper.OpenDirectoryInExplorerAsync(ProfilesPath);
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ProfilesFolderOpened;
-            });
-            _specificLogger.LogInformation("Successfully opened memory region profiles folder");
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _specificLogger.LogError(ex, "Access denied while opening profiles folder");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_FailedToOpenFolderAccessDenied;
-            });
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error opening memory region profiles folder: {Message}", ex.Message);
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToOpenFolder, ex.Message);
-            });
-        }
-    }
-
-    /// <summary>
-    /// Resets the profiles path to the default value.
-    /// </summary>
-    private async Task ResetProfilesPathAsync()
-    {
-        try
-        {
-            _specificLogger.LogDebug("Resetting memory region profiles path to default");
-
-            // Reset the setting to its default value
-            await _settingsService.ResetSettingAsync("profiles.memoryRegionPath").ConfigureAwait(false);
-
-            // Explicitly refresh to ensure UI consistency
-            RefreshFromSettings();
-
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = UIStrings.Status_ProfilesPathReset;
-            });
-            _specificLogger.LogInformation("Memory region profiles path reset to default");
-        }
-        catch (Exception ex)
-        {
-            _specificLogger.LogError(ex, "Error resetting memory region profiles path to default");
-            await _uiThreadService.InvokeOnUIThreadAsync(() =>
-            {
-                StatusMessage = string.Format(UIStrings.Status_FailedToResetProfilesPath, ex.Message);
-            });
-        }
-    }
 
     #endregion
 
@@ -918,11 +675,7 @@ public class MemoryRegionSettingsViewModel : ProfileManagementViewModelBase<Memo
                 // Unsubscribe from segment changes
                 UnsubscribeFromSegmentChanges();
 
-                // Unsubscribe from settings changes
-                if (_settingsChangedHandler != null)
-                {
-                    _settingsService.SettingsChanged -= _settingsChangedHandler;
-                }
+
 
                 _disposables.Dispose();
             }
