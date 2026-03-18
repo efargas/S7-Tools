@@ -58,7 +58,7 @@ public class PathSettingsViewModel : ViewModelBase
             if (args.Key == "profiles.serialPath" ||
                 args.Key == "profiles.socatPath" ||
                 args.Key == "profiles.powerSupplyPath" ||
-                args.Key == "profiles.memoryMappingPath")
+                args.Key == "profiles.memoryRegionPath")
             {
                 RefreshFromSettings();
             }
@@ -133,7 +133,7 @@ public class PathSettingsViewModel : ViewModelBase
         PowerSupplyProfilesPath = GetDirectoryFromPath(powerSupplyPath, _pathService.PowerSupplyProfilesPath);
 
         // Memory Region
-        string memoryRegionPath = _settingsService.GetSetting<string>("profiles.memoryMappingPath", _pathService.MemoryRegionProfilesPath);
+        string memoryRegionPath = _settingsService.GetSetting<string>("profiles.memoryRegionPath", _pathService.MemoryRegionProfilesPath);
         MemoryRegionProfilesPath = GetDirectoryFromPath(memoryRegionPath, _pathService.MemoryRegionProfilesPath);
     }
 
@@ -246,7 +246,7 @@ public class PathSettingsViewModel : ViewModelBase
     private Task ResetPowerSupplyProfilesPathAsync() => HandleResetPathAsync(_pathService.PowerSupplyProfilesPath, p => PowerSupplyProfilesPath = p, "profiles.powerSupplyPath", "PowerSupplyProfiles.json");
 
     // Memory Region
-    private Task BrowseMemoryRegionProfilesPathAsync() => HandleBrowsePathAsync(MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, "profiles.memoryMappingPath", "MemoryMappingProfiles.json");
+    private Task BrowseMemoryRegionProfilesPathAsync() => HandleBrowsePathAsync(MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, "profiles.memoryRegionPath", "MemoryMappingProfiles.json");
     private Task OpenMemoryRegionProfilesPathAsync() => HandleOpenPathAsync(MemoryRegionProfilesPath);
-    private Task ResetMemoryRegionProfilesPathAsync() => HandleResetPathAsync(_pathService.MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, "profiles.memoryMappingPath", "MemoryMappingProfiles.json");
+    private Task ResetMemoryRegionProfilesPathAsync() => HandleResetPathAsync(_pathService.MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, "profiles.memoryRegionPath", "MemoryMappingProfiles.json");
 }

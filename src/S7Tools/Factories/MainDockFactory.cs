@@ -83,6 +83,10 @@ public class MainDockFactory : Factory
             if (_mainDocumentDock!.VisibleDockables?.Contains(existingDoc) == true)
             {
                 _mainDocumentDock.ActiveDockable = existingDoc;
+                if (vm is IDisposable disposableVm && !ReferenceEquals(existingDoc.Context, vm))
+                {
+                    disposableVm.Dispose();
+                }
                 return;
             }
             else

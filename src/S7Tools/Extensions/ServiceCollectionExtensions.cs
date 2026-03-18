@@ -421,7 +421,7 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
         // Add Memory Dump Viewer ViewModel
-        services.TryAddSingleton<StreamedMemoryDumpViewModel>();
+        services.TryAddTransient<StreamedMemoryDumpViewModel>();
         services.TryAddSingleton<FileMemoryDumpViewModel>();
         services.TryAddTransient<FileMemoryDumpDocumentViewModel>();
         services.TryAddSingleton<MemoryDumpViewerViewModel>();

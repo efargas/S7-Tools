@@ -51,6 +51,8 @@ public partial class FileTreeItemViewModel : ViewModelBase
 
     public ObservableCollection<FileTreeItemViewModel> Children { get; } = new();
 
+    public bool IsDummyNode { get; private set; }
+
     public FileTreeItemViewModel(string path, bool isDirectory)
     {
         FullPath = path;
@@ -66,7 +68,7 @@ public partial class FileTreeItemViewModel : ViewModelBase
         if (IsDirectory)
         {
             // Add a dummy node so the expander arrow shows up
-            Children.Add(new FileTreeItemViewModel("Loading..."));
+            Children.Add(CreateDummyNode("Loading..."));
         }
     }
 
@@ -74,6 +76,12 @@ public partial class FileTreeItemViewModel : ViewModelBase
     {
         Name = dummyName;
         IsDirectory = false;
+        IsDummyNode = true;
+    }
+
+    public static FileTreeItemViewModel CreateDummyNode(string dummyName)
+    {
+        return new FileTreeItemViewModel(dummyName);
     }
 
     private void LoadChildren()
@@ -102,11 +110,11 @@ public partial class FileTreeItemViewModel : ViewModelBase
         }
         catch (UnauthorizedAccessException)
         {
-            Children.Add(new FileTreeItemViewModel("Access Denied", false));
+            Children.Add(CreateDummyNode("Access Denied"));
         }
         catch (Exception ex)
         {
-            Children.Add(new FileTreeItemViewModel($"Error: {ex.Message}", false));
+            Children.Add(CreateDummyNode($"Error: {ex.Message}"));
         }
     }
 }

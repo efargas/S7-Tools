@@ -117,11 +117,13 @@ public partial class StreamedMemoryDumpViewModel : ViewModelBase, S7Tools.Core.I
         MemoryBlocks = orchestrator.MemoryBlocks;
 
         // Subscribe to collection changes for statistics
-        MemoryBlocks.CollectionChanged += (s, e) =>
-        {
-            BlockCount = MemoryBlocks.Count;
-            TotalBytes = _orchestrator.TotalBytesReceived;
-        };
+        MemoryBlocks.CollectionChanged += OnMemoryBlocksCollectionChanged;
+    }
+
+    private void OnMemoryBlocksCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        BlockCount = MemoryBlocks.Count;
+        TotalBytes = _orchestrator.TotalBytesReceived;
     }
 
     /// <summary>
@@ -236,9 +238,40 @@ public partial class StreamedMemoryDumpViewModel : ViewModelBase, S7Tools.Core.I
     {
         if (disposing)
         {
-            _cts?.Cancel();
-            _cts?.Dispose();
-            _cts = null;
+            MemoryBlocks.CollectionChanged -= OnMemoryBlocksCollectionChanged;
+            if (IsConnected)
+            {
+                _logger.LogInformation("Disposing active connection to memory dump session");
+
+                // Cancel synchronously to stop reading immediately
+                _cts?.Cancel();
+
+                // Fire and forget orchestrator shutdown so we don't block the UI thread
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _orchestrator.StopAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error while stopping orchestrator during disposal");
+                    }
+                    finally
+                    {
+                        _cts?.Dispose();
+                        _cts = null;
+                    }
+                });
+
+                IsConnected = false;
+                ConnectionStatus = "Disconnected";
+            }
+            else
+            {
+                _cts?.Dispose();
+                _cts = null;
+            }
         }
     }
 }

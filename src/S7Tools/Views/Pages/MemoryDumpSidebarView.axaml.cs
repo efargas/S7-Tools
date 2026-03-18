@@ -26,7 +26,7 @@ public partial class MemoryDumpSidebarView : UserControl
     {
         if (DataContext is S7Tools.ViewModels.Pages.MemoryDumpViewerViewModel mainVm)
         {
-            if (mainVm.SelectedCategoryViewModel is S7Tools.Core.Interfaces.ViewModels.IDockableViewModel dockable)
+            if (mainVm.GetDockableForOpen() is S7Tools.Core.Interfaces.ViewModels.IDockableViewModel dockable)
             {
                 mainVm.OpenDocumentAction?.Invoke(dockable);
             }
