@@ -13,6 +13,7 @@ using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Jobs;
 using S7Tools.ViewModels.Pages;
+using S7Tools.ViewModels.Profiles;
 using S7Tools.ViewModels.Settings;
 using S7Tools.ViewModels.Tasks;
 using DesignTimeFactory = S7Tools.Services.DesignTimeViewModelFactory;
@@ -412,6 +413,15 @@ public class NavigationViewModel : ReactiveObject
                     // Open jobs as a dock tab
                     OpenDockableContent(jobsViewModel);
                     _logger.LogDebug("Navigated to Jobs Management");
+                    break;
+
+                case "profiles":
+                    SidebarTitle = "Profile Management";
+                    ProfilesViewModel? profilesViewModel = CreateViewModel<ProfilesViewModel>();
+                    CurrentContent = profilesViewModel; // Sidebar categories
+                    ShowLogStats = false;
+                    OpenDockableContent(profilesViewModel);
+                    _logger.LogDebug("Navigated to Profiles");
                     break;
 
                 case "memorydump":

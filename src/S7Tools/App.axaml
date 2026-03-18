@@ -63,6 +63,7 @@
         <StyleInclude Source="/Styles/Styles.axaml" />
         <StyleInclude Source="/Styles/DockStyles.axaml" />
         <StyleInclude Source="/Styles/InfoStyles.axaml" />
+        <StyleInclude Source="/Styles/PropertyStyles.axaml" />
 
         <!-- Override FluentAvalonia's ToggleButton:checked accent color in Expanders -->
         <!-- This must come AFTER FluentAvaloniaTheme to have higher precedence -->

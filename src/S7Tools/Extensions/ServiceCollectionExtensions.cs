@@ -416,6 +416,7 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
         services.TryAddSingleton<SettingsViewModel>(provider => new SettingsViewModel(provider));
+        services.TryAddSingleton<ViewModels.Profiles.ProfilesViewModel>(provider => new ViewModels.Profiles.ProfilesViewModel(provider));
         services.TryAddTransient<AboutViewModel>();
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
