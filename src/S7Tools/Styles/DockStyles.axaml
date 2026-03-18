@@ -14,101 +14,59 @@
         own PathIcon/geometry content renders correctly.
     -->
 
-    <!-- === DocumentControl buttons (tab close buttons) === -->
-    <Style Selector="idc|DocumentControl Button">
+    <!-- === Generic Dock button resets for inner template buttons === -->
+    <!-- Dock.Avalonia usually names its buttons #PART_CloseButton, #PART_PinButton, #PART_FloatButton -->
+    <Style Selector="Button#PART_CloseButton, Button#PART_PinButton, Button#PART_FloatButton">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Padding" Value="4"/>
         <Setter Property="Margin" Value="0"/>
         <Setter Property="MinWidth" Value="0"/>
         <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}"/>
     </Style>
 
-    <!-- === ToolControl buttons (tool panel header buttons) === -->
-    <Style Selector="idc|ToolControl Button">
+    <Style Selector="Button#PART_CloseButton:pointerover, Button#PART_PinButton:pointerover, Button#PART_FloatButton:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandAccentBrush}"/>
+    </Style>
+
+    <Style Selector="Button#PART_CloseButton:pressed, Button#PART_PinButton:pressed, Button#PART_FloatButton:pressed">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundBrush}"/>
+    </Style>
+
+    <!-- Sometimes Dock plugins use PathIcon directly inside a generic transparent button template. Let's make sure the host buttons nested inside any Dock control reset their borders -->
+    <Style Selector="idc|DocumentTabStripItem Button, idc|ToolTabStripItem Button, idc|ToolChromeControl Button">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="Margin" Value="0"/>
-        <Setter Property="MinWidth" Value="0"/>
-        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextForegroundSecondaryBrush}"/>
     </Style>
 
-    <!-- === ToolChromeControl buttons (chrome bar close/float/pin) === -->
-    <Style Selector="idc|ToolChromeControl Button">
-        <Setter Property="Background" Value="Transparent"/>
+    <Style Selector="idc|DocumentTabStripItem Button PathIcon, idc|ToolTabStripItem Button PathIcon, idc|ToolChromeControl Button PathIcon, Button#PART_CloseButton PathIcon, Button#PART_PinButton PathIcon, Button#PART_FloatButton PathIcon">
+        <Setter Property="Width" Value="12"/>
+        <Setter Property="Height" Value="12"/>
+    </Style>
+
+    <Style Selector="idc|DocumentTabStripItem Button:pointerover, idc|ToolTabStripItem Button:pointerover, idc|ToolChromeControl Button:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="Margin" Value="0"/>
-        <Setter Property="MinWidth" Value="0"/>
-        <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource BrandAccentBrush}"/>
     </Style>
 
-    <!-- === DocumentTabStripItem close button === -->
-    <Style Selector="idc|DocumentTabStripItem Button">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="Margin" Value="0"/>
-        <Setter Property="MinWidth" Value="0"/>
-        <Setter Property="MinHeight" Value="0"/>
-    </Style>
-
-    <!-- === ToolTabStripItem close button === -->
-    <Style Selector="idc|ToolTabStripItem Button">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="Margin" Value="0"/>
-        <Setter Property="MinWidth" Value="0"/>
-        <Setter Property="MinHeight" Value="0"/>
-    </Style>
-
-    <!-- === Hover states for dock buttons === -->
-    <Style Selector="idc|DocumentControl Button:pointerover">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
-
-    <Style Selector="idc|ToolControl Button:pointerover">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
-
-    <Style Selector="idc|ToolChromeControl Button:pointerover">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
-
-    <Style Selector="idc|DocumentTabStripItem Button:pointerover">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
-
-    <Style Selector="idc|ToolTabStripItem Button:pointerover">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
-
-    <!-- === Pressed states for dock buttons === -->
-    <Style Selector="idc|DocumentControl Button:pressed">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
-
-    <Style Selector="idc|ToolControl Button:pressed">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
-
-    <Style Selector="idc|ToolChromeControl Button:pressed">
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderBrush" Value="Transparent"/>
-    </Style>
 
 </Styles>

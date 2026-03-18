@@ -4,6 +4,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:S7Tools.ViewModels.Pages"
     xmlns:controls="using:S7Tools.Views.Controls"
+    xmlns:icons="using:Projektanker.Icons.Avalonia"
     mc:Ignorable="d" d:DesignWidth="240" d:DesignHeight="600"
     x:Class="S7Tools.Views.Pages.MemoryDumpSidebarView"
     x:DataType="vm:MemoryDumpViewerViewModel">
@@ -12,6 +13,10 @@
         <vm:MemoryDumpViewerViewModel />
     </Design.DataContext>
 
+    <UserControl.Styles>
+        <StyleInclude Source="/Styles/SidebarStyles.axaml" />
+    </UserControl.Styles>
+
     <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="0" Margin="0">
             <controls:SidebarSection Title="MEMORY VIEWERS"
@@ -19,6 +24,63 @@
                 ItemsSource="{Binding Categories}"
                 SelectedItem="{Binding SelectedCategory, Mode=TwoWay}"
                 IsExpanded="True" />
+
+            <Border Classes="CategorySection" Margin="0,10,0,0">
+                <Expander IsExpanded="True">
+                    <Expander.Header>
+                        <Grid Background="Transparent" Height="32" Margin="4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <icons:Icon Grid.Column="0" Classes="CategoryIcon ExpanderArrow" />
+                            <icons:Icon Grid.Column="1" Classes="CategoryIcon" Value="fa-solid fa-folder-tree" />
+                            <TextBlock Grid.Column="2" Classes="CategoryHeader" Text="FILE EXPLORER" />
+                            
+                            <Button Grid.Column="3" Command="{Binding FileExplorer.SelectFolderCommand}" Classes="transparent" Margin="0,0,4,0" ToolTip.Tip="Select Folder...">
+                                <icons:Icon Value="fa-solid fa-folder-open" FontSize="14" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                            </Button>
+                            <Button Grid.Column="4" Command="{Binding FileExplorer.RefreshCommand}" Classes="transparent" ToolTip.Tip="Refresh tree view">
+                                <icons:Icon Value="fa-solid fa-sync" FontSize="14" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                            </Button>
+                        </Grid>
+                    </Expander.Header>
+                    
+                    <Grid DataContext="{Binding FileExplorer}">
+                        <TextBlock Text="No folder selected" 
+                                 IsVisible="{Binding !FileTreeItems.Count}"
+                                 Foreground="{DynamicResource TextForegroundMutedBrush}"
+                                 Margin="16,8"
+                                 FontStyle="Italic" />
+                                 
+                        <TreeView ItemsSource="{Binding FileTreeItems}" 
+                                  Background="Transparent" 
+                                  BorderThickness="0"
+                                  IsVisible="{Binding FileTreeItems.Count}"
+                                  Padding="4,0,0,0"
+                                  DoubleTapped="OnTreeViewDoubleTapped">
+                            <TreeView.ItemTemplate>
+                                <TreeDataTemplate DataType="vm:FileTreeItemViewModel" ItemsSource="{Binding Children}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8" Background="Transparent">
+                                        <icons:Icon Value="{Binding IsDirectory, Converter={x:Static ObjectConverters.IsNull}}" IsVisible="{Binding IsDirectory}" />
+                                        <icons:Icon Value="fa-solid fa-folder" IsVisible="{Binding IsDirectory}" Foreground="{DynamicResource BrandAccentBrush}" />
+                                        <icons:Icon Value="fa-solid fa-file-code" IsVisible="{Binding !IsDirectory}" Foreground="{DynamicResource TextForegroundMutedBrush}" />
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </TreeDataTemplate>
+                            </TreeView.ItemTemplate>
+                            <TreeView.Styles>
+                                <Style Selector="TreeViewItem" x:DataType="vm:FileTreeItemViewModel">
+                                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                                </Style>
+                            </TreeView.Styles>
+                        </TreeView>
+                    </Grid>
+                </Expander>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 

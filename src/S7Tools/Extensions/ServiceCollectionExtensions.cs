@@ -420,9 +420,10 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<ConfirmationDialogViewModel>();
 
         // Add Memory Dump Viewer ViewModel
-        services.TryAddTransient<StreamedMemoryDumpViewModel>();
-        services.TryAddTransient<FileMemoryDumpViewModel>();
-        services.TryAddTransient<MemoryDumpViewerViewModel>();
+        services.TryAddSingleton<StreamedMemoryDumpViewModel>();
+        services.TryAddSingleton<FileMemoryDumpViewModel>();
+        services.TryAddTransient<FileMemoryDumpDocumentViewModel>();
+        services.TryAddSingleton<MemoryDumpViewerViewModel>();
 
         // Hex Viewer
         services.TryAddTransient<HexViewerViewModel>();

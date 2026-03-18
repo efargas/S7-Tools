@@ -60,8 +60,8 @@
         <FluentTheme />
         <sty:FluentAvaloniaTheme />
         <StyleInclude Source="avares://Dock.Avalonia.Themes.Fluent/DockFluentTheme.axaml"/>
-        <StyleInclude Source="/Styles/DockStyles.axaml" />
         <StyleInclude Source="/Styles/Styles.axaml" />
+        <StyleInclude Source="/Styles/DockStyles.axaml" />
         <StyleInclude Source="/Styles/InfoStyles.axaml" />
 
         <!-- Override FluentAvalonia's ToggleButton:checked accent color in Expanders -->

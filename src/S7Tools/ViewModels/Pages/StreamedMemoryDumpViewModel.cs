@@ -14,8 +14,14 @@ namespace S7Tools.ViewModels.Pages;
 /// ViewModel for real-time PLC memory dump visualization.
 /// Provides high-performance rendering using virtualization and batching.
 /// </summary>
-public partial class StreamedMemoryDumpViewModel : ViewModelBase, IDisposable
+public partial class StreamedMemoryDumpViewModel : ViewModelBase, S7Tools.Core.Interfaces.ViewModels.IDockableViewModel, IDisposable
 {
+    // IDockableViewModel implementation
+    public string DockId => "StreamedMemoryDump";
+    public string DockTitle => "Streamed PLC Memory Viewer";
+    public bool CanClose => true;
+    public bool CanFloat => true;
+
     private readonly MemoryDumpOrchestrator _orchestrator;
     private readonly ILogger<StreamedMemoryDumpViewModel> _logger;
 

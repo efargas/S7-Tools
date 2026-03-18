@@ -1,5 +1,5 @@
 using System;
-using System.IO;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -7,96 +7,118 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels.Hex;
 
 namespace S7Tools.ViewModels.Pages;
 
 /// <summary>
 /// ViewModel for visualizing PLC memory dumps from a file.
-/// Hosts the HexViewerViewModel and manages file loading.
+/// Hosts the file folder explorer to open multiple memory dumps in tabs.
 /// </summary>
-public partial class FileMemoryDumpViewModel : ViewModelBase, IDisposable
+public partial class FileMemoryDumpViewModel : ViewModelBase
 {
     private readonly ILogger<FileMemoryDumpViewModel> _logger;
     private readonly IFileDialogService _fileDialogService;
     private readonly IServiceProvider _serviceProvider;
-
-    private HexViewerViewModel? _hexViewer;
-    public HexViewerViewModel? HexViewer
-    {
-        get => _hexViewer;
-        set => this.RaiseAndSetIfChanged(ref _hexViewer, value);
-    }
+    private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
 
     public FileMemoryDumpViewModel(
         ILogger<FileMemoryDumpViewModel> logger,
         IFileDialogService fileDialogService,
-        IServiceProvider serviceProvider)
+        IServiceProvider serviceProvider,
+        S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _fileDialogService = fileDialogService ?? throw new ArgumentNullException(nameof(fileDialogService));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
 
-        // Initialize Hex Viewer
-        HexViewer = _serviceProvider.GetRequiredService<HexViewerViewModel>();
+        // Load default folder from settings
+        string defaultFolder = _settingsService.GetSetting<string>("memoryDump.defaultFolder", string.Empty);
+        if (!string.IsNullOrEmpty(defaultFolder) && Directory.Exists(defaultFolder))
+        {
+            RootFolderPath = defaultFolder;
+            LoadTree();
+        }
     }
 
     public string Title => "File PLC Memory Viewer";
-    public string Description => "Load memory dump files (.bin, .dmp) to inspect content, analyze data structures, and debug PLC memory states.";
+    public string Description => "Select a folder to explore and open memory dump files within the system.";
+
+    private string _rootFolderPath = string.Empty;
+    public string RootFolderPath
+    {
+        get => _rootFolderPath;
+        set => this.RaiseAndSetIfChanged(ref _rootFolderPath, value);
+    }
+
+    public ObservableCollection<FileTreeItemViewModel> FileTreeItems { get; } = new();
+
+    /// <summary>
+    /// Action set by the parent (MemoryDumpViewerViewModel -> NavigationViewModel)
+    /// to instruct the main docking system to open a new tab.
+    /// </summary>
+    public Action<IDockableViewModel>? OpenDocumentAction { get; set; }
 
     [RelayCommand]
-    private async Task OpenFileAsync()
+    private async Task SelectFolderAsync()
     {
         try
         {
-            var filters = "All files (*.*)|*.*|Binary files (*.bin)|*.bin|Dump files (*.dmp)|*.dmp";
-            var path = await _fileDialogService.ShowOpenFileDialogAsync("Open Memory Dump File", filters);
-
-            if (!string.IsNullOrEmpty(path))
+            string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Folder containing Memory Dumps");
+            
+            if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
             {
-                // We need to adapt the string path to IStorageFile for consistency if possible,
-                // but our FileDialogService returns string path.
-                // HexViewer expects IStorageFile? No, wait. 
-                // Let's check HexViewerViewModel.
-
-                // HexViewerViewModel.LoadFileAsync takes IStorageFile. 
-                // This mismatch is because IFileDialogService is older style returning string.
-                // We should update HexViewerViewModel to accept string path or adapt here.
-                // Actually, let's update HexViewerViewModel to take string path OR update FileDialogService.
-                // Given the context, updating HexViewerViewModel to take string path is easier as we just used FileStream(path).
-
-                // Wait, I wrote HexViewerViewModel.LoadFileAsync(IStorageFile file).
-                // I should overload it or change it.
-                // I'll assume for this step I can call a new method LoadFileAsync(string path).
-                // I will add that to HexViewerViewModel in a subsequent step if needed, or modify it now.
-
-                // Actually, I can just create a wrapper IStorageFile or change HexViewerViewModel.
-                // Changing HexViewerViewModel is cleaner since it uses FileHexBuffer which takes a string path!
-
-                if (HexViewer != null)
-                {
-                    HexViewer.OpenStream(path);
-                }
+                RootFolderPath = folderPath;
+                await _settingsService.SetSettingAsync("memoryDump.defaultFolder", folderPath);
+                LoadTree();
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error opening file");
+            _logger.LogError(ex, "Error selecting folder");
         }
     }
 
-    public void Dispose()
+    [RelayCommand]
+    private void Refresh()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        LoadTree();
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void LoadTree()
     {
-        if (disposing)
+        FileTreeItems.Clear();
+        if (string.IsNullOrEmpty(RootFolderPath)) return;
+
+        try
         {
-            HexViewer?.Dispose();
+            var root = new FileTreeItemViewModel(RootFolderPath, true);
+            root.IsExpanded = true;
+            FileTreeItems.Add(root);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error loading file tree for {Path}", RootFolderPath);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenFile(FileTreeItemViewModel? item)
+    {
+        if (item == null || item.IsDirectory || OpenDocumentAction == null) return;
+
+        try
+        {
+            var docVm = _serviceProvider.GetRequiredService<FileMemoryDumpDocumentViewModel>();
+            docVm.OpenFile(item.FullPath);
+            
+            OpenDocumentAction.Invoke(docVm);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error opening document for file {Path}", item.FullPath);
         }
     }
 }

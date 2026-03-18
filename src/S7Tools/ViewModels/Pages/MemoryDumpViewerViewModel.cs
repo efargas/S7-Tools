@@ -22,18 +22,16 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
 
     private readonly IServiceProvider _serviceProvider;
     private readonly StreamedMemoryDumpViewModel _streamedViewModel;
-    private readonly FileMemoryDumpViewModel _fileViewModel;
 
     public MemoryDumpViewerViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _streamedViewModel = _serviceProvider.GetRequiredService<StreamedMemoryDumpViewModel>();
-        _fileViewModel = _serviceProvider.GetRequiredService<FileMemoryDumpViewModel>();
+        FileExplorer = _serviceProvider.GetRequiredService<FileMemoryDumpViewModel>();
 
         Categories = new ObservableCollection<string>(new[]
         {
-            "Streamed PLC Memory Viewer",
-            "File PLC Memory Viewer"
+            "Streamed PLC Memory Viewer"
         });
 
         // Default selection
@@ -48,6 +46,8 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
             }
         });
     }
+
+    public FileMemoryDumpViewModel FileExplorer { get; }
 
     public ObservableCollection<string> Categories { get; }
 
@@ -69,6 +69,24 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         set => this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
     }
 
+    /// <summary>
+    /// Action set by NavigationViewModel to open a docked document tab.
+    /// Propagated to child view models so they can open documents.
+    /// </summary>
+    private Action<IDockableViewModel>? _openDocumentAction;
+    public Action<IDockableViewModel>? OpenDocumentAction
+    {
+        get => _openDocumentAction;
+        set
+        {
+            _openDocumentAction = value;
+            if (FileExplorer != null)
+            {
+                FileExplorer.OpenDocumentAction = value;
+            }
+        }
+    }
+
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
 
     private ViewModelBase GetCategoryViewModel(string category)
@@ -76,7 +94,6 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         return category switch
         {
             "Streamed PLC Memory Viewer" => _streamedViewModel,
-            "File PLC Memory Viewer" => _fileViewModel,
             _ => _streamedViewModel
         };
     }
@@ -84,6 +101,5 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
     public void Dispose()
     {
         _streamedViewModel?.Dispose();
-        _fileViewModel?.Dispose();
     }
 }

@@ -60,6 +60,7 @@ namespace S7Tools.Services
                 "profiles.powerSupplyPath" => settings.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => settings.Profiles.MemoryRegionPath,
                 "powerSupply.powerStateChangeDelayMs" => settings.PowerSupply.PowerStateChangeDelayMs,
+                "memoryDump.defaultFolder" => settings.MemoryDump.DefaultFolder,
                 _ => null
             };
 
@@ -104,6 +105,7 @@ namespace S7Tools.Services
                     case "profiles.powerSupplyPath": oldValue = settings.Profiles.PowerSupplyPath; settings.Profiles.PowerSupplyPath = value.ToString() ?? ""; break;
                     case "profiles.memoryRegionPath": oldValue = settings.Profiles.MemoryRegionPath; settings.Profiles.MemoryRegionPath = value.ToString() ?? ""; break;
                     case "powerSupply.powerStateChangeDelayMs": oldValue = settings.PowerSupply.PowerStateChangeDelayMs; settings.PowerSupply.PowerStateChangeDelayMs = Convert.ToInt32(value); break;
+                    case "memoryDump.defaultFolder": oldValue = settings.MemoryDump.DefaultFolder; settings.MemoryDump.DefaultFolder = value.ToString() ?? ""; break;
                 }
                 return Task.CompletedTask;
             });
@@ -130,6 +132,7 @@ namespace S7Tools.Services
                 "profiles.powerSupplyPath" => def.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => def.Profiles.MemoryRegionPath,
                 "powerSupply.powerStateChangeDelayMs" => def.PowerSupply.PowerStateChangeDelayMs,
+                "memoryDump.defaultFolder" => def.MemoryDump.DefaultFolder,
                 _ => null
             };
             if (defValue != null)
@@ -145,6 +148,7 @@ namespace S7Tools.Services
                 s.Paths = def.Paths;
                 s.Profiles = def.Profiles;
                 s.PowerSupply = def.PowerSupply;
+                s.MemoryDump = def.MemoryDump;
                 return Task.CompletedTask;
             });
             SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = false });

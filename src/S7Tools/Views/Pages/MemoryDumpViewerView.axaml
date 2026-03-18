@@ -14,9 +14,6 @@
             <DataTemplate DataType="vm:StreamedMemoryDumpViewModel">
                 <views:StreamedMemoryDumpView />
             </DataTemplate>
-            <DataTemplate DataType="vm:FileMemoryDumpViewModel">
-                <views:FileMemoryDumpView />
-            </DataTemplate>
         </ContentControl.DataTemplates>
     </ContentControl>
 </UserControl>
