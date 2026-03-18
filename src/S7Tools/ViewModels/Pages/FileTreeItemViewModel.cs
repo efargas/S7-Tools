@@ -93,9 +93,8 @@ public partial class FileTreeItemViewModel : ViewModelBase
             var directories = Directory.EnumerateDirectories(FullPath)
                 .Select(d => new FileTreeItemViewModel(d, true));
 
-            var files = Directory.EnumerateFiles(FullPath, "*.*")
-                .Where(f => f.EndsWith(".bin", StringComparison.OrdinalIgnoreCase) || 
-                            f.EndsWith(".dmp", StringComparison.OrdinalIgnoreCase))
+            var files = Directory.EnumerateFiles(FullPath, "*.bin")
+                .Concat(Directory.EnumerateFiles(FullPath, "*.dmp"))
                 .Select(f => new FileTreeItemViewModel(f, false));
 
             foreach (var dir in directories.OrderBy(d => d.Name))
