@@ -51,7 +51,7 @@
                     
                     <Grid DataContext="{Binding FileExplorer}">
                         <TextBlock Text="No folder selected" 
-                                 IsVisible="{Binding !FileTreeItems.Count}"
+                                 IsVisible="{Binding !HasItems}"
                                  Foreground="{DynamicResource TextForegroundMutedBrush}"
                                  Margin="16,8"
                                  FontStyle="Italic" />
@@ -59,7 +59,7 @@
                         <TreeView ItemsSource="{Binding FileTreeItems}" 
                                   Background="Transparent" 
                                   BorderThickness="0"
-                                  IsVisible="{Binding FileTreeItems.Count}"
+                                  IsVisible="{Binding HasItems}"
                                   Padding="4,0,0,0"
                                   DoubleTapped="OnTreeViewDoubleTapped">
                             <TreeView.ItemTemplate>

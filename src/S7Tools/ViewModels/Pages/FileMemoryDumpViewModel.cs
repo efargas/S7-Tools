@@ -53,6 +53,13 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _rootFolderPath, value);
     }
 
+    private bool _hasItems;
+    public bool HasItems
+    {
+        get => _hasItems;
+        private set => this.RaiseAndSetIfChanged(ref _hasItems, value);
+    }
+
     public ObservableCollection<FileTreeItemViewModel> FileTreeItems { get; } = new();
 
     /// <summary>
@@ -90,6 +97,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     private void LoadTree()
     {
         FileTreeItems.Clear();
+        HasItems = false;
         if (string.IsNullOrEmpty(RootFolderPath)) return;
 
         try
@@ -97,6 +105,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
             var root = new FileTreeItemViewModel(RootFolderPath, true);
             root.IsExpanded = true;
             FileTreeItems.Add(root);
+            HasItems = true;
         }
         catch (Exception ex)
         {
@@ -107,7 +116,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     [RelayCommand]
     private void OpenFile(FileTreeItemViewModel? item)
     {
-        if (item == null || item.IsDirectory || OpenDocumentAction == null) return;
+        if (item == null || item.IsDirectory || item.IsDummyNode || string.IsNullOrEmpty(item.FullPath) || OpenDocumentAction == null) return;
 
         try
         {
