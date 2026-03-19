@@ -446,8 +446,23 @@ namespace S7Tools.Services.Adapters.Plc
             }
         }
 
-        public Task StopAsync()
+        public async Task StopAsync()
         {
+            if (_stream != null)
+            {
+                try
+                {
+                    // Send cancellation byte (ETX / Ctrl+C) to abort any active PLC dump payload
+                    await _stream.WriteAsync(new byte[] { 0x03 }, CancellationToken.None).ConfigureAwait(false);
+                    await _stream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+                    Logger.LogDebug("Sent cancellation byte (0x03) to PLC dump payload.");
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogTrace(ex, "Failed to send cancellation byte during StopAsync (stream might already be closed).");
+                }
+            }
+
             _cts?.Cancel();
             if (!_isExternalStream && _stream != null)
             {
@@ -459,7 +474,6 @@ namespace S7Tools.Services.Adapters.Plc
             }
             _stream = null;
             _socket = null;
-            return Task.CompletedTask;
         }
 
         public void Dispose()
