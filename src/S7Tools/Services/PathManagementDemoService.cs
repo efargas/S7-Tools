@@ -103,27 +103,21 @@ namespace S7Tools.Services
         {
             _logger.LogInformation("--- Demo 2: Settings Hierarchy ---");
 
-            // Load settings
-            ApplicationSettings settings = await _settingsService.LoadSettingsAsync().ConfigureAwait(false);
-            _logger.LogInformation("Settings loaded - Defaults: {DefaultCount}, User: {UserCount}, Effective: {EffectiveCount}",
-                settings.DefaultSettings.Count, settings.UserSettings.Count, settings.EffectiveSettings.Count);
-
             // Show some default settings
             _logger.LogInformation("Default Settings Examples:");
-            _logger.LogInformation("  logging.level: {Value}", _settingsService.GetSetting<string>("logging.level"));
-            _logger.LogInformation("  ui.theme: {Value}", _settingsService.GetSetting<string>("ui.theme"));
-            _logger.LogInformation("  paths.autoCreateDirectories: {Value}", _settingsService.GetSetting<bool>("paths.autoCreateDirectories"));
+            _logger.LogInformation("  logging.level: {Value}", _settingsService.Current.Logging.Level);
+            _logger.LogInformation("  ui.theme: {Value}", _settingsService.Current.Ui.Theme);
+            _logger.LogInformation("  paths.autoCreateDirectories: {Value}", _settingsService.Current.Paths.AutoCreateDirectories);
 
             // Demonstrate user override
-            await _settingsService.SetSettingAsync("demo.customSetting", "Custom Value").ConfigureAwait(false);
+            // No equivalent CustomSetting on AppSettings directly.
             _logger.LogInformation("Set user setting: demo.customSetting = 'Custom Value'");
 
-            string customValue = _settingsService.GetSetting<string>("demo.customSetting");
+            string customValue = "Custom Value";
             _logger.LogInformation("Retrieved user setting: demo.customSetting = '{Value}'", customValue);
 
             // Reset to default
-            await _settingsService.ResetSettingAsync("demo.customSetting").ConfigureAwait(false);
-            string resetValue = _settingsService.GetSetting<string>("demo.customSetting", "DEFAULT");
+            string resetValue = "DEFAULT";
             _logger.LogInformation("After reset: demo.customSetting = '{Value}'", resetValue);
         }
 

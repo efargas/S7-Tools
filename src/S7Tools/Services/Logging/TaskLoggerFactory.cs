@@ -70,7 +70,7 @@ public class TaskLoggerFactory(
                 LogDataStore? processLogDataStore = captureProcessOutput ? (LogDataStore?)processDataStore : null;
 
                 // Create logger providers with DataStores
-                string logLevelString = _applicationSettingsService.GetSetting<string>("logging.level", "Information");
+                string logLevelString = _applicationSettingsService.Current.Logging.Level;
 
                 if (!Enum.TryParse(logLevelString, true, out LogLevel configuredLogLevel))
                 {

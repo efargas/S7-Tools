@@ -699,7 +699,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
 
             if (success)
             {
-                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
+                await Task.Delay(_settingsService.Current.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
                 await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerTurnedOn);
                 _specificLogger.LogInformation("Power turned ON successfully");
@@ -735,7 +735,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
 
             if (success)
             {
-                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
+                await Task.Delay(_settingsService.Current.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
                 await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerTurnedOff);
                 _specificLogger.LogInformation("Power turned OFF successfully");
@@ -805,7 +805,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
         await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
-            int delayMs = _settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000);
+            int delayMs = _settingsService.Current.PowerSupply.PowerStateChangeDelayMs;
 
             _specificLogger.LogInformation("Starting power cycle (delay={Delay}ms)", delayMs);
 

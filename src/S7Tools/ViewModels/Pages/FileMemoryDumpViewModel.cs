@@ -35,7 +35,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
 
         // Load default folder from settings
-        string defaultFolder = _settingsService.GetSetting<string>("memoryDump.defaultFolder", string.Empty);
+        string defaultFolder = _settingsService.Current.MemoryDump.DefaultFolder;
         if (!string.IsNullOrEmpty(defaultFolder) && Directory.Exists(defaultFolder))
         {
             RootFolderPath = defaultFolder;
@@ -75,7 +75,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
             {
                 RootFolderPath = folderPath;
-                await _settingsService.SetSettingAsync("memoryDump.defaultFolder", folderPath);
+                await _settingsService.UpdateSettingsAsync(s => s.MemoryDump.DefaultFolder = folderPath);
                 LoadTree();
             }
         }

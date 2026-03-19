@@ -1,4 +1,6 @@
-using S7Tools.Core.Models.Configuration;
+using System;
+using System.Threading.Tasks;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 
 namespace S7Tools.Core.Interfaces.Services
 {
@@ -8,46 +10,20 @@ namespace S7Tools.Core.Interfaces.Services
     public interface IApplicationSettingsService
     {
         /// <summary>
+        /// Gets the current strongly-typed application settings
+        /// </summary>
+        AppSettings Current { get; }
+
+        /// <summary>
         /// Loads settings from default and user configuration sources
         /// </summary>
-        /// <returns>Merged application settings</returns>
-        Task<ApplicationSettings> LoadSettingsAsync();
+        Task LoadSettingsAsync();
 
         /// <summary>
-        /// Saves user settings to the user configuration file
+        /// Updates settings safely and saves them
         /// </summary>
-        /// <param name="userSettings">Settings to save</param>
-        Task SaveUserSettingsAsync(Dictionary<string, object> userSettings);
-
-        /// <summary>
-        /// Gets a specific setting value with type conversion
-        /// </summary>
-        /// <typeparam name="T">Type to convert value to</typeparam>
-        /// <param name="key">Setting key</param>
-        /// <returns>Setting value or default if not found</returns>
-        T GetSetting<T>(string key);
-
-        /// <summary>
-        /// Gets a specific setting value with type conversion and fallback
-        /// </summary>
-        /// <typeparam name="T">Type to convert value to</typeparam>
-        /// <param name="key">Setting key</param>
-        /// <param name="defaultValue">Value to return if setting not found</param>
-        /// <returns>Setting value or provided default</returns>
-        T GetSetting<T>(string key, T defaultValue);
-
-        /// <summary>
-        /// Sets a user setting value
-        /// </summary>
-        /// <param name="key">Setting key</param>
-        /// <param name="value">Setting value</param>
-        Task SetSettingAsync(string key, object value);
-
-        /// <summary>
-        /// Resets a user setting to its default value
-        /// </summary>
-        /// <param name="key">Setting key to reset</param>
-        Task ResetSettingAsync(string key);
+        /// <param name="updateAction">Action to apply changes to the settings</param>
+        Task UpdateSettingsAsync(Action<AppSettings> updateAction);
 
         /// <summary>
         /// Resets all user settings to defaults
@@ -60,7 +36,7 @@ namespace S7Tools.Core.Interfaces.Services
         Task RestoreDefaultsAsync();
 
         /// <summary>
-        /// Event fired when settings are reloaded
+        /// Event fired when settings are reloaded or updated
         /// </summary>
         event EventHandler<SettingsChangedEventArgs> SettingsChanged;
     }
@@ -70,21 +46,6 @@ namespace S7Tools.Core.Interfaces.Services
     /// </summary>
     public class SettingsChangedEventArgs : EventArgs
     {
-        /// <summary>
-        /// The setting key that changed
-        /// </summary>
-        public string Key { get; set; } = string.Empty;
-
-        /// <summary>
-        /// The previous value of the setting
-        /// </summary>
-        public object? OldValue { get; set; }
-
-        /// <summary>
-        /// The new value of the setting
-        /// </summary>
-        public object? NewValue { get; set; }
-
         /// <summary>
         /// Whether this is a user setting (true) or default setting (false)
         /// </summary>

@@ -189,8 +189,8 @@ public partial class SocatService : ISocatService, IDisposable
         }
 
         // Get settings from application settings service
-        int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
-        bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
+        int maxConcurrentInstances = _settingsService.Current.Socat.MaxConcurrentInstances;
+        bool autoConfigureSerialDevice = _settingsService.Current.Socat.AutoConfigureSerialDevice;
 
         // Check concurrent instances limit
         return await _semaphore.ExecuteAsync(async () =>
@@ -277,8 +277,8 @@ public partial class SocatService : ISocatService, IDisposable
 
         _logger.LogDebug("Getting socat settings - MaxConcurrentInstances query");
         // Get settings from application settings service
-        int maxConcurrentInstances = _settingsService.GetSetting("socat.maxConcurrentInstances", 5);
-        bool autoConfigureSerialDevice = _settingsService.GetSetting("socat.autoConfigureSerialDevice", true);
+        int maxConcurrentInstances = _settingsService.Current.Socat.MaxConcurrentInstances;
+        bool autoConfigureSerialDevice = _settingsService.Current.Socat.AutoConfigureSerialDevice;
 
         // PERFORM VALIDATIONS BEFORE ACQUIRING SEMAPHORE to reduce lock duration
 
@@ -403,7 +403,7 @@ public partial class SocatService : ISocatService, IDisposable
             }
 
             // Get shutdown timeout from settings
-            int configuredShutdownSeconds = _settingsService.GetSetting("socat.processShutdownTimeoutSeconds", 5);
+            int configuredShutdownSeconds = _settingsService.Current.Socat.ProcessShutdownTimeoutSeconds;
             int timeoutMs = Math.Clamp(configuredShutdownSeconds, 1, 120) * 1000;
 
             // Delegate process stop to ProcessManager
@@ -547,7 +547,7 @@ public partial class SocatService : ISocatService, IDisposable
             }
 
             // Get status refresh interval from settings and clamp to a safe range
-            int configuredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+            int configuredInterval = _settingsService.Current.Socat.StatusRefreshIntervalSeconds;
             int statusRefreshIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
             if (statusRefreshIntervalSeconds != configuredInterval)
             {
@@ -573,7 +573,7 @@ public partial class SocatService : ISocatService, IDisposable
                     await UpdateProcessStatusAsync(processInfo).ConfigureAwait(false);
 
                     // Re-read the setting to get the latest value for dynamic updates
-                    int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+                    int updatedConfiguredInterval = _settingsService.Current.Socat.StatusRefreshIntervalSeconds;
                     int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
 
                     // Only reschedule if this timer is still the active one for the process
@@ -598,7 +598,7 @@ public partial class SocatService : ISocatService, IDisposable
                     {
                         try
                         {
-                            int updatedConfiguredInterval = _settingsService.GetSetting("socat.statusRefreshIntervalSeconds", 2);
+                            int updatedConfiguredInterval = _settingsService.Current.Socat.StatusRefreshIntervalSeconds;
                             int updatedInterval = Math.Clamp(updatedConfiguredInterval, 1, 3600);
                             monitor.Change(TimeSpan.FromSeconds(updatedInterval), Timeout.InfiniteTimeSpan);
                         }
@@ -738,7 +738,7 @@ public partial class SocatService : ISocatService, IDisposable
         CancellationToken cancellationToken)
     {
         // Get settings from application settings service
-        bool captureProcessOutput = _settingsService.GetSetting("socat.captureProcessOutput", true);
+        bool captureProcessOutput = _settingsService.Current.Socat.CaptureProcessOutput;
 
         try
         {

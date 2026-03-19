@@ -76,10 +76,10 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     public async Task<IEnumerable<SerialPortInfo>> ScanAvailablePortsAsync(CancellationToken cancellationToken = default)
     {
         // Get settings from application settings service
-        bool includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
-        bool includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
-        bool includeStandardPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
-        int maxScanPorts = _settingsService.GetSetting("serial.maxScanPorts", 32);
+        bool includeUsbPorts = _settingsService.Current.Serial.IncludeUsbPorts;
+        bool includeAcmPorts = _settingsService.Current.Serial.IncludeAcmPorts;
+        bool includeStandardPorts = _settingsService.Current.Serial.IncludeStandardPorts;
+        int maxScanPorts = _settingsService.Current.Serial.MaxScanPorts;
 
         return await _discoveryService.ScanAvailablePortsAsync(
             includeUsbPorts,
@@ -98,7 +98,7 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
         }
 
         // Get port test timeout from settings and clamp to a safe range
-        int configuredTimeoutMs = _settingsService.GetSetting("serial.portTestTimeoutMs", 1000);
+        int configuredTimeoutMs = _settingsService.Current.Serial.PortTestTimeoutMs;
         int portTestTimeoutMs = Math.Clamp(configuredTimeoutMs, 100, 10_000);
         if (portTestTimeoutMs != configuredTimeoutMs)
         {
@@ -116,13 +116,13 @@ public sealed class SerialPortService : ISerialPortService, IDisposable
     public async Task StartPortMonitoringAsync(CancellationToken cancellationToken = default)
     {
         // Get settings from application settings service
-        bool includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
-        bool includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
-        bool includeStandardPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
-        int maxScanPorts = _settingsService.GetSetting("serial.maxScanPorts", 32);
+        bool includeUsbPorts = _settingsService.Current.Serial.IncludeUsbPorts;
+        bool includeAcmPorts = _settingsService.Current.Serial.IncludeAcmPorts;
+        bool includeStandardPorts = _settingsService.Current.Serial.IncludeStandardPorts;
+        int maxScanPorts = _settingsService.Current.Serial.MaxScanPorts;
 
         // Get scan interval from settings and clamp to a safe range
-        int configuredInterval = _settingsService.GetSetting("serial.scanIntervalSeconds", 5);
+        int configuredInterval = _settingsService.Current.Serial.ScanIntervalSeconds;
         int scanIntervalSeconds = Math.Clamp(configuredInterval, 1, 3600);
         if (scanIntervalSeconds != configuredInterval)
         {

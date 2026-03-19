@@ -160,14 +160,15 @@ public class LoggingSettingsViewModel : ViewModelBase
     private void RefreshFromSettings()
     {
         // Load settings using the new structured approach
-        DefaultLogPath = _settingsService.GetSetting<string>("logging.logDirectory", "Resources/Logs/Main");
-        ExportPath = _settingsService.GetSetting<string>("logging.exportDirectory", "Resources/Logs/Exported");
-        MinimumLogLevel = _settingsService.GetSetting<string>("logging.level", "Information");
-        AutoScrollLogs = _settingsService.GetSetting<bool>("ui.autoScrollLogs", true);
-        EnableRollingLogs = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
-        ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
-        ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
-        ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
+        var current = _settingsService.Current;
+        DefaultLogPath = current.Logging.LogDirectory;
+        ExportPath = current.Logging.ExportDirectory;
+        MinimumLogLevel = current.Logging.Level.ToString();
+        AutoScrollLogs = current.Ui.AutoScrollLogs;
+        EnableRollingLogs = current.Logging.EnableFileLogging;
+        ShowTimestampInLogs = current.Ui.ShowTimestampInLogs;
+        ShowCategoryInLogs = current.Ui.ShowCategoryInLogs;
+        ShowLogLevelInLogs = current.Ui.ShowLogLevelInLogs;
     }
 
     private async Task BrowseDefaultLogPathAsync()
@@ -218,19 +219,17 @@ public class LoggingSettingsViewModel : ViewModelBase
     {
         try
         {
-            var userSettings = new Dictionary<string, object>
+            await _settingsService.UpdateSettingsAsync(settings =>
             {
-                ["logging.logDirectory"] = DefaultLogPath,
-                ["logging.exportDirectory"] = ExportPath,
-                ["logging.level"] = MinimumLogLevel,
-                ["ui.autoScrollLogs"] = AutoScrollLogs,
-                ["logging.enableFileLogging"] = EnableRollingLogs,
-                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
-                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
-                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
-            };
-
-            await _settingsService.SaveUserSettingsAsync(userSettings);
+                settings.Logging.LogDirectory = DefaultLogPath;
+                settings.Logging.ExportDirectory = ExportPath;
+                settings.Logging.Level = MinimumLogLevel;
+                settings.Ui.AutoScrollLogs = AutoScrollLogs;
+                settings.Logging.EnableFileLogging = EnableRollingLogs;
+                settings.Ui.ShowTimestampInLogs = ShowTimestampInLogs;
+                settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
+                settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
+            });
         }
         catch (Exception ex)
         {

@@ -204,26 +204,13 @@ namespace S7Tools.Core.Models.Configuration
         /// <returns>JSON content with both default and user settings sections</returns>
         private static string GetDefaultAppSettingsContent()
         {
-            // Create a default ApplicationSettings instance to get ALL the default values
-            var defaultSettings = ApplicationSettings.CreateDefault();
-
-            // Create the proper file structure with both sections
-            var appSettingsFileContent = new
-            {
-                DefaultSettings = defaultSettings.DefaultSettings,
-                UserSettings = new Dictionary<string, object>(defaultSettings.DefaultSettings), // Copy defaults to user settings initially
-                SettingsFilePath = "Resources/AppSettings/AppSettings.json",
-                LastModified = DateTime.UtcNow
-            };
-
-            // Serialize to JSON with proper formatting
+            var defaultSettings = new StrongSettings.AppSettings();
             var options = new System.Text.Json.JsonSerializerOptions
             {
                 WriteIndented = true,
                 PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
             };
-
-            return System.Text.Json.JsonSerializer.Serialize(appSettingsFileContent, options);
+            return System.Text.Json.JsonSerializer.Serialize(defaultSettings, options);
         }
     }
 }

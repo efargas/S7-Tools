@@ -623,11 +623,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            // Create a minimal set of current settings to save
-            var currentSettings = new Dictionary<string, object>();
-
             // Save the current user settings
-            await _settingsService.SaveUserSettingsAsync(currentSettings);
+            await _settingsService.UpdateSettingsAsync(_ => {});
             StatusMessage = UIStrings.Status_ConfigurationSavedSuccessfully;
             _logger.LogInformation("Configuration saved to settings file");
         }

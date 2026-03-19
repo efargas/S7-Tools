@@ -335,14 +335,14 @@ public class SettingsManagementViewModel : ReactiveObject
         try
         {
             // Load settings using the new ApplicationSettingsService
-            DefaultLogPath = _settingsService.GetSetting<string>("logging.logDirectory", "Resources/Logs/Main");
-            ExportPath = _settingsService.GetSetting<string>("logging.exportDirectory", "Resources/Logs/Exported");
-            MinimumLogLevel = _settingsService.GetSetting<string>("logging.level", "Information");
-            AutoScrollLogs = _settingsService.GetSetting<bool>("ui.autoScrollLogs", true);
-            EnableRollingLogs = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
-            ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
-            ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
-            ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
+            DefaultLogPath = _settingsService.Current.Logging.LogDirectory;
+            ExportPath = _settingsService.Current.Logging.ExportDirectory;
+            MinimumLogLevel = _settingsService.Current.Logging.Level;
+            AutoScrollLogs = _settingsService.Current.Ui.AutoScrollLogs;
+            EnableRollingLogs = _settingsService.Current.Logging.EnableFileLogging;
+            ShowTimestampInLogs = _settingsService.Current.Ui.ShowTimestampInLogs;
+            ShowCategoryInLogs = _settingsService.Current.Ui.ShowCategoryInLogs;
+            ShowLogLevelInLogs = _settingsService.Current.Ui.ShowLogLevelInLogs;
 
             CurrentSettingsFilePath = "Resources/AppSettings/AppSettings.json";
 
@@ -373,20 +373,18 @@ public class SettingsManagementViewModel : ReactiveObject
         {
             SettingsStatusMessage = UIStrings.Status_SavingSettings;
 
-            // Create dictionary of settings to save
-            var userSettings = new Dictionary<string, object>
+            // Update settings through strongly-typed abstraction
+            await _settingsService.UpdateSettingsAsync(settings =>
             {
-                ["logging.logDirectory"] = DefaultLogPath,
-                ["logging.exportDirectory"] = ExportPath,
-                ["logging.level"] = MinimumLogLevel,
-                ["ui.autoScrollLogs"] = AutoScrollLogs,
-                ["logging.enableFileLogging"] = EnableRollingLogs,
-                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
-                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
-                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
-            };
-
-            await _settingsService.SaveUserSettingsAsync(userSettings);
+                settings.Logging.LogDirectory = DefaultLogPath;
+                settings.Logging.ExportDirectory = ExportPath;
+                settings.Logging.Level = MinimumLogLevel;
+                settings.Ui.AutoScrollLogs = AutoScrollLogs;
+                settings.Logging.EnableFileLogging = EnableRollingLogs;
+                settings.Ui.ShowTimestampInLogs = ShowTimestampInLogs;
+                settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
+                settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
+            });
 
             SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
             SettingsLastModified = DateTime.UtcNow.ToLocalTime();
@@ -564,7 +562,7 @@ public class SettingsManagementViewModel : ReactiveObject
     /// </summary>
     /// <param name="json">The JSON string containing settings.</param>
     /// <returns>True if import was successful, false otherwise.</returns>
-    public bool ImportSettingsFromJson(string json)
+    public async Task<bool> ImportSettingsFromJson(string json)
     {
         try
         {
@@ -591,8 +589,33 @@ public class SettingsManagementViewModel : ReactiveObject
                 return false;
             }
 
-            // Save settings using the service
-            _ = _settingsService.SaveUserSettingsAsync(importedSettings);
+            // Save settings via strongly-typed abstraction
+            await _settingsService.UpdateSettingsAsync(settings =>
+            {
+                if (importedSettings.TryGetValue("logging.logDirectory", out object? logDir) && logDir is JsonElement logDirElem && logDirElem.ValueKind == JsonValueKind.String)
+                    settings.Logging.LogDirectory = logDirElem.GetString() ?? settings.Logging.LogDirectory;
+
+                if (importedSettings.TryGetValue("logging.exportDirectory", out object? expDir) && expDir is JsonElement expDirElem && expDirElem.ValueKind == JsonValueKind.String)
+                    settings.Logging.ExportDirectory = expDirElem.GetString() ?? settings.Logging.ExportDirectory;
+
+                if (importedSettings.TryGetValue("logging.level", out object? level) && level is JsonElement levelElem && levelElem.ValueKind == JsonValueKind.String)
+                    settings.Logging.Level = levelElem.GetString() ?? settings.Logging.Level;
+
+                if (importedSettings.TryGetValue("ui.autoScrollLogs", out object? autoScroll) && autoScroll is JsonElement autoScrollElem && (autoScrollElem.ValueKind == JsonValueKind.True || autoScrollElem.ValueKind == JsonValueKind.False))
+                    settings.Ui.AutoScrollLogs = autoScrollElem.GetBoolean();
+
+                if (importedSettings.TryGetValue("logging.enableFileLogging", out object? enableFileLog) && enableFileLog is JsonElement enableFileLogElem && (enableFileLogElem.ValueKind == JsonValueKind.True || enableFileLogElem.ValueKind == JsonValueKind.False))
+                    settings.Logging.EnableFileLogging = enableFileLogElem.GetBoolean();
+
+                if (importedSettings.TryGetValue("ui.showTimestampInLogs", out object? showTimestamp) && showTimestamp is JsonElement showTimestampElem && (showTimestampElem.ValueKind == JsonValueKind.True || showTimestampElem.ValueKind == JsonValueKind.False))
+                    settings.Ui.ShowTimestampInLogs = showTimestampElem.GetBoolean();
+
+                if (importedSettings.TryGetValue("ui.showCategoryInLogs", out object? showCat) && showCat is JsonElement showCatElem && (showCatElem.ValueKind == JsonValueKind.True || showCatElem.ValueKind == JsonValueKind.False))
+                    settings.Ui.ShowCategoryInLogs = showCatElem.GetBoolean();
+
+                if (importedSettings.TryGetValue("ui.showLogLevelInLogs", out object? showLogLevel) && showLogLevel is JsonElement showLogLevelElem && (showLogLevelElem.ValueKind == JsonValueKind.True || showLogLevelElem.ValueKind == JsonValueKind.False))
+                    settings.Ui.ShowLogLevelInLogs = showLogLevelElem.GetBoolean();
+            });
 
             // Update ViewModel properties from imported settings
             RefreshFromSettings();

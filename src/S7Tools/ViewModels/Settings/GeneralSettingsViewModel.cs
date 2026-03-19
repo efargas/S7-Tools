@@ -98,7 +98,7 @@ public class GeneralSettingsViewModel : ViewModelBase
         {
             SettingsStatusMessage = UIStrings.Status_SavingSettings;
             // No local properties to save in General yet, but trigger global settings validation/save
-            await _settingsService.SaveUserSettingsAsync(new System.Collections.Generic.Dictionary<string, object>());
+            await _settingsService.UpdateSettingsAsync(s => { });
             SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
             _logger.LogInformation("General settings saved successfully");
         }
