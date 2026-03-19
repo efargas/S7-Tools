@@ -59,9 +59,6 @@ namespace S7Tools.Services
                 "profiles.socatPath" => settings.Profiles.SocatPath,
                 "profiles.powerSupplyPath" => settings.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => settings.Profiles.MemoryRegionPath,
-                "profiles.socatPath" => settings.Profiles.SocatPath,
-                "profiles.powerSupplyPath" => settings.Profiles.PowerSupplyPath,
-                "profiles.memoryRegionPath" => settings.Profiles.MemoryRegionPath,
                 "powerSupply.powerStateChangeDelayMs" => settings.PowerSupply.PowerStateChangeDelayMs,
                 "memoryDump.defaultFolder" => settings.MemoryDump.DefaultFolder,
                 _ => null
@@ -107,11 +104,6 @@ namespace S7Tools.Services
                     case "profiles.socatPath": oldValue = settings.Profiles.SocatPath; settings.Profiles.SocatPath = value.ToString() ?? ""; break;
                     case "profiles.powerSupplyPath": oldValue = settings.Profiles.PowerSupplyPath; settings.Profiles.PowerSupplyPath = value.ToString() ?? ""; break;
                     case "profiles.memoryRegionPath":
-                    {
-                        oldValue = settings.Profiles.MemoryRegionPath;
-                        settings.Profiles.MemoryRegionPath = value.ToString() ?? "";
-                        break;
-                    }
                         oldValue = settings.Profiles.MemoryRegionPath;
                         settings.Profiles.MemoryRegionPath = value.ToString() ?? "";
                         break;
@@ -142,10 +134,6 @@ namespace S7Tools.Services
                 "profiles.socatPath" => def.Profiles.SocatPath,
                 "profiles.powerSupplyPath" => def.Profiles.PowerSupplyPath,
                 "profiles.memoryRegionPath" => def.Profiles.MemoryRegionPath,
-        {
-            get => def.Profiles.MemoryRegionPath;
-        }
-
                 "powerSupply.powerStateChangeDelayMs" => def.PowerSupply.PowerStateChangeDelayMs,
                 "memoryDump.defaultFolder" => def.MemoryDump.DefaultFolder,
                 _ => null
