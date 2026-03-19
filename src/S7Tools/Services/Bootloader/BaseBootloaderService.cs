@@ -114,6 +114,12 @@ public abstract class BaseBootloaderService
 
                 for (int i = 0; i < selectedSegments.Count; i++)
                 {
+                    if (i > 0)
+                    {
+                        logger.LogInformation("Waiting 5 seconds before next segment dump...");
+                        await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
+                    }
+
                     MemorySegment segment = selectedSegments[i];
 
                     string startStr = segment.StartAddress;
@@ -238,7 +244,8 @@ public abstract class BaseBootloaderService
 
             if (iter < profiles.DumpCount - 1)
             {
-                await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+                logger.LogInformation("Waiting 5 seconds before next dump iteration...");
+                await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -309,6 +316,12 @@ public abstract class BaseBootloaderService
 
             for (int iter = 0; iter < iterationCount; iter++)
             {
+                if (iter > 0)
+                {
+                    logger.LogInformation("Waiting 5 seconds before next dump iteration...");
+                    await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
+                }
+
                 logger.LogInformation("Iteration {Iter}/{Total}", iter + 1, iterationCount);
 
                 // Determine final file path up-front
@@ -430,6 +443,12 @@ public abstract class BaseBootloaderService
         {
             for (int i = 0; i < segments.Count; i++)
             {
+                if (i > 0)
+                {
+                    ctx.Logger.LogInformation("Waiting 5 seconds before next segment dump...");
+                    await Task.Delay(5000, ctx.CancellationToken).ConfigureAwait(false);
+                }
+
                 var segment = segments[i];
                 uint segStart = ParseSegmentAddress(segment);
                 uint segLength = (uint)segment.Size;
