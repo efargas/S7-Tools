@@ -254,6 +254,26 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         set => this.RaiseAndSetIfChanged(ref _runningProcessCount, value);
     }
 
+    private string? _testResult;
+    /// <summary>
+    /// Gets or sets the test result string.
+    /// </summary>
+    public string? TestResult
+    {
+        get => _testResult;
+        set => this.RaiseAndSetIfChanged(ref _testResult, value);
+    }
+
+    private DateTime? _lastTested;
+    /// <summary>
+    /// Gets or sets the timestamp of the last test.
+    /// </summary>
+    public DateTime? LastTested
+    {
+        get => _lastTested;
+        set => this.RaiseAndSetIfChanged(ref _lastTested, value);
+    }
+
     #endregion
 
     #region Commands
@@ -289,6 +309,11 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// Gets the command to test the TCP connection for the selected process.
     /// </summary>
     public ReactiveCommand<Unit, Unit> TestConnectionCommand { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the command to test the socat proxy with the selected port.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestSocatCommand { get; private set; } = null!;
 
 
     /// <summary>
@@ -367,6 +392,15 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         TestConnectionCommand = ReactiveCommand.CreateFromTask(TestConnectionAsync, canTestConnection);
         TestConnectionCommand.ThrownExceptions
             .Subscribe(ex => HandleCommandException(ex, "testing connection"))
+            .DisposeWith(_disposables);
+
+        // Test socat command - enabled when a serial port is selected from PortScanner
+        IObservable<bool> canTestSocat = this.WhenAnyValue(x => x.PortScanner.SelectedPort)
+            .Select(port => port != null);
+
+        TestSocatCommand = ReactiveCommand.CreateFromTask(TestSocatAsync, canTestSocat);
+        TestSocatCommand.ThrownExceptions
+            .Subscribe(ex => HandleCommandException(ex, "testing socat proxy"))
             .DisposeWith(_disposables);
 
 
@@ -778,6 +812,73 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             _specificLogger.LogError(ex, "Error testing TCP connection");
             StatusMessage = UIStrings.Status_ErrorTestingConnection;
+        }
+    }
+
+    /// <summary>
+    /// Tests the socat proxy by launching a temporary process to verify TCP connectivity.
+    /// </summary>
+    private async Task TestSocatAsync()
+    {
+        string? portName = PortScanner.SelectedPort?.PortName;
+        if (string.IsNullOrEmpty(portName))
+        {
+            TestResult = "No port selected.";
+            LastTested = DateTime.Now;
+            return;
+        }
+
+        try
+        {
+            TestResult = $"Testing socat on {portName}...";
+            LastTested = DateTime.Now;
+
+            // Create a temporary transient profile
+            var tempConfig = new SocatConfiguration
+            {
+                TcpPort = 19999, // Temporary ephemeral port
+                Verbose = true
+            };
+            var tempProfile = new SocatProfile
+            {
+                Name = "TempTestProfile",
+                Description = "Temporary profile for testing",
+                Configuration = tempConfig
+            };
+
+            // Start the temporary socat process
+            StatusMessage = $"Starting temporary socat on {portName} (Port 19999)...";
+            SocatProcessInfo processInfo = await _socatService.StartSocatWithProfileAsync(tempProfile, portName);
+
+            // Wait a brief moment for the process to bind
+            await Task.Delay(1000);
+
+            // Test the TCP connection
+            bool success = await _socatService.TestTcpConnectionAsync("localhost", 19999);
+
+            // Stop the temporary process
+            await _socatService.StopSocatAsync(processInfo);
+
+            if (success)
+            {
+                TestResult = $"Success! Socat launched successfully and TCP connection to port 19999 was validated.";
+            }
+            else
+            {
+                TestResult = $"Failed. Socat process launched, but could not connect to TCP port 19999.";
+            }
+            StatusMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            _specificLogger.LogError(ex, "Error testing socat proxy");
+            TestResult = $"Error: {ex.Message}";
+            StatusMessage = "Socat test failed.";
+        }
+        finally
+        {
+            LastTested = DateTime.Now;
+            await RefreshRunningProcessesAsync(); // Ensure our process list is updated in case a stray process remains
         }
     }
 
