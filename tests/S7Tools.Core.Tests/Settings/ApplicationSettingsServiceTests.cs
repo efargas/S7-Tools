@@ -41,6 +41,33 @@ namespace S7Tools.Core.Tests.Settings
             }
         }
 
+        /// <summary>
+        /// Tracks which write path was used (Update vs UpdateAsync) for verification tests.
+        /// </summary>
+        private class TrackingWritableOptions<T> : IWritableOptions<T> where T : class, new()
+        {
+            public T CurrentValue { get; private set; } = new T();
+            public T Value => CurrentValue;
+            public bool UpdateSyncCalled { get; set; }
+            public bool UpdateAsyncCalled { get; private set; }
+
+            public T Get(string? name) => CurrentValue;
+            public IDisposable? OnChange(Action<T, string?> listener) => null;
+
+            public void Update(Action<T> applyChanges)
+            {
+                UpdateSyncCalled = true;
+                applyChanges(CurrentValue);
+            }
+
+            public Task UpdateAsync(Func<T, Task> applyChanges)
+            {
+                UpdateAsyncCalled = true;
+                applyChanges(CurrentValue).GetAwaiter().GetResult();
+                return Task.CompletedTask;
+            }
+        }
+
         private ApplicationSettingsService CreateTestService()
         {
             var loggerMock = new Mock<ILogger<ApplicationSettingsService>>();
@@ -114,6 +141,42 @@ namespace S7Tools.Core.Tests.Settings
             Assert.True(eventArgs.IsUserSetting);
             // Verify the actual value change is accessible via Current
             Assert.Equal("Dark", service.Current.Ui.Theme);
+        }
+
+        [Fact]
+        public async Task UpdateSettingsAsync_DelegatesToUpdateAsync_NotSyncUpdate()
+        {
+            // Arrange
+            var trackingOptions = new TrackingWritableOptions<AppSettings>();
+            var loggerMock = new Mock<ILogger<ApplicationSettingsService>>();
+            var service = new ApplicationSettingsService(loggerMock.Object, trackingOptions);
+
+            // Act
+            await service.UpdateSettingsAsync(s => s.Logging.Level = "Debug");
+
+            // Assert – only the async path must have been called
+            Assert.True(trackingOptions.UpdateAsyncCalled, "UpdateSettingsAsync must delegate to UpdateAsync.");
+            Assert.False(trackingOptions.UpdateSyncCalled, "UpdateSettingsAsync must not call the synchronous Update method.");
+        }
+
+        [Fact]
+        public async Task ResetAllSettingsAsync_DelegatesToUpdateAsync_NotSyncUpdate()
+        {
+            // Arrange
+            var trackingOptions = new TrackingWritableOptions<AppSettings>();
+            var loggerMock = new Mock<ILogger<ApplicationSettingsService>>();
+            var service = new ApplicationSettingsService(loggerMock.Object, trackingOptions);
+            await service.UpdateSettingsAsync(s => s.Logging.Level = "Debug");
+
+            // Verify arrange step used UpdateAsync
+            Assert.True(trackingOptions.UpdateAsyncCalled, "Arrange: UpdateSettingsAsync must have called UpdateAsync.");
+            trackingOptions.UpdateSyncCalled = false;
+
+            // Act
+            await service.ResetAllSettingsAsync();
+
+            // Assert
+            Assert.False(trackingOptions.UpdateSyncCalled, "ResetAllSettingsAsync must not call the synchronous Update method.");
         }
     }
 }

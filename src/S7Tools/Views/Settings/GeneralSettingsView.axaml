@@ -127,6 +127,119 @@
                         FontSize="11" />
                 </StackPanel>
             </Border>
+
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Memory Dump"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Default Output Folder"
+                            Foreground="{DynamicResource TextForegroundBrush}"
+                            FontSize="13" />
+                        <TextBox Text="{Binding MemoryDumpDefaultFolder}"
+                            Watermark="e.g. Resources/Dumps"
+                            Background="{DynamicResource InputBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}" />
+                        <TextBlock Text="Folder where dump files are saved. Relative paths are resolved from the application base directory."
+                            Foreground="{DynamicResource TextForegroundMutedBrush}"
+                            FontSize="11"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Grid ColumnDefinitions="*,16,*">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Inter-Segment Delay (ms)"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                FontSize="13" />
+                            <NumericUpDown Value="{Binding SegmentDumpDelayMs}"
+                                Minimum="0" Maximum="60000" Increment="500"
+                                FormatString="0"
+                                Background="{DynamicResource InputBackgroundBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}" />
+                            <TextBlock Text="Pause between successive segment dumps. Set 0 to disable."
+                                Foreground="{DynamicResource TextForegroundMutedBrush}"
+                                FontSize="11"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock Text="Inter-Iteration Delay (ms)"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                FontSize="13" />
+                            <NumericUpDown Value="{Binding IterationDumpDelayMs}"
+                                Minimum="0" Maximum="60000" Increment="500"
+                                FormatString="0"
+                                Background="{DynamicResource InputBackgroundBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}" />
+                            <TextBlock Text="Pause between successive dump iterations (DumpCount &gt; 1). Set 0 to disable."
+                                Foreground="{DynamicResource TextForegroundMutedBrush}"
+                                FontSize="11"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="PLC Connection"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <Grid ColumnDefinitions="*,16,*,16,*">
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock Text="Connection Timeout (ms)"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                FontSize="13" />
+                            <NumericUpDown Value="{Binding PlcConnectionTimeout}"
+                                Minimum="100" Maximum="60000" Increment="500"
+                                FormatString="0"
+                                Background="{DynamicResource InputBackgroundBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Spacing="4">
+                            <TextBlock Text="Read Timeout (ms)"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                FontSize="13" />
+                            <NumericUpDown Value="{Binding PlcReadTimeout}"
+                                Minimum="100" Maximum="60000" Increment="500"
+                                FormatString="0"
+                                Background="{DynamicResource InputBackgroundBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4" Spacing="4">
+                            <TextBlock Text="Retry Attempts"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                FontSize="13" />
+                            <NumericUpDown Value="{Binding PlcRetryAttempts}"
+                                Minimum="0" Maximum="10" Increment="1"
+                                FormatString="0"
+                                Background="{DynamicResource InputBackgroundBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                BorderBrush="{DynamicResource ControlBorderBrush}" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

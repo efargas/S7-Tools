@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration.StrongSettings;
+using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services
 {
@@ -12,14 +13,20 @@ namespace S7Tools.Services
         private readonly ILogger<ApplicationSettingsService> _logger;
         private readonly IWritableOptions<AppSettings> _options;
         private readonly IConfigurationRoot? _configurationRoot;
+        private readonly IUIThreadService? _uiThreadService;
 
         public event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
 
-        public ApplicationSettingsService(ILogger<ApplicationSettingsService> logger, IWritableOptions<AppSettings> options, IConfiguration? configuration = null)
+        public ApplicationSettingsService(
+            ILogger<ApplicationSettingsService> logger,
+            IWritableOptions<AppSettings> options,
+            IConfiguration? configuration = null,
+            IUIThreadService? uiThreadService = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options ?? throw new ArgumentNullException(nameof(options));
             _configurationRoot = configuration as IConfigurationRoot;
+            _uiThreadService = uiThreadService;
             _logger.LogInformation("ApplicationSettingsService initialized as strongly-typed proxy");
         }
 
@@ -37,7 +44,7 @@ namespace S7Tools.Services
             try
             {
                 await Task.Run(() => _configurationRoot.Reload()).ConfigureAwait(false);
-                SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = false });
+                RaiseSettingsChanged(new SettingsChangedEventArgs { IsUserSetting = false });
             }
             catch (Exception ex)
             {
@@ -53,12 +60,12 @@ namespace S7Tools.Services
                 updateAction(settings);
                 return Task.CompletedTask;
             }).ConfigureAwait(false);
-            SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = true });
+            RaiseSettingsChanged(new SettingsChangedEventArgs { IsUserSetting = true });
         }
 
-        public Task ResetAllSettingsAsync()
+        public async Task ResetAllSettingsAsync()
         {
-            _options.Update(s =>
+            await _options.UpdateAsync(s =>
             {
                 var def = new AppSettings();
                 s.Logging = def.Logging;
@@ -75,11 +82,26 @@ namespace S7Tools.Services
                 s.Serial = def.Serial;
                 s.Network = def.Network;
                 s.Socat = def.Socat;
-            });
-            SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = false });
-            return Task.CompletedTask;
+                return Task.CompletedTask;
+            }).ConfigureAwait(false);
+            RaiseSettingsChanged(new SettingsChangedEventArgs { IsUserSetting = false });
         }
 
         public Task RestoreDefaultsAsync() => ResetAllSettingsAsync();
+
+        private void RaiseSettingsChanged(SettingsChangedEventArgs args)
+        {
+            var handler = SettingsChanged;
+            if (handler is null) return;
+
+            if (_uiThreadService is not null)
+            {
+                _uiThreadService.PostToUIThread(() => handler(this, args));
+            }
+            else
+            {
+                handler(this, args);
+            }
+        }
     }
 }

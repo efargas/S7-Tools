@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Services.Interfaces;
@@ -16,23 +17,27 @@ namespace S7Tools.Services.Bootloader;
 public abstract class BaseBootloaderService
 {
     private readonly ITimeProvider _timeProvider;
+    private readonly IApplicationSettingsService? _settingsService;
 
-    protected BaseBootloaderService(ITimeProvider? timeProvider = null)
+    protected BaseBootloaderService(ITimeProvider? timeProvider = null, IApplicationSettingsService? settingsService = null)
     {
         _timeProvider = timeProvider!;
+        _settingsService = settingsService;
     }
 
     /// <summary>
     /// Gets the delay in milliseconds to wait between segment dumps within a single iteration.
-    /// Override in derived classes to provide a configurable value from application settings.
+    /// Reads from <see cref="IApplicationSettingsService"/> when available; falls back to 5000 ms.
     /// </summary>
-    protected virtual int SegmentDumpDelayMilliseconds => 5000;
+    protected virtual int SegmentDumpDelayMilliseconds =>
+        _settingsService?.Current.MemoryDump.SegmentDumpDelayMilliseconds ?? 5000;
 
     /// <summary>
     /// Gets the delay in milliseconds to wait between dump iterations.
-    /// Override in derived classes to provide a configurable value from application settings.
+    /// Reads from <see cref="IApplicationSettingsService"/> when available; falls back to 5000 ms.
     /// </summary>
-    protected virtual int IterationDumpDelayMilliseconds => 5000;
+    protected virtual int IterationDumpDelayMilliseconds =>
+        _settingsService?.Current.MemoryDump.IterationDumpDelayMilliseconds ?? 5000;
 
     /// <summary>
     /// Performs the core memory dump process, iterating through dumps and segments.
@@ -50,6 +55,10 @@ public abstract class BaseBootloaderService
         ArgumentNullException.ThrowIfNull(profiles);
         ArgumentNullException.ThrowIfNull(progress);
         ArgumentNullException.ThrowIfNull(logger);
+
+        // Snapshot configurable delays once so repeated property reads during the loop don't re-query settings.
+        int segmentDumpDelayMs = SegmentDumpDelayMilliseconds;
+        int iterationDumpDelayMs = IterationDumpDelayMilliseconds;
 
         List<byte[]> allDumps = [];
 
@@ -124,13 +133,11 @@ public abstract class BaseBootloaderService
             {
                 List<byte[]> segmentDataList = [];
 
-                int segmentDumpDelayMilliseconds = SegmentDumpDelayMilliseconds;
-
                 for (int i = 0; i < selectedSegments.Count; i++)
                 {
-                    if (i > 0 && segmentDumpDelayMilliseconds > 0)
+                    if (i > 0 && segmentDumpDelayMs > 0)
                     {
-                        var delay = TimeSpan.FromMilliseconds(segmentDumpDelayMilliseconds);
+                        var delay = TimeSpan.FromMilliseconds(segmentDumpDelayMs);
                         logger.LogDebug("Waiting {Delay} before next segment dump...", delay);
                         await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                     }
@@ -259,11 +266,10 @@ public abstract class BaseBootloaderService
 
             if (iter < profiles.DumpCount - 1)
             {
-                int iterationDelayMs = IterationDumpDelayMilliseconds;
-                if (iterationDelayMs > 0)
+                if (iterationDumpDelayMs > 0)
                 {
-                    logger.LogDebug("Waiting {DelayMs}ms before next dump iteration...", iterationDelayMs);
-                    await Task.Delay(iterationDelayMs, cancellationToken).ConfigureAwait(false);
+                    logger.LogDebug("Waiting {DelayMs}ms before next dump iteration...", iterationDumpDelayMs);
+                    await Task.Delay(iterationDumpDelayMs, cancellationToken).ConfigureAwait(false);
                 }
             }
         }

@@ -2,6 +2,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
@@ -22,8 +23,9 @@ public sealed class EnhancedBootloaderService(
     IPowerSupplyService power,
     ISerialPortService serialPort,
     Func<JobProfileSet, IPlcClient> clientFactory,
-    IResourceCoordinator resourceCoordinator)
-    : BaseBootloaderService(null), IEnhancedBootloaderService, IDisposable
+    IResourceCoordinator resourceCoordinator,
+    IApplicationSettingsService? settingsService = null)
+    : BaseBootloaderService(null, settingsService), IEnhancedBootloaderService, IDisposable
 {
     private readonly ILogger<EnhancedBootloaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IPayloadProvider _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));

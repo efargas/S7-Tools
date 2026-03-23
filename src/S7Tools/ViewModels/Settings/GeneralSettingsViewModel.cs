@@ -19,6 +19,7 @@ public class GeneralSettingsViewModel : ViewModelBase
     private readonly IApplicationSettingsService _settingsService;
     private readonly IPathService _pathService;
     private readonly ILogger<GeneralSettingsViewModel> _logger;
+    private bool _isInitializing;
 
     /// <summary>
     /// Initializes a new instance of the GeneralSettingsViewModel class.
@@ -37,8 +38,32 @@ public class GeneralSettingsViewModel : ViewModelBase
         ResetSettingsCommand = ReactiveCommand.CreateFromTask(ResetSettingsAsync);
         OpenSettingsFolderCommand = ReactiveCommand.CreateFromTask(OpenSettingsFolderAsync);
 
+        _isInitializing = true;
         RefreshFromSettings();
-        _settingsService.SettingsChanged += (_, _) => RefreshFromSettings();
+        _isInitializing = false;
+
+        _settingsService.SettingsChanged += (_, _) =>
+        {
+            _isInitializing = true;
+            RefreshFromSettings();
+            _isInitializing = false;
+        };
+
+        // Auto-save when any property changes
+        this.PropertyChanged += (_, e) =>
+        {
+            if (_isInitializing) return;
+            if (e.PropertyName is
+                nameof(MemoryDumpDefaultFolder) or
+                nameof(SegmentDumpDelayMs) or
+                nameof(IterationDumpDelayMs) or
+                nameof(PlcConnectionTimeout) or
+                nameof(PlcReadTimeout) or
+                nameof(PlcRetryAttempts))
+            {
+                _ = SaveGeneralSettingsAsync();
+            }
+        };
     }
 
     // Default constructor for designer
@@ -70,6 +95,50 @@ public class GeneralSettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _settingsLastModified, value);
     }
 
+    // MemoryDump settings
+    private string _memoryDumpDefaultFolder = string.Empty;
+    public string MemoryDumpDefaultFolder
+    {
+        get => _memoryDumpDefaultFolder;
+        set => this.RaiseAndSetIfChanged(ref _memoryDumpDefaultFolder, value);
+    }
+
+    private int _segmentDumpDelayMs = 5000;
+    public int SegmentDumpDelayMs
+    {
+        get => _segmentDumpDelayMs;
+        set => this.RaiseAndSetIfChanged(ref _segmentDumpDelayMs, value);
+    }
+
+    private int _iterationDumpDelayMs = 5000;
+    public int IterationDumpDelayMs
+    {
+        get => _iterationDumpDelayMs;
+        set => this.RaiseAndSetIfChanged(ref _iterationDumpDelayMs, value);
+    }
+
+    // PLC settings
+    private int _plcConnectionTimeout = 5000;
+    public int PlcConnectionTimeout
+    {
+        get => _plcConnectionTimeout;
+        set => this.RaiseAndSetIfChanged(ref _plcConnectionTimeout, value);
+    }
+
+    private int _plcReadTimeout = 2000;
+    public int PlcReadTimeout
+    {
+        get => _plcReadTimeout;
+        set => this.RaiseAndSetIfChanged(ref _plcReadTimeout, value);
+    }
+
+    private int _plcRetryAttempts = 3;
+    public int PlcRetryAttempts
+    {
+        get => _plcRetryAttempts;
+        set => this.RaiseAndSetIfChanged(ref _plcRetryAttempts, value);
+    }
+
     public ReactiveCommand<Unit, Unit>? SaveSettingsCommand { get; }
     public ReactiveCommand<Unit, Unit>? LoadSettingsCommand { get; }
     public ReactiveCommand<Unit, Unit>? ResetSettingsCommand { get; }
@@ -93,6 +162,34 @@ public class GeneralSettingsViewModel : ViewModelBase
         {
             SettingsLastModified = DateTime.UtcNow.ToLocalTime();
         }
+
+        var current = _settingsService.Current;
+        MemoryDumpDefaultFolder = current.MemoryDump.DefaultFolder;
+        SegmentDumpDelayMs = current.MemoryDump.SegmentDumpDelayMilliseconds;
+        IterationDumpDelayMs = current.MemoryDump.IterationDumpDelayMilliseconds;
+        PlcConnectionTimeout = current.Plc.ConnectionTimeout;
+        PlcReadTimeout = current.Plc.ReadTimeout;
+        PlcRetryAttempts = current.Plc.RetryAttempts;
+    }
+
+    private async Task SaveGeneralSettingsAsync()
+    {
+        try
+        {
+            await _settingsService.UpdateSettingsAsync(s =>
+            {
+                s.MemoryDump.DefaultFolder = MemoryDumpDefaultFolder;
+                s.MemoryDump.SegmentDumpDelayMilliseconds = SegmentDumpDelayMs;
+                s.MemoryDump.IterationDumpDelayMilliseconds = IterationDumpDelayMs;
+                s.Plc.ConnectionTimeout = PlcConnectionTimeout;
+                s.Plc.ReadTimeout = PlcReadTimeout;
+                s.Plc.RetryAttempts = PlcRetryAttempts;
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error auto-saving general settings");
+        }
     }
 
     private async Task SaveSettingsAsync()
@@ -100,8 +197,7 @@ public class GeneralSettingsViewModel : ViewModelBase
         try
         {
             SettingsStatusMessage = UIStrings.Status_SavingSettings;
-            // No local properties to save in General yet, but trigger global settings validation/save
-            await _settingsService.UpdateSettingsAsync(s => { });
+            await SaveGeneralSettingsAsync();
             SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
             _logger.LogInformation("General settings saved successfully");
         }
