@@ -2,7 +2,8 @@
 title: "Canon Index — Architectural Foundation Documents"
 version: "1.0.0"
 created: "2026-03-23"
-status: "canon"
+last-updated: "2026-03-23"
+status: "current"
 tags: ["canon", "index", "architecture"]
 ---
 

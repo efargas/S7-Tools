@@ -2,7 +2,8 @@
 title: "S7Tools Core API Contract — The Engine Manual"
 version: "1.0.0"
 created: "2026-03-23"
-status: "canon"
+last-updated: "2026-03-23"
+status: "current"
 tags: ["api-contract", "canon", "services", "interfaces", "prescriptive"]
 related:
   - docs/canon/ARCHITECTURE.md

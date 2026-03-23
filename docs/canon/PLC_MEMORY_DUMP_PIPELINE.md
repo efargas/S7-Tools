@@ -2,7 +2,8 @@
 title: "PLC Memory Dump Pipeline — System Blueprint"
 version: "1.0.0"
 created: "2026-03-23"
-status: "canon"
+last-updated: "2026-03-23"
+status: "current"
 tags: ["blueprint", "canon", "plc", "memory-dump", "bootloader", "prescriptive"]
 related:
   - docs/canon/ARCHITECTURE.md

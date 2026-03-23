@@ -2,7 +2,8 @@
 title: "S7Tools Data Flow — The Blueprint"
 version: "1.0.0"
 created: "2026-03-23"
-status: "canon"
+last-updated: "2026-03-23"
+status: "current"
 tags: ["data-flow", "canon", "prescriptive", "unidirectional"]
 related:
   - docs/canon/ARCHITECTURE.md

@@ -2,7 +2,8 @@
 title: "S7Tools Architecture — The Constitution"
 version: "1.0.0"
 created: "2026-03-23"
-status: "canon"
+last-updated: "2026-03-23"
+status: "current"
 tags: ["architecture", "canon", "hexagonal", "solid", "prescriptive"]
 ---
 

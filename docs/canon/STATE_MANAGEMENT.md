@@ -2,7 +2,8 @@
 title: "S7Tools State Management — The Ledger Rules"
 version: "1.0.0"
 created: "2026-03-23"
-status: "canon"
+last-updated: "2026-03-23"
+status: "current"
 tags: ["state-management", "canon", "mvvm", "reactiveui", "prescriptive"]
 related:
   - docs/canon/ARCHITECTURE.md
