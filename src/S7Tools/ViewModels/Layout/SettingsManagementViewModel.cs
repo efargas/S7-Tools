@@ -523,38 +523,7 @@ public class SettingsManagementViewModel : ReactiveObject
     /// <returns>JSON representation of the current settings.</returns>
     public string ExportSettingsToJson()
     {
-        try
-        {
-            // Create a representation of current settings from ViewModel
-            var currentSettings = new Dictionary<string, object>
-            {
-                ["logging.logDirectory"] = DefaultLogPath,
-                ["logging.exportDirectory"] = ExportPath,
-                ["logging.level"] = MinimumLogLevel,
-                ["ui.autoScrollLogs"] = AutoScrollLogs,
-                ["logging.enableFileLogging"] = EnableRollingLogs,
-                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
-                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
-                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
-            };
-
-            // Serialize to JSON with pretty formatting
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            string json = JsonSerializer.Serialize(currentSettings, options);
-            _logger.LogInformation("Settings exported to JSON ({Length} characters)", json.Length);
-
-            return json;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to export settings to JSON");
-            return string.Empty;
-        }
+        return _settingsService.ExportSettingsToJson();
     }
 
     /// <summary>
@@ -573,74 +542,20 @@ public class SettingsManagementViewModel : ReactiveObject
                 return false;
             }
 
-            // Deserialize JSON to Dictionary
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
-            };
+            bool result = await _settingsService.ImportSettingsFromJsonAsync(json);
 
-            Dictionary<string, object>? importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
-
-            if (importedSettings == null)
+            if (result)
             {
-                _logger.LogWarning("Failed to deserialize settings from JSON");
+                RefreshFromSettings();
+                SettingsStatusMessage = UIStrings.Status_SettingsImportedSuccessfully;
+                SettingsLastModified = DateTime.UtcNow.ToLocalTime();
+            }
+            else
+            {
                 SettingsStatusMessage = UIStrings.Status_InvalidSettingsFormat;
-                return false;
             }
 
-            // Save settings via strongly-typed abstraction
-            await _settingsService.UpdateSettingsAsync(settings =>
-            {
-                if (importedSettings.TryGetValue("logging.logDirectory", out object? logDir) && logDir is JsonElement logDirElem && logDirElem.ValueKind == JsonValueKind.String)
-                {
-                    settings.Logging.LogDirectory = logDirElem.GetString() ?? settings.Logging.LogDirectory;
-                }
-
-                if (importedSettings.TryGetValue("logging.exportDirectory", out object? expDir) && expDir is JsonElement expDirElem && expDirElem.ValueKind == JsonValueKind.String)
-                {
-                    settings.Logging.ExportDirectory = expDirElem.GetString() ?? settings.Logging.ExportDirectory;
-                }
-
-                if (importedSettings.TryGetValue("logging.level", out object? level) && level is JsonElement levelElem && levelElem.ValueKind == JsonValueKind.String)
-                {
-                    settings.Logging.Level = levelElem.GetString() ?? settings.Logging.Level;
-                }
-
-                if (importedSettings.TryGetValue("ui.autoScrollLogs", out object? autoScroll) && autoScroll is JsonElement autoScrollElem && (autoScrollElem.ValueKind == JsonValueKind.True || autoScrollElem.ValueKind == JsonValueKind.False))
-                {
-                    settings.Ui.AutoScrollLogs = autoScrollElem.GetBoolean();
-                }
-
-                if (importedSettings.TryGetValue("logging.enableFileLogging", out object? enableFileLog) && enableFileLog is JsonElement enableFileLogElem && (enableFileLogElem.ValueKind == JsonValueKind.True || enableFileLogElem.ValueKind == JsonValueKind.False))
-                {
-                    settings.Logging.EnableFileLogging = enableFileLogElem.GetBoolean();
-                }
-
-                if (importedSettings.TryGetValue("ui.showTimestampInLogs", out object? showTimestamp) && showTimestamp is JsonElement showTimestampElem && (showTimestampElem.ValueKind == JsonValueKind.True || showTimestampElem.ValueKind == JsonValueKind.False))
-                {
-                    settings.Ui.ShowTimestampInLogs = showTimestampElem.GetBoolean();
-                }
-
-                if (importedSettings.TryGetValue("ui.showCategoryInLogs", out object? showCat) && showCat is JsonElement showCatElem && (showCatElem.ValueKind == JsonValueKind.True || showCatElem.ValueKind == JsonValueKind.False))
-                {
-                    settings.Ui.ShowCategoryInLogs = showCatElem.GetBoolean();
-                }
-
-                if (importedSettings.TryGetValue("ui.showLogLevelInLogs", out object? showLogLevel) && showLogLevel is JsonElement showLogLevelElem && (showLogLevelElem.ValueKind == JsonValueKind.True || showLogLevelElem.ValueKind == JsonValueKind.False))
-                {
-                    settings.Ui.ShowLogLevelInLogs = showLogLevelElem.GetBoolean();
-                }
-            });
-
-            // Update ViewModel properties from imported settings
-            RefreshFromSettings();
-
-            _logger.LogInformation("Settings imported from JSON successfully");
-            SettingsStatusMessage = UIStrings.Status_SettingsImportedSuccessfully;
-            SettingsLastModified = DateTime.UtcNow.ToLocalTime();
-
-            return true;
+            return result;
         }
         catch (Exception ex)
         {

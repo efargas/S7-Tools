@@ -109,10 +109,17 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         // Load initial data
         _ = Task.Run(async () =>
         {
-            await base.InitializeAsync();
-            await RefreshCommand.Execute();
-            await ScanSerialDevicesAsync();
-            await RefreshRunningProcessesAsync();
+            try
+            {
+                await base.InitializeAsync();
+                await RefreshCommand.Execute();
+                await ScanSerialDevicesAsync();
+                await RefreshRunningProcessesAsync();
+            }
+            catch (Exception ex)
+            {
+                _specificLogger.LogError(ex, "Failed to initialize SocatSettingsViewModel");
+            }
         });
 
         _specificLogger.LogInformation("SocatSettingsViewModel initialized");

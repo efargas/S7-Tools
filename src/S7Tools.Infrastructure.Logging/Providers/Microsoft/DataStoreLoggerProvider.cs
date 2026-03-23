@@ -17,7 +17,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     private readonly DataStoreLoggerConfiguration _configuration;
     private readonly ITimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, DataStoreLogger> _loggers = new();
-    private IExternalScopeProvider? _scopeProvider;
+
     private bool _disposed;
 
     /// <summary>
@@ -71,7 +71,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
     /// <inheritdoc />
     public void SetScopeProvider(IExternalScopeProvider scopeProvider)
     {
-        _scopeProvider = scopeProvider;
+    // Provider uses contextual scopes dynamically if needed
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
         }
 
         _loggers.Clear();
-        _scopeProvider = null;
+
         _disposed = true;
     }
 }

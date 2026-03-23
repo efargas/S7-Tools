@@ -102,8 +102,15 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         // Load profiles and scan ports in background but marshal collection updates to UI thread
         _ = Task.Run(async () =>
         {
-            await base.InitializeAsync();
-            await ScanPortsAsync();
+            try
+            {
+                await base.InitializeAsync();
+                await ScanPortsAsync();
+            }
+            catch (Exception ex)
+            {
+                _specificLogger.LogError(ex, "Failed to initialize SerialPortsSettingsViewModel");
+            }
         });
 
         _specificLogger.LogInformation("SerialPortsSettingsViewModel initialized");
@@ -320,36 +327,48 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         try
         {
-            IsScanning = true;
-            StatusMessage = UIStrings.Status_ScanningForPorts;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                IsScanning = true;
+                StatusMessage = UIStrings.Status_ScanningForPorts;
+            });
 
             IEnumerable<Core.Interfaces.Services.SerialPortInfo> portInfos = await _portService.ScanAvailablePortsAsync();
 
-            AvailablePorts.Clear();
-
-            // Sort ports with ttyUSB* first (external serial adapters), then others alphabetically
-            IOrderedEnumerable<Core.Interfaces.Services.SerialPortInfo> sortedPortInfos = portInfos
-                .OrderBy(p => !p.PortPath.Contains("/ttyUSB")) // ttyUSB* ports come first (false sorts before true)
-                .ThenBy(p => p.PortPath); // Then sort alphabetically within each group
-
-            foreach (Core.Interfaces.Services.SerialPortInfo? portInfo in sortedPortInfos)
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                AvailablePorts.Add(portInfo.PortPath);
-            }
+                AvailablePorts.Clear();
 
-            PortCount = AvailablePorts.Count;
-            StatusMessage = $"Found {PortCount} port(s)";
+                // Sort ports with ttyUSB* first (external serial adapters), then others alphabetically
+                IOrderedEnumerable<Core.Interfaces.Services.SerialPortInfo> sortedPortInfos = portInfos
+                    .OrderBy(p => !p.PortPath.Contains("/ttyUSB")) // ttyUSB* ports come first (false sorts before true)
+                    .ThenBy(p => p.PortPath); // Then sort alphabetically within each group
+
+                foreach (Core.Interfaces.Services.SerialPortInfo? portInfo in sortedPortInfos)
+                {
+                    AvailablePorts.Add(portInfo.PortPath);
+                }
+
+                PortCount = AvailablePorts.Count;
+                StatusMessage = $"Found {PortCount} port(s)";
+            });
 
             _specificLogger.LogInformation("Found {PortCount} available ports", PortCount);
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error scanning for ports");
-            StatusMessage = UIStrings.Status_ErrorScanningForPorts;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ErrorScanningForPorts;
+            });
         }
         finally
         {
-            IsScanning = false;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                IsScanning = false;
+            });
         }
     }
 

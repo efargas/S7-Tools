@@ -794,9 +794,13 @@ internal class DesignTimeUIThreadService : IUIThreadService
     public bool IsUIThread => true;
 
     public void InvokeOnUIThread(Action action) => action?.Invoke();
-    public Task InvokeOnUIThreadAsync(Action action) => Task.Run(action);
+    public Task InvokeOnUIThreadAsync(Action action)
+    {
+        action?.Invoke();
+        return Task.CompletedTask;
+    }
     public T InvokeOnUIThread<T>(Func<T> function) => function();
-    public Task<T> InvokeOnUIThreadAsync<T>(Func<T> function) => Task.Run(function);
+    public Task<T> InvokeOnUIThreadAsync<T>(Func<T> function) => Task.FromResult(function());
     public Task InvokeOnUIThreadAsync(Func<Task> asyncAction) => asyncAction();
     public Task<T> InvokeOnUIThreadAsync<T>(Func<Task<T>> asyncFunction) => asyncFunction();
     public void PostToUIThread(Action action) => action?.Invoke();

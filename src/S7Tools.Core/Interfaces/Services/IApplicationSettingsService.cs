@@ -36,6 +36,19 @@ namespace S7Tools.Core.Interfaces.Services
         Task RestoreDefaultsAsync();
 
         /// <summary>
+        /// Exports the current settings to a JSON string
+        /// </summary>
+        /// <returns>JSON representation of the current settings.</returns>
+        string ExportSettingsToJson();
+
+        /// <summary>
+        /// Imports settings from a JSON string
+        /// </summary>
+        /// <param name="json">The JSON string containing settings.</param>
+        /// <returns>True if import was successful, false otherwise.</returns>
+        Task<bool> ImportSettingsFromJsonAsync(string json);
+
+        /// <summary>
         /// Event fired when settings are reloaded or updated
         /// </summary>
         event EventHandler<SettingsChangedEventArgs> SettingsChanged;

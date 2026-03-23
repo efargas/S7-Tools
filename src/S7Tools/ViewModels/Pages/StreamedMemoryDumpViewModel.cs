@@ -167,7 +167,7 @@ public partial class StreamedMemoryDumpViewModel : ViewModelBase, S7Tools.Core.I
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Memory dump session error");
-                    await DisconnectInternalAsync();
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => { _ = DisconnectInternalAsync(); });
                 }
             }, _cts.Token);
         }
