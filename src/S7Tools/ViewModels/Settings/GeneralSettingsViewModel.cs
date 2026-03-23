@@ -47,12 +47,18 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
         RefreshFromSettings();
         _isInitializing = false;
 
-        _settingsService.SettingsChanged += (_, _) =>
-        {
-            _isInitializing = true;
-            RefreshFromSettings();
-            _isInitializing = false;
-        };
+        // Subscribe to settings-changed and unsubscribe on disposal via _disposables
+        Observable.FromEventPattern<SettingsChangedEventArgs>(
+                h => _settingsService.SettingsChanged += h,
+                h => _settingsService.SettingsChanged -= h)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ =>
+            {
+                _isInitializing = true;
+                RefreshFromSettings();
+                _isInitializing = false;
+            })
+            .DisposeWith(_disposables);
 
         // Auto-save when any relevant property changes, throttled to avoid excessive disk I/O
         this.Changed
@@ -66,9 +72,7 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
             .Where(_ => !_isInitializing)
             .Throttle(TimeSpan.FromMilliseconds(500))
             .ObserveOn(RxApp.MainThreadScheduler)
-            .Subscribe(_ => SaveGeneralSettingsAsync().ContinueWith(
-                t => _logger.LogError(t.Exception, "Error auto-saving general settings"),
-                System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted))
+            .Subscribe(__ => { _ = SaveGeneralSettingsAsync(); })
             .DisposeWith(_disposables);
     }
 
