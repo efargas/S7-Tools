@@ -75,8 +75,8 @@ namespace S7Tools.Core.Models.Configuration
                 },
                 new DirectoryInfo
                 {
-                    Name = ResourcePaths.MemoryRegionsFolder,
-                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionsFolder),
+                    Name = ResourcePaths.MemoryRegionFolder,
+                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionFolder),
                     Purpose = "Memory region profiles and definitions"
                 },
                 new DirectoryInfo
@@ -175,7 +175,7 @@ namespace S7Tools.Core.Models.Configuration
                 new FileInfo
                 {
                     Name = ResourcePaths.MemoryRegionProfilesFile,
-                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionsFolder, ResourcePaths.MemoryRegionProfilesFile),
+                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionFolder, ResourcePaths.MemoryRegionProfilesFile),
                     DefaultContent = "[]",
                     Purpose = "Memory region profile configurations"
                 },

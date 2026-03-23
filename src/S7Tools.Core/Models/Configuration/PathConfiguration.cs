@@ -53,11 +53,6 @@ namespace S7Tools.Core.Models.Configuration
         public string DumpsDirectory => Path.Combine(ResourcesDirectory, ResourcePaths.DumpsFolder);
 
         /// <summary>
-        /// Path to Resources/Profiles/MemoryRegions/
-        /// </summary>
-        public string MemoryRegionsDirectory => Path.Combine(ProfilesDirectory, ResourcePaths.MemoryRegionsFolder);
-
-        /// <summary>
         /// Whether paths have been resolved and validated
         /// </summary>
         public bool IsInitialized { get; set; }
@@ -74,7 +69,7 @@ namespace S7Tools.Core.Models.Configuration
                 "Serial" => Path.Combine(ProfilesDirectory, ResourcePaths.SerialFolder),
                 "Socat" => Path.Combine(ProfilesDirectory, ResourcePaths.SocatFolder),
                 "PowerSupply" => Path.Combine(ProfilesDirectory, ResourcePaths.PowerSupplyFolder),
-                "MemoryRegions" => MemoryRegionsDirectory,
+                "MemoryRegion" => Path.Combine(ProfilesDirectory, ResourcePaths.MemoryRegionFolder),
                 _ => throw new ArgumentException($"Unknown profile type: {profileType}", nameof(profileType))
             };
         }
@@ -91,7 +86,7 @@ namespace S7Tools.Core.Models.Configuration
                 "Serial" => Path.Combine(GetProfileDirectory(profileType), ResourcePaths.SerialProfilesFile),
                 "Socat" => Path.Combine(GetProfileDirectory(profileType), ResourcePaths.SocatProfilesFile),
                 "PowerSupply" => Path.Combine(GetProfileDirectory(profileType), ResourcePaths.PowerSupplyProfilesFile),
-                "MemoryRegion" => Path.Combine(GetProfileDirectory("MemoryRegions"), ResourcePaths.MemoryRegionProfilesFile),
+                "MemoryRegion" => Path.Combine(GetProfileDirectory(profileType), ResourcePaths.MemoryRegionProfilesFile),
                 _ => throw new ArgumentException($"Profile type {profileType} does not have a single file", nameof(profileType))
             };
         }
@@ -145,8 +140,7 @@ namespace S7Tools.Core.Models.Configuration
                     JobsPath,
                     TasksPath,
                     PayloadsDirectory,
-                    DumpsDirectory,
-                    MemoryRegionsDirectory
+                    DumpsDirectory
                 };
 
                 foreach (string? path in paths)

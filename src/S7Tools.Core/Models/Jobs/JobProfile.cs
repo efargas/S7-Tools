@@ -232,7 +232,7 @@ public class JobProfile : IProfileBase
             SocatProfileId = 1, // Default socat profile
             PowerSupplyProfileId = 1, // Default power supply profile
             MemoryRegionProfileId = 1, // Default memory region profile
-            SelectedMemorySegment = "BSS", // Standard segment
+            SelectedMemorySegment = ".bss", // Standard segment
             DumpCount = 1,
             Payloads = PayloadSetProfile.CreateDefault(), // Default payload configuration
             OutputPath = "./dumps",

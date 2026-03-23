@@ -93,16 +93,8 @@ namespace S7Tools.Services
         public string MemoryRegionProfilesPath => ResolvePath(Path.Combine(
             ResourcePaths.ResourcesFolder,
             ResourcePaths.ProfilesFolder,
-            ResourcePaths.MemoryRegionsFolder,
+            ResourcePaths.MemoryRegionFolder,
             ResourcePaths.MemoryRegionProfilesFile));
-
-        /// <summary>
-        /// Gets the path to Resources/Profiles/MemoryRegions directory
-        /// </summary>
-        public string MemoryRegionsDirectory => ResolvePath(Path.Combine(
-            ResourcePaths.ResourcesFolder,
-            ResourcePaths.ProfilesFolder,
-            ResourcePaths.MemoryRegionsFolder));
 
         /// <summary>
         /// Gets the path to Resources/Profiles/PayloadSets/PayloadSetProfiles.json
@@ -190,7 +182,7 @@ namespace S7Tools.Services
                     Path.Combine(ProfilesDirectory, ResourcePaths.SerialFolder),
                     Path.Combine(ProfilesDirectory, ResourcePaths.SocatFolder),
                     Path.Combine(ProfilesDirectory, ResourcePaths.PowerSupplyFolder),
-                    MemoryRegionsDirectory,
+                    Path.Combine(ProfilesDirectory, ResourcePaths.MemoryRegionFolder),
                     LogsDirectory,
                     MainLogsDirectory,
                     ExportedLogsDirectory,
@@ -348,7 +340,7 @@ namespace S7Tools.Services
                     { "Socat Profiles Path", Path.GetDirectoryName(SocatProfilesPath)! },
                     { "PowerSupply Profiles Path", Path.GetDirectoryName(PowerSupplyProfilesPath)! },
                     { "Memory Region Profiles Path", Path.GetDirectoryName(MemoryRegionProfilesPath)! },
-                    { "Memory Regions Directory", MemoryRegionsDirectory },
+                    { "Memory Region Directory", Path.Combine(ProfilesDirectory, ResourcePaths.MemoryRegionFolder) },
                     { "Logs Directory", LogsDirectory },
                     { "Main Logs Directory", MainLogsDirectory },
                     { "Exported Logs Directory", ExportedLogsDirectory },

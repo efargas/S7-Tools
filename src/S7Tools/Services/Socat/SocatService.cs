@@ -725,7 +725,6 @@ public partial class SocatService : ISocatService, IDisposable
     /// <param name="configuration">The socat configuration.</param>
     /// <param name="serialDevice">The serial device path.</param>
     /// <param name="profile">The profile used (if any).</param>
-    /// <param name="protocolLogger">Optional logger for capturing protocol-level communication logs.</param>
     /// <param name="processLogger">Optional logger for capturing process stdout/stderr output.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>Process information for the started socat process.</returns>
@@ -1132,7 +1131,6 @@ public partial class SocatService : ISocatService, IDisposable
     /// Updates the status of a specific process.
     /// </summary>
     /// <param name="processInfo">The process information to update.</param>
-    /// <param name="cancellationToken">Token to cancel the operation.</param>
     private Task UpdateProcessStatusAsync(SocatProcessInfo processInfo)
     {
         try

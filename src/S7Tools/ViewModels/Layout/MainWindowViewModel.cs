@@ -85,7 +85,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
     /// </summary>
     /// <param name="navigation">The navigation ViewModel.</param>
-    /// <param name="bottomPanel">The bottom panel ViewModel.</param>
     /// <param name="settings">The settings management ViewModel.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>

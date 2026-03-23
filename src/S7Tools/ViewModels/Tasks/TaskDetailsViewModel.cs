@@ -33,7 +33,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ILogger<TaskDetailsViewModel> _logger;
     private readonly ISocatService _socatService;
     private readonly IPowerSupplyService _powerSupplyService;
-    private readonly IEnhancedBootloaderService _bootloaderService;
+    private readonly IBootloaderService _bootloaderService;
     private readonly IUIThreadService _uiThreadService;
     private readonly IJobManager _jobManager;
     private readonly IPowerSupplyProfileService _powerSupplyProfileService;
@@ -77,13 +77,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     /// <param name="serialPortProfileService">Serial port profile service for accessing serial port profiles.</param>
     /// <param name="socatProfileService">Socat profile service for accessing socat profiles.</param>
     /// <param name="jobProfileSetFactory">Job profile set factory for creating profile sets.</param>
-    /// <param name="centralizedTaskLogService">The centralized task log service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     public TaskDetailsViewModel(
         ILogger<TaskDetailsViewModel> logger,
         ISocatService socatService,
         IPowerSupplyService powerSupplyService,
-        IEnhancedBootloaderService bootloaderService,
+        IBootloaderService bootloaderService,
         IUIThreadService uiThreadService,
         IJobManager jobManager,
         IPowerSupplyProfileService powerSupplyProfileService,

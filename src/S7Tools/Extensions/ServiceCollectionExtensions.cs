@@ -344,10 +344,7 @@ public static class ServiceCollectionExtensions
 
         // Add Bootloader Services
         // Add Bootloader Services
-        // Use EnhancedBootloaderService as the implementation for IBootloaderService
-        services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
-        services.TryAddSingleton<IBootloaderService>(provider =>
-            provider.GetRequiredService<IEnhancedBootloaderService>());
+        services.TryAddSingleton<IBootloaderService, Services.Bootloader.BootloaderService>();
 
         // Add Payload Services
         services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();
