@@ -199,9 +199,9 @@ namespace S7Tools.Core.Models.Configuration
         }
 
         /// <summary>
-        /// Generates default content for AppSettings.json file with proper structure
+        /// Generates default content for the AppSettings.json file using the StrongSettings.AppSettings schema.
         /// </summary>
-        /// <returns>JSON content with both default and user settings sections</returns>
+        /// <returns>Formatted JSON representing the default StrongSettings.AppSettings configuration.</returns>
         private static string GetDefaultAppSettingsContent()
         {
             var defaultSettings = new StrongSettings.AppSettings();

@@ -24,22 +24,25 @@ namespace S7Tools.Services
 
         public Task LoadSettingsAsync()
         {
+            _logger.LogInformation("Reloading application settings from current configuration source.");
+            SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = false });
             return Task.CompletedTask;
         }
 
-        public async Task UpdateSettingsAsync(Action<AppSettings> updateAction)
+        public Task UpdateSettingsAsync(Action<AppSettings> updateAction)
         {
-            await _options.UpdateAsync(settings =>
+            _options.Update(settings =>
             {
                 updateAction(settings);
-                return Task.CompletedTask;
             });
             SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = true });
+            return Task.CompletedTask;
         }
 
-        public async Task ResetAllSettingsAsync()
+        public Task ResetAllSettingsAsync()
         {
-            await _options.UpdateAsync(s => {
+            _options.Update(s =>
+            {
                 var def = new AppSettings();
                 s.Logging = def.Logging;
                 s.Ui = def.Ui;
@@ -55,9 +58,9 @@ namespace S7Tools.Services
                 s.Serial = def.Serial;
                 s.Network = def.Network;
                 s.Socat = def.Socat;
-                return Task.CompletedTask;
             });
             SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = false });
+            return Task.CompletedTask;
         }
 
         public Task RestoreDefaultsAsync() => ResetAllSettingsAsync();

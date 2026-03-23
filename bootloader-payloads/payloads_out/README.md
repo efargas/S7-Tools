@@ -28,5 +28,4 @@ This directory contains the compiled payloads extracted from the Docker build pr
 
 These compiled payloads can be used with the SiemensS7-Bootloader for exploitation and testing purposes.
 
-Generated on: jue 19 mar 2026 18:11:20 CET
 Extraction method: Docker volume mount

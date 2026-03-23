@@ -112,12 +112,15 @@ public abstract class BaseBootloaderService
             {
                 List<byte[]> segmentDataList = [];
 
+                const int SegmentDumpDelayMilliseconds = 5000;
+
                 for (int i = 0; i < selectedSegments.Count; i++)
                 {
                     if (i > 0)
                     {
-                        logger.LogInformation("Waiting 5 seconds before next segment dump...");
-                        await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
+                        var delay = TimeSpan.FromMilliseconds(SegmentDumpDelayMilliseconds);
+                        logger.LogInformation("Waiting {Delay} before next segment dump...", delay);
+                        await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                     }
 
                     MemorySegment segment = selectedSegments[i];

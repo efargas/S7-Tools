@@ -99,11 +99,19 @@ public partial class App : Application
 
                         // 4. Set Initial Theme and Subscribe to Changes
                         var settingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(settingsService.Current.Ui.Theme));
-                        
+                        var lastAppliedTheme = settingsService.Current.Ui.Theme;
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(lastAppliedTheme));
+
                         settingsService.SettingsChanged += (s, e) =>
                         {
-                            Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(settingsService.Current.Ui.Theme));
+                            var newTheme = settingsService.Current.Ui.Theme;
+                            if (Equals(newTheme, lastAppliedTheme))
+                            {
+                                return;
+                            }
+
+                            lastAppliedTheme = newTheme;
+                            Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(newTheme));
                         };
 
                         // 5. Switch to Main Window on UI Thread

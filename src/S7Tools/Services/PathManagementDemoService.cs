@@ -108,17 +108,6 @@ namespace S7Tools.Services
             _logger.LogInformation("  logging.level: {Value}", _settingsService.Current.Logging.Level);
             _logger.LogInformation("  ui.theme: {Value}", _settingsService.Current.Ui.Theme);
             _logger.LogInformation("  paths.autoCreateDirectories: {Value}", _settingsService.Current.Paths.AutoCreateDirectories);
-
-            // Demonstrate user override
-            // No equivalent CustomSetting on AppSettings directly.
-            _logger.LogInformation("Set user setting: demo.customSetting = 'Custom Value'");
-
-            string customValue = "Custom Value";
-            _logger.LogInformation("Retrieved user setting: demo.customSetting = '{Value}'", customValue);
-
-            // Reset to default
-            string resetValue = "DEFAULT";
-            _logger.LogInformation("After reset: demo.customSetting = '{Value}'", resetValue);
         }
 
         /// <summary>

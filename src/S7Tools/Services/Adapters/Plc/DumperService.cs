@@ -450,12 +450,20 @@ namespace S7Tools.Services.Adapters.Plc
         {
             if (_stream != null)
             {
+                // Use a short timeout to prevent StopAsync from hanging indefinitely
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+
                 try
                 {
                     // Send cancellation byte (ETX / Ctrl+C) to abort any active PLC dump payload
-                    await _stream.WriteAsync(new byte[] { 0x03 }, CancellationToken.None).ConfigureAwait(false);
-                    await _stream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+                    await _stream.WriteAsync(new byte[] { 0x03 }, timeoutCts.Token).ConfigureAwait(false);
+                    await _stream.FlushAsync(timeoutCts.Token).ConfigureAwait(false);
                     Logger.LogDebug("Sent cancellation byte (0x03) to PLC dump payload.");
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // Timed out while attempting to send the cancellation byte; treat as best-effort
+                    Logger.LogTrace(ex, "Timed out sending cancellation byte during StopAsync (stream might be blocked or already closed).");
                 }
                 catch (Exception ex)
                 {
