@@ -163,7 +163,6 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         ISerialPortProfileService profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
         ISerialPortService portService = _serviceProvider.GetRequiredService<ISerialPortService>();
         IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        IProfileEditDialogService profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
         IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
@@ -173,7 +172,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         SerialPortDiscoveryViewModel portScanner = _serviceProvider.GetRequiredService<SerialPortDiscoveryViewModel>();
         ILogger<SerialPortsSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
-        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, pathService, portScanner, logger);
+        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, pathService, portScanner, logger);
     }
 
     private SocatSettingsViewModel CreateSocatSettingsViewModel()

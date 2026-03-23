@@ -78,9 +78,6 @@ public static class ServiceCollectionExtensions
         // Add Dialog Service
         services.TryAddTransient<IDialogService, DialogService>();
 
-        // Add Profile Edit Dialog Service
-        services.TryAddTransient<IProfileEditDialogService, ProfileEditDialogService>();
-
         // Add Unified Profile Dialog Service (delegates to ProfileEditDialogService)
         services.TryAddTransient<IUnifiedProfileDialogService, UnifiedProfileDialogService>();
 
@@ -388,9 +385,6 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddS7ToolsViewModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-
-        // Add ViewModel Factory
-        services.TryAddSingleton<IViewModelFactory, ViewModelFactory>();
 
         // Add Main ViewModels
         services.TryAddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel(

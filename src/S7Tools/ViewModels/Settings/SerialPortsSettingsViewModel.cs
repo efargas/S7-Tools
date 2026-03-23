@@ -36,7 +36,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     private readonly ISerialPortProfileService _profileService;
     private readonly ISerialPortService _portService;
     private readonly IDialogService _dialogService;
-    private readonly IProfileEditDialogService _profileEditDialogService;
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<SerialPortsSettingsViewModel> _specificLogger;
@@ -58,7 +57,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// <param name="profileService">The serial port profile service.</param>
     /// <param name="portService">The serial port service.</param>
     /// <param name="dialogService">The dialog service.</param>
-    /// <param name="profileEditDialogService">The profile edit dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
@@ -71,7 +69,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         ISerialPortProfileService profileService,
         ISerialPortService portService,
         IDialogService dialogService,
-        IProfileEditDialogService profileEditDialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
@@ -85,7 +82,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-        _profileEditDialogService = profileEditDialogService ?? throw new ArgumentNullException(nameof(profileEditDialogService));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
