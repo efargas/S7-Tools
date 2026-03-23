@@ -43,19 +43,18 @@ namespace S7Tools.Services.Adapters
                 throw new InvalidOperationException("Transport not configured. Call Configure() first.");
             }
 
-            _logger.LogInformation("Connecting to PLC via Socat at {Host}:{Port}...", _host, _port);
-
-            // Re-create TcpClient if disposed or previously used
-            if (_client == null || _client.Client == null || !_client.Connected && _client.Client.Connected)
-            {
-                _client?.Dispose();
-                _client = new TcpClient();
-            }
-            // Handle case where client is already connected or in weird state
-            if (_client.Connected)
+            if (_client?.Connected == true)
             {
                 return;
             }
+
+            _logger.LogInformation("Connecting to PLC via Socat at {Host}:{Port}...", _host, _port);
+
+            // Dispose previous stream and client; always use a fresh TcpClient for each connection attempt
+            _stream?.Dispose();
+            _stream = null;
+            _client?.Dispose();
+            _client = new TcpClient();
 
             try
             {
@@ -72,13 +71,14 @@ namespace S7Tools.Services.Adapters
             }
         }
 
-        public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+        public Task DisconnectAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Disconnecting transport...");
-            _stream?.Close();
-            _client?.Close();
+            _stream?.Dispose();
+            _stream = null;
+            _client?.Dispose();
             _client = new TcpClient(); // Reset for next use
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
