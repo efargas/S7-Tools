@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Models.Validation;
@@ -18,7 +19,8 @@ public sealed class BootloaderService(
     IPowerSupplyService power,
     ISerialPortService serialPort,
     ITimeProvider timeProvider,
-    Func<JobProfileSet, IPlcClient> clientFactory) : BaseBootloaderService(timeProvider), IBootloaderService
+    Func<JobProfileSet, IPlcClient> clientFactory,
+    IApplicationSettingsService? settingsService = null) : BaseBootloaderService(timeProvider, settingsService), IBootloaderService
 {
     private readonly ILogger<BootloaderService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IPayloadProvider _payloads = payloads ?? throw new ArgumentNullException(nameof(payloads));

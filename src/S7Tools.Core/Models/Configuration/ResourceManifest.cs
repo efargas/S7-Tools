@@ -210,7 +210,13 @@ namespace S7Tools.Core.Models.Configuration
                 WriteIndented = true,
                 PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
             };
-            return System.Text.Json.JsonSerializer.Serialize(defaultSettings, options);
+            // Use Dictionary to preserve the exact "App" key casing.
+            // An anonymous type would be camelCased to "app" by the naming policy.
+            var rootObject = new System.Collections.Generic.Dictionary<string, object?>
+            {
+                ["App"] = defaultSettings
+            };
+            return System.Text.Json.JsonSerializer.Serialize(rootObject, options);
         }
     }
 }
