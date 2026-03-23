@@ -85,7 +85,7 @@ public class MemorySegment : INotifyPropertyChanged
     public MemorySegmentType Type { get; set; } = MemorySegmentType.Flash;
 
     /// <summary>
-    /// Gets or sets whether this segment is selected for operations.
+    /// Gets or sets a value indicating whether this segment is selected for operations.
     /// </summary>
     /// <value>True if the segment is selected for memory operations, false otherwise.</value>
     [Display(Name = "Selected")]

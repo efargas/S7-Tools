@@ -45,6 +45,9 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
     #region Constructor
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobWizardMemoryRegionStepViewModel"/> class.
+    /// </summary>
     public JobWizardMemoryRegionStepViewModel(
         ILogger<JobWizardMemoryRegionStepViewModel> logger,
         IMemoryRegionProfileService memoryRegionService,
@@ -510,12 +513,18 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
     #region IDisposable
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

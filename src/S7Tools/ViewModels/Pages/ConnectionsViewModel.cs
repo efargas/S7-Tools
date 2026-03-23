@@ -11,9 +11,21 @@ namespace S7Tools.ViewModels.Pages;
 public class ConnectionsViewModel : ViewModelBase, IDockableViewModel
 {
     // IDockableViewModel implementation
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "Connections";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Connections";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
     private readonly IViewModelFactory _viewModelFactory;

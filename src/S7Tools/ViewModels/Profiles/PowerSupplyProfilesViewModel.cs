@@ -27,9 +27,21 @@ namespace S7Tools.ViewModels.Profiles;
 public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<PowerSupplyProfile>, IDockableViewModel
 {
 
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "PowerSupplyProfiles";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Power Supply";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
     #region Fields
 

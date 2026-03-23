@@ -24,6 +24,9 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     private readonly IServiceProvider _serviceProvider;
     private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileMemoryDumpViewModel"/> class.
+    /// </summary>
     public FileMemoryDumpViewModel(
         ILogger<FileMemoryDumpViewModel> logger,
         IFileDialogService fileDialogService,
@@ -46,7 +49,13 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         FileTreeItems.CollectionChanged += (_, _) => this.RaisePropertyChanged(nameof(HasItems));
     }
 
+    /// <summary>
+    /// Gets or sets the Title.
+    /// </summary>
     public string Title => "File PLC Memory Viewer";
+    /// <summary>
+    /// Gets or sets the Description.
+    /// </summary>
     public string Description => "Select a folder to explore and open memory dump files within the system.";
 
     private string _rootFolderPath = string.Empty;
@@ -56,8 +65,14 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _rootFolderPath, value);
     }
 
+    /// <summary>
+    /// Gets or sets the HasItems.
+    /// </summary>
     public bool HasItems => FileTreeItems.Count > 0;
 
+    /// <summary>
+    /// Gets or sets the FileTreeItems.
+    /// </summary>
     public ObservableCollection<FileTreeItemViewModel> FileTreeItems { get; } = new();
 
     /// <summary>

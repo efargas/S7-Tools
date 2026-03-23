@@ -30,6 +30,9 @@ namespace S7Tools.Services.Plc.Adapters
         private string _socatHost = "127.0.0.1";
         private int _socatPort = 3333; // Default fallback
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PlcClientAdapter"/> class.
+        /// </summary>
         public PlcClientAdapter(
             IPlcProtocol protocol,
             ILogger<PlcClientAdapter> logger,
@@ -49,6 +52,9 @@ namespace S7Tools.Services.Plc.Adapters
 
 
 
+        /// <summary>
+        /// Executes the Configure operation.
+        /// </summary>
         public void Configure(string host, int port)
         {
             // Store socat connection info for streaming dumps
@@ -58,6 +64,9 @@ namespace S7Tools.Services.Plc.Adapters
             _protocol.Configure(host, port);
         }
 
+        /// <summary>
+        /// Executes the DisposeAsync operation.
+        /// </summary>
         public async ValueTask DisposeAsync()
         {
             if (_protocol is IAsyncDisposable d)
@@ -73,12 +82,18 @@ namespace S7Tools.Services.Plc.Adapters
 
         #region Handshake
 
+        /// <summary>
+        /// Executes the ConnectAsync operation.
+        /// </summary>
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Connecting to PLC via Protocol...");
             await _protocol.ConnectAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Executes the HandshakeAsync operation.
+        /// </summary>
         public async Task HandshakeAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Starting handshake...");
@@ -86,6 +101,9 @@ namespace S7Tools.Services.Plc.Adapters
             _logger.LogInformation("Handshake successful!");
         }
 
+        /// <summary>
+        /// Executes the GetBootloaderVersionAsync operation.
+        /// </summary>
         public async Task<string> GetBootloaderVersionAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Getting bootloader version...");
@@ -143,6 +161,9 @@ namespace S7Tools.Services.Plc.Adapters
 
         #region Stager Installation
 
+        /// <summary>
+        /// Executes the InstallStagerAsync operation.
+        /// </summary>
         public async Task InstallStagerAsync(byte[] stager, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Installing Stager...");
@@ -154,6 +175,9 @@ namespace S7Tools.Services.Plc.Adapters
 
         #region Memory Dump
 
+        /// <summary>
+        /// Executes the InstallDumperAsync operation.
+        /// </summary>
         public async Task InstallDumperAsync(byte[] dumperPayload, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Installing Dumper Payload via Stager...");
@@ -167,12 +191,18 @@ namespace S7Tools.Services.Plc.Adapters
                 PlcConstants.DUMPER_PAYLOAD_LOCATION, PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND);
         }
 
+        /// <summary>
+        /// Executes the InvokeDumperAsync operation.
+        /// </summary>
         public async Task<byte[]> InvokeDumperAsync(uint address, uint length, IProgress<long> progress, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Invoking Dumper (0x{Addr:X}, {Len} bytes)...", address, length);
             return await _memoryManager.InvokeDumperAsync(address, length, progress, cancellationToken);
         }
 
+        /// <summary>
+        /// Executes the InvokeDumperStreamAsync operation.
+        /// </summary>
         public async Task InvokeDumperStreamAsync(
             uint address,
             uint length,
@@ -197,6 +227,9 @@ namespace S7Tools.Services.Plc.Adapters
                 logger);
         }
 
+        /// <summary>
+        /// Executes the StopDumperSessionAsync operation.
+        /// </summary>
         public async Task StopDumperSessionAsync()
         {
             _logger.LogInformation("Stopping persistent dumper session...");

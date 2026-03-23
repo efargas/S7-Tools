@@ -21,9 +21,21 @@ namespace S7Tools.ViewModels.Pages;
 public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, IDisposable
 {
     // IDockableViewModel implementation
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "Welcome";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Welcome";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
     private readonly IDialogService _dialogService;

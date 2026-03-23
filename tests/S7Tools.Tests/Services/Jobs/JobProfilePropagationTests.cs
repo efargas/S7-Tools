@@ -1,10 +1,11 @@
+using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Services;
 using S7Tools.Services.Jobs;
 
@@ -84,9 +85,9 @@ public sealed class JobProfilePropagationTests : IDisposable
         Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile);
 
         // Assert - Verify that the JobProfileSet contains the custom timing values
-        Assert.NotNull(executionJob.ProfileSet);
-        Assert.Equal(customPowerOnTimeMs, executionJob.ProfileSet.PowerOnTimeMs);
-        Assert.Equal(customPowerOffDelayMs, executionJob.ProfileSet.PowerOffDelayMs);
+        executionJob.ProfileSet.Should().NotBeNull();
+        executionJob.ProfileSet.PowerOnTimeMs.Should().Be(customPowerOnTimeMs);
+        executionJob.ProfileSet.PowerOffDelayMs.Should().Be(customPowerOffDelayMs);
     }
 
     [Fact]
@@ -114,11 +115,11 @@ public sealed class JobProfilePropagationTests : IDisposable
         Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile);
 
         // Assert - Verify serial configuration is from the profile, not defaults
-        Assert.NotNull(executionJob.ProfileSet.Serial.Configuration);
-        Assert.Equal(115200, executionJob.ProfileSet.Serial.Configuration.BaudRate);
-        Assert.Equal(ParityMode.None, executionJob.ProfileSet.Serial.Configuration.Parity);
-        Assert.Equal(8, executionJob.ProfileSet.Serial.Configuration.CharacterSize);
-        Assert.Equal(StopBits.One, executionJob.ProfileSet.Serial.Configuration.StopBits);
+        executionJob.ProfileSet.Serial.Configuration.Should().NotBeNull();
+        executionJob.ProfileSet.Serial.Configuration.BaudRate.Should().Be(115200);
+        executionJob.ProfileSet.Serial.Configuration.Parity.Should().Be(ParityMode.None);
+        executionJob.ProfileSet.Serial.Configuration.CharacterSize.Should().Be(8);
+        executionJob.ProfileSet.Serial.Configuration.StopBits.Should().Be(StopBits.One);
     }
 
     [Fact]
@@ -144,10 +145,10 @@ public sealed class JobProfilePropagationTests : IDisposable
         Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile);
 
         // Assert - Verify socat configuration is from the profile
-        Assert.NotNull(executionJob.ProfileSet.Socat.Configuration);
-        Assert.Equal(8080, executionJob.ProfileSet.Socat.Configuration.TcpPort);
-        Assert.True(executionJob.ProfileSet.Socat.Configuration.EnableFork);
-        Assert.True(executionJob.ProfileSet.Socat.Configuration.EnableReuseAddr);
+        executionJob.ProfileSet.Socat.Configuration.Should().NotBeNull();
+        executionJob.ProfileSet.Socat.Configuration.TcpPort.Should().Be(8080);
+        executionJob.ProfileSet.Socat.Configuration.EnableFork.Should().BeTrue();
+        executionJob.ProfileSet.Socat.Configuration.EnableReuseAddr.Should().BeTrue();
     }
 
     [Fact]
@@ -173,13 +174,13 @@ public sealed class JobProfilePropagationTests : IDisposable
         Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile);
 
         // Assert - Verify power configuration is from the profile
-        Assert.NotNull(executionJob.ProfileSet.Power.Configuration);
+        executionJob.ProfileSet.Power.Configuration.Should().NotBeNull();
         var modbusTcp = executionJob.ProfileSet.Power.Configuration as ModbusTcpConfiguration;
-        Assert.NotNull(modbusTcp);
-        Assert.Equal("192.168.1.100", modbusTcp.Host);
-        Assert.Equal(502, modbusTcp.Port);
-        Assert.Equal((ushort)1, modbusTcp.DeviceId);
-        Assert.Equal((ushort)0, modbusTcp.OnOffCoil);
+        modbusTcp.Should().NotBeNull();
+        modbusTcp.Host.Should().Be("192.168.1.100");
+        modbusTcp.Port.Should().Be(502);
+        modbusTcp.DeviceId.Should().Be((byte)1);
+        modbusTcp.OnOffCoil.Should().Be((ushort)0);
     }
 
     [Fact]
@@ -206,8 +207,8 @@ public sealed class JobProfilePropagationTests : IDisposable
         Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile);
 
         // Assert - Verify that default values are preserved
-        Assert.Equal(5000, executionJob.ProfileSet.PowerOnTimeMs);
-        Assert.Equal(2000, executionJob.ProfileSet.PowerOffDelayMs);
+        executionJob.ProfileSet.PowerOnTimeMs.Should().Be(5000);
+        executionJob.ProfileSet.PowerOffDelayMs.Should().Be(2000);
     }
 
     [Fact]
@@ -238,8 +239,8 @@ public sealed class JobProfilePropagationTests : IDisposable
         _ = await _jobManager.CreateExecutionJobAsync(jobProfile);
 
         // Assert - Verify original profile is unchanged
-        Assert.Equal(originalPowerOnTime, jobProfile.PowerOnTimeMs);
-        Assert.Equal(originalPowerOffDelay, jobProfile.PowerOffDelayMs);
+        jobProfile.PowerOnTimeMs.Should().Be(originalPowerOnTime);
+        jobProfile.PowerOffDelayMs.Should().Be(originalPowerOffDelay);
     }
 
     public void Dispose()

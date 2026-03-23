@@ -27,8 +27,11 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     private bool _disposed;
 
     /// <summary>
-    /// Initializes a new instance of the GeneralSettingsViewModel class.
+    /// Initializes a new instance of the <see cref="GeneralSettingsViewModel"/> class.
     /// </summary>
+    /// <param name="settingsService">The application settings service for reading and writing settings.</param>
+    /// <param name="pathService">The path service for resolving application paths.</param>
+    /// <param name="logger">The logger instance.</param>
     public GeneralSettingsViewModel(
         IApplicationSettingsService settingsService,
         IPathService pathService,
@@ -76,7 +79,9 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
     }
 
-    // Default constructor for designer
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GeneralSettingsViewModel"/> class for XAML designer use.
+    /// </summary>
     public GeneralSettingsViewModel()
     {
         _settingsService = null!;
@@ -85,6 +90,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     }
 
     private string _settingsStatusMessage = UIStrings.Status_SettingsReady;
+
+    /// <summary>
+    /// Gets or sets the user-facing status message for settings operations.
+    /// </summary>
     public string SettingsStatusMessage
     {
         get => _settingsStatusMessage;
@@ -92,6 +101,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     }
 
     private string _currentSettingsFilePath = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the full file-system path of the current settings file.
+    /// </summary>
     public string CurrentSettingsFilePath
     {
         get => _currentSettingsFilePath;
@@ -99,6 +112,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     }
 
     private DateTime _settingsLastModified = DateTime.UtcNow.ToLocalTime();
+
+    /// <summary>
+    /// Gets or sets the last-modified timestamp of the settings file.
+    /// </summary>
     public DateTime SettingsLastModified
     {
         get => _settingsLastModified;
@@ -107,6 +124,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
 
     // MemoryDump settings
     private string _memoryDumpDefaultFolder = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the default folder path for memory dump output files.
+    /// </summary>
     public string MemoryDumpDefaultFolder
     {
         get => _memoryDumpDefaultFolder;
@@ -114,6 +135,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     }
 
     private int _segmentDumpDelayMs = 5000;
+
+    /// <summary>
+    /// Gets or sets the delay in milliseconds between dumping each memory segment.
+    /// </summary>
     public int SegmentDumpDelayMs
     {
         get => _segmentDumpDelayMs;
@@ -121,6 +146,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     }
 
     private int _iterationDumpDelayMs = 5000;
+
+    /// <summary>
+    /// Gets or sets the delay in milliseconds between full dump iterations.
+    /// </summary>
     public int IterationDumpDelayMs
     {
         get => _iterationDumpDelayMs;
@@ -129,6 +158,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
 
     // PLC settings
     private int _plcConnectionTimeout = 5000;
+
+    /// <summary>
+    /// Gets or sets the PLC connection timeout in milliseconds.
+    /// </summary>
     public int PlcConnectionTimeout
     {
         get => _plcConnectionTimeout;
@@ -136,6 +169,10 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     }
 
     private int _plcReadTimeout = 2000;
+
+    /// <summary>
+    /// Gets or sets the PLC read operation timeout in milliseconds.
+    /// </summary>
     public int PlcReadTimeout
     {
         get => _plcReadTimeout;
@@ -143,15 +180,34 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     }
 
     private int _plcRetryAttempts = 3;
+
+    /// <summary>
+    /// Gets or sets the number of retry attempts for failed PLC operations.
+    /// </summary>
     public int PlcRetryAttempts
     {
         get => _plcRetryAttempts;
         set => this.RaiseAndSetIfChanged(ref _plcRetryAttempts, value);
     }
 
+    /// <summary>
+    /// Gets the command to manually save the current general settings.
+    /// </summary>
     public ReactiveCommand<Unit, Unit>? SaveSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to reload general settings from the settings file.
+    /// </summary>
     public ReactiveCommand<Unit, Unit>? LoadSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to reset all general settings to their default values.
+    /// </summary>
     public ReactiveCommand<Unit, Unit>? ResetSettingsCommand { get; }
+
+    /// <summary>
+    /// Gets the command to open the settings file directory in the system file explorer.
+    /// </summary>
     public ReactiveCommand<Unit, Unit>? OpenSettingsFolderCommand { get; }
 
     private void RefreshFromSettings()
@@ -286,7 +342,7 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) return;
+        if (_disposed) { return; }
         if (disposing)
         {
             _disposables.Dispose();

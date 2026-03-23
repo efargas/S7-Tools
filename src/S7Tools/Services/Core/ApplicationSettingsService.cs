@@ -10,6 +10,9 @@ using System.Text.Json;
 
 namespace S7Tools.Services
 {
+    /// <summary>
+    /// Represents the ApplicationSettingsService.
+    /// </summary>
     public sealed class ApplicationSettingsService : IApplicationSettingsService
     {
         private readonly ILogger<ApplicationSettingsService> _logger;
@@ -19,6 +22,9 @@ namespace S7Tools.Services
 
         public event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationSettingsService"/> class.
+        /// </summary>
         public ApplicationSettingsService(
             ILogger<ApplicationSettingsService> logger,
             IWritableOptions<AppSettings> options,
@@ -32,8 +38,14 @@ namespace S7Tools.Services
             _logger.LogInformation("ApplicationSettingsService initialized as strongly-typed proxy");
         }
 
+        /// <summary>
+        /// Gets or sets the Current.
+        /// </summary>
         public AppSettings Current => _options.CurrentValue;
 
+        /// <summary>
+        /// Executes the LoadSettingsAsync operation.
+        /// </summary>
         public async Task LoadSettingsAsync()
         {
             if (_configurationRoot is null)
@@ -55,6 +67,9 @@ namespace S7Tools.Services
             }
         }
 
+        /// <summary>
+        /// Executes the UpdateSettingsAsync operation.
+        /// </summary>
         public async Task UpdateSettingsAsync(Action<AppSettings> updateAction)
         {
             await _options.UpdateAsync(settings =>
@@ -65,6 +80,9 @@ namespace S7Tools.Services
             RaiseSettingsChanged(new SettingsChangedEventArgs { IsUserSetting = true });
         }
 
+        /// <summary>
+        /// Executes the ResetAllSettingsAsync operation.
+        /// </summary>
         public async Task ResetAllSettingsAsync()
         {
             await _options.UpdateAsync(s =>
@@ -89,8 +107,14 @@ namespace S7Tools.Services
             RaiseSettingsChanged(new SettingsChangedEventArgs { IsUserSetting = false });
         }
 
+        /// <summary>
+        /// Executes the RestoreDefaultsAsync operation.
+        /// </summary>
         public Task RestoreDefaultsAsync() => ResetAllSettingsAsync();
 
+        /// <summary>
+        /// Executes the ExportSettingsToJson operation.
+        /// </summary>
         public string ExportSettingsToJson()
         {
             try
@@ -125,6 +149,9 @@ namespace S7Tools.Services
             }
         }
 
+        /// <summary>
+        /// Executes the ImportSettingsFromJsonAsync operation.
+        /// </summary>
         public async Task<bool> ImportSettingsFromJsonAsync(string json)
         {
             try

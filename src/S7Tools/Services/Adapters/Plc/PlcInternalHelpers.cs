@@ -3,8 +3,14 @@ using System.Linq;
 
 namespace S7Tools.Services.Adapters.Plc
 {
+    /// <summary>
+    /// Represents the PlcInternalHelpers.
+    /// </summary>
     internal static class PlcInternalHelpers
     {
+        /// <summary>
+        /// Executes the GetBigEndianBytes operation.
+        /// </summary>
         public static byte[] GetBigEndianBytes(uint value)
         {
             var b = BitConverter.GetBytes(value);
@@ -15,6 +21,9 @@ namespace S7Tools.Services.Adapters.Plc
             return b;
         }
 
+        /// <summary>
+        /// Executes the EncodeWithXor operation.
+        /// </summary>
         public static byte[] EncodeWithXor(byte[] chunk)
         {
             // Find Key

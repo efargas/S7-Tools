@@ -1040,6 +1040,9 @@ public enum PortTypeEnum
     Unknown
 }
 
+/// <summary>
+/// Represents the SerialPortInfo.
+/// </summary>
 public class SerialPortInfo : ReactiveObject
 {
     private string _portName = string.Empty;

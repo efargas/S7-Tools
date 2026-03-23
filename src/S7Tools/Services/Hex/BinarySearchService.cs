@@ -7,17 +7,26 @@ using AvaloniaHex.Document;
 
 namespace S7Tools.Services.Hex
 {
+    /// <summary>
+    /// Represents the IBinarySearchService.
+    /// </summary>
     public interface IBinarySearchService
     {
         Task<IEnumerable<long>> FindAllAsync(IBinaryDocument doc, byte[] pattern, CancellationToken ct = default);
         Task<long> FindNextAsync(IBinaryDocument doc, byte[] pattern, long startOffset, CancellationToken ct = default);
     }
 
+    /// <summary>
+    /// Represents the BinarySearchService.
+    /// </summary>
     public class BinarySearchService : IBinarySearchService
     {
         // 64KB buffer size for reading
         private const int BufferSize = 64 * 1024;
 
+        /// <summary>
+        /// Executes the FindAllAsync operation.
+        /// </summary>
         public async Task<IEnumerable<long>> FindAllAsync(IBinaryDocument doc, byte[] pattern, CancellationToken ct = default)
         {
             var results = new List<long>();
@@ -110,11 +119,14 @@ namespace S7Tools.Services.Hex
                     // Move forward, but back up by overlap to catch boundary cases
                     currentOffset += (readSize - overlap);
                 }
-            }, ct);
+            }, ct).ConfigureAwait(false);
 
             return results;
         }
 
+        /// <summary>
+        /// Executes the FindNextAsync operation.
+        /// </summary>
         public async Task<long> FindNextAsync(IBinaryDocument doc, byte[] pattern, long startOffset, CancellationToken ct = default)
         {
             if (doc == null || pattern == null || pattern.Length == 0)
@@ -160,7 +172,7 @@ namespace S7Tools.Services.Hex
                     currentOffset += (readSize - overlap);
                 }
                 return -1;
-            }, ct);
+            }, ct).ConfigureAwait(false);
         }
 
         private bool IsMatch(ReadOnlySpan<byte> buffer, int offset, byte[] pattern)

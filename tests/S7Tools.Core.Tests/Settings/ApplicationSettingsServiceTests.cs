@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,8 +9,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Services;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using Xunit;
 
 namespace S7Tools.Core.Tests.Settings
@@ -82,9 +83,9 @@ namespace S7Tools.Core.Tests.Settings
             ApplicationSettingsService service = CreateTestService();
 
             // Act & Assert - defaults match AppSettings default constructor values
-            Assert.Equal("Information", service.Current.Logging.Level);
-            Assert.True(service.Current.Logging.EnableFileLogging);
-            Assert.Equal("System", service.Current.Ui.Theme);
+            service.Current.Logging.Level.Should().Be("Information");
+            service.Current.Logging.EnableFileLogging.Should().BeTrue();
+            service.Current.Ui.Theme.Should().Be("System");
         }
 
         [Fact]
@@ -101,8 +102,8 @@ namespace S7Tools.Core.Tests.Settings
             });
 
             // Assert - settings reflect the update
-            Assert.Equal("Debug", service.Current.Logging.Level);
-            Assert.Equal("Dark", service.Current.Ui.Theme);
+            service.Current.Logging.Level.Should().Be("Debug");
+            service.Current.Ui.Theme.Should().Be("Dark");
         }
 
         [Fact]
@@ -113,13 +114,13 @@ namespace S7Tools.Core.Tests.Settings
             await service.UpdateSettingsAsync(s => s.Logging.Level = "Debug");
 
             // Verify update was applied
-            Assert.Equal("Debug", service.Current.Logging.Level);
+            service.Current.Logging.Level.Should().Be("Debug");
 
             // Act - reset to defaults
             await service.ResetAllSettingsAsync();
 
             // Assert - reverted to default
-            Assert.Equal("Information", service.Current.Logging.Level);
+            service.Current.Logging.Level.Should().Be("Information");
         }
 
         [Fact]
@@ -137,10 +138,10 @@ namespace S7Tools.Core.Tests.Settings
             // Assert
             // The strongly-typed API fires SettingsChanged with IsUserSetting=true for any UpdateSettingsAsync call.
             // Individual key/value change info is no longer tracked; instead, callers read Current directly for the new values.
-            Assert.NotNull(eventArgs);
-            Assert.True(eventArgs.IsUserSetting);
+            eventArgs.Should().NotBeNull();
+            eventArgs.IsUserSetting.Should().BeTrue();
             // Verify the actual value change is accessible via Current
-            Assert.Equal("Dark", service.Current.Ui.Theme);
+            service.Current.Ui.Theme.Should().Be("Dark");
         }
 
         [Fact]

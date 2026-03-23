@@ -16,6 +16,9 @@ public class ProfileDetailsService : IProfileDetailsService
 {
     private readonly ILogger<ProfileDetailsService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProfileDetailsService"/> class.
+    /// </summary>
     public ProfileDetailsService(ILogger<ProfileDetailsService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -10,10 +10,16 @@ using S7Tools.ViewModels.Dialogs;
 
 namespace S7Tools.ViewModels.Profiles;
 
+/// <summary>
+/// Represents the SerialPortProfilesViewModel.
+/// </summary>
 public class SerialPortProfilesViewModel : ProfileManagementViewModelBase<SerialPortProfile>, IDockableViewModel
 {
     private readonly ISerialPortProfileService _profileService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SerialPortProfilesViewModel"/> class.
+    /// </summary>
     public SerialPortProfilesViewModel(
         ISerialPortProfileService profileService,
         IUnifiedProfileDialogService unifiedDialogService,
@@ -31,26 +37,59 @@ public class SerialPortProfilesViewModel : ProfileManagementViewModelBase<Serial
         });
     }
 
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "SerialPortProfiles";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Serial Ports";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
+    /// <summary>
+    /// Executes the GetProfileManager operation.
+    /// </summary>
     protected override IProfileManager<SerialPortProfile> GetProfileManager() => _profileService;
+    /// <summary>
+    /// Executes the GetDefaultProfileName operation.
+    /// </summary>
     protected override string GetDefaultProfileName() => "SerialDefault";
+    /// <summary>
+    /// Executes the GetProfileTypeName operation.
+    /// </summary>
     protected override string GetProfileTypeName() => "Serial Port";
+    /// <summary>
+    /// Executes the CreateDefaultProfile operation.
+    /// </summary>
     protected override SerialPortProfile CreateDefaultProfile() => SerialPortProfile.CreateDefaultProfile();
 
+    /// <summary>
+    /// Executes the ShowCreateDialogAsync operation.
+    /// </summary>
     protected override async Task<ProfileDialogResult<SerialPortProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
         return await UnifiedDialogService.ShowSerialCreateDialogAsync(request).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes the ShowEditDialogAsync operation.
+    /// </summary>
     protected override async Task<ProfileDialogResult<SerialPortProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
         return await UnifiedDialogService.ShowSerialEditDialogAsync(request).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes the ShowDuplicateDialogAsync operation.
+    /// </summary>
     protected override async Task<ProfileDialogResult<string>> ShowDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
         return await UnifiedDialogService.ShowSerialDuplicateDialogAsync(request).ConfigureAwait(false);

@@ -18,9 +18,21 @@ namespace S7Tools.ViewModels.Pages;
 public partial class StreamedMemoryDumpViewModel : ViewModelBase, S7Tools.Core.Interfaces.ViewModels.IDockableViewModel, IDisposable
 {
     // IDockableViewModel implementation
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "StreamedMemoryDump";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Streamed PLC Memory Viewer";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
     private readonly MemoryDumpOrchestrator _orchestrator;
@@ -235,6 +247,9 @@ public partial class StreamedMemoryDumpViewModel : ViewModelBase, S7Tools.Core.I
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

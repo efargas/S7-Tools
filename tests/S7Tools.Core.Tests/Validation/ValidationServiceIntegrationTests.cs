@@ -1,4 +1,5 @@
-using S7Tools.Core.Models.Validators;
+using FluentAssertions;
+using S7Tools.Core.Validation.Validators;
 using S7Tools.Core.Models.ValueObjects;
 using S7Tools.Core.Validation;
 using Xunit;
@@ -14,16 +15,16 @@ public class ValidationServiceIntegrationTests
         service.RegisterValidator(new PlcAddressValidator());
         Result<PlcAddress> valid = PlcAddress.Create("DB1.DBX0.0");
         Result<PlcAddress> invalid = PlcAddress.Create("M0.9"); // bit offset fuera de rango
-        Assert.True(valid.IsSuccess);
-        Assert.True(service.Validate(valid.Value).IsValid);
+        valid.IsSuccess.Should().BeTrue();
+        service.Validate(valid.Value).IsValid.Should().BeTrue();
         // Si la creación falla, es correcto porque el value object ya valida el rango
         if (invalid.IsSuccess)
         {
-            Assert.False(service.Validate(invalid.Value).IsValid);
+            service.Validate(invalid.Value).IsValid.Should().BeFalse();
         }
         else
         {
-            Assert.False(invalid.IsSuccess); // El value object filtra la entrada inválida
+            invalid.IsSuccess.Should().BeFalse(); // El value object filtra la entrada inválida
         }
     }
 
@@ -33,10 +34,10 @@ public class ValidationServiceIntegrationTests
         var service = new ValidationService();
         service.RegisterValidator(new PlcAddressValidator());
         Result<PlcAddress> valid = PlcAddress.Create("DB1.DBX0.0");
-        Assert.True(valid.IsSuccess);
-        Assert.True(service.Validate(valid.Value).IsValid);
-        Assert.True(service.UnregisterValidator<PlcAddress>());
+        valid.IsSuccess.Should().BeTrue();
+        service.Validate(valid.Value).IsValid.Should().BeTrue();
+        service.UnregisterValidator<PlcAddress>().Should().BeTrue();
         // Sin validador, siempre es válido
-        Assert.True(service.Validate(valid.Value).IsValid);
+        service.Validate(valid.Value).IsValid.Should().BeTrue();
     }
 }

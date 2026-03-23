@@ -30,6 +30,9 @@ namespace S7Tools.Services.Adapters.Plc
         private ILogger Logger => _sessionLogger ?? _logger;
         private bool _expectGreeting;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DumperService"/> class.
+        /// </summary>
         public DumperService(ILogger<DumperService> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -39,14 +42,20 @@ namespace S7Tools.Services.Adapters.Plc
         }
 
         // Expose the reader for the consumer
+        /// <summary>
+        /// Gets or sets the DataReader.
+        /// </summary>
         public ChannelReader<MemoryBlock> DataReader => _outputChannel?.Reader ?? throw new InvalidOperationException("Dumper session not started");
 
+        /// <summary>
+        /// Executes the StartDumpingAsync operation.
+        /// </summary>
         public async Task StartDumpingAsync(string host, int port, CancellationToken token, Stream? existingStream = null, ILogger? logger = null)
         {
             _sessionLogger = logger;
             // Always stop previous session to cancel old tasks (e.g. FillPipeAsync)
             // protecting the stream from concurrent reads.
-            await StopAsync();
+            await StopAsync().ConfigureAwait(false);
 
             if (existingStream != null)
             {
@@ -77,7 +86,7 @@ namespace S7Tools.Services.Adapters.Plc
                 {
                     _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     Logger.LogInformation("Connecting to socat at {Host}:{Port}...", host, port);
-                    await _socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(host), port), _cts.Token);
+                    await _socket.ConnectAsync(new IPEndPoint(IPAddress.Parse(host), port), _cts.Token).ConfigureAwait(false);
                     _stream = new NetworkStream(_socket, ownsSocket: true);
                 }
 
@@ -86,7 +95,7 @@ namespace S7Tools.Services.Adapters.Plc
                 var fillTask = FillPipeAsync(_stream, _pipe.Writer, _cts.Token);
                 var readTask = ProcessPipeAsync(_pipe.Reader, _outputChannel.Writer, _cts.Token);
 
-                await Task.WhenAll(fillTask, readTask);
+                await Task.WhenAll(fillTask, readTask).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
@@ -166,7 +175,7 @@ namespace S7Tools.Services.Adapters.Plc
 
                 try
                 {
-                    int bytesRead = await stream.ReadAsync(memory, token);
+                    int bytesRead = await stream.ReadAsync(memory, token).ConfigureAwait(false);
 
                     if (bytesRead == 0)
                     {
@@ -180,7 +189,7 @@ namespace S7Tools.Services.Adapters.Plc
                         }
                         Logger.LogDebug("EOF detected ({Count}/{Max}), waiting for more data...",
                             _consecutiveEofCount, MaxEofRetries);
-                        await Task.Delay(50, token);
+                        await Task.Delay(50, token).ConfigureAwait(false);
                         continue;
                     }
 
@@ -218,7 +227,7 @@ namespace S7Tools.Services.Adapters.Plc
 
             while (!token.IsCancellationRequested)
             {
-                ReadResult result = await reader.ReadAsync(token);
+                ReadResult result = await reader.ReadAsync(token).ConfigureAwait(false);
                 ReadOnlySequence<byte> buffer = result.Buffer;
 
                 if (result.IsCanceled)
@@ -239,26 +248,26 @@ namespace S7Tools.Services.Adapters.Plc
                             buffer.Length, hexDump);
                     }
 
+                List<MemoryBlock> pendingBlocks;
+                bool processed;
+
+                // All ref-struct usage must complete before any await.
+                {
                     var seqReader = new SequenceReader<byte>(buffer);
-                    bool processed = false;
+                    processed = false;
 
                     if (_expectGreeting)
                     {
-                        // Try to find the greeting in the buffer (skipping junk if necessary)
                         bool foundGreeting = TryConsumeGreeting(ref seqReader);
-
-                        // CRITICAL FIX: Always update 'consumed' to where the reader ended up.
-                        // TryConsumeGreeting now consumes junk bytes up to the potential greeting.
                         consumed = seqReader.Position;
 
                         if (foundGreeting)
                         {
-                            _expectGreeting = false; // Greeting consumed, switch to data mode
+                            _expectGreeting = false;
                             processed = true;
 
                             Logger.LogInformation("✅ Greeting consumed. Switching to DATA mode.");
 
-                            // Check if we consumed everything or have leftovers
                             if (seqReader.Remaining > 0)
                             {
                                 if (Logger.IsEnabled(LogLevel.Trace))
@@ -266,40 +275,38 @@ namespace S7Tools.Services.Adapters.Plc
                                     Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
                                 }
 
-                                // Re-slice to strip the greeting we just ate
                                 buffer = buffer.Slice(consumed);
 
-                                // Parse remaining as data protocol
-                                ParseProtocol(ref seqReader, ref currentAddress, writer, token);
-                                consumed = seqReader.Position;
+                                (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
+                            }
+                            else
+                            {
+                                pendingBlocks = [];
                             }
                         }
                         else
                         {
-                            // Greeting expected but not found yet.
-                            // If we consumed some junk (consumed != start), processed is effectively true
-                            if (!consumed.Equals(buffer.Start))
-                            {
-                                processed = true;
-                            }
-                            else
-                            {
-                                processed = false;
-                            }
+                            processed = !consumed.Equals(buffer.Start);
+                            pendingBlocks = [];
                         }
                     }
                     else
                     {
-                        // Data Mode
                         processed = true;
-                        ParseProtocol(ref seqReader, ref currentAddress, writer, token);
-                        consumed = seqReader.Position;
+                        (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
                     }
+                } // seqReader ref-struct is destroyed here — safe to await below.
 
-                    if (!processed && buffer.Length > 0 && buffer.Length < 16)
-                    {
-                        // Potential STUCK STATE diagnostic
-                    }
+                // Write pending blocks to the channel now that no ref-struct is live.
+                foreach (var block in pendingBlocks)
+                {
+                    await writer.WriteAsync(block, token).ConfigureAwait(false);
+                }
+
+                if (!processed && buffer.Length > 0 && buffer.Length < 16)
+                {
+                    // Potential STUCK STATE diagnostic
+                }
                 }
 
                 reader.AdvanceTo(consumed, examined);
@@ -320,7 +327,7 @@ namespace S7Tools.Services.Adapters.Plc
             }
 
             writer.TryComplete();
-            await reader.CompleteAsync();
+            await reader.CompleteAsync().ConfigureAwait(false);
         }
 
         /// <summary>
@@ -393,40 +400,32 @@ namespace S7Tools.Services.Adapters.Plc
         }
 
 
-        private void ParseProtocol(ref SequenceReader<byte> reader, ref uint currentAddress, ChannelWriter<MemoryBlock> writer, CancellationToken token)
+        private static (List<MemoryBlock> Blocks, SequencePosition Consumed) ParseProtocol(
+            ref SequenceReader<byte> reader,
+            ref uint currentAddress)
         {
             const int BlockSize = 16; // 16 bytes per line
-            int blocksProcessed = 0;
+            var blocks = new List<MemoryBlock>();
 
             while (reader.Remaining >= BlockSize)
             {
-                token.ThrowIfCancellationRequested();
-
                 ReadOnlySequence<byte> blockSeq = reader.Sequence.Slice(reader.Position, BlockSize);
 
                 // Copy to array for UI consumption (crosses thread boundary)
                 byte[] data = blockSeq.ToArray();
 
-                var memoryBlock = new MemoryBlock(currentAddress, data);
-
-                if (!writer.TryWrite(memoryBlock))
-                {
-                    var task = writer.WriteAsync(memoryBlock).AsTask();
-                    task.Wait();
-                }
+                blocks.Add(new MemoryBlock(currentAddress, data));
 
                 currentAddress += BlockSize;
                 reader.Advance(BlockSize);
-                blocksProcessed++;
             }
 
-            if (blocksProcessed > 0 && Logger.IsEnabled(LogLevel.Trace))
-            {
-                Logger.LogTrace("Parsed {Count} data blocks ({Bytes} bytes). New Addr: 0x{Addr:X}",
-                    blocksProcessed, blocksProcessed * BlockSize, currentAddress);
-            }
+            return (blocks, reader.Position);
         }
 
+        /// <summary>
+        /// Executes the WriteAsync operation.
+        /// </summary>
         public async Task WriteAsync(byte[] data, CancellationToken token)
         {
             if (_stream == null)
@@ -446,6 +445,9 @@ namespace S7Tools.Services.Adapters.Plc
             }
         }
 
+        /// <summary>
+        /// Executes the StopAsync operation.
+        /// </summary>
         public async Task StopAsync()
         {
             if (_stream != null)
@@ -484,6 +486,9 @@ namespace S7Tools.Services.Adapters.Plc
             _socket = null;
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             _cts?.Cancel();

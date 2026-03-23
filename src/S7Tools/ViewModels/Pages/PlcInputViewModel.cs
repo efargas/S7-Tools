@@ -64,16 +64,25 @@ public partial class PlcInputViewModel : ObservableObject
 /// </summary>
 internal class DesignTimeValidatorFactory : IKeyedFactory<string, IValidator>
 {
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
     public IValidator Create(string key)
     {
         return new DesignTimeValidator();
     }
 
+    /// <summary>
+    /// Executes the GetAvailableKeys operation.
+    /// </summary>
     public IEnumerable<string> GetAvailableKeys()
     {
         return new[] { "PlcAddress" };
     }
 
+    /// <summary>
+    /// Executes the CanCreate operation.
+    /// </summary>
     public bool CanCreate(string key)
     {
         return key == "PlcAddress";
@@ -85,17 +94,26 @@ internal class DesignTimeValidatorFactory : IKeyedFactory<string, IValidator>
 /// </summary>
 internal class DesignTimeValidator : IValidator
 {
+    /// <summary>
+    /// Executes the Validate operation.
+    /// </summary>
     public ValidationResult Validate(object instance)
     {
         // Return a valid result for design-time
         return new ValidationResult { IsValid = true };
     }
 
+    /// <summary>
+    /// Executes the CanValidate operation.
+    /// </summary>
     public bool CanValidate(Type type)
     {
         return true;
     }
 
+    /// <summary>
+    /// Executes the ValidateAsync operation.
+    /// </summary>
     public Task<ValidationResult> ValidateAsync(object instance, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(Validate(instance));

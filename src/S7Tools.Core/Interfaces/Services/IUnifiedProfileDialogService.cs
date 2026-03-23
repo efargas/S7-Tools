@@ -30,7 +30,7 @@ public class ProfileCreateRequest
     public string DefaultDescription { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether to auto-generate a unique name if the default name is taken.
+    /// Gets or sets a value indicating whether to auto-generate a unique name if the default name is taken.
     /// </summary>
     public bool AutoGenerateUniqueName { get; set; } = true;
 }

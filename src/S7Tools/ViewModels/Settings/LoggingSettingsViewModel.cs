@@ -152,9 +152,21 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     #region Commands
 
+    /// <summary>
+    /// Gets or sets the BrowseDefaultLogPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseDefaultLogPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the BrowseExportPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseExportPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenDefaultLogPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenDefaultLogPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenExportPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenExportPathCommand { get; }
 
     #endregion

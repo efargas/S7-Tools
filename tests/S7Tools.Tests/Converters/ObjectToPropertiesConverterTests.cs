@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -25,9 +26,9 @@ public class ObjectToPropertiesConverterTests
         object? result = _converter.Convert(null, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Empty(collection);
+        collection.Should().BeEmpty();
     }
 
     [Fact(DisplayName = "Convert with simple object returns properties")]
@@ -44,15 +45,15 @@ public class ObjectToPropertiesConverterTests
         object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Equal(2, collection.Count);
+        collection.Count.Should().Be(2);
 
         PropertyDisplayItem nameItem = collection.First(p => p.Label.Contains("Name"));
-        Assert.Equal("Test", nameItem.Value);
+        nameItem.Value.Should().Be("Test");
 
         PropertyDisplayItem valueItem = collection.First(p => p.Label.Contains("Value"));
-        Assert.Equal("42", valueItem.Value);
+        valueItem.Value.Should().Be("42");
     }
 
     [Fact(DisplayName = "Convert respects Browsable(false) attribute")]
@@ -69,11 +70,11 @@ public class ObjectToPropertiesConverterTests
         object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Single(collection);
-        Assert.Equal("Visible Property", collection[0].Label);
-        Assert.Equal("Visible", collection[0].Value);
+        collection.Should().ContainSingle();
+        collection[0].Label.Should().Be("Visible Property");
+        collection[0].Value.Should().Be("Visible");
     }
 
     [Fact(DisplayName = "Convert respects Display Name attribute")]
@@ -90,15 +91,15 @@ public class ObjectToPropertiesConverterTests
         object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Equal(2, collection.Count);
+        collection.Count.Should().Be(2);
 
         PropertyDisplayItem portItem = collection.First(p => p.Label == "TCP Port");
-        Assert.Equal("1234", portItem.Value);
+        portItem.Value.Should().Be("1234");
 
         PropertyDisplayItem hostItem = collection.First(p => p.Label == "Host Address");
-        Assert.Equal("192.168.1.1", hostItem.Value);
+        hostItem.Value.Should().Be("192.168.1.1");
     }
 
     [Fact(DisplayName = "Convert respects Display Order attribute")]
@@ -116,18 +117,18 @@ public class ObjectToPropertiesConverterTests
         object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Equal(3, collection.Count);
+        collection.Count.Should().Be(3);
 
-        Assert.Equal("First Property", collection[0].Label);
-        Assert.Equal("A", collection[0].Value);
+        collection[0].Label.Should().Be("First Property");
+        collection[0].Value.Should().Be("A");
 
-        Assert.Equal("Second Property", collection[1].Label);
-        Assert.Equal("B", collection[1].Value);
+        collection[1].Label.Should().Be("Second Property");
+        collection[1].Value.Should().Be("B");
 
-        Assert.Equal("Third Property", collection[2].Label);
-        Assert.Equal("C", collection[2].Value);
+        collection[2].Label.Should().Be("Third Property");
+        collection[2].Value.Should().Be("C");
     }
 
     [Fact(DisplayName = "Convert formats boolean values correctly")]
@@ -144,15 +145,15 @@ public class ObjectToPropertiesConverterTests
         object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Equal(2, collection.Count);
+        collection.Count.Should().Be(2);
 
         PropertyDisplayItem enabledItem = collection.First(p => p.Label.Contains("Enabled"));
-        Assert.Equal("True", enabledItem.Value);
+        enabledItem.Value.Should().Be("True");
 
         PropertyDisplayItem disabledItem = collection.First(p => p.Label.Contains("Disabled"));
-        Assert.Equal("False", disabledItem.Value);
+        disabledItem.Value.Should().Be("False");
     }
 
     [Fact(DisplayName = "ConvertBack returns AvaloniaProperty.UnsetValue")]
@@ -162,7 +163,7 @@ public class ObjectToPropertiesConverterTests
         object? result = _converter.ConvertBack(null, typeof(object), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.Equal(Avalonia.AvaloniaProperty.UnsetValue, result);
+        result.Should().Be(Avalonia.AvaloniaProperty.UnsetValue);
     }
 
     [Fact(DisplayName = "Convert with same type twice uses cached reflection results")]
@@ -181,8 +182,8 @@ public class ObjectToPropertiesConverterTests
         ObservableCollection<PropertyDisplayItem> secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
 
         // Assert - Both conversions produce correct results with same structure
-        Assert.Equal(2, firstCollection.Count);
-        Assert.Equal(2, secondCollection.Count);
+        firstCollection.Count.Should().Be(2);
+        secondCollection.Count.Should().Be(2);
 
         // Verify first object values
         Assert.Contains(firstCollection, p => p.Label.Contains("Name") && p.Value == "First");
@@ -195,7 +196,7 @@ public class ObjectToPropertiesConverterTests
         // Verify labels are consistent (proving cache is being used with ConditionalWeakTable)
         var firstLabels = firstCollection.Select(p => p.Label).ToList();
         var secondLabels = secondCollection.Select(p => p.Label).ToList();
-        Assert.Equal(firstLabels, secondLabels); // Ensures order and content are the same
+        secondLabels.Should().Equal(firstLabels); // Ensures order and content are the same
 
         // For a stronger cache proof, assert that the string instances are the same.
         // This is a good indicator that they came from the same cached PropertyMetadata.
@@ -203,7 +204,7 @@ public class ObjectToPropertiesConverterTests
         // but during normal operation, it maintains the cache for active types.
         for (int i = 0; i < firstCollection.Count; i++)
         {
-            Assert.Same(firstCollection[i].Label, secondCollection[i].Label);
+            secondCollection[i].Label.Should().BeSameAs(firstCollection[i].Label);
         }
     }
 
@@ -222,18 +223,18 @@ public class ObjectToPropertiesConverterTests
         ObservableCollection<PropertyDisplayItem> secondCollection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(secondResult);
 
         // Assert - Order is consistent across both conversions
-        Assert.Equal(3, firstCollection.Count);
-        Assert.Equal(3, secondCollection.Count);
+        firstCollection.Count.Should().Be(3);
+        secondCollection.Count.Should().Be(3);
 
         // First conversion order
-        Assert.Equal("First Property", firstCollection[0].Label);
-        Assert.Equal("Second Property", firstCollection[1].Label);
-        Assert.Equal("Third Property", firstCollection[2].Label);
+        firstCollection[0].Label.Should().Be("First Property");
+        firstCollection[1].Label.Should().Be("Second Property");
+        firstCollection[2].Label.Should().Be("Third Property");
 
         // Second conversion order (should match first due to cache)
-        Assert.Equal("First Property", secondCollection[0].Label);
-        Assert.Equal("Second Property", secondCollection[1].Label);
-        Assert.Equal("Third Property", secondCollection[2].Label);
+        secondCollection[0].Label.Should().Be("First Property");
+        secondCollection[1].Label.Should().Be("Second Property");
+        secondCollection[2].Label.Should().Be("Third Property");
     }
 
     #region Test Classes

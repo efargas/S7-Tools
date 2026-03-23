@@ -17,6 +17,9 @@ using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Components;
 
+/// <summary>
+/// Represents the TaskLogsPanelViewModel.
+/// </summary>
 public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 {
     private const int MaxLogEntries = 1000;
@@ -50,6 +53,9 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
     }
     private bool _invertAutoScroll;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskLogsPanelViewModel"/> class.
+    /// </summary>
     public TaskLogsPanelViewModel(
         TaskExecution task,
         IClipboardService clipboardService,
@@ -336,12 +342,18 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)
@@ -366,7 +378,13 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _task, value);
     }
 
+    /// <summary>
+    /// Gets or sets the MainLogEntries.
+    /// </summary>
     public ObservableCollection<LogEntry> MainLogEntries { get; }
+    /// <summary>
+    /// Gets or sets the ProcessLogEntries.
+    /// </summary>
     public ObservableCollection<LogEntry> ProcessLogEntries { get; }
 
     private ObservableCollection<LogEntry> _filteredMainLogEntries = new();
@@ -383,7 +401,16 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         private set => this.RaiseAndSetIfChanged(ref _filteredProcessLogEntries, value);
     }
 
+    /// <summary>
+    /// Gets or sets the CopySelectedEntryCommand.
+    /// </summary>
     public ReactiveCommand<LogEntry?, Unit> CopySelectedEntryCommand { get; }
+    /// <summary>
+    /// Gets or sets the CopySelectedMessageCommand.
+    /// </summary>
     public ReactiveCommand<LogEntry?, Unit> CopySelectedMessageCommand { get; }
+    /// <summary>
+    /// Gets or sets the SortCommand.
+    /// </summary>
     public ReactiveCommand<string, Unit> SortCommand { get; }
 }

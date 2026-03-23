@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ public class ExceptionTests
         var exception = new S7ToolsException();
 
         // Assert
-        Assert.NotNull(exception);
+        exception.Should().NotBeNull();
         Assert.IsAssignableFrom<Exception>(exception);
     }
 
@@ -35,7 +36,7 @@ public class ExceptionTests
         var exception = new S7ToolsException(Message);
 
         // Assert
-        Assert.Equal(Message, exception.Message);
+        exception.Message.Should().Be(Message);
     }
 
     [Fact]
@@ -49,8 +50,8 @@ public class ExceptionTests
         var exception = new S7ToolsException(Message, innerException);
 
         // Assert
-        Assert.Equal(Message, exception.Message);
-        Assert.Same(innerException, exception.InnerException);
+        exception.Message.Should().Be(Message);
+        exception.InnerException.Should().BeSameAs(innerException);
     }
 
     #endregion
@@ -68,8 +69,8 @@ public class ExceptionTests
         var exception = new ProfileException(Message, ProfileId);
 
         // Assert
-        Assert.Equal(Message, exception.Message);
-        Assert.Equal(ProfileId, exception.ProfileId);
+        exception.Message.Should().Be(Message);
+        exception.ProfileId.Should().Be(ProfileId);
     }
 
     [Fact]
@@ -84,9 +85,9 @@ public class ExceptionTests
         var exception = new ProfileException(Message, ProfileId, ProfileName);
 
         // Assert
-        Assert.Equal(Message, exception.Message);
-        Assert.Equal(ProfileId, exception.ProfileId);
-        Assert.Equal(ProfileName, exception.ProfileName);
+        exception.Message.Should().Be(Message);
+        exception.ProfileId.Should().Be(ProfileId);
+        exception.ProfileName.Should().Be(ProfileName);
     }
 
     [Fact]
@@ -115,7 +116,7 @@ public class ExceptionTests
         // Assert
         Assert.Contains("123", exception.Message);
         Assert.Contains("not found", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(ProfileId, exception.ProfileId);
+        exception.ProfileId.Should().Be(ProfileId);
     }
 
     [Fact]
@@ -132,8 +133,8 @@ public class ExceptionTests
         Assert.Contains("123", exception.Message);
         Assert.Contains("MyProfile", exception.Message);
         Assert.Contains("not found", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(ProfileId, exception.ProfileId);
-        Assert.Equal(ProfileName, exception.ProfileName);
+        exception.ProfileId.Should().Be(ProfileId);
+        exception.ProfileName.Should().Be(ProfileName);
     }
 
     [Fact]
@@ -162,8 +163,8 @@ public class ExceptionTests
         // Assert
         Assert.Contains(ProfileName, exception.Message);
         Assert.Contains("already exists", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(ProfileName, exception.DuplicateName);
-        Assert.Equal(ProfileName, exception.ProfileName);
+        exception.DuplicateName.Should().Be(ProfileName);
+        exception.ProfileName.Should().Be(ProfileName);
     }
 
     [Fact]
@@ -193,7 +194,7 @@ public class ExceptionTests
         Assert.Contains("1", exception.Message);
         Assert.Contains("default", exception.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("cannot delete", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(ProfileId, exception.ProfileId);
+        exception.ProfileId.Should().Be(ProfileId);
     }
 
     [Fact]
@@ -210,8 +211,8 @@ public class ExceptionTests
         Assert.Contains("1", exception.Message);
         Assert.Contains("DefaultProfile", exception.Message);
         Assert.Contains("default", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(ProfileId, exception.ProfileId);
-        Assert.Equal(ProfileName, exception.ProfileName);
+        exception.ProfileId.Should().Be(ProfileId);
+        exception.ProfileName.Should().Be(ProfileName);
     }
 
     [Fact]
@@ -241,7 +242,7 @@ public class ExceptionTests
         Assert.Contains("99", exception.Message);
         Assert.Contains("read-only", exception.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("cannot modify", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(profileId, exception.ProfileId);
+        exception.ProfileId.Should().Be(profileId);
     }
 
     [Fact]
@@ -258,8 +259,8 @@ public class ExceptionTests
         Assert.Contains("99", exception.Message);
         Assert.Contains("SystemProfile", exception.Message);
         Assert.Contains("read-only", exception.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(profileId, exception.ProfileId);
-        Assert.Equal(profileName, exception.ProfileName);
+        exception.ProfileId.Should().Be(profileId);
+        exception.ProfileName.Should().Be(profileName);
     }
 
     [Fact]
@@ -288,9 +289,9 @@ public class ExceptionTests
         var exception = new ConnectionException(message, target, type);
 
         // Assert
-        Assert.Equal(message, exception.Message);
-        Assert.Equal(target, exception.ConnectionTarget);
-        Assert.Equal(type, exception.ConnectionType);
+        exception.Message.Should().Be(message);
+        exception.ConnectionTarget.Should().Be(target);
+        exception.ConnectionType.Should().Be(type);
     }
 
     [Fact]
@@ -317,9 +318,9 @@ public class ExceptionTests
         var exception = new ValidationException(error);
 
         // Assert
-        Assert.Equal(error, exception.Message);
-        Assert.Single(exception.ValidationErrors);
-        Assert.Equal(error, exception.ValidationErrors[0]);
+        exception.Message.Should().Be(error);
+        exception.ValidationErrors.Should().ContainSingle();
+        exception.ValidationErrors[0].Should().Be(error);
     }
 
     [Fact]
@@ -333,8 +334,8 @@ public class ExceptionTests
 
         // Assert
         Assert.Contains("3 error(s)", exception.Message);
-        Assert.Equal(3, exception.ValidationErrors.Count);
-        Assert.Equal(errors, exception.ValidationErrors);
+        exception.ValidationErrors.Count.Should().Be(3);
+        exception.ValidationErrors.Should().Be(errors);
     }
 
     [Fact]
@@ -350,7 +351,7 @@ public class ExceptionTests
         // Assert
         Assert.Contains(propertyName, exception.Message);
         Assert.Contains(error, exception.Message);
-        Assert.Equal(propertyName, exception.PropertyName);
+        exception.PropertyName.Should().Be(propertyName);
     }
 
     [Fact]
@@ -364,7 +365,7 @@ public class ExceptionTests
 
         // Assert
         Assert.Contains("Validation failed", exception.Message);
-        Assert.Empty(exception.ValidationErrors);
+        exception.ValidationErrors.Should().BeEmpty();
     }
 
     [Fact]
@@ -392,8 +393,8 @@ public class ExceptionTests
         var exception = new ConfigurationException(message, settingName);
 
         // Assert
-        Assert.Equal(message, exception.Message);
-        Assert.Equal(settingName, exception.SettingName);
+        exception.Message.Should().Be(message);
+        exception.SettingName.Should().Be(settingName);
     }
 
     [Fact]

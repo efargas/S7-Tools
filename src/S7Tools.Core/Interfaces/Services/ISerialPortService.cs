@@ -220,12 +220,12 @@ public class SerialPortInfo
     public SerialPortType PortType { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the port is currently accessible.
+    /// Gets or sets a value indicating whether the port is currently accessible.
     /// </summary>
     public bool IsAccessible { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the port is currently in use.
+    /// Gets or sets a value indicating whether the port is currently in use.
     /// </summary>
     public bool IsInUse { get; set; }
 
@@ -318,7 +318,7 @@ public class UsbDeviceInfo
 public class SttyCommandResult
 {
     /// <summary>
-    /// Gets or sets whether the command executed successfully.
+    /// Gets or sets a value indicating whether the command executed successfully.
     /// </summary>
     public bool Success { get; set; }
 
@@ -354,7 +354,7 @@ public class SttyCommandResult
 public class SttyCommandValidationResult
 {
     /// <summary>
-    /// Gets or sets whether the command is valid and safe to execute.
+    /// Gets or sets a value indicating whether the command is valid and safe to execute.
     /// </summary>
     public bool IsValid { get; set; }
 

@@ -23,6 +23,9 @@ public class PathSettingsViewModel : ViewModelBase
     private readonly ILogger<PathSettingsViewModel> _logger;
     private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PathSettingsViewModel"/> class.
+    /// </summary>
     public PathSettingsViewModel(
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         IPathService pathService,
@@ -75,8 +78,17 @@ public class PathSettingsViewModel : ViewModelBase
         get => _serialProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _serialProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowseSerialProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseSerialProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenSerialProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenSerialProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetSerialProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetSerialProfilesPathCommand { get; }
 
     // Socat
@@ -86,8 +98,17 @@ public class PathSettingsViewModel : ViewModelBase
         get => _socatProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _socatProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowseSocatProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseSocatProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenSocatProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenSocatProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetSocatProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetSocatProfilesPathCommand { get; }
 
     // Power Supply
@@ -97,8 +118,17 @@ public class PathSettingsViewModel : ViewModelBase
         get => _powerSupplyProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _powerSupplyProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowsePowerSupplyProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowsePowerSupplyProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenPowerSupplyProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenPowerSupplyProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetPowerSupplyProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetPowerSupplyProfilesPathCommand { get; }
 
     // Memory Region
@@ -108,8 +138,17 @@ public class PathSettingsViewModel : ViewModelBase
         get => _memoryRegionProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _memoryRegionProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowseMemoryRegionProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseMemoryRegionProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenMemoryRegionProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenMemoryRegionProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetMemoryRegionProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetMemoryRegionProfilesPathCommand { get; }
 
 

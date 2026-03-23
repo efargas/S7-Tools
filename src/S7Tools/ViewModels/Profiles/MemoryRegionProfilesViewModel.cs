@@ -11,11 +11,17 @@ using S7Tools.Views.Dialogs;
 
 namespace S7Tools.ViewModels.Profiles;
 
+/// <summary>
+/// Represents the MemoryRegionProfilesViewModel.
+/// </summary>
 public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<MemoryMappingProfile>, IDockableViewModel
 {
     private readonly IMemoryRegionProfileService _profileService;
     private readonly IUIThreadService _uiThreadService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemoryRegionProfilesViewModel"/> class.
+    /// </summary>
     public MemoryRegionProfilesViewModel(
         IMemoryRegionProfileService profileService,
         IUnifiedProfileDialogService unifiedDialogService,
@@ -35,16 +41,43 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
         });
     }
 
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "MemoryRegionProfiles";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Memory Regions";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
+    /// <summary>
+    /// Executes the GetProfileManager operation.
+    /// </summary>
     protected override IProfileManager<MemoryMappingProfile> GetProfileManager() => _profileService;
+    /// <summary>
+    /// Executes the GetDefaultProfileName operation.
+    /// </summary>
     protected override string GetDefaultProfileName() => "Memory Region Default";
+    /// <summary>
+    /// Executes the GetProfileTypeName operation.
+    /// </summary>
     protected override string GetProfileTypeName() => "Memory Region Profile";
+    /// <summary>
+    /// Executes the CreateDefaultProfile operation.
+    /// </summary>
     protected override MemoryMappingProfile CreateDefaultProfile() => MemoryMappingProfile.CreateDefaultProfile();
 
+    /// <summary>
+    /// Executes the ShowCreateDialogAsync operation.
+    /// </summary>
     protected override async Task<ProfileDialogResult<MemoryMappingProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
         var nameResult = await UnifiedDialogService.ShowNameInputDialogAsync(
@@ -64,6 +97,9 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
         return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
     }
 
+    /// <summary>
+    /// Executes the ShowEditDialogAsync operation.
+    /// </summary>
     protected override async Task<ProfileDialogResult<MemoryMappingProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
         if (SelectedProfile == null)
@@ -103,6 +139,9 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
         return ProfileDialogResult<MemoryMappingProfile>.Cancelled();
     }
 
+    /// <summary>
+    /// Executes the ShowDuplicateDialogAsync operation.
+    /// </summary>
     protected override async Task<ProfileDialogResult<string>> ShowDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
         return await UnifiedDialogService.ShowNameInputDialogAsync(

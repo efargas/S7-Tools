@@ -40,6 +40,9 @@ public sealed class BootloaderService(
     private RetryConfiguration _retryConfiguration = RetryConfiguration.Default;
     private bool _disposed;
 
+    /// <summary>
+    /// Executes the DumpAsync operation.
+    /// </summary>
     public async Task<BootloaderResult> DumpAsync(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,

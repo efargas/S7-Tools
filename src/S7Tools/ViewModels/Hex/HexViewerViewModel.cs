@@ -11,6 +11,9 @@ using S7Tools.Services.Hex;
 
 namespace S7Tools.ViewModels.Hex
 {
+    /// <summary>
+    /// Represents the HexViewerViewModel.
+    /// </summary>
     public class HexViewerViewModel : ReactiveObject, IDisposable
     {
         private readonly ILogger<HexViewerViewModel> _logger;
@@ -28,6 +31,9 @@ namespace S7Tools.ViewModels.Hex
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HexViewerViewModel"/> class.
+        /// </summary>
         public HexViewerViewModel(ILogger<HexViewerViewModel> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -83,6 +89,9 @@ namespace S7Tools.ViewModels.Hex
             }
         }
 
+        /// <summary>
+        /// Gets or sets the DataInspector.
+        /// </summary>
         public DataInspectorViewModel? DataInspector { get; set; }
 
         public IBinaryDocument? Document
@@ -103,6 +112,9 @@ namespace S7Tools.ViewModels.Hex
             private set => this.RaiseAndSetIfChanged(ref _fileSize, value);
         }
 
+        /// <summary>
+        /// Gets or sets the IsFileOpen.
+        /// </summary>
         public bool IsFileOpen => Document != null;
 
         public int DisplayBase
@@ -126,9 +138,18 @@ namespace S7Tools.ViewModels.Hex
         // View configuration logic has been moved to the View's code-behind 
         // to better support AvaloniaHex control features directly.
 
+        /// <summary>
+        /// Gets or sets the CloseFileCommand.
+        /// </summary>
         public ReactiveCommand<Unit, Unit> CloseFileCommand { get; }
+        /// <summary>
+        /// Gets or sets the CopyCommand.
+        /// </summary>
         public ReactiveCommand<Unit, Unit> CopyCommand { get; set; } = null!; // Set by View or initialized later if we move logic here
 
+        /// <summary>
+        /// Executes the OpenStream operation.
+        /// </summary>
         public void OpenStream(string path)
         {
             CloseFile();
@@ -185,12 +206,18 @@ namespace S7Tools.ViewModels.Hex
             }
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)

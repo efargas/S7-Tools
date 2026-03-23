@@ -1,4 +1,5 @@
-using S7Tools.Core.Models.Validators;
+using FluentAssertions;
+using S7Tools.Core.Validation.Validators;
 using S7Tools.Core.Models.ValueObjects;
 using S7Tools.Core.Validation;
 using Xunit;
@@ -28,11 +29,11 @@ public class PlcAddressValidatorTests
         if (result.IsSuccess)
         {
             ValidationResult validation = _validator.Validate(result.Value);
-            Assert.Equal(expectedValid, validation.IsValid);
+            validation.IsValid.Should().Be(expectedValid);
         }
         else
         {
-            Assert.False(expectedValid); // Si no se puede crear, debe ser inválido
+            expectedValid.Should().BeFalse(); // Si no se puede crear, debe ser inválido
         }
     }
 }

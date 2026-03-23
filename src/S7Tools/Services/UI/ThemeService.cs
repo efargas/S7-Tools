@@ -417,7 +417,13 @@ public sealed class ThemeService : IThemeService
 
     private sealed class ThemeConfiguration
     {
+        /// <summary>
+        /// Gets or sets the CurrentTheme.
+        /// </summary>
         public ThemeMode CurrentTheme { get; set; }
+        /// <summary>
+        /// Gets or sets the CustomColors.
+        /// </summary>
         public Dictionary<string, string>? CustomColors { get; set; }
     }
 }

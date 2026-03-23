@@ -78,7 +78,7 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
 
         try
         {
-            while (await _logChannel.Reader.WaitToReadAsync(_cts.Token))
+            while (await _logChannel.Reader.WaitToReadAsync(_cts.Token).ConfigureAwait(false))
             {
                 while (_logChannel.Reader.TryRead(out var entry))
                 {
@@ -108,12 +108,12 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
                             line += Environment.NewLine + entry.Exception;
                         }
 
-                        await writer.WriteLineAsync(line);
+                        await writer.WriteLineAsync(line).ConfigureAwait(false);
 
                         // Force flush on errors to ensure they are persisted immediately
                         if (entry.LogLevel >= LogLevel.Error)
                         {
-                            await writer.FlushAsync();
+                            await writer.FlushAsync().ConfigureAwait(false);
                         }
                     }
                     catch (Exception ex)
@@ -129,7 +129,7 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
                     foreach (var writer in writers.Values)
                     {
                         try
-                        { await writer.FlushAsync(); }
+                        { await writer.FlushAsync().ConfigureAwait(false); }
                         catch { }
                     }
                     lastFlush = DateTime.UtcNow;
@@ -147,7 +147,7 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
             {
                 try
                 {
-                    await writer.FlushAsync();
+                    await writer.FlushAsync().ConfigureAwait(false);
                     writer.Dispose();
                 }
                 catch { }
@@ -179,7 +179,7 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
 
         try
         {
-            await _processTask;
+            await _processTask.ConfigureAwait(false);
         }
         catch
         {
@@ -210,7 +210,7 @@ public class FileLogSink : IFileLogSink, IAsyncDisposable, IDisposable
             // This is critical for preventing log loss during synchronous shutdown.
             try
             {
-                _processTask.GetAwaiter().GetResult();
+                Task.Run(() => _processTask).GetAwaiter().GetResult();
             }
             catch
             {

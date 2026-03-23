@@ -6,6 +6,9 @@ using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
 
+/// <summary>
+/// Represents the TaskLogDataStoreFactory.
+/// </summary>
 public class TaskLogDataStoreFactory(IOptions<TaskLogDataStoreOptions> options) : ITaskLogDataStoreFactory
 {
     private readonly IOptions<TaskLogDataStoreOptions> _options = options ?? throw new ArgumentNullException(nameof(options));

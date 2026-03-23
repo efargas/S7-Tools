@@ -64,11 +64,29 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private class DummyOptions : S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>
     {
+        /// <summary>
+        /// Gets or sets the CurrentValue.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings CurrentValue { get; } = new();
+        /// <summary>
+        /// Gets or sets the Value.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Value => CurrentValue;
+        /// <summary>
+        /// Executes the Get operation.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Get(string? name) => CurrentValue;
+        /// <summary>
+        /// Executes the OnChange operation.
+        /// </summary>
         public IDisposable? OnChange(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string?> listener) => null;
+        /// <summary>
+        /// Executes the Update operation.
+        /// </summary>
         public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) { }
+        /// <summary>
+        /// Executes the UpdateAsync operation.
+        /// </summary>
         public Task UpdateAsync(Func<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, Task> applyChanges) => Task.CompletedTask;
     }
 

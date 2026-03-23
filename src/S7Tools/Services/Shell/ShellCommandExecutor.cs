@@ -17,6 +17,9 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
 {
     private readonly ILogger<ShellCommandExecutor> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ShellCommandExecutor"/> class.
+    /// </summary>
     public ShellCommandExecutor(ILogger<ShellCommandExecutor> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

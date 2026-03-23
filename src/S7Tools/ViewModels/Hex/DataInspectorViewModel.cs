@@ -14,7 +14,13 @@ namespace S7Tools.ViewModels.Hex;
 public partial class DataInspectorViewModel : ObservableObject
 {
     // Navigation & Editing Actions
+    /// <summary>
+    /// Gets or sets the RequestGoToOffset.
+    /// </summary>
     public Action<long>? RequestGoToOffset { get; set; }
+    /// <summary>
+    /// Gets or sets the RequestFillSelection.
+    /// </summary>
     public Action<byte[]>? RequestFillSelection { get; set; }
 
     [ObservableProperty]
@@ -150,6 +156,9 @@ public partial class DataInspectorViewModel : ObservableObject
 
     private byte[]? _lastBytes;
 
+    /// <summary>
+    /// Executes the Update operation.
+    /// </summary>
     public void Update(byte[]? data)
     {
         _lastBytes = data;
@@ -241,8 +250,14 @@ public partial class DataInspectorViewModel : ObservableObject
     // Helpers not strictly needed with the array logic above but good for clarity if reused
     private static byte[] ReverseIfBig(byte[] b) { if (!BitConverter.IsLittleEndian) { Array.Reverse(b); } return b; }
 
+    /// <summary>
+    /// Gets or sets the Search.
+    /// </summary>
     public SearchViewModel Search { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataInspectorViewModel"/> class.
+    /// </summary>
     public DataInspectorViewModel()
     {
         // Initialize SearchViewModel
@@ -255,6 +270,9 @@ public partial class DataInspectorViewModel : ObservableObject
         RequestGoToOffset?.Invoke(offset);
     }
 
+    /// <summary>
+    /// Executes the SetDocument operation.
+    /// </summary>
     public void SetDocument(AvaloniaHex.Document.IBinaryDocument? document)
     {
         Search.SetDocument(document);

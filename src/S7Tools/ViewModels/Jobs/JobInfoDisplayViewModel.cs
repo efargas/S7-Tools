@@ -42,6 +42,9 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
     private bool _hasMissingProfiles;
     private readonly ObservableCollection<string> _missingProfileWarnings = [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobInfoDisplayViewModel"/> class.
+    /// </summary>
     public JobInfoDisplayViewModel(
         IProfileDetailsService profileDetailsService,
         ISerialPortProfileService serialService,
@@ -512,12 +515,18 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
 
     #region IDisposable
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

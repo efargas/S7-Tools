@@ -35,8 +35,14 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
 
     private static readonly Interaction<S7Tools.ViewModels.Dialogs.Models.ProfileEditRequest, ProfileEditResult> _staticInteraction = new();
 
+    /// <summary>
+    /// Gets or sets the ShowProfileEditDialog.
+    /// </summary>
     public Interaction<S7Tools.ViewModels.Dialogs.Models.ProfileEditRequest, ProfileEditResult> ShowProfileEditDialog => _staticInteraction;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnifiedProfileDialogService"/> class.
+    /// </summary>
     public UnifiedProfileDialogService(
         ISerialPortProfileService serialPortProfileService,
         ISocatProfileService socatProfileService,
@@ -108,6 +114,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
 
     #region Serial Port Profile Operations
 
+    /// <summary>
+    /// Executes the ShowSerialCreateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<SerialPortProfile>> ShowSerialCreateDialogAsync(ProfileCreateRequest request)
     {
         try
@@ -141,6 +150,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         }
     }
 
+    /// <summary>
+    /// Executes the ShowSerialEditDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<SerialPortProfile>> ShowSerialEditDialogAsync(CoreProfileEditRequest request)
     {
         try
@@ -173,6 +185,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         }
     }
 
+    /// <summary>
+    /// Executes the ShowSerialDuplicateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<string>> ShowSerialDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
         try
@@ -206,6 +221,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
 
     #region Socat Profile Operations
 
+    /// <summary>
+    /// Executes the ShowSocatCreateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<SocatProfile>> ShowSocatCreateDialogAsync(ProfileCreateRequest request)
     {
         try
@@ -237,6 +255,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         }
     }
 
+    /// <summary>
+    /// Executes the ShowSocatEditDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<SocatProfile>> ShowSocatEditDialogAsync(CoreProfileEditRequest request)
     {
         try
@@ -269,6 +290,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         }
     }
 
+    /// <summary>
+    /// Executes the ShowSocatDuplicateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<string>> ShowSocatDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
         try
@@ -302,6 +326,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
 
     #region Power Supply Profile Operations
 
+    /// <summary>
+    /// Executes the ShowPowerSupplyCreateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<PowerSupplyProfile>> ShowPowerSupplyCreateDialogAsync(ProfileCreateRequest request)
     {
         try
@@ -331,6 +358,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         }
     }
 
+    /// <summary>
+    /// Executes the ShowPowerSupplyEditDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<PowerSupplyProfile>> ShowPowerSupplyEditDialogAsync(CoreProfileEditRequest request)
     {
         try
@@ -361,6 +391,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         }
     }
 
+    /// <summary>
+    /// Executes the ShowPowerSupplyDuplicateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<string>> ShowPowerSupplyDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
         try
@@ -394,18 +427,27 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
 
     #region Job Profile Operations
 
+    /// <summary>
+    /// Executes the ShowJobCreateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobCreateDialogAsync(ProfileCreateRequest request)
     {
         await Task.CompletedTask;
         return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Cancelled();
     }
 
+    /// <summary>
+    /// Executes the ShowJobEditDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>> ShowJobEditDialogAsync(CoreProfileEditRequest request)
     {
         await Task.CompletedTask;
         return ProfileDialogResult<S7Tools.Core.Models.Jobs.JobProfile>.Cancelled();
     }
 
+    /// <summary>
+    /// Executes the ShowJobDuplicateDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<string>> ShowJobDuplicateDialogAsync(ProfileDuplicateRequest request)
     {
         try
@@ -428,6 +470,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
 
     #region Common Dialog Operations
 
+    /// <summary>
+    /// Executes the ShowDeleteConfirmationDialogAsync operation.
+    /// </summary>
     public async Task<bool> ShowDeleteConfirmationDialogAsync(string profileName, string profileType)
     {
         try
@@ -444,6 +489,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         }
     }
 
+    /// <summary>
+    /// Executes the ShowNameInputDialogAsync operation.
+    /// </summary>
     public async Task<ProfileDialogResult<string>> ShowNameInputDialogAsync(
         string title,
         string prompt,

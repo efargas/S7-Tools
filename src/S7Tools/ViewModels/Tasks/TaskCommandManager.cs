@@ -20,6 +20,9 @@ public class TaskCommandManager
     private readonly IJobManager _jobManager;
     private readonly IDialogService _dialogService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskCommandManager"/> class.
+    /// </summary>
     public TaskCommandManager(
         ILogger<TaskCommandManager> logger,
         ITaskScheduler taskScheduler,
@@ -32,6 +35,9 @@ public class TaskCommandManager
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
     }
 
+    /// <summary>
+    /// Executes the StartTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> StartTaskAsync(TaskExecution task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -63,6 +69,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the StopTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> StopTaskAsync(TaskExecution task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -103,6 +112,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the PauseTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> PauseTaskAsync(TaskExecution task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -133,6 +145,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the ResumeTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> ResumeTaskAsync(TaskExecution task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -163,6 +178,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the RestartTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> RestartTaskAsync(TaskExecution task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -212,6 +230,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the DeleteTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> DeleteTaskAsync(TaskExecution task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -251,6 +272,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the ScheduleTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> ScheduleTaskAsync(TaskExecution task)
     {
         ArgumentNullException.ThrowIfNull(task);
@@ -300,6 +324,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the CreateTaskAsync operation.
+    /// </summary>
     public async Task<CommandResult> CreateTaskAsync()
     {
         try
@@ -332,6 +359,9 @@ public class TaskCommandManager
         }
     }
 
+    /// <summary>
+    /// Executes the ClearFinishedTasksAsync operation.
+    /// </summary>
     public async Task<CommandResult> ClearFinishedTasksAsync()
     {
         bool confirmed = await _dialogService.ShowConfirmationAsync(
@@ -385,11 +415,26 @@ public class TaskCommandManager
     }
 }
 
+/// <summary>
+/// Represents the struct.
+/// </summary>
 public readonly record struct CommandResult
 {
+    /// <summary>
+    /// Gets or sets the IsSuccess.
+    /// </summary>
     public bool IsSuccess { get; }
+    /// <summary>
+    /// Gets or sets the IsCancelled.
+    /// </summary>
     public bool IsCancelled { get; }
+    /// <summary>
+    /// Gets or sets the Message.
+    /// </summary>
     public string Message { get; }
+    /// <summary>
+    /// Gets or sets the Data.
+    /// </summary>
     public object? Data { get; }
 
     private CommandResult(bool isSuccess, bool isCancelled, string message, object? data = null)
@@ -400,7 +445,16 @@ public readonly record struct CommandResult
         Data = data;
     }
 
+    /// <summary>
+    /// Executes the Success operation.
+    /// </summary>
     public static CommandResult Success(string message, object? data = null) => new(true, false, message, data);
+    /// <summary>
+    /// Executes the Failure operation.
+    /// </summary>
     public static CommandResult Failure(string message) => new(false, false, message);
+    /// <summary>
+    /// Executes the Cancelled operation.
+    /// </summary>
     public static CommandResult Cancelled() => new(false, true, string.Empty);
 }

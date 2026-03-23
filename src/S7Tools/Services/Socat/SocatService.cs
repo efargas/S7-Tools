@@ -1289,11 +1289,11 @@ public partial class SocatService : ISocatService, IDisposable
     {
         if (!_disposed && disposing)
         {
-            // Stop all running processes
+            // Stop running processes — run on thread-pool to avoid deadlocks
+            // when Dispose() is called from a synchronisation context (e.g. UI thread).
             try
             {
-                Task<int> stopTask = StopAllSocatProcessesAsync(CancellationToken.None);
-                stopTask.GetAwaiter().GetResult();
+                Task.Run(() => StopAllSocatProcessesAsync(CancellationToken.None)).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

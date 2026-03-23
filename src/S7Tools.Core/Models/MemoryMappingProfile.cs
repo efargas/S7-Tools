@@ -86,7 +86,7 @@ public class MemoryMappingProfile : IProfileBase
     public List<MemorySegment> Segments { get; set; } = new();
 
     /// <summary>
-    /// Gets or sets whether this profile is currently active for job operations.
+    /// Gets or sets a value indicating whether this profile is currently active for job operations.
     /// </summary>
     /// <value>True if the profile is active and selected for operations, false otherwise.</value>
     [Display(Name = "Active Profile")]

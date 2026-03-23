@@ -28,6 +28,9 @@ namespace S7Tools.Services.Adapters
         private string _socatHost = "127.0.0.1";
         private int _socatPort = 3333; // Default fallback
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PlcClientAdapter"/> class.
+        /// </summary>
         public PlcClientAdapter(
             IPlcProtocol protocol,
             ILogger<PlcClientAdapter> logger,
@@ -47,6 +50,9 @@ namespace S7Tools.Services.Adapters
 
 
 
+        /// <summary>
+        /// Executes the Configure operation.
+        /// </summary>
         public void Configure(string host, int port)
         {
             // Store socat connection info for streaming dumps
@@ -56,11 +62,14 @@ namespace S7Tools.Services.Adapters
             _protocol.Configure(host, port);
         }
 
+        /// <summary>
+        /// Executes the DisposeAsync operation.
+        /// </summary>
         public async ValueTask DisposeAsync()
         {
             if (_protocol is IAsyncDisposable d)
             {
-                await d.DisposeAsync();
+                await d.DisposeAsync().ConfigureAwait(false);
             }
             // Dispose the orchestrator if it implements IDisposable
             if (_orchestrator is IDisposable disposableOrchestrator)
@@ -71,23 +80,32 @@ namespace S7Tools.Services.Adapters
 
         #region Handshake
 
+        /// <summary>
+        /// Executes the ConnectAsync operation.
+        /// </summary>
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Connecting to PLC via Protocol...");
-            await _protocol.ConnectAsync(cancellationToken);
+            await _protocol.ConnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the HandshakeAsync operation.
+        /// </summary>
         public async Task HandshakeAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Starting handshake...");
-            await _protocolHandler.PerformHandshakeAsync(cancellationToken);
+            await _protocolHandler.PerformHandshakeAsync(cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Handshake successful!");
         }
 
+        /// <summary>
+        /// Executes the GetBootloaderVersionAsync operation.
+        /// </summary>
         public async Task<string> GetBootloaderVersionAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Getting bootloader version...");
-            byte[] versionBytes = await _protocolHandler.GetVersionAsync(cancellationToken);
+            byte[] versionBytes = await _protocolHandler.GetVersionAsync(cancellationToken).ConfigureAwait(false);
 
             if (versionBytes.Length == 0)
             {
@@ -141,10 +159,13 @@ namespace S7Tools.Services.Adapters
 
         #region Stager Installation
 
+        /// <summary>
+        /// Executes the InstallStagerAsync operation.
+        /// </summary>
         public async Task InstallStagerAsync(byte[] stager, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Installing Stager...");
-            await _stagerManager.InstallStagerAsync(stager, cancellationToken);
+            await _stagerManager.InstallStagerAsync(stager, cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Stager installed at 0x{Addr:X}", PlcConstants.IRAM_STAGER_START);
         }
 
@@ -152,6 +173,9 @@ namespace S7Tools.Services.Adapters
 
         #region Memory Dump
 
+        /// <summary>
+        /// Executes the InstallDumperAsync operation.
+        /// </summary>
         public async Task InstallDumperAsync(byte[] dumperPayload, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Installing Dumper Payload via Stager...");
@@ -160,17 +184,23 @@ namespace S7Tools.Services.Adapters
                 PlcConstants.DUMPER_PAYLOAD_LOCATION,
                 dumperPayload,
                 PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND,
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
             _logger.LogInformation("Dumper payload installed at 0x{Addr:X} (Hook {Hook})",
                 PlcConstants.DUMPER_PAYLOAD_LOCATION, PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND);
         }
 
+        /// <summary>
+        /// Executes the InvokeDumperAsync operation.
+        /// </summary>
         public async Task<byte[]> InvokeDumperAsync(uint address, uint length, IProgress<long> progress, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Invoking Dumper (0x{Addr:X}, {Len} bytes)...", address, length);
-            return await _memoryManager.InvokeDumperAsync(address, length, progress, cancellationToken);
+            return await _memoryManager.InvokeDumperAsync(address, length, progress, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the InvokeDumperStreamAsync operation.
+        /// </summary>
         public async Task InvokeDumperStreamAsync(
             uint address,
             uint length,
@@ -192,9 +222,12 @@ namespace S7Tools.Services.Adapters
                 _socatPort,
                 cancellationToken,
                 keepSessionOpen,
-                logger);
+                logger).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the StopDumperSessionAsync operation.
+        /// </summary>
         public async Task StopDumperSessionAsync()
         {
             _logger.LogInformation("Stopping persistent dumper session...");

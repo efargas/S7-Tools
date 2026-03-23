@@ -1,3 +1,4 @@
+using FluentAssertions;
 using S7Tools.Core.Exceptions;
 
 namespace S7Tools.Core.Tests.Exceptions;
@@ -14,8 +15,8 @@ public class DialogParentNotFoundExceptionTests
         var exception = new DialogParentNotFoundException();
 
         // Assert
-        Assert.NotNull(exception);
-        Assert.NotNull(exception.Message);
+        exception.Should().NotBeNull();
+        exception.Message.Should().NotBeNull();
         Assert.IsAssignableFrom<S7ToolsException>(exception);
     }
 
@@ -29,8 +30,8 @@ public class DialogParentNotFoundExceptionTests
         var exception = new DialogParentNotFoundException(expectedMessage);
 
         // Assert
-        Assert.NotNull(exception);
-        Assert.Equal(expectedMessage, exception.Message);
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be(expectedMessage);
         Assert.IsAssignableFrom<S7ToolsException>(exception);
     }
 
@@ -45,9 +46,9 @@ public class DialogParentNotFoundExceptionTests
         var exception = new DialogParentNotFoundException(expectedMessage, innerException);
 
         // Assert
-        Assert.NotNull(exception);
-        Assert.Equal(expectedMessage, exception.Message);
-        Assert.Same(innerException, exception.InnerException);
+        exception.Should().NotBeNull();
+        exception.Message.Should().Be(expectedMessage);
+        exception.InnerException.Should().BeSameAs(innerException);
         Assert.IsAssignableFrom<S7ToolsException>(exception);
     }
 
@@ -58,7 +59,7 @@ public class DialogParentNotFoundExceptionTests
         var exception = new DialogParentNotFoundException();
 
         // Assert
-        Assert.IsType<DialogParentNotFoundException>(exception);
+        exception.Should().BeOfType<DialogParentNotFoundException>().Subject;
         Assert.IsAssignableFrom<S7ToolsException>(exception);
         Assert.IsAssignableFrom<Exception>(exception);
     }
@@ -81,8 +82,8 @@ public class DialogParentNotFoundExceptionTests
         }
 
         // Assert
-        Assert.NotNull(caughtException);
-        Assert.Equal(expectedMessage, caughtException.Message);
+        caughtException.Should().NotBeNull();
+        caughtException.Message.Should().Be(expectedMessage);
     }
 
     [Fact]
@@ -103,8 +104,8 @@ public class DialogParentNotFoundExceptionTests
         }
 
         // Assert
-        Assert.NotNull(caughtException);
-        Assert.IsType<DialogParentNotFoundException>(caughtException);
-        Assert.Equal(expectedMessage, caughtException.Message);
+        caughtException.Should().NotBeNull();
+        caughtException.Should().BeOfType<DialogParentNotFoundException>().Subject;
+        caughtException.Message.Should().Be(expectedMessage);
     }
 }

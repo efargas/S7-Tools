@@ -6,6 +6,9 @@ using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services
 {
+    /// <summary>
+    /// Represents the WritableOptions.
+    /// </summary>
     public sealed class WritableOptions<T> : IWritableOptions<T>, IDisposable where T : class, new()
     {
         private readonly string _basePath;
@@ -21,6 +24,9 @@ namespace S7Tools.Services
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WritableOptions"/> class.
+        /// </summary>
         public WritableOptions(
             string basePath,
             IOptionsMonitor<T> options,
@@ -33,12 +39,24 @@ namespace S7Tools.Services
             _file = file;
         }
 
+        /// <summary>
+        /// Gets or sets the CurrentValue.
+        /// </summary>
         public T CurrentValue => _options.CurrentValue;
 
+        /// <summary>
+        /// Executes the Get operation.
+        /// </summary>
         public T Get(string? name) => _options.Get(name);
 
+        /// <summary>
+        /// Executes the OnChange operation.
+        /// </summary>
         public IDisposable? OnChange(Action<T, string?> listener) => _options.OnChange(listener);
 
+        /// <summary>
+        /// Executes the Update operation.
+        /// </summary>
         public void Update(Action<T> applyChanges)
         {
             _writeLock.Wait();
@@ -103,6 +121,9 @@ namespace S7Tools.Services
             }
         }
 
+        /// <summary>
+        /// Executes the UpdateAsync operation.
+        /// </summary>
         public async Task UpdateAsync(Func<T, Task> applyChanges)
         {
             await _writeLock.WaitAsync().ConfigureAwait(false);
@@ -160,6 +181,9 @@ namespace S7Tools.Services
             }
         }
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             if (!_disposed)

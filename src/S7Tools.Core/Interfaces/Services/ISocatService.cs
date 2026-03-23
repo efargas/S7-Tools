@@ -297,7 +297,7 @@ public class SocatProcessInfo
     public DateTime StartTime { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// Gets or sets whether the process is currently running.
+    /// Gets or sets a value indicating whether the process is currently running.
     /// </summary>
     public bool IsRunning { get; set; } = true;
 
@@ -446,7 +446,7 @@ public class SocatTransferStats
 public class SocatCommandValidationResult
 {
     /// <summary>
-    /// Gets or sets whether the command is valid and safe to execute.
+    /// Gets or sets a value indicating whether the command is valid and safe to execute.
     /// </summary>
     public bool IsValid { get; set; }
 
@@ -466,7 +466,7 @@ public class SocatCommandValidationResult
     public string ValidatedCommand { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the command requires root privileges.
+    /// Gets or sets a value indicating whether the command requires root privileges.
     /// </summary>
     public bool RequiresRoot { get; set; }
 
@@ -487,22 +487,22 @@ public class SocatCommandValidationResult
 public class SerialDeviceValidationResult
 {
     /// <summary>
-    /// Gets or sets whether the device is valid and accessible.
+    /// Gets or sets a value indicating whether the device is valid and accessible.
     /// </summary>
     public bool IsValid { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the device exists.
+    /// Gets or sets a value indicating whether the device exists.
     /// </summary>
     public bool Exists { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the device is accessible for reading/writing.
+    /// Gets or sets a value indicating whether the device is accessible for reading/writing.
     /// </summary>
     public bool IsAccessible { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the device is currently in use by another process.
+    /// Gets or sets a value indicating whether the device is currently in use by another process.
     /// </summary>
     public bool IsInUse { get; set; }
 

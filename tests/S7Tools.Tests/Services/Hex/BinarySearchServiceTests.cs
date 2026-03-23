@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -62,10 +63,10 @@ namespace S7Tools.Tests.Services.Hex
              var pattern = new byte[] { 0xAA, 0xBB };
 
              var result1 = await service.FindNextAsync(doc, pattern, 0);
-             Assert.Equal(2, result1);
+             result1.Should().Be(2);
 
              var result2 = await service.FindNextAsync(doc, pattern, 3);
-             Assert.Equal(5, result2);
+             result2.Should().Be(5);
         }
 
         [Fact]
@@ -78,7 +79,7 @@ namespace S7Tools.Tests.Services.Hex
 
             var results = await service.FindAllAsync(doc, pattern);
 
-            Assert.Empty(results);
+            results.Should().BeEmpty();
         }
 
         [Fact]
@@ -91,7 +92,7 @@ namespace S7Tools.Tests.Services.Hex
 
             var results = await service.FindAllAsync(doc, pattern);
 
-            Assert.Empty(results);
+            results.Should().BeEmpty();
         }
     }
 }

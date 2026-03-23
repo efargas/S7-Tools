@@ -15,6 +15,9 @@ public partial class SocatCommandBuilder
 {
     private readonly ILogger<SocatCommandBuilder> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SocatCommandBuilder"/> class.
+    /// </summary>
     public SocatCommandBuilder(ILogger<SocatCommandBuilder> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

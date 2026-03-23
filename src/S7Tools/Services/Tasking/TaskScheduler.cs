@@ -1282,10 +1282,11 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
         if (disposing)
         {
-            // Save tasks before disposing
+            // Save tasks before disposing — run on thread-pool to avoid deadlocks
+            // when Dispose() is called from a synchronisation context (e.g. UI thread).
             try
             {
-                SaveTasksAsync().GetAwaiter().GetResult();
+                Task.Run(SaveTasksAsync).GetAwaiter().GetResult();
             }
             catch (Exception ex)
             {

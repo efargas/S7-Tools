@@ -2,7 +2,9 @@ using System.Reactive;
 using System.Reactive.Linq;
 using ReactiveUI;
 using S7Tools.Models;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Services;
+using S7Tools.ViewModels.Dialogs.Models;
 
 namespace S7Tools.Tests.Services;
 

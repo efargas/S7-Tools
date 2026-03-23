@@ -50,10 +50,19 @@ public partial class FileTreeItemViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Gets or sets the Children.
+    /// </summary>
     public ObservableCollection<FileTreeItemViewModel> Children { get; } = new();
 
+    /// <summary>
+    /// Gets or sets the IsDummyNode.
+    /// </summary>
     public bool IsDummyNode { get; private set; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileTreeItemViewModel"/> class.
+    /// </summary>
     public FileTreeItemViewModel(string path, bool isDirectory)
     {
         FullPath = path;
@@ -80,6 +89,9 @@ public partial class FileTreeItemViewModel : ViewModelBase
         IsDummyNode = true;
     }
 
+    /// <summary>
+    /// Executes the CreateDummyNode operation.
+    /// </summary>
     public static FileTreeItemViewModel CreateDummyNode(string dummyName)
     {
         return new FileTreeItemViewModel(dummyName);

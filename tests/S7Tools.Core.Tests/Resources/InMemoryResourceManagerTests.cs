@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System.Globalization;
 using S7Tools.Core.Resources;
 using Xunit;
@@ -11,14 +12,14 @@ public class InMemoryResourceManagerTests
     {
         var manager = new InMemoryResourceManager();
         manager.AddOrUpdate("Hello", "Hola");
-        Assert.Equal("Hola", manager.GetString("Hello"));
+        manager.GetString("Hello").Should().Be("Hola");
     }
 
     [Fact]
     public void GetString_ReturnsKey_IfNotFound()
     {
         var manager = new InMemoryResourceManager();
-        Assert.Equal("MissingKey", manager.GetString("MissingKey"));
+        manager.GetString("MissingKey").Should().Be("MissingKey");
     }
 
     [Fact]
@@ -38,7 +39,7 @@ public class InMemoryResourceManagerTests
     {
         var manager = new InMemoryResourceManager();
         manager.AddOrUpdate("Key", "Valor");
-        Assert.True(manager.HasResource("Key"));
+        manager.HasResource("Key").Should().BeTrue();
     }
 
     [Fact]
@@ -72,6 +73,6 @@ public class InMemoryResourceManagerTests
         manager.AddOrUpdate("Hello", "Hello", en);
         manager.AddOrUpdate("Hello", "Hola", es);
         manager.SetCurrentCulture(es);
-        Assert.Equal("Hola", manager.GetString("Hello"));
+        manager.GetString("Hello").Should().Be("Hola");
     }
 }

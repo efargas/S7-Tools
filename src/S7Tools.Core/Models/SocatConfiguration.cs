@@ -32,14 +32,14 @@ public class SocatConfiguration
     public string TcpHost { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether to enable fork mode for multiple concurrent connections.
+    /// Gets or sets a value indicating whether to enable fork mode for multiple concurrent connections.
     /// </summary>
     /// <value>True to enable fork mode (allows multiple connections), false otherwise. Default is true.</value>
     [Display(Name = "Enable Fork Mode", Order = 3)]
     public bool EnableFork { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to enable address reuse.
+    /// Gets or sets a value indicating whether to enable address reuse.
     /// </summary>
     /// <value>True to enable reuseaddr option, false otherwise. Default is true.</value>
     [Display(Name = "Enable Address Reuse", Order = 4)]
@@ -50,14 +50,14 @@ public class SocatConfiguration
     #region socat Flags
 
     /// <summary>
-    /// Gets or sets whether to enable verbose logging.
+    /// Gets or sets a value indicating whether to enable verbose logging.
     /// </summary>
     /// <value>True to enable verbose mode (-v flag), false otherwise. Default is true.</value>
     [Display(Name = "Verbose Logging", Order = 5)]
     public bool Verbose { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to enable hex dump of transferred data.
+    /// Gets or sets a value indicating whether to enable hex dump of transferred data.
     /// </summary>
     /// <value>True to enable hex dump (-x flag), false otherwise. Default is true.</value>
     [Display(Name = "Hex Dump", Order = 6)]
@@ -92,7 +92,7 @@ public class SocatConfiguration
     public int BaudRate { get; set; } = 38400;
 
     /// <summary>
-    /// Gets or sets whether to enable raw mode for the serial device.
+    /// Gets or sets a value indicating whether to enable raw mode for the serial device.
     /// </summary>
     /// <value>True to enable raw mode, false otherwise. Default is true.</value>
     /// <remarks>
@@ -103,7 +103,7 @@ public class SocatConfiguration
     public bool SerialRawMode { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to disable echo on the serial device.
+    /// Gets or sets a value indicating whether to disable echo on the serial device.
     /// </summary>
     /// <value>True to disable echo (echo=0), false to enable. Default is true.</value>
     [Display(Name = "Disable Serial Echo", Order = 11)]
@@ -114,7 +114,7 @@ public class SocatConfiguration
     #region Process Management
 
     /// <summary>
-    /// Gets or sets whether to automatically configure the serial port with stty before starting socat.
+    /// Gets or sets a value indicating whether to automatically configure the serial port with stty before starting socat.
     /// </summary>
     /// <value>True to run stty configuration first, false to skip. Default is true.</value>
     [Display(Name = "Auto-Configure Serial", Order = 11)]
@@ -129,7 +129,7 @@ public class SocatConfiguration
     public int ConnectionTimeout { get; set; } = 0;
 
     /// <summary>
-    /// Gets or sets whether to restart socat automatically if it terminates unexpectedly.
+    /// Gets or sets a value indicating whether to restart socat automatically if it terminates unexpectedly.
     /// </summary>
     /// <value>True to enable auto-restart, false otherwise. Default is false.</value>
     [Display(Name = "Auto-Restart", Order = 13)]

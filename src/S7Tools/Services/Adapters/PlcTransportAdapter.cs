@@ -20,22 +20,37 @@ namespace S7Tools.Services.Adapters
         private string _host = string.Empty;
         private int _port;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PlcTransportAdapter"/> class.
+        /// </summary>
         public PlcTransportAdapter(ILogger<PlcTransportAdapter> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _client = new TcpClient();
         }
 
+        /// <summary>
+        /// Gets or sets the IsConnected.
+        /// </summary>
         public bool IsConnected => _client?.Connected ?? false;
 
+        /// <summary>
+        /// Gets or sets the DataAvailable.
+        /// </summary>
         public bool DataAvailable => _stream?.DataAvailable ?? false;
 
+        /// <summary>
+        /// Executes the Configure operation.
+        /// </summary>
         public void Configure(string host, int port)
         {
             _host = host;
             _port = port;
         }
 
+        /// <summary>
+        /// Executes the ConnectAsync operation.
+        /// </summary>
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(_host) || _port == 0)
@@ -59,7 +74,7 @@ namespace S7Tools.Services.Adapters
             try
             {
                 _client.NoDelay = true;
-                await _client.ConnectAsync(_host, _port, cancellationToken);
+                await _client.ConnectAsync(_host, _port, cancellationToken).ConfigureAwait(false);
                 _logger.LogInformation("TcpClient.NoDelay set to: {Value}", _client.NoDelay);
                 _stream = _client.GetStream();
                 _logger.LogInformation("Connected successfully.");
@@ -71,6 +86,9 @@ namespace S7Tools.Services.Adapters
             }
         }
 
+        /// <summary>
+        /// Executes the DisconnectAsync operation.
+        /// </summary>
         public Task DisconnectAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Disconnecting transport...");
@@ -81,27 +99,39 @@ namespace S7Tools.Services.Adapters
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Executes the ReadAsync operation.
+        /// </summary>
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             if (_stream == null)
             {
                 throw new InvalidOperationException("Transport not connected.");
             }
-            return await _stream.ReadAsync(buffer, offset, count, cancellationToken);
+            return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the WriteAsync operation.
+        /// </summary>
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             if (_stream == null)
             {
                 throw new InvalidOperationException("Transport not connected.");
             }
-            await _stream.WriteAsync(buffer, offset, count, cancellationToken);
+            await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
             // await _stream.FlushAsync(cancellationToken); // Removed to prevent packet fragmentation logic interference
         }
 
+        /// <summary>
+        /// Executes the GetStream operation.
+        /// </summary>
         public Stream? GetStream() => _stream;
 
+        /// <summary>
+        /// Executes the DisposeAsync operation.
+        /// </summary>
         public ValueTask DisposeAsync()
         {
             _stream?.Dispose();

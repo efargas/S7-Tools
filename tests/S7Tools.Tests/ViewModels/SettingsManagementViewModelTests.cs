@@ -1,6 +1,8 @@
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Services;
 using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.ViewModels.Layout;
 using Xunit;
@@ -34,10 +36,10 @@ public class SettingsManagementViewModelTests
         var viewModel = new SettingsManagementViewModel(_mockLogger.Object, _mockSettingsService.Object);
 
         // Assert
-        Assert.NotNull(viewModel);
-        Assert.NotNull(viewModel.SaveSettingsCommand);
-        Assert.NotNull(viewModel.LoadSettingsCommand);
-        Assert.NotNull(viewModel.ResetSettingsCommand);
+        viewModel.Should().NotBeNull();
+        viewModel.SaveSettingsCommand.Should().NotBeNull();
+        viewModel.LoadSettingsCommand.Should().NotBeNull();
+        viewModel.ResetSettingsCommand.Should().NotBeNull();
     }
 
     [Fact]
@@ -73,9 +75,9 @@ public class SettingsManagementViewModelTests
         viewModel.AutoScrollLogs = false;
 
         // Assert
-        Assert.Equal("/test/path", viewModel.DefaultLogPath);
-        Assert.Equal("/export/path", viewModel.ExportPath);
-        Assert.Equal("Debug", viewModel.MinimumLogLevel);
-        Assert.False(viewModel.AutoScrollLogs);
+        viewModel.DefaultLogPath.Should().Be("/test/path");
+        viewModel.ExportPath.Should().Be("/export/path");
+        viewModel.MinimumLogLevel.Should().Be("Debug");
+        viewModel.AutoScrollLogs.Should().BeFalse();
     }
 }

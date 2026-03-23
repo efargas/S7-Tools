@@ -5,60 +5,93 @@ using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services.Adapters.Plc
 {
+    /// <summary>
+    /// Represents the PlcProtocolHandler.
+    /// </summary>
     internal class PlcProtocolHandler(IPlcProtocol protocol)
     {
         private readonly IPlcProtocol _protocol = protocol ?? throw new ArgumentNullException(nameof(protocol));
+        /// <summary>
+        /// Executes the DisconnectAsync operation.
+        /// </summary>
         public async Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            await _protocol.DisconnectAsync(cancellationToken);
+            await _protocol.DisconnectAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the GetStream operation.
+        /// </summary>
         public Stream? GetStream() => _protocol.GetStream();
 
+        /// <summary>
+        /// Executes the InvokePrimaryHandlerAsync operation.
+        /// </summary>
         public async Task<byte[]?> InvokePrimaryHandlerAsync(byte handlerIndex, byte[] args, bool awaitResponse, CancellationToken cancellationToken)
         {
             byte[] payload = new byte[1 + args.Length];
             payload[0] = handlerIndex;
             Array.Copy(args, 0, payload, 1, args.Length);
-            await _protocol.SendPacketAsync(payload, cancellationToken: cancellationToken);
+            await _protocol.SendPacketAsync(payload, cancellationToken: cancellationToken).ConfigureAwait(false);
 
             if (!awaitResponse)
             {
                 return null;
             }
-            return await _protocol.ReceivePacketAsync(cancellationToken);
+            return await _protocol.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the InvokeAddHookAsync operation.
+        /// </summary>
         public async Task<byte[]?> InvokeAddHookAsync(int hookNo, byte[] args, bool awaitResponse, CancellationToken cancellationToken)
         {
             byte[] payload = new byte[1 + args.Length];
             payload[0] = (byte)hookNo;
             Array.Copy(args, 0, payload, 1, args.Length);
-            return await InvokePrimaryHandlerAsync(0x1C, payload, awaitResponse, cancellationToken);
+            return await InvokePrimaryHandlerAsync(0x1C, payload, awaitResponse, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the SendPacketAsync operation.
+        /// </summary>
         public async Task SendPacketAsync(byte[] payload, int? maxChunk, CancellationToken cancellationToken)
         {
-            await _protocol.SendPacketAsync(payload, maxChunk, cancellationToken);
+            await _protocol.SendPacketAsync(payload, maxChunk, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the ReceivePacketAsync operation.
+        /// </summary>
         public async Task<byte[]> ReceivePacketAsync(CancellationToken cancellationToken)
         {
-            return await _protocol.ReceivePacketAsync(cancellationToken);
+            return await _protocol.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the RawWriteAsync operation.
+        /// </summary>
         public async Task RawWriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            await _protocol.RawWriteAsync(buffer, offset, count, cancellationToken);
+            await _protocol.RawWriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the RawReadAsync operation.
+        /// </summary>
         public async Task<int> RawReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return await _protocol.RawReadAsync(buffer, offset, count, cancellationToken);
+            return await _protocol.RawReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Gets or sets the DataAvailable.
+        /// </summary>
         public bool DataAvailable => _protocol.DataAvailable;
 
+        /// <summary>
+        /// Executes the PerformHandshakeAsync operation.
+        /// </summary>
         public async Task PerformHandshakeAsync(CancellationToken cancellationToken)
         {
             const int MaxHandshakeAttempts = 50; // Maximum attempts before giving up
@@ -72,7 +105,7 @@ namespace S7Tools.Services.Adapters.Plc
             for (int attempt = 0; attempt < MaxHandshakeAttempts; attempt++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                await _protocol.RawWriteAsync(handshakePayload, 0, handshakePayload.Length, cancellationToken);
+                await _protocol.RawWriteAsync(handshakePayload, 0, handshakePayload.Length, cancellationToken).ConfigureAwait(false);
 
                 // Wait for response
                 var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -82,7 +115,7 @@ namespace S7Tools.Services.Adapters.Plc
                     if (_protocol.DataAvailable)
                     {
                         byte[] tmpBuf = new byte[1024];
-                        int bytesRead = await _protocol.RawReadAsync(tmpBuf, 0, tmpBuf.Length, cancellationToken);
+                        int bytesRead = await _protocol.RawReadAsync(tmpBuf, 0, tmpBuf.Length, cancellationToken).ConfigureAwait(false);
                         if (bytesRead > 0)
                         {
                             responseBuffer.AddRange(System.Linq.Enumerable.Take(tmpBuf, bytesRead));
@@ -93,17 +126,20 @@ namespace S7Tools.Services.Adapters.Plc
                             }
                         }
                     }
-                    await Task.Delay(50, cancellationToken);
+                    await Task.Delay(50, cancellationToken).ConfigureAwait(false);
                 }
-                await Task.Delay(10, cancellationToken);
+                await Task.Delay(10, cancellationToken).ConfigureAwait(false);
             }
             throw new Exception($"Handshake failed after {MaxHandshakeAttempts} attempts");
         }
 
+        /// <summary>
+        /// Executes the GetVersionAsync operation.
+        /// </summary>
         public async Task<byte[]> GetVersionAsync(CancellationToken cancellationToken)
         {
             // Handler 0x00 = Get Info
-            byte[]? response = await InvokePrimaryHandlerAsync(0x00, [], true, cancellationToken);
+            byte[]? response = await InvokePrimaryHandlerAsync(0x00, [], true, cancellationToken).ConfigureAwait(false);
             return response ?? [];
         }
     }

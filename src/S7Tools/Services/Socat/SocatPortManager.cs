@@ -21,6 +21,9 @@ public class SocatPortManager
 {
     private readonly ILogger<SocatPortManager> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SocatPortManager"/> class.
+    /// </summary>
     public SocatPortManager(ILogger<SocatPortManager> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -41,6 +41,9 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 {
     private readonly ILogger _logger;
     private readonly IUnifiedProfileDialogService _profileDialogService;
+    /// <summary>
+    /// Gets or sets the UnifiedDialogService.
+    /// </summary>
     protected IUnifiedProfileDialogService UnifiedDialogService => _profileDialogService;
     private readonly IDialogService _dialogService;
     private readonly IUIThreadService _uiThreadService;
@@ -252,8 +255,17 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     /// </remarks>
     public ReactiveCommand<Unit, Unit> SetDefaultCommand { get; private set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the ExportProfilesCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ExportProfilesCommand { get; private set; } = null!;
+    /// <summary>
+    /// Gets or sets the ImportProfilesCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
+    /// <summary>
+    /// Gets or sets the ExportSelectedProfileCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ExportSelectedProfileCommand { get; private set; } = null!;
 
     #endregion
