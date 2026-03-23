@@ -1,16 +1,14 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.ViewModels.Layout;
 using Xunit;
 
 namespace S7Tools.Tests.ViewModels;
 
 /// <summary>
-/// Tests for the SettingsManagementViewModel.
-/// NOTE: This test file uses the old ISettingsService which has been removed.
-/// These tests are disabled pending update to use IApplicationSettingsService.
+/// Tests for the SettingsManagementViewModel using the strongly-typed IApplicationSettingsService.
 /// </summary>
 public class SettingsManagementViewModelTests
 {
@@ -22,15 +20,11 @@ public class SettingsManagementViewModelTests
         _mockLogger = new Mock<ILogger<SettingsManagementViewModel>>();
         _mockSettingsService = new Mock<IApplicationSettingsService>();
 
-        // Setup mock to return default values for settings
-        _mockSettingsService.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns((string key, string defaultValue) => defaultValue);
-        _mockSettingsService.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns((string key, bool defaultValue) => defaultValue);
-        _mockSettingsService.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<int>()))
-            .Returns((string key, int defaultValue) => defaultValue);
-        _mockSettingsService.Setup(s => s.LoadSettingsAsync())
-            .ReturnsAsync(ApplicationSettings.CreateDefault());
+        // Setup mock to return default AppSettings
+        _mockSettingsService.Setup(s => s.Current).Returns(new AppSettings());
+        _mockSettingsService.Setup(s => s.LoadSettingsAsync()).Returns(Task.CompletedTask);
+        _mockSettingsService.Setup(s => s.UpdateSettingsAsync(It.IsAny<Action<AppSettings>>()))
+            .Returns(Task.CompletedTask);
     }
 
     [Fact]
