@@ -46,14 +46,14 @@ namespace S7Tools.Services
             }
         }
 
-        public Task UpdateSettingsAsync(Action<AppSettings> updateAction)
+        public async Task UpdateSettingsAsync(Action<AppSettings> updateAction)
         {
-            _options.Update(settings =>
+            await _options.UpdateAsync(settings =>
             {
                 updateAction(settings);
-            });
+                return Task.CompletedTask;
+            }).ConfigureAwait(false);
             SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = true });
-            return Task.CompletedTask;
         }
 
         public Task ResetAllSettingsAsync()

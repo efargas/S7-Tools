@@ -210,7 +210,8 @@ namespace S7Tools.Core.Models.Configuration
                 WriteIndented = true,
                 PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
             };
-            return System.Text.Json.JsonSerializer.Serialize(defaultSettings, options);
+            var rootObject = new { App = defaultSettings };
+            return System.Text.Json.JsonSerializer.Serialize(rootObject, options);
         }
     }
 }

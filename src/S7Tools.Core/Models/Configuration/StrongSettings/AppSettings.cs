@@ -24,6 +24,10 @@ namespace S7Tools.Core.Models.Configuration.StrongSettings
     public class MemoryDumpSettings
     {
         public string DefaultFolder { get; set; } = "";
+        [Range(0, 60000)]
+        public int SegmentDumpDelayMilliseconds { get; set; } = 5000;
+        [Range(0, 60000)]
+        public int IterationDumpDelayMilliseconds { get; set; } = 5000;
     }
 
     public class LoggingSettings

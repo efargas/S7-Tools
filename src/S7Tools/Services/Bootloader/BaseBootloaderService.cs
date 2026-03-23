@@ -23,6 +23,18 @@ public abstract class BaseBootloaderService
     }
 
     /// <summary>
+    /// Gets the delay in milliseconds to wait between segment dumps within a single iteration.
+    /// Override in derived classes to provide a configurable value from application settings.
+    /// </summary>
+    protected virtual int SegmentDumpDelayMilliseconds => 5000;
+
+    /// <summary>
+    /// Gets the delay in milliseconds to wait between dump iterations.
+    /// Override in derived classes to provide a configurable value from application settings.
+    /// </summary>
+    protected virtual int IterationDumpDelayMilliseconds => 5000;
+
+    /// <summary>
     /// Performs the core memory dump process, iterating through dumps and segments.
     /// </summary>
     protected async Task<List<byte[]>> PerformDumpProcessAsync(
@@ -112,14 +124,14 @@ public abstract class BaseBootloaderService
             {
                 List<byte[]> segmentDataList = [];
 
-                const int SegmentDumpDelayMilliseconds = 5000;
+                int segmentDumpDelayMilliseconds = SegmentDumpDelayMilliseconds;
 
                 for (int i = 0; i < selectedSegments.Count; i++)
                 {
-                    if (i > 0)
+                    if (i > 0 && segmentDumpDelayMilliseconds > 0)
                     {
-                        var delay = TimeSpan.FromMilliseconds(SegmentDumpDelayMilliseconds);
-                        logger.LogInformation("Waiting {Delay} before next segment dump...", delay);
+                        var delay = TimeSpan.FromMilliseconds(segmentDumpDelayMilliseconds);
+                        logger.LogDebug("Waiting {Delay} before next segment dump...", delay);
                         await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                     }
 
@@ -247,8 +259,12 @@ public abstract class BaseBootloaderService
 
             if (iter < profiles.DumpCount - 1)
             {
-                logger.LogInformation("Waiting 5 seconds before next dump iteration...");
-                await Task.Delay(5000, cancellationToken).ConfigureAwait(false);
+                int iterationDelayMs = IterationDumpDelayMilliseconds;
+                if (iterationDelayMs > 0)
+                {
+                    logger.LogDebug("Waiting {DelayMs}ms before next dump iteration...", iterationDelayMs);
+                    await Task.Delay(iterationDelayMs, cancellationToken).ConfigureAwait(false);
+                }
             }
         }
 
