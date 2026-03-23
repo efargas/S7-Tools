@@ -11,7 +11,7 @@ namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 /// Logger provider that creates DataStore loggers for capturing log entries in memory.
 /// </summary>
 [ProviderAlias("DataStore")]
-public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalScope
+public sealed class DataStoreLoggerProvider : ILoggerProvider
 {
     private readonly ILogDataStore _dataStore;
     private readonly DataStoreLoggerConfiguration _configuration;
@@ -66,12 +66,6 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
         }
 
         return _loggers.GetOrAdd(categoryName, name => new DataStoreLogger(name, _dataStore, _configuration, _timeProvider));
-    }
-
-    /// <inheritdoc />
-    public void SetScopeProvider(IExternalScopeProvider scopeProvider)
-    {
-    // Provider uses contextual scopes dynamically if needed
     }
 
     /// <summary>
