@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -15,9 +16,10 @@ using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Validation;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;

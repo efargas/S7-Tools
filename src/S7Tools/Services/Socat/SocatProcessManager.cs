@@ -9,8 +9,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
-using S7Tools.Core.Services.Shell;
+using S7Tools.Core.Interfaces.Shell;
 using S7Tools.Extensions;
 
 namespace S7Tools.Services.Socat;

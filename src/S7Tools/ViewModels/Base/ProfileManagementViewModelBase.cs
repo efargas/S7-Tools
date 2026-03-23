@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Concurrent;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Services.Interfaces;
 

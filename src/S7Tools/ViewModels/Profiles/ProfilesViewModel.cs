@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Settings;
 

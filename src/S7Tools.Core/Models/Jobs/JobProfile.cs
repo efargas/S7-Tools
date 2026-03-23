@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using S7Tools.Core.Constants;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Core.Models.Jobs;
 

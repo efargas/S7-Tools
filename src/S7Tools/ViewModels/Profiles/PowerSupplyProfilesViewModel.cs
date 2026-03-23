@@ -14,7 +14,6 @@ using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
@@ -438,7 +437,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Duplicating power supply profile: {ProfileName}", SelectedProfile.Name);
 
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Profile",
                 "Enter a name for the duplicate profile:",
                 $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);

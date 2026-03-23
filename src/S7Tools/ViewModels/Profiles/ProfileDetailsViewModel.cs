@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using ReactiveUI;
 using S7Tools.Core.Constants;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels.Profiles;

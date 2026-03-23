@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Validation;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
@@ -453,7 +453,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             _logger.LogDebug("Showing duplicate input dialog for job profile ID: {SourceProfileId}", request.SourceProfileId);
 
             // Use the input dialog service since the job-specific duplicate dialog is not implemented yet
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 request.Title,
                 "Enter a name for the duplicated job profile:",
                 request.SuggestedName,
@@ -816,7 +816,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             string templateListText = string.Join("\n", JobTemplates.Select((t, i) => $"{i + 1}. {t.Name}"));
             string message = $"Select a template number:\n\n{templateListText}";
 
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Select Template",
                 message,
                 "1",
@@ -841,7 +841,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             JobProfile template = JobTemplates[templateIndex - 1];
 
             // Ask for new job name
-            Models.InputResult nameResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult nameResult = await _dialogService.ShowInputAsync(
                 "New Job Name",
                 $"Enter a name for the job created from template '{template.Name}':",
                 $"Job from {template.Name}",
@@ -888,7 +888,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             StatusMessage = UIStrings.Status_SavingJobAsTemplate;
 
             // Show template name input dialog
-            Models.InputResult nameResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult nameResult = await _dialogService.ShowInputAsync(
                 "Save as Template",
                 $"Enter a name for the template based on job '{SelectedProfile.Name}':",
                 $"{SelectedProfile.Name} Template",
@@ -1199,7 +1199,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             // Show date/time picker dialog using input dialog
             string currentTime = DateTime.UtcNow.ToLocalTime().AddMinutes(5).ToString(S7Tools.Constants.AppConstants.StandardUserInputDateFormat);
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Schedule Task",
                 $"Enter the scheduled execution time for job '{SelectedProfile.Name}':\n\nFormat: {S7Tools.Constants.AppConstants.StandardUserInputDateFormat} (24-hour format)",
                 currentTime,

@@ -95,7 +95,7 @@ namespace S7Tools.Services
             try
             {
                 // Validate required directories
-                foreach (Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
+                foreach (global::S7Tools.Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
                 {
                     if (string.IsNullOrEmpty(dirInfo.AbsolutePath))
                     {
@@ -119,7 +119,7 @@ namespace S7Tools.Services
                 }
 
                 // Validate required files
-                foreach (Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
+                foreach (global::S7Tools.Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
                 {
                     if (string.IsNullOrEmpty(fileInfo.AbsolutePath))
                     {
@@ -172,7 +172,7 @@ namespace S7Tools.Services
             try
             {
                 // Create missing directories
-                foreach (Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
+                foreach (global::S7Tools.Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
                 {
                     if (string.IsNullOrEmpty(dirInfo.AbsolutePath))
                     {
@@ -205,7 +205,7 @@ namespace S7Tools.Services
                 }
 
                 // Create missing files
-                foreach (Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
+                foreach (global::S7Tools.Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
                 {
                     if (string.IsNullOrEmpty(fileInfo.AbsolutePath))
                     {
@@ -412,7 +412,7 @@ namespace S7Tools.Services
         private void ResolveManifestPaths()
         {
             // Resolve directory paths
-            foreach (Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
+            foreach (global::S7Tools.Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
             {
                 if (string.IsNullOrEmpty(dirInfo.AbsolutePath))
                 {
@@ -421,7 +421,7 @@ namespace S7Tools.Services
             }
 
             // Resolve file paths
-            foreach (Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
+            foreach (global::S7Tools.Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
             {
                 if (string.IsNullOrEmpty(fileInfo.AbsolutePath))
                 {
@@ -435,7 +435,7 @@ namespace S7Tools.Services
         /// </summary>
         private async Task CreateRequiredDirectoriesAsync(ResourceInitializationResult result)
         {
-            foreach (Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
+            foreach (global::S7Tools.Core.Models.Configuration.DirectoryInfo dirInfo in _resourceManifest.RequiredDirectories)
             {
                 if (!Directory.Exists(dirInfo.AbsolutePath) && dirInfo.CreateIfMissing)
                 {
@@ -463,7 +463,7 @@ namespace S7Tools.Services
         /// </summary>
         private async Task CreateRequiredFilesAsync(ResourceInitializationResult result)
         {
-            foreach (Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
+            foreach (global::S7Tools.Core.Models.Configuration.FileInfo fileInfo in _resourceManifest.RequiredFiles)
             {
                 if (!File.Exists(fileInfo.AbsolutePath))
                 {

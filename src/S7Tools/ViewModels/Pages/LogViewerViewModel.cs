@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,6 +12,7 @@ using S7Tools.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 

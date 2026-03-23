@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -5,12 +6,13 @@ using Avalonia.Controls;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Profiles;
 using S7Tools.ViewModels;
-using CoreProfileEditRequest = S7Tools.Core.Services.Interfaces.ProfileEditRequest;
+using CoreProfileEditRequest = S7Tools.Core.Interfaces.Services.ProfileEditRequest;
 
 namespace S7Tools.Services;
 
@@ -31,9 +33,9 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
     private readonly IDialogService _dialogService;
     private readonly ILogger<UnifiedProfileDialogService> _logger;
 
-    private static readonly Interaction<S7Tools.Models.ProfileEditRequest, ProfileEditResult> _staticInteraction = new();
+    private static readonly Interaction<S7Tools.ViewModels.Dialogs.Models.ProfileEditRequest, ProfileEditResult> _staticInteraction = new();
 
-    public Interaction<S7Tools.Models.ProfileEditRequest, ProfileEditResult> ShowProfileEditDialog => _staticInteraction;
+    public Interaction<S7Tools.ViewModels.Dialogs.Models.ProfileEditRequest, ProfileEditResult> ShowProfileEditDialog => _staticInteraction;
 
     public UnifiedProfileDialogService(
         ISerialPortProfileService serialPortProfileService,
@@ -100,7 +102,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
 
     private async Task<ProfileEditResult> ShowEditDialogAsync(string title, ViewModelBase profileViewModel, ProfileType profileType)
     {
-        var request = new S7Tools.Models.ProfileEditRequest(title, profileViewModel, profileType);
+        var request = new global::S7Tools.ViewModels.Dialogs.Models.ProfileEditRequest(title, profileViewModel, profileType);
         return await ShowProfileEditDialog.Handle(request).FirstAsync();
     }
 
@@ -450,7 +452,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
     {
         try
         {
-            Models.InputResult result = await _dialogService.ShowInputAsync(title, prompt, defaultValue).ConfigureAwait(false);
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult result = await _dialogService.ShowInputAsync(title, prompt, defaultValue).ConfigureAwait(false);
 
             if (!result.IsCancelled && !string.IsNullOrEmpty(result.Value))
             {

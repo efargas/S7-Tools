@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -10,7 +11,7 @@ using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Services;
 using S7Tools.ViewModels;
 using S7Tools.ViewModels.Controls;

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;

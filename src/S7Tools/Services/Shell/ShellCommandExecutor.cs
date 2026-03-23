@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using S7Tools.Core.Services.Shell;
+using S7Tools.Core.Interfaces.Shell;
 
 namespace S7Tools.Services.Shell;
 

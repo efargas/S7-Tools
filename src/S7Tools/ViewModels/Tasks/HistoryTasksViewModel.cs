@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Helpers;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;

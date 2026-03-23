@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System.Reactive;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;

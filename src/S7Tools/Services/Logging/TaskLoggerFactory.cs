@@ -3,7 +3,6 @@ using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
@@ -18,13 +17,13 @@ namespace S7Tools.Services.Logging;
 public class TaskLoggerFactory(
     IPathService pathService,
     ILogger<TaskLoggerFactory> logger,
-    S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService,
+    S7Tools.Core.Interfaces.Services.ICentralizedTaskLogService centralizedTaskLogService,
     IApplicationSettingsService applicationSettingsService,
     ITimeProvider timeProvider) : ITaskLoggerFactory, IDisposable
 {
     private readonly IPathService _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
     private readonly ILogger<TaskLoggerFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
+    private readonly S7Tools.Core.Interfaces.Services.ICentralizedTaskLogService _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
     private readonly IApplicationSettingsService _applicationSettingsService = applicationSettingsService ?? throw new ArgumentNullException(nameof(applicationSettingsService));
     private readonly ITimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly ConcurrentDictionary<Guid, TaskLoggerContext> _activeLoggers = new();

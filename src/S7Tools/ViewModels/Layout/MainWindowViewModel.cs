@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Reactive;
 using System.Reactive.Disposables;

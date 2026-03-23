@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using ReactiveUI;
 using S7Tools.Services.Interfaces;
 

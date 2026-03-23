@@ -2,6 +2,7 @@ using System.Reactive;
 using Avalonia.Controls;
 using Avalonia.Input;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.ViewModels.Dialogs;
 
 namespace S7Tools.Views.Dialogs;

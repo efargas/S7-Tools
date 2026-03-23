@@ -221,7 +221,7 @@ public sealed class MemoryDumpOrchestrator : IDisposable
         Array.Copy(hookPayload, 0, primaryPayload, 1, hookPayload.Length);
 
         // Final packet framing (Length + Data + Checksum)
-        byte[] packet = Adapters.PlcProtocolAdapter.EncodePacket(primaryPayload);
+        byte[] packet = S7Tools.Services.Plc.Adapters.PlcProtocolAdapter.EncodePacket(primaryPayload);
 
         _logger.LogInformation("Sending dump command (framed) via dump connection...");
         await _dumperService.WriteAsync(packet, ct).ConfigureAwait(false);

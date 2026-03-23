@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -9,7 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 

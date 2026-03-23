@@ -13,7 +13,6 @@ using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
@@ -324,16 +323,16 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
             IsScanning = true;
             StatusMessage = UIStrings.Status_ScanningForPorts;
 
-            IEnumerable<Core.Services.Interfaces.SerialPortInfo> portInfos = await _portService.ScanAvailablePortsAsync();
+            IEnumerable<Core.Interfaces.Services.SerialPortInfo> portInfos = await _portService.ScanAvailablePortsAsync();
 
             AvailablePorts.Clear();
 
             // Sort ports with ttyUSB* first (external serial adapters), then others alphabetically
-            IOrderedEnumerable<Core.Services.Interfaces.SerialPortInfo> sortedPortInfos = portInfos
+            IOrderedEnumerable<Core.Interfaces.Services.SerialPortInfo> sortedPortInfos = portInfos
                 .OrderBy(p => !p.PortPath.Contains("/ttyUSB")) // ttyUSB* ports come first (false sorts before true)
                 .ThenBy(p => p.PortPath); // Then sort alphabetically within each group
 
-            foreach (Core.Services.Interfaces.SerialPortInfo? portInfo in sortedPortInfos)
+            foreach (Core.Interfaces.Services.SerialPortInfo? portInfo in sortedPortInfos)
             {
                 AvailablePorts.Add(portInfo.PortPath);
             }

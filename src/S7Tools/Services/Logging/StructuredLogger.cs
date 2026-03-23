@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using S7Tools.Core.Logging;
+using S7Tools.Core.Interfaces.Logging;
 
 namespace S7Tools.Services;
 
@@ -68,7 +68,6 @@ public class StructuredLogger(ILogger baseLogger, string categoryName) : IStruct
             ["ExceptionMessage"] = exception.Message
         };
 
-        using IDisposable? scope = BeginScope(enrichedProperties);
         _baseLogger.Log(logLevel, exception, "{Message}", message);
     }
 
