@@ -447,7 +447,7 @@ public static class ServiceCollectionExtensions
         // Add Power Supply ViewModels (Power Supply Control - Modbus TCP)
         services.TryAddTransient<PowerSupplyProfileViewModel>();
         services.TryAddTransient<PowerSupplyProfilesViewModel>();
-        
+
         // Add Memory Region Profiles ViewModels
         services.TryAddTransient<MemoryRegionProfilesViewModel>();
 

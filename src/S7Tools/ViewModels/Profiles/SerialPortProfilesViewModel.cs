@@ -25,7 +25,7 @@ public class SerialPortProfilesViewModel : ProfileManagementViewModelBase<Serial
         : base(logger, unifiedDialogService, dialogService, uiThreadService, fileDialogService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
-        
+
         _ = Task.Run(async () =>
         {
             await InitializeAsync();
@@ -41,12 +41,12 @@ public class SerialPortProfilesViewModel : ProfileManagementViewModelBase<Serial
     protected override string GetDefaultProfileName() => "SerialDefault";
     protected override string GetProfileTypeName() => "Serial Port";
     protected override SerialPortProfile CreateDefaultProfile() => SerialPortProfile.CreateDefaultProfile();
-    
+
     protected override async Task<ProfileDialogResult<SerialPortProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
         return await UnifiedDialogService.ShowSerialCreateDialogAsync(request).ConfigureAwait(false);
     }
-    
+
     protected override async Task<ProfileDialogResult<SerialPortProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
         return await UnifiedDialogService.ShowSerialEditDialogAsync(request).ConfigureAwait(false);

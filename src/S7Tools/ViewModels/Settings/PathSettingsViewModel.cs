@@ -115,7 +115,7 @@ public class PathSettingsViewModel : ViewModelBase
     private void RefreshFromSettings()
     {
         var current = _settingsService.Current;
-        
+
         // Serial
         string serialPath = !string.IsNullOrEmpty(current.Profiles.SerialPath) ? current.Profiles.SerialPath : _pathService.SerialProfilesPath;
         SerialProfilesPath = GetDirectoryFromPath(serialPath, _pathService.SerialProfilesPath);
@@ -140,7 +140,11 @@ public class PathSettingsViewModel : ViewModelBase
             string? directoryPath = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(directoryPath))
             {
-                if (Path.IsPathRooted(directoryPath)) return directoryPath;
+                if (Path.IsPathRooted(directoryPath))
+                {
+                    return directoryPath;
+                }
+
                 return _pathService.ResolvePath(directoryPath);
             }
         }

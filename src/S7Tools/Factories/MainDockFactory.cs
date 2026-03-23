@@ -1,10 +1,10 @@
+using System.ComponentModel;
+using System.Linq;
+using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
-using Dock.Avalonia.Controls;
-using System.ComponentModel;
-using System.Linq;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.ViewModels.Layout;
 
@@ -44,7 +44,10 @@ public class MainDockFactory : Factory
     /// </summary>
     private bool EnsureDocumentDock()
     {
-        if (_mainDocumentDock == null) return false;
+        if (_mainDocumentDock == null)
+        {
+            return false;
+        }
 
         if (_mainDocumentDock.VisibleDockables == null)
         {
@@ -59,7 +62,10 @@ public class MainDockFactory : Factory
     /// </summary>
     private bool EnsureToolDock()
     {
-        if (_bottomToolDock == null) return false;
+        if (_bottomToolDock == null)
+        {
+            return false;
+        }
 
         if (_bottomToolDock.VisibleDockables == null)
         {
@@ -75,7 +81,10 @@ public class MainDockFactory : Factory
     /// </summary>
     public void OpenDocument(IDockableViewModel vm)
     {
-        if (!EnsureDocumentDock()) return;
+        if (!EnsureDocumentDock())
+        {
+            return;
+        }
 
         // Check for existing open document by DockId
         if (_openDocuments.TryGetValue(vm.DockId, out var existingDoc))
@@ -128,7 +137,10 @@ public class MainDockFactory : Factory
     /// </summary>
     public void OpenTool(IDockableViewModel vm)
     {
-        if (!EnsureToolDock()) return;
+        if (!EnsureToolDock())
+        {
+            return;
+        }
 
         if (_openTools.TryGetValue(vm.DockId, out var existingTool))
         {
@@ -185,7 +197,10 @@ public class MainDockFactory : Factory
     /// </summary>
     public void RestoreSettings()
     {
-        if (!EnsureDocumentDock() || SettingsContent == null) return;
+        if (!EnsureDocumentDock() || SettingsContent == null)
+        {
+            return;
+        }
 
         var existingSettings = _mainDocumentDock!.VisibleDockables?
             .OfType<Document>()
@@ -247,7 +262,7 @@ public class MainDockFactory : Factory
     public override void CloseDockable(IDockable dockable)
     {
         base.CloseDockable(dockable);
-        
+
         // When actually closing a dockable tab, dispose its resources
         if (dockable is IDocument doc && doc.Context is IDisposable disposableVm)
         {

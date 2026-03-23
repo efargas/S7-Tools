@@ -30,7 +30,9 @@ public class DockingService
     public void SetPanelVisible(string panelId, bool isVisible)
     {
         if (_panelStates.TryGetValue(panelId, out var state))
+        {
             state.IsVisible = isVisible;
+        }
     }
 
     /// <summary>
@@ -39,7 +41,9 @@ public class DockingService
     public void SetPanelSize(string panelId, double size)
     {
         if (_panelStates.TryGetValue(panelId, out var state))
+        {
             state.Size = size;
+        }
     }
 }
 

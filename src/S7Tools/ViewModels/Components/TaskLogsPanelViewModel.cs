@@ -157,9 +157,15 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
                 }
             }
 
-            if (needsMainSort) ApplySortToMain();
-            if (needsProcessSort) ApplySortToProcess();
+            if (needsMainSort)
+            {
+                ApplySortToMain();
+            }
 
+            if (needsProcessSort)
+            {
+                ApplySortToProcess();
+            }
         }, TimeSpan.FromMilliseconds(500), _uiThreadService!);
 
         _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
@@ -190,7 +196,10 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         {
             InvertAutoScroll = true;
             // Also enable auto scroll if moving to this default
-            if (!AutoScroll) AutoScroll = true;
+            if (!AutoScroll)
+            {
+                AutoScroll = true;
+            }
         }
         else
         {
@@ -222,11 +231,17 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
     private IEnumerable<LogEntry> SortLogEntries(IEnumerable<LogEntry> source)
     {
         if (_sortColumn == "Level")
+        {
             return _sortAscending ? source.OrderBy(e => e.Level).ThenBy(e => e.Timestamp) : source.OrderByDescending(e => e.Level).ThenByDescending(e => e.Timestamp);
+        }
         else if (_sortColumn == "Message")
+        {
             return _sortAscending ? source.OrderBy(e => e.Message).ThenBy(e => e.Timestamp) : source.OrderByDescending(e => e.Message).ThenByDescending(e => e.Timestamp);
+        }
         else // Timestamp
+        {
             return _sortAscending ? source.OrderBy(e => e.Timestamp) : source.OrderByDescending(e => e.Timestamp);
+        }
     }
 
     private void InitializeLogs()
@@ -254,10 +269,16 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 
     private void PopulateInitialLogEntries(ITaskLogDataStore? store, ObservableCollection<LogEntry> sourceCollection, ObservableCollection<LogEntry> targetCollection)
     {
-        if (store == null) return;
+        if (store == null)
+        {
+            return;
+        }
 
         int count = store.Count();
-        if (count == 0) return;
+        if (count == 0)
+        {
+            return;
+        }
 
         var initialEntries = new List<LogEntry>();
         int skipCount = Math.Max(0, count - MaxLogEntries);
@@ -345,7 +366,7 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 
     public ObservableCollection<LogEntry> MainLogEntries { get; }
     public ObservableCollection<LogEntry> ProcessLogEntries { get; }
-    
+
     private ObservableCollection<LogEntry> _filteredMainLogEntries = new();
     public ObservableCollection<LogEntry> FilteredMainLogEntries
     {

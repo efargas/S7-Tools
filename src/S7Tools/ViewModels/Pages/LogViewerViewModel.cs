@@ -486,7 +486,10 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         {
             InvertAutoScroll = true;
             // Optional: re-enable auto scroll when clicking descending timestamp for newest at top
-            if (!AutoScroll) AutoScroll = true;
+            if (!AutoScroll)
+            {
+                AutoScroll = true;
+            }
         }
         else
         {
@@ -678,28 +681,28 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         IEnumerable<LogModel> sortedList;
         if (_sortColumn == "Level")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Level).ThenBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Level).ThenBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Level).ThenByDescending(e => e.Timestamp);
         }
         else if (_sortColumn == "Category")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Category).ThenBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Category).ThenBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Category).ThenByDescending(e => e.Timestamp);
         }
         else if (_sortColumn == "Message")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Message).ThenBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Message).ThenBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Message).ThenByDescending(e => e.Timestamp);
         }
         else // Timestamp
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Timestamp);
         }
 
         var filteredList = sortedList.ToList();
 
-        _uiThreadService.InvokeOnUIThread(() => 
+        _uiThreadService.InvokeOnUIThread(() =>
         {
             FilteredLogEntries = new ObservableCollection<LogModel>(filteredList);
             FilteredLogCount = FilteredLogEntries.Count;

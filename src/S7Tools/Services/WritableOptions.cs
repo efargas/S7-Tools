@@ -1,17 +1,19 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using Microsoft.Extensions.Options;
 using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services
 {
-    public class WritableOptions<T> : IWritableOptions<T> where T : class, new()
+    public sealed class WritableOptions<T> : IWritableOptions<T>, IDisposable where T : class, new()
     {
         private readonly string _basePath;
         private readonly IOptionsMonitor<T> _options;
         private readonly string _section;
         private readonly string _file;
-        private readonly object _lock = new object();
+        private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
+        private bool _disposed;
 
         private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
         {
@@ -39,7 +41,8 @@ namespace S7Tools.Services
 
         public void Update(Action<T> applyChanges)
         {
-            lock (_lock)
+            _writeLock.Wait();
+            try
             {
                 var physicalPath = Path.IsPathRooted(_file) ? _file : Path.Combine(_basePath, _file);
 
@@ -94,55 +97,77 @@ namespace S7Tools.Services
                 File.WriteAllText(tempPath, jObject.ToJsonString(JsonOptions));
                 File.Move(tempPath, physicalPath, overwrite: true);
             }
+            finally
+            {
+                _writeLock.Release();
+            }
         }
 
         public async Task UpdateAsync(Func<T, Task> applyChanges)
         {
-            var physicalPath = Path.IsPathRooted(_file) ? _file : Path.Combine(_basePath, _file);
-
-            JsonNode? rootNode = null;
-
-            if (File.Exists(physicalPath))
+            await _writeLock.WaitAsync().ConfigureAwait(false);
+            try
             {
-                try
+                var physicalPath = Path.IsPathRooted(_file) ? _file : Path.Combine(_basePath, _file);
+
+                JsonNode? rootNode = null;
+
+                if (File.Exists(physicalPath))
                 {
-                    var jsonContent = await File.ReadAllTextAsync(physicalPath).ConfigureAwait(false);
-                    if (!string.IsNullOrWhiteSpace(jsonContent))
+                    try
                     {
-                        rootNode = JsonNode.Parse(jsonContent);
+                        var jsonContent = await File.ReadAllTextAsync(physicalPath).ConfigureAwait(false);
+                        if (!string.IsNullOrWhiteSpace(jsonContent))
+                        {
+                            rootNode = JsonNode.Parse(jsonContent);
+                        }
+                    }
+                    catch
+                    {
+                        rootNode = null;
                     }
                 }
-                catch
+
+                if (rootNode == null)
                 {
-                    rootNode = null;
+                    rootNode = new JsonObject();
                 }
-            }
 
-            if (rootNode == null)
+                if (rootNode is not JsonObject jObject)
+                {
+                    jObject = new JsonObject();
+                }
+
+                var sectionObject = CurrentValue;
+                await applyChanges(sectionObject).ConfigureAwait(false);
+
+                var sectionNode = JsonSerializer.SerializeToNode(sectionObject, JsonOptions);
+                jObject[_section] = sectionNode;
+
+                var dir = Path.GetDirectoryName(physicalPath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
+                var tempPath = physicalPath + ".tmp";
+                await File.WriteAllTextAsync(tempPath, jObject.ToJsonString(JsonOptions)).ConfigureAwait(false);
+                File.Move(tempPath, physicalPath, overwrite: true);
+            }
+            finally
             {
-                rootNode = new JsonObject();
+                _writeLock.Release();
             }
+        }
 
-            if (rootNode is not JsonObject jObject)
+        public void Dispose()
+        {
+            if (!_disposed)
             {
-                jObject = new JsonObject();
+                _writeLock.Dispose();
+                _disposed = true;
+                GC.SuppressFinalize(this);
             }
-
-            var sectionObject = CurrentValue;
-            await applyChanges(sectionObject).ConfigureAwait(false);
-
-            var sectionNode = JsonSerializer.SerializeToNode(sectionObject, JsonOptions);
-            jObject[_section] = sectionNode;
-
-            var dir = Path.GetDirectoryName(physicalPath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-
-            var tempPath = physicalPath + ".tmp";
-            await File.WriteAllTextAsync(tempPath, jObject.ToJsonString(JsonOptions)).ConfigureAwait(false);
-            File.Move(tempPath, physicalPath, overwrite: true);
         }
     }
 }

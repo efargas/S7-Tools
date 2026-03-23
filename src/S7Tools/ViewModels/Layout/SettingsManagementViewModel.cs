@@ -78,7 +78,7 @@ public class SettingsManagementViewModel : ReactiveObject
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Value => CurrentValue;
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Get(string? name) => CurrentValue;
         public IDisposable? OnChange(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string?> listener) => null;
-        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) {}
+        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) { }
         public Task UpdateAsync(Func<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, Task> applyChanges) => Task.CompletedTask;
     }
 
@@ -593,28 +593,44 @@ public class SettingsManagementViewModel : ReactiveObject
             await _settingsService.UpdateSettingsAsync(settings =>
             {
                 if (importedSettings.TryGetValue("logging.logDirectory", out object? logDir) && logDir is JsonElement logDirElem && logDirElem.ValueKind == JsonValueKind.String)
+                {
                     settings.Logging.LogDirectory = logDirElem.GetString() ?? settings.Logging.LogDirectory;
+                }
 
                 if (importedSettings.TryGetValue("logging.exportDirectory", out object? expDir) && expDir is JsonElement expDirElem && expDirElem.ValueKind == JsonValueKind.String)
+                {
                     settings.Logging.ExportDirectory = expDirElem.GetString() ?? settings.Logging.ExportDirectory;
+                }
 
                 if (importedSettings.TryGetValue("logging.level", out object? level) && level is JsonElement levelElem && levelElem.ValueKind == JsonValueKind.String)
+                {
                     settings.Logging.Level = levelElem.GetString() ?? settings.Logging.Level;
+                }
 
                 if (importedSettings.TryGetValue("ui.autoScrollLogs", out object? autoScroll) && autoScroll is JsonElement autoScrollElem && (autoScrollElem.ValueKind == JsonValueKind.True || autoScrollElem.ValueKind == JsonValueKind.False))
+                {
                     settings.Ui.AutoScrollLogs = autoScrollElem.GetBoolean();
+                }
 
                 if (importedSettings.TryGetValue("logging.enableFileLogging", out object? enableFileLog) && enableFileLog is JsonElement enableFileLogElem && (enableFileLogElem.ValueKind == JsonValueKind.True || enableFileLogElem.ValueKind == JsonValueKind.False))
+                {
                     settings.Logging.EnableFileLogging = enableFileLogElem.GetBoolean();
+                }
 
                 if (importedSettings.TryGetValue("ui.showTimestampInLogs", out object? showTimestamp) && showTimestamp is JsonElement showTimestampElem && (showTimestampElem.ValueKind == JsonValueKind.True || showTimestampElem.ValueKind == JsonValueKind.False))
+                {
                     settings.Ui.ShowTimestampInLogs = showTimestampElem.GetBoolean();
+                }
 
                 if (importedSettings.TryGetValue("ui.showCategoryInLogs", out object? showCat) && showCat is JsonElement showCatElem && (showCatElem.ValueKind == JsonValueKind.True || showCatElem.ValueKind == JsonValueKind.False))
+                {
                     settings.Ui.ShowCategoryInLogs = showCatElem.GetBoolean();
+                }
 
                 if (importedSettings.TryGetValue("ui.showLogLevelInLogs", out object? showLogLevel) && showLogLevel is JsonElement showLogLevelElem && (showLogLevelElem.ValueKind == JsonValueKind.True || showLogLevelElem.ValueKind == JsonValueKind.False))
+                {
                     settings.Ui.ShowLogLevelInLogs = showLogLevelElem.GetBoolean();
+                }
             });
 
             // Update ViewModel properties from imported settings

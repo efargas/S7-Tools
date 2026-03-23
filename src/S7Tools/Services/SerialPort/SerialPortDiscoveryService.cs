@@ -79,17 +79,26 @@ public sealed class SerialPortDiscoveryService
             foreach (var port in availableSystemPorts)
             {
                 if (includeUsbPorts && port.Contains("ttyUSB"))
+                {
                     portsToScan.Add(port);
+                }
                 else if (includeAcmPorts && port.Contains("ttyACM"))
+                {
                     portsToScan.Add(port);
+                }
                 else if (includeStandardPorts && port.Contains("ttyS") && !port.Contains("ttyUSB") && !port.Contains("ttyACM"))
+                {
                     portsToScan.Add(port);
+                }
             }
 
             // Scan gathered valid hardware ports, ensuring unique and sorted sequence
             foreach (var portPath in portsToScan.Distinct().OrderBy(p => p))
             {
-                if (cancellationToken.IsCancellationRequested) break;
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
 
                 // GetPortInfoAsync will do accessibility test (stty) BUT only for ports that actually structurally exist!
                 SerialPortInfo? portInfo = await GetPortInfoAsync(portPath, 1000, cancellationToken).ConfigureAwait(false);

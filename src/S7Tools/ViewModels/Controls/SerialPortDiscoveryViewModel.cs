@@ -307,9 +307,15 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             {
                 switch (propertyName)
                 {
-                    case nameof(IncludeUsbPorts): s.Serial.IncludeUsbPorts = value; break;
-                    case nameof(IncludeAcmPorts): s.Serial.IncludeAcmPorts = value; break;
-                    case nameof(IncludeSerialPorts): s.Serial.IncludeStandardPorts = value; break;
+                    case nameof(IncludeUsbPorts):
+                        s.Serial.IncludeUsbPorts = value;
+                        break;
+                    case nameof(IncludeAcmPorts):
+                        s.Serial.IncludeAcmPorts = value;
+                        break;
+                    case nameof(IncludeSerialPorts):
+                        s.Serial.IncludeStandardPorts = value;
+                        break;
                 }
             });
 

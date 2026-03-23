@@ -70,7 +70,7 @@ public class ProfilesViewModel : ViewModelBase, IDockableViewModel
     public ViewModelBase? SelectedCategoryViewModel
     {
         get => _selectedCategoryViewModel;
-        set 
+        set
         {
             this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
             this.RaisePropertyChanged("SidebarItemTapped");
@@ -88,7 +88,7 @@ public class ProfilesViewModel : ViewModelBase, IDockableViewModel
     {
         if (string.IsNullOrWhiteSpace(category))
         {
-            category = "Serial Ports"; 
+            category = "Serial Ports";
         }
 
         if (_categoryViewModels.TryGetValue(category, out ViewModelBase? existingViewModel))
@@ -114,7 +114,7 @@ public class ProfilesViewModel : ViewModelBase, IDockableViewModel
         {
             var logger = _serviceProvider.GetService<ILogger<ProfilesViewModel>>();
             logger?.LogError(ex, "Error creating ViewModel for profile category: {Category}", category);
-            
+
             // Fallback
             return _serviceProvider.GetRequiredService<SerialPortProfilesViewModel>();
         }

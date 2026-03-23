@@ -9,10 +9,10 @@ using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Services.Interfaces;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Resources;
+using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Dialogs;

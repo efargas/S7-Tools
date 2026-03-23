@@ -40,7 +40,7 @@ public class AppearanceSettingsViewModel : ViewModelBase
     {
         _settingsService = null!; // Dummy for designer
         _theme = "Dark";
-        RestoreDefaultsCommand = ReactiveCommand.Create(() => {});
+        RestoreDefaultsCommand = ReactiveCommand.Create(() => { });
     }
 
     /// <summary>

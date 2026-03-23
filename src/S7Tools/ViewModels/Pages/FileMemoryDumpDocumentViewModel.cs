@@ -20,11 +20,11 @@ public partial class FileMemoryDumpDocumentViewModel : ViewModelBase, IDockableV
     }
 
     public string DockId => FilePath;
-    
+
     public string DockTitle => Path.GetFileName(FilePath);
-    
+
     public bool CanClose => true;
-    
+
     public bool CanFloat => true;
 
     private HexViewerViewModel? _hexViewer;
@@ -45,7 +45,7 @@ public partial class FileMemoryDumpDocumentViewModel : ViewModelBase, IDockableV
         FilePath = path;
         this.RaisePropertyChanged(nameof(DockId));
         this.RaisePropertyChanged(nameof(DockTitle));
-        
+
         HexViewer?.OpenStream(path);
     }
 
