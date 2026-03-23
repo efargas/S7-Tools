@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System.Globalization;
 using Avalonia.Media;
 using Microsoft.Extensions.Logging;
@@ -19,7 +20,7 @@ public class ObjectConvertersTests
         object? result = converter.Convert(value, typeof(bool), (object?)null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.True((bool)result!);
+        ((bool)result!).Should().BeTrue();
     }
 
     [Fact]
@@ -32,7 +33,7 @@ public class ObjectConvertersTests
         object? result = converter.Convert(null, typeof(bool), (object?)null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.False((bool)result!);
+        ((bool)result!).Should().BeFalse();
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -10,7 +11,7 @@ using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Services;
 using S7Tools.ViewModels;
 using S7Tools.ViewModels.Controls;
@@ -41,6 +42,9 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
     private bool _hasMissingProfiles;
     private readonly ObservableCollection<string> _missingProfileWarnings = [];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobInfoDisplayViewModel"/> class.
+    /// </summary>
     public JobInfoDisplayViewModel(
         IProfileDetailsService profileDetailsService,
         ISerialPortProfileService serialService,
@@ -511,12 +515,18 @@ public class JobInfoDisplayViewModel : ViewModelBase, IDisposable
 
     #region IDisposable
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

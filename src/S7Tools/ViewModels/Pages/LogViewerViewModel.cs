@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,6 +12,7 @@ using S7Tools.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
@@ -486,7 +488,10 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         {
             InvertAutoScroll = true;
             // Optional: re-enable auto scroll when clicking descending timestamp for newest at top
-            if (!AutoScroll) AutoScroll = true;
+            if (!AutoScroll)
+            {
+                AutoScroll = true;
+            }
         }
         else
         {
@@ -678,28 +683,28 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
         IEnumerable<LogModel> sortedList;
         if (_sortColumn == "Level")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Level).ThenBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Level).ThenBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Level).ThenByDescending(e => e.Timestamp);
         }
         else if (_sortColumn == "Category")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Category).ThenBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Category).ThenBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Category).ThenByDescending(e => e.Timestamp);
         }
         else if (_sortColumn == "Message")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Message).ThenBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Message).ThenBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Message).ThenByDescending(e => e.Timestamp);
         }
         else // Timestamp
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Timestamp) 
+            sortedList = _sortAscending ? filtered.OrderBy(e => e.Timestamp)
                                         : filtered.OrderByDescending(e => e.Timestamp);
         }
 
         var filteredList = sortedList.ToList();
 
-        _uiThreadService.InvokeOnUIThread(() => 
+        _uiThreadService.InvokeOnUIThread(() =>
         {
             FilteredLogEntries = new ObservableCollection<LogModel>(filteredList);
             FilteredLogCount = FilteredLogEntries.Count;
@@ -745,6 +750,9 @@ internal class DesignTimeLogDataStore : ILogDataStore
     public event System.Collections.Specialized.NotifyCollectionChangedEventHandler? CollectionChanged;
 #pragma warning restore CS0067
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DesignTimeLogDataStore"/> class.
+    /// </summary>
     public DesignTimeLogDataStore()
     {
         // Ensure analyzers see events as "used" without runtime impact
@@ -761,6 +769,9 @@ internal class DesignTimeLogDataStore : ILogDataStore
         }
     }
 
+    /// <summary>
+    /// Gets or sets the Entries.
+    /// </summary>
     public IReadOnlyList<LogModel> Entries { get; } = new List<LogModel>
     {
         new() { Timestamp = DateTimeOffset.Now.AddMinutes(-5).DateTime, Level = LogLevel.Information, Category = "S7Tools.Services", Message = "Application started successfully" },
@@ -768,16 +779,46 @@ internal class DesignTimeLogDataStore : ILogDataStore
         new() { Timestamp = DateTimeOffset.Now.AddMinutes(-1).DateTime, Level = LogLevel.Error, Category = "S7Tools.Data", Message = "Failed to read tag value", Exception = new InvalidOperationException("Tag not found") }
     };
 
+    /// <summary>
+    /// Gets or sets the Count.
+    /// </summary>
     public int Count => Entries.Count;
+    /// <summary>
+    /// Gets or sets the MaxEntries.
+    /// </summary>
     public int MaxEntries => 10000;
+    /// <summary>
+    /// Gets or sets the IsFull.
+    /// </summary>
     public bool IsFull => false;
 
+    /// <summary>
+    /// Executes the AddEntry operation.
+    /// </summary>
     public void AddEntry(LogModel logEntry) { }
+    /// <summary>
+    /// Executes the AddEntries operation.
+    /// </summary>
     public void AddEntries(IEnumerable<LogModel> logEntries) { }
+    /// <summary>
+    /// Executes the Clear operation.
+    /// </summary>
     public void Clear() { }
+    /// <summary>
+    /// Executes the GetFilteredEntries operation.
+    /// </summary>
     public IEnumerable<LogModel> GetFilteredEntries(Func<LogModel, bool> filter) => Entries.Where(filter);
+    /// <summary>
+    /// Executes the GetEntriesInTimeRange operation.
+    /// </summary>
     public IEnumerable<LogModel> GetEntriesInTimeRange(DateTimeOffset startTime, DateTimeOffset endTime) => Entries.Where(e => e.Timestamp >= startTime && e.Timestamp <= endTime);
+    /// <summary>
+    /// Executes the ExportAsync operation.
+    /// </summary>
     public Task<string> ExportAsync(string format = "txt") => Task.FromResult("Design-time export data");
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose() { }
 }
 
@@ -786,14 +827,33 @@ internal class DesignTimeLogDataStore : ILogDataStore
 /// </summary>
 internal class DesignTimeUIThreadService : IUIThreadService
 {
+    /// <summary>
+    /// Gets or sets the IsUIThread.
+    /// </summary>
     public bool IsUIThread => true;
 
+    /// <summary>
+    /// Executes the InvokeOnUIThread operation.
+    /// </summary>
     public void InvokeOnUIThread(Action action) => action?.Invoke();
-    public Task InvokeOnUIThreadAsync(Action action) => Task.Run(action);
+    /// <summary>
+    /// Executes the InvokeOnUIThreadAsync operation.
+    /// </summary>
+    public Task InvokeOnUIThreadAsync(Action action)
+    {
+        action?.Invoke();
+        return Task.CompletedTask;
+    }
     public T InvokeOnUIThread<T>(Func<T> function) => function();
-    public Task<T> InvokeOnUIThreadAsync<T>(Func<T> function) => Task.Run(function);
+    public Task<T> InvokeOnUIThreadAsync<T>(Func<T> function) => Task.FromResult(function());
+    /// <summary>
+    /// Executes the InvokeOnUIThreadAsync operation.
+    /// </summary>
     public Task InvokeOnUIThreadAsync(Func<Task> asyncAction) => asyncAction();
     public Task<T> InvokeOnUIThreadAsync<T>(Func<Task<T>> asyncFunction) => asyncFunction();
+    /// <summary>
+    /// Executes the PostToUIThread operation.
+    /// </summary>
     public void PostToUIThread(Action action) => action?.Invoke();
 }
 
@@ -802,7 +862,13 @@ internal class DesignTimeUIThreadService : IUIThreadService
 /// </summary>
 internal class DesignTimeClipboardService : IClipboardService
 {
+    /// <summary>
+    /// Executes the GetTextAsync operation.
+    /// </summary>
     public Task<string?> GetTextAsync() => Task.FromResult<string?>("Design-time clipboard text");
+    /// <summary>
+    /// Executes the SetTextAsync operation.
+    /// </summary>
     public Task SetTextAsync(string? text) => Task.CompletedTask;
 }
 
@@ -811,18 +877,42 @@ internal class DesignTimeClipboardService : IClipboardService
 /// </summary>
 internal class DesignTimeDialogService : IDialogService
 {
+    /// <summary>
+    /// Gets or sets the ShowConfirmation.
+    /// </summary>
     public Interaction<ConfirmationRequest, bool> ShowConfirmation { get; } = new();
+    /// <summary>
+    /// Gets or sets the ShowError.
+    /// </summary>
     public Interaction<ConfirmationRequest, Unit> ShowError { get; } = new();
+    /// <summary>
+    /// Gets or sets the ShowInput.
+    /// </summary>
     public Interaction<InputRequest, InputResult> ShowInput { get; } = new();
+    /// <summary>
+    /// Gets or sets the ShowJobSelection.
+    /// </summary>
     public Interaction<JobSelectionRequest, Core.Models.Jobs.JobProfile?> ShowJobSelection { get; } = new();
 
+    /// <summary>
+    /// Executes the ShowConfirmationAsync operation.
+    /// </summary>
     public Task<bool> ShowConfirmationAsync(string title, string message) => Task.FromResult(false);
+    /// <summary>
+    /// Executes the ShowErrorAsync operation.
+    /// </summary>
     public Task ShowErrorAsync(string title, string message) => Task.CompletedTask;
+    /// <summary>
+    /// Executes the ShowInputAsync operation.
+    /// </summary>
     public Task<InputResult> ShowInputAsync(string title, string message, string? defaultValue = null, string? placeholder = null)
     {
         return Task.FromResult(InputResult.Cancelled());
     }
 
+    /// <summary>
+    /// Executes the ShowJobSelectionAsync operation.
+    /// </summary>
     public Task<Core.Models.Jobs.JobProfile?> ShowJobSelectionAsync()
     {
         return Task.FromResult<Core.Models.Jobs.JobProfile?>(null);

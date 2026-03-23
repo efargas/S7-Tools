@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,8 +27,8 @@ public class ShellCommandExecutorTests
         var result = await _executor.ExecuteCommandAsync("echo 'hello world'");
 
         // Assert
-        Assert.True(result.Success);
-        Assert.Equal(0, result.ExitCode);
+        result.Success.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
         Assert.Contains("hello world", result.Output);
     }
 
@@ -38,7 +39,7 @@ public class ShellCommandExecutorTests
         var result = await _executor.ExecuteCommandAsync("nonexistent_command_12345");
 
         // Assert
-        Assert.False(result.Success);
+        result.Success.Should().BeFalse();
         Assert.NotEqual(0, result.ExitCode);
     }
 
@@ -49,8 +50,8 @@ public class ShellCommandExecutorTests
         var result = await _executor.ExecuteCommandWithTimeoutAsync("sleep 0.1", 1000);
 
         // Assert
-        Assert.True(result.Success);
-        Assert.Equal(0, result.ExitCode);
+        result.Success.Should().BeTrue();
+        result.ExitCode.Should().Be(0);
     }
 
     [Fact]
@@ -60,7 +61,7 @@ public class ShellCommandExecutorTests
         var result = await _executor.ExecuteCommandWithTimeoutAsync("sleep 2", 500);
 
         // Assert
-        Assert.False(result.Success);
+        result.Success.Should().BeFalse();
         Assert.Contains("timed out", result.Error.ToLower());
     }
 
@@ -81,7 +82,7 @@ public class ShellCommandExecutorTests
         int currentPid = System.Diagnostics.Process.GetCurrentProcess().Id;
         var children = await _executor.GetChildProcessesAsync(currentPid);
 
-        Assert.NotNull(children);
+        children.Should().NotBeNull();
         
         cts.Cancel();
     }

@@ -6,24 +6,41 @@ using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels.Settings;
 
+/// <summary>
+/// Represents the SettingsViewModel.
+/// </summary>
 public class SettingsViewModel : ViewModelBase, IDockableViewModel
 {
     // IDockableViewModel implementation
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "Settings";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Settings";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
     private readonly IServiceProvider _serviceProvider;
     private readonly Dictionary<string, ViewModelBase> _categoryViewModels;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SettingsViewModel"/> class.
+    /// </summary>
     public SettingsViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -53,6 +70,9 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         });
     }
 
+    /// <summary>
+    /// Gets or sets the Categories.
+    /// </summary>
     public ObservableCollection<string> Categories { get; }
 
     private string _selectedCategory = "Logging";
@@ -79,6 +99,9 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         set => this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
     }
 
+    /// <summary>
+    /// Gets or sets the SelectCategoryCommand.
+    /// </summary>
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
 
     private ViewModelBase GetCategoryViewModel(string category)
@@ -163,7 +186,6 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         ISerialPortProfileService profileService = _serviceProvider.GetRequiredService<ISerialPortProfileService>();
         ISerialPortService portService = _serviceProvider.GetRequiredService<ISerialPortService>();
         IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
-        IProfileEditDialogService profileEditDialogService = _serviceProvider.GetRequiredService<IProfileEditDialogService>();
         IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
         IFileDialogService? fileDialogService = _serviceProvider.GetService<IFileDialogService>();
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<S7Tools.Core.Interfaces.Services.IApplicationSettingsService>();
@@ -173,7 +195,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         SerialPortDiscoveryViewModel portScanner = _serviceProvider.GetRequiredService<SerialPortDiscoveryViewModel>();
         ILogger<SerialPortsSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<SerialPortsSettingsViewModel>>();
 
-        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, profileEditDialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, pathService, portScanner, logger);
+        return new SerialPortsSettingsViewModel(profileService, portService, dialogService, clipboardService, fileDialogService, settingsService, uiThreadService, unifiedProfileDialogService, pathService, portScanner, logger);
     }
 
     private SocatSettingsViewModel CreateSocatSettingsViewModel()

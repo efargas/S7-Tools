@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 
 namespace S7Tools.Services.Socat;
 
@@ -18,6 +17,9 @@ public class SocatConfigurationService
     private readonly ILogger<SocatConfigurationService> _logger;
     private readonly ISerialPortService _serialPortService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SocatConfigurationService"/> class.
+    /// </summary>
     public SocatConfigurationService(
         ILogger<SocatConfigurationService> logger,
         ISerialPortService serialPortService)

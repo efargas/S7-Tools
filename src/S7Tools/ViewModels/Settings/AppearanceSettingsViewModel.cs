@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System.Reactive;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
@@ -18,7 +19,7 @@ public class AppearanceSettingsViewModel : ViewModelBase
     public AppearanceSettingsViewModel(IApplicationSettingsService settingsService)
     {
         _settingsService = settingsService;
-        _theme = _settingsService.GetSetting("ui.theme", "System");
+        _theme = _settingsService.Current.Ui.Theme;
 
         RestoreDefaultsCommand = ReactiveCommand.Create(RestoreDefaults);
 
@@ -26,9 +27,9 @@ public class AppearanceSettingsViewModel : ViewModelBase
         this.WhenAnyValue(x => x.Theme)
             .Subscribe(newTheme =>
             {
-                if (newTheme != _settingsService.GetSetting("ui.theme", "System"))
+                if (newTheme != _settingsService.Current.Ui.Theme)
                 {
-                    _ = _settingsService.SetSettingAsync("ui.theme", newTheme);
+                    _ = _settingsService.UpdateSettingsAsync(settings => settings.Ui.Theme = newTheme);
                 }
             });
     }
@@ -40,7 +41,7 @@ public class AppearanceSettingsViewModel : ViewModelBase
     {
         _settingsService = null!; // Dummy for designer
         _theme = "Dark";
-        RestoreDefaultsCommand = ReactiveCommand.Create(() => {});
+        RestoreDefaultsCommand = ReactiveCommand.Create(() => { });
     }
 
     /// <summary>

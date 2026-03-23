@@ -3,7 +3,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Services;
 using S7Tools.Services.Tasking;
 
 namespace S7Tools.Core.Tests.Tasking;

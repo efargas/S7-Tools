@@ -7,12 +7,18 @@ using Microsoft.Extensions.Logging;
 
 namespace S7Tools.Services.Adapters.Plc
 {
+    /// <summary>
+    /// Represents the PlcMemoryManager.
+    /// </summary>
     internal class PlcMemoryManager
     {
         private readonly PlcProtocolHandler _protocol;
         private readonly MemoryDumpOrchestrator _orchestrator;
         private readonly Microsoft.Extensions.Logging.ILogger<PlcMemoryManager> _logger;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PlcMemoryManager"/> class.
+        /// </summary>
         public PlcMemoryManager(
             PlcProtocolHandler protocol,
             MemoryDumpOrchestrator orchestrator,
@@ -23,6 +29,9 @@ namespace S7Tools.Services.Adapters.Plc
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>
+        /// Executes the WriteToIramAsync operation.
+        /// </summary>
         public async Task WriteToIramAsync(uint address, byte[] data, CancellationToken cancellationToken)
         {
             // Enter Subprotocol 0x80 (IRAM Mode)
@@ -70,6 +79,9 @@ namespace S7Tools.Services.Adapters.Plc
             await _protocol.ReceivePacketAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Executes the InvokeDumperAsync operation.
+        /// </summary>
         public async Task<byte[]> InvokeDumperAsync(uint address, uint length, IProgress<long> progress, CancellationToken cancellationToken)
         {
             // Protocol: 'A' + Addr + Len
@@ -171,6 +183,9 @@ namespace S7Tools.Services.Adapters.Plc
             }
         }
 
+        /// <summary>
+        /// Executes the ReceiveManyAsync operation.
+        /// </summary>
         public async Task<byte[]> ReceiveManyAsync(IProgress<long> progress, CancellationToken cancellationToken)
         {
             using var ms = new MemoryStream();

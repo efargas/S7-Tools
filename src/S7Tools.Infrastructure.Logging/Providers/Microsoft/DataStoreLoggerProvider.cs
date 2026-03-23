@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 
@@ -11,13 +11,13 @@ namespace S7Tools.Infrastructure.Logging.Providers.Microsoft;
 /// Logger provider that creates DataStore loggers for capturing log entries in memory.
 /// </summary>
 [ProviderAlias("DataStore")]
-public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalScope
+public sealed class DataStoreLoggerProvider : ILoggerProvider
 {
     private readonly ILogDataStore _dataStore;
     private readonly DataStoreLoggerConfiguration _configuration;
     private readonly ITimeProvider _timeProvider;
     private readonly ConcurrentDictionary<string, DataStoreLogger> _loggers = new();
-    private IExternalScopeProvider? _scopeProvider;
+
     private bool _disposed;
 
     /// <summary>
@@ -66,12 +66,6 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
         }
 
         return _loggers.GetOrAdd(categoryName, name => new DataStoreLogger(name, _dataStore, _configuration, _timeProvider));
-    }
-
-    /// <inheritdoc />
-    public void SetScopeProvider(IExternalScopeProvider scopeProvider)
-    {
-        _scopeProvider = scopeProvider;
     }
 
     /// <summary>
@@ -140,7 +134,7 @@ public sealed class DataStoreLoggerProvider : ILoggerProvider, ISupportExternalS
         }
 
         _loggers.Clear();
-        _scopeProvider = null;
+
         _disposed = true;
     }
 }

@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -15,9 +16,10 @@ using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Validation;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
@@ -33,7 +35,7 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     private readonly ILogger<TaskDetailsViewModel> _logger;
     private readonly ISocatService _socatService;
     private readonly IPowerSupplyService _powerSupplyService;
-    private readonly IEnhancedBootloaderService _bootloaderService;
+    private readonly IBootloaderService _bootloaderService;
     private readonly IUIThreadService _uiThreadService;
     private readonly IJobManager _jobManager;
     private readonly IPowerSupplyProfileService _powerSupplyProfileService;
@@ -77,13 +79,12 @@ public class TaskDetailsViewModel : ViewModelBase, IDisposable
     /// <param name="serialPortProfileService">Serial port profile service for accessing serial port profiles.</param>
     /// <param name="socatProfileService">Socat profile service for accessing socat profiles.</param>
     /// <param name="jobProfileSetFactory">Job profile set factory for creating profile sets.</param>
-    /// <param name="centralizedTaskLogService">The centralized task log service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     public TaskDetailsViewModel(
         ILogger<TaskDetailsViewModel> logger,
         ISocatService socatService,
         IPowerSupplyService powerSupplyService,
-        IEnhancedBootloaderService bootloaderService,
+        IBootloaderService bootloaderService,
         IUIThreadService uiThreadService,
         IJobManager jobManager,
         IPowerSupplyProfileService powerSupplyProfileService,

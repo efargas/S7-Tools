@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Validation;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
@@ -28,6 +28,10 @@ public class JobsMainContentViewModel : ViewModelBase, IDisposable
     private readonly CompositeDisposable _disposables = [];
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobsMainContentViewModel"/> class.
+    /// </summary>
+    /// <param name="parent">The parent <see cref="JobsManagementViewModel"/> whose state and commands are forwarded.</param>
     public JobsMainContentViewModel(JobsManagementViewModel parent)
     {
         _parent = parent ?? throw new ArgumentNullException(nameof(parent));
@@ -70,42 +74,86 @@ public class JobsMainContentViewModel : ViewModelBase, IDisposable
     public ViewModels.Jobs.JobInfoDisplayViewModel? JobInfoDisplayViewModel { get; internal set; }
 
     // Expose parent properties for data binding
+    /// <summary>Gets the collection of all job profiles.</summary>
     public ObservableCollection<JobProfile> Profiles => _parent.Profiles;
+
+    /// <summary>Gets or sets the currently selected job profile.</summary>
     public JobProfile? SelectedProfile
     {
         get => _parent.SelectedProfile;
         set => _parent.SelectedProfile = value;
     }
+
+    /// <summary>Gets the collection of all job profiles.</summary>
     public ObservableCollection<JobProfile> AllJobs => _parent.AllJobs;
+
+    /// <summary>Gets the collection of job template profiles.</summary>
     public ObservableCollection<JobProfile> JobTemplates => _parent.JobTemplates;
+
+    /// <summary>Gets the collection of user-created job profiles.</summary>
     public ObservableCollection<JobProfile> UserJobs => _parent.UserJobs;
+
+    /// <summary>Gets the current status message from the parent ViewModel.</summary>
     public string StatusMessage => _parent.StatusMessage ?? string.Empty;
+
+    /// <summary>Gets a value indicating whether the parent ViewModel is loading data.</summary>
     public bool IsLoading => _parent.IsLoading;
 
     // Expose parent commands
+    /// <summary>Gets the command to open the job creation wizard.</summary>
     public ReactiveCommand<Unit, Unit> CreateCommand => _parent.CreateWizardCommand; // Use wizard instead of base create
+
+    /// <summary>Gets the command to open the edit wizard for the selected job.</summary>
     public ReactiveCommand<Unit, Unit> EditCommand => _parent.EditCommand;
+
+    /// <summary>Gets the command to duplicate the selected job profile.</summary>
     public ReactiveCommand<Unit, Unit> DuplicateCommand => _parent.DuplicateCommand;
+
+    /// <summary>Gets the command to delete the selected job profile.</summary>
     public ReactiveCommand<Unit, Unit> DeleteCommand => _parent.DeleteCommand;
+
+    /// <summary>Gets the command to refresh the list of job profiles.</summary>
     public ReactiveCommand<Unit, Unit> RefreshCommand => _parent.RefreshCommand;
+
+    /// <summary>Gets the command to set the selected job as the default profile.</summary>
     public ReactiveCommand<Unit, Unit> SetDefaultCommand => _parent.SetDefaultCommand;
 
     // Job-specific commands
+    /// <summary>Gets the command to create a new job from a template.</summary>
     public ReactiveCommand<Unit, Unit> CreateFromTemplateCommand => _parent.CreateFromTemplateCommand;
+
+    /// <summary>Gets the command to save the selected job as a template.</summary>
     public ReactiveCommand<Unit, Unit> SaveAsTemplateCommand => _parent.SaveAsTemplateCommand;
+
+    /// <summary>Gets the command to import job profiles from a file.</summary>
     public ReactiveCommand<Unit, Unit> ImportJobCommand => _parent.ImportJobCommand;
+
+    /// <summary>Gets the command to export the selected job profile to a file.</summary>
     public ReactiveCommand<Unit, Unit> ExportJobCommand => _parent.ExportJobCommand;
+
+    /// <summary>Gets the command to create a new task from the selected job.</summary>
     public ReactiveCommand<Unit, Unit> CreateTaskFromJobCommand => _parent.CreateTaskFromJobCommand;
+
+    /// <summary>Gets the command to schedule a task from the selected job.</summary>
     public ReactiveCommand<Unit, Unit> ScheduleTaskFromJobCommand => _parent.ScheduleTaskFromJobCommand;
+
+    /// <summary>Gets the command to enqueue a task from the selected job.</summary>
     public ReactiveCommand<Unit, Unit> EnqueueTaskFromJobCommand => _parent.EnqueueTaskFromJobCommand;
+
+    /// <summary>Gets the command to validate the selected job configuration.</summary>
     public ReactiveCommand<Unit, Unit> ValidateJobCommand => _parent.ValidateJobCommand;
 
+    /// <inheritdoc />
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Releases managed resources used by this ViewModel.
+    /// </summary>
+    /// <param name="disposing"><see langword="true"/> to release managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
         if (!_disposed && disposing)
@@ -137,9 +185,21 @@ public class JobsMainContentViewModel : ViewModelBase, IDisposable
 public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile>, IDockableViewModel
 {
     // IDockableViewModel implementation
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "Jobs";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Jobs Management";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
     private readonly IJobManager _jobManager;
@@ -275,7 +335,11 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         get => _selectedSideMenuItem;
         set
         {
-            if (string.IsNullOrWhiteSpace(value)) return;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return;
+            }
+
             this.RaiseAndSetIfChanged(ref _selectedSideMenuItem, value);
             this.RaisePropertyChanged(nameof(SelectedContentViewModel));
         }
@@ -449,7 +513,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             _logger.LogDebug("Showing duplicate input dialog for job profile ID: {SourceProfileId}", request.SourceProfileId);
 
             // Use the input dialog service since the job-specific duplicate dialog is not implemented yet
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 request.Title,
                 "Enter a name for the duplicated job profile:",
                 request.SuggestedName,
@@ -812,7 +876,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             string templateListText = string.Join("\n", JobTemplates.Select((t, i) => $"{i + 1}. {t.Name}"));
             string message = $"Select a template number:\n\n{templateListText}";
 
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Select Template",
                 message,
                 "1",
@@ -837,7 +901,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             JobProfile template = JobTemplates[templateIndex - 1];
 
             // Ask for new job name
-            Models.InputResult nameResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult nameResult = await _dialogService.ShowInputAsync(
                 "New Job Name",
                 $"Enter a name for the job created from template '{template.Name}':",
                 $"Job from {template.Name}",
@@ -884,7 +948,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
             StatusMessage = UIStrings.Status_SavingJobAsTemplate;
 
             // Show template name input dialog
-            Models.InputResult nameResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult nameResult = await _dialogService.ShowInputAsync(
                 "Save as Template",
                 $"Enter a name for the template based on job '{SelectedProfile.Name}':",
                 $"{SelectedProfile.Name} Template",
@@ -1195,7 +1259,7 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
 
             // Show date/time picker dialog using input dialog
             string currentTime = DateTime.UtcNow.ToLocalTime().AddMinutes(5).ToString(S7Tools.Constants.AppConstants.StandardUserInputDateFormat);
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Schedule Task",
                 $"Enter the scheduled execution time for job '{SelectedProfile.Name}':\n\nFormat: {S7Tools.Constants.AppConstants.StandardUserInputDateFormat} (24-hour format)",
                 currentTime,

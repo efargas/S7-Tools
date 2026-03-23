@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -10,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
@@ -68,9 +68,9 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         ScanHistory = new ObservableCollection<ScanResult>();
 
         // Load initial filter preferences from application settings
-        _includeUsbPorts = _settingsService.GetSetting("serial.includeUsbPorts", true);
-        _includeAcmPorts = _settingsService.GetSetting("serial.includeAcmPorts", true);
-        _includeSerialPorts = _settingsService.GetSetting("serial.includeStandardPorts", true);
+        _includeUsbPorts = _settingsService.Current.Serial.IncludeUsbPorts;
+        _includeAcmPorts = _settingsService.Current.Serial.IncludeAcmPorts;
+        _includeSerialPorts = _settingsService.Current.Serial.IncludeStandardPorts;
 
         // Initialize commands
         InitializeCommands();
@@ -293,7 +293,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             {
                 _logger.LogDebug("Unchecking {PropertyName} would leave no filters - forcing USB to true", propertyName);
                 _includeUsbPorts = true;
-                _ = _settingsService.SetSettingAsync("serial.includeUsbPorts", true);
+                _ = _settingsService.UpdateSettingsAsync(s => s.Serial.IncludeUsbPorts = true);
 
                 // The UIRefreshService will handle the property change notifications automatically
                 this.RaisePropertyChanged(nameof(IncludeUsbPorts));
@@ -303,18 +303,21 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
         // Normal property change - UIRefreshService handles the rest
         if (this.RaiseAndSetIfChanged(ref field, value))
         {
-            string settingKey = propertyName switch
+            _ = _settingsService.UpdateSettingsAsync(s =>
             {
-                nameof(IncludeUsbPorts) => "serial.includeUsbPorts",
-                nameof(IncludeAcmPorts) => "serial.includeAcmPorts",
-                nameof(IncludeSerialPorts) => "serial.includeStandardPorts",
-                _ => string.Empty
-            };
-
-            if (!string.IsNullOrEmpty(settingKey))
-            {
-                _ = _settingsService.SetSettingAsync(settingKey, value);
-            }
+                switch (propertyName)
+                {
+                    case nameof(IncludeUsbPorts):
+                        s.Serial.IncludeUsbPorts = value;
+                        break;
+                    case nameof(IncludeAcmPorts):
+                        s.Serial.IncludeAcmPorts = value;
+                        break;
+                    case nameof(IncludeSerialPorts):
+                        s.Serial.IncludeStandardPorts = value;
+                        break;
+                }
+            });
 
             _logger.LogDebug("{PropertyName} changed to {Value}", propertyName, value);
             ApplyFiltersToDiscoveredPorts();
@@ -477,7 +480,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             CancellationToken cancellationToken = _scanCancellationTokenSource.Token;
 
             // Get available ports
-            IEnumerable<Core.Services.Interfaces.SerialPortInfo> availablePorts = await _portService.ScanAvailablePortsAsync(cancellationToken);
+            IEnumerable<Core.Interfaces.Services.SerialPortInfo> availablePorts = await _portService.ScanAvailablePortsAsync(cancellationToken);
 
             // Map port info objects directly from backend response to avoid double I/O testing
             var portInfos = new List<SerialPortInfo>();
@@ -619,7 +622,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
             {
                 try
                 {
-                    Core.Services.Interfaces.SerialPortInfo? portDetails = await _portService.GetPortInfoAsync(portName).ConfigureAwait(false);
+                    Core.Interfaces.Services.SerialPortInfo? portDetails = await _portService.GetPortInfoAsync(portName).ConfigureAwait(false);
                     if (portDetails != null)
                     {
                         SelectedPort.Description = portDetails.Description ?? "";
@@ -1037,6 +1040,9 @@ public enum PortTypeEnum
     Unknown
 }
 
+/// <summary>
+/// Represents the SerialPortInfo.
+/// </summary>
 public class SerialPortInfo : ReactiveObject
 {
     private string _portName = string.Empty;

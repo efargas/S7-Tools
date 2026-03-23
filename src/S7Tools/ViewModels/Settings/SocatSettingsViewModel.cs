@@ -13,7 +13,6 @@ using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
@@ -110,10 +109,17 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         // Load initial data
         _ = Task.Run(async () =>
         {
-            await base.InitializeAsync();
-            await RefreshCommand.Execute();
-            await ScanSerialDevicesAsync();
-            await RefreshRunningProcessesAsync();
+            try
+            {
+                await base.InitializeAsync();
+                await RefreshCommand.Execute();
+                await ScanSerialDevicesAsync();
+                await RefreshRunningProcessesAsync();
+            }
+            catch (Exception ex)
+            {
+                _specificLogger.LogError(ex, "Failed to initialize SocatSettingsViewModel");
+            }
         });
 
         _specificLogger.LogInformation("SocatSettingsViewModel initialized");
@@ -493,7 +499,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
             IsScanning = true;
             StatusMessage = UIStrings.Status_ScanningDevices;
 
-            IEnumerable<Core.Services.Interfaces.SerialPortInfo> deviceInfos = await _serialPortService.ScanAvailablePortsAsync();
+            IEnumerable<Core.Interfaces.Services.SerialPortInfo> deviceInfos = await _serialPortService.ScanAvailablePortsAsync();
             IEnumerable<string> devices = deviceInfos.Select(info => info.PortPath);
 
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
@@ -649,7 +655,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         {
             _specificLogger.LogDebug("Duplicating socat profile: {ProfileName}", SelectedProfile.Name);
 
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Profile",
                 "Enter a name for the duplicate profile:",
                 $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);

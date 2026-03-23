@@ -1,7 +1,9 @@
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -9,7 +11,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Services;
 using S7Tools.Services.Bootloader;
 using Xunit;
 
@@ -17,34 +20,50 @@ namespace S7Tools.Tests.Services.Bootloader;
 
 public class OptimizationVerificationTests
 {
-    private class TestBootloaderService : BaseBootloaderService
+    private BootloaderService CreateService(ITimeProvider timeProvider)
     {
-        public TestBootloaderService(ITimeProvider timeProvider) : base(timeProvider) { }
+        return new BootloaderService(
+            NullLogger<BootloaderService>.Instance,
+            Substitute.For<IPayloadProvider>(),
+            Substitute.For<ISocatService>(),
+            Substitute.For<IPowerSupplyService>(),
+            Substitute.For<ISerialPortService>(),
+            (profiles) => Substitute.For<IPlcClient>(),
+            Substitute.For<IResourceCoordinator>(),
+            timeProvider,
+            null
+        );
+    }
 
-        public new Task<List<byte[]>> PerformDumpProcessAsync(
-            IPlcClient client,
-            JobProfileSet profiles,
-            IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
-            ILogger logger,
-            double startPercent,
-            double weight,
-            CancellationToken cancellationToken)
-        {
-            return base.PerformDumpProcessAsync(client, profiles, progress, logger, startPercent, weight, cancellationToken);
-        }
+    private async Task<List<byte[]>> InvokePerformDumpProcessAsync(
+        BootloaderService service,
+        IPlcClient client,
+        JobProfileSet profiles,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        ILogger logger,
+        double startPercent,
+        double weight,
+        CancellationToken cancellationToken)
+    {
+        MethodInfo? method = typeof(BootloaderService).GetMethod("PerformDumpProcessAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+        var task = (Task<List<byte[]>>)method!.Invoke(service, new object[] { client, profiles, progress, logger, startPercent, weight, cancellationToken })!;
+        return await task;
+    }
 
-        public new Task<BootloaderResult> PerformDumpProcessStreamingAsync(
-            IPlcClient client,
-            JobProfileSet profiles,
-            IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
-            ILogger logger,
-            double startPercent,
-            double weight,
-            Guid? taskId,
-            CancellationToken cancellationToken)
-        {
-            return base.PerformDumpProcessStreamingAsync(client, profiles, progress, logger, startPercent, weight, taskId, cancellationToken);
-        }
+    private async Task<BootloaderResult> InvokePerformDumpProcessStreamingAsync(
+        BootloaderService service,
+        IPlcClient client,
+        JobProfileSet profiles,
+        IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
+        ILogger logger,
+        double startPercent,
+        double weight,
+        Guid? taskId,
+        CancellationToken cancellationToken)
+    {
+        MethodInfo? method = typeof(BootloaderService).GetMethod("PerformDumpProcessStreamingAsync", BindingFlags.NonPublic | BindingFlags.Instance);
+        var task = (Task<BootloaderResult>)method!.Invoke(service, new object[] { client, profiles, progress, logger, startPercent, weight, taskId, cancellationToken })!;
+        return await task;
     }
 
     [Fact]
@@ -53,7 +72,7 @@ public class OptimizationVerificationTests
         // Arrange
         var timeProvider = Substitute.For<ITimeProvider>();
         timeProvider.GetUtcNow().Returns(DateTime.UtcNow);
-        var service = new TestBootloaderService(timeProvider);
+        var service = CreateService(timeProvider);
         var client = Substitute.For<IPlcClient>();
 
         var segments = new List<MemorySegment>
@@ -86,12 +105,12 @@ public class OptimizationVerificationTests
         var progress = Substitute.For<IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)>>();
 
         // Act
-        var result = await service.PerformDumpProcessAsync(client, profiles, progress, NullLogger.Instance, 0, 100, CancellationToken.None);
+        var result = await InvokePerformDumpProcessAsync(service, client, profiles, progress, NullLogger.Instance, 0, 100, CancellationToken.None);
 
         // Assert
-        Assert.Single(result);
-        Assert.Equal(30, result[0].Length);
-        Assert.Equal(data1.Concat(data2), result[0]);
+        result.Should().ContainSingle();
+        result[0].Length.Should().Be(30);
+        result[0].Should().BeEquivalentTo(data1.Concat(data2));
     }
 
     [Fact]
@@ -102,7 +121,7 @@ public class OptimizationVerificationTests
         DateTime now = new DateTime(2026, 1, 1, 12, 0, 0);
         timeProvider.GetUtcNow().Returns(now);
         timeProvider.GetLocalNow().Returns(now);
-        var service = new TestBootloaderService(timeProvider);
+        var service = CreateService(timeProvider);
         var client = Substitute.For<IPlcClient>();
 
         string tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -146,13 +165,13 @@ public class OptimizationVerificationTests
             var progress = Substitute.For<IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)>>();
 
             // Act
-            var result = await service.PerformDumpProcessStreamingAsync(client, profiles, progress, NullLogger.Instance, 0, 100, null, CancellationToken.None);
+            var result = await InvokePerformDumpProcessStreamingAsync(service, client, profiles, progress, NullLogger.Instance, 0, 100, null, CancellationToken.None);
 
             // Assert
-            Assert.Single(result.SavedFiles);
+            result.SavedFiles.Should().ContainSingle();
             byte[] writtenData = File.ReadAllBytes(result.SavedFiles[0]);
-            Assert.Equal(30, writtenData.Length);
-            Assert.Equal(data1.Concat(data2), writtenData);
+            writtenData.Length.Should().Be(30);
+            writtenData.Should().BeEquivalentTo(data1.Concat(data2));
         }
         finally
         {

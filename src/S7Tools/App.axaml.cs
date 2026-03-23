@@ -1,17 +1,18 @@
 using System.Reactive;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Resources;
 using S7Tools.Extensions;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Dialogs;
 using S7Tools.Views.Dialogs;
 using S7Tools.Views.Layout;
-using Avalonia.Styling;
 
 namespace S7Tools;
 
@@ -99,14 +100,19 @@ public partial class App : Application
 
                         // 4. Set Initial Theme and Subscribe to Changes
                         var settingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
-                        Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(settingsService.GetSetting("ui.theme", "System")));
-                        
+                        var lastAppliedTheme = settingsService.Current.Ui.Theme;
+                        Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(lastAppliedTheme));
+
                         settingsService.SettingsChanged += (s, e) =>
                         {
-                            if (e.Key.Equals("ui.theme", StringComparison.OrdinalIgnoreCase))
+                            var newTheme = settingsService.Current.Ui.Theme;
+                            if (Equals(newTheme, lastAppliedTheme))
                             {
-                                Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(e.NewValue?.ToString() ?? "System"));
+                                return;
                             }
+
+                            lastAppliedTheme = newTheme;
+                            Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(newTheme));
                         };
 
                         // 5. Switch to Main Window on UI Thread
@@ -343,7 +349,7 @@ public partial class App : Application
                     logger.LogDebug("Showing job selection dialog");
 
                     // Get job manager to fetch available jobs
-                    var jobManager = _serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IJobManager>();
+                    var jobManager = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IJobManager>();
                     if (jobManager == null)
                     {
                         logger.LogError("IJobManager service not available for job selection dialog");
@@ -491,7 +497,7 @@ public partial class App : Application
         try
         {
             logger.LogInformation("🚀 Starting JobScheduler...");
-            Core.Services.Interfaces.IJobScheduler? jobScheduler = _serviceProvider.GetService<Core.Services.Interfaces.IJobScheduler>();
+            Core.Interfaces.Services.IJobScheduler? jobScheduler = _serviceProvider.GetService<Core.Interfaces.Services.IJobScheduler>();
             if (jobScheduler != null)
             {
                 await jobScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);
@@ -511,7 +517,7 @@ public partial class App : Application
         try
         {
             logger.LogInformation("🚀 Starting TaskScheduler...");
-            Core.Services.Interfaces.ITaskScheduler? taskScheduler = _serviceProvider.GetService<Core.Services.Interfaces.ITaskScheduler>();
+            Core.Interfaces.Services.ITaskScheduler? taskScheduler = _serviceProvider.GetService<Core.Interfaces.Services.ITaskScheduler>();
             if (taskScheduler != null)
             {
                 await taskScheduler.StartAsync(System.Threading.CancellationToken.None).ConfigureAwait(false);

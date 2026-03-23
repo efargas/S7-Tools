@@ -49,28 +49,28 @@ public class SerialPortConfiguration
     #region Control Flags (c_cflag)
 
     /// <summary>
-    /// Gets or sets whether to enable receiver (CREAD flag).
+    /// Gets or sets a value indicating whether to enable receiver (CREAD flag).
     /// </summary>
     /// <value>True to enable receiver, false otherwise. Default is true.</value>
     [Display(Name = "Enable Receiver", Order = 5)]
     public bool EnableReceiver { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to use hardware flow control (CRTSCTS flag).
+    /// Gets or sets a value indicating whether to use hardware flow control (CRTSCTS flag).
     /// </summary>
     /// <value>True to disable hardware flow control (-crtscts), false to enable. Default is true (disabled).</value>
     [Display(Name = "Disable Hardware Flow Control", Order = 6)]
     public bool DisableHardwareFlowControl { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether parity is enabled (PARENB flag).
+    /// Gets or sets a value indicating whether parity is enabled (PARENB flag).
     /// </summary>
     /// <value>True to enable parity checking, false otherwise. Default is true.</value>
     [Browsable(false)] // Combined with Parity property
     public bool ParityEnabled { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to use odd parity (PARODD flag).
+    /// Gets or sets a value indicating whether to use odd parity (PARODD flag).
     /// </summary>
     /// <value>True for odd parity, false for even parity. Default is false (even parity, -parodd).</value>
     [Browsable(false)] // Combined with Parity property
@@ -81,35 +81,35 @@ public class SerialPortConfiguration
     #region Input Flags (c_iflag)
 
     /// <summary>
-    /// Gets or sets whether to ignore break conditions (IGNBRK flag).
+    /// Gets or sets a value indicating whether to ignore break conditions (IGNBRK flag).
     /// </summary>
     /// <value>True to ignore break conditions, false otherwise. Default is true.</value>
     [Browsable(false)]
     public bool IgnoreBreak { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to signal interrupt on break (BRKINT flag).
+    /// Gets or sets a value indicating whether to signal interrupt on break (BRKINT flag).
     /// </summary>
     /// <value>True to disable break interrupt (-brkint), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableBreakInterrupt { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to map CR to NL on input (ICRNL flag).
+    /// Gets or sets a value indicating whether to map CR to NL on input (ICRNL flag).
     /// </summary>
     /// <value>True to disable CR to NL mapping (-icrnl), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableMapCRtoNL { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to ring bell on input queue full (IMAXBEL flag).
+    /// Gets or sets a value indicating whether to ring bell on input queue full (IMAXBEL flag).
     /// </summary>
     /// <value>True to disable bell on queue full (-imaxbel), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableBellOnQueueFull { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to enable XON/XOFF flow control (IXON flag).
+    /// Gets or sets a value indicating whether to enable XON/XOFF flow control (IXON flag).
     /// </summary>
     /// <value>True to disable XON/XOFF flow control (-ixon), false to enable. Default is true (disabled).</value>
     [Display(Name = "Disable XON/XOFF Flow Control", Order = 7)]
@@ -120,14 +120,14 @@ public class SerialPortConfiguration
     #region Output Flags (c_oflag)
 
     /// <summary>
-    /// Gets or sets whether to enable output processing (OPOST flag).
+    /// Gets or sets a value indicating whether to enable output processing (OPOST flag).
     /// </summary>
     /// <value>True to disable output processing (-opost), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableOutputProcessing { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to map NL to CR-NL on output (ONLCR flag).
+    /// Gets or sets a value indicating whether to map NL to CR-NL on output (ONLCR flag).
     /// </summary>
     /// <value>True to disable NL to CR-NL mapping (-onlcr), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
@@ -138,56 +138,56 @@ public class SerialPortConfiguration
     #region Local Flags (c_lflag)
 
     /// <summary>
-    /// Gets or sets whether to enable canonical input processing (ICANON flag).
+    /// Gets or sets a value indicating whether to enable canonical input processing (ICANON flag).
     /// </summary>
     /// <value>True to disable canonical mode (-icanon), false to enable. Default is true (disabled for raw mode).</value>
     [Browsable(false)]
     public bool DisableCanonicalMode { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to enable signal generation (ISIG flag).
+    /// Gets or sets a value indicating whether to enable signal generation (ISIG flag).
     /// </summary>
     /// <value>True to disable signal generation (-isig), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableSignalGeneration { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to enable extended input processing (IEXTEN flag).
+    /// Gets or sets a value indicating whether to enable extended input processing (IEXTEN flag).
     /// </summary>
     /// <value>True to disable extended processing (-iexten), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableExtendedProcessing { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to echo input characters (ECHO flag).
+    /// Gets or sets a value indicating whether to echo input characters (ECHO flag).
     /// </summary>
     /// <value>True to disable echo (-echo), false to enable. Default is true (disabled).</value>
     [Display(Name = "Disable Echo", Order = 8)]
     public bool DisableEcho { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to echo erase characters (ECHOE flag).
+    /// Gets or sets a value indicating whether to echo erase characters (ECHOE flag).
     /// </summary>
     /// <value>True to disable echo erase (-echoe), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableEchoErase { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to echo kill characters (ECHOK flag).
+    /// Gets or sets a value indicating whether to echo kill characters (ECHOK flag).
     /// </summary>
     /// <value>True to disable echo kill (-echok), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableEchoKill { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to echo control characters (ECHOCTL flag).
+    /// Gets or sets a value indicating whether to echo control characters (ECHOCTL flag).
     /// </summary>
     /// <value>True to disable echo control (-echoctl), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
     public bool DisableEchoControl { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to echo kill with erase (ECHOKE flag).
+    /// Gets or sets a value indicating whether to echo kill with erase (ECHOKE flag).
     /// </summary>
     /// <value>True to disable echo kill erase (-echoke), false to enable. Default is true (disabled).</value>
     [Browsable(false)]
@@ -198,7 +198,7 @@ public class SerialPortConfiguration
     #region Special Modes
 
     /// <summary>
-    /// Gets or sets whether to enable raw mode.
+    /// Gets or sets a value indicating whether to enable raw mode.
     /// </summary>
     /// <value>True to enable raw mode, false otherwise. Default is true.</value>
     /// <remarks>

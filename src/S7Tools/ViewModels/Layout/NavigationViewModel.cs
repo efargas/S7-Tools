@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Globalization;
 using System.Reactive;
@@ -42,6 +43,9 @@ public class NavigationViewModel : ReactiveObject
     /// Initializes a new instance of the <see cref="NavigationViewModel"/> class for design-time.
     /// </summary>
     // Default constructor for design-time data
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NavigationViewModel"/> class.
+    /// </summary>
     public NavigationViewModel() : this(
         new ActivityBarService(),
         new DesignTimeFactory(),

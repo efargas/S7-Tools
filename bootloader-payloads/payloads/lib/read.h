@@ -19,4 +19,7 @@ int UART_protocol_recv_chunk(char *buf, int bufsize);
 */
 int UART_protocol_recv(char *buf, int n);
 
+int is_data_available(void);
+int read_byte_blocking(void);
+
 #endif

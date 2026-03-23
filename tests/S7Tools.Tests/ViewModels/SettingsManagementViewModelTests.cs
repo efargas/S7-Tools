@@ -1,16 +1,16 @@
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
+using S7Tools.Services;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.ViewModels.Layout;
 using Xunit;
 
 namespace S7Tools.Tests.ViewModels;
 
 /// <summary>
-/// Tests for the SettingsManagementViewModel.
-/// NOTE: This test file uses the old ISettingsService which has been removed.
-/// These tests are disabled pending update to use IApplicationSettingsService.
+/// Tests for the SettingsManagementViewModel using the strongly-typed IApplicationSettingsService.
 /// </summary>
 public class SettingsManagementViewModelTests
 {
@@ -22,15 +22,11 @@ public class SettingsManagementViewModelTests
         _mockLogger = new Mock<ILogger<SettingsManagementViewModel>>();
         _mockSettingsService = new Mock<IApplicationSettingsService>();
 
-        // Setup mock to return default values for settings
-        _mockSettingsService.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns((string key, string defaultValue) => defaultValue);
-        _mockSettingsService.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<bool>()))
-            .Returns((string key, bool defaultValue) => defaultValue);
-        _mockSettingsService.Setup(s => s.GetSetting(It.IsAny<string>(), It.IsAny<int>()))
-            .Returns((string key, int defaultValue) => defaultValue);
-        _mockSettingsService.Setup(s => s.LoadSettingsAsync())
-            .ReturnsAsync(ApplicationSettings.CreateDefault());
+        // Setup mock to return default AppSettings
+        _mockSettingsService.Setup(s => s.Current).Returns(new AppSettings());
+        _mockSettingsService.Setup(s => s.LoadSettingsAsync()).Returns(Task.CompletedTask);
+        _mockSettingsService.Setup(s => s.UpdateSettingsAsync(It.IsAny<Action<AppSettings>>()))
+            .Returns(Task.CompletedTask);
     }
 
     [Fact]
@@ -40,10 +36,10 @@ public class SettingsManagementViewModelTests
         var viewModel = new SettingsManagementViewModel(_mockLogger.Object, _mockSettingsService.Object);
 
         // Assert
-        Assert.NotNull(viewModel);
-        Assert.NotNull(viewModel.SaveSettingsCommand);
-        Assert.NotNull(viewModel.LoadSettingsCommand);
-        Assert.NotNull(viewModel.ResetSettingsCommand);
+        viewModel.Should().NotBeNull();
+        viewModel.SaveSettingsCommand.Should().NotBeNull();
+        viewModel.LoadSettingsCommand.Should().NotBeNull();
+        viewModel.ResetSettingsCommand.Should().NotBeNull();
     }
 
     [Fact]
@@ -79,9 +75,9 @@ public class SettingsManagementViewModelTests
         viewModel.AutoScrollLogs = false;
 
         // Assert
-        Assert.Equal("/test/path", viewModel.DefaultLogPath);
-        Assert.Equal("/export/path", viewModel.ExportPath);
-        Assert.Equal("Debug", viewModel.MinimumLogLevel);
-        Assert.False(viewModel.AutoScrollLogs);
+        viewModel.DefaultLogPath.Should().Be("/test/path");
+        viewModel.ExportPath.Should().Be("/export/path");
+        viewModel.MinimumLogLevel.Should().Be("Debug");
+        viewModel.AutoScrollLogs.Should().BeFalse();
     }
 }

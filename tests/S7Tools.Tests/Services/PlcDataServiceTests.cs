@@ -1,8 +1,9 @@
+using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.ValueObjects;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Services;
 using Xunit;
 
@@ -26,8 +27,8 @@ public sealed class PlcDataServiceTests : IDisposable
         var service = new PlcDataService(_mockLogger.Object);
 
         // Assert
-        Assert.NotNull(service);
-        Assert.Equal(ConnectionState.Disconnected, service.State);
+        service.Should().NotBeNull();
+        service.State.Should().Be(ConnectionState.Disconnected);
     }
 
     [Fact]
@@ -40,7 +41,7 @@ public sealed class PlcDataServiceTests : IDisposable
         Result<Tag> result = await _service.ReadTagAsync(address);
 
         // Assert
-        Assert.True(result.IsFailure);
+        result.IsFailure.Should().BeTrue();
         Assert.Contains("Not connected", result.Error);
     }
 
@@ -57,8 +58,8 @@ public sealed class PlcDataServiceTests : IDisposable
         Result<Tag> result = await _service.ReadTagAsync(address);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
         Assert.Contains("Tag_", result.Value.Name);
     }
 
@@ -72,8 +73,8 @@ public sealed class PlcDataServiceTests : IDisposable
         Result result = await _service.ConnectAsync(config);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(ConnectionState.Connected, _service.State);
+        result.IsSuccess.Should().BeTrue();
+        _service.State.Should().Be(ConnectionState.Connected);
     }
 
     [Fact]
@@ -87,8 +88,8 @@ public sealed class PlcDataServiceTests : IDisposable
         Result result = await _service.DisconnectAsync();
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(ConnectionState.Disconnected, _service.State);
+        result.IsSuccess.Should().BeTrue();
+        _service.State.Should().Be(ConnectionState.Disconnected);
     }
 
     [Fact]
@@ -101,7 +102,7 @@ public sealed class PlcDataServiceTests : IDisposable
         Result result = await _service.TestConnectionAsync(config);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
@@ -115,8 +116,8 @@ public sealed class PlcDataServiceTests : IDisposable
         Result<PlcInfo> result = await _service.GetPlcInfoAsync();
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
         Assert.Contains("CPU", result.Value.CpuType);
     }
 
@@ -125,17 +126,17 @@ public sealed class PlcDataServiceTests : IDisposable
     {
         // Arrange
         Result<Tag> tagResult = Tag.Create("TestTag", "DB1.DBX0.0", true);
-        Assert.True(tagResult.IsSuccess);
+        tagResult.IsSuccess.Should().BeTrue();
         Tag? tag = tagResult.Value;
 
         // Act
         Result result = await _service.AddTagAsync(tag!);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
 
         Result<IReadOnlyCollection<Tag>> allTagsResult = await _service.GetAllTagsAsync();
-        Assert.True(allTagsResult.IsSuccess);
+        allTagsResult.IsSuccess.Should().BeTrue();
         Assert.Contains(allTagsResult.Value!, t => t.Name == "TestTag");
     }
 
@@ -149,7 +150,7 @@ public sealed class PlcDataServiceTests : IDisposable
         Result result = await _service.WriteTagAsync(address, true);
 
         // Assert
-        Assert.True(result.IsFailure);
+        result.IsFailure.Should().BeTrue();
         Assert.Contains("Not connected", result.Error);
     }
 
@@ -166,7 +167,7 @@ public sealed class PlcDataServiceTests : IDisposable
         Result result = await _service.WriteTagAsync(address, true);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]

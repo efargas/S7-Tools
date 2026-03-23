@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services.Adapters
 {
@@ -21,24 +21,39 @@ namespace S7Tools.Services.Adapters
         private readonly ILogger<PlcProtocolAdapter> _logger;
         private readonly IPlcTransport _transport;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PlcProtocolAdapter"/> class.
+        /// </summary>
         public PlcProtocolAdapter(IPlcTransport transport, ILogger<PlcProtocolAdapter> logger)
         {
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        /// <summary>
+        /// Gets or sets the DataAvailable.
+        /// </summary>
         public bool DataAvailable => _transport.DataAvailable;
 
+        /// <summary>
+        /// Executes the Configure operation.
+        /// </summary>
         public void Configure(string host, int port)
         {
             _transport.Configure(host, port);
         }
 
+        /// <summary>
+        /// Executes the ConnectAsync operation.
+        /// </summary>
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             await _transport.ConnectAsync(cancellationToken);
         }
 
+        /// <summary>
+        /// Executes the DisconnectAsync operation.
+        /// </summary>
         public async Task DisconnectAsync(CancellationToken cancellationToken = default)
         {
             await _transport.DisconnectAsync(cancellationToken);
@@ -56,6 +71,9 @@ namespace S7Tools.Services.Adapters
             return (byte)-sum;
         }
 
+        /// <summary>
+        /// Executes the EncodePacket operation.
+        /// </summary>
         public static byte[] EncodePacket(byte[] contents)
         {
             if (contents.Length > 254)
@@ -98,6 +116,9 @@ namespace S7Tools.Services.Adapters
 
         #endregion
 
+        /// <summary>
+        /// Executes the SendPacketAsync operation.
+        /// </summary>
         public async Task SendPacketAsync(byte[] payload, int? maxChunk = 2, CancellationToken cancellationToken = default)
         {
             // Safety delay exactly as in reference
@@ -124,6 +145,9 @@ namespace S7Tools.Services.Adapters
             }
         }
 
+        /// <summary>
+        /// Executes the ReceivePacketAsync operation.
+        /// </summary>
         public async Task<byte[]> ReceivePacketAsync(CancellationToken cancellationToken = default)
         {
             var lengthByte = new byte[1];
@@ -165,16 +189,25 @@ namespace S7Tools.Services.Adapters
             return DecodePacket(fullPacket);
         }
 
+        /// <summary>
+        /// Executes the RawWriteAsync operation.
+        /// </summary>
         public async Task RawWriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             await _transport.WriteAsync(buffer, offset, count, cancellationToken);
         }
 
+        /// <summary>
+        /// Executes the RawReadAsync operation.
+        /// </summary>
         public async Task<int> RawReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             return await _transport.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
+        /// <summary>
+        /// Executes the GetStream operation.
+        /// </summary>
         public Stream? GetStream() => _transport.GetStream();
     }
 }

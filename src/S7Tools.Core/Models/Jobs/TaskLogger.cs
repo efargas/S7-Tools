@@ -50,14 +50,14 @@ public class TaskLogger
     public string? ProcessLogFilePath { get; set; }
 
     /// <summary>
-    /// Gets or sets whether logging is enabled for this task.
+    /// Gets or sets a value indicating whether logging is enabled for this task.
     /// </summary>
     public bool IsEnabled { get; set; } = true;
 
 
 
     /// <summary>
-    /// Gets or sets whether process output logging is enabled.
+    /// Gets or sets a value indicating whether process output logging is enabled.
     /// </summary>
     public bool CaptureProcessOutput { get; set; } = true;
 

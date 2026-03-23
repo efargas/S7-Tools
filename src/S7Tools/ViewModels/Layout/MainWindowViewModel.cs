@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -63,11 +64,29 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
     private class DummyOptions : S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>
     {
+        /// <summary>
+        /// Gets or sets the CurrentValue.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings CurrentValue { get; } = new();
+        /// <summary>
+        /// Gets or sets the Value.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Value => CurrentValue;
+        /// <summary>
+        /// Executes the Get operation.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Get(string? name) => CurrentValue;
+        /// <summary>
+        /// Executes the OnChange operation.
+        /// </summary>
         public IDisposable? OnChange(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string?> listener) => null;
-        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) {}
+        /// <summary>
+        /// Executes the Update operation.
+        /// </summary>
+        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) { }
+        /// <summary>
+        /// Executes the UpdateAsync operation.
+        /// </summary>
         public Task UpdateAsync(Func<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, Task> applyChanges) => Task.CompletedTask;
     }
 
@@ -85,7 +104,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     /// Initializes a new instance of the <see cref="MainWindowViewModel"/> class.
     /// </summary>
     /// <param name="navigation">The navigation ViewModel.</param>
-    /// <param name="bottomPanel">The bottom panel ViewModel.</param>
     /// <param name="settings">The settings management ViewModel.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
@@ -623,11 +641,8 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            // Create a minimal set of current settings to save
-            var currentSettings = new Dictionary<string, object>();
-
             // Save the current user settings
-            await _settingsService.SaveUserSettingsAsync(currentSettings);
+            await _settingsService.UpdateSettingsAsync(_ => { });
             StatusMessage = UIStrings.Status_ConfigurationSavedSuccessfully;
             _logger.LogInformation("Configuration saved to settings file");
         }

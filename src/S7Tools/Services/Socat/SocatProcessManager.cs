@@ -9,8 +9,7 @@ using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
-using S7Tools.Core.Services.Shell;
+using S7Tools.Core.Interfaces.Shell;
 using S7Tools.Extensions;
 
 namespace S7Tools.Services.Socat;
@@ -29,6 +28,12 @@ public partial class SocatProcessManager : IDisposable
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SocatProcessManager"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="timeProvider">The time provider for timestamping process info.</param>
+    /// <param name="shellExecutor">The shell command executor for OS-level operations.</param>
     public SocatProcessManager(
         ILogger<SocatProcessManager> logger,
         ITimeProvider timeProvider,
@@ -490,12 +495,17 @@ public partial class SocatProcessManager : IDisposable
     [GeneratedRegex(@"^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ")]
     private static partial Regex SocatLogTimestampRegex();
 
+    /// <inheritdoc />
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Releases resources used by this manager.
+    /// </summary>
+    /// <param name="disposing"><see langword="true"/> to release managed resources.</param>
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed)
@@ -533,9 +543,17 @@ public partial class SocatProcessManager : IDisposable
 /// </summary>
 public class ProcessExitedEventArgs : EventArgs
 {
+    /// <summary>Gets the OS process ID of the exited process.</summary>
     public int ProcessId { get; }
+
+    /// <summary>Gets the exit code reported by the process.</summary>
     public int ExitCode { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ProcessExitedEventArgs"/> class.
+    /// </summary>
+    /// <param name="processId">The process ID of the exited process.</param>
+    /// <param name="exitCode">The exit code of the process.</param>
     public ProcessExitedEventArgs(int processId, int exitCode)
     {
         ProcessId = processId;

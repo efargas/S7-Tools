@@ -1,11 +1,13 @@
+using FluentAssertions;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
-using S7Tools.Core.Services.Shell;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.Shell;
+using S7Tools.Services;
 using S7Tools.Services.SerialPort;
 using Xunit;
 
@@ -68,9 +70,9 @@ public class SerialPortConfigurationServiceTests
         var result = await _service.ReadPortConfigurationAsync(portPath);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(115200, result.BaudRate);
-        Assert.Equal(8, result.CharacterSize);
+        result.Should().NotBeNull();
+        result.BaudRate.Should().Be(115200);
+        result.CharacterSize.Should().Be(8);
         _shellExecutorMock.Verify(e => e.ExecuteCommandWithTimeoutAsync(It.Is<string>(c => c.Contains("-a")), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -88,7 +90,7 @@ public class SerialPortConfigurationServiceTests
         bool success = await _service.ApplyConfigurationAsync(portPath, config);
 
         // Assert
-        Assert.True(success);
+        success.Should().BeTrue();
         _shellExecutorMock.Verify(e => e.ExecuteCommandWithTimeoutAsync(It.Is<string>(c => c.Contains("stty")), It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -106,7 +108,7 @@ public class SerialPortConfigurationServiceTests
         bool success = await _service.ApplyConfigurationAsync(portPath, config);
 
         // Assert
-        Assert.False(success);
+        success.Should().BeFalse();
     }
 
     [Fact]
@@ -116,8 +118,8 @@ public class SerialPortConfigurationServiceTests
         var result = _service.ValidateSttyCommand("stty -F /dev/ttyUSB0 115200");
 
         // Assert
-        Assert.True(result.IsValid);
-        Assert.Empty(result.Errors);
+        result.IsValid.Should().BeTrue();
+        result.Errors.Should().BeEmpty();
     }
 
     [Fact]
@@ -127,7 +129,7 @@ public class SerialPortConfigurationServiceTests
         var result = _service.ValidateSttyCommand("stty -F /dev/ttyUSB0; rm -rf /");
 
         // Assert
-        Assert.False(result.IsValid);
+        result.IsValid.Should().BeFalse();
         Assert.NotEmpty(result.Errors);
     }
 }

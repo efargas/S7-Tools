@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.ComponentModel;
 using System.Reactive;
@@ -8,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Resources;
 
 namespace S7Tools.ViewModels.Profiles;

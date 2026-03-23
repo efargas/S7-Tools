@@ -16,9 +16,21 @@ namespace S7Tools.ViewModels.Layout;
 public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewModel
 {
     // IDockableViewModel implementation
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "TaskManager";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Task Manager";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
     private readonly IServiceProvider _serviceProvider;
@@ -28,6 +40,9 @@ public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewMode
     private readonly HistoryTasksViewModel _historyTasksViewModel;
     private readonly TaskCreatorViewModel _taskCreatorViewModel;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskManagerShellViewModel"/> class.
+    /// </summary>
     public TaskManagerShellViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -60,6 +75,9 @@ public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewMode
         });
     }
 
+    /// <summary>
+    /// Gets or sets the Categories.
+    /// </summary>
     public ObservableCollection<string> Categories { get; }
 
     private string _selectedCategory = string.Empty;
@@ -68,7 +86,11 @@ public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewMode
         get => _selectedCategory;
         set
         {
-            if (string.IsNullOrWhiteSpace(value)) return;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return;
+            }
+
             this.RaiseAndSetIfChanged(ref _selectedCategory, value);
             // Keep the main content in sync whenever the category changes via binding
             SelectedCategoryViewModel = GetCategoryViewModel(value);
@@ -82,6 +104,9 @@ public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewMode
         set => this.RaiseAndSetIfChanged(ref _selectedCategoryViewModel, value);
     }
 
+    /// <summary>
+    /// Gets or sets the SelectCategoryCommand.
+    /// </summary>
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
 
     private ViewModelBase GetCategoryViewModel(string category)

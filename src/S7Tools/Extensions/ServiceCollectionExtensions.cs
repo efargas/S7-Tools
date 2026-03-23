@@ -6,16 +6,16 @@ using Microsoft.Extensions.Options;
 using S7Tools.Core.Commands;
 using S7Tools.Core.Factories;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Logging;
+using S7Tools.Core.Interfaces.Logging;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Resources;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Core.Validation;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Infrastructure.Logging.Providers.Extensions;
 using S7Tools.Infrastructure.Logging.Sinks;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Bootloader;
@@ -52,7 +52,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<ITimeProvider, S7Tools.Services.Time.TimeProvider>();
 
         // Add Shell Command Executor
-        services.TryAddSingleton<S7Tools.Core.Services.Shell.IShellCommandExecutor, S7Tools.Services.Shell.ShellCommandExecutor>();
+        services.TryAddSingleton<S7Tools.Core.Interfaces.Shell.IShellCommandExecutor, S7Tools.Services.Shell.ShellCommandExecutor>();
 
         // Add UI Thread Service
         services.TryAddSingleton<IUIThreadService, AvaloniaUIThreadService>();
@@ -77,9 +77,6 @@ public static class ServiceCollectionExtensions
 
         // Add Dialog Service
         services.TryAddTransient<IDialogService, DialogService>();
-
-        // Add Profile Edit Dialog Service
-        services.TryAddTransient<IProfileEditDialogService, ProfileEditDialogService>();
 
         // Add Unified Profile Dialog Service (delegates to ProfileEditDialogService)
         services.TryAddTransient<IUnifiedProfileDialogService, UnifiedProfileDialogService>();
@@ -347,10 +344,7 @@ public static class ServiceCollectionExtensions
 
         // Add Bootloader Services
         // Add Bootloader Services
-        // Use EnhancedBootloaderService as the implementation for IBootloaderService
-        services.TryAddSingleton<IEnhancedBootloaderService, Services.Bootloader.EnhancedBootloaderService>();
-        services.TryAddSingleton<IBootloaderService>(provider =>
-            provider.GetRequiredService<IEnhancedBootloaderService>());
+        services.TryAddSingleton<IBootloaderService, Services.Bootloader.BootloaderService>();
 
         // Add Payload Services
         services.TryAddSingleton<IPayloadProvider, Services.Adapters.FilePayloadProvider>();
@@ -388,9 +382,6 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddS7ToolsViewModels(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-
-        // Add ViewModel Factory
-        services.TryAddSingleton<IViewModelFactory, ViewModelFactory>();
 
         // Add Main ViewModels
         services.TryAddSingleton<MainWindowViewModel>(provider => new MainWindowViewModel(
@@ -447,7 +438,7 @@ public static class ServiceCollectionExtensions
         // Add Power Supply ViewModels (Power Supply Control - Modbus TCP)
         services.TryAddTransient<PowerSupplyProfileViewModel>();
         services.TryAddTransient<PowerSupplyProfilesViewModel>();
-        
+
         // Add Memory Region Profiles ViewModels
         services.TryAddTransient<MemoryRegionProfilesViewModel>();
 
@@ -669,10 +660,10 @@ public static class ServiceCollectionExtensions
     /// <param name="startupLogger">The startup logger for overall initialization tracking.</param>
     /// <returns>A task representing the asynchronous initialization operation.</returns>
     private static async Task InitializeProfileServiceAsync<T>(
-        Core.Services.Interfaces.IProfileManager<T> profileService,
+        Core.Interfaces.Services.IProfileManager<T> profileService,
         string serviceName,
         ILogger? serviceLogger,
-        ILogger? startupLogger) where T : class, Core.Services.Interfaces.IProfileBase
+        ILogger? startupLogger) where T : class, Core.Interfaces.Services.IProfileBase
     {
         var serviceStartTime = System.Diagnostics.Stopwatch.StartNew();
 
@@ -773,7 +764,7 @@ public static class ServiceCollectionExtensions
 
             // UI and logging services
             typeof(IUIRefreshService),
-            typeof(S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore)
+            typeof(global::S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore)
         ];
 
         foreach (Type serviceType in serviceTypes)

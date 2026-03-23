@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,7 +16,7 @@ using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Controls;
@@ -44,6 +45,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
 
     // Removed power scan resources
 
+    /// <summary>
+    /// Represents the WizardStep.
+    /// </summary>
     public enum WizardStep
     {
         Serial = 0,
@@ -78,7 +82,13 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     // Memory
     private uint _memoryStart = MemoryConstants.DefaultUserMemoryStart;
     private uint _memoryLength = MemoryConstants.DefaultDumpSize;
+    /// <summary>
+    /// Represents the MemoryPreset.
+    /// </summary>
     public sealed record MemoryPreset(string Name, uint Start, uint Length);
+    /// <summary>
+    /// Gets or sets the MemoryPresets.
+    /// </summary>
     public ObservableCollection<MemoryPreset> MemoryPresets { get; } = [];
     private MemoryPreset? _selectedMemoryPreset;
 
@@ -88,6 +98,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     private string _payloadsBasePath = "./bootloader-payloads";
     private string _outputPath = "./dumps";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobWizardViewModel"/> class.
+    /// </summary>
     public JobWizardViewModel(
         ILogger<JobWizardViewModel> logger,
         ISerialPortProfileService serialService,
@@ -225,10 +238,25 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     }
 
     // Optional preselection inputs (set by parent VM before showing wizard)
+    /// <summary>
+    /// Gets or sets the PreselectSerialId.
+    /// </summary>
     public int? PreselectSerialId { get; set; }
+    /// <summary>
+    /// Gets or sets the PreselectSocatId.
+    /// </summary>
     public int? PreselectSocatId { get; set; }
+    /// <summary>
+    /// Gets or sets the PreselectPowerId.
+    /// </summary>
     public int? PreselectPowerId { get; set; }
+    /// <summary>
+    /// Gets or sets the PreselectJobName.
+    /// </summary>
     public string? PreselectJobName { get; set; }
+    /// <summary>
+    /// Gets or sets the PreselectJobDescription.
+    /// </summary>
     public string? PreselectJobDescription { get; set; }
 
     /// <summary>
@@ -240,22 +268,64 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         IsEditMode = true;
     }
 
+    /// <summary>
+    /// Gets or sets the SerialProfiles.
+    /// </summary>
     public ObservableCollection<SerialPortProfile> SerialProfiles { get; }
+    /// <summary>
+    /// Gets or sets the SocatProfiles.
+    /// </summary>
     public ObservableCollection<SocatProfile> SocatProfiles { get; }
+    /// <summary>
+    /// Gets or sets the PowerProfiles.
+    /// </summary>
     public ObservableCollection<PowerSupplyProfile> PowerProfiles { get; }
+    /// <summary>
+    /// Gets or sets the MemoryProfiles.
+    /// </summary>
     public ObservableCollection<MemoryMappingProfile> MemoryProfiles { get; }
+    /// <summary>
+    /// Gets or sets the AvailablePorts.
+    /// </summary>
     public ObservableCollection<string> AvailablePorts { get; }
     // Port scanner VM for UI embedding
+    /// <summary>
+    /// Gets or sets the PortScanner.
+    /// </summary>
     public SerialPortDiscoveryViewModel PortScanner { get; }
     // Memory region step VM for wizard integration
+    /// <summary>
+    /// Gets or sets the MemoryRegionStepViewModel.
+    /// </summary>
     public JobWizardMemoryRegionStepViewModel MemoryRegionStepViewModel { get; }
 
+    /// <summary>
+    /// Gets or sets the BackCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BackCommand { get; }
+    /// <summary>
+    /// Gets or sets the NextCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> NextCommand { get; }
+    /// <summary>
+    /// Gets or sets the CancelCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> CancelCommand { get; }
+    /// <summary>
+    /// Gets or sets the FinishCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> FinishCommand { get; }
+    /// <summary>
+    /// Gets or sets the BrowsePayloadsPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowsePayloadsPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the BrowseOutputPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseOutputPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ScanPortsCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ScanPortsCommand { get; }
 
     private bool _cancelRequested;
@@ -287,11 +357,29 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     }
 
     // Helper properties for step visibility
+    /// <summary>
+    /// Gets or sets the IsSerialStep.
+    /// </summary>
     public bool IsSerialStep => CurrentStep == WizardStep.Serial;
+    /// <summary>
+    /// Gets or sets the IsSocatStep.
+    /// </summary>
     public bool IsSocatStep => CurrentStep == WizardStep.Socat;
+    /// <summary>
+    /// Gets or sets the IsPowerStep.
+    /// </summary>
     public bool IsPowerStep => CurrentStep == WizardStep.Power;
+    /// <summary>
+    /// Gets or sets the IsMemoryStep.
+    /// </summary>
     public bool IsMemoryStep => CurrentStep == WizardStep.Memory;
+    /// <summary>
+    /// Gets or sets the IsTimingOutputStep.
+    /// </summary>
     public bool IsTimingOutputStep => CurrentStep == WizardStep.TimingOutput;
+    /// <summary>
+    /// Gets or sets the IsReviewStep.
+    /// </summary>
     public bool IsReviewStep => CurrentStep == WizardStep.Review;
 
     public string JobName
@@ -318,6 +406,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     }
 
     // Dynamic title bound in the view's header
+    /// <summary>
+    /// Gets or sets the WizardTitle.
+    /// </summary>
     public string WizardTitle => IsEditMode ? "Edit Job Wizard" : "Create Job Wizard";
 
     public bool IsBusy
@@ -617,8 +708,17 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
     }
 
     // Computed, type-safe accessors for power configuration shown in UI
+    /// <summary>
+    /// Gets or sets the PowerConfigurationType.
+    /// </summary>
     public string PowerConfigurationType => SelectedPower?.Configuration?.Type.ToString() ?? string.Empty;
+    /// <summary>
+    /// Gets or sets the PowerConfigurationHost.
+    /// </summary>
     public string PowerConfigurationHost => (SelectedPower?.Configuration as ModbusTcpConfiguration)?.Host ?? string.Empty;
+    /// <summary>
+    /// Gets or sets the PowerConfigurationPort.
+    /// </summary>
     public int PowerConfigurationPort => (SelectedPower?.Configuration as ModbusTcpConfiguration)?.Port ?? 0;
 
     private async Task LoadAsync()
@@ -877,6 +977,9 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the InitializeFromJob operation.
+    /// </summary>
     public void InitializeFromJob(JobProfile job)
     {
         if (job == null)
@@ -1375,12 +1478,18 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

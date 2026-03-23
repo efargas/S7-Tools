@@ -5,9 +5,11 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Services;
 using S7Tools.Core.Models;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Controls;
 using S7Tools.ViewModels.Jobs;
@@ -31,6 +33,7 @@ public sealed class JobWizardViewModelTests : IDisposable
     private readonly Mock<IViewModelFactory> _mockViewModelFactory;
     private readonly Mock<ISerialPortService> _mockSerialPortService;
     private readonly Mock<ILogger<SerialPortDiscoveryViewModel>> _mockScannerLogger;
+    private readonly Mock<IApplicationSettingsService> _mockSettingsService;
 
     public JobWizardViewModelTests()
     {
@@ -45,11 +48,16 @@ public sealed class JobWizardViewModelTests : IDisposable
         _mockViewModelFactory = new Mock<IViewModelFactory>();
         _mockSerialPortService = new Mock<ISerialPortService>();
         _mockScannerLogger = new Mock<ILogger<SerialPortDiscoveryViewModel>>();
+        _mockSettingsService = new Mock<IApplicationSettingsService>();
         var _mockUIRefreshService = new Mock<IUIRefreshService>();
+
+        // Setup mock settings service
+        _mockSettingsService.Setup(s => s.Current).Returns(new AppSettings());
 
         // Create a real instance for SerialPortDiscoveryViewModel (can't mock concrete class)
         var realSerialScanner = new SerialPortDiscoveryViewModel(
             _mockSerialPortService.Object,
+            _mockSettingsService.Object,
             _mockUIThreadService.Object,
             _mockUIRefreshService.Object,
             _mockScannerLogger.Object);

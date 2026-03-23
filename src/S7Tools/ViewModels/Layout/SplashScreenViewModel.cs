@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Reactive;
 using System.Threading.Tasks;
@@ -10,6 +11,9 @@ using S7Tools.Core.Resources;
 
 namespace S7Tools.ViewModels.Layout;
 
+/// <summary>
+/// Represents the SplashScreenViewModel.
+/// </summary>
 public class SplashScreenViewModel(IServiceProvider serviceProvider, ILogger<SplashScreenViewModel> logger) : ViewModelBase
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
@@ -29,6 +33,9 @@ public class SplashScreenViewModel(IServiceProvider serviceProvider, ILogger<Spl
         set => this.RaiseAndSetIfChanged(ref _progress, value);
     }
 
+    /// <summary>
+    /// Executes the InitializeAsync operation.
+    /// </summary>
     public async Task InitializeAsync()
     {
         try

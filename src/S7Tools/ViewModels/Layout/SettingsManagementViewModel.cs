@@ -74,11 +74,29 @@ public class SettingsManagementViewModel : ReactiveObject
 
     private class DummyOptions : S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>
     {
+        /// <summary>
+        /// Gets or sets the CurrentValue.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings CurrentValue { get; } = new();
+        /// <summary>
+        /// Gets or sets the Value.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Value => CurrentValue;
+        /// <summary>
+        /// Executes the Get operation.
+        /// </summary>
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Get(string? name) => CurrentValue;
+        /// <summary>
+        /// Executes the OnChange operation.
+        /// </summary>
         public IDisposable? OnChange(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string?> listener) => null;
-        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) {}
+        /// <summary>
+        /// Executes the Update operation.
+        /// </summary>
+        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) { }
+        /// <summary>
+        /// Executes the UpdateAsync operation.
+        /// </summary>
         public Task UpdateAsync(Func<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, Task> applyChanges) => Task.CompletedTask;
     }
 
@@ -335,14 +353,14 @@ public class SettingsManagementViewModel : ReactiveObject
         try
         {
             // Load settings using the new ApplicationSettingsService
-            DefaultLogPath = _settingsService.GetSetting<string>("logging.logDirectory", "Resources/Logs/Main");
-            ExportPath = _settingsService.GetSetting<string>("logging.exportDirectory", "Resources/Logs/Exported");
-            MinimumLogLevel = _settingsService.GetSetting<string>("logging.level", "Information");
-            AutoScrollLogs = _settingsService.GetSetting<bool>("ui.autoScrollLogs", true);
-            EnableRollingLogs = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
-            ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
-            ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
-            ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
+            DefaultLogPath = _settingsService.Current.Logging.LogDirectory;
+            ExportPath = _settingsService.Current.Logging.ExportDirectory;
+            MinimumLogLevel = _settingsService.Current.Logging.Level;
+            AutoScrollLogs = _settingsService.Current.Ui.AutoScrollLogs;
+            EnableRollingLogs = _settingsService.Current.Logging.EnableFileLogging;
+            ShowTimestampInLogs = _settingsService.Current.Ui.ShowTimestampInLogs;
+            ShowCategoryInLogs = _settingsService.Current.Ui.ShowCategoryInLogs;
+            ShowLogLevelInLogs = _settingsService.Current.Ui.ShowLogLevelInLogs;
 
             CurrentSettingsFilePath = "Resources/AppSettings/AppSettings.json";
 
@@ -373,20 +391,18 @@ public class SettingsManagementViewModel : ReactiveObject
         {
             SettingsStatusMessage = UIStrings.Status_SavingSettings;
 
-            // Create dictionary of settings to save
-            var userSettings = new Dictionary<string, object>
+            // Update settings through strongly-typed abstraction
+            await _settingsService.UpdateSettingsAsync(settings =>
             {
-                ["logging.logDirectory"] = DefaultLogPath,
-                ["logging.exportDirectory"] = ExportPath,
-                ["logging.level"] = MinimumLogLevel,
-                ["ui.autoScrollLogs"] = AutoScrollLogs,
-                ["logging.enableFileLogging"] = EnableRollingLogs,
-                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
-                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
-                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
-            };
-
-            await _settingsService.SaveUserSettingsAsync(userSettings);
+                settings.Logging.LogDirectory = DefaultLogPath;
+                settings.Logging.ExportDirectory = ExportPath;
+                settings.Logging.Level = MinimumLogLevel;
+                settings.Ui.AutoScrollLogs = AutoScrollLogs;
+                settings.Logging.EnableFileLogging = EnableRollingLogs;
+                settings.Ui.ShowTimestampInLogs = ShowTimestampInLogs;
+                settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
+                settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
+            });
 
             SettingsStatusMessage = UIStrings.Status_SettingsSavedSuccessfully;
             SettingsLastModified = DateTime.UtcNow.ToLocalTime();
@@ -525,38 +541,7 @@ public class SettingsManagementViewModel : ReactiveObject
     /// <returns>JSON representation of the current settings.</returns>
     public string ExportSettingsToJson()
     {
-        try
-        {
-            // Create a representation of current settings from ViewModel
-            var currentSettings = new Dictionary<string, object>
-            {
-                ["logging.logDirectory"] = DefaultLogPath,
-                ["logging.exportDirectory"] = ExportPath,
-                ["logging.level"] = MinimumLogLevel,
-                ["ui.autoScrollLogs"] = AutoScrollLogs,
-                ["logging.enableFileLogging"] = EnableRollingLogs,
-                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
-                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
-                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
-            };
-
-            // Serialize to JSON with pretty formatting
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            string json = JsonSerializer.Serialize(currentSettings, options);
-            _logger.LogInformation("Settings exported to JSON ({Length} characters)", json.Length);
-
-            return json;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to export settings to JSON");
-            return string.Empty;
-        }
+        return _settingsService.ExportSettingsToJson();
     }
 
     /// <summary>
@@ -564,7 +549,7 @@ public class SettingsManagementViewModel : ReactiveObject
     /// </summary>
     /// <param name="json">The JSON string containing settings.</param>
     /// <returns>True if import was successful, false otherwise.</returns>
-    public bool ImportSettingsFromJson(string json)
+    public async Task<bool> ImportSettingsFromJson(string json)
     {
         try
         {
@@ -575,33 +560,20 @@ public class SettingsManagementViewModel : ReactiveObject
                 return false;
             }
 
-            // Deserialize JSON to Dictionary
-            var options = new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                PropertyNameCaseInsensitive = true
-            };
+            bool result = await _settingsService.ImportSettingsFromJsonAsync(json);
 
-            Dictionary<string, object>? importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
-
-            if (importedSettings == null)
+            if (result)
             {
-                _logger.LogWarning("Failed to deserialize settings from JSON");
+                RefreshFromSettings();
+                SettingsStatusMessage = UIStrings.Status_SettingsImportedSuccessfully;
+                SettingsLastModified = DateTime.UtcNow.ToLocalTime();
+            }
+            else
+            {
                 SettingsStatusMessage = UIStrings.Status_InvalidSettingsFormat;
-                return false;
             }
 
-            // Save settings using the service
-            _ = _settingsService.SaveUserSettingsAsync(importedSettings);
-
-            // Update ViewModel properties from imported settings
-            RefreshFromSettings();
-
-            _logger.LogInformation("Settings imported from JSON successfully");
-            SettingsStatusMessage = UIStrings.Status_SettingsImportedSuccessfully;
-            SettingsLastModified = DateTime.UtcNow.ToLocalTime();
-
-            return true;
+            return result;
         }
         catch (Exception ex)
         {

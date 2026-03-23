@@ -7,7 +7,7 @@ using System.Reactive.Linq;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Helpers;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
@@ -24,6 +24,9 @@ public sealed class HistoryTasksViewModel : ViewModelBase, IDisposable
     private readonly ILogger<HistoryTasksViewModel> _logger;
     private TaskExecution? _selectedHistoryTask;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HistoryTasksViewModel"/> class.
+    /// </summary>
     public HistoryTasksViewModel(
         TaskManagerViewModel manager,
         IJobManager jobManager,
@@ -41,6 +44,9 @@ public sealed class HistoryTasksViewModel : ViewModelBase, IDisposable
             .DisposeWith(_disposables);
     }
 
+    /// <summary>
+    /// Gets or sets the Manager.
+    /// </summary>
     public TaskManagerViewModel Manager { get; }
 
     /// <summary>
@@ -138,6 +144,9 @@ public sealed class HistoryTasksViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         _disposables.Dispose();

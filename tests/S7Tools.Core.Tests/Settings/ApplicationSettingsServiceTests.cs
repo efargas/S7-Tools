@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,9 +9,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
-using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Services;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using Xunit;
 
 namespace S7Tools.Core.Tests.Settings
@@ -42,6 +42,33 @@ namespace S7Tools.Core.Tests.Settings
             }
         }
 
+        /// <summary>
+        /// Tracks which write path was used (Update vs UpdateAsync) for verification tests.
+        /// </summary>
+        private class TrackingWritableOptions<T> : IWritableOptions<T> where T : class, new()
+        {
+            public T CurrentValue { get; private set; } = new T();
+            public T Value => CurrentValue;
+            public bool UpdateSyncCalled { get; set; }
+            public bool UpdateAsyncCalled { get; private set; }
+
+            public T Get(string? name) => CurrentValue;
+            public IDisposable? OnChange(Action<T, string?> listener) => null;
+
+            public void Update(Action<T> applyChanges)
+            {
+                UpdateSyncCalled = true;
+                applyChanges(CurrentValue);
+            }
+
+            public Task UpdateAsync(Func<T, Task> applyChanges)
+            {
+                UpdateAsyncCalled = true;
+                applyChanges(CurrentValue).GetAwaiter().GetResult();
+                return Task.CompletedTask;
+            }
+        }
+
         private ApplicationSettingsService CreateTestService()
         {
             var loggerMock = new Mock<ILogger<ApplicationSettingsService>>();
@@ -50,67 +77,107 @@ namespace S7Tools.Core.Tests.Settings
         }
 
         [Fact]
-        public void GetSetting_WithNoUserSettings_ReturnsDefaultSettings()
+        public void Current_WithNoUserSettings_ReturnsDefaultSettings()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
 
-            // Act & Assert
-            // These defaults match the AppSettings default constructor values
-            Assert.Equal("Information", service.GetSetting<string>("logging.level"));
-            Assert.True(service.GetSetting<bool>("logging.enableFileLogging"));
-            Assert.Equal("System", service.GetSetting<string>("ui.theme"));
+            // Act & Assert - defaults match AppSettings default constructor values
+            service.Current.Logging.Level.Should().Be("Information");
+            service.Current.Logging.EnableFileLogging.Should().BeTrue();
+            service.Current.Ui.Theme.Should().Be("System");
         }
 
         [Fact]
-        public async Task SetSettingAsync_UserSettingOverridesDefault_CorrectHierarchy()
+        public async Task UpdateSettingsAsync_UserSettingOverridesDefault_CorrectHierarchy()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
 
-            // Act - Set user setting to override default
-            await service.SetSettingAsync("logging.level", "Debug");
-            await service.SetSettingAsync("ui.theme", "Dark");
+            // Act - update settings via strongly-typed action
+            await service.UpdateSettingsAsync(s =>
+            {
+                s.Logging.Level = "Debug";
+                s.Ui.Theme = "Dark";
+            });
 
-            // Assert - User settings override defaults
-            Assert.Equal("Debug", service.GetSetting<string>("logging.level"));
-            Assert.Equal("Dark", service.GetSetting<string>("ui.theme"));
+            // Assert - settings reflect the update
+            service.Current.Logging.Level.Should().Be("Debug");
+            service.Current.Ui.Theme.Should().Be("Dark");
         }
 
         [Fact]
-        public async Task ResetSettingAsync_UserSettingReset_RevertsToDefault()
+        public async Task ResetAllSettingsAsync_UserSettingReset_RevertsToDefault()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
-            await service.SetSettingAsync("logging.level", "Debug");
+            await service.UpdateSettingsAsync(s => s.Logging.Level = "Debug");
 
-            // Verify user override is active
-            Assert.Equal("Debug", service.GetSetting<string>("logging.level"));
+            // Verify update was applied
+            service.Current.Logging.Level.Should().Be("Debug");
 
-            // Act - Reset to default
-            await service.ResetSettingAsync("logging.level");
+            // Act - reset to defaults
+            await service.ResetAllSettingsAsync();
 
-            // Assert - Reverted to default
-            Assert.Equal("Information", service.GetSetting<string>("logging.level"));
+            // Assert - reverted to default
+            service.Current.Logging.Level.Should().Be("Information");
         }
 
         [Fact]
-        public async Task SettingsChanged_EventFired_WhenSettingChanged()
+        public async Task SettingsChanged_EventFired_WhenSettingsUpdated()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
 
-            S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs? eventArgs = null;
+            SettingsChangedEventArgs? eventArgs = null;
             service.SettingsChanged += (sender, args) => eventArgs = args;
 
             // Act
-            await service.SetSettingAsync("ui.theme", "Dark");
+            await service.UpdateSettingsAsync(s => s.Ui.Theme = "Dark");
 
             // Assert
-            Assert.NotNull(eventArgs);
-            Assert.Equal("ui.theme", eventArgs.Key);
-            Assert.Equal("Dark", eventArgs.NewValue);
-            Assert.True(eventArgs.IsUserSetting);
+            // The strongly-typed API fires SettingsChanged with IsUserSetting=true for any UpdateSettingsAsync call.
+            // Individual key/value change info is no longer tracked; instead, callers read Current directly for the new values.
+            eventArgs.Should().NotBeNull();
+            eventArgs.IsUserSetting.Should().BeTrue();
+            // Verify the actual value change is accessible via Current
+            service.Current.Ui.Theme.Should().Be("Dark");
+        }
+
+        [Fact]
+        public async Task UpdateSettingsAsync_DelegatesToUpdateAsync_NotSyncUpdate()
+        {
+            // Arrange
+            var trackingOptions = new TrackingWritableOptions<AppSettings>();
+            var loggerMock = new Mock<ILogger<ApplicationSettingsService>>();
+            var service = new ApplicationSettingsService(loggerMock.Object, trackingOptions);
+
+            // Act
+            await service.UpdateSettingsAsync(s => s.Logging.Level = "Debug");
+
+            // Assert – only the async path must have been called
+            Assert.True(trackingOptions.UpdateAsyncCalled, "UpdateSettingsAsync must delegate to UpdateAsync.");
+            Assert.False(trackingOptions.UpdateSyncCalled, "UpdateSettingsAsync must not call the synchronous Update method.");
+        }
+
+        [Fact]
+        public async Task ResetAllSettingsAsync_DelegatesToUpdateAsync_NotSyncUpdate()
+        {
+            // Arrange
+            var trackingOptions = new TrackingWritableOptions<AppSettings>();
+            var loggerMock = new Mock<ILogger<ApplicationSettingsService>>();
+            var service = new ApplicationSettingsService(loggerMock.Object, trackingOptions);
+            await service.UpdateSettingsAsync(s => s.Logging.Level = "Debug");
+
+            // Verify arrange step used UpdateAsync
+            Assert.True(trackingOptions.UpdateAsyncCalled, "Arrange: UpdateSettingsAsync must have called UpdateAsync.");
+            trackingOptions.UpdateSyncCalled = false;
+
+            // Act
+            await service.ResetAllSettingsAsync();
+
+            // Assert
+            Assert.False(trackingOptions.UpdateSyncCalled, "ResetAllSettingsAsync must not call the synchronous Update method.");
         }
     }
 }

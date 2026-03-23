@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -7,7 +8,8 @@ using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using ReactiveUI;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Jobs;
 using Xunit;
@@ -76,11 +78,11 @@ public class JobWizardMemoryRegionStepViewModelTests
         JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Assert
-        Assert.NotNull(viewModel);
-        Assert.NotNull(viewModel.AvailableProfiles);
-        Assert.NotNull(viewModel.SelectedSegments);
-        Assert.False(viewModel.IsBusy);
-        Assert.False(viewModel.IsStepValid);
+        viewModel.Should().NotBeNull();
+        viewModel.AvailableProfiles.Should().NotBeNull();
+        viewModel.SelectedSegments.Should().NotBeNull();
+        viewModel.IsBusy.Should().BeFalse();
+        viewModel.IsStepValid.Should().BeFalse();
         // Status may be set during profile loading, so we don't assert it's empty
     }
 
@@ -132,8 +134,8 @@ public class JobWizardMemoryRegionStepViewModelTests
         viewModel.SelectedProfile = profile;
 
         // Assert
-        Assert.True(propertyChanged);
-        Assert.Equal(profile, viewModel.SelectedProfile);
+        propertyChanged.Should().BeTrue();
+        viewModel.SelectedProfile.Should().Be(profile);
     }
 
     [Fact]
@@ -143,7 +145,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
-        Assert.Equal("No profile selected", viewModel.ProfileSummary);
+        viewModel.ProfileSummary.Should().Be("No profile selected");
     }
 
     [Fact]
@@ -167,7 +169,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
-        Assert.Equal(0, viewModel.SelectedSegmentCount);
+        viewModel.SelectedSegmentCount.Should().Be(0);
     }
 
     [Fact]
@@ -181,7 +183,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         viewModel.SelectedProfile = profile;
 
         // Assert
-        Assert.Equal(1, viewModel.SelectedSegmentCount); // Only .bss is selected in sample profile
+        viewModel.SelectedSegmentCount.Should().Be(1); // Only .bss is selected in sample profile
     }
 
     [Fact]
@@ -191,7 +193,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
-        Assert.Equal(0, viewModel.TotalSelectedSize);
+        viewModel.TotalSelectedSize.Should().Be(0);
     }
 
     [Fact]
@@ -205,7 +207,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         viewModel.SelectedProfile = profile;
 
         // Assert
-        Assert.Equal(16 * 1024, viewModel.TotalSelectedSize); // .bss segment size
+        viewModel.TotalSelectedSize.Should().Be(16 * 1024); // .bss segment size
     }
 
     [Fact]
@@ -220,7 +222,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         viewModel.SelectedProfile = profile;
 
         // Assert
-        Assert.Equal("512 bytes", viewModel.TotalSelectedSizeFormatted);
+        viewModel.TotalSelectedSizeFormatted.Should().Be("512 bytes");
     }
 
     [Fact]
@@ -247,7 +249,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
-        Assert.False(viewModel.IsStepValid);
+        viewModel.IsStepValid.Should().BeFalse();
     }
 
     [Fact]
@@ -261,7 +263,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         viewModel.SelectedProfile = profile;
 
         // Assert
-        Assert.True(viewModel.IsStepValid);
+        viewModel.IsStepValid.Should().BeTrue();
     }
 
     [Fact]
@@ -271,7 +273,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         JobWizardMemoryRegionStepViewModel viewModel = CreateViewModel();
 
         // Act & Assert
-        Assert.Equal("Please select a memory region profile", viewModel.ValidationMessage);
+        viewModel.ValidationMessage.Should().Be("Please select a memory region profile");
     }
 
     [Fact]
@@ -303,7 +305,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         int? result = viewModel.GetSelectedProfileId();
 
         // Assert
-        Assert.Null(result);
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -318,7 +320,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         int? result = viewModel.GetSelectedProfileId();
 
         // Assert
-        Assert.Equal(42, result);
+        result.Should().Be(42);
     }
 
     [Fact]
@@ -334,8 +336,8 @@ public class JobWizardMemoryRegionStepViewModelTests
         bool result = viewModel.SetSelectedProfileId(null);
 
         // Assert
-        Assert.True(result);
-        Assert.Null(viewModel.SelectedProfile);
+        result.Should().BeTrue();
+        viewModel.SelectedProfile.Should().BeNull();
     }
 
     [Fact]
@@ -350,8 +352,8 @@ public class JobWizardMemoryRegionStepViewModelTests
         bool result = viewModel.SetSelectedProfileId(42);
 
         // Assert
-        Assert.True(result);
-        Assert.Equal(profile, viewModel.SelectedProfile);
+        result.Should().BeTrue();
+        viewModel.SelectedProfile.Should().Be(profile);
     }
 
     [Fact]
@@ -366,8 +368,8 @@ public class JobWizardMemoryRegionStepViewModelTests
         bool result = viewModel.SetSelectedProfileId(99);
 
         // Assert
-        Assert.False(result);
-        Assert.Null(viewModel.SelectedProfile);
+        result.Should().BeFalse();
+        viewModel.SelectedProfile.Should().BeNull();
     }
 
     [Fact]
@@ -380,7 +382,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         List<string> errors = viewModel.ValidateStep();
 
         // Assert
-        Assert.Single(errors);
+        errors.Should().ContainSingle();
         Assert.Contains("Memory region profile must be selected", errors);
     }
 
@@ -416,7 +418,7 @@ public class JobWizardMemoryRegionStepViewModelTests
         List<string> errors = viewModel.ValidateStep();
 
         // Assert
-        Assert.Empty(errors);
+        errors.Should().BeEmpty();
     }
 
     #endregion
@@ -435,8 +437,8 @@ public class JobWizardMemoryRegionStepViewModelTests
         viewModel.SelectedProfile = profile;
 
         // Assert
-        Assert.False(initialValid);
-        Assert.True(viewModel.IsStepValid);
+        initialValid.Should().BeFalse();
+        viewModel.IsStepValid.Should().BeTrue();
     }
 
     [Fact]
@@ -450,8 +452,8 @@ public class JobWizardMemoryRegionStepViewModelTests
         viewModel.SelectedProfile = profile;
 
         // Assert
-        Assert.Single(viewModel.SelectedSegments);
-        Assert.Equal(".bss", viewModel.SelectedSegments.First().Name);
+        viewModel.SelectedSegments.Should().ContainSingle();
+        viewModel.SelectedSegments.First().Name.Should().Be(".bss");
     }
 
     #endregion

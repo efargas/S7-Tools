@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System.Text.Json;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
@@ -64,21 +65,21 @@ public class JobPersistenceTests
         Job? loadedJob = JsonSerializer.Deserialize<Job>(json);
 
         // Assert
-        Assert.NotNull(loadedJob);
-        Assert.Equal(originalJob.Id, loadedJob.Id);
-        Assert.Equal(originalJob.Name, loadedJob.Name);
-        Assert.Equal(originalJob.Description, loadedJob.Description);
-        Assert.Equal(originalJob.OutputPath, loadedJob.OutputPath);
-        Assert.Equal(originalJob.State, loadedJob.State);
-        Assert.Equal(originalJob.Progress, loadedJob.Progress);
+        loadedJob.Should().NotBeNull();
+        loadedJob.Id.Should().Be(originalJob.Id);
+        loadedJob.Name.Should().Be(originalJob.Name);
+        loadedJob.Description.Should().Be(originalJob.Description);
+        loadedJob.OutputPath.Should().Be(originalJob.OutputPath);
+        loadedJob.State.Should().Be(originalJob.State);
+        loadedJob.Progress.Should().Be(originalJob.Progress);
 
         // ProfileSet comparison
-        Assert.NotNull(loadedJob.ProfileSet);
-        Assert.Equal(originalJob.ProfileSet.Serial.Device, loadedJob.ProfileSet.Serial.Device);
-        Assert.Equal(originalJob.ProfileSet.Socat.Port, loadedJob.ProfileSet.Socat.Port);
-        Assert.Equal(originalJob.ProfileSet.Power.Host, loadedJob.ProfileSet.Power.Host);
-        Assert.Equal(originalJob.ProfileSet.Memory.Start, loadedJob.ProfileSet.Memory.Start);
-        Assert.Equal(originalJob.ProfileSet.Payloads.BasePath, loadedJob.ProfileSet.Payloads.BasePath);
+        loadedJob.ProfileSet.Should().NotBeNull();
+        loadedJob.ProfileSet.Serial.Device.Should().Be(originalJob.ProfileSet.Serial.Device);
+        loadedJob.ProfileSet.Socat.Port.Should().Be(originalJob.ProfileSet.Socat.Port);
+        loadedJob.ProfileSet.Power.Host.Should().Be(originalJob.ProfileSet.Power.Host);
+        loadedJob.ProfileSet.Memory.Start.Should().Be(originalJob.ProfileSet.Memory.Start);
+        loadedJob.ProfileSet.Payloads.BasePath.Should().Be(originalJob.ProfileSet.Payloads.BasePath);
     }
 
     private static JobProfileSet CreateTestProfileSet()

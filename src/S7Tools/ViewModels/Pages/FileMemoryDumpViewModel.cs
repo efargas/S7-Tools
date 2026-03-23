@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -23,6 +24,9 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     private readonly IServiceProvider _serviceProvider;
     private readonly S7Tools.Core.Interfaces.Services.IApplicationSettingsService _settingsService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileMemoryDumpViewModel"/> class.
+    /// </summary>
     public FileMemoryDumpViewModel(
         ILogger<FileMemoryDumpViewModel> logger,
         IFileDialogService fileDialogService,
@@ -35,7 +39,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
 
         // Load default folder from settings
-        string defaultFolder = _settingsService.GetSetting<string>("memoryDump.defaultFolder", string.Empty);
+        string defaultFolder = _settingsService.Current.MemoryDump.DefaultFolder;
         if (!string.IsNullOrEmpty(defaultFolder) && Directory.Exists(defaultFolder))
         {
             RootFolderPath = defaultFolder;
@@ -45,7 +49,13 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         FileTreeItems.CollectionChanged += (_, _) => this.RaisePropertyChanged(nameof(HasItems));
     }
 
+    /// <summary>
+    /// Gets or sets the Title.
+    /// </summary>
     public string Title => "File PLC Memory Viewer";
+    /// <summary>
+    /// Gets or sets the Description.
+    /// </summary>
     public string Description => "Select a folder to explore and open memory dump files within the system.";
 
     private string _rootFolderPath = string.Empty;
@@ -55,8 +65,14 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _rootFolderPath, value);
     }
 
+    /// <summary>
+    /// Gets or sets the HasItems.
+    /// </summary>
     public bool HasItems => FileTreeItems.Count > 0;
 
+    /// <summary>
+    /// Gets or sets the FileTreeItems.
+    /// </summary>
     public ObservableCollection<FileTreeItemViewModel> FileTreeItems { get; } = new();
 
     /// <summary>
@@ -71,11 +87,11 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         try
         {
             string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Folder containing Memory Dumps");
-            
+
             if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
             {
                 RootFolderPath = folderPath;
-                await _settingsService.SetSettingAsync("memoryDump.defaultFolder", folderPath);
+                await _settingsService.UpdateSettingsAsync(s => s.MemoryDump.DefaultFolder = folderPath);
                 LoadTree();
             }
         }
@@ -95,7 +111,10 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     {
         FileTreeItems.Clear();
 
-        if (string.IsNullOrEmpty(RootFolderPath)) return;
+        if (string.IsNullOrEmpty(RootFolderPath))
+        {
+            return;
+        }
 
         try
         {
@@ -113,13 +132,16 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     [RelayCommand]
     private void OpenFile(FileTreeItemViewModel? item)
     {
-        if (item == null || item.IsDirectory || item.IsDummyNode || string.IsNullOrEmpty(item.FullPath) || OpenDocumentAction == null) return;
+        if (item == null || item.IsDirectory || item.IsDummyNode || string.IsNullOrEmpty(item.FullPath) || OpenDocumentAction == null)
+        {
+            return;
+        }
 
         try
         {
             var docVm = _serviceProvider.GetRequiredService<FileMemoryDumpDocumentViewModel>();
             docVm.OpenFile(item.FullPath);
-            
+
             OpenDocumentAction.Invoke(docVm);
         }
         catch (Exception ex)

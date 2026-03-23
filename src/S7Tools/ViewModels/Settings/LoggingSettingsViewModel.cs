@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System.Reactive;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -50,7 +51,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         _isInitializing = false;
 
         // Subscribe to settings changes
-        _settingsService.SettingsChanged += (_, _) => 
+        _settingsService.SettingsChanged += (_, _) =>
         {
             _isInitializing = true;
             RefreshFromSettings();
@@ -60,10 +61,13 @@ public class LoggingSettingsViewModel : ViewModelBase
         // Auto-save when properties change
         this.PropertyChanged += (s, e) =>
         {
-            if (_isInitializing) return;
+            if (_isInitializing)
+            {
+                return;
+            }
 
-            if (e.PropertyName is nameof(DefaultLogPath) or nameof(ExportPath) or nameof(MinimumLogLevel) or 
-                nameof(AutoScrollLogs) or nameof(EnableRollingLogs) or nameof(ShowTimestampInLogs) or 
+            if (e.PropertyName is nameof(DefaultLogPath) or nameof(ExportPath) or nameof(MinimumLogLevel) or
+                nameof(AutoScrollLogs) or nameof(EnableRollingLogs) or nameof(ShowTimestampInLogs) or
                 nameof(ShowCategoryInLogs) or nameof(ShowLogLevelInLogs))
             {
                 _ = SaveLoggingSettingsAsync();
@@ -148,9 +152,21 @@ public class LoggingSettingsViewModel : ViewModelBase
 
     #region Commands
 
+    /// <summary>
+    /// Gets or sets the BrowseDefaultLogPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseDefaultLogPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the BrowseExportPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseExportPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenDefaultLogPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenDefaultLogPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenExportPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenExportPathCommand { get; }
 
     #endregion
@@ -160,14 +176,15 @@ public class LoggingSettingsViewModel : ViewModelBase
     private void RefreshFromSettings()
     {
         // Load settings using the new structured approach
-        DefaultLogPath = _settingsService.GetSetting<string>("logging.logDirectory", "Resources/Logs/Main");
-        ExportPath = _settingsService.GetSetting<string>("logging.exportDirectory", "Resources/Logs/Exported");
-        MinimumLogLevel = _settingsService.GetSetting<string>("logging.level", "Information");
-        AutoScrollLogs = _settingsService.GetSetting<bool>("ui.autoScrollLogs", true);
-        EnableRollingLogs = _settingsService.GetSetting<bool>("logging.enableFileLogging", true);
-        ShowTimestampInLogs = _settingsService.GetSetting<bool>("ui.showTimestampInLogs", true);
-        ShowCategoryInLogs = _settingsService.GetSetting<bool>("ui.showCategoryInLogs", true);
-        ShowLogLevelInLogs = _settingsService.GetSetting<bool>("ui.showLogLevelInLogs", true);
+        var current = _settingsService.Current;
+        DefaultLogPath = current.Logging.LogDirectory;
+        ExportPath = current.Logging.ExportDirectory;
+        MinimumLogLevel = current.Logging.Level.ToString();
+        AutoScrollLogs = current.Ui.AutoScrollLogs;
+        EnableRollingLogs = current.Logging.EnableFileLogging;
+        ShowTimestampInLogs = current.Ui.ShowTimestampInLogs;
+        ShowCategoryInLogs = current.Ui.ShowCategoryInLogs;
+        ShowLogLevelInLogs = current.Ui.ShowLogLevelInLogs;
     }
 
     private async Task BrowseDefaultLogPathAsync()
@@ -218,19 +235,17 @@ public class LoggingSettingsViewModel : ViewModelBase
     {
         try
         {
-            var userSettings = new Dictionary<string, object>
+            await _settingsService.UpdateSettingsAsync(settings =>
             {
-                ["logging.logDirectory"] = DefaultLogPath,
-                ["logging.exportDirectory"] = ExportPath,
-                ["logging.level"] = MinimumLogLevel,
-                ["ui.autoScrollLogs"] = AutoScrollLogs,
-                ["logging.enableFileLogging"] = EnableRollingLogs,
-                ["ui.showTimestampInLogs"] = ShowTimestampInLogs,
-                ["ui.showCategoryInLogs"] = ShowCategoryInLogs,
-                ["ui.showLogLevelInLogs"] = ShowLogLevelInLogs
-            };
-
-            await _settingsService.SaveUserSettingsAsync(userSettings);
+                settings.Logging.LogDirectory = DefaultLogPath;
+                settings.Logging.ExportDirectory = ExportPath;
+                settings.Logging.Level = MinimumLogLevel;
+                settings.Ui.AutoScrollLogs = AutoScrollLogs;
+                settings.Logging.EnableFileLogging = EnableRollingLogs;
+                settings.Ui.ShowTimestampInLogs = ShowTimestampInLogs;
+                settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
+                settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
+            });
         }
         catch (Exception ex)
         {

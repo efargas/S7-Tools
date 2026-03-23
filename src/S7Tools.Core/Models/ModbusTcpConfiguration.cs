@@ -106,7 +106,7 @@ public class ModbusTcpConfiguration : PowerSupplyConfiguration
     public int WriteTimeoutMs { get; set; } = 3000;
 
     /// <summary>
-    /// Gets or sets whether to enable automatic reconnection on connection loss.
+    /// Gets or sets a value indicating whether to enable automatic reconnection on connection loss.
     /// </summary>
     /// <value>True to enable auto-reconnect, false otherwise. Default is true.</value>
     [Display(Name = "Enable Auto-Reconnect", Order = 9)]

@@ -12,14 +12,12 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
-
-using S7Tools.Core.Interfaces.ViewModels;
 namespace S7Tools.ViewModels.Profiles;
 
 /// <summary>
@@ -29,9 +27,21 @@ namespace S7Tools.ViewModels.Profiles;
 public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<PowerSupplyProfile>, IDockableViewModel
 {
 
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "PowerSupplyProfiles";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Power Supply";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
     #region Fields
 
@@ -439,7 +449,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
         {
             _specificLogger.LogDebug("Duplicating power supply profile: {ProfileName}", SelectedProfile.Name);
 
-            Models.InputResult inputResult = await _dialogService.ShowInputAsync(
+            global::S7Tools.ViewModels.Dialogs.Models.InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Profile",
                 "Enter a name for the duplicate profile:",
                 $"{SelectedProfile.Name} (Copy)").ConfigureAwait(false);
@@ -699,7 +709,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
 
             if (success)
             {
-                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
+                await Task.Delay(_settingsService.Current.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
                 await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerTurnedOn);
                 _specificLogger.LogInformation("Power turned ON successfully");
@@ -735,7 +745,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
 
             if (success)
             {
-                await Task.Delay(_settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000)).ConfigureAwait(false);
+                await Task.Delay(_settingsService.Current.PowerSupply.PowerStateChangeDelayMs).ConfigureAwait(false);
                 await ReadStateCoreAsync().ConfigureAwait(false);
                 await _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = UIStrings.Status_PowerTurnedOff);
                 _specificLogger.LogInformation("Power turned OFF successfully");
@@ -805,7 +815,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
         await _uiThreadService.InvokeOnUIThreadAsync(() => IsBusy = true);
         try
         {
-            int delayMs = _settingsService.GetSetting<int>("powerSupply.powerStateChangeDelayMs", 1000);
+            int delayMs = _settingsService.Current.PowerSupply.PowerStateChangeDelayMs;
 
             _specificLogger.LogInformation("Starting power cycle (delay={Delay}ms)", delayMs);
 

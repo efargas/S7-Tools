@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.IO;
 using System.Reactive;
@@ -22,6 +23,9 @@ public class PathSettingsViewModel : ViewModelBase
     private readonly ILogger<PathSettingsViewModel> _logger;
     private EventHandler<S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs>? _settingsChangedHandler;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PathSettingsViewModel"/> class.
+    /// </summary>
     public PathSettingsViewModel(
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
         IPathService pathService,
@@ -55,13 +59,7 @@ public class PathSettingsViewModel : ViewModelBase
         // Subscribe to settings changes
         _settingsChangedHandler = (_, args) =>
         {
-            if (args.Key == "profiles.serialPath" ||
-                args.Key == "profiles.socatPath" ||
-                args.Key == "profiles.powerSupplyPath" ||
-                args.Key == "profiles.memoryRegionPath")
-            {
-                RefreshFromSettings();
-            }
+            RefreshFromSettings();
         };
         _settingsService.SettingsChanged += _settingsChangedHandler;
     }
@@ -80,8 +78,17 @@ public class PathSettingsViewModel : ViewModelBase
         get => _serialProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _serialProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowseSerialProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseSerialProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenSerialProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenSerialProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetSerialProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetSerialProfilesPathCommand { get; }
 
     // Socat
@@ -91,8 +98,17 @@ public class PathSettingsViewModel : ViewModelBase
         get => _socatProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _socatProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowseSocatProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseSocatProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenSocatProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenSocatProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetSocatProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetSocatProfilesPathCommand { get; }
 
     // Power Supply
@@ -102,8 +118,17 @@ public class PathSettingsViewModel : ViewModelBase
         get => _powerSupplyProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _powerSupplyProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowsePowerSupplyProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowsePowerSupplyProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenPowerSupplyProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenPowerSupplyProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetPowerSupplyProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetPowerSupplyProfilesPathCommand { get; }
 
     // Memory Region
@@ -113,27 +138,38 @@ public class PathSettingsViewModel : ViewModelBase
         get => _memoryRegionProfilesPath;
         set => this.RaiseAndSetIfChanged(ref _memoryRegionProfilesPath, value);
     }
+    /// <summary>
+    /// Gets or sets the BrowseMemoryRegionProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> BrowseMemoryRegionProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the OpenMemoryRegionProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> OpenMemoryRegionProfilesPathCommand { get; }
+    /// <summary>
+    /// Gets or sets the ResetMemoryRegionProfilesPathCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ResetMemoryRegionProfilesPathCommand { get; }
 
 
     private void RefreshFromSettings()
     {
+        var current = _settingsService.Current;
+
         // Serial
-        string serialPath = _settingsService.GetSetting<string>("profiles.serialPath", _pathService.SerialProfilesPath);
+        string serialPath = !string.IsNullOrEmpty(current.Profiles.SerialPath) ? current.Profiles.SerialPath : _pathService.SerialProfilesPath;
         SerialProfilesPath = GetDirectoryFromPath(serialPath, _pathService.SerialProfilesPath);
 
         // Socat
-        string socatPath = _settingsService.GetSetting<string>("profiles.socatPath", _pathService.SocatProfilesPath);
+        string socatPath = !string.IsNullOrEmpty(current.Profiles.SocatPath) ? current.Profiles.SocatPath : _pathService.SocatProfilesPath;
         SocatProfilesPath = GetDirectoryFromPath(socatPath, _pathService.SocatProfilesPath);
 
         // Power Supply
-        string powerSupplyPath = _settingsService.GetSetting<string>("profiles.powerSupplyPath", _pathService.PowerSupplyProfilesPath);
+        string powerSupplyPath = !string.IsNullOrEmpty(current.Profiles.PowerSupplyPath) ? current.Profiles.PowerSupplyPath : _pathService.PowerSupplyProfilesPath;
         PowerSupplyProfilesPath = GetDirectoryFromPath(powerSupplyPath, _pathService.PowerSupplyProfilesPath);
 
         // Memory Region
-        string memoryRegionPath = _settingsService.GetSetting<string>("profiles.memoryRegionPath", _pathService.MemoryRegionProfilesPath);
+        string memoryRegionPath = !string.IsNullOrEmpty(current.Profiles.MemoryRegionPath) ? current.Profiles.MemoryRegionPath : _pathService.MemoryRegionProfilesPath;
         MemoryRegionProfilesPath = GetDirectoryFromPath(memoryRegionPath, _pathService.MemoryRegionProfilesPath);
     }
 
@@ -144,7 +180,11 @@ public class PathSettingsViewModel : ViewModelBase
             string? directoryPath = Path.GetDirectoryName(fullPath);
             if (!string.IsNullOrEmpty(directoryPath))
             {
-                if (Path.IsPathRooted(directoryPath)) return directoryPath;
+                if (Path.IsPathRooted(directoryPath))
+                {
+                    return directoryPath;
+                }
+
                 return _pathService.ResolvePath(directoryPath);
             }
         }
@@ -152,7 +192,7 @@ public class PathSettingsViewModel : ViewModelBase
         return _pathService.ProfilesDirectory;
     }
 
-    private async Task HandleBrowsePathAsync(string currentPath, Action<string> pathSetter, string settingsKey, string fileName)
+    private async Task HandleBrowsePathAsync(string currentPath, Action<string> pathSetter, Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string> updateAction, string fileName)
     {
         if (_fileDialogService == null)
         {
@@ -166,7 +206,7 @@ public class PathSettingsViewModel : ViewModelBase
             if (!string.IsNullOrEmpty(result))
             {
                 pathSetter(result);
-                await UpdatePathInSettingsAsync(settingsKey, result, fileName);
+                await UpdatePathInSettingsAsync(updateAction, result, fileName);
             }
         }
         catch (Exception ex)
@@ -201,13 +241,13 @@ public class PathSettingsViewModel : ViewModelBase
         }
     }
 
-    private async Task HandleResetPathAsync(string defaultPathValue, Action<string> pathSetter, string settingsKey, string fileName)
+    private async Task HandleResetPathAsync(string defaultPathValue, Action<string> pathSetter, Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string> updateAction, string fileName)
     {
         try
         {
             string defaultFolder = Path.GetDirectoryName(defaultPathValue) ?? _pathService.ProfilesDirectory;
             pathSetter(defaultFolder);
-            await UpdatePathInSettingsAsync(settingsKey, defaultFolder, fileName);
+            await UpdatePathInSettingsAsync(updateAction, defaultFolder, fileName);
         }
         catch (Exception ex)
         {
@@ -216,11 +256,11 @@ public class PathSettingsViewModel : ViewModelBase
         }
     }
 
-    private async Task UpdatePathInSettingsAsync(string key, string folderPath, string fileName)
+    private async Task UpdatePathInSettingsAsync(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string> updateAction, string folderPath, string fileName)
     {
         try
         {
-            await _settingsService.SetSettingAsync(key, Path.Combine(folderPath, fileName)).ConfigureAwait(false);
+            await _settingsService.UpdateSettingsAsync(s => updateAction(s, Path.Combine(folderPath, fileName))).ConfigureAwait(false);
             StatusMessage = "Path updated";
         }
         catch (Exception ex)
@@ -231,22 +271,22 @@ public class PathSettingsViewModel : ViewModelBase
     }
 
     // Serial
-    private Task BrowseSerialProfilesPathAsync() => HandleBrowsePathAsync(SerialProfilesPath, p => SerialProfilesPath = p, "profiles.serialPath", "SerialProfiles.json");
+    private Task BrowseSerialProfilesPathAsync() => HandleBrowsePathAsync(SerialProfilesPath, p => SerialProfilesPath = p, (s, path) => s.Profiles.SerialPath = path, "SerialProfiles.json");
     private Task OpenSerialProfilesPathAsync() => HandleOpenPathAsync(SerialProfilesPath);
-    private Task ResetSerialProfilesPathAsync() => HandleResetPathAsync(_pathService.SerialProfilesPath, p => SerialProfilesPath = p, "profiles.serialPath", "SerialProfiles.json");
+    private Task ResetSerialProfilesPathAsync() => HandleResetPathAsync(_pathService.SerialProfilesPath, p => SerialProfilesPath = p, (s, path) => s.Profiles.SerialPath = path, "SerialProfiles.json");
 
     // Socat
-    private Task BrowseSocatProfilesPathAsync() => HandleBrowsePathAsync(SocatProfilesPath, p => SocatProfilesPath = p, "profiles.socatPath", "SocatProfiles.json");
+    private Task BrowseSocatProfilesPathAsync() => HandleBrowsePathAsync(SocatProfilesPath, p => SocatProfilesPath = p, (s, path) => s.Profiles.SocatPath = path, "SocatProfiles.json");
     private Task OpenSocatProfilesPathAsync() => HandleOpenPathAsync(SocatProfilesPath);
-    private Task ResetSocatProfilesPathAsync() => HandleResetPathAsync(_pathService.SocatProfilesPath, p => SocatProfilesPath = p, "profiles.socatPath", "SocatProfiles.json");
+    private Task ResetSocatProfilesPathAsync() => HandleResetPathAsync(_pathService.SocatProfilesPath, p => SocatProfilesPath = p, (s, path) => s.Profiles.SocatPath = path, "SocatProfiles.json");
 
     // Power Supply
-    private Task BrowsePowerSupplyProfilesPathAsync() => HandleBrowsePathAsync(PowerSupplyProfilesPath, p => PowerSupplyProfilesPath = p, "profiles.powerSupplyPath", "PowerSupplyProfiles.json");
+    private Task BrowsePowerSupplyProfilesPathAsync() => HandleBrowsePathAsync(PowerSupplyProfilesPath, p => PowerSupplyProfilesPath = p, (s, path) => s.Profiles.PowerSupplyPath = path, "PowerSupplyProfiles.json");
     private Task OpenPowerSupplyProfilesPathAsync() => HandleOpenPathAsync(PowerSupplyProfilesPath);
-    private Task ResetPowerSupplyProfilesPathAsync() => HandleResetPathAsync(_pathService.PowerSupplyProfilesPath, p => PowerSupplyProfilesPath = p, "profiles.powerSupplyPath", "PowerSupplyProfiles.json");
+    private Task ResetPowerSupplyProfilesPathAsync() => HandleResetPathAsync(_pathService.PowerSupplyProfilesPath, p => PowerSupplyProfilesPath = p, (s, path) => s.Profiles.PowerSupplyPath = path, "PowerSupplyProfiles.json");
 
     // Memory Region
-    private Task BrowseMemoryRegionProfilesPathAsync() => HandleBrowsePathAsync(MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, "profiles.memoryRegionPath", "MemoryMappingProfiles.json");
+    private Task BrowseMemoryRegionProfilesPathAsync() => HandleBrowsePathAsync(MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, (s, path) => s.Profiles.MemoryRegionPath = path, "MemoryMappingProfiles.json");
     private Task OpenMemoryRegionProfilesPathAsync() => HandleOpenPathAsync(MemoryRegionProfilesPath);
-    private Task ResetMemoryRegionProfilesPathAsync() => HandleResetPathAsync(_pathService.MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, "profiles.memoryRegionPath", "MemoryMappingProfiles.json");
+    private Task ResetMemoryRegionProfilesPathAsync() => HandleResetPathAsync(_pathService.MemoryRegionProfilesPath, p => MemoryRegionProfilesPath = p, (s, path) => s.Profiles.MemoryRegionPath = path, "MemoryMappingProfiles.json");
 }

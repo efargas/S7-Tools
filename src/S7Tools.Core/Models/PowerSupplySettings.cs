@@ -38,13 +38,13 @@ public class PowerSupplySettings
     public int MaxProfiles { get; set; } = 100;
 
     /// <summary>
-    /// Gets or sets whether to automatically load the default profile on application startup.
+    /// Gets or sets a value indicating whether to automatically load the default profile on application startup.
     /// </summary>
     /// <value>True to auto-load default profile, false otherwise. Default is true.</value>
     public bool AutoLoadDefaultProfile { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to automatically save profile changes.
+    /// Gets or sets a value indicating whether to automatically save profile changes.
     /// </summary>
     /// <value>True to auto-save changes, false otherwise. Default is true.</value>
     /// <remarks>
@@ -68,7 +68,7 @@ public class PowerSupplySettings
     public int DefaultConnectionTimeoutMs { get; set; } = 5000;
 
     /// <summary>
-    /// Gets or sets whether to enable connection pooling.
+    /// Gets or sets a value indicating whether to enable connection pooling.
     /// </summary>
     /// <value>True to enable connection pooling, false otherwise. Default is true.</value>
     /// <remarks>
@@ -78,7 +78,7 @@ public class PowerSupplySettings
     public bool EnableConnectionPooling { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to automatically reconnect on connection loss.
+    /// Gets or sets a value indicating whether to automatically reconnect on connection loss.
     /// </summary>
     /// <value>True to enable auto-reconnect, false otherwise. Default is true.</value>
     public bool EnableAutoReconnect { get; set; } = true;
@@ -100,7 +100,7 @@ public class PowerSupplySettings
     #region Power Control Settings
 
     /// <summary>
-    /// Gets or sets whether to require confirmation before turning power off.
+    /// Gets or sets a value indicating whether to require confirmation before turning power off.
     /// </summary>
     /// <value>True to require confirmation, false otherwise. Default is true.</value>
     /// <remarks>
@@ -109,7 +109,7 @@ public class PowerSupplySettings
     public bool ConfirmPowerOff { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to require confirmation before turning power on.
+    /// Gets or sets a value indicating whether to require confirmation before turning power on.
     /// </summary>
     /// <value>True to require confirmation, false otherwise. Default is false.</value>
     public bool ConfirmPowerOn { get; set; }
@@ -125,7 +125,7 @@ public class PowerSupplySettings
     public int PowerStateChangeDelayMs { get; set; } = 1000;
 
     /// <summary>
-    /// Gets or sets whether to automatically read power state after connection.
+    /// Gets or sets a value indicating whether to automatically read power state after connection.
     /// </summary>
     /// <value>True to auto-read state, false otherwise. Default is true.</value>
     public bool AutoReadStateAfterConnect { get; set; } = true;
@@ -144,13 +144,13 @@ public class PowerSupplySettings
     public int StatusRefreshIntervalMs { get; set; } = 5000;
 
     /// <summary>
-    /// Gets or sets whether to show notifications for power state changes.
+    /// Gets or sets a value indicating whether to show notifications for power state changes.
     /// </summary>
     /// <value>True to show notifications, false otherwise. Default is true.</value>
     public bool ShowPowerStateNotifications { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to show notifications for connection state changes.
+    /// Gets or sets a value indicating whether to show notifications for connection state changes.
     /// </summary>
     /// <value>True to show notifications, false otherwise. Default is true.</value>
     public bool ShowConnectionNotifications { get; set; } = true;
@@ -160,7 +160,7 @@ public class PowerSupplySettings
     #region Logging Settings
 
     /// <summary>
-    /// Gets or sets whether to log all Modbus operations.
+    /// Gets or sets a value indicating whether to log all Modbus operations.
     /// </summary>
     /// <value>True to enable operation logging, false otherwise. Default is false.</value>
     /// <remarks>
@@ -170,13 +170,13 @@ public class PowerSupplySettings
     public bool LogModbusOperations { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to log connection state changes.
+    /// Gets or sets a value indicating whether to log connection state changes.
     /// </summary>
     /// <value>True to log connection changes, false otherwise. Default is true.</value>
     public bool LogConnectionStateChanges { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to log power state changes.
+    /// Gets or sets a value indicating whether to log power state changes.
     /// </summary>
     /// <value>True to log power changes, false otherwise. Default is true.</value>
     public bool LogPowerStateChanges { get; set; } = true;

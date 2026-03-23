@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,8 +8,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
-using S7Tools.Core.Services.Shell;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.Shell;
+using S7Tools.Services;
 using S7Tools.Services.SerialPort;
 using Xunit;
 
@@ -42,11 +44,11 @@ public class SerialPortDiscoveryServiceTests : IDisposable
     [Fact]
     public void GetPortType_KnownPatterns_ReturnsCorrectType()
     {
-        Assert.Equal(SerialPortType.Usb, _service.GetPortType("/dev/ttyUSB0"));
-        Assert.Equal(SerialPortType.Acm, _service.GetPortType("/dev/ttyACM0"));
-        Assert.Equal(SerialPortType.Standard, _service.GetPortType("/dev/ttyS0"));
-        Assert.Equal(SerialPortType.Virtual, _service.GetPortType("/dev/pts/1"));
-        Assert.Equal(SerialPortType.Unknown, _service.GetPortType("/dev/unknown"));
+        _service.GetPortType("/dev/ttyUSB0").Should().Be(SerialPortType.Usb);
+        _service.GetPortType("/dev/ttyACM0").Should().Be(SerialPortType.Acm);
+        _service.GetPortType("/dev/ttyS0").Should().Be(SerialPortType.Standard);
+        _service.GetPortType("/dev/pts/1").Should().Be(SerialPortType.Virtual);
+        _service.GetPortType("/dev/unknown").Should().Be(SerialPortType.Unknown);
     }
 
     [Fact]
@@ -56,7 +58,7 @@ public class SerialPortDiscoveryServiceTests : IDisposable
         bool result = await _service.IsPortAccessibleAsync("/non/existent/port");
 
         // Assert
-        Assert.False(result);
+        result.Should().BeFalse();
     }
 
     [Fact]
@@ -77,11 +79,11 @@ public class SerialPortDiscoveryServiceTests : IDisposable
         var info = await _service.GetPortInfoAsync(portPath, 1000);
 
         // Assert
-        Assert.NotNull(info);
-        Assert.Equal(portPath, info.PortPath);
-        Assert.Equal(SerialPortType.Usb, info.PortType);
-        Assert.True(info.IsAccessible);
-        Assert.False(info.IsInUse);
+        info.Should().NotBeNull();
+        info.PortPath.Should().Be(portPath);
+        info.PortType.Should().Be(SerialPortType.Usb);
+        info.IsAccessible.Should().BeTrue();
+        info.IsInUse.Should().BeFalse();
     }
 
     public void Dispose()

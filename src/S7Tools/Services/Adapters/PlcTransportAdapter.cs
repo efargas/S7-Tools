@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services.Adapters
 {
@@ -20,22 +20,37 @@ namespace S7Tools.Services.Adapters
         private string _host = string.Empty;
         private int _port;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PlcTransportAdapter"/> class.
+        /// </summary>
         public PlcTransportAdapter(ILogger<PlcTransportAdapter> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _client = new TcpClient();
         }
 
+        /// <summary>
+        /// Gets or sets the IsConnected.
+        /// </summary>
         public bool IsConnected => _client?.Connected ?? false;
 
+        /// <summary>
+        /// Gets or sets the DataAvailable.
+        /// </summary>
         public bool DataAvailable => _stream?.DataAvailable ?? false;
 
+        /// <summary>
+        /// Executes the Configure operation.
+        /// </summary>
         public void Configure(string host, int port)
         {
             _host = host;
             _port = port;
         }
 
+        /// <summary>
+        /// Executes the ConnectAsync operation.
+        /// </summary>
         public async Task ConnectAsync(CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(_host) || _port == 0)
@@ -43,24 +58,23 @@ namespace S7Tools.Services.Adapters
                 throw new InvalidOperationException("Transport not configured. Call Configure() first.");
             }
 
-            _logger.LogInformation("Connecting to PLC via Socat at {Host}:{Port}...", _host, _port);
-
-            // Re-create TcpClient if disposed or previously used
-            if (_client == null || _client.Client == null || !_client.Connected && _client.Client.Connected)
-            {
-                _client?.Dispose();
-                _client = new TcpClient();
-            }
-            // Handle case where client is already connected or in weird state
-            if (_client.Connected)
+            if (_client?.Connected == true)
             {
                 return;
             }
 
+            _logger.LogInformation("Connecting to PLC via Socat at {Host}:{Port}...", _host, _port);
+
+            // Dispose previous stream and client; always use a fresh TcpClient for each connection attempt
+            _stream?.Dispose();
+            _stream = null;
+            _client?.Dispose();
+            _client = new TcpClient();
+
             try
             {
                 _client.NoDelay = true;
-                await _client.ConnectAsync(_host, _port, cancellationToken);
+                await _client.ConnectAsync(_host, _port, cancellationToken).ConfigureAwait(false);
                 _logger.LogInformation("TcpClient.NoDelay set to: {Value}", _client.NoDelay);
                 _stream = _client.GetStream();
                 _logger.LogInformation("Connected successfully.");
@@ -72,36 +86,52 @@ namespace S7Tools.Services.Adapters
             }
         }
 
-        public async Task DisconnectAsync(CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Executes the DisconnectAsync operation.
+        /// </summary>
+        public Task DisconnectAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Disconnecting transport...");
-            _stream?.Close();
-            _client?.Close();
+            _stream?.Dispose();
+            _stream = null;
+            _client?.Dispose();
             _client = new TcpClient(); // Reset for next use
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Executes the ReadAsync operation.
+        /// </summary>
         public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             if (_stream == null)
             {
                 throw new InvalidOperationException("Transport not connected.");
             }
-            return await _stream.ReadAsync(buffer, offset, count, cancellationToken);
+            return await _stream.ReadAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
         }
 
+        /// <summary>
+        /// Executes the WriteAsync operation.
+        /// </summary>
         public async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken = default)
         {
             if (_stream == null)
             {
                 throw new InvalidOperationException("Transport not connected.");
             }
-            await _stream.WriteAsync(buffer, offset, count, cancellationToken);
+            await _stream.WriteAsync(buffer, offset, count, cancellationToken).ConfigureAwait(false);
             // await _stream.FlushAsync(cancellationToken); // Removed to prevent packet fragmentation logic interference
         }
 
+        /// <summary>
+        /// Executes the GetStream operation.
+        /// </summary>
         public Stream? GetStream() => _stream;
 
+        /// <summary>
+        /// Executes the DisposeAsync operation.
+        /// </summary>
         public ValueTask DisposeAsync()
         {
             _stream?.Dispose();

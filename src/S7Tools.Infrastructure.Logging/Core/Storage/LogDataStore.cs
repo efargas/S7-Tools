@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Infrastructure.Logging.Core.Models;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;

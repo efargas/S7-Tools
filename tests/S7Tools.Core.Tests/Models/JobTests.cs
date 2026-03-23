@@ -1,3 +1,4 @@
+using FluentAssertions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using Xunit;
@@ -55,20 +56,20 @@ public class JobTests
         DateTime afterCreate = DateTime.UtcNow;
 
         // Assert
-        Assert.Equal(1, job.Id);
-        Assert.Equal("Test Job", job.Name);
-        Assert.Equal("Test job description", job.Description);
-        Assert.NotNull(job.ProfileSet);
-        Assert.Equal("/tmp/dumps", job.OutputPath);
-        Assert.Equal(JobState.Created, job.State);
+        job.Id.Should().Be(1);
+        job.Name.Should().Be("Test Job");
+        job.Description.Should().Be("Test job description");
+        job.ProfileSet.Should().NotBeNull();
+        job.OutputPath.Should().Be("/tmp/dumps");
+        job.State.Should().Be(JobState.Created);
         Assert.InRange(job.CreatedAt, beforeCreate, afterCreate);
         Assert.InRange(job.ModifiedAt, beforeCreate, afterCreate);
-        Assert.Null(job.QueuedAt);
-        Assert.Null(job.StartedAt);
-        Assert.Null(job.CompletedAt);
-        Assert.Equal(0.0, job.Progress);
-        Assert.Equal(string.Empty, job.CurrentOperation);
-        Assert.Null(job.ErrorMessage);
+        job.QueuedAt.Should().BeNull();
+        job.StartedAt.Should().BeNull();
+        job.CompletedAt.Should().BeNull();
+        job.Progress.Should().Be(0.0);
+        job.CurrentOperation.Should().Be(string.Empty);
+        job.ErrorMessage.Should().BeNull();
     }
 
     [Fact]
@@ -114,10 +115,10 @@ public class JobTests
         Assert.NotEqual(original.CurrentOperation, modifiedClone.CurrentOperation);
 
         // Original unchanged
-        Assert.Equal(1, original.Id);
-        Assert.Equal("Original Job", original.Name);
-        Assert.Equal(50.0, original.Progress);
-        Assert.Equal("Installing stager", original.CurrentOperation);
+        original.Id.Should().Be(1);
+        original.Name.Should().Be("Original Job");
+        original.Progress.Should().Be(50.0);
+        original.CurrentOperation.Should().Be("Installing stager");
     }
 
     private static JobProfileSet CreateTestProfileSet()

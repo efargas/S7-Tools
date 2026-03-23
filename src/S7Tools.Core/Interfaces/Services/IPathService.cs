@@ -48,11 +48,6 @@ namespace S7Tools.Core.Interfaces.Services
         string MemoryRegionProfilesPath { get; }
 
         /// <summary>
-        /// Gets the path to Resources/Profiles/MemoryRegions directory
-        /// </summary>
-        string MemoryRegionsDirectory { get; }
-
-        /// <summary>
         /// Gets the path to Resources/Profiles/PayloadSets/PayloadSetProfiles.json
         /// </summary>
         string PayloadSetProfilesPath { get; }

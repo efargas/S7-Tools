@@ -11,6 +11,9 @@ using S7Tools.Services.Hex;
 
 namespace S7Tools.ViewModels.Hex
 {
+    /// <summary>
+    /// Represents the SearchMode.
+    /// </summary>
     public enum SearchMode
     {
         Hex,
@@ -18,6 +21,9 @@ namespace S7Tools.ViewModels.Hex
         Binary // Interpreted as bit string "0101"
     }
 
+    /// <summary>
+    /// Represents the SearchViewModel.
+    /// </summary>
     public class SearchViewModel : ReactiveObject
     {
         private readonly IBinarySearchService _searchService;
@@ -29,6 +35,9 @@ namespace S7Tools.ViewModels.Hex
         private int _currentResultIndex = -1;
         private ObservableCollection<long> _searchResults = new();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SearchViewModel"/> class.
+        /// </summary>
         public SearchViewModel(IBinarySearchService searchService)
         {
             _searchService = searchService;
@@ -45,9 +54,21 @@ namespace S7Tools.ViewModels.Hex
             CloseCommand = ReactiveCommand.Create(() => { IsVisible = false; });
         }
 
+        /// <summary>
+        /// Gets or sets the FindCommand.
+        /// </summary>
         public ReactiveCommand<Unit, Unit> FindCommand { get; }
+        /// <summary>
+        /// Gets or sets the FindNextCommand.
+        /// </summary>
         public ReactiveCommand<Unit, Unit> FindNextCommand { get; }
+        /// <summary>
+        /// Gets or sets the FindPreviousCommand.
+        /// </summary>
         public ReactiveCommand<Unit, Unit> FindPreviousCommand { get; }
+        /// <summary>
+        /// Gets or sets the CloseCommand.
+        /// </summary>
         public ReactiveCommand<Unit, Unit> CloseCommand { get; }
 
         public event Action<long>? RequestNavigation;
@@ -102,6 +123,9 @@ namespace S7Tools.ViewModels.Hex
             }
         }
 
+        /// <summary>
+        /// Executes the SetDocument operation.
+        /// </summary>
         public void SetDocument(IBinaryDocument? document)
         {
             _document = document;

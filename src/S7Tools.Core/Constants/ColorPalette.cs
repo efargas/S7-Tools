@@ -7,7 +7,7 @@ namespace S7Tools.Core.Constants;
 /// These RGB color values ensure consistent visual feedback across all UI components.
 /// Each color is defined with RGB byte values (0-255) for red, green, and blue channels.
 /// </remarks>
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
 public static class ColorPalette
 {
     #region Log Level Colors
@@ -18,8 +18,11 @@ public static class ColorPalette
     /// </summary>
     public static class Trace
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 128;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 128;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 128;
     }
 
@@ -29,8 +32,11 @@ public static class ColorPalette
     /// </summary>
     public static class Debug
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 0;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 122;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 204;
     }
 
@@ -40,8 +46,11 @@ public static class ColorPalette
     /// </summary>
     public static class Information
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 0;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 150;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 0;
     }
 
@@ -51,8 +60,11 @@ public static class ColorPalette
     /// </summary>
     public static class Warning
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 255;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 165;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 0;
     }
 
@@ -62,8 +74,11 @@ public static class ColorPalette
     /// </summary>
     public static class WarningLight
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 255;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 152;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 0;
     }
 
@@ -73,8 +88,11 @@ public static class ColorPalette
     /// </summary>
     public static class Error
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 220;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 20;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 60;
     }
 
@@ -84,8 +102,11 @@ public static class ColorPalette
     /// </summary>
     public static class ErrorRed
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 211;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 47;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 47;
     }
 
@@ -95,8 +116,11 @@ public static class ColorPalette
     /// </summary>
     public static class Critical
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 139;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 0;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 0;
     }
 
@@ -106,8 +130,11 @@ public static class ColorPalette
     /// </summary>
     public static class None
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 64;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 64;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 64;
     }
 
@@ -117,11 +144,14 @@ public static class ColorPalette
     /// </summary>
     public static class Default
     {
+        /// <summary>Gets the red channel value.</summary>
         public const byte R = 128;
+        /// <summary>Gets the green channel value.</summary>
         public const byte G = 128;
+        /// <summary>Gets the blue channel value.</summary>
         public const byte B = 128;
     }
 
     #endregion
 }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+

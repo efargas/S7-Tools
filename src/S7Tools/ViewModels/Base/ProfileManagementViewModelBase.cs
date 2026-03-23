@@ -2,16 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
@@ -41,6 +41,9 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
 {
     private readonly ILogger _logger;
     private readonly IUnifiedProfileDialogService _profileDialogService;
+    /// <summary>
+    /// Gets or sets the UnifiedDialogService.
+    /// </summary>
     protected IUnifiedProfileDialogService UnifiedDialogService => _profileDialogService;
     private readonly IDialogService _dialogService;
     private readonly IUIThreadService _uiThreadService;
@@ -252,8 +255,17 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
     /// </remarks>
     public ReactiveCommand<Unit, Unit> SetDefaultCommand { get; private set; } = null!;
 
+    /// <summary>
+    /// Gets or sets the ExportProfilesCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ExportProfilesCommand { get; private set; } = null!;
+    /// <summary>
+    /// Gets or sets the ImportProfilesCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ImportProfilesCommand { get; private set; } = null!;
+    /// <summary>
+    /// Gets or sets the ExportSelectedProfileCommand.
+    /// </summary>
     public ReactiveCommand<Unit, Unit> ExportSelectedProfileCommand { get; private set; } = null!;
 
     #endregion
@@ -737,7 +749,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             IEnumerable<TProfile> importedProfiles = await GetProfileManager().ImportAsync(profiles, replaceExisting: false);
 
             int importedCount = importedProfiles.Count();
-            await LoadProfilesAsync(); 
+            await LoadProfilesAsync();
 
             StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
             _logger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);

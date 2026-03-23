@@ -7,10 +7,16 @@ namespace S7Tools.ViewModels.Tasks;
 /// </summary>
 public sealed class ActiveTasksViewModel : ViewModelBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ActiveTasksViewModel"/> class.
+    /// </summary>
     public ActiveTasksViewModel(TaskManagerViewModel manager)
     {
         Manager = manager ?? throw new ArgumentNullException(nameof(manager));
     }
 
+    /// <summary>
+    /// Gets or sets the Manager.
+    /// </summary>
     public TaskManagerViewModel Manager { get; }
 }

@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services.Socat;
 
@@ -15,6 +15,9 @@ public partial class SocatCommandBuilder
 {
     private readonly ILogger<SocatCommandBuilder> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SocatCommandBuilder"/> class.
+    /// </summary>
     public SocatCommandBuilder(ILogger<SocatCommandBuilder> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

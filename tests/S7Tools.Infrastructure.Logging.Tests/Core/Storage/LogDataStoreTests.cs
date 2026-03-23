@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using Microsoft.Extensions.Logging;
@@ -125,8 +126,8 @@ public sealed class LogDataStoreTests : IDisposable
         collectionChangedArgs.Should().NotBeNull();
         collectionChangedArgs!.Action.Should().Be(NotifyCollectionChangedAction.Add);
         var newItems = collectionChangedArgs.NewItems as System.Collections.IList;
-        Assert.NotNull(newItems);
-        Assert.True(newItems.Contains(logEntry));
+        newItems.Should().NotBeNull();
+        newItems.Contains(logEntry).Should().BeTrue();
     }
 
     [Fact]

@@ -10,7 +10,7 @@ using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Providers.Extensions;
@@ -62,7 +62,7 @@ sealed class Program
                 // Run initialization asynchronously for diagnostics
                 await serviceProvider.InitializeS7ToolsServicesAsync().ConfigureAwait(false);
 
-                ISerialPortProfileService? profileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISerialPortProfileService>();
+                ISerialPortProfileService? profileService = serviceProvider.GetService<S7Tools.Core.Interfaces.Services.ISerialPortProfileService>();
 
                 if (profileService != null)
                 {
@@ -80,7 +80,7 @@ sealed class Program
                 }
 
                 // Initialize SocatProfileService and ensure default profile exists
-                ISocatProfileService? socatProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.ISocatProfileService>();
+                ISocatProfileService? socatProfileService = serviceProvider.GetService<S7Tools.Core.Interfaces.Services.ISocatProfileService>();
 
                 if (socatProfileService != null)
                 {
@@ -98,7 +98,7 @@ sealed class Program
                 }
 
                 // Initialize PowerSupplyProfileService and ensure default profile exists
-                IPowerSupplyProfileService? powerSupplyProfileService = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IPowerSupplyProfileService>();
+                IPowerSupplyProfileService? powerSupplyProfileService = serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IPowerSupplyProfileService>();
 
                 if (powerSupplyProfileService != null)
                 {
@@ -116,7 +116,7 @@ sealed class Program
                 }
 
                 // Initialize JobManager and ensure default job profiles exist
-                IJobManager? jobManager = serviceProvider.GetService<S7Tools.Core.Services.Interfaces.IJobManager>();
+                IJobManager? jobManager = serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IJobManager>();
 
                 if (jobManager != null)
                 {
@@ -181,7 +181,7 @@ sealed class Program
             .ValidateOnStart();
 
         // Register WritableOptions factory
-        services.AddTransient<S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(provider => 
+        services.AddTransient<S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(provider =>
             new S7Tools.Services.WritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>(
                 basePath,
                 provider.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(),

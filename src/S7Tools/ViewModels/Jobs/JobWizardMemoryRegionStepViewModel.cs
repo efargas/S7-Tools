@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 
@@ -44,6 +45,9 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
     #region Constructor
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JobWizardMemoryRegionStepViewModel"/> class.
+    /// </summary>
     public JobWizardMemoryRegionStepViewModel(
         ILogger<JobWizardMemoryRegionStepViewModel> logger,
         IMemoryRegionProfileService memoryRegionService,
@@ -509,12 +513,18 @@ public class JobWizardMemoryRegionStepViewModel : ViewModelBase, IDisposable
 
     #region IDisposable
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)

@@ -13,7 +13,6 @@ using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
@@ -36,7 +35,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     private readonly ISerialPortProfileService _profileService;
     private readonly ISerialPortService _portService;
     private readonly IDialogService _dialogService;
-    private readonly IProfileEditDialogService _profileEditDialogService;
     private readonly IClipboardService _clipboardService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<SerialPortsSettingsViewModel> _specificLogger;
@@ -58,7 +56,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     /// <param name="profileService">The serial port profile service.</param>
     /// <param name="portService">The serial port service.</param>
     /// <param name="dialogService">The dialog service.</param>
-    /// <param name="profileEditDialogService">The profile edit dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="fileDialogService">The file dialog service.</param>
     /// <param name="settingsService">The settings service used to persist application settings.</param>
@@ -71,7 +68,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         ISerialPortProfileService profileService,
         ISerialPortService portService,
         IDialogService dialogService,
-        IProfileEditDialogService profileEditDialogService,
         IClipboardService clipboardService,
         IFileDialogService? fileDialogService,
         S7Tools.Core.Interfaces.Services.IApplicationSettingsService settingsService,
@@ -85,7 +81,6 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _portService = portService ?? throw new ArgumentNullException(nameof(portService));
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
-        _profileEditDialogService = profileEditDialogService ?? throw new ArgumentNullException(nameof(profileEditDialogService));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _fileDialogService = fileDialogService;
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
@@ -107,8 +102,15 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
         // Load profiles and scan ports in background but marshal collection updates to UI thread
         _ = Task.Run(async () =>
         {
-            await base.InitializeAsync();
-            await ScanPortsAsync();
+            try
+            {
+                await base.InitializeAsync();
+                await ScanPortsAsync();
+            }
+            catch (Exception ex)
+            {
+                _specificLogger.LogError(ex, "Failed to initialize SerialPortsSettingsViewModel");
+            }
         });
 
         _specificLogger.LogInformation("SerialPortsSettingsViewModel initialized");
@@ -325,36 +327,48 @@ public class SerialPortsSettingsViewModel : ProfileManagementViewModelBase<Seria
     {
         try
         {
-            IsScanning = true;
-            StatusMessage = UIStrings.Status_ScanningForPorts;
-
-            IEnumerable<Core.Services.Interfaces.SerialPortInfo> portInfos = await _portService.ScanAvailablePortsAsync();
-
-            AvailablePorts.Clear();
-
-            // Sort ports with ttyUSB* first (external serial adapters), then others alphabetically
-            IOrderedEnumerable<Core.Services.Interfaces.SerialPortInfo> sortedPortInfos = portInfos
-                .OrderBy(p => !p.PortPath.Contains("/ttyUSB")) // ttyUSB* ports come first (false sorts before true)
-                .ThenBy(p => p.PortPath); // Then sort alphabetically within each group
-
-            foreach (Core.Services.Interfaces.SerialPortInfo? portInfo in sortedPortInfos)
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                AvailablePorts.Add(portInfo.PortPath);
-            }
+                IsScanning = true;
+                StatusMessage = UIStrings.Status_ScanningForPorts;
+            });
 
-            PortCount = AvailablePorts.Count;
-            StatusMessage = $"Found {PortCount} port(s)";
+            IEnumerable<Core.Interfaces.Services.SerialPortInfo> portInfos = await _portService.ScanAvailablePortsAsync();
+
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                AvailablePorts.Clear();
+
+                // Sort ports with ttyUSB* first (external serial adapters), then others alphabetically
+                IOrderedEnumerable<Core.Interfaces.Services.SerialPortInfo> sortedPortInfos = portInfos
+                    .OrderBy(p => !p.PortPath.Contains("/ttyUSB")) // ttyUSB* ports come first (false sorts before true)
+                    .ThenBy(p => p.PortPath); // Then sort alphabetically within each group
+
+                foreach (Core.Interfaces.Services.SerialPortInfo? portInfo in sortedPortInfos)
+                {
+                    AvailablePorts.Add(portInfo.PortPath);
+                }
+
+                PortCount = AvailablePorts.Count;
+                StatusMessage = $"Found {PortCount} port(s)";
+            });
 
             _specificLogger.LogInformation("Found {PortCount} available ports", PortCount);
         }
         catch (Exception ex)
         {
             _specificLogger.LogError(ex, "Error scanning for ports");
-            StatusMessage = UIStrings.Status_ErrorScanningForPorts;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = UIStrings.Status_ErrorScanningForPorts;
+            });
         }
         finally
         {
-            IsScanning = false;
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                IsScanning = false;
+            });
         }
     }
 

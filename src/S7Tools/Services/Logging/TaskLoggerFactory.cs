@@ -3,7 +3,6 @@ using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
 using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Core.Models;
@@ -18,13 +17,13 @@ namespace S7Tools.Services.Logging;
 public class TaskLoggerFactory(
     IPathService pathService,
     ILogger<TaskLoggerFactory> logger,
-    S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService centralizedTaskLogService,
+    S7Tools.Core.Interfaces.Services.ICentralizedTaskLogService centralizedTaskLogService,
     IApplicationSettingsService applicationSettingsService,
     ITimeProvider timeProvider) : ITaskLoggerFactory, IDisposable
 {
     private readonly IPathService _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
     private readonly ILogger<TaskLoggerFactory> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly S7Tools.Core.Services.Interfaces.ICentralizedTaskLogService _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
+    private readonly S7Tools.Core.Interfaces.Services.ICentralizedTaskLogService _centralizedTaskLogService = centralizedTaskLogService ?? throw new ArgumentNullException(nameof(centralizedTaskLogService));
     private readonly IApplicationSettingsService _applicationSettingsService = applicationSettingsService ?? throw new ArgumentNullException(nameof(applicationSettingsService));
     private readonly ITimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     private readonly ConcurrentDictionary<Guid, TaskLoggerContext> _activeLoggers = new();
@@ -70,7 +69,7 @@ public class TaskLoggerFactory(
                 LogDataStore? processLogDataStore = captureProcessOutput ? (LogDataStore?)processDataStore : null;
 
                 // Create logger providers with DataStores
-                string logLevelString = _applicationSettingsService.GetSetting<string>("logging.level", "Information");
+                string logLevelString = _applicationSettingsService.Current.Logging.Level;
 
                 if (!Enum.TryParse(logLevelString, true, out LogLevel configuredLogLevel))
                 {
@@ -272,12 +271,18 @@ public class TaskLoggerFactory(
         return string.Join("_", fileName.Split(invalidChars, StringSplitOptions.RemoveEmptyEntries));
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (_disposed)
@@ -312,12 +317,33 @@ public class TaskLoggerFactory(
 
     private class TaskLoggerContext
     {
+        /// <summary>
+        /// Gets or sets the TaskLogger.
+        /// </summary>
         public TaskLogger TaskLogger { get; set; } = null!;
+        /// <summary>
+        /// Gets or sets the MainDataStore.
+        /// </summary>
         public LogDataStore? MainDataStore { get; set; }
+        /// <summary>
+        /// Gets or sets the ProcessDataStore.
+        /// </summary>
         public LogDataStore? ProcessDataStore { get; set; }
+        /// <summary>
+        /// Gets or sets the MainProvider.
+        /// </summary>
         public DataStoreLoggerProvider? MainProvider { get; set; }
+        /// <summary>
+        /// Gets or sets the ProcessProvider.
+        /// </summary>
         public DataStoreLoggerProvider? ProcessProvider { get; set; }
+        /// <summary>
+        /// Gets or sets the FileLoggers.
+        /// </summary>
         public List<ILogger> FileLoggers { get; set; } = [];
+        /// <summary>
+        /// Gets or sets the LogDirectory.
+        /// </summary>
         public string LogDirectory { get; set; } = string.Empty;
     }
 }
@@ -334,6 +360,9 @@ internal class CompositeLogger(ILogger[] loggers) : ILogger
         return new CompositeScope([.. _loggers.Select(l => l.BeginScope(state))]);
     }
 
+    /// <summary>
+    /// Executes the IsEnabled operation.
+    /// </summary>
     public bool IsEnabled(LogLevel logLevel)
     {
         return _loggers.Any(l => l.IsEnabled(logLevel));
@@ -359,6 +388,9 @@ internal class CompositeLogger(ILogger[] loggers) : ILogger
     {
         private readonly IDisposable?[] _scopes = scopes;
 
+        /// <summary>
+        /// Executes the Dispose operation.
+        /// </summary>
         public void Dispose()
         {
             foreach (IDisposable? scope in _scopes)
@@ -382,6 +414,9 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
     private readonly LogLevel _minLevel;
     private bool _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AsyncFileLogger"/> class.
+    /// </summary>
     public AsyncFileLogger(string filePath, LogLevel minLevel)
     {
         _minLevel = minLevel;
@@ -402,6 +437,9 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
         return null; // Simple implementation without scope support
     }
 
+    /// <summary>
+    /// Executes the IsEnabled operation.
+    /// </summary>
     public bool IsEnabled(LogLevel logLevel)
     {
         return logLevel >= _minLevel;
@@ -488,6 +526,9 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the DisposeAsync operation.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         if (_disposed)
@@ -530,9 +571,21 @@ internal class AsyncFileLogger : ILogger, IAsyncDisposable
     /// </summary>
     private record LogEntry
     {
+        /// <summary>
+        /// Gets or sets the Timestamp.
+        /// </summary>
         public DateTime Timestamp { get; init; }
+        /// <summary>
+        /// Gets or sets the Level.
+        /// </summary>
         public LogLevel Level { get; init; }
+        /// <summary>
+        /// Gets or sets the Message.
+        /// </summary>
         public string Message { get; init; } = string.Empty;
+        /// <summary>
+        /// Gets or sets the Exception.
+        /// </summary>
         public Exception? Exception { get; init; }
     }
 }

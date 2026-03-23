@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services.Tasking;
 

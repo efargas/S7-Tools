@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using ReactiveUI;
 using S7Tools.Services.Interfaces;
 
@@ -59,6 +60,9 @@ internal class DesignTimeViewModelFactory : IViewModelFactory
         throw new NotSupportedException($"Design-time factory does not support type {typeof(T).Name}");
     }
 
+    /// <summary>
+    /// Executes the Create operation.
+    /// </summary>
     public ViewModelBase Create(Type viewModelType)
     {
         if (viewModelType == typeof(AboutViewModel))

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using S7Tools.Core.Services.Shell;
+using S7Tools.Core.Interfaces.Shell;
 
 namespace S7Tools.Services.Shell;
 
@@ -17,6 +17,9 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
 {
     private readonly ILogger<ShellCommandExecutor> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ShellCommandExecutor"/> class.
+    /// </summary>
     public ShellCommandExecutor(ILogger<ShellCommandExecutor> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

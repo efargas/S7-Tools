@@ -1,0 +1,789 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Extensions;
+using S7Tools.Resources;
+
+namespace S7Tools.Services;
+
+/// <summary>
+/// Standard implementation of IProfileManager&lt;T&gt; providing unified profile management functionality.
+/// This class implements the complete IProfileManager contract with proper business rule enforcement,
+/// thread safety, and consistent error handling patterns.
+/// </summary>
+/// <typeparam name="T">The profile type that implements IProfileBase.</typeparam>
+/// <remarks>
+/// This is a completely new standardized implementation that replaces all legacy profile services.
+/// It provides:
+/// - Thread-safe operations with SemaphoreSlim
+/// - Comprehensive business rule enforcement
+/// - Gap-filling ID assignment
+/// - Automatic name uniqueness resolution
+/// - JSON-based persistence with proper error handling
+/// - Audit trail maintenance (CreatedAt/ModifiedAt)
+/// - Default profile management
+/// </remarks>
+public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposable where T : class, IProfileBase, new()
+{
+    #region Private Fields
+
+    /// <summary>
+    /// Logger instance for this manager.
+    /// </summary>
+    protected readonly ILogger _logger;
+
+    /// <summary>
+    /// Semaphore used to ensure thread-safety across profile operations.
+    /// </summary>
+    protected readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    /// <summary>
+    /// In-memory cache of profiles. Access must be protected by <see cref="_semaphore"/>.
+    /// </summary>
+    protected readonly List<T> _profiles = [];
+
+    /// <summary>
+    /// Absolute path to the JSON file where profiles are persisted.
+    /// </summary>
+    protected readonly string _profilesPath;
+
+    /// <summary>
+    /// Indicates whether profiles have been loaded into memory.
+    /// </summary>
+    protected bool _isLoaded;
+
+    /// <summary>
+    /// Indicates whether this instance has been disposed.
+    /// </summary>
+    protected bool _disposed;
+
+    // Cache serializer options to avoid per-call allocations (CA1869)
+    private static readonly JsonSerializerOptions ReadOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true
+    };
+    private static readonly JsonSerializerOptions WriteOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true,
+        IncludeFields = false
+    };
+
+    #endregion
+
+    #region Constructor
+
+    /// <summary>
+    /// Initializes a new instance of the StandardProfileManager class.
+    /// </summary>
+    /// <param name="profilesPath">The file path where profiles are persisted.</param>
+    /// <param name="logger">The logger instance for this manager.</param>
+    protected StandardProfileManager(string profilesPath, ILogger logger)
+    {
+        _profilesPath = profilesPath ?? throw new ArgumentNullException(nameof(profilesPath));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        // Ensure the directory exists
+        string? directory = Path.GetDirectoryName(_profilesPath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
+    #endregion
+
+    #region Abstract Methods
+
+    /// <summary>
+    /// Creates a system default profile for this profile type.
+    /// </summary>
+    /// <returns>A new default profile with appropriate default values.</returns>
+    protected abstract T CreateSystemDefault();
+
+    /// <summary>
+    /// Gets the display name for this profile type (used in logging and error messages).
+    /// </summary>
+    protected abstract string ProfileTypeName { get; }
+
+    #endregion
+
+    #region Profile CRUD Operations
+
+    /// <inheritdoc/>
+    public async Task<T> CreateAsync(T profile, CancellationToken cancellationToken = default)
+    {
+
+        ArgumentNullException.ThrowIfNull(profile);
+
+        _logger.LogInformation("🚀 StandardProfileManager.CreateAsync ENTRY for profile: {ProfileName}", profile.Name);
+        _logger.LogInformation(" Waiting for semaphore in CreateAsync...");
+
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            _logger.LogInformation("✅ Semaphore acquired in CreateAsync for profile: {ProfileName}", profile.Name);
+
+            _logger.LogInformation("📂 Calling EnsureLoadedAsync...");
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("✅ EnsureLoadedAsync completed, profiles loaded: {Count}", _profiles.Count);
+
+            // Validate business rules
+            if (string.IsNullOrWhiteSpace(profile.Name))
+            {
+                _logger.LogError("Profile name validation failed: name is empty");
+                throw new ValidationException("Name", UIStrings.Error_ProfileNameEmpty);
+            }
+
+            // Inline name uniqueness check while holding the semaphore to avoid nested WaitAsync calls
+            _logger.LogInformation("🔍 Checking name uniqueness for '{ProfileName}'...", profile.Name);
+            if (_profiles.Any(p => string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogError("Profile name uniqueness validation failed: profile with name '{ProfileName}' already exists. Existing profiles: {ExistingNames}",
+                    profile.Name, string.Join(", ", _profiles.Select(p => p.Name)));
+                throw new DuplicateProfileNameException(profile.Name);
+            }
+            _logger.LogDebug("✅ Name '{ProfileName}' is unique", profile.Name);
+
+            // Clone the profile to avoid modifying the input
+            _logger.LogDebug("Cloning profile...");
+            T newProfile = CloneProfile(profile);
+
+            // Assign new ID and timestamps
+            _logger.LogDebug("Getting next available ID...");
+            newProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
+            _logger.LogDebug("Assigned ID: {ProfileId}", newProfile.Id);
+
+            newProfile.CreatedAt = DateTime.UtcNow;
+            newProfile.ModifiedAt = DateTime.UtcNow;
+            newProfile.Version = "1.0";
+
+            // Handle default profile business rule
+            if (newProfile.IsDefault)
+            {
+                _logger.LogDebug("Profile is marked as default, clearing other default flags...");
+                await ClearAllDefaultFlagsAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            // Add to collection
+            _logger.LogDebug("Adding profile to collection...");
+            _profiles.Add(newProfile);
+            _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
+            _logger.LogDebug("Profile added, collection now has {Count} profiles", _profiles.Count);
+
+            // Persist changes
+            _logger.LogDebug("💾 Saving profiles to disk...");
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+            _logger.LogDebug("✅ Profiles saved successfully");
+
+            _logger.LogInformation("✅ Created {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
+    ProfileTypeName, newProfile.Name, newProfile.Id);
+
+            T clonedProfile = CloneProfile(newProfile);
+            _logger.LogDebug("🔓 Releasing semaphore in CreateAsync (auto via ExecuteAsync)");
+            return clonedProfile;
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<T> UpdateAsync(T profile, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        if (profile.Id <= 0)
+        {
+            throw new ArgumentException("Profile ID must be greater than zero.", nameof(profile));
+        }
+
+        _logger.LogDebug("StandardProfileManager.UpdateAsync called for profile: {ProfileName}, ID: {ProfileId}", profile.Name, profile.Id);
+
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+            T? existingProfile = _profiles.FirstOrDefault(p => p.Id == profile.Id);
+            if (existingProfile == null)
+            {
+                _logger.LogError("Profile not found: ID {ProfileId}", profile.Id);
+                throw new ProfileNotFoundException(profile.Id);
+            }
+
+            if (!existingProfile.CanModify())
+            {
+                _logger.LogError("Cannot modify read-only profile: {ProfileName} (ID: {ProfileId})", existingProfile.Name, existingProfile.Id);
+                throw new ReadOnlyProfileModificationException(existingProfile.Id, existingProfile.Name);
+            }
+
+            // Validate business rules
+            if (string.IsNullOrWhiteSpace(profile.Name))
+            {
+                _logger.LogError("Profile name validation failed: name is empty for ID {ProfileId}", profile.Id);
+                throw new ValidationException("Name", UIStrings.Error_ProfileNameEmpty);
+            }
+
+            // Inline name uniqueness check while holding the semaphore
+            if (_profiles.Any(p => p.Id != profile.Id && string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                _logger.LogError("Profile name uniqueness validation failed: profile with name '{ProfileName}' already exists (excluding ID {ProfileId}). Existing profiles: {ExistingNames}",
+                    profile.Name, profile.Id, string.Join(", ", _profiles.Select(p => $"{p.Name} (ID: {p.Id})")));
+                throw new DuplicateProfileNameException(profile.Name);
+            }
+
+            // Clone the profile to avoid modifying the input
+            T updatedProfile = CloneProfile(profile);
+
+            // Preserve immutable properties
+            updatedProfile.Id = existingProfile.Id;
+            updatedProfile.CreatedAt = existingProfile.CreatedAt;
+            updatedProfile.ModifiedAt = DateTime.UtcNow;
+
+            // Handle default profile business rule
+            if (updatedProfile.IsDefault && !existingProfile.IsDefault)
+            {
+                await ClearAllDefaultFlagsAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            // Replace the existing profile
+            int index = _profiles.IndexOf(existingProfile);
+            _profiles[index] = updatedProfile;
+
+            // Persist changes
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Updated {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
+                ProfileTypeName, updatedProfile.Name, updatedProfile.Id);
+
+            return CloneProfile(updatedProfile);
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> DeleteAsync(int profileId, CancellationToken cancellationToken = default)
+    {
+        if (profileId <= 0)
+        { throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId)); }
+
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
+            if (profile == null)
+            { return false; }
+
+            if (!profile.CanDelete())
+            {
+                if (profile.IsDefault)
+                {
+                    throw new DefaultProfileDeletionException(profile.Id, profile.Name);
+                }
+                throw new ReadOnlyProfileModificationException(profile.Id, profile.Name);
+            }
+
+            _profiles.Remove(profile);
+
+            // Persist changes
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Deleted {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
+                ProfileTypeName, profile.Name, profile.Id);
+
+            return true;
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<T> DuplicateAsync(int sourceProfileId, string newName, CancellationToken cancellationToken = default)
+    {
+        if (sourceProfileId <= 0)
+        { throw new ArgumentException("Source profile ID must be greater than zero.", nameof(sourceProfileId)); }
+
+        if (string.IsNullOrWhiteSpace(newName))
+        { throw new ArgumentException("New name cannot be empty.", nameof(newName)); }
+
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+            T sourceProfile = _profiles.FirstOrDefault(p => p.Id == sourceProfileId) ?? throw new ProfileNotFoundException(sourceProfileId);
+
+            // Ensure the new name is unique - use Core version to avoid deadlock
+            string uniqueName = EnsureUniqueNameCore(newName, excludeId: null);
+
+            // Clone the source profile
+            T duplicateProfile = CloneProfile(sourceProfile);
+
+            // Assign new identity and clear flags
+            duplicateProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
+            duplicateProfile.Name = uniqueName;
+            duplicateProfile.IsDefault = false; // Duplicates are never default
+            duplicateProfile.IsReadOnly = false; // Duplicates are never read-only
+            duplicateProfile.CreatedAt = DateTime.UtcNow;
+            duplicateProfile.ModifiedAt = DateTime.UtcNow;
+
+            // Add to collection
+            _profiles.Add(duplicateProfile);
+            _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
+
+            // Persist changes
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Duplicated {ProfileType} profile: {SourceName} -> {NewName} (ID: {ProfileId})",
+                ProfileTypeName, sourceProfile.Name, duplicateProfile.Name, duplicateProfile.Id);
+
+            return CloneProfile(duplicateProfile);
+        }, cancellationToken);
+    }
+
+    #endregion
+
+    #region Profile Query Operations
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            return (IEnumerable<T>)_profiles.Select(CloneProfile).ToList();
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<T?> GetByIdAsync(int profileId, CancellationToken cancellationToken = default)
+    {
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId);
+            return profile != null ? CloneProfile(profile) : null;
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<T?> GetDefaultAsync(CancellationToken cancellationToken = default)
+    {
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            T? defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
+            return defaultProfile != null ? CloneProfile(defaultProfile) : null;
+        }, cancellationToken);
+    }
+
+    #endregion
+
+    #region Default Profile Management
+
+    /// <inheritdoc/>
+    public async Task SetDefaultAsync(int profileId, CancellationToken cancellationToken = default)
+    {
+        if (profileId <= 0)
+        {
+            throw new ArgumentException("Profile ID must be greater than zero.", nameof(profileId));
+        }
+
+        await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+            T? profile = _profiles.FirstOrDefault(p => p.Id == profileId) ?? throw new ProfileNotFoundException(profileId);
+
+            // Clear all default flags first
+            await ClearAllDefaultFlagsAsync(cancellationToken).ConfigureAwait(false);
+
+            // Set the new default
+            profile.IsDefault = true;
+            profile.ModifiedAt = DateTime.UtcNow;
+
+            // Persist changes
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Set {ProfileType} profile as default: {ProfileName} (ID: {ProfileId})",
+                ProfileTypeName, profile.Name, profile.Id);
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<T> EnsureDefaultExistsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+            T? defaultProfile = _profiles.FirstOrDefault(p => p.IsDefault);
+            if (defaultProfile != null)
+            {
+                return CloneProfile(defaultProfile);
+            }
+
+            // Create system default
+            T systemDefault = CreateSystemDefault();
+            systemDefault.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
+            systemDefault.IsDefault = true;
+            systemDefault.IsReadOnly = true;
+            systemDefault.CreatedAt = DateTime.UtcNow;
+            systemDefault.ModifiedAt = DateTime.UtcNow;
+            systemDefault.Version = "1.0";
+
+            _profiles.Add(systemDefault);
+            _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
+
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Created system default {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
+                ProfileTypeName, systemDefault.Name, systemDefault.Id);
+
+            return CloneProfile(systemDefault);
+        }, cancellationToken);
+    }
+
+    #endregion
+
+    #region Validation Operations
+
+    /// <inheritdoc/>
+    public async Task<bool> IsNameUniqueAsync(string name, int? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return false;
+        }
+
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            return !_profiles.Any(p => p.Id != excludeId &&
+                                      string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<string> EnsureUniqueNameAsync(string baseName, int? excludeId = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(baseName))
+        {
+            throw new ArgumentException("Base name cannot be empty.", nameof(baseName));
+        }
+
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            return EnsureUniqueNameCore(baseName, excludeId);
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Ensures a profile name is unique by appending a counter if necessary.
+    /// This is the non-locking version that assumes the caller already holds the semaphore.
+    /// </summary>
+    /// <param name="baseName">The base name to make unique.</param>
+    /// <param name="excludeId">Optional profile ID to exclude from uniqueness check (for updates).</param>
+    /// <returns>A unique profile name.</returns>
+    private string EnsureUniqueNameCore(string baseName, int? excludeId = null)
+    {
+        string candidateName = baseName;
+        int counter = 1;
+
+        // Check uniqueness directly against the in-memory collection
+        // Caller must already hold the semaphore
+        while (_profiles.Any(p => p.Id != excludeId && string.Equals(p.Name, candidateName, StringComparison.OrdinalIgnoreCase)))
+        {
+            candidateName = $"{baseName}_{counter}";
+            counter++;
+
+            // Prevent infinite loops
+            if (counter > 1000)
+            {
+                throw new InvalidOperationException(UIStrings.Error_UniqueNameGenerationFailed);
+            }
+        }
+
+        return candidateName;
+    }
+
+    /// <inheritdoc/>
+    public async Task<int> GetNextAvailableIdAsync(CancellationToken cancellationToken = default)
+    {
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            return GetNextAvailableIdCore();
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the next available profile ID without acquiring the semaphore.
+    /// This method assumes the caller already holds the semaphore lock.
+    /// </summary>
+    protected int GetNextAvailableIdCore()
+    {
+        if (_profiles.Count == 0)
+        {
+            return 1;
+        }
+
+        var existingIds = _profiles.Select(p => p.Id).Where(id => id > 0).OrderBy(id => id).ToList();
+
+        // Find the first gap in the sequence
+        for (int i = 1; i <= existingIds.Count + 1; i++)
+        {
+            if (!existingIds.Contains(i))
+            {
+                return i;
+            }
+        }
+
+        return existingIds.Count + 1;
+    }
+
+    #endregion
+
+    #region Import/Export Operations
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<T>> ImportAsync(IEnumerable<T> profiles, bool replaceExisting = false, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(profiles);
+
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+
+            var importedProfiles = new List<T>();
+
+            foreach (T profile in profiles)
+            {
+                if (profile == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    T importProfile = CloneProfile(profile);
+
+                    // Handle name conflicts
+                    if (!replaceExisting)
+                    {
+                        // Use Core version to avoid deadlock since we already hold the semaphore
+                        importProfile.Name = EnsureUniqueNameCore(importProfile.Name, excludeId: null);
+                    }
+                    else
+                    {
+                        // Remove existing profile with same name
+                        T? existingProfile = _profiles.FirstOrDefault(p =>
+                            string.Equals(p.Name, importProfile.Name, StringComparison.OrdinalIgnoreCase));
+                        if (existingProfile != null && existingProfile.CanDelete())
+                        {
+                            _profiles.Remove(existingProfile);
+                        }
+                    }
+
+                    // Assign new ID and update timestamps
+                    importProfile.Id = GetNextAvailableIdCore(); // Use non-locking version since we already hold the semaphore
+                    importProfile.CreatedAt = DateTime.UtcNow;
+                    importProfile.ModifiedAt = DateTime.UtcNow;
+                    importProfile.IsDefault = false; // Imported profiles are never default
+                    importProfile.IsReadOnly = false; // Imported profiles are never read-only
+
+                    _profiles.Add(importProfile);
+                    importedProfiles.Add(CloneProfile(importProfile));
+
+                    _logger.LogInformation("Imported {ProfileType} profile: {ProfileName} (ID: {ProfileId})",
+                        ProfileTypeName, importProfile.Name, importProfile.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to import {ProfileType} profile: {ProfileName}",
+                        ProfileTypeName, profile.Name);
+                }
+            }
+
+            _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
+            await SaveProfilesAsync(cancellationToken).ConfigureAwait(false);
+
+            _logger.LogInformation("Imported {Count} {ProfileType} profiles", importedProfiles.Count, ProfileTypeName);
+
+            return (IEnumerable<T>)importedProfiles;
+        }, cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<T>> ExportAsync(CancellationToken cancellationToken = default)
+    {
+        return await _semaphore.ExecuteAsync(async () =>
+        {
+            await EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
+            return (IEnumerable<T>)_profiles.Select(CloneProfile).ToList();
+        }, cancellationToken);
+    }
+
+    #endregion
+
+    #region Private Helper Methods
+
+    /// <summary>
+    /// Ensures that profiles are loaded from storage.
+    /// </summary>
+    protected async Task EnsureLoadedAsync(CancellationToken cancellationToken = default)
+    {
+        if (!_isLoaded)
+        {
+            await LoadProfilesAsync(cancellationToken).ConfigureAwait(false);
+            _isLoaded = true;
+        }
+    }
+
+    /// <summary>
+    /// Loads profiles from the JSON file.
+    /// </summary>
+    private async Task LoadProfilesAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!File.Exists(_profilesPath))
+            {
+                _logger.LogInformation("Profile file not found, creating default profiles: {Path}", _profilesPath);
+                await CreateDefaultProfilesAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            string json = await File.ReadAllTextAsync(_profilesPath, cancellationToken).ConfigureAwait(false);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                _logger.LogInformation("Profile file is empty, creating default profiles: {Path}", _profilesPath);
+                await CreateDefaultProfilesAsync(cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            List<T>? profiles = JsonSerializer.Deserialize<List<T>>(json, ReadOptions);
+            if (profiles != null)
+            {
+                _profiles.Clear();
+                _profiles.AddRange(profiles);
+                _profiles.Sort((x, y) => x.Id.CompareTo(y.Id));
+
+                _logger.LogInformation("Loaded {Count} {ProfileType} profiles from: {Path}",
+                    _profiles.Count, ProfileTypeName, _profilesPath);
+
+                // If file exists but contains no profiles, create defaults
+                if (_profiles.Count == 0)
+                {
+                    _logger.LogInformation("Profile file is empty, creating default profiles: {Path}", _profilesPath);
+                    await CreateDefaultProfilesAsync(cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load {ProfileType} profiles from: {Path}", ProfileTypeName, _profilesPath);
+
+            // Backup corrupted profile file before starting with an empty collection
+            try
+            {
+                if (File.Exists(_profilesPath))
+                {
+                    string backupPath = $"{_profilesPath}.bak_{DateTime.Now:yyyyMMddHHmmss}";
+                    File.Move(_profilesPath, backupPath);
+                    _logger.LogWarning("Corrupted profile file backed up to: {BackupPath}", backupPath);
+                }
+            }
+            catch (Exception backupEx)
+            {
+                _logger.LogError(backupEx, "Failed to backup corrupted profile file: {Path}", _profilesPath);
+            }
+            // Don't rethrow - start with empty collection
+        }
+    }
+
+    /// <summary>
+    /// Saves profiles to the JSON file.
+    /// </summary>
+    protected async Task SaveProfilesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            string json = JsonSerializer.Serialize(_profiles, WriteOptions);
+            await File.WriteAllTextAsync(_profilesPath, json, cancellationToken).ConfigureAwait(false);
+
+            _logger.LogDebug("Saved {Count} {ProfileType} profiles to: {Path}",
+                _profiles.Count, ProfileTypeName, _profilesPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save {ProfileType} profiles to: {Path}", ProfileTypeName, _profilesPath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Clears the default flag from all profiles.
+    /// </summary>
+    protected async Task ClearAllDefaultFlagsAsync(CancellationToken cancellationToken = default)
+    {
+        await Task.Run(() =>
+        {
+            foreach (T? profile in _profiles.Where(p => p.IsDefault))
+            {
+                profile.IsDefault = false;
+                profile.ModifiedAt = DateTime.UtcNow;
+            }
+        }, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Creates a deep clone of a profile using JSON serialization.
+    /// </summary>
+    protected static T CloneProfile(T profile)
+    {
+        string json = JsonSerializer.Serialize(profile, WriteOptions);
+        return JsonSerializer.Deserialize<T>(json, ReadOptions)!;
+    }
+
+    #endregion
+
+    #region Abstract Methods for Default Profiles
+
+    /// <summary>
+    /// Creates default profiles when no profiles file exists.
+    /// Derived classes should implement this to create appropriate default profiles.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A task that represents the asynchronous operation</returns>
+    protected abstract Task CreateDefaultProfilesAsync(CancellationToken cancellationToken);
+
+    #endregion
+
+    #region IDisposable Implementation
+
+    /// <summary>
+    /// Disposes the manager and releases resources.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Disposes the manager and releases resources.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed && disposing)
+        {
+            _semaphore?.Dispose();
+            _disposed = true;
+        }
+    }
+
+    #endregion
+}

@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,14 +8,18 @@ using System.Reactive;
 using System.Text;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Models;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Components;
 
+/// <summary>
+/// Represents the TaskLogsPanelViewModel.
+/// </summary>
 public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 {
     private const int MaxLogEntries = 1000;
@@ -48,6 +53,9 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
     }
     private bool _invertAutoScroll;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskLogsPanelViewModel"/> class.
+    /// </summary>
     public TaskLogsPanelViewModel(
         TaskExecution task,
         IClipboardService clipboardService,
@@ -157,9 +165,15 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
                 }
             }
 
-            if (needsMainSort) ApplySortToMain();
-            if (needsProcessSort) ApplySortToProcess();
+            if (needsMainSort)
+            {
+                ApplySortToMain();
+            }
 
+            if (needsProcessSort)
+            {
+                ApplySortToProcess();
+            }
         }, TimeSpan.FromMilliseconds(500), _uiThreadService!);
 
         _mainHandler = (s, e) => HandleLogCollectionChanged(s, e, "Main");
@@ -190,7 +204,10 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         {
             InvertAutoScroll = true;
             // Also enable auto scroll if moving to this default
-            if (!AutoScroll) AutoScroll = true;
+            if (!AutoScroll)
+            {
+                AutoScroll = true;
+            }
         }
         else
         {
@@ -222,11 +239,17 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
     private IEnumerable<LogEntry> SortLogEntries(IEnumerable<LogEntry> source)
     {
         if (_sortColumn == "Level")
+        {
             return _sortAscending ? source.OrderBy(e => e.Level).ThenBy(e => e.Timestamp) : source.OrderByDescending(e => e.Level).ThenByDescending(e => e.Timestamp);
+        }
         else if (_sortColumn == "Message")
+        {
             return _sortAscending ? source.OrderBy(e => e.Message).ThenBy(e => e.Timestamp) : source.OrderByDescending(e => e.Message).ThenByDescending(e => e.Timestamp);
+        }
         else // Timestamp
+        {
             return _sortAscending ? source.OrderBy(e => e.Timestamp) : source.OrderByDescending(e => e.Timestamp);
+        }
     }
 
     private void InitializeLogs()
@@ -254,10 +277,16 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
 
     private void PopulateInitialLogEntries(ITaskLogDataStore? store, ObservableCollection<LogEntry> sourceCollection, ObservableCollection<LogEntry> targetCollection)
     {
-        if (store == null) return;
+        if (store == null)
+        {
+            return;
+        }
 
         int count = store.Count();
-        if (count == 0) return;
+        if (count == 0)
+        {
+            return;
+        }
 
         var initialEntries = new List<LogEntry>();
         int skipCount = Math.Max(0, count - MaxLogEntries);
@@ -313,12 +342,18 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)
@@ -343,9 +378,15 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         set => this.RaiseAndSetIfChanged(ref _task, value);
     }
 
+    /// <summary>
+    /// Gets or sets the MainLogEntries.
+    /// </summary>
     public ObservableCollection<LogEntry> MainLogEntries { get; }
+    /// <summary>
+    /// Gets or sets the ProcessLogEntries.
+    /// </summary>
     public ObservableCollection<LogEntry> ProcessLogEntries { get; }
-    
+
     private ObservableCollection<LogEntry> _filteredMainLogEntries = new();
     public ObservableCollection<LogEntry> FilteredMainLogEntries
     {
@@ -360,7 +401,16 @@ public class TaskLogsPanelViewModel : ViewModelBase, IDisposable
         private set => this.RaiseAndSetIfChanged(ref _filteredProcessLogEntries, value);
     }
 
+    /// <summary>
+    /// Gets or sets the CopySelectedEntryCommand.
+    /// </summary>
     public ReactiveCommand<LogEntry?, Unit> CopySelectedEntryCommand { get; }
+    /// <summary>
+    /// Gets or sets the CopySelectedMessageCommand.
+    /// </summary>
     public ReactiveCommand<LogEntry?, Unit> CopySelectedMessageCommand { get; }
+    /// <summary>
+    /// Gets or sets the SortCommand.
+    /// </summary>
     public ReactiveCommand<string, Unit> SortCommand { get; }
 }

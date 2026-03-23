@@ -1,8 +1,10 @@
+using FluentAssertions;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
 using S7Tools.ViewModels.Tasks;
@@ -22,7 +24,7 @@ public class TaskManagerViewModelTests
             new Mock<ILogger<TaskDetailsViewModel>>().Object,
             new Mock<ISocatService>().Object,
             new Mock<IPowerSupplyService>().Object,
-            new Mock<IEnhancedBootloaderService>().Object,
+            new Mock<IBootloaderService>().Object,
             new Mock<IUIThreadService>().Object,
             new Mock<IJobManager>().Object,
             new Mock<IPowerSupplyProfileService>().Object,
@@ -65,8 +67,8 @@ public class TaskManagerViewModelTests
         var viewModel = CreateViewModel();
 
         // Assert - Verify ViewModel was constructed with UIThreadService
-        Assert.NotNull(viewModel);
-        Assert.NotNull(viewModel.RefreshTasksCommand);
+        viewModel.Should().NotBeNull();
+        viewModel.RefreshTasksCommand.Should().NotBeNull();
     }
 
     [Fact]
@@ -79,6 +81,6 @@ public class TaskManagerViewModelTests
         viewModel.StatusMessage = "Test Message";
 
         // Assert
-        Assert.Equal("Test Message", viewModel.StatusMessage);
+        viewModel.StatusMessage.Should().Be("Test Message");
     }
 }

@@ -11,7 +11,7 @@ public partial class MemoryDumpSidebarView : UserControl
 
     private void OnTreeViewDoubleTapped(object? sender, Avalonia.Input.TappedEventArgs e)
     {
-        if (sender is TreeView treeView && 
+        if (sender is TreeView treeView &&
             treeView.SelectedItem is S7Tools.ViewModels.Pages.FileTreeItemViewModel fileItem &&
             DataContext is S7Tools.ViewModels.Pages.MemoryDumpViewerViewModel mainVm)
         {

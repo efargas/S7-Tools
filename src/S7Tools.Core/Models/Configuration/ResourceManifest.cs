@@ -75,8 +75,8 @@ namespace S7Tools.Core.Models.Configuration
                 },
                 new DirectoryInfo
                 {
-                    Name = ResourcePaths.MemoryRegionsFolder,
-                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionsFolder),
+                    Name = ResourcePaths.MemoryRegionFolder,
+                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionFolder),
                     Purpose = "Memory region profiles and definitions"
                 },
                 new DirectoryInfo
@@ -175,7 +175,7 @@ namespace S7Tools.Core.Models.Configuration
                 new FileInfo
                 {
                     Name = ResourcePaths.MemoryRegionProfilesFile,
-                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionsFolder, ResourcePaths.MemoryRegionProfilesFile),
+                    RelativePath = Path.Combine(ResourcePaths.ResourcesFolder, ResourcePaths.ProfilesFolder, ResourcePaths.MemoryRegionFolder, ResourcePaths.MemoryRegionProfilesFile),
                     DefaultContent = "[]",
                     Purpose = "Memory region profile configurations"
                 },
@@ -199,31 +199,24 @@ namespace S7Tools.Core.Models.Configuration
         }
 
         /// <summary>
-        /// Generates default content for AppSettings.json file with proper structure
+        /// Generates default content for the AppSettings.json file using the StrongSettings.AppSettings schema.
         /// </summary>
-        /// <returns>JSON content with both default and user settings sections</returns>
+        /// <returns>Formatted JSON representing the default StrongSettings.AppSettings configuration.</returns>
         private static string GetDefaultAppSettingsContent()
         {
-            // Create a default ApplicationSettings instance to get ALL the default values
-            var defaultSettings = ApplicationSettings.CreateDefault();
-
-            // Create the proper file structure with both sections
-            var appSettingsFileContent = new
-            {
-                DefaultSettings = defaultSettings.DefaultSettings,
-                UserSettings = new Dictionary<string, object>(defaultSettings.DefaultSettings), // Copy defaults to user settings initially
-                SettingsFilePath = "Resources/AppSettings/AppSettings.json",
-                LastModified = DateTime.UtcNow
-            };
-
-            // Serialize to JSON with proper formatting
+            var defaultSettings = new StrongSettings.AppSettings();
             var options = new System.Text.Json.JsonSerializerOptions
             {
                 WriteIndented = true,
                 PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
             };
-
-            return System.Text.Json.JsonSerializer.Serialize(appSettingsFileContent, options);
+            // Use Dictionary to preserve the exact "App" key casing.
+            // An anonymous type would be camelCased to "app" by the naming policy.
+            var rootObject = new System.Collections.Generic.Dictionary<string, object?>
+            {
+                ["App"] = defaultSettings
+            };
+            return System.Text.Json.JsonSerializer.Serialize(rootObject, options);
         }
     }
 }

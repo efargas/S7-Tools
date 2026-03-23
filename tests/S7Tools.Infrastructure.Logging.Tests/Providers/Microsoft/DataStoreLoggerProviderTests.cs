@@ -1,7 +1,8 @@
 using System;
 using Microsoft.Extensions.Logging;
 using Moq;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Services;
 using S7Tools.Infrastructure.Logging.Core.Configuration;
 using S7Tools.Infrastructure.Logging.Providers.Microsoft;
 using FluentAssertions;

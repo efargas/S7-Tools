@@ -21,5 +21,6 @@
     },
     "chat.instructionsFilesLocations": {
         ".github/instructions": false
-    }
+    },
+    "dotnet.defaultSolution": "src/S7Tools.sln"
 }

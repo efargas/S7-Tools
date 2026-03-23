@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using S7Tools.Core.Services.Interfaces;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.ViewModels.Controls;
 
 namespace S7Tools.ViewModels.Profiles;

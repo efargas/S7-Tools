@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System;
 using System.Globalization;
 using S7Tools.Converters;
@@ -19,7 +20,7 @@ public class DateTimeToStringConverterTests
         object? result = converter.Convert(dateTime, typeof(string), format, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.Equal("2025-10-22 14:30", result);
+        result.Should().Be("2025-10-22 14:30");
     }
 
     [Fact]
@@ -36,7 +37,7 @@ public class DateTimeToStringConverterTests
         object? result = converter.Convert(dateTimeOffset, typeof(string), format, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.Equal("2025-10-22 14:30", result);
+        result.Should().Be("2025-10-22 14:30");
     }
 
     [Fact]
@@ -49,7 +50,7 @@ public class DateTimeToStringConverterTests
         object? result = converter.Convert(null, typeof(string), "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.Equal(string.Empty, result);
+        result.Should().Be(string.Empty);
     }
 
     [Fact]
@@ -64,7 +65,7 @@ public class DateTimeToStringConverterTests
 
         // Assert
         // Default format is "yyyy-MM-dd HH:mm:ss.fff"
-        Assert.Equal("2025-10-22 14:30:45.000", result);
+        result.Should().Be("2025-10-22 14:30:45.000");
     }
 
     [Fact]
@@ -93,7 +94,7 @@ public class DateTimeToStringConverterTests
         object? result = converter.Convert(value, typeof(string), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.Equal("Some string value", result);
+        result.Should().Be("Some string value");
     }
 
     [Fact]

@@ -58,7 +58,13 @@ namespace S7Tools.Core.Constants
         /// <summary>
         /// Folder name for memory region profiles
         /// </summary>
-        public const string MemoryRegionsFolder = "MemoryRegions";
+        public const string MemoryRegionFolder = "MemoryRegion";
+
+        /// <summary>
+        /// Legacy folder name for memory region profiles used by previous versions.
+        /// Keep for backward compatibility when probing or migrating existing profiles.
+        /// </summary>
+        public const string LegacyMemoryRegionsFolder = "MemoryRegions";
 
         /// <summary>
         /// File name for memory region profiles JSON file

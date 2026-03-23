@@ -1,3 +1,4 @@
+using S7Tools.ViewModels.Base;
 using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
@@ -15,13 +16,28 @@ namespace S7Tools.ViewModels.Pages;
 public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewModel, IDisposable
 {
     // IDockableViewModel implementation
+    /// <summary>
+    /// Gets or sets the DockId.
+    /// </summary>
     public string DockId => "MemoryDump";
+    /// <summary>
+    /// Gets or sets the DockTitle.
+    /// </summary>
     public string DockTitle => "Memory Dump Viewer";
+    /// <summary>
+    /// Gets or sets the CanClose.
+    /// </summary>
     public bool CanClose => true;
+    /// <summary>
+    /// Gets or sets the CanFloat.
+    /// </summary>
     public bool CanFloat => true;
 
     private readonly IServiceProvider _serviceProvider;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MemoryDumpViewerViewModel"/> class.
+    /// </summary>
     public MemoryDumpViewerViewModel(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -45,8 +61,14 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         });
     }
 
+    /// <summary>
+    /// Gets or sets the FileExplorer.
+    /// </summary>
     public FileMemoryDumpViewModel FileExplorer { get; }
 
+    /// <summary>
+    /// Gets or sets the Categories.
+    /// </summary>
     public ObservableCollection<string> Categories { get; }
 
     private string _selectedCategory = string.Empty;
@@ -83,8 +105,14 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         }
     }
 
+    /// <summary>
+    /// Gets or sets the SelectCategoryCommand.
+    /// </summary>
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }
 
+    /// <summary>
+    /// Executes the GetDockableForOpen operation.
+    /// </summary>
     public IDockableViewModel? GetDockableForOpen()
     {
         return SelectedCategory switch
@@ -94,6 +122,9 @@ public sealed class MemoryDumpViewerViewModel : ViewModelBase, IDockableViewMode
         };
     }
 
+    /// <summary>
+    /// Executes the Dispose operation.
+    /// </summary>
     public void Dispose()
     {
     }

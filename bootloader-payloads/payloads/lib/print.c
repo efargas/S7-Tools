@@ -14,6 +14,7 @@
 
 #include "print.h"
 #include "stdlib.h"
+#include "read.h"
 
 #define BUF_LEN 16
 
@@ -194,6 +195,13 @@ int UART_protocol_send_many(const char *s, unsigned int len) {
     unsigned int transfer_size;
 
     while(i<len) {
+        // Check for cancellation signal from host (0x03)
+        if (is_data_available()) {
+            if (read_byte_blocking() == 0x03) {
+                break;
+            }
+        }
+
         if(len-i < CHUNK_SIZE) {
             transfer_size = len-i;
         } else {

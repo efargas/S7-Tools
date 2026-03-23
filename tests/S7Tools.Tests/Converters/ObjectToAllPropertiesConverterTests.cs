@@ -1,3 +1,4 @@
+using FluentAssertions;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -29,9 +30,9 @@ public class ObjectToAllPropertiesConverterTests
         object? result = _converter.Convert(null, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Empty(collection);
+        collection.Should().BeEmpty();
     }
 
     [Fact(DisplayName = "Convert shows all properties including Browsable(false)")]
@@ -48,11 +49,11 @@ public class ObjectToAllPropertiesConverterTests
         object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
 
         // Should show both properties (unlike ObjectToPropertiesConverter which would hide HiddenProperty)
-        Assert.Equal(2, collection.Count);
+        collection.Count.Should().Be(2);
         Assert.Contains(collection, p => p.Label.Contains("Visible Property"));
         Assert.Contains(collection, p => p.Label.Contains("Hidden Property"));
     }
@@ -70,11 +71,11 @@ public class ObjectToAllPropertiesConverterTests
         object? result = _converter.Convert(testObject, typeof(ObservableCollection<PropertyDisplayItem>), null, CultureInfo.InvariantCulture);
 
         // Assert
-        Assert.NotNull(result);
+        result.Should().NotBeNull();
         ObservableCollection<PropertyDisplayItem> collection = Assert.IsType<ObservableCollection<PropertyDisplayItem>>(result);
-        Assert.Single(collection);
-        Assert.Equal("Custom Display Name", collection[0].Label);
-        Assert.Equal("Test Value", collection[0].Value);
+        collection.Should().ContainSingle();
+        collection[0].Label.Should().Be("Custom Display Name");
+        collection[0].Value.Should().Be("Test Value");
     }
 
     private class TestObjectWithBrowsableFalse
