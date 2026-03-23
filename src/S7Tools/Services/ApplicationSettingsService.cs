@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration.StrongSettings;
@@ -10,13 +11,15 @@ namespace S7Tools.Services
     {
         private readonly ILogger<ApplicationSettingsService> _logger;
         private readonly IWritableOptions<AppSettings> _options;
+        private readonly IConfigurationRoot? _configurationRoot;
 
         public event EventHandler<SettingsChangedEventArgs>? SettingsChanged;
 
-        public ApplicationSettingsService(ILogger<ApplicationSettingsService> logger, IWritableOptions<AppSettings> options)
+        public ApplicationSettingsService(ILogger<ApplicationSettingsService> logger, IWritableOptions<AppSettings> options, IConfiguration? configuration = null)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _configurationRoot = configuration as IConfigurationRoot;
             _logger.LogInformation("ApplicationSettingsService initialized as strongly-typed proxy");
         }
 
@@ -25,6 +28,7 @@ namespace S7Tools.Services
         public Task LoadSettingsAsync()
         {
             _logger.LogInformation("Reloading application settings from current configuration source.");
+            _configurationRoot?.Reload();
             SettingsChanged?.Invoke(this, new SettingsChangedEventArgs { IsUserSetting = false });
             return Task.CompletedTask;
         }

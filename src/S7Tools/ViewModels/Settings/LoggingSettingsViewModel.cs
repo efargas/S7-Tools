@@ -50,7 +50,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         _isInitializing = false;
 
         // Subscribe to settings changes
-        _settingsService.SettingsChanged += (_, _) => 
+        _settingsService.SettingsChanged += (_, _) =>
         {
             _isInitializing = true;
             RefreshFromSettings();
@@ -60,10 +60,13 @@ public class LoggingSettingsViewModel : ViewModelBase
         // Auto-save when properties change
         this.PropertyChanged += (s, e) =>
         {
-            if (_isInitializing) return;
+            if (_isInitializing)
+            {
+                return;
+            }
 
-            if (e.PropertyName is nameof(DefaultLogPath) or nameof(ExportPath) or nameof(MinimumLogLevel) or 
-                nameof(AutoScrollLogs) or nameof(EnableRollingLogs) or nameof(ShowTimestampInLogs) or 
+            if (e.PropertyName is nameof(DefaultLogPath) or nameof(ExportPath) or nameof(MinimumLogLevel) or
+                nameof(AutoScrollLogs) or nameof(EnableRollingLogs) or nameof(ShowTimestampInLogs) or
                 nameof(ShowCategoryInLogs) or nameof(ShowLogLevelInLogs))
             {
                 _ = SaveLoggingSettingsAsync();

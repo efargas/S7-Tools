@@ -57,7 +57,7 @@ public partial class FileTreeItemViewModel : ViewModelBase
     {
         FullPath = path;
         Name = Path.GetFileName(path);
-        
+
         if (string.IsNullOrEmpty(Name))
         {
             Name = path; // Root drives might not have a file name

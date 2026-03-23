@@ -1,5 +1,6 @@
 using System.Reactive;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Styling;
 using Microsoft.Extensions.DependencyInjection;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
@@ -11,7 +12,6 @@ using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Dialogs;
 using S7Tools.Views.Dialogs;
 using S7Tools.Views.Layout;
-using Avalonia.Styling;
 
 namespace S7Tools;
 

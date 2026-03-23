@@ -181,7 +181,7 @@ sealed class Program
             .ValidateOnStart();
 
         // Register WritableOptions factory
-        services.AddTransient<S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(provider => 
+        services.AddTransient<S7Tools.Core.Interfaces.Services.IWritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(provider =>
             new S7Tools.Services.WritableOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>(
                 basePath,
                 provider.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>>(),

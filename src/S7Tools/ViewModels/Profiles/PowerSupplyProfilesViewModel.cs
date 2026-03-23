@@ -12,14 +12,13 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
 using S7Tools.Core.Services.Interfaces;
 using S7Tools.Helpers;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
-
-using S7Tools.Core.Interfaces.ViewModels;
 namespace S7Tools.ViewModels.Profiles;
 
 /// <summary>

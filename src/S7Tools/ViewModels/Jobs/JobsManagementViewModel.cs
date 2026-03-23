@@ -275,7 +275,11 @@ public class JobsManagementViewModel : ProfileManagementViewModelBase<JobProfile
         get => _selectedSideMenuItem;
         set
         {
-            if (string.IsNullOrWhiteSpace(value)) return;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return;
+            }
+
             this.RaiseAndSetIfChanged(ref _selectedSideMenuItem, value);
             this.RaisePropertyChanged(nameof(SelectedContentViewModel));
         }

@@ -685,7 +685,7 @@ public abstract class StandardProfileManager<T> : IProfileManager<T>, IDisposabl
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to load {ProfileType} profiles from: {Path}", ProfileTypeName, _profilesPath);
-            
+
             // Backup corrupted profile file before starting with an empty collection
             try
             {

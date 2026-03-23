@@ -67,7 +67,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Value => CurrentValue;
         public S7Tools.Core.Models.Configuration.StrongSettings.AppSettings Get(string? name) => CurrentValue;
         public IDisposable? OnChange(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, string?> listener) => null;
-        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) {}
+        public void Update(Action<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings> applyChanges) { }
         public Task UpdateAsync(Func<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings, Task> applyChanges) => Task.CompletedTask;
     }
 
@@ -624,7 +624,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         try
         {
             // Save the current user settings
-            await _settingsService.UpdateSettingsAsync(_ => {});
+            await _settingsService.UpdateSettingsAsync(_ => { });
             StatusMessage = UIStrings.Status_ConfigurationSavedSuccessfully;
             _logger.LogInformation("Configuration saved to settings file");
         }

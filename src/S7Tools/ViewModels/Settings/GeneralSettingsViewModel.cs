@@ -77,8 +77,11 @@ public class GeneralSettingsViewModel : ViewModelBase
 
     private void RefreshFromSettings()
     {
-        if (_pathService == null) return;
-        
+        if (_pathService == null)
+        {
+            return;
+        }
+
         CurrentSettingsFilePath = _pathService.AppSettingsPath;
 
         try

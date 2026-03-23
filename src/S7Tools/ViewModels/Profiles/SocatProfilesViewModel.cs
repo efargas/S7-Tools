@@ -25,7 +25,7 @@ public class SocatProfilesViewModel : ProfileManagementViewModelBase<SocatProfil
         : base(logger, unifiedDialogService, dialogService, uiThreadService, fileDialogService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
-        
+
         _ = Task.Run(async () =>
         {
             await InitializeAsync();
@@ -41,12 +41,12 @@ public class SocatProfilesViewModel : ProfileManagementViewModelBase<SocatProfil
     protected override string GetDefaultProfileName() => "ServerDefault";
     protected override string GetProfileTypeName() => "Server Configuration";
     protected override SocatProfile CreateDefaultProfile() => SocatProfile.CreateDefaultProfile();
-    
+
     protected override async Task<ProfileDialogResult<SocatProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
         return await UnifiedDialogService.ShowSocatCreateDialogAsync(request).ConfigureAwait(false);
     }
-    
+
     protected override async Task<ProfileDialogResult<SocatProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
         return await UnifiedDialogService.ShowSocatEditDialogAsync(request).ConfigureAwait(false);

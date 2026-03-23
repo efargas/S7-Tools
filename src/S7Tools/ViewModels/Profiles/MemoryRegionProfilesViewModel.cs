@@ -28,7 +28,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _uiThreadService = uiThreadService;
-        
+
         _ = Task.Run(async () =>
         {
             await InitializeAsync();
@@ -45,7 +45,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
     protected override string GetDefaultProfileName() => "Memory Region Default";
     protected override string GetProfileTypeName() => "Memory Region Profile";
     protected override MemoryMappingProfile CreateDefaultProfile() => MemoryMappingProfile.CreateDefaultProfile();
-    
+
     protected override async Task<ProfileDialogResult<MemoryMappingProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
         var nameResult = await UnifiedDialogService.ShowNameInputDialogAsync(
@@ -64,11 +64,13 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
 
         return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
     }
-    
+
     protected override async Task<ProfileDialogResult<MemoryMappingProfile>> ShowEditDialogAsync(ProfileEditRequest request)
     {
         if (SelectedProfile == null)
+        {
             return ProfileDialogResult<MemoryMappingProfile>.Failure("No profile selected");
+        }
 
         ILogger<EditMemoryRegionProfileDialogViewModel> dialogLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<EditMemoryRegionProfileDialogViewModel>();
         var dialogViewModel = new EditMemoryRegionProfileDialogViewModel(SelectedProfile, dialogLogger);
@@ -79,8 +81,12 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
             Avalonia.Controls.Window? mainWindow = Avalonia.Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                 ? desktop.MainWindow
                 : null;
-                
-            if (mainWindow == null) throw new InvalidOperationException("No main window");
+
+            if (mainWindow == null)
+            {
+                throw new InvalidOperationException("No main window");
+            }
+
             return await dialog.ShowDialog<bool?>(mainWindow);
         }).ConfigureAwait(false);
 
@@ -94,7 +100,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
             }
             return ProfileDialogResult<MemoryMappingProfile>.Failure("Failed to modify");
         }
-        
+
         return ProfileDialogResult<MemoryMappingProfile>.Cancelled();
     }
 

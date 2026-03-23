@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Services.Interfaces;
@@ -737,7 +737,7 @@ public abstract class ProfileManagementViewModelBase<TProfile> : ViewModelBase, 
             IEnumerable<TProfile> importedProfiles = await GetProfileManager().ImportAsync(profiles, replaceExisting: false);
 
             int importedCount = importedProfiles.Count();
-            await LoadProfilesAsync(); 
+            await LoadProfilesAsync();
 
             StatusMessage = $"Imported {importedCount} profile(s) from {Path.GetFileName(fileName)}";
             _logger.LogInformation("Imported {ImportedCount} profiles from {FileName}", importedCount, fileName);

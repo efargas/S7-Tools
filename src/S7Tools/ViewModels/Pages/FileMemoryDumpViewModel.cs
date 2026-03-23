@@ -71,7 +71,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         try
         {
             string? folderPath = await _fileDialogService.ShowFolderBrowserDialogAsync("Select Folder containing Memory Dumps");
-            
+
             if (!string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath))
             {
                 RootFolderPath = folderPath;
@@ -95,7 +95,10 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     {
         FileTreeItems.Clear();
 
-        if (string.IsNullOrEmpty(RootFolderPath)) return;
+        if (string.IsNullOrEmpty(RootFolderPath))
+        {
+            return;
+        }
 
         try
         {
@@ -113,13 +116,16 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
     [RelayCommand]
     private void OpenFile(FileTreeItemViewModel? item)
     {
-        if (item == null || item.IsDirectory || item.IsDummyNode || string.IsNullOrEmpty(item.FullPath) || OpenDocumentAction == null) return;
+        if (item == null || item.IsDirectory || item.IsDummyNode || string.IsNullOrEmpty(item.FullPath) || OpenDocumentAction == null)
+        {
+            return;
+        }
 
         try
         {
             var docVm = _serviceProvider.GetRequiredService<FileMemoryDumpDocumentViewModel>();
             docVm.OpenFile(item.FullPath);
-            
+
             OpenDocumentAction.Invoke(docVm);
         }
         catch (Exception ex)
