@@ -25,7 +25,7 @@ namespace S7Tools.Services
         };
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WritableOptions"/> class.
+        /// Initializes a new instance of the <see cref="WritableOptions{T}"/> class.
         /// </summary>
         public WritableOptions(
             string basePath,

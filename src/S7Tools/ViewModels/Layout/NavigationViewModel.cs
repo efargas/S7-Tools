@@ -39,9 +39,6 @@ public class NavigationViewModel : ReactiveObject
     private bool _showLogStats;
     private string _logStatsMessage = "";
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="NavigationViewModel"/> class for design-time.
-    /// </summary>
     // Default constructor for design-time data
     /// <summary>
     /// Initializes a new instance of the <see cref="NavigationViewModel"/> class.
