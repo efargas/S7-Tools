@@ -84,7 +84,7 @@ namespace S7Tools.Core.Models.Configuration.StrongSettings
         public string SerialPath { get; set; } = "Resources/Profiles/Serial/SerialProfiles.json";
         public string SocatPath { get; set; } = "Resources/Profiles/Socat/SocatProfiles.json";
         public string PowerSupplyPath { get; set; } = "Resources/Profiles/PowerSupply/PowerSupplyProfiles.json";
-        public string MemoryRegionPath { get; set; } = "Resources/Profiles/MemoryRegions/MemoryRegionProfiles.json";
+        public string MemoryRegionPath { get; set; } = "Resources/Profiles/MemoryRegion/MemoryRegionProfiles.json";
     }
 
     public class MemoryRegionSettings

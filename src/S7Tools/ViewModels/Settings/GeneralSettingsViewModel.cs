@@ -2,6 +2,8 @@ using S7Tools.ViewModels.Base;
 using System;
 using System.IO;
 using System.Reactive;
+using System.Reactive.Disposables;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
@@ -15,12 +17,14 @@ namespace S7Tools.ViewModels.Settings;
 /// <summary>
 /// ViewModel for general settings configuration.
 /// </summary>
-public class GeneralSettingsViewModel : ViewModelBase
+public class GeneralSettingsViewModel : ViewModelBase, IDisposable
 {
     private readonly IApplicationSettingsService _settingsService;
     private readonly IPathService _pathService;
     private readonly ILogger<GeneralSettingsViewModel> _logger;
+    private readonly CompositeDisposable _disposables = new();
     private bool _isInitializing;
+    private bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the GeneralSettingsViewModel class.
@@ -50,21 +54,22 @@ public class GeneralSettingsViewModel : ViewModelBase
             _isInitializing = false;
         };
 
-        // Auto-save when any property changes
-        this.PropertyChanged += (_, e) =>
-        {
-            if (_isInitializing) return;
-            if (e.PropertyName is
+        // Auto-save when any relevant property changes, throttled to avoid excessive disk I/O
+        this.Changed
+            .Where(e => e.PropertyName is
                 nameof(MemoryDumpDefaultFolder) or
                 nameof(SegmentDumpDelayMs) or
                 nameof(IterationDumpDelayMs) or
                 nameof(PlcConnectionTimeout) or
                 nameof(PlcReadTimeout) or
                 nameof(PlcRetryAttempts))
-            {
-                _ = SaveGeneralSettingsAsync();
-            }
-        };
+            .Where(_ => !_isInitializing)
+            .Throttle(TimeSpan.FromMilliseconds(500))
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Subscribe(_ => SaveGeneralSettingsAsync().ContinueWith(
+                t => _logger.LogError(t.Exception, "Error auto-saving general settings"),
+                System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted))
+            .DisposeWith(_disposables);
     }
 
     // Default constructor for designer
@@ -263,5 +268,25 @@ public class GeneralSettingsViewModel : ViewModelBase
             _logger.LogError(ex, "Error opening settings directory");
             SettingsStatusMessage = UIStrings.Status_ErrorOpeningSettingsDirectory;
         }
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases resources used by this ViewModel.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed) return;
+        if (disposing)
+        {
+            _disposables.Dispose();
+        }
+        _disposed = true;
     }
 }
