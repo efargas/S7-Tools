@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
 using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Services;
 using Xunit;
@@ -50,67 +49,71 @@ namespace S7Tools.Core.Tests.Settings
         }
 
         [Fact]
-        public void GetSetting_WithNoUserSettings_ReturnsDefaultSettings()
+        public void Current_WithNoUserSettings_ReturnsDefaultSettings()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
 
-            // Act & Assert
-            // These defaults match the AppSettings default constructor values
-            Assert.Equal("Information", service.GetSetting<string>("logging.level"));
-            Assert.True(service.GetSetting<bool>("logging.enableFileLogging"));
-            Assert.Equal("System", service.GetSetting<string>("ui.theme"));
+            // Act & Assert - defaults match AppSettings default constructor values
+            Assert.Equal("Information", service.Current.Logging.Level);
+            Assert.True(service.Current.Logging.EnableFileLogging);
+            Assert.Equal("System", service.Current.Ui.Theme);
         }
 
         [Fact]
-        public async Task SetSettingAsync_UserSettingOverridesDefault_CorrectHierarchy()
+        public async Task UpdateSettingsAsync_UserSettingOverridesDefault_CorrectHierarchy()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
 
-            // Act - Set user setting to override default
-            await service.SetSettingAsync("logging.level", "Debug");
-            await service.SetSettingAsync("ui.theme", "Dark");
+            // Act - update settings via strongly-typed action
+            await service.UpdateSettingsAsync(s =>
+            {
+                s.Logging.Level = "Debug";
+                s.Ui.Theme = "Dark";
+            });
 
-            // Assert - User settings override defaults
-            Assert.Equal("Debug", service.GetSetting<string>("logging.level"));
-            Assert.Equal("Dark", service.GetSetting<string>("ui.theme"));
+            // Assert - settings reflect the update
+            Assert.Equal("Debug", service.Current.Logging.Level);
+            Assert.Equal("Dark", service.Current.Ui.Theme);
         }
 
         [Fact]
-        public async Task ResetSettingAsync_UserSettingReset_RevertsToDefault()
+        public async Task ResetAllSettingsAsync_UserSettingReset_RevertsToDefault()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
-            await service.SetSettingAsync("logging.level", "Debug");
+            await service.UpdateSettingsAsync(s => s.Logging.Level = "Debug");
 
-            // Verify user override is active
-            Assert.Equal("Debug", service.GetSetting<string>("logging.level"));
+            // Verify update was applied
+            Assert.Equal("Debug", service.Current.Logging.Level);
 
-            // Act - Reset to default
-            await service.ResetSettingAsync("logging.level");
+            // Act - reset to defaults
+            await service.ResetAllSettingsAsync();
 
-            // Assert - Reverted to default
-            Assert.Equal("Information", service.GetSetting<string>("logging.level"));
+            // Assert - reverted to default
+            Assert.Equal("Information", service.Current.Logging.Level);
         }
 
         [Fact]
-        public async Task SettingsChanged_EventFired_WhenSettingChanged()
+        public async Task SettingsChanged_EventFired_WhenSettingsUpdated()
         {
             // Arrange
             ApplicationSettingsService service = CreateTestService();
 
-            S7Tools.Core.Interfaces.Services.SettingsChangedEventArgs? eventArgs = null;
+            SettingsChangedEventArgs? eventArgs = null;
             service.SettingsChanged += (sender, args) => eventArgs = args;
 
             // Act
-            await service.SetSettingAsync("ui.theme", "Dark");
+            await service.UpdateSettingsAsync(s => s.Ui.Theme = "Dark");
 
             // Assert
+            // The strongly-typed API fires SettingsChanged with IsUserSetting=true for any UpdateSettingsAsync call.
+            // Individual key/value change info is no longer tracked; instead, callers read Current directly for the new values.
             Assert.NotNull(eventArgs);
-            Assert.Equal("ui.theme", eventArgs.Key);
-            Assert.Equal("Dark", eventArgs.NewValue);
             Assert.True(eventArgs.IsUserSetting);
+            // Verify the actual value change is accessible via Current
+            Assert.Equal("Dark", service.Current.Ui.Theme);
         }
     }
 }
