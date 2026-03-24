@@ -474,13 +474,28 @@ namespace S7Tools.Services.Adapters.Plc
             }
 
             _cts?.Cancel();
-            if (!_isExternalStream && _stream != null)
+            if (!_isExternalStream)
             {
                 try
                 {
-                    _stream.Dispose();
+                    if (_socket != null && _socket.Connected)
+                    {
+                        _socket.Shutdown(SocketShutdown.Both);
+                    }
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Logger.LogTrace(ex, "Ignored exception during socket shutdown in StopAsync");
+                }
+
+                if (_stream != null)
+                {
+                    try
+                    {
+                        _stream.Dispose();
+                    }
+                    catch { }
+                }
             }
             _stream = null;
             _socket = null;
@@ -495,6 +510,18 @@ namespace S7Tools.Services.Adapters.Plc
             _cts?.Dispose();
             if (!_isExternalStream)
             {
+                try
+                {
+                    if (_socket != null && _socket.Connected)
+                    {
+                        _socket.Shutdown(SocketShutdown.Both);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogTrace(ex, "Ignored exception during socket shutdown in Dispose");
+                }
+
                 _stream?.Dispose();
                 _socket?.Dispose();
             }

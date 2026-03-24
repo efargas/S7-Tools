@@ -130,6 +130,8 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
     /// <inheritdoc />
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
+        // Use CancellationToken.None here so that disconnection operations
+        // are not skipped if the incoming cancellationToken was already cancelled.
         await _semaphore.ExecuteAsync(async () =>
         {
             if (!_isConnected)
@@ -142,7 +144,7 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
             CleanupConnection();
             _logger.LogInformation("Disconnected from power supply");
             await Task.CompletedTask;
-        }, cancellationToken);
+        }, CancellationToken.None);
     }
 
     /// <inheritdoc />
@@ -406,6 +408,18 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
 
         _modbusMaster?.Dispose();
         _modbusMaster = null;
+
+        try
+        {
+            if (_tcpClient?.Client != null && _tcpClient.Client.Connected)
+            {
+                _tcpClient.Client.Shutdown(SocketShutdown.Both);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogTrace(ex, "Ignored exception during TCP socket shutdown in CleanupConnection");
+        }
 
         _tcpClient?.Close();
         _tcpClient?.Dispose();

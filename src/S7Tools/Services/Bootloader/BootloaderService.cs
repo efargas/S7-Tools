@@ -1482,7 +1482,8 @@ public sealed class BootloaderService(
             {
                 try
                 {
-                    await socat.StopSocatAsync(socatProcess, cancellationToken).ConfigureAwait(false);
+                    // Use CancellationToken.None to ensure we stop socat even if parent task was cancelled
+                    await socat.StopSocatAsync(socatProcess, CancellationToken.None).ConfigureAwait(false);
                     effectiveTaskLogger.LogDebug("✓ Socat process stopped");
                 }
                 catch (Exception ex) { effectiveTaskLogger.LogWarning(ex, "Failed to stop socat"); }
@@ -1492,7 +1493,8 @@ public sealed class BootloaderService(
             {
                 try
                 {
-                    await power.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+                    // Use CancellationToken.None to ensure we disconnect even if parent task was cancelled
+                    await power.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
                     effectiveTaskLogger.LogDebug("✓ Disconnected from power supply");
                 }
                 catch (Exception ex) { effectiveTaskLogger.LogWarning(ex, "Failed to disconnect power"); }

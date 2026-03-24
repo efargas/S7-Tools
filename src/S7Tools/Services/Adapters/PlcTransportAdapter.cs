@@ -94,6 +94,19 @@ namespace S7Tools.Services.Adapters
             _logger.LogInformation("Disconnecting transport...");
             _stream?.Dispose();
             _stream = null;
+
+            try
+            {
+                if (_client?.Client != null && _client.Client.Connected)
+                {
+                    _client.Client.Shutdown(SocketShutdown.Both);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Ignored exception during socket shutdown in DisconnectAsync");
+            }
+
             _client?.Dispose();
             _client = new TcpClient(); // Reset for next use
             return Task.CompletedTask;
@@ -135,6 +148,19 @@ namespace S7Tools.Services.Adapters
         public ValueTask DisposeAsync()
         {
             _stream?.Dispose();
+
+            try
+            {
+                if (_client?.Client != null && _client.Client.Connected)
+                {
+                    _client.Client.Shutdown(SocketShutdown.Both);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Ignored exception during socket shutdown in DisposeAsync");
+            }
+
             _client?.Dispose();
             return ValueTask.CompletedTask;
         }
