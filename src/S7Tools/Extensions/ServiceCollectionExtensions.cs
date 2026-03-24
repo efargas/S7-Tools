@@ -64,6 +64,9 @@ public static class ServiceCollectionExtensions
         // Add Layout Service
         services.TryAddSingleton<ILayoutService, LayoutService>();
 
+        // Add Task Log Scope Service for Serilog integration
+        services.TryAddSingleton<ITaskLogScope, S7Tools.Services.Logging.SerilogTaskLogScope>();
+
         // Add Docking Service
         services.TryAddSingleton<DockingService>();
 
