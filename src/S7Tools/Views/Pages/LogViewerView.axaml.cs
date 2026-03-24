@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -20,6 +22,7 @@ public partial class LogViewerView : UserControl
     private ScrollViewer? _scrollViewer;
     private bool _isStuckToBottom = true;
     private bool _isInitializing = true;
+    private bool _isApplyingColumnWidths;
 
     public LogViewerView()
     {
@@ -61,6 +64,10 @@ public partial class LogViewerView : UserControl
 
             // Watch AutoScroll property changes
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+            // Apply saved column widths and track changes
+            ApplySavedColumnWidths();
+            HookColumnWidthChanges();
         }
     }
 
@@ -157,5 +164,95 @@ public partial class LogViewerView : UserControl
             return;
 
         _logDataGrid.ScrollIntoView(items[items.Count - 1], null);
+    }
+
+    private void HookColumnWidthChanges()
+    {
+        if (_logDataGrid?.Columns == null)
+            return;
+
+        // Schedule periodic saving of column widths (every 500ms while columns are being resized)
+        DispatcherTimer? saveTimer = null;
+        saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(500) };
+        saveTimer.Tick += (_, _) =>
+        {
+            SaveColumnWidths();
+            saveTimer.Stop();
+        };
+
+        // Hook into column width changes via the DataGrid's property changed event
+        _logDataGrid.PropertyChanged += (s, e) =>
+        {
+            if (e.Property.Name == "Columns" && !_isApplyingColumnWidths)
+            {
+                saveTimer.Stop();
+                saveTimer.Start();
+            }
+        };
+    }
+
+    private void SaveColumnWidths()
+    {
+        if (_logDataGrid?.Columns == null || DataContext is not LogViewerViewModel viewModel)
+            return;
+
+        try
+        {
+            // Create a comma-separated string with column widths
+            var widths = new List<string>();
+            foreach (var column in _logDataGrid.Columns)
+            {
+                // Store width as string (e.g., "160" or "*")
+                string widthStr = column.Width.ToString() ?? "*";
+                widths.Add(widthStr);
+            }
+
+            // Store in view model as a string (comma-separated)
+            viewModel.ColumnWidths = string.Join(",", widths);
+        }
+        catch
+        {
+            // Silent fail - column width saving is not critical
+        }
+    }
+
+    private void ApplySavedColumnWidths()
+    {
+        if (_logDataGrid?.Columns == null || DataContext is not LogViewerViewModel viewModel)
+            return;
+
+        try
+        {
+            if (string.IsNullOrEmpty(viewModel.ColumnWidths))
+                return;
+
+            _isApplyingColumnWidths = true;
+            var widths = viewModel.ColumnWidths.Split(',');
+
+            for (int i = 0; i < _logDataGrid.Columns.Count && i < widths.Length; i++)
+            {
+                var widthStr = widths[i].Trim();
+                try
+                {
+                    // Parse DataGridLength from string
+                    if (double.TryParse(widthStr, out double width))
+                    {
+                        _logDataGrid.Columns[i].Width = new DataGridLength(width);
+                    }
+                }
+                catch
+                {
+                    // Continue with next column on parse error
+                }
+            }
+        }
+        catch
+        {
+            // Silent fail - column width restoration is not critical
+        }
+        finally
+        {
+            _isApplyingColumnWidths = false;
+        }
     }
 }

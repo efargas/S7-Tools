@@ -305,6 +305,16 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
         set => this.RaiseAndSetIfChanged(ref _fontSize, value);
     }
 
+    private string _columnWidths = string.Empty;
+    /// <summary>
+    /// Gets or sets the persisted column widths (comma-separated format).
+    /// </summary>
+    public string ColumnWidths
+    {
+        get => _columnWidths;
+        set => this.RaiseAndSetIfChanged(ref _columnWidths, value);
+    }
+
     /// <summary>
     /// Gets the available log levels for filtering.
     /// </summary>
