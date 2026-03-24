@@ -134,18 +134,18 @@ public partial class SocatProcessManager : IDisposable
                             trimmedData.Contains("> ") ||
                             (trimmedData.Contains("0x") && trimmedData.Length > 15) ||
                             trimmedData.Trim() == "--" ||
-                            HexDumpRegex().IsMatch(trimmedData);
+                            GetHexDumpRegex().IsMatch(trimmedData);
 
                         if (isHexDumpLine && protocolLogger != null)
                         {
                             // Route hex dump to protocol logger
-                            string cleanOutput = SocatLogTimestampRegex().Replace(e.Data, string.Empty);
+                            string cleanOutput = GetSocatLogTimestampRegex().Replace(e.Data, string.Empty);
                             protocolLogger.LogDebug("{HexData}", cleanOutput);
                         }
                         else
                         {
                             // Regular error/info output
-                            string cleanMessage = SocatLogTimestampRegex().Replace(e.Data, string.Empty);
+                            string cleanMessage = GetSocatLogTimestampRegex().Replace(e.Data, string.Empty);
                             processLogger?.LogInformation("socat[{ProcessId}] {Message}", processId, cleanMessage);
                         }
                     }
@@ -309,6 +309,15 @@ public partial class SocatProcessManager : IDisposable
                 {
                     if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                     {
+                        // Send SIGTERM to children first, so they die gracefully and don't get orphaned
+                        if (childPids.Count > 0)
+                        {
+                            await _shellExecutor.ExecuteCommandAsync($"kill -TERM {string.Join(" ", childPids)}", cancellationToken).ConfigureAwait(false);
+                        }
+                        
+                        // Also try pkill to catch any processes spawned after GetChildProcessesAsync
+                        await _shellExecutor.ExecuteCommandAsync($"pkill -TERM -P {processId}", cancellationToken).ConfigureAwait(false);
+
                         await _shellExecutor.ExecuteCommandAsync($"kill -TERM {processId}", cancellationToken).ConfigureAwait(false);
                         exited = await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
                     }
@@ -349,14 +358,22 @@ public partial class SocatProcessManager : IDisposable
             if (!exited && !process.HasExited)
             {
                 _logger.LogWarning("Socat process {ProcessId} did not exit after SIGTERM, forcing termination", processId);
-                process.Kill();
+                try { process.Kill(true); } catch { process.Kill(); }
                 await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
             }
 
-            // Clean up child processes
-            if (childPids.Count > 0 && (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS()))
+            // Final safety net: clean up any known or newly discovered child processes
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
-                foreach (int childPid in childPids)
+                // Re-discover any lingering children (in case they were orphaned before process.Kill(true))
+                List<int> latestChildPids = await _shellExecutor.GetChildProcessesAsync(processId, cancellationToken).ConfigureAwait(false);
+                var allKnownChildren = new HashSet<int>(childPids);
+                foreach (var p in latestChildPids)
+                {
+                    allKnownChildren.Add(p);
+                }
+
+                foreach (int childPid in allKnownChildren)
                 {
                     try
                     {
@@ -373,6 +390,9 @@ public partial class SocatProcessManager : IDisposable
                         _logger.LogWarning(ex, "Failed to cleanup child process {ChildPid}", childPid);
                     }
                 }
+
+                // And finally, attempt a catch-all pkill just in case
+                await _shellExecutor.ExecuteCommandAsync($"pkill -9 -P {processId}", cancellationToken).ConfigureAwait(false);
             }
 
             // Dispose fallback process if created
@@ -486,14 +506,16 @@ public partial class SocatProcessManager : IDisposable
     /// <summary>
     /// Regex pattern for detecting hex dump lines.
     /// </summary>
-    [GeneratedRegex(@"^\s+([0-9a-fA-F]{2}\s+)+")]
-    private static partial Regex HexDumpRegex();
+    private static readonly Regex _hexDumpRegex = new Regex(@"^\s+([0-9a-fA-F]{2}\s+)+", RegexOptions.Compiled);
+
+    private static Regex GetHexDumpRegex() => _hexDumpRegex;
 
     /// <summary>
     /// Regex pattern for socat log timestamps.
     /// </summary>
-    [GeneratedRegex(@"^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ")]
-    private static partial Regex SocatLogTimestampRegex();
+    private static readonly Regex _socatLogTimestampRegex = new Regex(@"^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} ", RegexOptions.Compiled);
+
+    private static Regex GetSocatLogTimestampRegex() => _socatLogTimestampRegex;
 
     /// <inheritdoc />
     public void Dispose()

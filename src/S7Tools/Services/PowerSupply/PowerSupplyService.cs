@@ -406,9 +406,6 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         _isConnected = false;
         _currentConfiguration = null;
 
-        _modbusMaster?.Dispose();
-        _modbusMaster = null;
-
         try
         {
             if (_tcpClient?.Client != null && _tcpClient.Client.Connected)
@@ -420,6 +417,9 @@ public class PowerSupplyService : IPowerSupplyService, IDisposable
         {
             _logger.LogTrace(ex, "Ignored exception during TCP socket shutdown in CleanupConnection");
         }
+
+        _modbusMaster?.Dispose();
+        _modbusMaster = null;
 
         _tcpClient?.Close();
         _tcpClient?.Dispose();
