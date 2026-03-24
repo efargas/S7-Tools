@@ -951,11 +951,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
         try
         {
-            task.UpdateState(TaskState.Running, "Starting task execution");
-            TaskStateChanged?.Invoke(task);
-            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist running state
-
-            // Create task-specific logger
+            // Create task-specific logger FIRST so UI auto-open has access to it when state changes to Running
             taskLogger = await _taskLoggerFactory.CreateTaskLoggerAsync(
                 taskId,
                 task.JobName,
@@ -963,6 +959,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 CancellationToken.None).ConfigureAwait(false);
 
             task.Logger = taskLogger;
+
+            task.UpdateState(TaskState.Running, "Starting task execution");
+            TaskStateChanged?.Invoke(task);
+            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist running state
 
             // Log task start
             taskLogger.MainLogger?.LogInformation(

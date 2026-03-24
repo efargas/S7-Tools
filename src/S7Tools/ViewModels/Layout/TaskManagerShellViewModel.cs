@@ -105,6 +105,37 @@ public sealed class TaskManagerShellViewModel : ViewModelBase, IDockableViewMode
     }
 
     /// <summary>
+    /// Gets or sets the OpenDocumentAction and propagates it to child view models.
+    /// </summary>
+    private Action<IDockableViewModel>? _openDocumentAction;
+    public Action<IDockableViewModel>? OpenDocumentAction
+    {
+        get => _openDocumentAction;
+        set
+        {
+            _openDocumentAction = value;
+            if (_taskManagerViewModel != null)
+            {
+                _taskManagerViewModel.OpenDocumentAction = value;
+            }
+        }
+    }
+
+    private Action<IDockableViewModel>? _openToolAction;
+    public Action<IDockableViewModel>? OpenToolAction
+    {
+        get => _openToolAction;
+        set
+        {
+            _openToolAction = value;
+            if (_taskManagerViewModel != null)
+            {
+                _taskManagerViewModel.OpenToolAction = value;
+            }
+        }
+    }
+
+    /// <summary>
     /// Gets or sets the SelectCategoryCommand.
     /// </summary>
     public ReactiveCommand<string, Unit> SelectCategoryCommand { get; }

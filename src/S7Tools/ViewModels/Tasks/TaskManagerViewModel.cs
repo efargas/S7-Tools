@@ -11,8 +11,11 @@ using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Pages;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace S7Tools.ViewModels.Tasks;
 
@@ -45,6 +48,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private readonly TaskDetailsViewModel _taskDetailsViewModel;
     private readonly TaskStatisticsViewModel _taskStatisticsViewModel;
     private readonly TaskCommandManager _taskCommandManager;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly ITaskLoggerFactory _taskLoggerFactory;
     private readonly CompositeDisposable _disposables = [];
 
     // State-based task collections for UI binding
@@ -78,6 +83,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// <param name="taskDetailsViewModel">The task details view model for the details panel.</param>
     /// <param name="taskStatisticsViewModel">The view model for task statistics.</param>
     /// <param name="taskCommandManager">The manager for handling task commands.</param>
+    /// <param name="serviceProvider">The service provider for resolving dynamic dependencies.</param>
+    /// <param name="taskLoggerFactory">The factory for task-specific loggers.</param>
     public TaskManagerViewModel(
         ILogger<TaskManagerViewModel> logger,
         ITaskScheduler taskScheduler,
@@ -86,7 +93,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         IDialogService dialogService,
         TaskDetailsViewModel taskDetailsViewModel,
         TaskStatisticsViewModel taskStatisticsViewModel,
-        TaskCommandManager taskCommandManager)
+        TaskCommandManager taskCommandManager,
+        IServiceProvider serviceProvider,
+        ITaskLoggerFactory taskLoggerFactory)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
@@ -96,6 +105,8 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         _taskDetailsViewModel = taskDetailsViewModel ?? throw new ArgumentNullException(nameof(taskDetailsViewModel));
         _taskStatisticsViewModel = taskStatisticsViewModel ?? throw new ArgumentNullException(nameof(taskStatisticsViewModel));
         _taskCommandManager = taskCommandManager ?? throw new ArgumentNullException(nameof(taskCommandManager));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _taskLoggerFactory = taskLoggerFactory ?? throw new ArgumentNullException(nameof(taskLoggerFactory));
 
         SetupCommands();
         SetupCollections();
@@ -136,6 +147,16 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     }
 
     #region Properties
+
+    /// <summary>
+    /// Action to open a document in the main dock layout.
+    /// </summary>
+    public Action<IDockableViewModel>? OpenDocumentAction { get; set; }
+
+    /// <summary>
+    /// Action to open a tool window in the bottom dock panel.
+    /// </summary>
+    public Action<IDockableViewModel>? OpenToolAction { get; set; }
 
     /// <summary>
     /// Gets the task details view model for the details panel.
@@ -427,6 +448,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// </remarks>
     public ReactiveCommand<Unit, Unit> CreateTaskCommand { get; private set; } = null!;
 
+    /// <summary>
+    /// Gets the command to view logs for a specific task.
+    /// </summary>
+    public ReactiveCommand<TaskExecution?, Unit> ViewTaskLogsCommand { get; private set; } = null!;
+
     #endregion
 
     #region Private Implementation
@@ -475,6 +501,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         RefreshTasksCommand = ReactiveCommand.CreateFromTask(ExecuteRefreshTasksAsync);
         ClearFinishedTasksCommand = ReactiveCommand.CreateFromTask(ExecuteClearFinishedTasksAsync, hasFinishedTasks);
         CreateTaskCommand = ReactiveCommand.CreateFromTask(ExecuteCreateTaskAsync);
+        ViewTaskLogsCommand = ReactiveCommand.Create<TaskExecution?>(ExecuteViewTaskLogs);
 
     }
 
@@ -512,6 +539,43 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     // Throttling for progress updates
     private readonly System.Collections.Concurrent.ConcurrentDictionary<Guid, (double Percentage, string Operation, Dictionary<string, object>? ExtraData)> _pendingProgressUpdates = new();
     private IDisposable? _progressUpdateTimer;
+
+    private void ExecuteViewTaskLogs(TaskExecution? task)
+    {
+        TaskExecution? targetTask = task ?? SelectedTask;
+        if (targetTask == null || targetTask.TaskId == Guid.Empty || (OpenToolAction == null && OpenDocumentAction == null))
+        {
+            return;
+        }
+
+        try
+        {
+            var taskLogDataStore = _taskLoggerFactory.GetTaskDataStore(targetTask.TaskId, TaskLogType.Main) as S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore;
+            if (taskLogDataStore == null)
+            {
+                _logger.LogWarning("No main log data store found for task {TaskId}", targetTask.TaskId);
+                return;
+            }
+
+            var logViewer = ActivatorUtilities.CreateInstance<LogViewerViewModel>(_serviceProvider, taskLogDataStore);
+            logViewer.DockId = $"TaskLog_{targetTask.TaskId}";
+            logViewer.DockTitle = $"Logs: {targetTask.JobName}";
+            
+            if (OpenToolAction != null)
+            {
+                OpenToolAction.Invoke(logViewer);
+            }
+            else
+            {
+                OpenDocumentAction?.Invoke(logViewer);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to open task logs for {TaskId}", targetTask.TaskId);
+            _ = _uiThreadService.InvokeOnUIThreadAsync(() => StatusMessage = "Failed to open task logs.");
+        }
+    }
 
     private void SubscribeToTaskEvents()
     {
@@ -551,6 +615,13 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         // Push to subject for throttling instead of direct update
         _taskStateChangedSubject.OnNext(taskExecution);
+        
+        // Auto-open task log when task starts running
+        if (taskExecution.State == TaskState.Running && (OpenToolAction != null || OpenDocumentAction != null))
+        {
+            // Execute on UI thread to ensure dock operations are safe
+            _ = _uiThreadService.InvokeOnUIThreadAsync(() => ExecuteViewTaskLogs(taskExecution));
+        }
     }
 
     private void OnTaskProgressUpdated(Guid taskId, double percentage, string operation, Dictionary<string, object>? extraData = null)

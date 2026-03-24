@@ -20,6 +20,7 @@ namespace S7Tools.Services.Adapters
     {
         private readonly ILogger<PlcProtocolAdapter> _logger;
         private readonly IPlcTransport _transport;
+        private ILogger _effectiveLogger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PlcProtocolAdapter"/> class.
@@ -28,6 +29,18 @@ namespace S7Tools.Services.Adapters
         {
             _transport = transport ?? throw new ArgumentNullException(nameof(transport));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _effectiveLogger = _logger;
+        }
+
+        /// <summary>
+        /// Sets an optional session-specific logger (e.g., for task-specific protocol logging).
+        /// </summary>
+        public void SetLogger(ILogger? logger)
+        {
+            if (logger != null)
+            {
+                _effectiveLogger = logger;
+            }
         }
 
         /// <summary>
@@ -125,9 +138,9 @@ namespace S7Tools.Services.Adapters
             await Task.Delay(10, cancellationToken).ConfigureAwait(false);
 
             var packet = EncodePacket(payload);
-            if (_logger.IsEnabled(LogLevel.Trace))
+            if (_effectiveLogger.IsEnabled(LogLevel.Trace))
             {
-                _logger.LogTrace("-> SEND: {Hex}", BitConverter.ToString(packet).Replace("-", ""));
+                _effectiveLogger.LogTrace("-> SEND: {Hex}", BitConverter.ToString(packet).Replace("-", ""));
             }
 
             int step = maxChunk ?? 2;
@@ -182,9 +195,9 @@ namespace S7Tools.Services.Adapters
                 bytesRead += currentBytesRead;
             }
 
-            if (_logger.IsEnabled(LogLevel.Trace))
+            if (_effectiveLogger.IsEnabled(LogLevel.Trace))
             {
-                _logger.LogTrace("<- RECV: {Hex}", BitConverter.ToString(fullPacket).Replace("-", ""));
+                _effectiveLogger.LogTrace("<- RECV: {Hex}", BitConverter.ToString(fullPacket).Replace("-", ""));
             }
             return DecodePacket(fullPacket);
         }

@@ -871,6 +871,7 @@ public sealed class BootloaderService(
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         ILogger logger,
+        ILogger? processLogger,
         double startPercent,
         double weight,
         Guid? taskId,
@@ -918,7 +919,7 @@ public sealed class BootloaderService(
 
             // Start the dumper session ONCE for all iterations
             logger.LogInformation("Starting persistent dumper session for all iterations.");
-            await client.StartDumperSessionAsync(cancellationToken, logger).ConfigureAwait(false);
+            await client.StartDumperSessionAsync(cancellationToken, processLogger).ConfigureAwait(false);
 
             for (int iter = 0; iter < iterationCount; iter++)
             {
@@ -941,6 +942,7 @@ public sealed class BootloaderService(
                     client,
                     progress,
                     logger,
+                    processLogger,
                     startPercent,
                     weight,
                     iterationCount,
@@ -990,12 +992,14 @@ public sealed class BootloaderService(
         IPlcClient Client,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> Progress,
         ILogger Logger,
+        ILogger? ProcessLogger,
         double StartPercent,
         double Weight,
         int IterationCount,
         int CurrentIteration,
         long TotalExpectedBytes,
-        CancellationToken CancellationToken);
+        CancellationToken CancellationToken
+    );
 
     private static uint ParseSegmentAddress(MemorySegment segment)
     {
@@ -1108,7 +1112,7 @@ public sealed class BootloaderService(
                     async data => await fileStream.WriteAsync(data, ctx.CancellationToken),
                     segProgress,
                     ctx.CancellationToken,
-                    logger: ctx.Logger).ConfigureAwait(false);
+                    logger: ctx.ProcessLogger).ConfigureAwait(false);
 
                 // Use the local variable that was updated by the progress callback
                 // or fall back to segLength if the callback didn't fire for some reason
@@ -1181,7 +1185,7 @@ public sealed class BootloaderService(
                 async data => await fileStream.WriteAsync(data, ctx.CancellationToken),
                 regionProgress,
                 ctx.CancellationToken,
-                logger: ctx.Logger).ConfigureAwait(false);
+                logger: ctx.ProcessLogger).ConfigureAwait(false);
 
             await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
 
@@ -1360,6 +1364,9 @@ public sealed class BootloaderService(
             progress.Report(("plc_connect", 12.0, null, null));
             await using IPlcClient client = clientFactory(profiles);
 
+            // Inject processlogger for protocol-level tracing during handshake and bootloader setup
+            client.SetLogger(processLogger);
+
             effectiveTaskLogger.LogDebug("Connecting PLC client to localhost:{Port}", profiles.Socat.Port);
             await client.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
@@ -1455,7 +1462,7 @@ public sealed class BootloaderService(
 
             var dumpResult = await PerformDumpProcessStreamingAsync(
                 client, profiles,
-                progress, effectiveTaskLogger,
+                progress, effectiveTaskLogger, processLogger,
                 startPercent: 20.0, weight: 75.0,
                 taskId,
                 cancellationToken).ConfigureAwait(false);

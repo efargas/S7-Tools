@@ -15,13 +15,14 @@ using S7Tools.Models;
 using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.Core.Interfaces.ViewModels;
 
 namespace S7Tools.ViewModels.Pages;
 
 /// <summary>
 /// ViewModel for the LogViewer functionality with real-time log display, filtering, and search capabilities.
 /// </summary>
-public sealed class LogViewerViewModel : ViewModelBase, IDisposable
+public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDisposable
 {
     private readonly ILogDataStore _logDataStore;
     private readonly IUIThreadService _uiThreadService;
@@ -34,6 +35,36 @@ public sealed class LogViewerViewModel : ViewModelBase, IDisposable
     // Sorting state
     private string _sortColumn = "Timestamp";
     private bool _sortAscending = true;
+
+    // IDockableViewModel implementation
+    private string _dockId = "MainLog";
+    private string _dockTitle = "System Logs";
+    private bool _canClose = true;
+    private bool _canFloat = true;
+
+    public string DockId
+    {
+        get => _dockId;
+        set => this.RaiseAndSetIfChanged(ref _dockId, value);
+    }
+
+    public string DockTitle
+    {
+        get => _dockTitle;
+        set => this.RaiseAndSetIfChanged(ref _dockTitle, value);
+    }
+
+    public bool CanClose
+    {
+        get => _canClose;
+        set => this.RaiseAndSetIfChanged(ref _canClose, value);
+    }
+
+    public bool CanFloat
+    {
+        get => _canFloat;
+        set => this.RaiseAndSetIfChanged(ref _canFloat, value);
+    }
 
     /// <summary>
     /// Initializes a new instance of the LogViewerViewModel class for design-time use.

@@ -173,6 +173,16 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         // Wire navigation to open content in dock tabs
         Navigation.OpenDocumentAction = vm => OpenDocumentTab(vm);
+        Navigation.OpenToolAction = vm => OpenToolTab(vm);
+
+        // Pre-wire TaskManagerViewModel so it can open task logs automatically
+        // even if the user hasn't visited the Tasks sidebar view yet
+        var taskManagerVm = _serviceProvider.GetService<ViewModels.Tasks.TaskManagerViewModel>();
+        if (taskManagerVm != null)
+        {
+            taskManagerVm.OpenDocumentAction = vm => OpenDocumentTab(vm);
+            taskManagerVm.OpenToolAction = vm => OpenToolTab(vm);
+        }
 
         _logger.LogDebug("MainWindowViewModel initialized with specialized ViewModels and docking system");
     }

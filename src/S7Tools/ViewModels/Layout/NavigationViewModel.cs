@@ -102,6 +102,11 @@ public class NavigationViewModel : ReactiveObject
     public Action<IDockableViewModel>? OpenDocumentAction { get; set; }
 
     /// <summary>
+    /// Action to open a tool window in the bottom dock panel.
+    /// </summary>
+    public Action<IDockableViewModel>? OpenToolAction { get; set; }
+
+    /// <summary>
     /// Creates the welcome/initial ViewModel for the dock's default document.
     /// </summary>
     public object? CreateWelcomeViewModel()
@@ -418,10 +423,20 @@ public class NavigationViewModel : ReactiveObject
                 case "taskmanager":
                     SidebarTitle = UIStrings.Navigation_TaskManager;
                     TaskManagerShellViewModel? taskManagerShell = CreateViewModel<TaskManagerShellViewModel>();
-                    CurrentContent = taskManagerShell; // Sidebar categories
-                    ShowLogStats = false;
-                    // Open task manager as a dock tab
-                    OpenDockableContent(taskManagerShell);
+                    if (taskManagerShell != null)
+                    {
+                        taskManagerShell.OpenDocumentAction = OpenDocumentAction;
+                        taskManagerShell.OpenToolAction = OpenToolAction;
+                        CurrentContent = taskManagerShell; // Sidebar categories
+                        ShowLogStats = false;
+                        // Open task manager as a dock tab
+                        OpenDockableContent(taskManagerShell);
+                    }
+                    else
+                    {
+                        CurrentContent = null;
+                        ShowLogStats = false;
+                    }
                     _logger.LogDebug("Navigated to Task Manager");
                     break;
 

@@ -55,6 +55,12 @@ public interface IPlcProtocol
     void Configure(string host, int port);
 
     /// <summary>
+    /// Sets an optional session-specific logger (e.g., for task-specific protocol logging).
+    /// </summary>
+    /// <param name="logger">The logger to use for this session.</param>
+    void SetLogger(Microsoft.Extensions.Logging.ILogger? logger);
+
+    /// <summary>
     /// Establishes the connection to the PLC.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token for the operation.</param>

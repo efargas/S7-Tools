@@ -136,6 +136,10 @@
                   Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).StopTaskCommand}"
                   CommandParameter="{Binding}"
                   ToolTip.Tip="Stop this task" />
+                <Button Content="Logs" FontSize="10" Padding="6,2"
+                  Command="{Binding $parent[DataGrid].((vm:TaskManagerViewModel)DataContext).ViewTaskLogsCommand}"
+                  CommandParameter="{Binding}"
+                  ToolTip.Tip="View task logs" />
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>

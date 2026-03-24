@@ -63,6 +63,14 @@ namespace S7Tools.Services.Adapters
         }
 
         /// <summary>
+        /// Sets an optional session-specific logger (e.g., for task-specific protocol logging).
+        /// </summary>
+        public void SetLogger(ILogger? logger)
+        {
+            _protocol.SetLogger(logger);
+        }
+
+        /// <summary>
         /// Executes the DisposeAsync operation.
         /// </summary>
         public async ValueTask DisposeAsync()
