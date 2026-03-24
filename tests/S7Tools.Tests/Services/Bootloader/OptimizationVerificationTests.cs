@@ -56,13 +56,14 @@ public class OptimizationVerificationTests
         JobProfileSet profiles,
         IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)> progress,
         ILogger logger,
+        ILogger? processLogger,
         double startPercent,
         double weight,
         Guid? taskId,
         CancellationToken cancellationToken)
     {
         MethodInfo? method = typeof(BootloaderService).GetMethod("PerformDumpProcessStreamingAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-        var task = (Task<BootloaderResult>)method!.Invoke(service, new object[] { client, profiles, progress, logger, startPercent, weight, taskId, cancellationToken })!;
+        var task = (Task<BootloaderResult>)method!.Invoke(service, new object[] { client, profiles, progress, logger, processLogger, startPercent, weight, taskId, cancellationToken })!;
         return await task;
     }
 
@@ -165,7 +166,7 @@ public class OptimizationVerificationTests
             var progress = Substitute.For<IProgress<(string stage, double percent, long? bytesRead, long? totalBytes)>>();
 
             // Act
-            var result = await InvokePerformDumpProcessStreamingAsync(service, client, profiles, progress, NullLogger.Instance, 0, 100, null, CancellationToken.None);
+            var result = await InvokePerformDumpProcessStreamingAsync(service, client, profiles, progress, NullLogger.Instance, null, 0, 100, null, CancellationToken.None);
 
             // Assert
             result.SavedFiles.Should().ContainSingle();

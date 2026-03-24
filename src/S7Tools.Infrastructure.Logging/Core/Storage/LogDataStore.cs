@@ -3,6 +3,9 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
+using Serilog.Core;
+using Serilog.Events;
 using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Infrastructure.Logging.Core.Models;
@@ -11,8 +14,9 @@ namespace S7Tools.Infrastructure.Logging.Core.Storage;
 
 /// <summary>
 /// Thread-safe circular buffer implementation for storing log entries with real-time notifications.
+/// Now acts as a native Serilog sink for optimal performance.
 /// </summary>
-public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore
+public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSink
 {
     /// <summary>
     /// Export format constants.
@@ -405,6 +409,59 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    /// <inheritdoc />
+    public void Emit(LogEvent logEvent)
+    {
+        var level = logEvent.Level switch
+        {
+            LogEventLevel.Verbose => LogLevel.Trace,
+            LogEventLevel.Debug => LogLevel.Debug,
+            LogEventLevel.Information => LogLevel.Information,
+            LogEventLevel.Warning => LogLevel.Warning,
+            LogEventLevel.Error => LogLevel.Error,
+            LogEventLevel.Fatal => LogLevel.Critical,
+            _ => LogLevel.None
+        };
+
+        var category = logEvent.Properties.TryGetValue("SourceContext", out var sourceContext) 
+            ? sourceContext.ToString().Trim('"') 
+            : string.Empty;
+
+        var eventId = logEvent.Properties.TryGetValue("EventId", out var eventIdProp) && eventIdProp is StructureValue sv 
+                    && sv.Properties.FirstOrDefault(p => p.Name == "Id")?.Value is ScalarValue idVal 
+                    && idVal.Value is int id
+            ? new EventId(id)
+            : new EventId(0);
+
+        var scope = logEvent.Properties.TryGetValue("LogScope", out var scopeProp)
+            ? scopeProp.ToString().Trim('"')
+            : null;
+
+        var properties = logEvent.Properties.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (object?)(kvp.Value is ScalarValue scalar ? scalar.Value : kvp.Value.ToString())
+        );
+
+        if (logEvent.Properties.TryGetValue("TaskId", out var taskIdValue) && Guid.TryParse(taskIdValue.ToString().Trim('"'), out var parsedTaskId))
+        {
+            properties["TaskId"] = parsedTaskId;
+        }
+
+        var model = new LogModel
+        {
+            Timestamp = logEvent.Timestamp.UtcDateTime,
+            Level = level,
+            Category = category,
+            Message = logEvent.RenderMessage(),
+            Exception = logEvent.Exception,
+            EventId = eventId,
+            Scope = scope,
+            Properties = properties
+        };
+
+        AddEntry(model);
     }
 
     /// <inheritdoc />

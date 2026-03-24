@@ -13,7 +13,6 @@ using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Models;
-using S7Tools.Infrastructure.Logging.Providers.Extensions;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels;
@@ -21,6 +20,7 @@ using S7Tools.ViewModels.Layout;
 using S7Tools.Views;
 using S7Tools.Views.Layout;
 using Splat.Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 
 namespace S7Tools;
@@ -188,26 +188,40 @@ sealed class Program
                 "App",
                 Path.Combine("Resources", "AppSettings", "UserSettings.json")));
 
-        // Add logging with DataStore provider
+        // Register Global LogDataStore Sink for UI
+        var logDataStore = new S7Tools.Infrastructure.Logging.Core.Storage.LogDataStore(new LogDataStoreOptions { MaxEntries = 10000 });
+        services.AddSingleton<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>(logDataStore);
+        services.AddSingleton<S7Tools.Core.Interfaces.Services.ITaskLogDataStore>(logDataStore);
+
+        // Configure Serilog Global Pipeline
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Debug()
+            .Enrich.FromLogContext()
+            // Global DataStore sink for UI
+            .WriteTo.Sink(logDataStore)
+            
+            // Application File Sink (No TaskId)
+            .WriteTo.Logger(lc => lc
+                .Filter.ByExcluding(e => e.Properties.ContainsKey("TaskId"))
+                .WriteTo.File("Logs/Application/app-.log", rollingInterval: RollingInterval.Day))
+            
+            // Task-specific File Sinks via Map (Has TaskId)
+            .WriteTo.Logger(lc => lc
+                .Filter.ByIncludingOnly(e => e.Properties.ContainsKey("TaskId"))
+                .WriteTo.Map("TaskId", (taskId, wt) => 
+                {
+                    // Within a task, map by Scope to create main.log, process.log, etc.
+                    wt.Map("LogScope", "Main", (scope, subWt) => 
+                        subWt.File($"Logs/Tasks/{taskId}/{scope}.log", rollingInterval: RollingInterval.Day));
+                }, sinkMapCountLimit: 50))
+                
+            .CreateLogger();
+
+        // Add logging using Serilog
         services.AddLogging(builder =>
         {
-            builder.SetMinimumLevel(LogLevel.Debug);
-
-            // Add DataStore logging provider
-            builder.AddDataStore(options =>
-            {
-                options.MaxEntries = 10000;
-            }, config =>
-            {
-                // Configure logger settings
-                config.LogLevel = LogLevel.Debug;
-                config.IncludeScopes = true;
-                config.CaptureProperties = true;
-                config.FormatMessages = true;
-                config.CaptureStackTrace = true;
-                config.MaxMessageLength = 10000;
-            });
-
+            builder.ClearProviders();
+            builder.AddSerilog(dispose: true);
         });
 
         // Add S7Tools services using the extension method

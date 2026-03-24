@@ -49,7 +49,6 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private readonly TaskStatisticsViewModel _taskStatisticsViewModel;
     private readonly TaskCommandManager _taskCommandManager;
     private readonly IServiceProvider _serviceProvider;
-    private readonly ITaskLoggerFactory _taskLoggerFactory;
     private readonly CompositeDisposable _disposables = [];
 
     // State-based task collections for UI binding
@@ -94,8 +93,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         TaskDetailsViewModel taskDetailsViewModel,
         TaskStatisticsViewModel taskStatisticsViewModel,
         TaskCommandManager taskCommandManager,
-        IServiceProvider serviceProvider,
-        ITaskLoggerFactory taskLoggerFactory)
+        IServiceProvider serviceProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _taskScheduler = taskScheduler ?? throw new ArgumentNullException(nameof(taskScheduler));
@@ -106,7 +104,6 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         _taskStatisticsViewModel = taskStatisticsViewModel ?? throw new ArgumentNullException(nameof(taskStatisticsViewModel));
         _taskCommandManager = taskCommandManager ?? throw new ArgumentNullException(nameof(taskCommandManager));
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _taskLoggerFactory = taskLoggerFactory ?? throw new ArgumentNullException(nameof(taskLoggerFactory));
 
         SetupCommands();
         SetupCollections();
@@ -550,14 +547,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var taskLogDataStore = _taskLoggerFactory.GetTaskDataStore(targetTask.TaskId, TaskLogType.Main) as S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore;
-            if (taskLogDataStore == null)
-            {
-                _logger.LogWarning("No main log data store found for task {TaskId}", targetTask.TaskId);
-                return;
-            }
+            var taskLogDataStore = _serviceProvider.GetRequiredService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
 
             var logViewer = ActivatorUtilities.CreateInstance<LogViewerViewModel>(_serviceProvider, taskLogDataStore);
+            logViewer.SelectedTaskId = targetTask.TaskId;
+            logViewer.SelectedScope = "Main";
             logViewer.DockId = $"TaskLog_{targetTask.TaskId}";
             logViewer.DockTitle = $"Logs: {targetTask.JobName}";
             

@@ -163,85 +163,65 @@
             </Grid>
         </Border>
 
-        <!-- Display Options removed, context menu will be used instead -->
+        <!-- DataGrid with resizable columns -->
+        <DataGrid Grid.Row="2"
+            x:Name="LogDataGrid"
+            ItemsSource="{Binding FilteredLogEntries}"
+            SelectedItem="{Binding SelectedLogEntry}"
+            CanUserResizeColumns="True"
+            CanUserReorderColumns="True"
+            CanUserSortColumns="False"
+            AutoGenerateColumns="False"
+            Background="{DynamicResource AppBackgroundBrush}"
+            Foreground="{DynamicResource TextForegroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="0,1,0,0"
+            IsReadOnly="True">
 
-        <!-- Log Entries DataGrid -->
-        <!-- Log Entries ListBox with Header -->
-        <Grid Grid.Row="2" RowDefinitions="Auto,*">
-            <!-- Headers -->
-            <Border Grid.Row="0" Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}"
-                BorderThickness="0,0,0,1" Padding="4">
-                <Grid ColumnDefinitions="160,80,150,*">
-                    <Button Grid.Column="0" Content="Timestamp" Command="{Binding SortCommand}" CommandParameter="Timestamp"
-                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left"
-                        IsVisible="{Binding ShowTimestamp}" />
-                    <Button Grid.Column="1" Content="Level" Command="{Binding SortCommand}" CommandParameter="Level"
-                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left"
-                        IsVisible="{Binding ShowLevel}" />
-                    <Button Grid.Column="2" Content="Category" Command="{Binding SortCommand}" CommandParameter="Category"
-                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left"
-                        IsVisible="{Binding ShowCategory}" />
-                    <Button Grid.Column="3" Content="Message" Command="{Binding SortCommand}" CommandParameter="Message"
-                        Background="Transparent" Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        FontWeight="SemiBold" Margin="4,0" Padding="0" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Left" />
-                </Grid>
-            </Border>
+            <!-- Context Menu for Copy operations -->
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy Full Entry"
+                        Command="{Binding CopySelectedEntryCommand}"
+                        CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    <MenuItem Header="Copy Message"
+                        Command="{Binding CopySelectedMessageCommand}"
+                        CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
 
-            <!-- ListBox -->
-            <components:LogListControl Grid.Row="1"
-                Name="LogListBox"
-                ItemsSource="{Binding FilteredLogEntries}"
-                AutoScroll="{Binding AutoScroll, Mode=TwoWay}"
-                InvertAutoScrollDirection="{Binding InvertAutoScroll}"
-                CopySelectedEntryCommand="{Binding CopySelectedEntryCommand}"
-                CopySelectedMessageCommand="{Binding CopySelectedMessageCommand}">
-                <components:LogListControl.ItemTemplate>
-                    <DataTemplate DataType="models:LogModel">
-                        <Grid ColumnDefinitions="160,80,150,*">
-                            <!-- Timestamp -->
-                            <TextBlock Grid.Column="0"
-                                Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
-                                VerticalAlignment="Center"
-                                Margin="4,2"
-                                IsVisible="{Binding $parent[UserControl].DataContext.ShowTimestamp}" />
+            <!-- Keyboard shortcuts -->
+            <DataGrid.KeyBindings>
+                <KeyBinding Gesture="Ctrl+C"
+                    Command="{Binding CopySelectedEntryCommand}"
+                    CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+            </DataGrid.KeyBindings>
 
-                            <!-- Level -->
-                            <Border Grid.Column="1"
-                                CornerRadius="3"
-                                Padding="4,2"
-                                Margin="2"
-                                VerticalAlignment="Center"
-                                IsVisible="{Binding $parent[UserControl].DataContext.ShowLevel}"
-                                Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
-                                <TextBlock Text="{Binding Level}"
-                                    Foreground="{DynamicResource TextForegroundBrush}"
-                                    FontSize="10"
-                                    FontWeight="SemiBold"
-                                    HorizontalAlignment="Center" />
-                            </Border>
+            <DataGrid.Columns>
+                <!-- Timestamp Column -->
+                <DataGridTextColumn Header="Timestamp"
+                    Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
+                    Width="160"
+                    IsVisible="{Binding $parent[UserControl].DataContext.ShowTimestamp}" />
 
-                            <!-- Category -->
-                            <TextBlock Grid.Column="2"
-                                Text="{Binding Category}"
-                                VerticalAlignment="Center"
-                                Margin="4,2"
-                                IsVisible="{Binding $parent[UserControl].DataContext.ShowCategory}" />
+                <!-- Level Column -->
+                <DataGridTextColumn Header="Level"
+                    Binding="{Binding Level}"
+                    Width="100"
+                    IsVisible="{Binding $parent[UserControl].DataContext.ShowLevel}" />
 
-                            <!-- Message -->
-                            <TextBlock Grid.Column="3"
-                                Text="{Binding FormattedMessage}"
-                                VerticalAlignment="Center"
-                                Margin="4,2"
-                                TextWrapping="NoWrap"
-                                TextTrimming="CharacterEllipsis" />
-                        </Grid>
-                    </DataTemplate>
-                </components:LogListControl.ItemTemplate>
-            </components:LogListControl>
-        </Grid>
+                <!-- Category Column -->
+                <DataGridTextColumn Header="Category"
+                    Binding="{Binding Category}"
+                    Width="150"
+                    IsVisible="{Binding $parent[UserControl].DataContext.ShowCategory}" />
+
+                <!-- Message Column -->
+                <DataGridTextColumn Header="Message"
+                    Binding="{Binding FormattedMessage}"
+                    Width="*" />
+            </DataGrid.Columns>
+        </DataGrid>
 
     </Grid>
 </UserControl>

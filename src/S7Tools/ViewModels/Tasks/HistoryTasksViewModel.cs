@@ -84,16 +84,17 @@ public sealed class HistoryTasksViewModel : ViewModelBase, IDisposable
 
     private async Task ExecuteOpenLogsFolderAsync()
     {
-        if (SelectedHistoryTask?.Logger?.MainLogFilePath == null)
+        if (SelectedHistoryTask == null || SelectedHistoryTask.TaskId == Guid.Empty)
         {
-            _logger.LogWarning("Cannot open logs folder: No log file path available");
+            _logger.LogWarning("Cannot open logs folder: No task selected");
             return;
         }
 
         try
         {
-            string? logDirectory = Path.GetDirectoryName(SelectedHistoryTask.Logger.MainLogFilePath);
-            if (!string.IsNullOrEmpty(logDirectory) && Directory.Exists(logDirectory))
+            string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "Tasks", SelectedHistoryTask.TaskId.ToString());
+            
+            if (Directory.Exists(logDirectory))
             {
                 await PlatformHelper.OpenDirectoryInExplorerAsync(logDirectory);
                 _logger.LogInformation("Opened logs folder: {LogDirectory}", logDirectory);
@@ -101,6 +102,13 @@ public sealed class HistoryTasksViewModel : ViewModelBase, IDisposable
             else
             {
                 _logger.LogWarning("Logs folder does not exist: {LogDirectory}", logDirectory);
+                
+                // Fallback to parent logs folder
+                string mainLogs = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "Tasks");
+                if (Directory.Exists(mainLogs))
+                {
+                    await PlatformHelper.OpenDirectoryInExplorerAsync(mainLogs);
+                }
             }
         }
         catch (Exception ex)

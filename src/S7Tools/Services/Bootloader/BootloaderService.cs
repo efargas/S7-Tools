@@ -139,18 +139,17 @@ public sealed class BootloaderService(
 
             try
             {
-                // Get process logger from task execution if available
-                Microsoft.Extensions.Logging.ILogger? taskLogger = taskExecution.Logger?.MainLogger;
-                Microsoft.Extensions.Logging.ILogger? processLogger = taskExecution.Logger?.ProcessLogger;
+                // Task scope is already active, so standard loggers will correctly attribute logs
+                Microsoft.Extensions.Logging.ILogger? taskLogger = _logger;
+                Microsoft.Extensions.Logging.ILogger? processLogger = _logger;
 
-                // Execute the memory dump with retry logic
                 // Execute the memory dump with retry logic
                 // Directly call Orchestration to get both data and file paths
                 var result = await ExecuteWithRetryAsync(
                     () => PerformBootloaderOrchestrationAsync(
                         profiles,
                         progressReporter,
-                        taskLogger ?? _logger,
+                        taskLogger,
                         processLogger,
                         _serialPort,
                         _socat,

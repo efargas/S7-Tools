@@ -25,7 +25,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     private readonly IBootloaderService _bootloaderService;
     private readonly IJobManager _jobManager;
     private readonly IPathService _pathService;
-    private readonly ITaskLoggerFactory _taskLoggerFactory;
+    private readonly ITaskLogScope _taskLogScope;
     private readonly ITimeProvider _timeProvider;
     private readonly string _tasksFilePath;
     private readonly string _historyFilePath;
@@ -74,7 +74,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
     /// <param name="bootloaderService">Bootloader service for job execution.</param>
     /// <param name="jobManager">Job manager for accessing job configurations.</param>
     /// <param name="pathService">Path service for resolving application paths.</param>
-    /// <param name="taskLoggerFactory">Task logger factory for creating task-specific loggers.</param>
+    /// <param name="taskLogScope">Task logger scope for task-specific logging contexts.</param>
     /// <param name="timeProvider">Time provider for consistent task scheduling.</param>
     public EnhancedTaskScheduler(
         ILogger<EnhancedTaskScheduler> logger,
@@ -82,7 +82,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         IBootloaderService bootloaderService,
         IJobManager jobManager,
         IPathService pathService,
-        ITaskLoggerFactory taskLoggerFactory,
+        ITaskLogScope taskLogScope,
         ITimeProvider timeProvider)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -90,7 +90,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         _bootloaderService = bootloaderService ?? throw new ArgumentNullException(nameof(bootloaderService));
         _jobManager = jobManager ?? throw new ArgumentNullException(nameof(jobManager));
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
-        _taskLoggerFactory = taskLoggerFactory ?? throw new ArgumentNullException(nameof(taskLoggerFactory));
+        _taskLogScope = taskLogScope ?? throw new ArgumentNullException(nameof(taskLogScope));
         _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
 
         _startTime = _timeProvider.GetUtcNow();
@@ -947,25 +947,17 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return;
         }
 
-        TaskLogger? taskLogger = null;
-
         try
         {
-            // Create task-specific logger FIRST so UI auto-open has access to it when state changes to Running
-            taskLogger = await _taskLoggerFactory.CreateTaskLoggerAsync(
-                taskId,
-                task.JobName,
-                captureProcessOutput: true,
-                CancellationToken.None).ConfigureAwait(false);
-
-            task.Logger = taskLogger;
+            // Begin Serilog logging scope for this task
+            using IDisposable logScope = _taskLogScope.BeginScope(taskId, task.JobName);
 
             task.UpdateState(TaskState.Running, "Starting task execution");
             TaskStateChanged?.Invoke(task);
             _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist running state
 
             // Log task start
-            taskLogger.MainLogger?.LogInformation(
+            _logger.LogInformation(
                 "Task execution started: {JobName} (ID: {TaskId}) at {StartTime}",
                 task.JobName, taskId, DateTime.UtcNow.ToLocalTime());
 
@@ -973,7 +965,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             JobProfile jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false)
                 ?? throw new InvalidOperationException($"Job profile {task.JobProfileId} not found");
 
-            taskLogger.MainLogger?.LogInformation("Job profile loaded: {ProfileName}", jobProfile.Name);
+            _logger.LogInformation("Job profile loaded: {ProfileName}", jobProfile.Name);
 
             // Create progress reporter
             // Create progress reporter with throttling
@@ -1017,13 +1009,13 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 {
                     if (p.bytesRead.HasValue && p.totalBytes.HasValue)
                     {
-                        taskLogger.MainLogger?.LogInformation(
+                        _logger.LogInformation(
                             "Progress: {Stage} - {Percent:F1}% ({BytesRead}/{TotalBytes} bytes)",
                             p.stage, p.percent, p.bytesRead, p.totalBytes);
                     }
                     else
                     {
-                        taskLogger.MainLogger?.LogInformation(
+                        _logger.LogInformation(
                             "Progress: {Stage} - {Percent:F1}%",
                             p.stage, p.percent);
                     }
@@ -1031,26 +1023,26 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             });
 
             // Execute the job
-            taskLogger.MainLogger?.LogInformation("Starting bootloader execution");
+            _logger.LogInformation("Starting bootloader execution");
             Job executionJob = await _jobManager.CreateExecutionJobAsync(jobProfile.Id, CancellationToken.None).ConfigureAwait(false);
 
             BootloaderResult result = await _bootloaderService.DumpAsync(
                 executionJob.ProfileSet,
                 progress,
-                taskLogger.MainLogger,
-                taskLogger.ProcessLogger,
+                _logger,
+                _logger,
                 CancellationToken.None)
                 .ConfigureAwait(false);
 
             long totalSize = result.SavedFiles.Sum(x => new System.IO.FileInfo(x).Length);
-            taskLogger.MainLogger?.LogInformation("Bootloader dump completed. Total size: {Size} bytes. Files: {Count}",
+            _logger.LogInformation("Bootloader dump completed. Total size: {Size} bytes. Files: {Count}",
                 totalSize, result.SavedFiles.Count);
 
             string primaryOutputFile = result.SavedFiles.FirstOrDefault() ?? string.Empty;
 
             if (result.SavedFiles.Count > 0)
             {
-                taskLogger.MainLogger?.LogInformation("Outputs saved to: {OutputPath} ({Count} files)",
+                _logger.LogInformation("Outputs saved to: {OutputPath} ({Count} files)",
                     Path.GetDirectoryName(primaryOutputFile), result.SavedFiles.Count);
             }
 
@@ -1076,7 +1068,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 }
             }
 
-            taskLogger.MainLogger?.LogInformation(
+            _logger.LogInformation(
                 "Task completed successfully. Execution time: {ExecutionTime}",
                 task.ExecutionTime);
 
@@ -1090,7 +1082,6 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None); // Persist cancelled state
             Interlocked.Increment(ref _cancelledTasks);
 
-            taskLogger?.MainLogger?.LogWarning("Task was cancelled");
             _logger.LogWarning("Task {TaskId} ({JobName}) was cancelled", taskId, task.JobName);
         }
         catch (Exception ex)
@@ -1101,25 +1092,10 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             Interlocked.Increment(ref _totalTasksProcessed);
             Interlocked.Increment(ref _failedTasks);
 
-            taskLogger?.MainLogger?.LogError(ex, "Task failed: {ErrorMessage}", ex.Message);
             _logger.LogError(ex, "Task {TaskId} ({JobName}) failed: {ErrorMessage}", taskId, task.JobName, ex.Message);
         }
         finally
         {
-            // Finalize task logger
-            if (taskLogger != null)
-            {
-                try
-                {
-                    await _taskLoggerFactory.FinalizeTaskLoggerAsync(taskId, CancellationToken.None).ConfigureAwait(false);
-                    _logger.LogInformation("Task logger finalized. Logs saved to: {LogPath}", taskLogger.MainLogFilePath);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to finalize task logger for task {TaskId}", taskId);
-                }
-            }
-
             // Release resources
             _resourceCoordinator.Release(task.LockedResources);
             _logger.LogDebug("Released {Count} resources for task {TaskId}", task.LockedResources.Count, taskId);

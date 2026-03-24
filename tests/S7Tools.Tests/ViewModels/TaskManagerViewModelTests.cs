@@ -57,7 +57,8 @@ public class TaskManagerViewModelTests
                 taskScheduler.Object,
                 jobManager.Object,
                 dialogService.Object
-            ));
+            ),
+            new Mock<IServiceProvider>().Object);
     }
 
     [Fact]

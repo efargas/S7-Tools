@@ -5,6 +5,8 @@ using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
+using DynamicData;
+using DynamicData.Binding;
 using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
@@ -30,7 +32,9 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     private readonly IDialogService _dialogService;
     private readonly ILogExportService? _logExportService;
     private bool _disposed;
-    private readonly S7Tools.Services.BufferedCollectionUpdater<LogModel> _bufferedUpdater;
+    private readonly SourceList<LogModel> _logEntriesSource = new();
+    private readonly ReadOnlyObservableCollection<LogModel> _filteredLogEntries;
+    private readonly IDisposable _cleanup;
 
     // Sorting state
     private string _sortColumn = "Timestamp";
@@ -77,8 +81,8 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     {
     }
 
-    private ObservableCollection<LogModel> _logEntries;
-    private ObservableCollection<LogModel> _filteredLogEntries;
+    private Guid? _selectedTaskId;
+    private string? _selectedScope;
     private LogModel? _selectedLogEntry;
     private string _searchText = string.Empty;
     private LogLevel _selectedLogLevel = LogLevel.Trace;
@@ -100,12 +104,16 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="logExportService">The log export service (optional).</param>
+    /// <param name="taskId">The task ID to initially filter by (optional).</param>
+    /// <param name="scope">The scope string to initially filter by (optional).</param>
     public LogViewerViewModel(
         ILogDataStore logDataStore,
         IUIThreadService uiThreadService,
         IClipboardService clipboardService,
         IDialogService dialogService,
-        ILogExportService? logExportService = null)
+        ILogExportService? logExportService = null,
+        Guid? taskId = null,
+        string? scope = null)
     {
         _logDataStore = logDataStore ?? throw new ArgumentNullException(nameof(logDataStore));
         _uiThreadService = uiThreadService ?? throw new ArgumentNullException(nameof(uiThreadService));
@@ -113,41 +121,61 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _logExportService = logExportService;
 
-        _logEntries = new ObservableCollection<LogModel>();
-        _filteredLogEntries = new ObservableCollection<LogModel>();
+        _selectedTaskId = taskId;
+        _selectedScope = scope;
 
         InitializeCommands();
-        _bufferedUpdater = new S7Tools.Services.BufferedCollectionUpdater<LogModel>(items =>
-        {
-            var newItems = new List<LogModel>();
-            foreach (var item in items)
+
+        var filterPredicate = this.WhenAnyValue(
+            x => x.SelectedLogLevel,
+            x => x.SearchText,
+            x => x.StartDate,
+            x => x.EndDate,
+            x => x.SelectedTaskId,
+            x => x.SelectedScope)
+            .Select(_ => BuildFilter());
+
+        var sortComparer = this.WhenAnyValue(
+            x => x._sortColumn,
+            x => x._sortAscending)
+            .Select(_ => BuildSort());
+
+        _cleanup = _logEntriesSource.Connect()
+            .Filter(filterPredicate)
+            .Sort(sortComparer)
+            .ObserveOn(RxApp.MainThreadScheduler)
+            .Bind(out _filteredLogEntries)
+            .Subscribe(_ => 
             {
-                LogEntries.Add(item);
-                newItems.Add(item);
-            }
-            ProcessNewEntries(newItems);
-        }, TimeSpan.FromMilliseconds(500), _uiThreadService);
+                FilteredLogCount = _filteredLogEntries.Count;
+                TotalLogCount = _logDataStore.Count;
+            });
+
         InitializeLogStore();
-        ApplyFilters();
     }
 
     /// <summary>
-    /// Gets the collection of all log entries.
+    /// Gets or sets the selected TaskId filter.
     /// </summary>
-    public ObservableCollection<LogModel> LogEntries
+    public Guid? SelectedTaskId
     {
-        get => _logEntries;
-        private set => this.RaiseAndSetIfChanged(ref _logEntries, value);
+        get => _selectedTaskId;
+        set => this.RaiseAndSetIfChanged(ref _selectedTaskId, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the selected Scope filter.
+    /// </summary>
+    public string? SelectedScope
+    {
+        get => _selectedScope;
+        set => this.RaiseAndSetIfChanged(ref _selectedScope, value);
     }
 
     /// <summary>
     /// Gets the collection of filtered log entries for display.
     /// </summary>
-    public ObservableCollection<LogModel> FilteredLogEntries
-    {
-        get => _filteredLogEntries;
-        private set => this.RaiseAndSetIfChanged(ref _filteredLogEntries, value);
-    }
+    public ReadOnlyObservableCollection<LogModel> FilteredLogEntries => _filteredLogEntries;
 
     /// <summary>
     /// Gets or sets the search text for filtering log entries.
@@ -155,11 +183,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     public string SearchText
     {
         get => _searchText;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _searchText, value);
-            ApplyFilters();
-        }
+        set => this.RaiseAndSetIfChanged(ref _searchText, value);
     }
 
     /// <summary>
@@ -168,11 +192,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     public LogLevel SelectedLogLevel
     {
         get => _selectedLogLevel;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _selectedLogLevel, value);
-            ApplyFilters();
-        }
+        set => this.RaiseAndSetIfChanged(ref _selectedLogLevel, value);
     }
 
     /// <summary>
@@ -245,11 +265,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     public DateTimeOffset? StartDate
     {
         get => _startDate;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _startDate, value);
-            ApplyFilters();
-        }
+        set => this.RaiseAndSetIfChanged(ref _startDate, value);
     }
 
     /// <summary>
@@ -258,11 +274,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     public DateTimeOffset? EndDate
     {
         get => _endDate;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _endDate, value);
-            ApplyFilters();
-        }
+        set => this.RaiseAndSetIfChanged(ref _endDate, value);
     }
 
     /// <summary>
@@ -480,7 +492,6 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
         RefreshCommand = ReactiveCommand.Create(() =>
         {
             LoadLogEntries();
-            ApplyFilters();
         });
 
         ClearFiltersCommand = ReactiveCommand.Create(() =>
@@ -489,6 +500,8 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             SelectedLogLevel = LogLevel.Trace;
             StartDate = null;
             EndDate = null;
+            SelectedTaskId = null;
+            SelectedScope = null;
         });
 
         ToggleTimestampCommand = ReactiveCommand.Create(() => { ShowTimestamp = !ShowTimestamp; });
@@ -529,7 +542,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             InvertAutoScroll = false;
         }
 
-        ApplyFiltersInternal();
+        
     }
 
     /// <summary>
@@ -537,11 +550,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     /// </summary>
     private void InitializeLogStore()
     {
-        // Load initial log entries
         LoadLogEntries();
-
-        // Subscribe to log store changes for real-time updates
-        // Note: We removed the PropertyChanged subscription as CollectionChanged is sufficient and more performant.
         _logDataStore.CollectionChanged += OnLogDataStoreCollectionChanged;
     }
 
@@ -550,205 +559,105 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     /// </summary>
     private void LoadLogEntries()
     {
-        IReadOnlyList<LogModel> entries = _logDataStore.Entries;
-
+        var entries = _logDataStore.Entries;
         _uiThreadService.InvokeOnUIThread(() =>
         {
-            LogEntries.Clear();
-            foreach (LogModel entry in entries)
+            _logEntriesSource.Edit(updater =>
             {
-                LogEntries.Add(entry);
-            }
-
-            TotalLogCount = LogEntries.Count;
+                updater.Clear();
+                updater.AddRange(entries);
+            });
+            TotalLogCount = _logDataStore.Count;
         });
     }
 
     /// <summary>
-    /// Handles collection changes from the log data store by adding them to a buffer.
+    /// Handles collection changes from the log data store.
     /// </summary>
     private void OnLogDataStoreCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add && e.NewItems != null)
         {
-            foreach (LogModel newItem in e.NewItems)
+            var newItems = e.NewItems.Cast<LogModel>().ToList();
+            _uiThreadService.InvokeOnUIThread(() =>
             {
-                _bufferedUpdater.Enqueue(newItem);
-            }
+                _logEntriesSource.AddRange(newItems);
+            });
         }
-        else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+        else if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset || e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
         {
             _uiThreadService.InvokeOnUIThread(() =>
             {
-                LogEntries.Clear();
-                ApplyFiltersInternal();
+                _logEntriesSource.Clear();
             });
         }
     }
 
-    /// <summary>
-    /// Processes new log entries incrementally, adding them to FilteredLogEntries if they match current filters.
-    /// </summary>
-    private void ProcessNewEntries(IEnumerable<LogModel> newItems)
+    private Func<LogModel, bool> BuildFilter()
     {
-        var matchedItems = new List<LogModel>();
-
-        foreach (var entry in newItems)
+        return entry =>
         {
-            if (IsLogMatch(entry))
+            if (entry.Level < SelectedLogLevel) return false;
+            
+            if (StartDate.HasValue && entry.Timestamp < StartDate.Value) return false;
+            
+            if (EndDate.HasValue)
             {
-                matchedItems.Add(entry);
+                var endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
+                if (entry.Timestamp > endDateOffset) return false;
             }
-        }
 
-        if (matchedItems.Any())
-        {
-            bool isDefaultSort = _sortColumn == "Timestamp" && _sortAscending;
-            bool needsReSort = false;
-
-            _uiThreadService.InvokeOnUIThread(() =>
+            if (SelectedTaskId.HasValue)
             {
-                foreach (var item in matchedItems)
+                if (entry.Properties == null || !entry.Properties.TryGetValue("TaskId", out var tid) || tid?.ToString() != SelectedTaskId.Value.ToString())
                 {
-                    if (isDefaultSort)
-                    {
-                        FilteredLogEntries.Add(item);
-                    }
-                    else
-                    {
-                        needsReSort = true;
-                    }
+                    return false;
                 }
+            }
 
-                if (needsReSort)
-                {
-                    ApplyFiltersInternal();
-                }
-                else
-                {
-                    FilteredLogCount = FilteredLogEntries.Count;
-                    TotalLogCount = LogEntries.Count;
-                }
-            });
-        }
+            if (!string.IsNullOrEmpty(SelectedScope))
+            {
+                if (entry.Scope != SelectedScope) return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                var term = SearchText;
+                bool matches = (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                               (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                               (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
+                if (!matches) return false;
+            }
+
+            return true;
+        };
     }
 
-    /// <summary>
-    /// checks if a log model matches the current filters.
-    /// </summary>
-    private bool IsLogMatch(LogModel entry)
+    private System.Collections.Generic.IComparer<LogModel> BuildSort()
     {
-        // 1. Log Level
-        if (entry.Level < SelectedLogLevel)
-        {
-            return false;
-        }
-
-        // 2. Date Range
-        if (StartDate.HasValue && entry.Timestamp < StartDate.Value)
-        {
-            return false;
-        }
-
-        if (EndDate.HasValue)
-        {
-            DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
-            if (entry.Timestamp > endDateOffset)
-            {
-                return false;
-            }
-        }
-
-        // 3. Search Text
-        if (!string.IsNullOrWhiteSpace(SearchText))
-        {
-            string term = SearchText;
-            bool matches = (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                           (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                           (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
-
-            if (!matches)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /// <summary>
-    /// Applies the current filters to the log entries. This should be called on the UI thread.
-    /// </summary>
-    private void ApplyFiltersInternal()
-    {
-        // Full rebuild of the filtered list
-        IEnumerable<LogModel> filtered = LogEntries.AsEnumerable();
-
-        if (SelectedLogLevel > LogLevel.Trace)
-        {
-            filtered = filtered.Where(entry => entry.Level >= SelectedLogLevel);
-        }
-
-        if (!string.IsNullOrWhiteSpace(SearchText))
-        {
-            string term = SearchText;
-            filtered = filtered.Where(entry =>
-                (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false)
-            );
-        }
-
-        if (StartDate.HasValue)
-        {
-            filtered = filtered.Where(entry => entry.Timestamp >= StartDate.Value);
-        }
-
-        if (EndDate.HasValue)
-        {
-            DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
-            filtered = filtered.Where(entry => entry.Timestamp <= endDateOffset);
-        }
-
-        // Use custom sort logic
-        IEnumerable<LogModel> sortedList;
         if (_sortColumn == "Level")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Level).ThenBy(e => e.Timestamp)
-                                        : filtered.OrderByDescending(e => e.Level).ThenByDescending(e => e.Timestamp);
+            return _sortAscending 
+                ? SortExpressionComparer<LogModel>.Ascending(e => e.Level).ThenByAscending(e => e.Timestamp)
+                : SortExpressionComparer<LogModel>.Descending(e => e.Level).ThenByDescending(e => e.Timestamp);
         }
         else if (_sortColumn == "Category")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Category).ThenBy(e => e.Timestamp)
-                                        : filtered.OrderByDescending(e => e.Category).ThenByDescending(e => e.Timestamp);
+            return _sortAscending 
+                ? SortExpressionComparer<LogModel>.Ascending(e => e.Category).ThenByAscending(e => e.Timestamp)
+                : SortExpressionComparer<LogModel>.Descending(e => e.Category).ThenByDescending(e => e.Timestamp);
         }
         else if (_sortColumn == "Message")
         {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Message).ThenBy(e => e.Timestamp)
-                                        : filtered.OrderByDescending(e => e.Message).ThenByDescending(e => e.Timestamp);
+            return _sortAscending 
+                ? SortExpressionComparer<LogModel>.Ascending(e => e.Message).ThenByAscending(e => e.Timestamp)
+                : SortExpressionComparer<LogModel>.Descending(e => e.Message).ThenByDescending(e => e.Timestamp);
         }
-        else // Timestamp
-        {
-            sortedList = _sortAscending ? filtered.OrderBy(e => e.Timestamp)
-                                        : filtered.OrderByDescending(e => e.Timestamp);
-        }
-
-        var filteredList = sortedList.ToList();
-
-        _uiThreadService.InvokeOnUIThread(() =>
-        {
-            FilteredLogEntries = new ObservableCollection<LogModel>(filteredList);
-            FilteredLogCount = FilteredLogEntries.Count;
-            TotalLogCount = LogEntries.Count;
-        });
-    }
-
-    /// <summary>
-    /// Applies the current filters on the UI thread.
-    /// </summary>
-    private void ApplyFilters()
-    {
-        _uiThreadService.InvokeOnUIThread(ApplyFiltersInternal);
+        
+        // Default to Timestamp
+        return _sortAscending
+            ? SortExpressionComparer<LogModel>.Ascending(e => e.Timestamp)
+            : SortExpressionComparer<LogModel>.Descending(e => e.Timestamp);
     }
 
     /// <summary>
@@ -761,7 +670,8 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             return;
         }
 
-        _bufferedUpdater?.Dispose();
+        _cleanup?.Dispose();
+        _logEntriesSource?.Dispose();
         _logDataStore.CollectionChanged -= OnLogDataStoreCollectionChanged;
 
         _disposed = true;
