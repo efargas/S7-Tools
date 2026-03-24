@@ -68,7 +68,7 @@ public class LoggingSettingsViewModel : ViewModelBase
 
             if (e.PropertyName is nameof(DefaultLogPath) or nameof(ExportPath) or nameof(MinimumLogLevel) or
                 nameof(AutoScrollLogs) or nameof(EnableRollingLogs) or nameof(ShowTimestampInLogs) or
-                nameof(ShowCategoryInLogs) or nameof(ShowLogLevelInLogs))
+                nameof(ShowCategoryInLogs) or nameof(ShowLogLevelInLogs) or nameof(LogViewerFontSize))
             {
                 _ = SaveLoggingSettingsAsync();
             }
@@ -148,6 +148,31 @@ public class LoggingSettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _showLogLevelInLogs, value);
     }
 
+    private double _logViewerFontSize = 12.0;
+    public double LogViewerFontSize
+    {
+        get => _logViewerFontSize;
+        set => this.RaiseAndSetIfChanged(ref _logViewerFontSize, value);
+    }
+
+    /// <summary>
+    /// Gets available font sizes for the log viewer.
+    /// </summary>
+    public List<double> AvailableFontSizes { get; } = new()
+    {
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        18,
+        20,
+        22,
+        24
+    };
+
     #endregion
 
     #region Commands
@@ -185,6 +210,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         ShowTimestampInLogs = current.Ui.ShowTimestampInLogs;
         ShowCategoryInLogs = current.Ui.ShowCategoryInLogs;
         ShowLogLevelInLogs = current.Ui.ShowLogLevelInLogs;
+        LogViewerFontSize = current.Ui.LogViewerFontSize;
     }
 
     private async Task BrowseDefaultLogPathAsync()
@@ -245,6 +271,7 @@ public class LoggingSettingsViewModel : ViewModelBase
                 settings.Ui.ShowTimestampInLogs = ShowTimestampInLogs;
                 settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
                 settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
+                settings.Ui.LogViewerFontSize = LogViewerFontSize;
             });
         }
         catch (Exception ex)

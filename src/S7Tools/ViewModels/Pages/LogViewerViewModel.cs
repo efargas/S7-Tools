@@ -295,6 +295,16 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
         private set => this.RaiseAndSetIfChanged(ref _filteredLogCount, value);
     }
 
+    private double _fontSize = 12.0;
+    /// <summary>
+    /// Gets or sets the font size for log entries display.
+    /// </summary>
+    public double FontSize
+    {
+        get => _fontSize;
+        set => this.RaiseAndSetIfChanged(ref _fontSize, value);
+    }
+
     /// <summary>
     /// Gets the available log levels for filtering.
     /// </summary>

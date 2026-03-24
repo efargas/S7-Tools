@@ -149,6 +149,13 @@ public class UiSettings
 
     /// <summary>Gets or sets a value indicating whether the log level column is shown in log entries.</summary>
     public bool ShowLogLevelInLogs { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the font size for the LogViewer data grid display.
+    /// </summary>
+    /// <value>A value between 10 and 24 points. The default is 12.</value>
+    [Range(10.0, 24.0)]
+    public double LogViewerFontSize { get; set; } = 12.0;
 }
 
 /// <summary>
