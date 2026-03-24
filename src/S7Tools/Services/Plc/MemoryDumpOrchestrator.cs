@@ -132,6 +132,10 @@ public sealed class MemoryDumpOrchestrator : IDisposable
     public async Task StopAsync()
     {
         _logger.LogInformation("🛑 Stopping continuous memory dump session");
+        
+        // Ensure dumper service sends cancellation byte (0x03) immediately before we stop
+        await _dumperService.StopAsync().ConfigureAwait(false);
+
         if (_cts != null)
         {
             _cts.Cancel();
@@ -247,13 +251,29 @@ public sealed class MemoryDumpOrchestrator : IDisposable
             // But StartSessionAsync might be called before WaitForSegmentAsync.
             // Let's assume gate is closed by default (initialized above).
 
-            await foreach (MemoryBlock rawBlock in reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
+            while (!cancellationToken.IsCancellationRequested)
             {
-                // Wait for the gate to open (i.e. valid segment expectation)
-                // This prevents consuming data destined for the next segment/iteration
-                // and effectively applies backpressure to the pipe/socket.
-                // WE MUST USE WaitAsync(token) TO AVOID DEADLOCK ON STOP
+                // Wait for the gate to open BEFORE reading from the channel
+                // This prevents pulling data out of the channel that needs to be flushed
                 await _consumptionGate.Task.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+                // Wait for data to be available
+                if (!await reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
+                {
+                    break; // Channel closed
+                }
+
+                // Read the data
+                if (!reader.TryRead(out MemoryBlock rawBlock))
+                {
+                    continue;
+                }
+
+                if (_remainingSegmentBytes <= 0)
+                {
+                    // Gate closed just as we read, shouldn't happen but discard to be safe
+                    continue;
+                }
 
                 // Map to absolute address if we are in a segment
                 MemoryBlock block = rawBlock;

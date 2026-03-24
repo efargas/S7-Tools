@@ -88,6 +88,14 @@ public interface IPlcClient : IAsyncDisposable
     Task ConnectAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Starts the persistent dumper streaming session.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <param name="logger">Optional logger for the session.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task StartDumperSessionAsync(CancellationToken cancellationToken = default, Microsoft.Extensions.Logging.ILogger? logger = null);
+
+    /// <summary>
     /// Stops any active persistent dumper streaming sessions.
     /// </summary>
     Task StopDumperSessionAsync();

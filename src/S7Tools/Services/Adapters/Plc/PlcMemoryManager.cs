@@ -104,6 +104,16 @@ namespace S7Tools.Services.Adapters.Plc
         }
 
         /// <summary>
+        /// Starts the persistent dumper session.
+        /// </summary>
+        public async Task StartDumperSessionAsync(string socatHost, int socatPort, CancellationToken cancellationToken = default, ILogger? logger = null)
+        {
+            _orchestrator.Configure(socatHost, socatPort);
+            Stream? currentStream = _protocol.GetStream();
+            await _orchestrator.StartSessionAsync(cancellationToken, currentStream, logger).ConfigureAwait(false);
+        }
+
+        /// <summary>
         /// Invokes the dumper with streaming using high-performance DumperService and Orchestrator.
         /// Data is streamed incrementally via callback while also being dispatched to UI for real-time visualization.
         /// </summary>
@@ -118,9 +128,6 @@ namespace S7Tools.Services.Adapters.Plc
             bool keepSessionOpen = false,
             ILogger? logger = null)
         {
-            // Configure orchestrator
-            _orchestrator.Configure(socatHost ?? "127.0.0.1", socatPort);
-
             _logger.LogInformation("Preparing to invoke dumper for address 0x{Address:X8}, length {Length} bytes", address, length);
 
             // Protocol: 'A' + Addr + Len
@@ -133,15 +140,6 @@ namespace S7Tools.Services.Adapters.Plc
 
             try
             {
-                // We share the existing session to keep socat ALIVE
-                Stream? currentStream = _protocol.GetStream();
-                _logger.LogDebug("Sharing existing protocol stream with dumper session.");
-
-                // 2026-01-15 Refactoring: Continuous Pipeline
-                // Start Session ONCE for all iterations
-                // Correct Order: Token, Stream (to match Orchestrator old signature style), Logger
-                await _orchestrator.StartSessionAsync(cancellationToken, currentStream, logger).ConfigureAwait(false);
-
                 try
                 {
                     // Use the orchestrator to send the command AND handle the streaming
@@ -160,11 +158,7 @@ namespace S7Tools.Services.Adapters.Plc
                 }
                 finally
                 {
-                    // Stop the session to clean up tasks ONLY if not keeping open
-                    if (!keepSessionOpen)
-                    {
-                        await _orchestrator.StopAsync().ConfigureAwait(false);
-                    }
+                    // Session is managed externally now, no need to stop it here.
                 }
             }
             catch (Exception ex)

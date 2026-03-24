@@ -115,10 +115,10 @@ namespace S7Tools.Services.Adapters.Plc
                 {
                     _stream?.Dispose();
                     _socket?.Dispose();
-                    _stream = null;
-                    _socket = null;
                 }
-                // For external streams, don't set _stream to null - it's still valid for next iteration
+                // ALWAYS clear references to prevent memory leaks and prevent StopAsync from using an old stream
+                _stream = null;
+                _socket = null;
             }
         }
 

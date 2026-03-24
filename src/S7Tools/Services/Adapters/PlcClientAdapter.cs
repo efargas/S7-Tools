@@ -71,11 +71,6 @@ namespace S7Tools.Services.Adapters
             {
                 await d.DisposeAsync().ConfigureAwait(false);
             }
-            // Dispose the orchestrator if it implements IDisposable
-            if (_orchestrator is IDisposable disposableOrchestrator)
-            {
-                disposableOrchestrator.Dispose();
-            }
         }
 
         #region Handshake
@@ -223,6 +218,15 @@ namespace S7Tools.Services.Adapters
                 cancellationToken,
                 keepSessionOpen,
                 logger).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Executes the StartDumperSessionAsync operation.
+        /// </summary>
+        public async Task StartDumperSessionAsync(CancellationToken cancellationToken = default, ILogger? logger = null)
+        {
+            _logger.LogInformation("Starting persistent dumper session...");
+            await _memoryManager.StartDumperSessionAsync(_socatHost, _socatPort, cancellationToken, logger);
         }
 
         /// <summary>

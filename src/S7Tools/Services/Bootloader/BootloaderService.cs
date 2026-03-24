@@ -913,8 +913,12 @@ public sealed class BootloaderService(
             }
 
             string rawJobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
-            string jobName = string.Join("_", rawJobName.Split(System.IO.Path.GetInvalidFileNameChars()));
+            string jobName = string.Join("_", rawJobName.Split(System.IO.Path.GetInvalidFileNameChars())).Replace(".", "_");
             string taskIdStr = taskId.HasValue ? $"_{taskId.Value:N}" : "";
+
+            // Start the dumper session ONCE for all iterations
+            logger.LogInformation("Starting persistent dumper session for all iterations.");
+            await client.StartDumperSessionAsync(cancellationToken, logger).ConfigureAwait(false);
 
             for (int iter = 0; iter < iterationCount; iter++)
             {
