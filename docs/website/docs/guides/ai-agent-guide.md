@@ -10,7 +10,6 @@ tags:
 - onboarding
 - quick-start
 related:
-- docs/INDEX.md
 - docs/architecture/overview.md
 - docs/patterns/_index.md
 - docs/guides/development-workflow.md

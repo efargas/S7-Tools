@@ -59,6 +59,7 @@ class DocumentationValidator:
     def __init__(
         self,
         workspace_root: Path,
+        docs_path: Optional[Path] = None,
         skip_compilation: bool = False,
         exclude_archives: bool = False,
         exclude_examples: bool = False,
@@ -68,12 +69,14 @@ class DocumentationValidator:
 
         Args:
             workspace_root: Path to S7Tools workspace root
+            docs_path: Optional override for docs directory (default: workspace_root/docs)
             skip_compilation: Skip code compilation checks (faster)
             exclude_archives: Exclude archived/deprecated documentation
             exclude_examples: Exclude tutorial/example documentation
             verbose: Enable verbose logging
         """
         self.workspace_root = workspace_root
+        self.docs_path = docs_path
         self.skip_compilation = skip_compilation
         self.exclude_archives = exclude_archives
         self.exclude_examples = exclude_examples
@@ -229,7 +232,7 @@ class DocumentationValidator:
         Returns:
             List of DocumentationFile entities
         """
-        docs_dir = self.workspace_root / "docs"
+        docs_dir = self.docs_path if self.docs_path else (self.workspace_root / "docs")
         if not docs_dir.exists():
             return []
 
@@ -240,8 +243,17 @@ class DocumentationValidator:
             # Skip certain files and directories
             if md_file.name in ["README.md", "CHANGELOG.md"]:
                 continue
-            # Skip website/blog docs and generated metadata
-            if "website" in md_file.parts or ".metadata" in md_file.parts or ".test-fixtures" in md_file.parts:
+            # Compute path relative to docs_dir for exclusion checks
+            try:
+                rel_parts = md_file.relative_to(docs_dir).parts
+            except ValueError:
+                rel_parts = md_file.parts
+            # Always skip generated metadata and test fixtures
+            if ".metadata" in rel_parts or ".test-fixtures" in rel_parts:
+                continue
+            # When scanning the default docs/ root, also skip the website subtree
+            # (website docs are validated separately via --docs-path docs/website/docs).
+            if self.docs_path is None and "website" in md_file.parts:
                 continue
 
             # Parse file
@@ -345,6 +357,13 @@ def main():
         help="Validate specific category only"
     )
     parser.add_argument(
+        "--docs-path",
+        type=Path,
+        default=None,
+        help="Override docs directory to validate (default: <workspace>/docs). "
+             "Use this to target docs/website/docs or another docs subtree."
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=None,
@@ -355,11 +374,18 @@ def main():
 
     # Determine workspace root (assume script is in scripts/ directory)
     workspace_root = Path(__file__).parent.parent
+
+    # Resolve docs_path: allow relative paths from workspace root or absolute paths
+    docs_path: Optional[Path] = None
+    if args.docs_path is not None:
+        docs_path = args.docs_path if args.docs_path.is_absolute() else workspace_root / args.docs_path
+
     output_dir = args.output or (workspace_root / "docs" / ".metadata")
 
     # Create validator
     validator = DocumentationValidator(
         workspace_root=workspace_root,
+        docs_path=docs_path,
         skip_compilation=args.skip_compilation,
         exclude_archives=args.exclude_archives,
         exclude_examples=args.exclude_examples,

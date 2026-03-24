@@ -1,12 +1,16 @@
 #!/bin/bash
 # Wrapper script to run all validation checks in sequence
 # Usage: ./scripts/validate-all.sh [docs_root]
+#
+# By default, validates both docs/ and docs/website/docs/
+# Pass a specific path to validate only that directory.
 
 set -e  # Exit on first error
 
 DOCS_ROOT="${1:-docs}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+WEBSITE_DOCS="$REPO_ROOT/docs/website/docs"
 
 # Use virtual environment if available, otherwise use system python3
 if [ -f "$REPO_ROOT/.venv/bin/python" ]; then
@@ -80,6 +84,44 @@ else
     exit 1
 fi
 echo ""
+
+# Website docs validation (docs/website/docs) — only when running the default suite
+RESOLVED_DOCS_ROOT="$(cd "$DOCS_ROOT" 2>/dev/null && pwd)"
+RESOLVED_DEFAULT_DOCS="$(cd "$REPO_ROOT/docs" 2>/dev/null && pwd)"
+if [ "$RESOLVED_DOCS_ROOT" = "$RESOLVED_DEFAULT_DOCS" ] && [ -d "$WEBSITE_DOCS" ]; then
+    echo "========================================="
+    echo "Website Documentation Validation"
+    echo "========================================="
+    echo "📁 Website docs root: $WEBSITE_DOCS"
+    echo ""
+
+    echo "1️⃣  Validating website docs frontmatter..."
+    echo "-----------------------------------"
+    if $PYTHON "$SCRIPT_DIR/validate-frontmatter.py" "$WEBSITE_DOCS"; then
+        echo "✓ Website frontmatter validation passed"
+    else
+        echo "✗ Website frontmatter validation FAILED"
+        exit 1
+    fi
+    echo ""
+
+    echo "2️⃣  Detecting orphaned website docs files..."
+    echo "-----------------------------------"
+    $PYTHON "$SCRIPT_DIR/detect-orphans.py" "$WEBSITE_DOCS" || true
+    echo ""
+
+    echo "3️⃣  Validating website docs against source code..."
+    echo "-----------------------------------"
+    if $PYTHON "$SCRIPT_DIR/validate-documentation.py" \
+        --docs-path "$WEBSITE_DOCS" \
+        --output "$REPO_ROOT/docs/.metadata/website"; then
+        echo "✓ Website documentation validation passed"
+    else
+        echo "✗ Website documentation validation FAILED"
+        exit 1
+    fi
+    echo ""
+fi
 
 echo "========================================="
 echo "✓ Validation suite complete"

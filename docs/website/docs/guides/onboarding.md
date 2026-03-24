@@ -6,7 +6,6 @@ last-updated: "2025-11-10"
 status: "current"
 tags: ["guide", "onboarding", "developers", "getting-started"]
 related:
-  - docs/INDEX.md
   - docs/architecture/overview.md
   - docs/guides/development-workflow.md
   - docs/guides/ai-agent-guide.md
@@ -26,7 +25,7 @@ git clone https://github.com/efargas/S7-Tools.git
 cd S7-Tools
 
 # Verify prerequisites
-dotnet --version  # Should be .NET 8.0+
+dotnet --version  # Should be .NET 10.0+
 git --version     # Any recent version
 
 # Build the project

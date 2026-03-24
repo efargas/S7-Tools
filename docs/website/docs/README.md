@@ -10,7 +10,6 @@ tags:
 - navigation
 - readme
 related:
-- docs/INDEX.md
 - docs/guides/ai-agent-guide.md
 - docs/guides/onboarding.md
 ---

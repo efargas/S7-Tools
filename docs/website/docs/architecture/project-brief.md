@@ -52,8 +52,8 @@ Build a professional-grade desktop application for **Siemens S7-1200 PLC memory 
 ## Technology Foundation
 
 ### Core Stack
-- **.NET 8.0** - Latest C# language features and performance
-- **Avalonia UI 11.3.6** - Cross-platform XAML framework
+- **.NET 10.0** - Latest C# language features and performance
+- **Avalonia UI 11.3.12** - Cross-platform XAML framework
 - **ReactiveUI 20.1.1** - Reactive MVVM implementation
 - **Microsoft.Extensions.*** - Logging, DI, and hosting
 

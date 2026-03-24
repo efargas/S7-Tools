@@ -7,7 +7,6 @@ status: "current"
 tags: ["documentation", "archive", "workflow", "deprecation"]
 related:
   - docs/guides/contributing-to-docs.md
-  - docs/INDEX.md
 ---
 
 # Archive Management Workflow

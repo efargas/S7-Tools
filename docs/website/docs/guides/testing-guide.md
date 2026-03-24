@@ -378,7 +378,7 @@ dotnet test --collect:"XPlat Code Coverage"
 ### Expected Output
 
 ```
-Test run for S7Tools.Tests.dll (.NET 8.0)
+Test run for S7Tools.Tests.dll (.NET 10.0)
 Total tests: 361
      Passed: 360
     Skipped: 1

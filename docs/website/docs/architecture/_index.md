@@ -6,7 +6,6 @@ last-updated: "2025-11-10"
 status: "current"
 tags: ["architecture", "index", "navigation"]
 related:
-  - "docs/INDEX.md"
   - "docs/architecture/overview.md"
   - "docs/patterns/_index.md"
 supersedes: []

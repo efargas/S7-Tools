@@ -1,8 +1,8 @@
 ---
 title: "Technology Stack"
-version: "1.0.0"
+version: "1.1.0"
 created: "2025-11-11"
-last-updated: "2025-11-11"
+last-updated: "2026-03-24"
 status: "current"
 tags: ["architecture", "technology", "stack", "libraries"]
 related:
@@ -20,8 +20,8 @@ related:
 
 ### **Core Technologies**
 
-#### **.NET 8.0**
-- **Version**: 8.0 (Latest LTS)
+#### **.NET 10.0**
+- **Version**: 10.0
 - **Language**: C# with latest language features
 - **Features Used**:
   - Nullable reference types enabled
@@ -30,7 +30,7 @@ related:
   - Pattern matching enhancements
   - Record types for data models
 
-#### **Avalonia UI 11.3.6**
+#### **Avalonia UI 11.3.12**
 - **Purpose**: Cross-platform desktop UI framework
 - **Advantages**:
   - Cross-platform (Windows, Linux, macOS)
@@ -64,7 +64,7 @@ related:
 - **Custom Integration**: DataStore provider for UI logging
 - **Providers**: Console, Debug, and custom DataStore
 
-#### **CommunityToolkit.Mvvm 8.2.0**
+#### **CommunityToolkit.Mvvm 8.4.0**
 - **Purpose**: Additional MVVM helpers and source generators
 - **Usage**: Complementary to ReactiveUI for specific scenarios
 
@@ -98,7 +98,7 @@ related:
 ### **Prerequisites**
 
 #### **Required Software**
-- **.NET 8.0 SDK** or later
+- **.NET 10.0 SDK** or later
 - **Git** for version control
 - **IDE** (Visual Studio 2022, Rider, or VS Code)
 
@@ -172,7 +172,7 @@ dotnet test
 - **Tertiary**: macOS (10.15+, x64/ARM64)
 
 #### **Runtime Requirements**
-- **.NET 8.0 Runtime** (Desktop)
+- **.NET 10.0 Runtime** (Desktop)
 - **Minimum RAM**: 512MB
 - **Minimum Storage**: 100MB
 - **Display**: 1024x768 minimum resolution
@@ -211,25 +211,36 @@ dotnet test
 
 #### **S7Tools Project**
 ```xml
-<PackageReference Include="Avalonia" Version="11.3.6" />
-<PackageReference Include="Avalonia.Desktop" Version="11.3.6" />
-<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.6" />
-<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.6" />
-<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.6" />
-<PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.6" />
+<PackageReference Include="Avalonia" Version="11.3.12" />
+<PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
+<PackageReference Include="AvaloniaHex" Version="0.1.10" />
+<PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
+<PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12" />
+<PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
+<PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.12" />
+<PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.3.0.6" />
+<PackageReference Include="Dock.Avalonia" Version="11.3.11.22" />
+<PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="11.3.11.22" />
+<PackageReference Include="Dock.Model.Mvvm" Version="11.3.11.22" />
 <PackageReference Include="ReactiveUI" Version="20.1.1" />
+<PackageReference Include="Splat.Microsoft.Extensions.DependencyInjection" Version="14.8.6" />
 <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.5" />
+<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 <PackageReference Include="Projektanker.Icons.Avalonia.FontAwesome" Version="9.6.2" />
 <PackageReference Include="FluentAvaloniaUI" Version="2.4.0" />
+<PackageReference Include="System.IO.Ports" Version="8.0.0" />
+<PackageReference Include="NModbus" Version="3.0.72" />
 ```
 
 #### **S7Tools.Infrastructure.Logging Project**
 ```xml
 <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-<PackageReference Include="System.Collections.Concurrent" Version="8.0.0" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+<PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
 ```
 
 #### **S7Tools.Core Project**
@@ -291,7 +302,7 @@ dotnet test
 dotnet publish src/S7Tools/S7Tools.csproj -c Release
 ```
 - **Advantages**: Smaller package size
-- **Requirements**: .NET 8.0 Runtime must be installed
+- **Requirements**: .NET 10.0 Runtime must be installed
 - **Use Case**: Corporate environments with managed runtimes
 
 #### **Self-Contained Deployment**

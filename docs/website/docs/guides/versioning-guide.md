@@ -8,7 +8,6 @@ tags: ["guide", "versioning", "semver", "documentation"]
 related:
   - docs/guides/memory-bank-usage.md
   - docs/guides/development-workflow.md
-  - docs/.metadata/schema.json
 ---
 
 # Documentation Versioning Guide

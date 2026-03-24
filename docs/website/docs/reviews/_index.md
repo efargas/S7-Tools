@@ -6,7 +6,6 @@ last-updated: "2025-11-10"
 status: "current"
 tags: ["reviews", "quality", "index"]
 related:
-  - docs/INDEX.md
   - docs/patterns/_index.md
 ---
 

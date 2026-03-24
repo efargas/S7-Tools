@@ -2,7 +2,8 @@
 title: "S7Tools Project Architecture and Structure Blueprint"
 version: "1.6.0"
 created: "2025-10-15"
-last-updated: "2026-03-17"
+last-updated: "2026-03-24"
+status: "current"
 tags: ["architecture", "blueprint", "structure", "ai-agent", "guide", "dotnet"]
 ---
 
@@ -10,21 +11,21 @@ tags: ["architecture", "blueprint", "structure", "ai-agent", "guide", "dotnet"]
 
 ## 1. Visión General
 
-S7Tools es una aplicación de escritorio multiplataforma avanzada diseñada para el análisis de seguridad, comunicación y volcado de memoria (firmware extraction) de los PLC Siemens S7-1200 mediante acceso por bootloader. Está construida utilizando **.NET 8.0** (con soporte de compilación en SDKs modernos como .NET 10.0), el framework de interfaz gráfica **Avalonia UI** y el patrón MVVM funcional-reactivo provisto por **ReactiveUI**. 
+S7Tools es una aplicación de escritorio multiplataforma avanzada diseñada para el análisis de seguridad, comunicación y volcado de memoria (firmware extraction) de los PLC Siemens S7-1200 mediante acceso por bootloader. Está construida utilizando **.NET 10.0**, el framework de interfaz gráfica **Avalonia UI** y el patrón MVVM funcional-reactivo provisto por **ReactiveUI**. 
 
 El proyecto se adhiere estrictamente a los principios de **Clean Architecture**, asegurando que el Dominio (Core) esté completamente aislado de la Infraestructura (I/O, Logging) y la Presentación (UI). Además, implementa un procesamiento altamente concurrente y seguro mediante la orquestación coordinada de recursos de hardware.
 
 ## 2. Análisis Técnico Detallado
 
 ### Entorno y SDKs
-* **.NET SDK**: 8.0 (LTS) como target principal. El sistema de CI/CD y build tools locales operan bajo SDKs actualizados (se detectan targeting packs de .NET 10.0.4 en los logs de MSBuild).
+* **.NET SDK**: 10.0 como target principal.
 * **Lenguajes**: C# 12/13 (features modernas: Primary Constructors, Records, Nullable Reference Types), C/ARM Assembly (para payloads del PLC), TypeScript/JavaScript (Documentación y scripts de scraping).
 
 ### Dependencias y Paquetes Clave
-* **Avalonia UI (v11.3.6)**: Framework principal para la interfaz de usuario multiplataforma (Windows, Linux, macOS).
+* **Avalonia UI (v11.3.12)**: Framework principal para la interfaz de usuario multiplataforma (Windows, Linux, macOS).
 * **ReactiveUI (v20.1.1)**: Motor MVVM principal, gestión de estado reactivo y comandos asíncronos (`ReactiveCommand`).
 * **Microsoft.Extensions.* (v8.0.0)**: Abstracciones estándar para Inyección de Dependencias (DI), Logging y Options.
-* **CommunityToolkit.Mvvm (v8.2.0)**: Utilizado como soporte complementario para observabilidad y Source Generators en escenarios específicos.
+* **CommunityToolkit.Mvvm (v8.4.0)**: Utilizado como soporte complementario para observabilidad y Source Generators en escenarios específicos.
 * **Dock.Avalonia**: Sistema de docking estilo VSCode (pestañas, paneles anclables) para gestionar el área de trabajo.
 * **AvaloniaHex**: Visor/Editor hexadecimal de alto rendimiento para el análisis de volcados de memoria.
 * **Testing**: xUnit, Moq, NSubstitute, FluentAssertions.
@@ -38,7 +39,7 @@ El proyecto se adhiere estrictamente a los principios de **Clean Architecture**,
 ### Pasos para Configurar y Ejecutar
 
 1. **Requisitos Previos**:
-   * Instalar .NET 8.0 SDK (o superior compatible).
+   * Instalar .NET 10.0 SDK (o superior compatible).
    * Instalar Git.
    * (Opcional) Docker y GCC ARM toolchain para compilar payloads.
 

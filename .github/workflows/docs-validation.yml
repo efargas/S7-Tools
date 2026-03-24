@@ -30,8 +30,12 @@ jobs:
       - name: Install markdownlint-cli
         run: npm install -g markdownlint-cli
 
-      - name: Run markdown linting
-        run: markdownlint 'docs/**/*.md' --ignore 'docs/.metadata/**' --ignore 'docs/archive/**'
+      - name: Run markdown linting (docs/)
+        run: markdownlint 'docs/**/*.md' --ignore 'docs/.metadata/**' --ignore 'docs/archive/**' --ignore 'docs/website/**'
+        continue-on-error: true
+
+      - name: Run markdown linting (docs/website/docs/)
+        run: markdownlint 'docs/website/docs/**/*.md' --ignore 'docs/website/docs/archive/**' --ignore 'docs/website/docs/external/**'
         continue-on-error: true
 
   frontmatter-validation:
@@ -49,8 +53,11 @@ jobs:
       - name: Install Python dependencies
         run: pip install pyyaml
 
-      - name: Validate frontmatter
+      - name: Validate frontmatter (docs/)
         run: python scripts/validate-frontmatter.py docs/
+
+      - name: Validate frontmatter (docs/website/docs/)
+        run: python scripts/validate-frontmatter.py docs/website/docs/
 
   link-validation:
     name: Link Validation (BLOCKING)
@@ -67,9 +74,13 @@ jobs:
       - name: Install markdown-link-check
         run: npm install -g markdown-link-check
 
-      - name: Check links in documentation
+      - name: Check links in documentation (docs/)
         run: |
-          find docs -name "*.md" -not -path "docs/.metadata/*" -exec markdown-link-check --config .markdown-link-check.json {} \;
+          find docs -name "*.md" -not -path "docs/.metadata/*" -not -path "docs/website/*" -not -path "docs/website" -exec markdown-link-check --config .markdown-link-check.json {} \;
+
+      - name: Check links in website documentation (docs/website/docs/)
+        run: |
+          find docs/website/docs -name "*.md" -not -path "docs/website/docs/external/*" -exec markdown-link-check --config .markdown-link-check.json {} \;
 
   orphan-detection:
     name: Orphan Detection (WARNING)
@@ -89,8 +100,12 @@ jobs:
       - name: Create output directory
         run: mkdir -p docs/.metadata/reports
 
-      - name: Detect orphaned files
+      - name: Detect orphaned files (docs/)
         run: python scripts/detect-orphans.py docs/ --report
+        continue-on-error: true
+
+      - name: Detect orphaned files (docs/website/docs/)
+        run: python scripts/detect-orphans.py docs/website/docs/ --report
         continue-on-error: true
 
       - name: Upload orphan report
@@ -129,10 +144,46 @@ jobs:
           path: docs/.metadata/reports/duplicates.csv
           if-no-files-found: ignore
 
+  website-docs-validation:
+    name: Website Docs Source Validation (WARNING)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install pyyaml colorama
+
+      - name: Create output directory
+        run: mkdir -p docs/.metadata/website
+
+      - name: Validate website docs against source code
+        run: |
+          python scripts/validate-documentation.py \
+            --docs-path docs/website/docs \
+            --skip-compilation \
+            --output docs/.metadata/website
+        continue-on-error: true
+
+      - name: Upload website validation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-docs-validation-report
+          path: docs/.metadata/website/
+          if-no-files-found: ignore
+
   validation-summary:
     name: Validation Summary
     runs-on: ubuntu-latest
-    needs: [frontmatter-validation, link-validation, orphan-detection, duplicate-detection]
+    needs: [frontmatter-validation, link-validation, orphan-detection, duplicate-detection, website-docs-validation]
     if: always()
     steps:
       - name: Check validation results
@@ -144,6 +195,7 @@ jobs:
           echo "Link Validation: ${{ needs.link-validation.result }}"
           echo "Orphan Detection: ${{ needs.orphan-detection.result }} (non-blocking)"
           echo "Duplicate Detection: ${{ needs.duplicate-detection.result }} (non-blocking)"
+          echo "Website Docs Validation: ${{ needs.website-docs-validation.result }} (non-blocking)"
           echo ""
           if [ "${{ needs.frontmatter-validation.result }}" != "success" ] || [ "${{ needs.link-validation.result }}" != "success" ]; then
             echo "❌ VALIDATION FAILED: Please fix frontmatter and link errors before merging."

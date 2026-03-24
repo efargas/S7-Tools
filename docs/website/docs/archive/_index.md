@@ -6,7 +6,6 @@ last-updated: "2025-11-12"
 status: "current"
 tags: ["archive", "index", "deprecated"]
 related:
-  - docs/INDEX.md
   - docs/guides/archive-management.md
 ---
 

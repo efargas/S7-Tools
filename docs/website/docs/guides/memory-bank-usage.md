@@ -7,7 +7,6 @@ status: "current"
 type: "tutorial"
 tags: ["guide", "documentation", "maintenance", "memory-bank"]
 related:
-  - docs/INDEX.md
   - docs/guides/development-workflow.md
   - docs/architecture/overview.md
 ---
