@@ -24,6 +24,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Application default configuration (read-only, version-controlled) -->
+    <Content Include="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- User settings directory scaffold (writable at runtime, not version-controlled) -->
+    <Content Include="Resources\AppSettings\UserSettings.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.12" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.12" />
     <PackageReference Include="AvaloniaHex" Version="0.1.10" />
