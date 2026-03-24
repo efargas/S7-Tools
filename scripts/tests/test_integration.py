@@ -110,10 +110,10 @@ public class HomeViewModel : ReactiveObject
   </PropertyGroup>
 </Project>""")
 
-        # Create pattern implementations
-        services_dir = src_dir / "Services"
-        services_dir.mkdir(parents=True)
-        (services_dir / "StandardProfileManager.cs").write_text("""namespace S7Tools.Services;
+        # Create pattern implementations (use correct subdirectory paths)
+        profiles_dir = src_dir / "Services" / "Profiles"
+        profiles_dir.mkdir(parents=True)
+        (profiles_dir / "StandardProfileManager.cs").write_text("""namespace S7Tools.Services.Profiles;
 
 public class StandardProfileManager<T> where T : class, IProfileBase
 {
@@ -259,3 +259,61 @@ public class Broken {
         assert report.namespace_compliance_rate >= 0.0
         assert report.pattern_verification_rate >= 0.0
         assert report.execution_time_seconds < 60.0  # Performance target
+
+    def test_skip_compilation_shows_100_percent(self, workspace_root):
+        """When --skip-compilation is used, compilation_success_rate must be 100%
+        not 0% (regression test for false failure reporting).
+        """
+        validator = DocumentationValidator(
+            workspace_root=workspace_root,
+            skip_compilation=True,
+            verbose=False
+        )
+
+        report = validator.validate_all_documentation()
+
+        # Must be 100%, not 0%
+        assert report.compilation_success_rate == 100.0, (
+            f"Expected 100% when compilation is skipped, got {report.compilation_success_rate}%"
+        )
+
+    def test_website_docs_are_excluded(self, workspace_root):
+        """docs/website/ directory must be excluded from validation."""
+        website_dir = workspace_root / "docs" / "website" / "docs"
+        website_dir.mkdir(parents=True)
+        (website_dir / "intro.md").write_text("""# Intro
+
+Link to [missing](missing-file.md)
+""")
+
+        validator = DocumentationValidator(
+            workspace_root=workspace_root,
+            skip_compilation=True,
+            verbose=False
+        )
+
+        report = validator.validate_all_documentation()
+
+        # Website intro.md must not appear in checked files count
+        # (architecture + patterns = 2 files; website not included)
+        assert report.total_files_checked == 2
+
+    def test_test_fixtures_are_excluded(self, workspace_root):
+        """docs/.test-fixtures/ directory must be excluded from validation."""
+        fixtures_dir = workspace_root / "docs" / ".test-fixtures"
+        fixtures_dir.mkdir(parents=True)
+        (fixtures_dir / "fixture.md").write_text("""# Fixture
+
+Link to [missing](missing-file.md)
+""")
+
+        validator = DocumentationValidator(
+            workspace_root=workspace_root,
+            skip_compilation=True,
+            verbose=False
+        )
+
+        report = validator.validate_all_documentation()
+
+        # Test fixtures must not be validated
+        assert report.total_files_checked == 2  # Only the two real doc files

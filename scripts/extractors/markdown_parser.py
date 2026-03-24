@@ -116,6 +116,9 @@ class MarkdownParser:
         - tests/...
         - Relative paths: ../path/to/file
 
+        Content inside fenced code blocks is excluded to avoid false positives
+        from code examples that reference hypothetical or template paths.
+
         Args:
             content: Markdown file content
             source_file: Path to source file
@@ -125,35 +128,61 @@ class MarkdownParser:
         """
         references = []
 
-        # Regex patterns for file paths
-        patterns = [
+        # Inline code patterns – these target explicit backtick-wrapped paths in prose
+        inline_patterns = [
             r'`(src/[^`]+\.(cs|csproj|axaml|json))`',
             r'`(docs/[^`]+\.md)`',
             r'`(tests/[^`]+\.(cs|csproj))`',
-            r'\]\((\.\./[^)]+\.md)\)',  # Relative markdown links
+        ]
+
+        # Link patterns – match markdown link syntax [text](path)
+        link_patterns = [
+            r'\]\((\.\./[^)]+\.md)\)',       # Relative markdown links
             r'\]\(([^)]+\.(cs|md|json|axaml))\)',  # Any file in markdown links
         ]
 
-        for line_num, line in enumerate(content.split('\n'), start=1):
-            for pattern in patterns:
+        lines = content.split('\n')
+        in_code_fence = False
+
+        for line_num, line in enumerate(lines, start=1):
+            # Track fenced code block boundaries
+            stripped = line.strip()
+            if stripped.startswith('```') or stripped.startswith('~~~'):
+                in_code_fence = not in_code_fence
+                continue
+
+            # Always extract inline backtick patterns (safe – content is inside backticks)
+            for pattern in inline_patterns:
                 for match in re.finditer(pattern, line):
                     referenced_path = match.group(1)
-
-                    # Determine path type
-                    if referenced_path.startswith('../'):
-                        path_type = "relative"
-                    elif referenced_path.startswith('/'):
-                        path_type = "absolute"
-                    else:
-                        path_type = "project_relative"
-
+                    path_type = "relative" if referenced_path.startswith('../') else (
+                        "absolute" if referenced_path.startswith('/') else "project_relative"
+                    )
                     references.append(FilePathReference(
                         source_file=source_file,
                         line_number=line_num,
                         referenced_path=referenced_path,
                         path_type=path_type,
-                        exists=False  # Will be validated later
+                        exists=False
                     ))
+
+            # Only extract link patterns outside fenced code blocks
+            if not in_code_fence:
+                # Temporarily remove inline code spans to avoid matching inside them
+                line_no_inline = re.sub(r'`[^`]+`', '', line)
+                for pattern in link_patterns:
+                    for match in re.finditer(pattern, line_no_inline):
+                        referenced_path = match.group(1)
+                        path_type = "relative" if referenced_path.startswith('../') else (
+                            "absolute" if referenced_path.startswith('/') else "project_relative"
+                        )
+                        references.append(FilePathReference(
+                            source_file=source_file,
+                            line_number=line_num,
+                            referenced_path=referenced_path,
+                            path_type=path_type,
+                            exists=False
+                        ))
 
         return references
 

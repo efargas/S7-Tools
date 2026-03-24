@@ -117,7 +117,7 @@ class NamespaceValidation:
     def __post_init__(self):
         """Validate entity after initialization."""
         valid_categories = [
-            "Base", "Controls", "Dialogs", "Jobs", "Layout",
+            "Base", "Components", "Controls", "Dialogs", "Hex", "Jobs", "Layout",
             "Pages", "Profiles", "Settings", "Tasks"
         ]
 

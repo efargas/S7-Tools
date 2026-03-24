@@ -279,5 +279,97 @@ class TestLinkExtraction:
         assert len(links) >= 1
 
 
+class TestCodeBlockFiltering:
+    """Tests for code block filtering in file reference and link extraction."""
+
+    def test_file_refs_excluded_from_fenced_block(self):
+        """Paths inside fenced code blocks must not be extracted as file references."""
+        content = """\
+Normal prose references:
+- `src/S7Tools/Services/Profiles/StandardProfileManager.cs`
+
+```text
+src/Does/Not/Exist.cs
+docs/imaginary-file.md
+tests/Fake/FakeTest.cs
+```
+"""
+        references = extract_file_references(content, "test.md")
+        paths = [r.referenced_path for r in references]
+
+        # Prose reference must be captured
+        assert "src/S7Tools/Services/Profiles/StandardProfileManager.cs" in paths
+        # Paths inside fenced block must NOT be captured
+        assert "src/Does/Not/Exist.cs" not in paths
+        assert "docs/imaginary-file.md" not in paths
+        assert "tests/Fake/FakeTest.cs" not in paths
+
+    def test_file_refs_excluded_from_tilde_fence(self):
+        """Paths inside tilde-fenced code blocks must not be extracted."""
+        content = """\
+~~~bash
+src/Fake/Service.cs
+tests/Fake/Test.cs
+~~~
+
+- `src/S7Tools/Services/Socat/SocatService.cs`
+"""
+        references = extract_file_references(content, "test.md")
+        paths = [r.referenced_path for r in references]
+
+        assert "src/Fake/Service.cs" not in paths
+        assert "tests/Fake/Test.cs" not in paths
+        assert "src/S7Tools/Services/Socat/SocatService.cs" in paths
+
+    def test_markdown_links_excluded_from_fenced_block(self):
+        """Markdown link syntax inside fenced blocks must not produce file references."""
+        content = """\
+Real link: [see pattern](../patterns/profile.md)
+
+```markdown
+[fake link inside fence](totally-imaginary.md)
+```
+"""
+        references = extract_file_references(content, "test.md")
+        paths = [r.referenced_path for r in references]
+
+        assert "totally-imaginary.md" not in paths
+
+    def test_links_in_inline_code_not_extracted(self):
+        """Links inside backtick inline code must not be reported as broken links."""
+        content = "The text `[not a link](no-such-file.md)` is inline code, not a link.\n"
+        references = extract_file_references(content, "test.md")
+        paths = [r.referenced_path for r in references]
+
+        assert "no-such-file.md" not in paths
+
+    def test_vbnet_method_call_not_extracted_as_link(self):
+        """VB.NET method calls like _random.[Next](0, count) inside a fenced block
+        must not be reported as broken internal links.
+        """
+        content = """\
+```vbnet
+Dim index As Integer = _random.[Next](0, _eventNames.Count)
+Return _messages(_random.[Next](0, _messages.Count))
+```
+"""
+        references = extract_file_references(content, "test.md")
+        assert references == []
+
+    def test_four_backtick_fence_handled(self):
+        """Four-backtick fences must be treated as code blocks."""
+        content = """\
+````markdown
+[fake link](fake-document.md)
+src/Does/Not/Exist.cs
+````
+"""
+        references = extract_file_references(content, "test.md")
+        paths = [r.referenced_path for r in references]
+
+        assert "fake-document.md" not in paths
+        assert "src/Does/Not/Exist.cs" not in paths
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -20,9 +20,9 @@ from entities import NamespaceValidation
 class NamespaceValidator:
     """Validates namespace conventions in C# source files."""
 
-    # Valid ViewModel/View categories
+    # Valid ViewModel/View categories (top-level directory names under ViewModels/ and Views/)
     VALID_CATEGORIES = [
-        "Base", "Controls", "Dialogs", "Jobs", "Layout",
+        "Base", "Components", "Controls", "Dialogs", "Hex", "Jobs", "Layout",
         "Pages", "Profiles", "Settings", "Tasks"
     ]
 
@@ -121,10 +121,11 @@ class NamespaceValidator:
             category = self._infer_category_from_path(file_path)
 
         # Determine expected pattern based on file location
-        if "ViewModels" in str(file_path):
+        file_parts = set(file_path.parts)
+        if "ViewModels" in file_parts:
             expected_pattern = f"S7Tools.ViewModels.{{Category}}"
             expected_namespace = f"S7Tools.ViewModels.{category}" if category else None
-        elif "Views" in str(file_path):
+        elif "Views" in file_parts:
             expected_pattern = f"S7Tools.Views.{{Category}}"
             expected_namespace = f"S7Tools.Views.{category}" if category else None
         else:
@@ -139,7 +140,19 @@ class NamespaceValidator:
             )
 
         # Check compliance
-        is_compliant = declared_namespace == expected_namespace
+        # A namespace is compliant if it starts with the expected prefix for the category.
+        # This allows sub-namespaces like S7Tools.ViewModels.Dialogs.Models.
+        if expected_namespace:
+            is_compliant = (
+                declared_namespace == expected_namespace or
+                declared_namespace.startswith(expected_namespace + ".")
+            )
+        else:
+            # No category inferred – accept any namespace that starts with the base prefix
+            if "ViewModels" in file_parts:
+                is_compliant = declared_namespace.startswith("S7Tools.ViewModels.")
+            else:
+                is_compliant = declared_namespace.startswith("S7Tools.Views.")
         violation_details = None
         if not is_compliant:
             violation_details = f"Expected: {expected_namespace}, Found: {declared_namespace}"

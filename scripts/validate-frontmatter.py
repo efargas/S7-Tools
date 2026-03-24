@@ -68,8 +68,12 @@ class FrontmatterValidator:
     def validate_all(self):
         """Validate all markdown files in docs_root"""
         for md_file in self.docs_root.rglob('*.md'):
-            # Skip metadata and test fixtures directories
-            if '.metadata' in md_file.parts or '.test-fixtures' in md_file.parts:
+            # Skip metadata, test fixtures, and website/blog directories
+            if (
+                '.metadata' in md_file.parts or
+                '.test-fixtures' in md_file.parts or
+                'website' in md_file.parts
+            ):
                 continue
 
             self.summary.files_checked += 1
