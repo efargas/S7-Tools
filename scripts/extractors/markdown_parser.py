@@ -151,7 +151,12 @@ class MarkdownParser:
                 in_code_fence = not in_code_fence
                 continue
 
-            # Always extract inline backtick patterns (safe – content is inside backticks)
+            # Skip all extraction while inside a fenced code block –
+            # paths and links there are illustrative/hypothetical, not real refs.
+            if in_code_fence:
+                continue
+
+            # Extract inline backtick patterns (prose references)
             for pattern in inline_patterns:
                 for match in re.finditer(pattern, line):
                     referenced_path = match.group(1)
@@ -166,23 +171,22 @@ class MarkdownParser:
                         exists=False
                     ))
 
-            # Only extract link patterns outside fenced code blocks
-            if not in_code_fence:
-                # Temporarily remove inline code spans to avoid matching inside them
-                line_no_inline = re.sub(r'`[^`]+`', '', line)
-                for pattern in link_patterns:
-                    for match in re.finditer(pattern, line_no_inline):
-                        referenced_path = match.group(1)
-                        path_type = "relative" if referenced_path.startswith('../') else (
-                            "absolute" if referenced_path.startswith('/') else "project_relative"
-                        )
-                        references.append(FilePathReference(
-                            source_file=source_file,
-                            line_number=line_num,
-                            referenced_path=referenced_path,
-                            path_type=path_type,
-                            exists=False
-                        ))
+            # Extract link patterns; strip inline code spans first to avoid
+            # matching syntax written inside backticks.
+            line_no_inline = re.sub(r'`[^`]+`', '', line)
+            for pattern in link_patterns:
+                for match in re.finditer(pattern, line_no_inline):
+                    referenced_path = match.group(1)
+                    path_type = "relative" if referenced_path.startswith('../') else (
+                        "absolute" if referenced_path.startswith('/') else "project_relative"
+                    )
+                    references.append(FilePathReference(
+                        source_file=source_file,
+                        line_number=line_num,
+                        referenced_path=referenced_path,
+                        path_type=path_type,
+                        exists=False
+                    ))
 
         return references
 

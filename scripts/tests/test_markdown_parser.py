@@ -371,5 +371,26 @@ src/Does/Not/Exist.cs
         assert "src/Does/Not/Exist.cs" not in paths
 
 
+    def test_inline_backtick_path_in_fenced_block_excluded(self):
+        """Inline-backtick paths that appear inside a fenced code block (e.g. a markdown
+        example showing how to write a reference) must NOT be extracted as real file
+        references.
+        """
+        content = """\
+```markdown
+Here is how you reference a file: `src/S7Tools/Hypothetical/MyService.cs`
+```
+
+Real reference: `src/S7Tools/Services/Profiles/StandardProfileManager.cs`
+"""
+        references = extract_file_references(content, "test.md")
+        paths = [r.referenced_path for r in references]
+
+        # Path inside the fenced block must NOT be captured
+        assert "src/S7Tools/Hypothetical/MyService.cs" not in paths
+        # Prose path after the block must be captured
+        assert "src/S7Tools/Services/Profiles/StandardProfileManager.cs" in paths
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

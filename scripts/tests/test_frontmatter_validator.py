@@ -157,13 +157,27 @@ class TestFrontmatterDirectoryExclusion:
         assert v.summary.errors == 0
 
     def test_test_fixtures_directory_excluded(self, tmp_path):
-        """Files under docs/.test-fixtures/ must be skipped."""
+        """Files under docs/.test-fixtures/ must be skipped when scanning the full docs tree."""
         docs = _make_docs(tmp_path, {
             ".test-fixtures/fixture.md": "# Fixture\n\nNo frontmatter.\n",
             "guides/valid.md": VALID_FM,
         })
         v = FrontmatterValidator(str(docs))
         v.validate_all()
+        assert v.summary.files_checked == 1
+        assert v.summary.errors == 0
+
+    def test_validate_fixtures_directly(self, tmp_path):
+        """Running the validator directly on .test-fixtures/ must check the files it contains,
+        not skip them (regression test for absolute-path parts check).
+        """
+        fixtures = tmp_path / ".test-fixtures"
+        fixtures.mkdir()
+        (fixtures / "fixture.md").write_text(VALID_FM, encoding="utf-8")
+
+        v = FrontmatterValidator(str(fixtures))
+        v.validate_all()
+        # The file should be checked (not skipped because '.test-fixtures' is in its absolute path)
         assert v.summary.files_checked == 1
         assert v.summary.errors == 0
 
@@ -184,8 +198,8 @@ class TestFrontmatterDeprecatedDocuments:
         """Deprecated documents without superseded-by should produce META-008 warning."""
         content = VALID_FM.replace(
             'status: "current"',
-            'status: "deprecated"'
-        ) + "deprecated-date: \"2026-01-01\"\n"
+            'status: "deprecated"\ndeprecated-date: "2026-01-01"'
+        )
         docs = _make_docs(tmp_path, {"guides/dep2.md": content})
         v = FrontmatterValidator(str(docs))
         v.validate_all()

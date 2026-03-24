@@ -16,13 +16,14 @@ This directory contains markdown files used to test and validate the
 ## Usage
 
 ```bash
-# Validate frontmatter only
-python scripts/validate-frontmatter.py docs/.test-fixtures/
+# Run frontmatter-specific tests
+pytest scripts/tests -k frontmatter -q
 
-# Run full validation suite (skip-compilation for speed)
-python scripts/validate-documentation.py --skip-compilation --verbose
+# Run the full validation test suite (covers all fixture scenarios)
+pytest scripts/tests -q
 ```
 
 > **Note:** This directory is excluded from the production validation runs
-> (`validate-frontmatter.py` and `validate-documentation.py` both skip `.test-fixtures/`).
-> Use the test suite in `scripts/tests/` to exercise these fixtures programmatically.
+> (`validate-frontmatter.py` and `validate-documentation.py` both skip `.test-fixtures/`
+> when scanning the main docs tree).  Use the pytest suite above to exercise these
+> fixtures programmatically.
