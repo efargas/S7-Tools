@@ -12,8 +12,6 @@ using S7Tools.Core.Resources;
 using S7Tools.Core.Validation;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using S7Tools.Infrastructure.Logging.Providers.Extensions;
-using S7Tools.Infrastructure.Logging.Sinks;
 using S7Tools.Models;
 using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
@@ -95,10 +93,6 @@ public static class ServiceCollectionExtensions
 
         // Add Log Export Service
         services.TryAddTransient<ILogExportService, LogExportService>();
-
-        // Register FileLogSink as ILogSink for UnifiedLoggerProvider
-        // It starts automatically in its constructor
-        services.TryAddEnumerable(ServiceDescriptor.Singleton<ILogSink, FileLogSink>());
 
         // Add File Dialog Service
         services.TryAddTransient<IFileDialogService>(provider =>
@@ -250,6 +244,7 @@ public static class ServiceCollectionExtensions
 
     /// <summary>
     /// Adds S7Tools logging infrastructure to the service collection.
+    /// Note: Serilog is configured globally in Program.cs. This method handles task-specific logging configuration.
     /// </summary>
     /// <param name="services">The service collection to add services to.</param>
     /// <param name="configureDataStore">Optional configuration action for the log data store.</param>
@@ -260,39 +255,14 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Add DataStore logging services
-        services.AddDataStoreLogging(configureDataStore);
-
-        services.TryAddSingleton<ICentralizedTaskLogService, CentralizedTaskLogService>();
-        services.TryAddSingleton<ITaskLogDataStoreFactory, TaskLogDataStoreFactory>();
+        // Configure task-specific logging options
         services.Configure<S7Tools.Infrastructure.Logging.Core.Configuration.TaskLogDataStoreOptions>(options => options.MaxEntries = 2000);
 
-        services.AddLogging(builder => builder.AddUnifiedFileLogger<S7Tools.Infrastructure.Logging.Core.Configuration.CombinedFileLoggerConfiguration>(options =>
+        // Apply custom data store configuration if provided
+        if (configureDataStore != null)
         {
-            // Use absolute paths by resolving PathService from DI
-            // The logger provider will resolve these paths when it's created
-            var serviceProvider = builder.Services.BuildServiceProvider();
-            var pathService = serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IPathService>();
-
-            if (pathService != null)
-            {
-                // Use absolute paths from PathService with timestamp
-                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                options.DefaultLogPath = System.IO.Path.Combine(pathService.MainLogsDirectory, $"s7tools_{timestamp}.log");
-                options.TaskMainLogPath = "task-main.log";  // These are relative to task directory
-                options.TaskProcessLogPath = "task-process.log";
-                options.TaskProtocolLogPath = "task-protocol.log";
-            }
-            else
-            {
-                // Fallback to relative paths if PathService not available yet
-                string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                options.DefaultLogPath = $"s7tools_{timestamp}.log";
-                options.TaskMainLogPath = "task-main.log";
-                options.TaskProcessLogPath = "task-process.log";
-                options.TaskProtocolLogPath = "task-protocol.log";
-            }
-        }));
+            services.Configure<LogDataStoreOptions>(configureDataStore);
+        }
 
         return services;
     }
@@ -337,7 +307,6 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IJobScheduler, Services.Tasking.JobScheduler>();
 
         // Add Task Logging Services
-        services.TryAddSingleton<ITaskLoggerFactory, Services.Logging.TaskLoggerFactory>();
 
         // Add Resource Coordination Services
         services.TryAddSingleton<IResourceCoordinator, ResourceCoordinator>();
@@ -537,9 +506,9 @@ public static class ServiceCollectionExtensions
         }
 
         // Add logging services if configured
-        if (configuration.IncludeLoggingServices)
+        if (configuration.IncludeLoggingServices && configuration.DataStoreConfiguration != null)
         {
-            services.AddDataStoreLogging(configuration.DataStoreConfiguration);
+            services.Configure<LogDataStoreOptions>(configuration.DataStoreConfiguration);
         }
 
         return services;
