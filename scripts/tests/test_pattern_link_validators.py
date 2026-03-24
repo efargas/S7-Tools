@@ -82,6 +82,41 @@ public class StandardProfileManager<T> where T : class, IProfileBase
         assert "Custom Exceptions" in pattern_names
         assert "Reusable Controls" in pattern_names
 
+    def test_core_pattern_expected_file_paths_exist(self, tmp_path):
+        """Verify that the expected file paths in verify_all_core_patterns() match the
+        actual repository layout (regression test for wrong-path bugs).
+        """
+        # Replicate the exact layout used by verify_all_core_patterns()
+        files_to_create = [
+            "src/S7Tools/Services/Profiles/StandardProfileManager.cs",
+            "src/S7Tools.Core/Interfaces/Services/IProfileManager.cs",
+            "src/S7Tools.Core/Interfaces/Services/IProfileBase.cs",
+            "src/S7Tools/Services/Socat/SocatService.cs",
+            "src/S7Tools/Services/PowerSupply/PowerSupplyService.cs",
+            "src/S7Tools/Services/Tasking/ResourceCoordinator.cs",
+            "src/S7Tools.Core/Interfaces/Services/IResourceCoordinator.cs",
+            "src/S7Tools.Core/Exceptions/S7ToolsException.cs",
+            "src/S7Tools.Core/Exceptions/ProfileException.cs",
+            "src/S7Tools.Core/Exceptions/ValidationException.cs",
+            "src/S7Tools.Core/Exceptions/ConnectionException.cs",
+            "src/S7Tools/Views/Controls/SerialPortDiscoveryControl.axaml",
+            "src/S7Tools/Views/Controls/SerialPortDiscoveryControl.axaml.cs",
+            "src/S7Tools/ViewModels/Controls/SerialPortDiscoveryViewModel.cs",
+        ]
+        for rel_path in files_to_create:
+            full_path = tmp_path / rel_path
+            full_path.parent.mkdir(parents=True, exist_ok=True)
+            full_path.write_text("// placeholder")
+
+        validator_local = PatternValidator(tmp_path)
+        patterns = validator_local.verify_all_core_patterns()
+
+        for p in patterns:
+            assert p.is_verified, (
+                f"Pattern '{p.pattern_name}' not verified. "
+                f"Missing: {p.missing_files}"
+            )
+
     def test_calculate_verification_rate(self, validator):
         """Test calculating pattern verification rate."""
         patterns = [
@@ -284,3 +319,44 @@ Link with anchor to [section](overview.md#section-name).
         exists = validator.resolve_markdown_link(target, source_file)
         # Now correctly resolves to docs/architecture/clean-architecture.md
         assert exists is True  # Fixed: correctly resolves relative to source directory
+
+    def test_vbnet_method_call_not_a_link(self, validator):
+        """VB.NET square-bracket method calls inside a fenced block must not be
+        extracted as internal links (regression test for false-positive links).
+        """
+        content = """\
+```vbnet
+Dim index As Integer = _random.[Next](0, _eventNames.Count)
+Return _messages(_random.[Next](0, _messages.Count))
+```
+"""
+        links = validator._extract_internal_links(content)
+        assert links == [], f"Expected no links, got: {links}"
+
+    def test_links_in_inline_code_not_extracted(self, validator):
+        """Links written inside backtick inline code must not be extracted."""
+        content = "The text `[not a link](no-such-file.md)` is inline code.\n"
+        links = validator._extract_internal_links(content)
+        link_targets = [link for link, _ in links]
+        assert "no-such-file.md" not in link_targets
+
+    def test_links_in_tilde_fence_not_extracted(self, validator):
+        """Links inside tilde-fenced code blocks must not be extracted."""
+        content = """\
+~~~markdown
+[fake link inside tilde fence](totally-imaginary.md)
+~~~
+
+Real link: [overview](../architecture/overview.md)
+"""
+        links = validator._extract_internal_links(content)
+        link_targets = [link for link, _ in links]
+        assert "totally-imaginary.md" not in link_targets
+        assert any("overview.md" in t for t in link_targets)
+
+    def test_anchor_only_links_pass(self, validator, workspace_root):
+        """Anchor-only links (#section) must not be reported as broken."""
+        source_file = workspace_root / "docs" / "architecture" / "overview.md"
+        # Anchor-only link (empty path component)
+        exists = validator.resolve_markdown_link("#some-section", source_file)
+        assert exists is True

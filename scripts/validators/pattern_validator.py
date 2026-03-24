@@ -127,9 +127,9 @@ class PatternValidator:
             pattern_name="Unified Profile Management",
             documented_location="docs/patterns/profile-management.md",
             expected_files=[
-                "src/S7Tools/Services/StandardProfileManager.cs",
-                "src/S7Tools.Core/Services/Interfaces/IProfileManager.cs",
-                "src/S7Tools.Core/Services/Interfaces/IProfileBase.cs"
+                "src/S7Tools/Services/Profiles/StandardProfileManager.cs",
+                "src/S7Tools.Core/Interfaces/Services/IProfileManager.cs",
+                "src/S7Tools.Core/Interfaces/Services/IProfileBase.cs"
             ]
         ))
 
@@ -138,8 +138,8 @@ class PatternValidator:
             pattern_name="Internal Method Pattern",
             documented_location="docs/patterns/internal-method.md",
             expected_files=[
-                "src/S7Tools/Services/SocatService.cs",
-                "src/S7Tools/Services/PowerSupplyService.cs"
+                "src/S7Tools/Services/Socat/SocatService.cs",
+                "src/S7Tools/Services/PowerSupply/PowerSupplyService.cs"
             ]
         ))
 
@@ -149,7 +149,7 @@ class PatternValidator:
             documented_location="docs/patterns/resource-coordination.md",
             expected_files=[
                 "src/S7Tools/Services/Tasking/ResourceCoordinator.cs",
-                "src/S7Tools.Core/Services/Interfaces/IResourceCoordinator.cs"
+                "src/S7Tools.Core/Interfaces/Services/IResourceCoordinator.cs"
             ]
         ))
 

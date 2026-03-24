@@ -68,8 +68,20 @@ class FrontmatterValidator:
     def validate_all(self):
         """Validate all markdown files in docs_root"""
         for md_file in self.docs_root.rglob('*.md'):
-            # Skip metadata and test fixtures directories
-            if '.metadata' in md_file.parts or '.test-fixtures' in md_file.parts:
+            # Compute path relative to docs_root so that exclusions only apply
+            # when the excluded directory is *under* docs_root, not when the
+            # script is invoked directly on one of those subdirectories.
+            try:
+                relative_parts = md_file.relative_to(self.docs_root).parts
+            except ValueError:
+                # Fallback: file is not under docs_root (shouldn't happen with rglob)
+                relative_parts = md_file.parts
+
+            if (
+                '.metadata' in relative_parts or
+                '.test-fixtures' in relative_parts or
+                'website' in relative_parts
+            ):
                 continue
 
             self.summary.files_checked += 1

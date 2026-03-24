@@ -199,9 +199,46 @@ class TestNamespaceValidator:
         assert rate == 50.0  # 1 out of 2 = 50%
 
     def test_valid_categories(self, validator):
-        """Test that all expected categories are recognized."""
+        """Test that all expected categories are recognized, including Hex and Components."""
         expected_categories = [
-            "Base", "Controls", "Dialogs", "Jobs", "Layout",
+            "Base", "Components", "Controls", "Dialogs", "Hex", "Jobs", "Layout",
             "Pages", "Profiles", "Settings", "Tasks"
         ]
         assert validator.VALID_CATEGORIES == expected_categories
+
+    def test_sub_namespace_is_compliant(self, validator, workspace_root):
+        """Test that sub-namespaces like Dialogs.Models are considered compliant."""
+        models_dir = workspace_root / "src" / "S7Tools" / "ViewModels" / "Dialogs" / "Models"
+        models_dir.mkdir(parents=True, exist_ok=True)
+        model_file = models_dir / "InputRequest.cs"
+        model_file.write_text(
+            "namespace S7Tools.ViewModels.Dialogs.Models;\n\npublic class InputRequest {}"
+        )
+
+        validation = validator.validate_namespace_convention(model_file, "Dialogs")
+        assert validation.is_compliant is True
+        assert validation.declared_namespace == "S7Tools.ViewModels.Dialogs.Models"
+
+    def test_hex_category_is_compliant(self, validator, workspace_root):
+        """Test that Hex category ViewModels are considered compliant."""
+        hex_dir = workspace_root / "src" / "S7Tools" / "ViewModels" / "Hex"
+        hex_dir.mkdir(parents=True, exist_ok=True)
+        vm_file = hex_dir / "HexViewerViewModel.cs"
+        vm_file.write_text(
+            "namespace S7Tools.ViewModels.Hex;\n\npublic class HexViewerViewModel {}"
+        )
+
+        validation = validator.validate_namespace_convention(vm_file, "Hex")
+        assert validation.is_compliant is True
+
+    def test_components_category_is_compliant(self, validator, workspace_root):
+        """Test that Components category ViewModels are considered compliant."""
+        comps_dir = workspace_root / "src" / "S7Tools" / "ViewModels" / "Components"
+        comps_dir.mkdir(parents=True, exist_ok=True)
+        vm_file = comps_dir / "TaskLogsPanelViewModel.cs"
+        vm_file.write_text(
+            "namespace S7Tools.ViewModels.Components;\n\npublic class TaskLogsPanelViewModel {}"
+        )
+
+        validation = validator.validate_namespace_convention(vm_file, "Components")
+        assert validation.is_compliant is True

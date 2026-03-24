@@ -141,6 +141,9 @@ class LinkValidator:
     def _extract_internal_links(self, content: str) -> list[tuple[str, int]]:
         """Extract internal markdown links from content.
 
+        Fenced code blocks (``` ... ```) and inline code spans are excluded to
+        avoid treating code examples (e.g. ``_obj.[Method](args)``) as links.
+
         Args:
             content: Markdown file content
 
@@ -149,11 +152,24 @@ class LinkValidator:
         """
         links = []
 
-        # Match markdown links: [text](link)
         link_pattern = re.compile(r'\]\(([^)]+)\)')
+        fence_re = re.compile(r'^(`{3,}|~{3,})')
+
+        in_code_fence = False
 
         for line_num, line in enumerate(content.split('\n'), start=1):
-            for match in link_pattern.finditer(line):
+            # Track fenced code block boundaries
+            if fence_re.match(line.strip()):
+                in_code_fence = not in_code_fence
+                continue
+
+            if in_code_fence:
+                continue
+
+            # Strip inline code spans before searching for links
+            line_no_inline = re.sub(r'`[^`]+`', '', line)
+
+            for match in link_pattern.finditer(line_no_inline):
                 link = match.group(1)
 
                 # Filter to internal links only (exclude HTTP/HTTPS, mailto, etc.)
