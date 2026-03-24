@@ -205,8 +205,14 @@
         <Setter Property="FontSize" Value="12" />
     </Style>
     <Style Selector="viewsPages|LogViewerView Button">
-        <Setter Property="Height" Value="32" />
-        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="16,6" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="viewsPages|LogViewerView ToggleButton">
+        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="16,6" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>

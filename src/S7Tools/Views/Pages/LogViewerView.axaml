@@ -4,10 +4,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="using:S7Tools.ViewModels.Pages"
     xmlns:models="using:S7Tools.Core.Models"
-    xmlns:icons="using:Projektanker.Icons.Avalonia"
     xmlns:converters="clr-namespace:S7Tools.Converters"
-    xmlns:components="using:S7Tools.Views.Components"
-    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+    xmlns:ui="using:FluentAvalonia.UI.Controls"
+    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
     x:Class="S7Tools.Views.Pages.LogViewerView"
     x:DataType="vm:LogViewerViewModel"
     Background="{DynamicResource AppBackgroundBrush}">
@@ -16,228 +15,175 @@
         <vm:LogViewerViewModel />
     </Design.DataContext>
 
-    <UserControl.Resources>
-        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        <converters:NullableDateTimeConverter x:Key="NullableDateTimeConverter" />
-    </UserControl.Resources>
+    <Grid RowDefinitions="Auto,Auto,*">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <!-- Toolbar -->
+        <!-- ── TOOLBAR ── -->
         <Border Grid.Row="0"
             Background="{DynamicResource PanelBackgroundBrush}"
             BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="0,0,0,1"
-            Padding="8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            Padding="8,4">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0" Spacing="4">
+                
+                <!-- Search -->
+                <TextBox Text="{Binding SearchText, Mode=TwoWay}"
+                         Watermark="Search logs..."
+                         Width="200"
+                         Margin="8,0,8,0"
+                         VerticalAlignment="Center">
+                    <TextBox.InnerRightContent>
+                        <Button Background="Transparent" BorderThickness="0" Padding="4"
+                                Command="{Binding ClearFiltersCommand}"
+                                ToolTip.Tip="Clear search and filters">
+                            <TextBlock Text="✕" FontSize="10" />
+                        </Button>
+                    </TextBox.InnerRightContent>
+                </TextBox>
+                
+                <!-- Filter Level -->
+                <TextBlock Text="Level:" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                <ComboBox SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
+                          ItemsSource="{Binding AvailableLogLevels}"
+                          Width="120"
+                          Margin="0,0,8,0"
+                          VerticalAlignment="Center"/>
+                          
+                <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
 
-                <!-- Left side controls -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                    <!-- Search -->
-                    <TextBox Text="{Binding SearchText}"
-                        Watermark="Search logs..."
-                        Width="200" />
+                <!-- Auto-Scroll Toggle -->
+                <ToggleButton IsChecked="{Binding AutoScroll, Mode=TwoWay}"
+                              Content="Auto-Scroll"
+                              Margin="8,0"
+                              VerticalAlignment="Center"/>
 
-                    <!-- Log Level Filter -->
-                    <ComboBox ItemsSource="{Binding AvailableLogLevels}"
-                        SelectedItem="{Binding SelectedLogLevel}"
-                        Width="120" />
+                <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
+                
+                <!-- Export -->
+                <TextBlock Text="Export:" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                <Button Content="JSON" Command="{Binding ExportLogsCommand}" CommandParameter="json" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                <Button Content="TXT" Command="{Binding ExportLogsCommand}" CommandParameter="txt" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                <Button Content="CSV" Command="{Binding ExportLogsCommand}" CommandParameter="csv" Margin="0,0,8,0" VerticalAlignment="Center"/>
 
-                    <!-- Date Range -->
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="From:"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            FontSize="12"
-                            VerticalAlignment="Center" />
-                        <DatePicker SelectedDate="{Binding StartDate, Mode=TwoWay}"
-                            Width="140" />
-                    </StackPanel>
+                <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
 
-                    <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="To:"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            FontSize="12"
-                            VerticalAlignment="Center" />
-                        <DatePicker SelectedDate="{Binding EndDate, Mode=TwoWay}"
-                            Width="140" />
-                    </StackPanel>
+                <!-- Clear -->
+                <Button Content="Clear Logs" Command="{Binding ClearLogsCommand}" Margin="4,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
 
-                    <!-- Clear Filters -->
-                    <Button Command="{Binding ClearFiltersCommand}"
-                        Classes="transparent">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <icons:Icon Value="fa-solid fa-times" Width="14" Height="14" />
-                            <TextBlock Text="Clear" FontSize="12" />
-                        </StackPanel>
+        <!-- ── HEADER (fixed, never scrolls) ── -->
+        <Border Grid.Row="1"
+            Background="{DynamicResource PanelBackgroundBrush}"
+            BorderBrush="{DynamicResource ControlBorderBrush}"
+            BorderThickness="0,0,0,1">
+            <Grid ColumnDefinitions="165,100,150,*" Margin="8,4">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                    <TextBlock Text="Timestamp" FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                    <Button Background="Transparent" BorderThickness="0"
+                        Padding="4,2" VerticalAlignment="Center"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                        Command="{Binding SortCommand}" CommandParameter="Timestamp">
+                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
                     </Button>
                 </StackPanel>
-
-                <!-- Right side controls -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <!-- Auto Scroll Toggle -->
-                    <ToggleButton IsChecked="{Binding AutoScroll, Mode=TwoWay}"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                    <TextBlock Text="Level" FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                    <Button Background="Transparent" BorderThickness="0"
+                        Padding="4,2" VerticalAlignment="Center"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Padding="8,4"
-                        ToolTip.Tip="Auto-scroll to latest entries">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <icons:Icon Value="fa-solid fa-arrow-down" Width="14" Height="14" />
-                            <TextBlock Text="Auto" FontSize="12" />
-                        </StackPanel>
-                    </ToggleButton>
-
-                    <!-- Refresh -->
-                    <Button Command="{Binding RefreshCommand}"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Padding="8,4"
-                        ToolTip.Tip="Refresh log display">
-                        <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                        Command="{Binding SortCommand}" CommandParameter="Level">
+                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
                     </Button>
-
-                    <!-- Export Menu -->
-                    <Button Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                    <TextBlock Text="Category" FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                    <Button Background="Transparent" BorderThickness="0"
+                        Padding="4,2" VerticalAlignment="Center"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Padding="8,4"
-                        ToolTip.Tip="Export logs">
-                        <Button.Flyout>
-                            <MenuFlyout>
-                                <MenuItem Header="Export as Text"
-                                    Command="{Binding ExportLogsCommand}"
-                                    CommandParameter="txt">
-                                    <MenuItem.Icon>
-                                        <icons:Icon Value="fa-solid fa-file-alt" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="Export as JSON"
-                                    Command="{Binding ExportLogsCommand}"
-                                    CommandParameter="json">
-                                    <MenuItem.Icon>
-                                        <icons:Icon Value="fa-solid fa-code" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="Export as CSV"
-                                    Command="{Binding ExportLogsCommand}"
-                                    CommandParameter="csv">
-                                    <MenuItem.Icon>
-                                        <icons:Icon Value="fa-solid fa-table" />
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                            </MenuFlyout>
-                        </Button.Flyout>
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
-                            <TextBlock Text="Export" FontSize="12" />
-                        </StackPanel>
+                        Command="{Binding SortCommand}" CommandParameter="Category">
+                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
                     </Button>
-
-                    <!-- Clear Logs -->
-                    <Button Command="{Binding ClearLogsCommand}"
-                        Background="Transparent"
-                        BorderThickness="1"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
+                </StackPanel>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2">
+                    <TextBlock Text="Message" FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                    <Button Background="Transparent" BorderThickness="0"
+                        Padding="4,2" VerticalAlignment="Center"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Padding="8,4"
-                        ToolTip.Tip="Clear all log entries">
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
-                            <TextBlock Text="Clear" FontSize="12" />
-                        </StackPanel>
+                        Command="{Binding SortCommand}" CommandParameter="Message">
+                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- DataGrid with resizable columns -->
-        <DataGrid Grid.Row="2"
-            x:Name="LogDataGrid"
-            ItemsSource="{Binding FilteredLogEntries}"
-            SelectedItem="{Binding SelectedLogEntry}"
-            CanUserResizeColumns="True"
-            CanUserReorderColumns="True"
-            CanUserSortColumns="False"
-            AutoGenerateColumns="False"
-            Background="{DynamicResource AppBackgroundBrush}"
-            Foreground="{DynamicResource TextForegroundBrush}"
-            BorderBrush="{DynamicResource ControlBorderBrush}"
-            BorderThickness="0,1,0,0"
-            FontSize="{Binding FontSize}"
-            IsReadOnly="True">
+        <!-- ── OUR ScrollViewer — direct named reference ── -->
+        <ScrollViewer Grid.Row="2"
+            Name="LogScrollViewer"
+            VerticalScrollBarVisibility="Auto"
+            HorizontalScrollBarVisibility="Auto">
 
-            <!-- Context Menu for Copy operations -->
-            <DataGrid.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Copy Full Entry"
-                        Command="{Binding CopySelectedEntryCommand}"
-                        CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
-                    <MenuItem Header="Copy Message"
-                        Command="{Binding CopySelectedMessageCommand}"
-                        CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
-                </ContextMenu>
-            </DataGrid.ContextMenu>
+            <ItemsControl ItemsSource="{Binding FilteredLogEntries}"
+                HorizontalAlignment="Stretch">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Vertical" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
 
-            <!-- Keyboard shortcuts -->
-            <DataGrid.KeyBindings>
-                <KeyBinding Gesture="Ctrl+C"
-                    Command="{Binding CopySelectedEntryCommand}"
-                    CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
-            </DataGrid.KeyBindings>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="models:LogModel">
+                        <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="0,2">
 
-            <DataGrid.Columns>
-                <!-- Timestamp Column -->
-                <DataGridTextColumn Header="Timestamp"
-                    Binding="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
-                    Width="160"
-                    IsVisible="{Binding $parent[UserControl].DataContext.ShowTimestamp}" />
+                            <Border.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Copy Full Entry"
+                                        Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedEntryCommand}"
+                                        CommandParameter="{Binding}" />
+                                    <MenuItem Header="Copy Message"
+                                        Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedMessageCommand}"
+                                        CommandParameter="{Binding}" />
+                                </ContextMenu>
+                            </Border.ContextMenu>
 
-                <!-- Level Column with Color Coding -->
-                <DataGridTemplateColumn Header="Level"
-                    Width="100"
-                    IsVisible="{Binding $parent[UserControl].DataContext.ShowLevel}">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate DataType="models:LogModel">
-                            <Border CornerRadius="3"
-                                Padding="4,2"
-                                Margin="2"
-                                HorizontalAlignment="Center"
-                                Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
-                                <TextBlock Text="{Binding Level}"
+                            <Grid ColumnDefinitions="165,100,150,*">
+                                <TextBlock Grid.Column="0"
+                                    Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
+                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                    VerticalAlignment="Center" Margin="8,0" />
+
+                                <Border Grid.Column="1"
+                                    CornerRadius="2" Padding="3,1" Margin="4,1"
+                                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                                    Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
+                                    <TextBlock Text="{Binding Level}"
+                                        FontSize="9" FontWeight="SemiBold" Foreground="White" />
+                                </Border>
+
+                                <TextBlock Grid.Column="2"
+                                    Text="{Binding Category}"
+                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                    VerticalAlignment="Center" Margin="8,0"
+                                    TextTrimming="CharacterEllipsis" />
+
+                                <TextBlock Grid.Column="3"
+                                    Text="{Binding FormattedMessage}"
+                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
                                     Foreground="{DynamicResource TextForegroundBrush}"
-                                    FontSize="10"
-                                    FontWeight="SemiBold"
-                                    HorizontalAlignment="Center" />
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-
-                <!-- Category Column -->
-                <DataGridTextColumn Header="Category"
-                    Binding="{Binding Category}"
-                    Width="150"
-                    IsVisible="{Binding $parent[UserControl].DataContext.ShowCategory}" />
-
-                <!-- Message Column -->
-                <DataGridTextColumn Header="Message"
-                    Binding="{Binding FormattedMessage}"
-                    Width="*" />
-            </DataGrid.Columns>
-        </DataGrid>
-
+                                    VerticalAlignment="Center" Margin="8,0"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

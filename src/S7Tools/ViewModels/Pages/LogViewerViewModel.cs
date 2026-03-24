@@ -40,6 +40,24 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     private string _sortColumn = "Timestamp";
     private bool _sortAscending = true;
 
+    /// <summary>
+    /// Gets or sets the column to sort by.
+    /// </summary>
+    public string SortColumn
+    {
+        get => _sortColumn;
+        set => this.RaiseAndSetIfChanged(ref _sortColumn, value);
+    }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to sort in ascending order.
+    /// </summary>
+    public bool SortAscending
+    {
+        get => _sortAscending;
+        set => this.RaiseAndSetIfChanged(ref _sortAscending, value);
+    }
+
     // IDockableViewModel implementation
     private string _dockId = "MainLog";
     private string _dockTitle = "System Logs";
@@ -136,8 +154,8 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             .Select(_ => BuildFilter());
 
         var sortComparer = this.WhenAnyValue(
-            x => x._sortColumn,
-            x => x._sortAscending)
+            x => x.SortColumn,
+            x => x.SortAscending)
             .Select(_ => BuildSort());
 
         _cleanup = _logEntriesSource.Connect()
@@ -314,6 +332,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
         get => _columnWidths;
         set => this.RaiseAndSetIfChanged(ref _columnWidths, value);
     }
+
 
     /// <summary>
     /// Gets the available log levels for filtering.
@@ -533,22 +552,22 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
     private void SortByColumn(string column)
     {
-        if (_sortColumn == column)
+        if (SortColumn == column)
         {
-            _sortAscending = !_sortAscending;
+            SortAscending = !SortAscending;
         }
         else
         {
-            _sortColumn = column;
-            _sortAscending = true;
+            SortColumn = column;
+            SortAscending = true;
         }
 
-        if (!(_sortColumn == "Timestamp" && _sortAscending) && !(_sortColumn == "Timestamp" && !_sortAscending))
+        if (!(SortColumn == "Timestamp" && SortAscending) && !(SortColumn == "Timestamp" && !SortAscending))
         {
             AutoScroll = false;
         }
 
-        if (_sortColumn == "Timestamp" && !_sortAscending)
+        if (SortColumn == "Timestamp" && !SortAscending)
         {
             InvertAutoScroll = true;
             // Optional: re-enable auto scroll when clicking descending timestamp for newest at top
@@ -561,8 +580,6 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
         {
             InvertAutoScroll = false;
         }
-
-        
     }
 
     /// <summary>
@@ -655,27 +672,27 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
     private System.Collections.Generic.IComparer<LogModel> BuildSort()
     {
-        if (_sortColumn == "Level")
+        if (SortColumn == "Level")
         {
-            return _sortAscending 
+            return SortAscending
                 ? SortExpressionComparer<LogModel>.Ascending(e => e.Level).ThenByAscending(e => e.Timestamp)
                 : SortExpressionComparer<LogModel>.Descending(e => e.Level).ThenByDescending(e => e.Timestamp);
         }
-        else if (_sortColumn == "Category")
+        else if (SortColumn == "Category")
         {
-            return _sortAscending 
+            return SortAscending
                 ? SortExpressionComparer<LogModel>.Ascending(e => e.Category).ThenByAscending(e => e.Timestamp)
                 : SortExpressionComparer<LogModel>.Descending(e => e.Category).ThenByDescending(e => e.Timestamp);
         }
-        else if (_sortColumn == "Message")
+        else if (SortColumn == "Message")
         {
-            return _sortAscending 
+            return SortAscending
                 ? SortExpressionComparer<LogModel>.Ascending(e => e.Message).ThenByAscending(e => e.Timestamp)
                 : SortExpressionComparer<LogModel>.Descending(e => e.Message).ThenByDescending(e => e.Timestamp);
         }
-        
+
         // Default to Timestamp
-        return _sortAscending
+        return SortAscending
             ? SortExpressionComparer<LogModel>.Ascending(e => e.Timestamp)
             : SortExpressionComparer<LogModel>.Descending(e => e.Timestamp);
     }

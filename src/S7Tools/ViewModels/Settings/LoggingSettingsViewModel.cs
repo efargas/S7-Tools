@@ -173,6 +173,26 @@ public class LoggingSettingsViewModel : ViewModelBase
         24
     };
 
+    private int _maxLogFileSizeMb = 10;
+    /// <summary>
+    /// Gets the maximum log file size in MB before rotation.
+    /// </summary>
+    public int MaxLogFileSizeMb
+    {
+        get => _maxLogFileSizeMb;
+        set => this.RaiseAndSetIfChanged(ref _maxLogFileSizeMb, value);
+    }
+
+    private int _maxRetainedLogFiles = 5;
+    /// <summary>
+    /// Gets the maximum number of rotated log files to retain.
+    /// </summary>
+    public int MaxRetainedLogFiles
+    {
+        get => _maxRetainedLogFiles;
+        set => this.RaiseAndSetIfChanged(ref _maxRetainedLogFiles, value);
+    }
+
     #endregion
 
     #region Commands
@@ -211,6 +231,8 @@ public class LoggingSettingsViewModel : ViewModelBase
         ShowCategoryInLogs = current.Ui.ShowCategoryInLogs;
         ShowLogLevelInLogs = current.Ui.ShowLogLevelInLogs;
         LogViewerFontSize = current.Ui.LogViewerFontSize;
+        MaxLogFileSizeMb = (int)(current.Logging.MaxFileSize / 1024 / 1024);
+        MaxRetainedLogFiles = current.Logging.MaxFiles;
     }
 
     private async Task BrowseDefaultLogPathAsync()

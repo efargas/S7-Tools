@@ -244,6 +244,113 @@
                     <CheckBox IsChecked="{Binding ShowLogLevelInLogs}"
                         Content="Show log level badges in log entries"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <!-- Font Size -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                            Text="Font Size:"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            VerticalAlignment="Center" />
+
+                        <ComboBox Grid.Column="1"
+                            ItemsSource="{Binding AvailableFontSizes}"
+                            SelectedItem="{Binding LogViewerFontSize}"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            Margin="8,0" />
+
+                        <TextBlock Grid.Column="2"
+                            Text="Font size for log viewer text (10-24pt)"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextForegroundMutedBrush}"
+                            VerticalAlignment="Center"
+                            Margin="8,0" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Serilog Configuration Section -->
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Serilog Configuration"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <!-- Max File Size -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                            Text="Max File Size:"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            VerticalAlignment="Center" />
+
+                        <TextBox Grid.Column="1"
+                            Text="{Binding MaxLogFileSizeMb, StringFormat={}{0} MB}"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            Margin="8,0"
+                            IsEnabled="False" />
+
+                        <TextBlock Grid.Column="2"
+                            Text="Maximum size of a single log file before rotation (10 MB)"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextForegroundMutedBrush}"
+                            VerticalAlignment="Center"
+                            Margin="8,0" />
+                    </Grid>
+
+                    <!-- Max Files -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                            Text="Max Retained Files:"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            VerticalAlignment="Center" />
+
+                        <TextBox Grid.Column="1"
+                            Text="{Binding MaxRetainedLogFiles}"
+                            Background="{DynamicResource ControlBackgroundBrush}"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            BorderBrush="{DynamicResource ControlBorderBrush}"
+                            Margin="8,0"
+                            IsEnabled="False" />
+
+                        <TextBlock Grid.Column="2"
+                            Text="Maximum number of rotated log files to keep (5 files)"
+                            FontSize="11"
+                            Foreground="{DynamicResource TextForegroundMutedBrush}"
+                            VerticalAlignment="Center"
+                            Margin="8,0" />
+                    </Grid>
+
+                    <!-- File Logging Info -->
+                    <TextBlock Text="Note: Serilog file rotation is configured automatically based on application settings"
+                        FontSize="11"
+                        Foreground="{DynamicResource TextForegroundMutedBrush}"
+                        TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
