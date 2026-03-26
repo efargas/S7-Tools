@@ -102,9 +102,9 @@ namespace S7Tools.Core.Constants
         public const string JsonLogsFolder = "JSON";
 
         /// <summary>
-        /// File name pattern for main log files with timestamp and rolling number placeholders
+        /// File name pattern for main log files with timestamp placeholder
         /// </summary>
-        public const string MainLogFilePattern = "MainLog_{0}_{1}.json";
+        public const string MainLogFilePattern = "s7tools_{0}.log";
 
         /// <summary>
         /// File name pattern for exported log files with timestamp and extension placeholders

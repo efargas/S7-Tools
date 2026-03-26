@@ -98,6 +98,8 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
         TestErrorLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Error));
         TestCriticalLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Critical));
 
+        TestStressLogCommand = ReactiveCommand.CreateFromTask(TestStressLogAsync);
+
         ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogsAsync);
 
         // Set up reactive pattern for button pressed message clearing
@@ -199,6 +201,11 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
     public ReactiveCommand<Unit, Unit> TestCriticalLogCommand { get; }
 
     /// <summary>
+    /// Gets the command to test UI stress with many logs.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> TestStressLogCommand { get; }
+
+    /// <summary>
     /// Gets the command to export logs to clipboard.
     /// </summary>
     public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
@@ -286,6 +293,34 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
         _logger.Log(logLevel, message);
 
         LastButtonPressed = logLevel.ToString();
+    }
+
+    /// <summary>
+    /// Tests UI stress by generating a large number of log messages.
+    /// </summary>
+    private async Task TestStressLogAsync()
+    {
+        StatusMessage = "Starting UI Stress Test (5000 logs)...";
+        LastButtonPressed = "Stress Test";
+        
+        // Run in background to not block UI thread during log generation
+        await Task.Run(async () => 
+        {
+            for (int i = 1; i <= 5000; i++)
+            {
+                // Use structured logging to test performance
+                _logger.LogInformation("Stress test message #{Index} at {Time}", i, DateTime.Now.ToString("HH:mm:ss.fff"));
+                
+                // Minimal delay every 10 messages to avoid complete saturation of the thread pool 
+                // but keep it fast enough to stress the UI renderer
+                if (i % 10 == 0)
+                {
+                    await Task.Delay(1).ConfigureAwait(false);
+                }
+            }
+        }).ConfigureAwait(false);
+
+        StatusMessage = "UI Stress Test Complete (5000 logs)";
     }
 
     /// <summary>

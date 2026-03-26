@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
+using System.Timers; // Added for batching timer
 using Microsoft.Extensions.Logging;
 using Serilog.Core;
 using Serilog.Events;
@@ -46,6 +47,11 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
     private int _count;
     private bool _disposed;
 
+    // Batching support
+    private readonly ConcurrentQueue<LogModel> _logQueue = new();
+    private readonly System.Timers.Timer _flushTimer;
+    private const int FlushIntervalMs = 100; // 100ms batching interval
+
     /// <summary>
     /// Initializes a new instance of the LogDataStore class.
     /// </summary>
@@ -54,6 +60,12 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _buffer = new LogModel[_options.MaxEntries];
+
+        // Initialize and start the flush timer
+        _flushTimer = new System.Timers.Timer(FlushIntervalMs);
+        _flushTimer.Elapsed += (s, e) => FlushQueue();
+        _flushTimer.AutoReset = true;
+        _flushTimer.Start();
     }
 
     /// <inheritdoc />
@@ -122,50 +134,56 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
             return;
         }
 
-        LogModel? removedEntry = null;
-        bool wasAdded = false;
+        // Just queue the entry and let the timer handle the rest
+        _logQueue.Enqueue(logEntry);
+    }
 
+    /// <summary>
+    /// Flushes the queued log entries into the main buffer and notifies the UI in a single batch.
+    /// </summary>
+    private void FlushQueue()
+    {
+        if (_disposed || _logQueue.IsEmpty)
+        {
+            return;
+        }
+
+        var batch = new List<LogModel>();
+        while (_logQueue.TryDequeue(out var entry))
+        {
+            batch.Add(entry);
+        }
+
+        if (batch.Count == 0)
+        {
+            return;
+        }
+
+        int startIndex;
         lock (_lock)
         {
-            // Store the entry that will be overwritten if buffer is full
-            if (_count == _buffer.Length)
+            startIndex = _count;
+            foreach (var logEntry in batch)
             {
-                int oldIndex = _head;
-                removedEntry = _buffer[oldIndex];
-            }
+                // Add the new entry to circular buffer
+                _buffer[_head] = logEntry;
+                _head = (_head + 1) % _buffer.Length;
 
-            // Add the new entry
-            _buffer[_head] = logEntry;
-            _head = (_head + 1) % _buffer.Length;
-
-            if (_count < _buffer.Length)
-            {
-                _count++;
-            }
-
-            wasAdded = true;
-        }
-
-        if (wasAdded)
-        {
-            // Notify outside of lock to prevent deadlocks
-            OnPropertyChanged(nameof(Count));
-            OnPropertyChanged(nameof(IsFull));
-            OnPropertyChanged(nameof(Entries));
-
-            if (removedEntry != null)
-            {
-                // Item was replaced
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Replace, logEntry, removedEntry, _count - 1));
-            }
-            else
-            {
-                // Item was added
-                OnCollectionChanged(new NotifyCollectionChangedEventArgs(
-                    NotifyCollectionChangedAction.Add, logEntry, _count - 1));
+                if (_count < _buffer.Length)
+                {
+                    _count++;
+                }
             }
         }
+
+        // Notify UI in a single batch outside of lock
+        OnPropertyChanged(nameof(Count));
+        OnPropertyChanged(nameof(IsFull));
+        OnPropertyChanged(nameof(Entries));
+
+        // Use Add action with the batch for better UI performance
+        OnCollectionChanged(new NotifyCollectionChangedEventArgs(
+            NotifyCollectionChangedAction.Add, batch, startIndex >= _buffer.Length ? _buffer.Length - 1 : startIndex));
     }
 
     /// <inheritdoc />
@@ -473,6 +491,9 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
             {
                 return;
             }
+
+            _flushTimer.Stop();
+            _flushTimer.Dispose();
 
             Array.Clear(_buffer, 0, _buffer.Length);
             _count = 0; // Reset the entry counter

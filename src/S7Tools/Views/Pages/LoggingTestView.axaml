@@ -127,20 +127,36 @@
                         </Button>
                     </WrapPanel>
 
-                    <!-- Export Logs Button -->
-                    <Button Command="{Binding ExportLogsCommand}"
-                            Background="{DynamicResource ControlBorderBrush}"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            BorderThickness="1"
-                            BorderBrush="{DynamicResource BrandAccentBrush}"
-                            CornerRadius="4"
-                            Padding="15,8"
-                            HorizontalAlignment="Left">
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <icons:Icon Value="fa-solid fa-download" Width="16" Height="16" />
-                            <TextBlock Text="Export Logs to Clipboard" FontSize="14" FontWeight="SemiBold" />
-                        </StackPanel>
-                    </Button>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <!-- Export Logs Button -->
+                        <Button Command="{Binding ExportLogsCommand}"
+                                Background="{DynamicResource ControlBorderBrush}"
+                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                BorderThickness="1"
+                                BorderBrush="{DynamicResource BrandAccentBrush}"
+                                CornerRadius="4"
+                                Padding="15,8"
+                                HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-download" Width="16" Height="16" />
+                                <TextBlock Text="Export Logs to Clipboard" FontSize="14" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- Stress Test Button -->
+                        <Button Command="{Binding TestStressLogCommand}"
+                                Background="{DynamicResource LogColorFatalBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                BorderThickness="0"
+                                CornerRadius="4"
+                                Padding="15,8"
+                                HorizontalAlignment="Left">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <icons:Icon Value="fa-solid fa-bolt" Width="16" Height="16" />
+                                <TextBlock Text="UI Stress Test (5000 Logs)" FontSize="14" FontWeight="SemiBold" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

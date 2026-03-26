@@ -9,6 +9,7 @@
     mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="400"
     x:Class="S7Tools.Views.Pages.LogViewerView"
     x:DataType="vm:LogViewerViewModel"
+    x:CompileBindings="True"
     Background="{DynamicResource AppBackgroundBrush}">
 
     <Design.DataContext>
@@ -120,70 +121,77 @@
             </Grid>
         </Border>
 
-        <!-- ── OUR ScrollViewer — direct named reference ── -->
-        <ScrollViewer Grid.Row="2"
-            Name="LogScrollViewer"
-            VerticalScrollBarVisibility="Auto"
-            HorizontalScrollBarVisibility="Auto">
+        <!-- ── VIRTUALIZED LOG LIST ── -->
+        <ListBox Grid.Row="2"
+                 Name="LogListBox"
+                 ItemsSource="{Binding FilteredLogEntries}"
+                 SelectedItem="{Binding SelectedLogEntry, Mode=TwoWay}"
+                 Background="Transparent"
+                 BorderThickness="0"
+                 Padding="0">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            
+            <ListBox.Styles>
+                <Style Selector="ListBoxItem">
+                    <Setter Property="Padding" Value="0"/>
+                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="MinHeight" Value="0"/>
+                </Style>
+            </ListBox.Styles>
 
-            <ItemsControl ItemsSource="{Binding FilteredLogEntries}"
-                HorizontalAlignment="Stretch">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Vertical" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="models:LogModel">
+                    <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="0,2">
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="models:LogModel">
-                        <Border BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="0,0,0,1"
-                            Padding="0,2">
+                        <Border.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Copy Full Entry"
+                                    Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedEntryCommand}"
+                                    CommandParameter="{Binding}" />
+                                <MenuItem Header="Copy Message"
+                                    Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedMessageCommand}"
+                                    CommandParameter="{Binding}" />
+                            </ContextMenu>
+                        </Border.ContextMenu>
 
-                            <Border.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="Copy Full Entry"
-                                        Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedEntryCommand}"
-                                        CommandParameter="{Binding}" />
-                                    <MenuItem Header="Copy Message"
-                                        Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedMessageCommand}"
-                                        CommandParameter="{Binding}" />
-                                </ContextMenu>
-                            </Border.ContextMenu>
+                        <Grid ColumnDefinitions="165,100,150,*">
+                            <TextBlock Grid.Column="0"
+                                Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
+                                FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                VerticalAlignment="Center" Margin="8,0" />
 
-                            <Grid ColumnDefinitions="165,100,150,*">
-                                <TextBlock Grid.Column="0"
-                                    Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
-                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
-                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                                    VerticalAlignment="Center" Margin="8,0" />
+                            <Border Grid.Column="1"
+                                CornerRadius="2" Padding="3,1" Margin="4,1"
+                                HorizontalAlignment="Left" VerticalAlignment="Center"
+                                Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
+                                <TextBlock Text="{Binding Level}"
+                                    FontSize="9" FontWeight="SemiBold" Foreground="White" />
+                            </Border>
 
-                                <Border Grid.Column="1"
-                                    CornerRadius="2" Padding="3,1" Margin="4,1"
-                                    HorizontalAlignment="Left" VerticalAlignment="Center"
-                                    Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
-                                    <TextBlock Text="{Binding Level}"
-                                        FontSize="9" FontWeight="SemiBold" Foreground="White" />
-                                </Border>
+                            <TextBlock Grid.Column="2"
+                                Text="{Binding Category}"
+                                FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                VerticalAlignment="Center" Margin="8,0"
+                                TextTrimming="CharacterEllipsis" />
 
-                                <TextBlock Grid.Column="2"
-                                    Text="{Binding Category}"
-                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
-                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                                    VerticalAlignment="Center" Margin="8,0"
-                                    TextTrimming="CharacterEllipsis" />
-
-                                <TextBlock Grid.Column="3"
-                                    Text="{Binding FormattedMessage}"
-                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
-                                    Foreground="{DynamicResource TextForegroundBrush}"
-                                    VerticalAlignment="Center" Margin="8,0"
-                                    TextTrimming="CharacterEllipsis" />
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </ScrollViewer>
+                            <TextBlock Grid.Column="3"
+                                Text="{Binding FormattedMessage}"
+                                FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                VerticalAlignment="Center" Margin="8,0"
+                                TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </UserControl>

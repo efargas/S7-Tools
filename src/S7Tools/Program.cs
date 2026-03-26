@@ -167,7 +167,7 @@ sealed class Program
     {
         var basePath = AppDomain.CurrentDomain.BaseDirectory;
         var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
-            .AddJsonFile(Path.Combine(basePath, "appsettings.json"), optional: true, reloadOnChange: true)
+            .AddJsonFile(Path.Combine(basePath, "Resources", "AppSettings", "AppSettings.json"), optional: true, reloadOnChange: true)
             .AddJsonFile(Path.Combine(basePath, "Resources", "AppSettings", "UserSettings.json"), optional: true, reloadOnChange: true)
             .Build();
 
@@ -203,16 +203,17 @@ sealed class Program
             // Application File Sink (No TaskId)
             .WriteTo.Logger(lc => lc
                 .Filter.ByExcluding(e => e.Properties.ContainsKey("TaskId"))
-                .WriteTo.File("Logs/Application/app-.log", rollingInterval: RollingInterval.Day))
+                .WriteTo.File(Path.Combine(basePath, "Resources", "Logs", "Main", $"s7tools_{DateTime.Now:yyyyMMdd_HHmmss}.log")))
             
             // Task-specific File Sinks via Map (Has TaskId)
             .WriteTo.Logger(lc => lc
                 .Filter.ByIncludingOnly(e => e.Properties.ContainsKey("TaskId"))
                 .WriteTo.Map("TaskId", (taskId, wt) => 
                 {
+                    var taskIdStr = taskId?.ToString() ?? "unknown";
                     // Within a task, map by Scope to create main.log, process.log, etc.
                     wt.Map("LogScope", "Main", (scope, subWt) => 
-                        subWt.File($"Logs/Tasks/{taskId}/{scope}.log", rollingInterval: RollingInterval.Day));
+                        subWt.File(Path.Combine(basePath, "Resources", "Logs", "Tasks", taskIdStr, $"{scope}.log"), rollingInterval: RollingInterval.Day));
                 }, sinkMapCountLimit: 50))
                 
             .CreateLogger();

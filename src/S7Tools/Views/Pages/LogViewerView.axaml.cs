@@ -11,6 +11,7 @@ namespace S7Tools.Views.Pages;
 public partial class LogViewerView : UserControl
 {
     private bool _autoScroll = true;
+    private ScrollViewer? _scrollViewer;
 
     public LogViewerView()
     {
@@ -21,7 +22,7 @@ public partial class LogViewerView : UserControl
     {
         base.OnLoaded(e);
 
-        LogScrollViewer.ScrollChanged += OnScrollChanged;
+        LogListBox.AddHandler(ScrollViewer.ScrollChangedEvent, OnScrollChanged, RoutingStrategies.Bubble);
 
         if (DataContext is LogViewerViewModel vm)
         {
@@ -38,7 +39,7 @@ public partial class LogViewerView : UserControl
     {
         base.OnUnloaded(e);
 
-        LogScrollViewer.ScrollChanged -= OnScrollChanged;
+        LogListBox.RemoveHandler(ScrollViewer.ScrollChangedEvent, OnScrollChanged);
 
         if (DataContext is LogViewerViewModel vm)
         {
@@ -51,9 +52,15 @@ public partial class LogViewerView : UserControl
 
     private void OnScrollChanged(object? sender, ScrollChangedEventArgs e)
     {
-        var sv = LogScrollViewer;
-        double scrollable = sv.Extent.Height - sv.Viewport.Height;
-        bool atBottom = scrollable <= 0 || sv.Offset.Y >= scrollable - 1;
+        if (e.Source is ScrollViewer sv)
+        {
+            _scrollViewer = sv;
+        }
+
+        if (_scrollViewer == null) return;
+
+        double scrollable = _scrollViewer.Extent.Height - _scrollViewer.Viewport.Height;
+        bool atBottom = scrollable <= 0 || _scrollViewer.Offset.Y >= scrollable - 5; // Added small tolerance
 
         _autoScroll = atBottom;
 
@@ -83,7 +90,13 @@ public partial class LogViewerView : UserControl
 
     private void ScrollToBottom()
     {
-        var sv = LogScrollViewer;
-        sv.Offset = new Vector(sv.Offset.X, sv.Extent.Height);
+        if (_scrollViewer != null)
+        {
+            _scrollViewer.Offset = new Vector(_scrollViewer.Offset.X, _scrollViewer.Extent.Height);
+        }
+        else if (DataContext is LogViewerViewModel vm && vm.FilteredLogEntries.Count > 0)
+        {
+            LogListBox.ScrollIntoView(vm.FilteredLogEntries.Count - 1);
+        }
     }
 }
