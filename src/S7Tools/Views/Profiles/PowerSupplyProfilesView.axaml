@@ -18,7 +18,7 @@
     <conv:ModbusTcpPropertyConverter x:Key="ModbusTcpOnOffCoil" PropertyName="OnOffCoil" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Power Supply Profiles"
@@ -33,9 +33,19 @@
               CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="8">
-          <!-- Toolbar -->
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,8">
-            <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Power Supply Profile Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+          <!-- Toolbar above the DataGrid -->
+          <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
               <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
@@ -77,7 +87,10 @@
                   <TextBlock Text="Refresh" />
                 </StackPanel>
               </Button>
+            </StackPanel>
 
+            <!-- Import/Export Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
               <Button Width="110" Height="34" Command="{Binding ExportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
@@ -92,7 +105,7 @@
                 </StackPanel>
               </Button>
             </StackPanel>
-          </ScrollViewer>
+          </Grid>
 
           <!-- DataGrid -->
           <DataGrid ItemsSource="{Binding Profiles}"
@@ -105,7 +118,7 @@
                     CanUserResizeColumns="True"
                     CanUserSortColumns="True"
                     IsReadOnly="True"
-                    Height="400"
+                    MaxHeight="400"
                     Margin="0,0,0,8">
             <DataGrid.Styles>
               <Style Selector="DataGridColumnHeader">
@@ -260,8 +273,7 @@
           </Grid>
 
           <!-- Connection Control Buttons -->
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,8,0,0">
-            <StackPanel Orientation="Horizontal" Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
               <Button Width="150" Height="38"
                       Command="{Binding ConnectCommand}"
                       Background="#16825D"
@@ -292,7 +304,6 @@
                 </StackPanel>
               </Button>
             </StackPanel>
-          </ScrollViewer>
 
           <TextBlock Text="Connect to the selected profile's Modbus TCP device to enable power control operations"
                      FontSize="11"
@@ -345,8 +356,7 @@
           </Grid>
 
           <!-- Power Control Buttons -->
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,8,0,0">
-            <StackPanel Orientation="Horizontal" Spacing="8">
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
               <Button Width="150" Height="38"
                       Command="{Binding TurnOnCommand}"
                       Background="#16825D"
@@ -387,7 +397,6 @@
                 </StackPanel>
               </Button>
             </StackPanel>
-          </ScrollViewer>
 
           <TextBlock Text="Control power supply via Modbus coil operations (Turn ON/OFF, Read current state, or Power Cycle with 5s delay)"
                      FontSize="11"

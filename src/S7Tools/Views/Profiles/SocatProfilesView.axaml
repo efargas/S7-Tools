@@ -14,7 +14,7 @@
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Server Profiles"
@@ -28,10 +28,14 @@
               BorderThickness="1"
               CornerRadius="4"
               Padding="16">
-        <StackPanel Spacing="8">
-          <!-- Toolbar -->
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,8">
-            <StackPanel Orientation="Horizontal" Spacing="8">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Socat Profile Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
               <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
@@ -73,7 +77,10 @@
                   <TextBlock Text="Refresh" />
                 </StackPanel>
               </Button>
+            </StackPanel>
 
+            <!-- Import/Export Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
               <Button Width="110" Height="34" Command="{Binding ExportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
@@ -88,7 +95,7 @@
                 </StackPanel>
               </Button>
             </StackPanel>
-          </ScrollViewer>
+          </Grid>
 
           <!-- DataGrid -->
           <DataGrid ItemsSource="{Binding Profiles}"
@@ -101,7 +108,7 @@
                     CanUserResizeColumns="True"
                     CanUserSortColumns="True"
                     IsReadOnly="True"
-                    Height="400"
+                    MaxHeight="500"
                     Margin="0,0,0,8">
             <DataGrid.Styles>
               <Style Selector="DataGridColumnHeader">

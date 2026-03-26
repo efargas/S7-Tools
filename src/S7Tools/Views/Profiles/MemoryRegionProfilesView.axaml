@@ -14,7 +14,7 @@
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Memory Region Profiles"
@@ -29,9 +29,19 @@
               CornerRadius="4"
               Padding="16">
         <StackPanel Spacing="8">
-          <!-- Toolbar -->
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,8">
-            <StackPanel Orientation="Horizontal" Spacing="8">
+          <TextBlock Text="Memory Region Profile Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+          <!-- Toolbar above the DataGrid -->
+          <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
               <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
@@ -73,7 +83,10 @@
                   <TextBlock Text="Refresh" />
                 </StackPanel>
               </Button>
+            </StackPanel>
 
+            <!-- Import/Export Buttons -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
               <Button Width="110" Height="34" Command="{Binding ExportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
@@ -88,7 +101,7 @@
                 </StackPanel>
               </Button>
             </StackPanel>
-          </ScrollViewer>
+          </Grid>
 
           <!-- DataGrid -->
           <DataGrid ItemsSource="{Binding Profiles}"
@@ -101,7 +114,7 @@
                     CanUserResizeColumns="True"
                     CanUserSortColumns="True"
                     IsReadOnly="True"
-                    Height="400"
+                    MaxHeight="400"
                     Margin="0,0,0,8">
             <DataGrid.Styles>
               <Style Selector="DataGridColumnHeader">
@@ -207,37 +220,15 @@
                      FontWeight="SemiBold"
                      Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto" />
-              <RowDefinition Height="Auto" />
-              <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,0,8,0" />
+          <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedProfile.Name}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="Total Segments:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="16,0,8,0" />
-            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding SelectedProfile.SegmentCount}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Total Segments:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedProfile.SegmentCount}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,8,0" />
-            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Text="{Binding SelectedProfile.Description}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,0,0" />
-            
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Selected:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,8,0" />
-            <TextBlock Grid.Row="2" Grid.Column="1" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,0,0">
-              <TextBlock.Text>
-                <MultiBinding StringFormat="{}{0} of {1} segments">
-                  <Binding Path="SelectedProfile.Segments" Converter="{x:Static conv:CollectionConverters.CountSelectedSegments}" />
-                  <Binding Path="SelectedProfile.Segments.Count" />
-                </MultiBinding>
-              </TextBlock.Text>
-            </TextBlock>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Description:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedProfile.Description}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" TextWrapping="Wrap" />
           </Grid>
 
           <!-- Memory Segments List -->
@@ -256,7 +247,7 @@
                     CanUserResizeColumns="True"
                     CanUserSortColumns="True"
                     IsReadOnly="True"
-                    Height="150"
+                    MaxHeight="150"
                     Margin="0,0,0,8">
             <DataGrid.Columns>
               <DataGridCheckBoxColumn Binding="{Binding IsSelected}" Width="60" IsReadOnly="True">
@@ -292,7 +283,7 @@
                 </DataGridTextColumn.Header>
               </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Description}" Width="*" MinWidth="120">
+              <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="120">
                 <DataGridTextColumn.Header>
                   <TextBlock Text="Description" FontSize="11" />
                 </DataGridTextColumn.Header>
