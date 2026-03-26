@@ -220,15 +220,39 @@
                      FontWeight="SemiBold"
                      Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
-          <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedProfile.Name}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+          <Grid ColumnDefinitions="Auto,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+            <!-- Row 0: Name -->
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,0,8,0" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3"
+                       Text="{Binding SelectedProfile.Name}"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Total Segments:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedProfile.SegmentCount}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+            <!-- Row 1: Description (wraps when long) -->
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,8,0"
+                       VerticalAlignment="Top" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                       Text="{Binding SelectedProfile.Description}"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                       TextWrapping="Wrap" Margin="0,4,0,0" />
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Description:" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedProfile.Description}" Foreground="{DynamicResource TextForegroundSecondaryBrush}" TextWrapping="Wrap" />
+            <!-- Row 2: Total Segments | Selected (same row) -->
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Total Segments:" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,8,0" />
+            <TextBlock Grid.Row="2" Grid.Column="1"
+                       Text="{Binding SelectedProfile.SegmentCount}"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,16,0" />
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="Selected:" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="8,4,8,0" />
+            <TextBlock Grid.Row="2" Grid.Column="3" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,0,0">
+              <TextBlock.Text>
+                <MultiBinding StringFormat="{}{0} of {1}">
+                  <Binding Path="SelectedProfile.Segments" Converter="{x:Static conv:CollectionConverters.CountSelectedSegments}" />
+                  <Binding Path="SelectedProfile.Segments.Count" />
+                </MultiBinding>
+              </TextBlock.Text>
+            </TextBlock>
           </Grid>
 
           <!-- Memory Segments List -->
