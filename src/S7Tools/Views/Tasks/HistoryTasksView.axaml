@@ -33,7 +33,6 @@
       <DataGrid.Columns>
         <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
         <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
-        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
         <DataGridTextColumn Header="Status" Binding="{Binding State}" Width="100" />
         <DataGridTextColumn Header="Completed"
           Binding="{Binding CompletedAt, StringFormat='MM/dd HH:mm'}" Width="120" />

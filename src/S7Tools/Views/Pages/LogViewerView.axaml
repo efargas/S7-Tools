@@ -16,7 +16,7 @@
         <vm:LogViewerViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,*">
 
         <!-- ── TOOLBAR ── -->
         <Border Grid.Row="0"
@@ -82,126 +82,134 @@
             </ScrollViewer>
         </Border>
 
-        <!-- ── HEADER (fixed, never scrolls) ── -->
-        <Border Grid.Row="1"
-            Background="{DynamicResource PanelBackgroundBrush}"
-            BorderBrush="{DynamicResource ControlBorderBrush}"
-            BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="165,100,150,*" Margin="8,1">
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
-                    <TextBlock Text="Timestamp" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
-                        Padding="4,0" VerticalAlignment="Center"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Command="{Binding SortCommand}" CommandParameter="Timestamp">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
-                    </Button>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
-                    <TextBlock Text="Level" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
-                        Padding="4,0" VerticalAlignment="Center"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Command="{Binding SortCommand}" CommandParameter="Level">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
-                    </Button>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
-                    <TextBlock Text="Category" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
-                        Padding="4,0" VerticalAlignment="Center"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Command="{Binding SortCommand}" CommandParameter="Category">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
-                    </Button>
-                </StackPanel>
-                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2">
-                    <TextBlock Text="Message" FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
-                        Padding="4,0" VerticalAlignment="Center"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Command="{Binding SortCommand}" CommandParameter="Message">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
+        <!-- ── HEADER + LOG LIST with shared horizontal scroll ── -->
+        <ScrollViewer Grid.Row="1"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Disabled">
+          <Grid RowDefinitions="Auto,*" MinWidth="460">
 
-        <!-- ── VIRTUALIZED LOG LIST ── -->
-        <ListBox Grid.Row="2"
-                 Name="LogListBox"
-                 ItemsSource="{Binding FilteredLogEntries}"
-                 SelectedItem="{Binding SelectedLogEntry, Mode=TwoWay}"
-                 Background="Transparent"
-                 BorderThickness="0"
-                 Padding="0">
-            <ListBox.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <VirtualizingStackPanel />
-                </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
-            
-            <ListBox.Styles>
-                <Style Selector="ListBoxItem">
-                    <Setter Property="Padding" Value="0"/>
-                    <Setter Property="Margin" Value="0"/>
-                    <Setter Property="MinHeight" Value="0"/>
-                </Style>
-            </ListBox.Styles>
+            <!-- ── HEADER ── -->
+            <Border Grid.Row="0"
+                Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="165,100,150,*" Margin="8,1">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
+                        <TextBlock Text="Timestamp" FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                            Padding="4,0" VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            Command="{Binding SortCommand}" CommandParameter="Timestamp">
+                            <ui:SymbolIcon Symbol="Sort" FontSize="10" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                        <TextBlock Text="Level" FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                            Padding="4,0" VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            Command="{Binding SortCommand}" CommandParameter="Level">
+                            <ui:SymbolIcon Symbol="Sort" FontSize="10" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
+                        <TextBlock Text="Category" FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                            Padding="4,0" VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            Command="{Binding SortCommand}" CommandParameter="Category">
+                            <ui:SymbolIcon Symbol="Sort" FontSize="10" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2">
+                        <TextBlock Text="Message" FontWeight="SemiBold"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
+                        <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                            Padding="4,0" VerticalAlignment="Center"
+                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                            Command="{Binding SortCommand}" CommandParameter="Message">
+                            <ui:SymbolIcon Symbol="Sort" FontSize="10" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
 
-            <ListBox.ItemTemplate>
-                <DataTemplate DataType="models:LogModel">
-                    <Border BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="0,0,0,1"
-                        Padding="0,2">
+            <!-- ── VIRTUALIZED LOG LIST ── -->
+            <ListBox Grid.Row="1"
+                     Name="LogListBox"
+                     ItemsSource="{Binding FilteredLogEntries}"
+                     SelectedItem="{Binding SelectedLogEntry, Mode=TwoWay}"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="0">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Setter Property="MinHeight" Value="0"/>
+                    </Style>
+                </ListBox.Styles>
 
-                        <Border.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Copy Full Entry"
-                                    Command="{Binding #LogListBox.((vm:LogViewerViewModel)DataContext).CopySelectedEntryCommand}"
-                                    CommandParameter="{Binding}" />
-                                <MenuItem Header="Copy Message"
-                                    Command="{Binding #LogListBox.((vm:LogViewerViewModel)DataContext).CopySelectedMessageCommand}"
-                                    CommandParameter="{Binding}" />
-                            </ContextMenu>
-                        </Border.ContextMenu>
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="models:LogModel">
+                        <Border BorderBrush="{DynamicResource ControlBorderBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="0,2">
 
-                        <Grid ColumnDefinitions="165,100,150,*">
-                            <TextBlock Grid.Column="0"
-                                Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
-                                FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
-                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                                VerticalAlignment="Center" Margin="8,0" />
+                            <Border.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Copy Full Entry"
+                                        Command="{Binding #LogListBox.((vm:LogViewerViewModel)DataContext).CopySelectedEntryCommand}"
+                                        CommandParameter="{Binding}" />
+                                    <MenuItem Header="Copy Message"
+                                        Command="{Binding #LogListBox.((vm:LogViewerViewModel)DataContext).CopySelectedMessageCommand}"
+                                        CommandParameter="{Binding}" />
+                                </ContextMenu>
+                            </Border.ContextMenu>
 
-                            <Border Grid.Column="1"
-                                CornerRadius="2" Padding="3,1" Margin="4,1"
-                                HorizontalAlignment="Left" VerticalAlignment="Center"
-                                Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
-                                <TextBlock Text="{Binding Level}"
-                                    FontSize="9" FontWeight="SemiBold" Foreground="White" />
-                            </Border>
+                            <Grid ColumnDefinitions="165,100,150,*">
+                                <TextBlock Grid.Column="0"
+                                    Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
+                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                    VerticalAlignment="Center" Margin="8,0" />
 
-                            <TextBlock Grid.Column="2"
-                                Text="{Binding Category}"
-                                FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
-                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                                VerticalAlignment="Center" Margin="8,0"
-                                TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="1"
+                                    CornerRadius="2" Padding="3,1" Margin="4,1"
+                                    HorizontalAlignment="Left" VerticalAlignment="Center"
+                                    Background="{Binding Level, Converter={x:Static converters:ObjectConverters.LogLevelToBrush}}">
+                                    <TextBlock Text="{Binding Level}"
+                                        FontSize="9" FontWeight="SemiBold" Foreground="White" />
+                                </Border>
 
-                            <TextBlock Grid.Column="3"
-                                Text="{Binding FormattedMessage}"
-                                FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
-                                Foreground="{DynamicResource TextForegroundBrush}"
-                                VerticalAlignment="Center" Margin="8,0"
-                                TextTrimming="CharacterEllipsis" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                                <TextBlock Grid.Column="2"
+                                    Text="{Binding Category}"
+                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                    VerticalAlignment="Center" Margin="8,0"
+                                    TextTrimming="CharacterEllipsis" />
+
+                                <TextBlock Grid.Column="3"
+                                    Text="{Binding FormattedMessage}"
+                                    FontSize="{Binding $parent[UserControl].DataContext.FontSize}"
+                                    Foreground="{DynamicResource TextForegroundBrush}"
+                                    VerticalAlignment="Center" Margin="8,0"
+                                    TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </ScrollViewer>
     </Grid>
 </UserControl>

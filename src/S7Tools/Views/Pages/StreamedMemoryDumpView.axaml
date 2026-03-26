@@ -23,9 +23,10 @@
             BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="0,0,0,1"
             Padding="12">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -92,13 +93,14 @@
                 </StackPanel>
 
                 <!-- Connection Status -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="12,0,0,0">
                     <TextBlock Text="{Binding ConnectionStatus}"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         VerticalAlignment="Center"
                         FontSize="13" />
                 </StackPanel>
             </Grid>
+            </ScrollViewer>
         </Border>
 
         <!-- Statistics Bar -->
@@ -163,7 +165,8 @@
         <ListBox Grid.Row="2"
             ItemsSource="{Binding MemoryBlocks}"
             Background="Transparent"
-            BorderThickness="0">
+            BorderThickness="0"
+            ScrollViewer.HorizontalScrollBarVisibility="Auto">
             <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="models:MemoryBlock">
                     <Border Background="{DynamicResource AppBackgroundBrush}"

@@ -23,11 +23,10 @@
       <DataGrid.Columns>
         <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
         <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
-        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
         <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="100" />
         <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
         <DataGridTextColumn Header="Elapsed" Binding="{Binding ExecutionTime}" Width="80" />
-        <DataGridTemplateColumn Header="Actions" Width="120">
+        <DataGridTemplateColumn Header="Actions" Width="160">
           <DataGridTemplateColumn.CellTemplate>
             <DataTemplate>
               <StackPanel Orientation="Horizontal" Spacing="4">
@@ -35,9 +34,10 @@
                         Command="{Binding $parent[UserControl].DataContext.Manager.StopTaskCommand}"
                         CommandParameter="{Binding}"
                         ToolTip.Tip="Stop this task" />
-                <Button Content="Details" FontSize="10" Padding="6,2"
-                        Command="{Binding $parent[UserControl].DataContext.Manager.CreateTaskCommand}"
-                        ToolTip.Tip="Show task details" />
+                <Button Content="Logs" FontSize="10" Padding="6,2"
+                        Command="{Binding $parent[UserControl].DataContext.Manager.ViewTaskLogsCommand}"
+                        CommandParameter="{Binding}"
+                        ToolTip.Tip="View task logs" />
               </StackPanel>
             </DataTemplate>
           </DataGridTemplateColumn.CellTemplate>

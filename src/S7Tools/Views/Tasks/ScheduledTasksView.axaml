@@ -24,7 +24,6 @@
       <DataGrid.Columns>
         <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
         <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
-        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
         <DataGridTextColumn Header="Scheduled For"
           Binding="{Binding CreatedAt, StringFormat='MM/dd HH:mm'}" Width="120" />
         <DataGridTextColumn Header="Time Until" Binding="{Binding TotalTime}" Width="100" />

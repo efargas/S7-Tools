@@ -19,8 +19,8 @@
     <!-- Header Section with Statistics -->
     <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
       BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,0,0,1" Padding="16,12">
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto">
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <StackPanel Orientation="Horizontal" Spacing="12">
           <TextBlock Text="Task Manager" FontWeight="SemiBold" FontSize="18"
             VerticalAlignment="Center" Margin="0,0,8,0" />
           <Border Background="#43A047" CornerRadius="12" Padding="8,4">
@@ -48,16 +48,12 @@
             <TextBlock Text="{Binding Statistics.FailedTasksCount, StringFormat='Failed: {0}'}"
               Foreground="{DynamicResource TextForegroundBrush}" FontSize="12" />
           </Border>
-        </StackPanel>
-
-        <Button Grid.Column="1" Content="Create Task" Command="{Binding CreateTaskCommand}"
-          Margin="0,0,16,0" ToolTip.Tip="Create a new task from a job profile" />
-
-        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
+          <Button Content="Create Task" Command="{Binding CreateTaskCommand}"
+            Margin="8,0,0,0" ToolTip.Tip="Create a new task from a job profile" />
           <Button Content="Refresh" Command="{Binding RefreshTasksCommand}"
             ToolTip.Tip="Manually refresh task list" />
         </StackPanel>
-      </Grid>
+      </ScrollViewer>
     </Border>
 
     <!-- Task List (Row 1) -->
