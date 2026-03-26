@@ -30,12 +30,8 @@
               Padding="16">
         <StackPanel Spacing="8">
           <!-- Toolbar -->
-          <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
               <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
@@ -92,7 +88,7 @@
                 </StackPanel>
               </Button>
             </StackPanel>
-          </Grid>
+          </ScrollViewer>
 
           <!-- DataGrid -->
           <DataGrid ItemsSource="{Binding Profiles}"
