@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <!-- Application default configuration (read-only, version-controlled) -->
-    <Content Include="AppSettings.json" Link="Resources\AppSettings\AppSettings.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Resources\AppSettings\AppSettings.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- User settings directory scaffold (writable at runtime, not version-controlled) -->
     <Content Include="Resources\AppSettings\UserSettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

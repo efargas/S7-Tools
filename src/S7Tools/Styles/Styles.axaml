@@ -182,9 +182,10 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrush}" />
     </Style>
 
-    <Style Selector="Button.transparent:pointerover">
-        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOverBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BrandAccentBrush}" />
+    <Style Selector="Button.compact">
+        <Setter Property="MinHeight" Value="20" />
+        <Setter Property="Padding" Value="4,0" />
+        <Setter Property="FontSize" Value="10" />
     </Style>
 
     <Style Selector="viewsPages|LogViewerView TextBox">
@@ -206,13 +207,13 @@
     </Style>
     <Style Selector="viewsPages|LogViewerView Button">
         <Setter Property="MinHeight" Value="32" />
-        <Setter Property="Padding" Value="16,6" />
+        <Setter Property="Padding" Value="8,4" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
     <Style Selector="viewsPages|LogViewerView ToggleButton">
         <Setter Property="MinHeight" Value="32" />
-        <Setter Property="Padding" Value="16,6" />
+        <Setter Property="Padding" Value="8,4" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>

@@ -68,7 +68,10 @@ public class LoggingSettingsViewModel : ViewModelBase
 
             if (e.PropertyName is nameof(DefaultLogPath) or nameof(ExportPath) or nameof(MinimumLogLevel) or
                 nameof(AutoScrollLogs) or nameof(EnableRollingLogs) or nameof(ShowTimestampInLogs) or
-                nameof(ShowCategoryInLogs) or nameof(ShowLogLevelInLogs) or nameof(LogViewerFontSize))
+                nameof(ShowCategoryInLogs) or nameof(ShowLogLevelInLogs) or nameof(LogViewerFontSize) or
+                nameof(MaxLogFileSizeMb) or nameof(MaxRetainedLogFiles) or
+                nameof(LogProfileOperations) or nameof(LogModbusOperations) or
+                nameof(LogConnectionStateChanges) or nameof(LogPowerStateChanges))
             {
                 _ = SaveLoggingSettingsAsync();
             }
@@ -193,6 +196,34 @@ public class LoggingSettingsViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _maxRetainedLogFiles, value);
     }
 
+    private bool _logProfileOperations = true;
+    public bool LogProfileOperations
+    {
+        get => _logProfileOperations;
+        set => this.RaiseAndSetIfChanged(ref _logProfileOperations, value);
+    }
+
+    private bool _logModbusOperations;
+    public bool LogModbusOperations
+    {
+        get => _logModbusOperations;
+        set => this.RaiseAndSetIfChanged(ref _logModbusOperations, value);
+    }
+
+    private bool _logConnectionStateChanges = true;
+    public bool LogConnectionStateChanges
+    {
+        get => _logConnectionStateChanges;
+        set => this.RaiseAndSetIfChanged(ref _logConnectionStateChanges, value);
+    }
+
+    private bool _logPowerStateChanges = true;
+    public bool LogPowerStateChanges
+    {
+        get => _logPowerStateChanges;
+        set => this.RaiseAndSetIfChanged(ref _logPowerStateChanges, value);
+    }
+
     #endregion
 
     #region Commands
@@ -233,6 +264,12 @@ public class LoggingSettingsViewModel : ViewModelBase
         LogViewerFontSize = current.Ui.LogViewerFontSize;
         MaxLogFileSizeMb = (int)(current.Logging.MaxFileSize / 1024 / 1024);
         MaxRetainedLogFiles = current.Logging.MaxFiles;
+        
+        // Detailed Operation Logging
+        LogProfileOperations = current.MemoryRegion.LogProfileOperations;
+        LogModbusOperations = current.PowerSupply.LogModbusOperations;
+        LogConnectionStateChanges = current.PowerSupply.LogConnectionStateChanges;
+        LogPowerStateChanges = current.PowerSupply.LogPowerStateChanges;
     }
 
     private async Task BrowseDefaultLogPathAsync()
@@ -294,6 +331,16 @@ public class LoggingSettingsViewModel : ViewModelBase
                 settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
                 settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
                 settings.Ui.LogViewerFontSize = LogViewerFontSize;
+                
+                // Serilog/File Logging
+                settings.Logging.MaxFileSize = (long)MaxLogFileSizeMb * 1024 * 1024;
+                settings.Logging.MaxFiles = MaxRetainedLogFiles;
+                
+                // Detailed Operation Logging
+                settings.MemoryRegion.LogProfileOperations = LogProfileOperations;
+                settings.PowerSupply.LogModbusOperations = LogModbusOperations;
+                settings.PowerSupply.LogConnectionStateChanges = LogConnectionStateChanges;
+                settings.PowerSupply.LogPowerStateChanges = LogPowerStateChanges;
             });
         }
         catch (Exception ex)

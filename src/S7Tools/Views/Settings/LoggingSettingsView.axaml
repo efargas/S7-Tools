@@ -57,22 +57,20 @@
                             Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
-                            Width="110"
-                            Height="34"
                             Content="Browse..."
                             Background="{DynamicResource ButtonBackgroundBrush}"
                             Foreground="{DynamicResource TextForegroundBrush}"
                             BorderThickness="0"
+                            Padding="12,4"
                             Margin="4,0"
                             Command="{Binding BrowseDefaultLogPathCommand}" />
 
                         <Button Grid.Column="3" Grid.Row="0"
-                            Width="110"
-                            Height="34"
                             Background="Transparent"
                             Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
+                            Padding="12,4"
                             Margin="4,0"
                             ToolTip.Tip="Open in Explorer"
                             Command="{Binding OpenDefaultLogPathCommand}">
@@ -116,22 +114,20 @@
                             Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
-                            Width="110"
-                            Height="34"
                             Content="Browse..."
                             Background="{DynamicResource ButtonBackgroundBrush}"
                             Foreground="{DynamicResource TextForegroundBrush}"
                             BorderThickness="0"
+                            Padding="12,4"
                             Margin="4,0"
                             Command="{Binding BrowseExportPathCommand}" />
 
                         <Button Grid.Column="3" Grid.Row="0"
-                            Width="110"
-                            Height="34"
                             Background="Transparent"
                             Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
                             BorderThickness="1"
+                            Padding="12,4"
                             Margin="4,0"
                             ToolTip.Tip="Open in Explorer"
                             Command="{Binding OpenExportPathCommand}">
@@ -302,12 +298,11 @@
                             VerticalAlignment="Center" />
 
                         <TextBox Grid.Column="1"
-                            Text="{Binding MaxLogFileSizeMb, StringFormat={}{0} MB}"
+                            Text="{Binding MaxLogFileSizeMb}"
                             Background="{DynamicResource ControlBackgroundBrush}"
                             Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
-                            Margin="8,0"
-                            IsEnabled="False" />
+                            Margin="8,0" />
 
                         <TextBlock Grid.Column="2"
                             Text="Maximum size of a single log file before rotation (10 MB)"
@@ -335,8 +330,7 @@
                             Background="{DynamicResource ControlBackgroundBrush}"
                             Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             BorderBrush="{DynamicResource ControlBorderBrush}"
-                            Margin="8,0"
-                            IsEnabled="False" />
+                            Margin="8,0" />
 
                         <TextBlock Grid.Column="2"
                             Text="Maximum number of rotated log files to keep (5 files)"
@@ -351,6 +345,36 @@
                         FontSize="11"
                         Foreground="{DynamicResource TextForegroundMutedBrush}"
                         TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- Operation Logging Section -->
+            <Border Background="{DynamicResource PanelBackgroundBrush}"
+                BorderBrush="{DynamicResource ControlBorderBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="16">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="Operation Logging"
+                        FontSize="18"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <CheckBox IsChecked="{Binding LogProfileOperations}"
+                        Content="Log profile CRUD operations"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <CheckBox IsChecked="{Binding LogModbusOperations}"
+                        Content="Log individual Modbus TCP operations (Debug)"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <CheckBox IsChecked="{Binding LogConnectionStateChanges}"
+                        Content="Log PLC connection state transitions"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+                    <CheckBox IsChecked="{Binding LogPowerStateChanges}"
+                        Content="Log power supply state transitions"
+                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                 </StackPanel>
             </Border>
 

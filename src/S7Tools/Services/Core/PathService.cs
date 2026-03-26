@@ -400,7 +400,9 @@ namespace S7Tools.Services
         public string GetMainLogPath(int rollingNumber = 0)
         {
             string timestamp = DateTime.UtcNow.ToLocalTime().ToString(FileNaming.TimestampFormat);
-            string fileName = string.Format(ResourcePaths.MainLogFilePattern, timestamp, rollingNumber);
+            string fileName = rollingNumber > 0
+                ? string.Format(ResourcePaths.MainLogRollingFilePattern, timestamp, rollingNumber)
+                : string.Format(ResourcePaths.MainLogFilePattern, timestamp);
             return Path.Combine(MainLogsDirectory, fileName);
         }
 

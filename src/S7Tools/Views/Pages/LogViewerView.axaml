@@ -24,52 +24,62 @@
             BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="0,0,0,1"
             Padding="8,4">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0" Spacing="4">
-                
-                <!-- Search -->
-                <TextBox Text="{Binding SearchText, Mode=TwoWay}"
-                         Watermark="Search logs..."
-                         Width="200"
-                         Margin="8,0,8,0"
-                         VerticalAlignment="Center">
-                    <TextBox.InnerRightContent>
-                        <Button Background="Transparent" BorderThickness="0" Padding="4"
-                                Command="{Binding ClearFiltersCommand}"
-                                ToolTip.Tip="Clear search and filters">
-                            <TextBlock Text="✕" FontSize="10" />
-                        </Button>
-                    </TextBox.InnerRightContent>
-                </TextBox>
-                
-                <!-- Filter Level -->
-                <TextBlock Text="Level:" VerticalAlignment="Center" Margin="8,0,4,0"/>
-                <ComboBox SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
-                          ItemsSource="{Binding AvailableLogLevels}"
-                          Width="120"
-                          Margin="0,0,8,0"
-                          VerticalAlignment="Center"/>
-                          
-                <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
-
-                <!-- Auto-Scroll Toggle -->
-                <ToggleButton IsChecked="{Binding AutoScroll, Mode=TwoWay}"
-                              Content="Auto-Scroll"
-                              Margin="8,0"
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0" Spacing="4">
+                    
+                    <!-- Search -->
+                    <TextBox Text="{Binding SearchText, Mode=TwoWay}"
+                             Watermark="Search logs..."
+                             Width="200"
+                             Margin="8,0,8,0"
+                             VerticalAlignment="Center">
+                        <TextBox.InnerRightContent>
+                            <Button Background="Transparent" BorderThickness="0" Padding="4"
+                                    Command="{Binding ClearFiltersCommand}"
+                                    ToolTip.Tip="Clear search and filters">
+                                <TextBlock Text="✕" FontSize="10" />
+                            </Button>
+                        </TextBox.InnerRightContent>
+                    </TextBox>
+                    
+                    <!-- Filter Level -->
+                    <TextBlock Text="Level:" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                    <ComboBox SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
+                              ItemsSource="{Binding AvailableLogLevels}"
+                              Width="120"
+                              Margin="0,0,8,0"
                               VerticalAlignment="Center"/>
-
-                <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
-                
-                <!-- Export -->
-                <TextBlock Text="Export:" VerticalAlignment="Center" Margin="8,0,4,0"/>
-                <Button Content="JSON" Command="{Binding ExportLogsCommand}" CommandParameter="json" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                <Button Content="TXT" Command="{Binding ExportLogsCommand}" CommandParameter="txt" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                <Button Content="CSV" Command="{Binding ExportLogsCommand}" CommandParameter="csv" Margin="0,0,8,0" VerticalAlignment="Center"/>
-
-                <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
-
-                <!-- Clear -->
-                <Button Content="Clear Logs" Command="{Binding ClearLogsCommand}" Margin="4,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
+                              
+                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
+    
+                    <!-- Auto-Scroll Toggle -->
+                    <ToggleButton IsChecked="{Binding AutoScroll, Mode=TwoWay}"
+                                  Content="Auto-Scroll"
+                                  Margin="8,0"
+                                  VerticalAlignment="Center"/>
+    
+                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
+                    
+                    <!-- Export -->
+                    <TextBlock Text="Export:" VerticalAlignment="Center" Margin="8,0,4,0"/>
+                    <Button Content="JSON" Command="{Binding ExportLogsCommand}" CommandParameter="json" 
+                            Margin="0,0,4,0" Padding="8,2" MinWidth="60"
+                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
+                    <Button Content="TXT" Command="{Binding ExportLogsCommand}" CommandParameter="txt" 
+                            Margin="0,0,4,0" Padding="8,2" MinWidth="55"
+                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
+                    <Button Content="CSV" Command="{Binding ExportLogsCommand}" CommandParameter="csv" 
+                            Margin="0,0,8,0" Padding="8,2" MinWidth="55"
+                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
+    
+                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
+    
+                    <!-- Clear -->
+                    <Button Content="Clear Logs" Command="{Binding ClearLogsCommand}" 
+                            Margin="4,0,0,0" Padding="12,2" MinWidth="100"
+                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- ── HEADER (fixed, never scrolls) ── -->
@@ -77,45 +87,45 @@
             Background="{DynamicResource PanelBackgroundBrush}"
             BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="0,0,0,1">
-            <Grid ColumnDefinitions="165,100,150,*" Margin="8,4">
+            <Grid ColumnDefinitions="165,100,150,*" Margin="8,1">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="2">
                     <TextBlock Text="Timestamp" FontWeight="SemiBold"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Background="Transparent" BorderThickness="0"
-                        Padding="4,2" VerticalAlignment="Center"
+                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                        Padding="4,0" VerticalAlignment="Center"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Command="{Binding SortCommand}" CommandParameter="Timestamp">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
+                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
                     </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
                     <TextBlock Text="Level" FontWeight="SemiBold"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Background="Transparent" BorderThickness="0"
-                        Padding="4,2" VerticalAlignment="Center"
+                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                        Padding="4,0" VerticalAlignment="Center"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Command="{Binding SortCommand}" CommandParameter="Level">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
+                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
                     </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="2">
                     <TextBlock Text="Category" FontWeight="SemiBold"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Background="Transparent" BorderThickness="0"
-                        Padding="4,2" VerticalAlignment="Center"
+                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                        Padding="4,0" VerticalAlignment="Center"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Command="{Binding SortCommand}" CommandParameter="Category">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
+                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
                     </Button>
                 </StackPanel>
                 <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="2">
                     <TextBlock Text="Message" FontWeight="SemiBold"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" VerticalAlignment="Center" />
-                    <Button Background="Transparent" BorderThickness="0"
-                        Padding="4,2" VerticalAlignment="Center"
+                    <Button Classes="compact" Background="Transparent" BorderThickness="0"
+                        Padding="4,0" VerticalAlignment="Center"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                         Command="{Binding SortCommand}" CommandParameter="Message">
-                        <ui:SymbolIcon Symbol="Sort" FontSize="12" />
+                        <ui:SymbolIcon Symbol="Sort" FontSize="10" />
                     </Button>
                 </StackPanel>
             </Grid>
@@ -152,10 +162,10 @@
                         <Border.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Copy Full Entry"
-                                    Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedEntryCommand}"
+                                    Command="{Binding #LogListBox.((vm:LogViewerViewModel)DataContext).CopySelectedEntryCommand}"
                                     CommandParameter="{Binding}" />
                                 <MenuItem Header="Copy Message"
-                                    Command="{Binding $parent[UserControl].((vm:LogViewerViewModel)DataContext).CopySelectedMessageCommand}"
+                                    Command="{Binding #LogListBox.((vm:LogViewerViewModel)DataContext).CopySelectedMessageCommand}"
                                     CommandParameter="{Binding}" />
                             </ContextMenu>
                         </Border.ContextMenu>
