@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
@@ -1074,6 +1075,23 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
             _logger.LogInformation("Task {TaskId} ({JobName}) completed successfully. Output: {OutputFile}",
                 taskId, task.JobName, primaryOutputFile);
+        }
+        catch (PartialDumpException pde)
+        {
+            // Dump was interrupted but partial files were saved — log them and mark task as failed
+            string partialState = pde.InnerException is OperationCanceledException ? "canceled" : "failed";
+            task.MarkAsFailed(pde.Message, pde.ToString());
+            TaskStateChanged?.Invoke(task);
+            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
+            Interlocked.Increment(ref _totalTasksProcessed);
+            Interlocked.Increment(ref _failedTasks);
+
+            foreach (string partialFile in pde.PartialResult.SavedFiles)
+            {
+                _logger.LogWarning("Task {TaskId} partial dump preserved: {FilePath}", taskId, partialFile);
+            }
+            _logger.LogWarning("Task {TaskId} ({JobName}) dump {State} with {Count} partial file(s)",
+                taskId, task.JobName, partialState, pde.PartialResult.SavedFiles.Count);
         }
         catch (OperationCanceledException)
         {

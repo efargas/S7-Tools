@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
@@ -386,6 +387,33 @@ public sealed class JobScheduler(
                 null));
 
             _logger.LogInformation("Job {JobId} completed successfully", job.Id);
+        }
+        catch (PartialDumpException pde)
+        {
+            // Dump was interrupted but partial files were preserved
+            string partialState = pde.InnerException is OperationCanceledException ? "canceled" : "failed";
+            foreach (string partialFile in pde.PartialResult.SavedFiles)
+            {
+                _logger.LogWarning("Job {JobId} partial dump preserved: {FilePath}", job.Id, partialFile);
+            }
+
+            Job partialJob = job with
+            {
+                State = JobState.Failed,
+                ErrorMessage = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} partial file(s) preserved",
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
+            };
+            _jobs[job.Id] = partialJob;
+
+            JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+                job.Id,
+                JobState.Running,
+                JobState.Failed,
+                partialJob.ErrorMessage));
+
+            _logger.LogWarning("Job {JobId} dump {State} with {Count} partial file(s)",
+                job.Id, partialState, pde.PartialResult.SavedFiles.Count);
         }
         catch (OperationCanceledException)
         {

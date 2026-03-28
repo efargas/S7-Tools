@@ -8,6 +8,7 @@ using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Validation.Models;
 using S7Tools.Extensions;
 using S7Tools.Resources;
+using System.IO;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -61,7 +62,7 @@ public sealed class BootloaderService(
             profiles,
             progress,
             effectiveTaskLogger,
-            processLogger,
+            CreateFilteredProcessLogger(processLogger),
             _serialPort,
             _socat,
             _power,
@@ -141,7 +142,8 @@ public sealed class BootloaderService(
             {
                 // Task scope is already active, so standard loggers will correctly attribute logs
                 Microsoft.Extensions.Logging.ILogger? taskLogger = _logger;
-                Microsoft.Extensions.Logging.ILogger? processLogger = _logger;
+                // Filter the process (protocol-level) logger by the configured minimum level
+                Microsoft.Extensions.Logging.ILogger? processLogger = CreateFilteredProcessLogger(_logger);
 
                 // Execute the memory dump with retry logic
                 // Directly call Orchestration to get both data and file paths
@@ -174,6 +176,23 @@ public sealed class BootloaderService(
                     "Output saved to: {OutputPath}", taskExecution.TaskId, outputFilePath);
 
                 return result;
+            }
+            catch (PartialDumpException pde)
+            {
+                // Dump was interrupted but partial files were saved — surface them
+                string partialState = pde.InnerException is OperationCanceledException
+                    ? "canceled"
+                    : "failed";
+                string partialMsg = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} partial file(s) preserved";
+                taskExecution.MarkAsFailed(partialMsg, pde.ToString());
+
+                foreach (string f in pde.PartialResult.SavedFiles)
+                {
+                    _logger.LogWarning("Partial dump file preserved: {FilePath}", f);
+                }
+                _logger.LogWarning("Bootloader dump {State} for task {TaskId}. Partial files: {Count}",
+                    partialState, taskExecution.TaskId, pde.PartialResult.SavedFiles.Count);
+                throw;
             }
             catch (OperationCanceledException)
             {
@@ -907,13 +926,13 @@ public sealed class BootloaderService(
                 ? profiles.OutputPath
                 : "./dumps";
 
-            if (!System.IO.Directory.Exists(dumpsDir))
+            if (!Directory.Exists(dumpsDir))
             {
-                System.IO.Directory.CreateDirectory(dumpsDir);
+                Directory.CreateDirectory(dumpsDir);
             }
 
             string rawJobName = segments.FirstOrDefault()?.Name ?? "MemoryDump";
-            string jobName = string.Join("_", rawJobName.Split(System.IO.Path.GetInvalidFileNameChars())).Replace(".", "_");
+            string jobName = string.Join("_", rawJobName.Split(Path.GetInvalidFileNameChars())).Replace(".", "_");
             string taskIdStr = taskId.HasValue ? $"_{taskId.Value:N}" : "";
 
             // Start the dumper session ONCE for all iterations
@@ -933,7 +952,7 @@ public sealed class BootloaderService(
                 // Determine final file path up-front
                 string timestamp = (_timeProvider?.GetLocalNow() ?? DateTime.Now).ToString("yyyyMMdd_HHmmss");
                 string dumpFileName = $"{jobName}_iter{iter + 1}_of_{iterationCount}{taskIdStr}_{timestamp}.bin";
-                string finalFilePath = System.IO.Path.Combine(dumpsDir, dumpFileName);
+                string finalFilePath = Path.Combine(dumpsDir, dumpFileName);
                 long bytesWrittenInIter = 0;
 
                 // Pass context object to helper methods
@@ -950,30 +969,53 @@ public sealed class BootloaderService(
                     cancellationToken
                 );
 
-                if (segments.Count > 0)
+                try
                 {
-                    bytesWrittenInIter = await StreamSegmentedDumpToFileAsync(
-                        context,
-                        segments,
-                        finalFilePath).ConfigureAwait(false);
-                }
-                else
-                {
-                    bytesWrittenInIter = await StreamSingleRegionDumpToFileAsync(
-                        context,
-                        profiles.Memory,
-                        finalFilePath).ConfigureAwait(false);
-                }
+                    if (segments.Count > 0)
+                    {
+                        bytesWrittenInIter = await StreamSegmentedDumpToFileAsync(
+                            context,
+                            segments,
+                            finalFilePath).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        bytesWrittenInIter = await StreamSingleRegionDumpToFileAsync(
+                            context,
+                            profiles.Memory,
+                            finalFilePath).ConfigureAwait(false);
+                    }
 
-                // The data is now saved to the file at finalFilePath.
-                // We no longer populate the deprecated `allDumps` list with empty arrays.
-                // Consumers should rely on `savedFiles` for data access.
-                savedFiles.Add(finalFilePath);
-                logger.LogInformation("✓ Dump file created: {File} ({Size:N0} bytes)", dumpFileName, bytesWrittenInIter);
+                    // The data is now saved to the file at finalFilePath.
+                    savedFiles.Add(finalFilePath);
+                    logger.LogInformation("✓ Dump file created: {File} ({Size:N0} bytes)", dumpFileName, bytesWrittenInIter);
+                }
+                catch (Exception iterEx)
+                {
+                    // Preserve whatever partial data was written for this iteration.
+                    // FileStream is disposed by await-using so the OS has flushed it already.
+                    string? partialFilePath = TrySavePartialFile(finalFilePath, logger);
+                    if (partialFilePath != null)
+                    {
+                        savedFiles.Add(partialFilePath);
+                    }
+
+                    // If we have any files (complete or partial), wrap in PartialDumpException
+                    // so callers can surface the preserved data even on failure.
+                    if (savedFiles.Count > 0)
+                    {
+                        throw new PartialDumpException(
+                            $"Dump interrupted at iteration {iter + 1}/{iterationCount}: {iterEx.Message}",
+                            iterEx,
+                            new BootloaderResult(savedFiles));
+                    }
+
+                    throw; // No data at all — propagate the original exception
+                }
             }
 
             TimeSpan dumpDuration = (_timeProvider?.GetUtcNow() ?? DateTime.UtcNow) - dumpStartTime;
-            long totalBytes = savedFiles.Sum(path => new System.IO.FileInfo(path).Length);
+            long totalBytes = savedFiles.Sum(path => new FileInfo(path).Length);
             double rate = totalBytes > 0 && dumpDuration.TotalSeconds > 0 ? totalBytes / dumpDuration.TotalSeconds : 0;
 
             logger.LogInformation("✓ Streaming dump complete: {Size:N0} bytes total", totalBytes);
@@ -999,6 +1041,43 @@ public sealed class BootloaderService(
         long TotalExpectedBytes,
         CancellationToken CancellationToken
     );
+
+    /// <summary>
+    /// If <paramref name="filePath"/> exists and has data, renames it to a
+    /// <c>.partial.bin</c> file so callers can identify incomplete dumps.
+    /// Returns the new path on success, or <see langword="null"/> if the file
+    /// was absent or empty (nothing worth preserving).
+    /// If the rename fails (e.g., permissions, cross-device move), the original path
+    /// is returned as a fallback provided it still has data.
+    /// </summary>
+    private static string? TrySavePartialFile(string filePath, ILogger logger)
+    {
+        try
+        {
+            if (!File.Exists(filePath))
+            {
+                return null;
+            }
+
+            long size = new FileInfo(filePath).Length;
+            if (size == 0)
+            {
+                File.Delete(filePath);
+                return null;
+            }
+
+            string partialPath = Path.ChangeExtension(filePath, ".partial.bin");
+            File.Move(filePath, partialPath, overwrite: true);
+            logger.LogWarning("Partial dump preserved ({Size:N0} bytes): {FilePath}", size, partialPath);
+            return partialPath;
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not rename partial dump file {FilePath}", filePath);
+            // Return the original path — it still has data even if renaming failed
+            return File.Exists(filePath) && new FileInfo(filePath).Length > 0 ? filePath : null;
+        }
+    }
 
     private static uint ParseSegmentAddress(MemorySegment segment)
     {
@@ -1042,11 +1121,11 @@ public sealed class BootloaderService(
             currentOffset += segments[i].Size;
         }
 
-        await using (var fileStream = new System.IO.FileStream(
+        await using (var fileStream = new FileStream(
             finalFilePath,
-            System.IO.FileMode.Create,
-            System.IO.FileAccess.ReadWrite,
-            System.IO.FileShare.None,
+            FileMode.Create,
+            FileAccess.ReadWrite,
+            FileShare.None,
             81920,
             true))
         {
@@ -1121,7 +1200,7 @@ public sealed class BootloaderService(
                 ctx.Logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, bytesCompleted);
             }
 
-            await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
+            await fileStream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
 
             // Trim if needed
             if (fileStream.Length > totalSegmentsSize)
@@ -1149,11 +1228,11 @@ public sealed class BootloaderService(
             return 0;
         }
 
-        await using (var fileStream = new System.IO.FileStream(
+        await using (var fileStream = new FileStream(
             finalFilePath,
-            System.IO.FileMode.Create,
-            System.IO.FileAccess.ReadWrite,
-            System.IO.FileShare.None,
+            FileMode.Create,
+            FileAccess.ReadWrite,
+            FileShare.None,
             81920,
             true))
         {
@@ -1186,7 +1265,7 @@ public sealed class BootloaderService(
                 ctx.CancellationToken,
                 logger: ctx.ProcessLogger).ConfigureAwait(false);
 
-            await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
+            await fileStream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
 
             // Trim if needed
             long expectedSize = (long)memoryRegion.Length;
@@ -1476,6 +1555,17 @@ public sealed class BootloaderService(
 
             return dumpResult;
         }
+        catch (PartialDumpException pde)
+        {
+            // Log partial files and re-throw so the caller can track them
+            effectiveTaskLogger.LogWarning("Dump interrupted with {Count} partial file(s) saved.",
+                pde.PartialResult.SavedFiles.Count);
+            foreach (string f in pde.PartialResult.SavedFiles)
+            {
+                effectiveTaskLogger.LogWarning("  Partial dump preserved: {FilePath}", f);
+            }
+            throw;
+        }
         catch (Exception ex)
         {
             processLogger?.LogError(ex, "Dump failed: {ErrorMessage}", ex.Message);
@@ -1573,6 +1663,58 @@ public sealed class BootloaderService(
             targetPercent,
             stage,
             cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Creates a process logger filtered to the configured minimum log level from application settings.
+    /// If <paramref name="baseLogger"/> is <see langword="null"/> or the configured level cannot be
+    /// parsed, the original logger is returned unmodified.
+    /// </summary>
+    private ILogger? CreateFilteredProcessLogger(ILogger? baseLogger)
+    {
+        if (baseLogger is null || _settingsService is null)
+        {
+            return baseLogger;
+        }
+
+        string levelStr = _settingsService.Current.Logging.Level;
+        if (Enum.TryParse<LogLevel>(levelStr, ignoreCase: true, out LogLevel minLevel))
+        {
+            return new LevelFilteringLogger(baseLogger, minLevel);
+        }
+
+        return baseLogger;
+    }
+
+    /// <summary>
+    /// Wraps an <see cref="ILogger"/> and suppresses any messages whose level is below
+    /// the configured minimum level.  All other behavior (scopes, IsEnabled) is delegated.
+    /// </summary>
+    private sealed class LevelFilteringLogger : ILogger
+    {
+        private readonly ILogger _inner;
+        private readonly LogLevel _minLevel;
+
+        internal LevelFilteringLogger(ILogger inner, LogLevel minLevel)
+        {
+            _inner = inner;
+            _minLevel = minLevel;
+        }
+
+        public bool IsEnabled(LogLevel logLevel) =>
+            logLevel >= _minLevel && _inner.IsEnabled(logLevel);
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state,
+            Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+            if (IsEnabled(logLevel))
+            {
+                _inner.Log(logLevel, eventId, state, exception, formatter);
+            }
+        }
+
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull =>
+            _inner.BeginScope(state);
     }
 }
 
