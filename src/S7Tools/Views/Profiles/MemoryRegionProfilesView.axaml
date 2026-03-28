@@ -247,7 +247,7 @@
                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="8,4,8,0" />
             <TextBlock Grid.Row="2" Grid.Column="3" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Margin="0,4,0,0">
               <TextBlock.Text>
-                <MultiBinding StringFormat="{}{0} of {1}">
+                <MultiBinding StringFormat="{}{0} of {1} segments">
                   <Binding Path="SelectedProfile.Segments" Converter="{x:Static conv:CollectionConverters.CountSelectedSegments}" />
                   <Binding Path="SelectedProfile.Segments.Count" />
                 </MultiBinding>
