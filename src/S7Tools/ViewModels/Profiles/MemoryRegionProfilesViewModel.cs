@@ -18,6 +18,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
 {
     private readonly IMemoryRegionProfileService _profileService;
     private readonly IUIThreadService _uiThreadService;
+    private readonly ILogger<EditMemoryRegionProfileDialogViewModel> _dialogLogger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MemoryRegionProfilesViewModel"/> class.
@@ -28,11 +29,13 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
         IDialogService dialogService,
         IUIThreadService uiThreadService,
         IFileDialogService fileDialogService,
-        ILogger<MemoryRegionProfilesViewModel> logger)
+        ILogger<MemoryRegionProfilesViewModel> logger,
+        ILogger<EditMemoryRegionProfileDialogViewModel> dialogLogger)
         : base(logger, unifiedDialogService, dialogService, uiThreadService, fileDialogService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _uiThreadService = uiThreadService;
+        _dialogLogger = dialogLogger ?? throw new ArgumentNullException(nameof(dialogLogger));
 
         _ = Task.Run(async () =>
         {
@@ -107,8 +110,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
             return ProfileDialogResult<MemoryMappingProfile>.Failure("No profile selected");
         }
 
-        ILogger<EditMemoryRegionProfileDialogViewModel> dialogLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<EditMemoryRegionProfileDialogViewModel>();
-        var dialogViewModel = new EditMemoryRegionProfileDialogViewModel(SelectedProfile, dialogLogger);
+        var dialogViewModel = new EditMemoryRegionProfileDialogViewModel(SelectedProfile, _dialogLogger);
         var dialog = new EditMemoryRegionProfileDialog(dialogViewModel);
 
         bool? dialogResult = await _uiThreadService.InvokeOnUIThreadAsync(async () =>

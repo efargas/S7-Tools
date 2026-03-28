@@ -66,7 +66,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private int _refreshIntervalSeconds = 2;
 
     // Throttling for UI updates
-    private readonly System.Reactive.Subjects.ISubject<TaskExecution> _taskStateChangedSubject = new System.Reactive.Subjects.Subject<TaskExecution>();
+    private readonly System.Reactive.Subjects.Subject<TaskExecution> _taskStateChangedSubject = new();
 
     private int _selectedTabIndex;
     private bool _isTaskDetailsPanelExpanded = true;
@@ -1108,6 +1108,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             ScheduledTasks.CollectionChanged -= OnTaskCollectionChanged;
             ActiveTasks.CollectionChanged -= OnTaskCollectionChanged;
             FinishedTasks.CollectionChanged -= OnTaskCollectionChanged;
+
+            _taskStateChangedSubject.OnCompleted();
+            _taskStateChangedSubject.Dispose();
 
             _disposables?.Dispose();
         }

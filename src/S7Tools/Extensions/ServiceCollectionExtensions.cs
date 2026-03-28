@@ -112,9 +112,6 @@ public static class ServiceCollectionExtensions
             });
         });
 
-        // Add Greeting Service
-        services.TryAddSingleton<IGreetingService, GreetingService>();
-
         // Add PLC Services
         services.TryAddSingleton<ITagRepository, PlcDataService>();
         services.TryAddSingleton<IS7ConnectionProvider, PlcDataService>();

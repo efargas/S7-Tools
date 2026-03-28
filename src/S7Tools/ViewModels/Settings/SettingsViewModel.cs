@@ -202,6 +202,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
     {
         IUnifiedProfileDialogService unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
         ILogger<ProfileManagementViewModelBase<SocatProfile>> logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<SocatProfile>>>();
+        ILogger<SocatSettingsViewModel> specificLogger = _serviceProvider.GetRequiredService<ILogger<SocatSettingsViewModel>>();
         IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         ISocatProfileService socatProfileService = _serviceProvider.GetRequiredService<ISocatProfileService>();
         ISocatService socatService = _serviceProvider.GetRequiredService<ISocatService>();
@@ -216,6 +217,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         return new SocatSettingsViewModel(
             unifiedDialogService,
             logger,
+            specificLogger,
             uiThreadService,
             socatProfileService,
             socatService,

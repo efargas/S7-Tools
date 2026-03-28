@@ -18,11 +18,12 @@ namespace S7Tools.ViewModels.Layout;
 /// ViewModel for managing application settings and configuration.
 /// Handles all settings-related properties, commands, and persistence.
 /// </summary>
-public class SettingsManagementViewModel : ReactiveObject
+public class SettingsManagementViewModel : ReactiveObject, IDisposable
 {
     private readonly ILogger<SettingsManagementViewModel> _logger;
     private readonly IFileDialogService? _fileDialogService;
     private readonly IApplicationSettingsService _settingsService;
+    private readonly EventHandler<SettingsChangedEventArgs> _settingsChangedHandler;
 
     // Settings Properties - will be populated from ApplicationSettingsService
     private string _defaultLogPath = string.Empty;
@@ -126,8 +127,9 @@ public class SettingsManagementViewModel : ReactiveObject
         // Load current settings from service
         RefreshFromSettings();
 
-        // Subscribe to settings changes
-        _settingsService.SettingsChanged += (_, _) => RefreshFromSettings();
+        // Subscribe to settings changes (stored for unsubscription in Dispose)
+        _settingsChangedHandler = (_, _) => RefreshFromSettings();
+        _settingsService.SettingsChanged += _settingsChangedHandler;
 
         _logger.LogDebug("SettingsManagementViewModel initialized");
     }
@@ -584,4 +586,22 @@ public class SettingsManagementViewModel : ReactiveObject
     }
 
     #endregion
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases managed resources.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _settingsService.SettingsChanged -= _settingsChangedHandler;
+        }
+    }
 }

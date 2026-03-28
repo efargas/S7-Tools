@@ -1,4 +1,5 @@
 using S7Tools.ViewModels.Base;
+using System.ComponentModel;
 using System.Reactive;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -14,12 +15,14 @@ namespace S7Tools.ViewModels.Settings;
 /// <summary>
 /// ViewModel for logging settings configuration.
 /// </summary>
-public class LoggingSettingsViewModel : ViewModelBase
+public class LoggingSettingsViewModel : ViewModelBase, IDisposable
 {
     private readonly IApplicationSettingsService _settingsService;
     private readonly IPathService _pathService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<LoggingSettingsViewModel> _logger;
+    private readonly EventHandler<SettingsChangedEventArgs> _settingsChangedHandler;
+    private readonly PropertyChangedEventHandler _propertyChangedHandler;
 
     /// <summary>
     /// Initializes a new instance of the LoggingSettingsViewModel class.
@@ -50,16 +53,17 @@ public class LoggingSettingsViewModel : ViewModelBase
         RefreshFromSettings();
         _isInitializing = false;
 
-        // Subscribe to settings changes
-        _settingsService.SettingsChanged += (_, _) =>
+        // Subscribe to settings changes (stored for unsubscription in Dispose)
+        _settingsChangedHandler = (_, _) =>
         {
             _isInitializing = true;
             RefreshFromSettings();
             _isInitializing = false;
         };
+        _settingsService.SettingsChanged += _settingsChangedHandler;
 
-        // Auto-save when properties change
-        this.PropertyChanged += (s, e) =>
+        // Auto-save when properties change (stored for unsubscription in Dispose)
+        _propertyChangedHandler = (s, e) =>
         {
             if (_isInitializing)
             {
@@ -76,6 +80,7 @@ public class LoggingSettingsViewModel : ViewModelBase
                 _ = SaveLoggingSettingsAsync();
             }
         };
+        this.PropertyChanged += _propertyChangedHandler;
     }
 
     private bool _isInitializing;
@@ -404,4 +409,23 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     #endregion
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases managed resources.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _settingsService.SettingsChanged -= _settingsChangedHandler;
+            this.PropertyChanged -= _propertyChangedHandler;
+        }
+    }
 }

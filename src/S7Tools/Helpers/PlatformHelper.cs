@@ -34,7 +34,7 @@ public static class PlatformHelper
                 if (OperatingSystem.IsWindows())
                 {
                     psi = new ProcessStartInfo(path) { UseShellExecute = true };
-                    Process.Start(psi);
+                    Process.Start(psi)?.Dispose();
                     return;
                 }
                 else if (OperatingSystem.IsLinux())
@@ -90,7 +90,7 @@ public static class PlatformHelper
                 {
                     psi = new ProcessStartInfo("open") { UseShellExecute = false };
                     psi.ArgumentList.Add(path);
-                    Process.Start(psi);
+                    Process.Start(psi)?.Dispose();
                     return;
                 }
                 else

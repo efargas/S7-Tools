@@ -67,6 +67,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
     /// </summary>
     /// <param name="unifiedDialogService">The unified profile dialog service.</param>
     /// <param name="logger">The logger.</param>
+    /// <param name="specificLogger">The logger specific to this ViewModel type.</param>
     /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="profileService">The power supply profile service.</param>
     /// <param name="powerSupplyService">The power supply service.</param>
@@ -78,6 +79,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
     public PowerSupplyProfilesViewModel(
         IUnifiedProfileDialogService unifiedDialogService,
         ILogger<ProfileManagementViewModelBase<PowerSupplyProfile>> logger,
+        ILogger<PowerSupplyProfilesViewModel> specificLogger,
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
         IPowerSupplyProfileService profileService,
         IPowerSupplyService powerSupplyService,
@@ -98,8 +100,7 @@ public class PowerSupplyProfilesViewModel : ProfileManagementViewModelBase<Power
         _uiThreadService = uiThreadService;
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
 
-        // Store specific logger (use constructor parameter, not create new factory)
-        _specificLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<PowerSupplyProfilesViewModel>();
+        _specificLogger = specificLogger ?? throw new ArgumentNullException(nameof(specificLogger));
 
         // DON'T initialize Profiles collection - base class provides it
         // Profiles collection is provided by base class ProfileManagementViewModelBase
