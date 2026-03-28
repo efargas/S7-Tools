@@ -75,7 +75,7 @@
                   </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
               </DataGridTemplateColumn>
-              <DataGridTextColumn Header="Scheduled For" Binding="{Binding CreatedAt, StringFormat='MM/dd HH:mm'}" Width="120" />
+              <DataGridTextColumn Header="Scheduled For" Binding="{Binding ScheduledTimeLocal, StringFormat='MM/dd HH:mm'}" Width="120" />
               <DataGridTextColumn Header="Time Until" Binding="{Binding TotalTime}" Width="100" />
               <DataGridTemplateColumn Header="Actions" Width="100">
                 <DataGridTemplateColumn.CellTemplate>
@@ -89,13 +89,13 @@
                               ToolTip.Tip="Run task immediately">
                         <icons:Icon Value="fa-solid fa-play" Foreground="{DynamicResource SystemAccentColor}" />
                       </Button>
-                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.DeleteTaskCommand}"
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.StopTaskCommand}"
                               CommandParameter="{Binding}"
                               Background="Transparent"
                               BorderThickness="0"
                               Padding="4"
-                              ToolTip.Tip="Delete task">
-                        <icons:Icon Value="fa-solid fa-trash" Foreground="{DynamicResource DangerForegroundBrush}" />
+                              ToolTip.Tip="Cancel / unschedule task">
+                        <icons:Icon Value="fa-solid fa-ban" Foreground="{DynamicResource DangerForegroundBrush}" />
                       </Button>
                     </StackPanel>
                   </DataTemplate>

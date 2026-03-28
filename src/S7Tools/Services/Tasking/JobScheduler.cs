@@ -391,16 +391,20 @@ public sealed class JobScheduler(
         catch (PartialDumpException pde)
         {
             // Dump was interrupted but partial files were preserved
-            string partialState = pde.InnerException is OperationCanceledException ? "canceled" : "failed";
+            bool wasCancelled = pde.InnerException is OperationCanceledException;
+            string partialState = wasCancelled ? "canceled" : "failed";
             foreach (string partialFile in pde.PartialResult.SavedFiles)
             {
                 _logger.LogWarning("Job {JobId} partial dump preserved: {FilePath}", job.Id, partialFile);
             }
 
+            string partialMsg = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} partial file(s) preserved";
+            JobState resultState = wasCancelled ? JobState.Canceled : JobState.Failed;
+
             Job partialJob = job with
             {
-                State = JobState.Failed,
-                ErrorMessage = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} partial file(s) preserved",
+                State = resultState,
+                ErrorMessage = partialMsg,
                 CompletedAt = _timeProvider.GetLocalNow(),
                 ModifiedAt = _timeProvider.GetLocalNow()
             };
@@ -409,7 +413,7 @@ public sealed class JobScheduler(
             JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
                 job.Id,
                 JobState.Running,
-                JobState.Failed,
+                resultState,
                 partialJob.ErrorMessage));
 
             _logger.LogWarning("Job {JobId} dump {State} with {Count} partial file(s)",

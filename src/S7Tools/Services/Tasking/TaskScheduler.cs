@@ -1078,13 +1078,26 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         }
         catch (PartialDumpException pde)
         {
-            // Dump was interrupted but partial files were saved — log them and mark task as failed
-            string partialState = pde.InnerException is OperationCanceledException ? "canceled" : "failed";
-            task.MarkAsFailed(pde.Message, pde.ToString());
-            TaskStateChanged?.Invoke(task);
-            _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
-            Interlocked.Increment(ref _totalTasksProcessed);
-            Interlocked.Increment(ref _failedTasks);
+            // Dump was interrupted but partial files were saved — log them and mark appropriately
+            bool wasCancelled = pde.InnerException is OperationCanceledException;
+            string partialState = wasCancelled ? "canceled" : "failed";
+
+            if (wasCancelled)
+            {
+                string cancelMsg = $"Task was cancelled; {pde.PartialResult.SavedFiles.Count} partial dump file(s) were preserved";
+                task.UpdateState(TaskState.Cancelled, cancelMsg);
+                TaskStateChanged?.Invoke(task);
+                _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
+                Interlocked.Increment(ref _cancelledTasks);
+            }
+            else
+            {
+                task.MarkAsFailed(pde.Message, pde.ToString());
+                TaskStateChanged?.Invoke(task);
+                _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
+                Interlocked.Increment(ref _totalTasksProcessed);
+                Interlocked.Increment(ref _failedTasks);
+            }
 
             foreach (string partialFile in pde.PartialResult.SavedFiles)
             {

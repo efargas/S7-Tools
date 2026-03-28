@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 
@@ -320,6 +321,35 @@ public class TaskExecution : INotifyPropertyChanged
     public TimeSpan TotalTime => Now - CreatedAt;
 
     /// <summary>
+    /// Gets the scheduled execution time if this task is in the Scheduled state.
+    /// Reads from <see cref="ProgressData"/>["ScheduledTime"] (stored as UTC by the scheduler).
+    /// Returns <c>null</c> when the task is not scheduled.
+    /// </summary>
+    [JsonIgnore]
+    public DateTime? ScheduledTime
+    {
+        get
+        {
+            if (ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
+            {
+                return scheduledObj switch
+                {
+                    DateTime dt => dt,
+                    string s when DateTime.TryParse(s, null, DateTimeStyles.RoundtripKind, out DateTime parsed) => parsed,
+                    _ => null
+                };
+            }
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Gets the scheduled execution time in local time, or <c>null</c> if not scheduled.
+    /// </summary>
+    [JsonIgnore]
+    public DateTime? ScheduledTimeLocal => ScheduledTime?.ToLocalTime();
+
+    /// <summary>
     /// Gets a value indicating whether the task is in a terminal state.
     /// </summary>
     public bool IsTerminal => State is TaskState.Completed or TaskState.Failed or TaskState.Cancelled;
@@ -332,7 +362,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets a value indicating whether the task can be cancelled.
     /// </summary>
-    public bool CanCancel => State is TaskState.Created or TaskState.Queued or TaskState.Running or TaskState.Paused;
+    public bool CanCancel => State is TaskState.Created or TaskState.Queued or TaskState.Scheduled or TaskState.Running or TaskState.Paused;
 
     /// <summary>
     /// Gets a value indicating whether the task can be restarted.
