@@ -23,7 +23,7 @@ echo "Building all payloads and collecting outputs..."
 mkdir -p "$OUTPUT_DIR"
 
 # Build payloads with Makefiles
-for D in dump_mem hello_loop tic_tac_toe; do
+for D in dump_mem hello_loop tic_tac_toe write_mem; do
     echo "Building $D..."
     (cd "$D" && make)
 
