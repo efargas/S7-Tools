@@ -416,7 +416,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// Removes a completed, failed, or cancelled task from the task history.
     /// Enabled when a task in a terminal state is selected.
     /// </remarks>
-    public ReactiveCommand<Unit, Unit> DeleteTaskCommand { get; private set; } = null!;
+    public ReactiveCommand<TaskExecution?, Unit> DeleteTaskCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to refresh all task collections from the scheduler.
@@ -478,9 +478,6 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         IObservable<bool> canResume = this.WhenAnyValue(x => x.SelectedTask)
             .Select(task => task.TaskId != Guid.Empty && task.State == TaskState.Paused);
 
-        IObservable<bool> canDelete = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task.TaskId != Guid.Empty && task.IsTerminal);
-
         IObservable<bool> hasFinishedTasks = this.WhenAnyValue(x => x.FinishedTasks.Count)
             .Select(count => count > 0);
 
@@ -494,7 +491,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         RestartTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteRestartTaskAsync);
         PauseTaskCommand = ReactiveCommand.CreateFromTask(ExecutePauseTaskAsync, canPause);
         ResumeTaskCommand = ReactiveCommand.CreateFromTask(ExecuteResumeTaskAsync, canResume);
-        DeleteTaskCommand = ReactiveCommand.CreateFromTask(ExecuteDeleteTaskAsync, canDelete);
+        DeleteTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteDeleteTaskAsync);
         RefreshTasksCommand = ReactiveCommand.CreateFromTask(ExecuteRefreshTasksAsync);
         ClearFinishedTasksCommand = ReactiveCommand.CreateFromTask(ExecuteClearFinishedTasksAsync, hasFinishedTasks);
         CreateTaskCommand = ReactiveCommand.CreateFromTask(ExecuteCreateTaskAsync);
@@ -957,19 +954,29 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task ExecuteDeleteTaskAsync()
+    private async Task ExecuteDeleteTaskAsync(TaskExecution? task)
     {
-        if (SelectedTask == null)
+        TaskExecution? targetTask = task ?? SelectedTask;
+        if (targetTask == null || targetTask.TaskId == Guid.Empty)
         {
+            return;
+        }
+
+        if (!targetTask.IsTerminal)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot delete task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be in a terminal state)";
+            });
+            _logger.LogWarning("Cannot delete task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
             return;
         }
 
         try
         {
             IsLoading = true;
-            // StatusMessage = UIStrings.Status_DeletingTask; // Handled by Result update or inside if we passed context
 
-            var result = await _taskCommandManager.DeleteTaskAsync(SelectedTask);
+            var result = await _taskCommandManager.DeleteTaskAsync(targetTask);
             UpdateCommandResult(result);
 
             if (result.IsSuccess)

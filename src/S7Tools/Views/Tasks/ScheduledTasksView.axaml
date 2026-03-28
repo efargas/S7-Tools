@@ -89,26 +89,14 @@
                               ToolTip.Tip="Run task immediately">
                         <icons:Icon Value="fa-solid fa-play" Foreground="{DynamicResource SystemAccentColor}" />
                       </Button>
-    public ReactiveCommand<TaskExecution?, Unit> DeleteTaskCommand { get; private set; } = null!;
-
-    // In SetupCommands()
-    DeleteTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteDeleteTaskAsync);
-
-    private async Task ExecuteDeleteTaskAsync(TaskExecution? task)
-    {
-        TaskExecution? targetTask = task ?? SelectedTask;
-        if (targetTask == null || targetTask.TaskId == Guid.Empty)
-        {
-            return;
-        }
-
-        if (!targetTask.IsTerminal)
-        {
-            return;
-        }
-
-        // ... rest of the delete logic using targetTask
-    }
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.DeleteTaskCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="Delete task">
+                        <icons:Icon Value="fa-solid fa-trash" Foreground="{DynamicResource DangerForegroundBrush}" />
+                      </Button>
                     </StackPanel>
                   </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
