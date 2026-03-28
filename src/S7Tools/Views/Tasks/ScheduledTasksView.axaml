@@ -1,49 +1,110 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:vm="using:S7Tools.ViewModels.Tasks"
-  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-  x:Class="S7Tools.Views.Tasks.ScheduledTasksView"
-  x:DataType="vm:ScheduledTasksViewModel">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Tasks"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.Tasks.ScheduledTasksView"
+             x:DataType="vm:ScheduledTasksViewModel">
 
-  <Grid RowDefinitions="Auto,*">
-    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
-      CornerRadius="4,4,0,0" Padding="12,8">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" Text="Scheduled for Future Execution" FontWeight="Medium" />
-        <TextBlock Grid.Column="1"
-          Text="{Binding Manager.ScheduledTasks.Count, StringFormat='{}{0} tasks'}"
-          FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
-      </Grid>
-    </Border>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Scheduled Tasks"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                 Margin="0,0,0,10" />
 
-    <DataGrid Grid.Row="1" ItemsSource="{Binding Manager.ScheduledTasks}"
-      IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
-      GridLinesVisibility="Horizontal" HeadersVisibility="Column">
-      <DataGrid.Columns>
-        <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
-        <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
-        <DataGridTextColumn Header="Scheduled For"
-          Binding="{Binding CreatedAt, StringFormat='MM/dd HH:mm'}" Width="120" />
-        <DataGridTextColumn Header="Time Until" Binding="{Binding TotalTime}" Width="100" />
-        <DataGridTemplateColumn Header="Actions" Width="120">
-          <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <Button Content="Cancel" FontSize="10" Padding="6,2"
-                  Command="{Binding $parent[UserControl].DataContext.Manager.DeleteTaskCommand}"
-                  ToolTip.Tip="Cancel scheduled task" />
-                <Button Content="Run Now" FontSize="10" Padding="6,2"
-                  Command="{Binding $parent[UserControl].DataContext.Manager.StartTaskCommand}"
-                  CommandParameter="{Binding}"
-                  ToolTip.Tip="Run task immediately" />
-              </StackPanel>
-            </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-      </DataGrid.Columns>
-    </DataGrid>
-  </Grid>
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
+            <TextBlock Grid.Column="0"
+                       Text="Scheduled for Future Execution"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+            <TextBlock Grid.Column="1"
+                       Text="{Binding Manager.ScheduledTasks.Count, StringFormat='{}{0} tasks'}"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}"
+                       VerticalAlignment="Center" />
+          </Grid>
+
+          <DataGrid ItemsSource="{Binding Manager.ScheduledTasks}"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    IsReadOnly="True"
+                    MaxHeight="400">
+            <DataGrid.Columns>
+              <DataGridTemplateColumn Header="Task ID" Width="180">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding TaskId}" 
+                               TextTrimming="CharacterEllipsis" 
+                               VerticalAlignment="Center" 
+                               Margin="12,0"
+                               ToolTip.Tip="{Binding TaskId}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="Name" Width="1*" MinWidth="150" MaxWidth="300">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding JobName}" 
+                               TextTrimming="CharacterEllipsis" 
+                               VerticalAlignment="Center" 
+                               Margin="12,0"
+                               ToolTip.Tip="{Binding JobName}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Header="Scheduled For" Binding="{Binding CreatedAt, StringFormat='MM/dd HH:mm'}" Width="120" />
+              <DataGridTextColumn Header="Time Until" Binding="{Binding TotalTime}" Width="100" />
+              <DataGridTemplateColumn Header="Actions" Width="100">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.StartTaskCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="Run task immediately">
+                        <icons:Icon Value="fa-solid fa-play" Foreground="{DynamicResource SystemAccentColor}" />
+                      </Button>
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.DeleteTaskCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="Cancel scheduled task">
+                        <icons:Icon Value="fa-solid fa-trash" Foreground="#D13438" />
+                      </Button>
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

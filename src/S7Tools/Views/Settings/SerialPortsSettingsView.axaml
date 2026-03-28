@@ -21,7 +21,7 @@
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Serial Ports Settings"
@@ -73,12 +73,12 @@
                        Margin="8,0" />
 
             <Button Grid.Column="2"
-                    Width="140"
+                    Width="110"
                     Height="34"
                     Command="{Binding TestSelectedPortCommand}"
                     Background="{DynamicResource ButtonBackgroundBrush}"
                     Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
+              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                 <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
                 <TextBlock Text="Test Port" />
               </StackPanel>

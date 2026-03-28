@@ -10,26 +10,25 @@
     x:DataType="vm:LoggingSettingsViewModel"
     Background="{DynamicResource AppBackgroundBrush}">
 
-    <ScrollViewer>
-        <StackPanel Margin="20" Spacing="20">
-            <!-- Header -->
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
             <TextBlock Text="Logging Settings"
                 FontSize="24"
                 FontWeight="Bold"
                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                 Margin="0,0,0,10" />
 
-            <!-- Logging Settings Section -->
-            <Border Background="{DynamicResource PanelBackgroundBrush}"
-                BorderBrush="{DynamicResource ControlBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="16">
-                <StackPanel Spacing="16">
-                    <TextBlock Text="Logging Configuration"
-                        FontSize="18"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Logging Configuration"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <!-- Default Log Path -->
                     <Grid>
@@ -57,28 +56,29 @@
                             Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
-                            Content="Browse..."
-                            Background="{DynamicResource ButtonBackgroundBrush}"
-                            Foreground="{DynamicResource TextForegroundBrush}"
-                            BorderThickness="0"
-                            Padding="12,4"
-                            Margin="4,0"
-                            Command="{Binding BrowseDefaultLogPathCommand}" />
+                                Width="110" Height="34"
+                                Command="{Binding BrowseDefaultLogPathCommand}"
+                                Background="{DynamicResource ButtonBackgroundBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                Margin="4,0">
+                          <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                            <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
+                            <TextBlock Text="Browse" />
+                          </StackPanel>
+                        </Button>
 
                         <Button Grid.Column="3" Grid.Row="0"
-                            Background="Transparent"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="1"
-                            Padding="12,4"
-                            Margin="4,0"
-                            ToolTip.Tip="Open in Explorer"
-                            Command="{Binding OpenDefaultLogPathCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <icons:Icon Value="fa-solid fa-external-link-alt" Width="14"
-                                    Height="14" />
-                                <TextBlock Text="Open" />
-                            </StackPanel>
+                                Width="110" Height="34"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                Margin="4,0"
+                                ToolTip.Tip="Open in Explorer"
+                                Command="{Binding OpenDefaultLogPathCommand}">
+                          <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                            <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                            <TextBlock Text="Open" />
+                          </StackPanel>
                         </Button>
 
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
@@ -114,28 +114,29 @@
                             Margin="8,0" />
 
                         <Button Grid.Column="2" Grid.Row="0"
-                            Content="Browse..."
-                            Background="{DynamicResource ButtonBackgroundBrush}"
-                            Foreground="{DynamicResource TextForegroundBrush}"
-                            BorderThickness="0"
-                            Padding="12,4"
-                            Margin="4,0"
-                            Command="{Binding BrowseExportPathCommand}" />
+                                Width="110" Height="34"
+                                Command="{Binding BrowseExportPathCommand}"
+                                Background="{DynamicResource ButtonBackgroundBrush}"
+                                Foreground="{DynamicResource TextForegroundBrush}"
+                                Margin="4,0">
+                          <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                            <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
+                            <TextBlock Text="Browse" />
+                          </StackPanel>
+                        </Button>
 
                         <Button Grid.Column="3" Grid.Row="0"
-                            Background="Transparent"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="1"
-                            Padding="12,4"
-                            Margin="4,0"
-                            ToolTip.Tip="Open in Explorer"
-                            Command="{Binding OpenExportPathCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                <icons:Icon Value="fa-solid fa-external-link-alt" Width="14"
-                                    Height="14" />
-                                <TextBlock Text="Open" />
-                            </StackPanel>
+                                Width="110" Height="34"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource ControlBorderBrush}"
+                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                Margin="4,0"
+                                ToolTip.Tip="Open in Explorer"
+                                Command="{Binding OpenExportPathCommand}">
+                          <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                            <icons:Icon Value="fa-solid fa-external-link-alt" Width="14" Height="14" />
+                            <TextBlock Text="Open" />
+                          </StackPanel>
                         </Button>
 
                         <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="3"
@@ -211,20 +212,20 @@
                             Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                             Margin="8,0" />
                     </Grid>
-                </StackPanel>
-            </Border>
+        </StackPanel>
+      </Border>
 
-            <!-- Display Settings Section -->
-            <Border Background="{DynamicResource PanelBackgroundBrush}"
-                BorderBrush="{DynamicResource ControlBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="16">
-                <StackPanel Spacing="16">
-                    <TextBlock Text="Display Options"
-                        FontSize="18"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <!-- Display Settings Section -->
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Display Options"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <!-- Show Timestamp -->
                     <CheckBox IsChecked="{Binding ShowTimestampInLogs}"
@@ -375,9 +376,8 @@
                     <CheckBox IsChecked="{Binding LogPowerStateChanges}"
                         Content="Log power supply state transitions"
                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-                </StackPanel>
-            </Border>
-
         </StackPanel>
-    </ScrollViewer>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

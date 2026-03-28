@@ -9,9 +9,9 @@
              x:DataType="vm:PathSettingsViewModel"
              Background="{DynamicResource AppBackgroundBrush}">
 
-    <ScrollViewer>
-        <StackPanel Margin="20" Spacing="20">
-            <!-- Header -->
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
             <TextBlock Text="Paths Settings" 
                        FontSize="24" 
                        FontWeight="Bold" 
@@ -31,7 +31,7 @@
                     CornerRadius="4" 
                     Padding="16">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Serial Ports Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+          <TextBlock Text="Serial Ports Profiles" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                     <TextBlock Text="Select the directory where serial port profiles (SerialProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
                     
                     <Grid Margin="0,8,0,0">
@@ -69,7 +69,7 @@
                     CornerRadius="4" 
                     Padding="16">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Socat Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+          <TextBlock Text="Socat Profiles" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                     <TextBlock Text="Select the directory where socat server profiles (SocatProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
                     
                     <Grid Margin="0,8,0,0">
@@ -107,7 +107,7 @@
                     CornerRadius="4" 
                     Padding="16">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Power Supply Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+          <TextBlock Text="Power Supply Profiles" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                     <TextBlock Text="Select the directory where power supply profiles (PowerSupplyProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
                     
                     <Grid Margin="0,8,0,0">
@@ -145,7 +145,7 @@
                     CornerRadius="4" 
                     Padding="16">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Memory Regions Profiles" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+          <TextBlock Text="Memory Regions Profiles" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
                     <TextBlock Text="Select the directory where memory mapping profiles (MemoryMappingProfiles.json) are stored." FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" />
                     
                     <Grid Margin="0,8,0,0">

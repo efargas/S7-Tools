@@ -16,22 +16,23 @@
         <vm:LogViewerViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <Grid RowDefinitions="Auto,*" MinWidth="900">
 
         <!-- ── TOOLBAR ── -->
         <Border Grid.Row="0"
             Background="{DynamicResource PanelBackgroundBrush}"
             BorderBrush="{DynamicResource ControlBorderBrush}"
             BorderThickness="0,0,0,1"
-            Padding="8,4">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0" Spacing="4">
+            Padding="16,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock Text="Log Viewer" FontWeight="SemiBold" FontSize="18" VerticalAlignment="Center" Margin="0,0,8,0" />
                     
                     <!-- Search -->
                     <TextBox Text="{Binding SearchText, Mode=TwoWay}"
                              Watermark="Search logs..."
                              Width="200"
-                             Margin="8,0,8,0"
                              VerticalAlignment="Center">
                         <TextBox.InnerRightContent>
                             <Button Background="Transparent" BorderThickness="0" Padding="4"
@@ -41,52 +42,50 @@
                             </Button>
                         </TextBox.InnerRightContent>
                     </TextBox>
-                    
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Right">
                     <!-- Filter Level -->
-                    <TextBlock Text="Level:" VerticalAlignment="Center" Margin="8,0,4,0"/>
-                    <ComboBox SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
-                              ItemsSource="{Binding AvailableLogLevels}"
-                              Width="120"
-                              Margin="0,0,8,0"
-                              VerticalAlignment="Center"/>
-                              
-                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
-    
-                    <!-- Auto-Scroll Toggle -->
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Level:" VerticalAlignment="Center" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                        <ComboBox SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
+                                  ItemsSource="{Binding AvailableLogLevels}"
+                                  Width="110"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Auto-Scroll -->
                     <ToggleButton IsChecked="{Binding AutoScroll, Mode=TwoWay}"
                                   Content="Auto-Scroll"
-                                  Margin="8,0"
+                                  Height="34"
                                   VerticalAlignment="Center"/>
-    
-                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
-                    
+                                  
+                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" />
+
                     <!-- Export -->
-                    <TextBlock Text="Export:" VerticalAlignment="Center" Margin="8,0,4,0"/>
-                    <Button Content="JSON" Command="{Binding ExportLogsCommand}" CommandParameter="json" 
-                            Margin="0,0,4,0" Padding="8,2" MinWidth="60"
-                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
-                    <Button Content="TXT" Command="{Binding ExportLogsCommand}" CommandParameter="txt" 
-                            Margin="0,0,4,0" Padding="8,2" MinWidth="55"
-                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
-                    <Button Content="CSV" Command="{Binding ExportLogsCommand}" CommandParameter="csv" 
-                            Margin="0,0,8,0" Padding="8,2" MinWidth="55"
-                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
-    
-                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" Margin="8,0"/>
-    
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Export:" VerticalAlignment="Center" Margin="0,0,4,0" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                        <Button Content="JSON" Command="{Binding ExportLogsCommand}" CommandParameter="json" 
+                                Width="65" Height="34" HorizontalContentAlignment="Center" VerticalAlignment="Center" Padding="0"/>
+                        <Button Content="TXT" Command="{Binding ExportLogsCommand}" CommandParameter="txt" 
+                                Width="60" Height="34" HorizontalContentAlignment="Center" VerticalAlignment="Center" Padding="0"/>
+                        <Button Content="CSV" Command="{Binding ExportLogsCommand}" CommandParameter="csv" 
+                                Width="60" Height="34" HorizontalContentAlignment="Center" VerticalAlignment="Center" Padding="0"/>
+                    </StackPanel>
+
+                    <Separator Width="1" Height="20" Background="{DynamicResource ControlBorderBrush}" />
+
                     <!-- Clear -->
                     <Button Content="Clear Logs" Command="{Binding ClearLogsCommand}" 
-                            Margin="4,0,0,0" Padding="12,2" MinWidth="100"
-                            HorizontalContentAlignment="Center" VerticalAlignment="Center"/>
+                            Width="110" Height="34" Classes="accent"
+                            HorizontalContentAlignment="Center" VerticalAlignment="Center"
+                            ToolTip.Tip="Clear all log entries" />
                 </StackPanel>
-            </ScrollViewer>
+            </Grid>
         </Border>
 
-        <!-- ── HEADER + LOG LIST with shared horizontal scroll ── -->
-        <ScrollViewer Grid.Row="1"
-            HorizontalScrollBarVisibility="Auto"
-            VerticalScrollBarVisibility="Disabled">
-          <Grid RowDefinitions="Auto,*" MinWidth="460">
+        <!-- ── HEADER + LOG LIST ── -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,*">
 
             <!-- ── HEADER ── -->
             <Border Grid.Row="0"
@@ -209,7 +208,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-          </Grid>
-        </ScrollViewer>
+        </Grid>
     </Grid>
+  </ScrollViewer>
 </UserControl>

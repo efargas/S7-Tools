@@ -17,7 +17,7 @@
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Servers Settings"
@@ -95,14 +95,14 @@
               Margin="8,0" />
 
             <Button Grid.Column="2"
-              Width="160"
-              Height="34"
-              Command="{Binding TestSocatCommand}"
-              Background="{DynamicResource ButtonBackgroundBrush}"
-              Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
+                    Width="110"
+                    Height="34"
+                    Command="{Binding TestSocatCommand}"
+                    Background="{DynamicResource ButtonBackgroundBrush}"
+                    Foreground="{DynamicResource TextForegroundBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                 <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
-                <TextBlock Text="Test Socat Proxy" />
+                <TextBlock Text="Test" />
               </StackPanel>
             </Button>
           </Grid>
@@ -146,69 +146,52 @@
         CornerRadius="4"
         Padding="16">
         <StackPanel Spacing="16">
-          <Grid>
+          <!-- Toolbar above the DataGrid -->
+          <Grid Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
-              Text="Running Processes"
-              FontSize="18"
-              FontWeight="SemiBold"
-              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-              VerticalAlignment="Center" />
-
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-              <Button Background="#D13438"
-                Foreground="{DynamicResource TextForegroundBrush}"
-                BorderThickness="0"
-                Padding="12,8"
-                Command="{Binding StopSocatCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-stop" Width="16" Height="16" />
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+              <Button Width="110" Height="34" Command="{Binding StopSocatCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-stop" Width="14" Height="14" />
                   <TextBlock Text="Stop" />
                 </StackPanel>
               </Button>
 
-              <Button Background="#D13438"
-                Foreground="{DynamicResource TextForegroundBrush}"
-                BorderThickness="0"
-                Padding="12,8"
-                Command="{Binding StopAllSocatCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-stop-circle" Width="16" Height="16" />
+              <Button Width="110" Height="34" Command="{Binding StopAllSocatCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-stop-circle" Width="14" Height="14" />
                   <TextBlock Text="Stop All" />
                 </StackPanel>
               </Button>
+            </StackPanel>
 
-              <Button Background="Transparent"
-                BorderBrush="{DynamicResource ControlBorderBrush}"
-                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                BorderThickness="1"
-                Padding="12,8"
-                Command="{Binding RefreshProcessesCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-sync" Width="16" Height="16" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+              <Button Width="110" Height="34" Command="{Binding RefreshProcessesCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
                   <TextBlock Text="Refresh" />
                 </StackPanel>
               </Button>
             </StackPanel>
           </Grid>
 
-          <!-- Running Processes List -->
+          <!-- DataGrid -->
           <DataGrid ItemsSource="{Binding RunningProcesses}"
-            SelectedItem="{Binding SelectedProcess}"
-            Background="{DynamicResource ControlBackgroundBrush}"
-            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-            GridLinesVisibility="Horizontal"
-            HeadersVisibility="Column"
-            CanUserReorderColumns="False"
-            CanUserResizeColumns="True"
-            CanUserSortColumns="True"
-            IsReadOnly="True"
-            Height="150">
+                    SelectedItem="{Binding SelectedProcess}"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    IsReadOnly="True"
+                    MaxHeight="300"
+                    Margin="0,0,0,8">
             <DataGrid.Styles>
               <Style Selector="DataGridColumnHeader">
                 <Setter Property="FontSize" Value="11" />
@@ -283,14 +266,14 @@
               VerticalAlignment="Center" />
 
             <Button Grid.Column="1"
-              Background="{DynamicResource ButtonBackgroundBrush}"
-              Foreground="{DynamicResource TextForegroundBrush}"
-              BorderThickness="0"
-              Padding="12,6"
-              Command="{Binding TestConnectionCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
+                    Width="110"
+                    Height="34"
+                    Command="{Binding TestConnectionCommand}"
+                    Background="{DynamicResource ButtonBackgroundBrush}"
+                    Foreground="{DynamicResource TextForegroundBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                 <icons:Icon Value="fa-solid fa-network-wired" Width="14" Height="14" />
-                <TextBlock Text="Connect Client" />
+                <TextBlock Text="Connect" />
               </StackPanel>
             </Button>
           </Grid>

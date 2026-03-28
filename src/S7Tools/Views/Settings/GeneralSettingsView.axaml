@@ -9,92 +9,69 @@
              x:DataType="vm:GeneralSettingsViewModel"
              Background="{DynamicResource AppBackgroundBrush}">
 
-    <ScrollViewer>
-        <StackPanel Margin="20" Spacing="20">
-            <!-- Header -->
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
             <TextBlock Text="General Settings" 
                        FontSize="24" 
                        FontWeight="Bold" 
                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" 
                        Margin="0,0,0,10" />
 
-            <!-- Actions Section -->
-            <Border Background="{DynamicResource PanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource ControlBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="4" 
-                Padding="16">
-                <StackPanel Spacing="16">
-                    <TextBlock Text="Settings Management" 
-                        FontSize="18" 
-                        FontWeight="SemiBold" 
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Settings Management"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
+          <!-- Toolbar Grid (Split CRUD and Other actions) -->
+          <Grid Margin="0,0,0,8">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
 
-                        <!-- Save Settings -->
-                        <Button Grid.Column="0"
-                            Background="{DynamicResource ButtonBackgroundBrush}"
-                            Foreground="{DynamicResource TextForegroundBrush}"
-                            BorderThickness="0"
-                            Padding="16,8"
-                            Margin="0,0,8,0"
-                            Command="{Binding SaveSettingsCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fa-solid fa-save" Width="16" Height="16" />
-                                <TextBlock Text="Save Settings" />
-                            </StackPanel>
-                        </Button>
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+              <!-- Save Settings -->
+              <Button Width="110" Height="34" Command="{Binding SaveSettingsCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-save" Width="14" Height="14" />
+                  <TextBlock Text="Save" />
+                </StackPanel>
+              </Button>
 
-                        <!-- Load Settings -->
-                        <Button Grid.Column="1"
-                            Background="{DynamicResource ButtonBackgroundBrush}"
-                            Foreground="{DynamicResource TextForegroundBrush}"
-                            BorderThickness="0"
-                            Padding="16,8"
-                            Margin="4,0"
-                            Command="{Binding LoadSettingsCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fa-solid fa-folder-open" Width="16" Height="16" />
-                                <TextBlock Text="Load Settings" />
-                            </StackPanel>
-                        </Button>
+              <!-- Load Settings -->
+              <Button Width="110" Height="34" Command="{Binding LoadSettingsCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
+                  <TextBlock Text="Load" />
+                </StackPanel>
+              </Button>
 
-                        <!-- Reset to Defaults -->
-                        <Button Grid.Column="2"
-                            Background="#D13438"
-                            Foreground="{DynamicResource TextForegroundBrush}"
-                            BorderThickness="0"
-                            Padding="16,8"
-                            Margin="4,0"
-                            Command="{Binding ResetSettingsCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fa-solid fa-undo" Width="16" Height="16" />
-                                <TextBlock Text="Reset Defaults" />
-                            </StackPanel>
-                        </Button>
+              <!-- Reset to Defaults -->
+              <Button Width="110" Height="34" Command="{Binding ResetSettingsCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-undo" Width="14" Height="14" />
+                  <TextBlock Text="Reset" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
 
-                        <!-- Open Settings Folder -->
-                        <Button Grid.Column="3"
-                            Background="Transparent"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            BorderBrush="{DynamicResource ControlBorderBrush}"
-                            BorderThickness="1"
-                            Padding="16,8"
-                            Margin="8,0,0,0"
-                            Command="{Binding OpenSettingsFolderCommand}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <icons:Icon Value="fa-solid fa-folder" Width="16" Height="16" />
-                                <TextBlock Text="Open Folder" />
-                            </StackPanel>
-                        </Button>
-                    </Grid>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+              <!-- Open Settings Folder -->
+              <Button Width="110" Height="34" Command="{Binding OpenSettingsFolderCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-folder" Width="14" Height="14" />
+                  <TextBlock Text="Open Folder" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
 
                     <!-- Status Text -->
                     <TextBlock Text="{Binding SettingsStatusMessage}"
@@ -104,17 +81,16 @@
                 </StackPanel>
             </Border>
 
-            <!-- Current Settings Info -->
-            <Border Background="{DynamicResource PanelBackgroundBrush}" 
-                BorderBrush="{DynamicResource ControlBorderBrush}" 
-                BorderThickness="1" 
-                CornerRadius="4" 
-                Padding="16">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Current Settings File" 
-                        FontSize="18" 
-                        FontWeight="SemiBold" 
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="Current Settings File"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <TextBlock Text="{Binding CurrentSettingsFilePath}"
                         Foreground="{DynamicResource TextForegroundMutedBrush}"
@@ -125,19 +101,19 @@
                         Text="{Binding SettingsLastModified, StringFormat='Last modified: {0:yyyy-MM-dd HH:mm:ss}'}"
                         Foreground="{DynamicResource TextForegroundMutedBrush}"
                         FontSize="11" />
-                </StackPanel>
-            </Border>
+        </StackPanel>
+      </Border>
 
-            <Border Background="{DynamicResource PanelBackgroundBrush}"
-                BorderBrush="{DynamicResource ControlBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="16">
-                <StackPanel Spacing="16">
-                    <TextBlock Text="Memory Dump"
-                        FontSize="18"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <TextBlock Text="Memory Dump"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <StackPanel Spacing="4">
                         <TextBlock Text="Default Output Folder"
@@ -187,19 +163,19 @@
                                 TextWrapping="Wrap" />
                         </StackPanel>
                     </Grid>
-                </StackPanel>
-            </Border>
+        </StackPanel>
+      </Border>
 
-            <Border Background="{DynamicResource PanelBackgroundBrush}"
-                BorderBrush="{DynamicResource ControlBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="4"
-                Padding="16">
-                <StackPanel Spacing="16">
-                    <TextBlock Text="PLC Connection"
-                        FontSize="18"
-                        FontWeight="SemiBold"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Background="{DynamicResource PanelBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="4"
+              Padding="16">
+        <StackPanel Spacing="16">
+          <TextBlock Text="PLC Connection"
+                     FontSize="18"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
 
                     <Grid ColumnDefinitions="*,16,*,16,*">
                         <StackPanel Grid.Column="0" Spacing="4">
@@ -238,8 +214,8 @@
                                 BorderBrush="{DynamicResource ControlBorderBrush}" />
                         </StackPanel>
                     </Grid>
-                </StackPanel>
-            </Border>
         </StackPanel>
-    </ScrollViewer>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

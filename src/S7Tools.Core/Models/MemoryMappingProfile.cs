@@ -159,7 +159,7 @@ public class MemoryMappingProfile : IProfileBase
         {
             Id = 1, // Default profile always has ID 1
             Name = "S7-1200 Firmware v4.02.01 Complete",
-            Description = "Complete firmware memory mapping for Siemens S7-1200 v4.02.01 (6ES7212-1AE40-OXBO). Based on actual firmware analysis with comprehensive segment coverage for professional reverse engineering and memory dump operations.",
+            Description = "Complete firmware memory mapping for Siemens S7-1200 v4.02.01 (6ES7212-1AE40-OXBO).",
             Segments = new List<MemorySegment>
             {
                 // Executive and System Segments
