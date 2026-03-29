@@ -782,11 +782,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (targetTask.State != TaskState.Created)
+        if (targetTask.State is not (TaskState.Created or TaskState.Scheduled))
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Cannot start task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be Created)";
+                StatusMessage = $"Cannot start task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be Created or Scheduled)";
             });
             _logger.LogWarning("Cannot start task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
             return;

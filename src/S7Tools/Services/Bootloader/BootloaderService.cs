@@ -1207,7 +1207,7 @@ public sealed class BootloaderService(
                 ctx.Logger.LogDebug("  ✓ Segment {Index} streamed: {Size:N0} bytes", i + 1, bytesCompleted);
             }
 
-            await fileStream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+            await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
 
             // Trim if needed
             if (fileStream.Length > totalSegmentsSize)
@@ -1272,7 +1272,7 @@ public sealed class BootloaderService(
                 ctx.CancellationToken,
                 logger: ctx.ProcessLogger).ConfigureAwait(false);
 
-            await fileStream.FlushAsync(CancellationToken.None).ConfigureAwait(false);
+            await fileStream.FlushAsync(ctx.CancellationToken).ConfigureAwait(false);
 
             // Trim if needed
             long expectedSize = (long)memoryRegion.Length;

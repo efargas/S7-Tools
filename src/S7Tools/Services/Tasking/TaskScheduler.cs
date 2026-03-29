@@ -171,10 +171,19 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        if (task.State != TaskState.Created)
+        if (task.State is not (TaskState.Created or TaskState.Scheduled))
         {
             _logger.LogWarning("Task {TaskId} is in state {State}, cannot enqueue", taskId, task.State);
             return Task.FromResult(false);
+        }
+
+        // If the task was scheduled, remove it from the scheduled map before enqueueing
+        if (task.State == TaskState.Scheduled)
+        {
+            _scheduledTasks.TryRemove(taskId, out _);
+            task.ProgressData.Remove("ScheduledTime");
+            _logger.LogInformation("Task {TaskId} ({JobName}) promoted from schedule to immediate queue",
+                taskId, task.JobName);
         }
 
         if (!TryEnqueueInternal(taskId, task))
