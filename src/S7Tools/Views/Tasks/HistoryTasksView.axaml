@@ -117,6 +117,14 @@
                               ToolTip.Tip="Restart this task">
                         <icons:Icon Value="fa-solid fa-redo" Foreground="{DynamicResource SystemAccentColor}" />
                       </Button>
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.DeleteTaskCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="Delete this task from history">
+                        <icons:Icon Value="fa-solid fa-trash" Foreground="#D13438" />
+                      </Button>
                     </StackPanel>
                   </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>

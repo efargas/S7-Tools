@@ -321,11 +321,13 @@ public class TaskExecution : INotifyPropertyChanged
     public TimeSpan TotalTime => Now - CreatedAt;
 
     /// <summary>
-    /// Gets the scheduled execution time if this task is in the Scheduled state.
-    /// Reads from <see cref="ProgressData"/>["ScheduledTime"] (stored as UTC by the scheduler).
-    /// Returns <c>null</c> when the task is not scheduled.
+    /// Gets the scheduled execution time stored in <see cref="ProgressData"/>["ScheduledTime"] (UTC), or
+    /// <c>null</c> if no scheduled time is present in <see cref="ProgressData"/>.
     /// </summary>
     /// <remarks>
+    /// The property reads directly from <see cref="ProgressData"/> without checking <see cref="State"/>.
+    /// The scheduler removes "ScheduledTime" from <see cref="ProgressData"/> when a task is promoted to the
+    /// queue, so the value is typically absent for non-scheduled tasks in practice.
     /// Handles three value shapes produced by the scheduler and JSON deserialization:
     /// <list type="bullet">
     ///   <item><c>DateTime</c> — set at runtime by the scheduler.</item>
