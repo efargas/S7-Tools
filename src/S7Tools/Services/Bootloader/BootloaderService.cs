@@ -1562,15 +1562,10 @@ public sealed class BootloaderService(
 
             return dumpResult;
         }
-        catch (PartialDumpException pde)
+        catch (PartialDumpException)
         {
-            // Log partial files and re-throw so the caller can track them
-            effectiveTaskLogger.LogWarning("Dump interrupted with {Count} partial file(s) saved.",
-                pde.PartialResult.SavedFiles.Count);
-            foreach (string f in pde.PartialResult.SavedFiles)
-            {
-                effectiveTaskLogger.LogWarning("  Partial dump preserved: {FilePath}", f);
-            }
+            // Let the outer caller (e.g. DumpWithTaskTrackingAsync) handle logging and task/job state
+            // for partial dumps to avoid duplicate log entries.
             throw;
         }
         catch (Exception ex)
