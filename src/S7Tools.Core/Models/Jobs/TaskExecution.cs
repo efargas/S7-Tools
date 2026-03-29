@@ -349,10 +349,10 @@ public class TaskExecution : INotifyPropertyChanged
             DateTime? result = scheduledObj switch
             {
                 DateTime dt => dt,
-                string s when DateTime.TryParse(s, null, DateTimeStyles.RoundtripKind, out DateTime parsed) => parsed,
+                string s when DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime parsed) => parsed,
                 System.Text.Json.JsonElement je when je.ValueKind == System.Text.Json.JsonValueKind.String =>
                     je.GetString() is { Length: > 0 } dateStr &&
-                    DateTime.TryParse(dateStr, null, DateTimeStyles.RoundtripKind, out DateTime jeDate) ? jeDate : null,
+                    DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime jeDate) ? jeDate : null,
                 _ => null
             };
 
