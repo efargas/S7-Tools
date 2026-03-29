@@ -325,21 +325,42 @@ public class TaskExecution : INotifyPropertyChanged
     /// Reads from <see cref="ProgressData"/>["ScheduledTime"] (stored as UTC by the scheduler).
     /// Returns <c>null</c> when the task is not scheduled.
     /// </summary>
+    /// <remarks>
+    /// Handles three value shapes produced by the scheduler and JSON deserialization:
+    /// <list type="bullet">
+    ///   <item><c>DateTime</c> — set at runtime by the scheduler.</item>
+    ///   <item><c>string</c> — written directly as a string.</item>
+    ///   <item><c>JsonElement</c> (string) — produced when <see cref="ProgressData"/> is round-tripped through
+    ///     <c>System.Text.Json</c>. <c>Unspecified</c> kind is treated as UTC to match the scheduler convention.</item>
+    /// </list>
+    /// </remarks>
     [JsonIgnore]
     public DateTime? ScheduledTime
     {
         get
         {
-            if (ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
+            if (!ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
             {
-                return scheduledObj switch
-                {
-                    DateTime dt => dt,
-                    string s when DateTime.TryParse(s, null, DateTimeStyles.RoundtripKind, out DateTime parsed) => parsed,
-                    _ => null
-                };
+                return null;
             }
-            return null;
+
+            DateTime? result = scheduledObj switch
+            {
+                DateTime dt => dt,
+                string s when DateTime.TryParse(s, null, DateTimeStyles.RoundtripKind, out DateTime parsed) => parsed,
+                System.Text.Json.JsonElement je when je.ValueKind == System.Text.Json.JsonValueKind.String =>
+                    je.GetString() is { Length: > 0 } dateStr &&
+                    DateTime.TryParse(dateStr, null, DateTimeStyles.RoundtripKind, out DateTime jeDate) ? jeDate : null,
+                _ => null
+            };
+
+            // Normalize Unspecified → UTC to match the scheduler convention
+            if (result.HasValue && result.Value.Kind == DateTimeKind.Unspecified)
+            {
+                result = DateTime.SpecifyKind(result.Value, DateTimeKind.Utc);
+            }
+
+            return result;
         }
     }
 

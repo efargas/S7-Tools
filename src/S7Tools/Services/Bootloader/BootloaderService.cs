@@ -182,7 +182,7 @@ public sealed class BootloaderService(
                 // Dump was interrupted but partial files were saved — surface them
                 bool wasCancelled = pde.InnerException is OperationCanceledException;
                 string partialState = wasCancelled ? "canceled" : "failed";
-                string partialMsg = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} partial file(s) preserved";
+                string partialMsg = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} dump file(s) preserved (some may be partial)";
 
                 if (wasCancelled)
                 {
@@ -195,9 +195,9 @@ public sealed class BootloaderService(
 
                 foreach (string f in pde.PartialResult.SavedFiles)
                 {
-                    _logger.LogWarning("Partial dump file preserved: {FilePath}", f);
+                    _logger.LogWarning("Dump file preserved: {FilePath}", f);
                 }
-                _logger.LogWarning("Bootloader dump {State} for task {TaskId}. Partial files: {Count}",
+                _logger.LogWarning("Bootloader dump {State} for task {TaskId}. Dump file(s) preserved (some may be partial): {Count}",
                     partialState, taskExecution.TaskId, pde.PartialResult.SavedFiles.Count);
                 throw;
             }

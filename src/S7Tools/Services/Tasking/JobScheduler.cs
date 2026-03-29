@@ -395,10 +395,10 @@ public sealed class JobScheduler(
             string partialState = wasCancelled ? "canceled" : "failed";
             foreach (string partialFile in pde.PartialResult.SavedFiles)
             {
-                _logger.LogWarning("Job {JobId} partial dump preserved: {FilePath}", job.Id, partialFile);
+                _logger.LogWarning("Job {JobId} dump file preserved: {FilePath}", job.Id, partialFile);
             }
 
-            string partialMsg = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} partial file(s) preserved";
+            string partialMsg = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} dump file(s) preserved (some may be partial)";
             JobState resultState = wasCancelled ? JobState.Canceled : JobState.Failed;
 
             Job partialJob = job with
@@ -416,7 +416,7 @@ public sealed class JobScheduler(
                 resultState,
                 partialJob.ErrorMessage));
 
-            _logger.LogWarning("Job {JobId} dump {State} with {Count} partial file(s)",
+            _logger.LogWarning("Job {JobId} dump {State} with {Count} dump file(s) preserved (some may be partial)",
                 job.Id, partialState, pde.PartialResult.SavedFiles.Count);
         }
         catch (OperationCanceledException)

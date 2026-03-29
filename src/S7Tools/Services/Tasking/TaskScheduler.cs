@@ -1084,7 +1084,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
             if (wasCancelled)
             {
-                string cancelMsg = $"Task was cancelled; {pde.PartialResult.SavedFiles.Count} partial dump file(s) were preserved";
+                string cancelMsg = $"Task was cancelled; {pde.PartialResult.SavedFiles.Count} dump file(s) were preserved (some may be partial)";
                 task.UpdateState(TaskState.Cancelled, cancelMsg);
                 TaskStateChanged?.Invoke(task);
                 _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
@@ -1101,9 +1101,9 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
 
             foreach (string partialFile in pde.PartialResult.SavedFiles)
             {
-                _logger.LogWarning("Task {TaskId} partial dump preserved: {FilePath}", taskId, partialFile);
+                _logger.LogWarning("Task {TaskId} dump file preserved: {FilePath}", taskId, partialFile);
             }
-            _logger.LogWarning("Task {TaskId} ({JobName}) dump {State} with {Count} partial file(s)",
+            _logger.LogWarning("Task {TaskId} ({JobName}) dump {State} with {Count} dump file(s) preserved (some may be partial)",
                 taskId, task.JobName, partialState, pde.PartialResult.SavedFiles.Count);
         }
         catch (OperationCanceledException)

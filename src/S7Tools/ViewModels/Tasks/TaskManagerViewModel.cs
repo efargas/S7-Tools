@@ -414,7 +414,10 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// </summary>
     /// <remarks>
     /// Removes a completed, failed, or cancelled task from the task history.
-    /// Enabled when a task in a terminal state is selected.
+    /// Always enabled; validation (terminal-state requirement) is enforced at runtime
+    /// and surfaced via <see cref="StatusMessage"/> when a non-terminal task is passed.
+    /// Accepts an explicit <see cref="TaskExecution"/> parameter (from row-level buttons)
+    /// or falls back to <see cref="SelectedTask"/> when called without a parameter.
     /// </remarks>
     public ReactiveCommand<TaskExecution?, Unit> DeleteTaskCommand { get; private set; } = null!;
 
