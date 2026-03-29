@@ -205,8 +205,8 @@ public class JobSchedulerTests
         JobStateChangedEventArgs failedArgs = stateChanges.First(s => s.NewState == JobState.Failed);
         failedArgs.JobId.Should().Be(42);
         failedArgs.ErrorMessage.Should().NotBeNull();
-        failedArgs.ErrorMessage.Should().Contain("partial file",
-            "error message should mention the partial file(s)");
+        failedArgs.ErrorMessage.Should().Contain("dump file",
+            "error message should mention the preserved dump file(s)");
         failedArgs.ErrorMessage.Should().Contain("1",
             "error message should include the count of partial files");
     }

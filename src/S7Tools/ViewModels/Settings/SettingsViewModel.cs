@@ -15,8 +15,9 @@ namespace S7Tools.ViewModels.Settings;
 /// <summary>
 /// Represents the SettingsViewModel.
 /// </summary>
-public class SettingsViewModel : ViewModelBase, IDockableViewModel
+public class SettingsViewModel : ViewModelBase, IDockableViewModel, IDisposable
 {
+    private bool _disposed;
     // IDockableViewModel implementation
     /// <summary>
     /// Gets or sets the DockId.
@@ -228,6 +229,39 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
             settingsService,
             pathService,
             portScanner);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases managed resources.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        if (disposing)
+        {
+            foreach (ViewModelBase vm in _categoryViewModels.Values)
+            {
+                if (vm is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+
+            _categoryViewModels.Clear();
+        }
     }
 
 }
