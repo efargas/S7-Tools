@@ -260,6 +260,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         if (utcTime <= _timeProvider.GetUtcNow())
         {
             _scheduledTasks.TryRemove(taskId, out _);
+            task.ProgressData.Remove("ScheduledTime");
             if (!TryEnqueueInternal(taskId, task, "Promoted to queue from schedule"))
             {
                 _logger.LogWarning("Failed to promote scheduled task {TaskId} to queue because it is full", taskId);
@@ -1101,7 +1102,8 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             }
             else
             {
-                task.MarkAsFailed(pde.Message, pde.ToString());
+                string failMsg = $"Dump failed with {pde.PartialResult.SavedFiles.Count} dump file(s) preserved (some may be partial)";
+                task.MarkAsFailed(failMsg, pde.ToString());
                 TaskStateChanged?.Invoke(task);
                 _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
                 Interlocked.Increment(ref _totalTasksProcessed);
