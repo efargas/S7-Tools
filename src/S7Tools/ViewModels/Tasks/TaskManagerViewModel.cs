@@ -985,6 +985,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             if (result.IsSuccess)
             {
                 SelectedTask = TaskExecution.Empty;
+                await LoadTasksAsync().ConfigureAwait(false);
             }
         }
         catch (Exception ex)

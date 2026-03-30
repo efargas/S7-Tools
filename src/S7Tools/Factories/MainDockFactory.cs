@@ -89,9 +89,13 @@ public class MainDockFactory : Factory
         // Check for existing open document by DockId
         if (_openDocuments.TryGetValue(vm.DockId, out var existingDoc))
         {
-            if (_mainDocumentDock!.VisibleDockables?.Contains(existingDoc) == true)
+            // The document may have been moved to a different dock panel (e.g. side-by-side layout).
+            // Use Owner to find its current containing dock and activate it there instead of
+            // opening a duplicate tab in the main dock.
+            if (existingDoc.Owner is IDock ownerDock &&
+                ownerDock.VisibleDockables?.Contains(existingDoc) == true)
             {
-                _mainDocumentDock.ActiveDockable = existingDoc;
+                ownerDock.ActiveDockable = existingDoc;
                 if (vm is IDisposable disposableVm && !ReferenceEquals(existingDoc.Context, vm))
                 {
                     disposableVm.Dispose();
@@ -255,6 +259,22 @@ public class MainDockFactory : Factory
             {
                 _openTools.Remove(key);
             }
+        }
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Re-registers documents that are moved between dock panels so that
+    /// the sidebar navigation can still find and activate them without
+    /// creating duplicate tabs.
+    /// </remarks>
+    public override void OnDockableAdded(IDockable? dockable)
+    {
+        base.OnDockableAdded(dockable);
+
+        if (dockable is IDocument doc && doc.Id != null && !_openDocuments.ContainsKey(doc.Id))
+        {
+            _openDocuments[doc.Id] = doc;
         }
     }
 

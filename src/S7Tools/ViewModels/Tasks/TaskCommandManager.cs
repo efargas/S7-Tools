@@ -42,10 +42,10 @@ public class TaskCommandManager
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        if (task.State != TaskState.Created)
+        if (task.State is not (TaskState.Created or TaskState.Scheduled))
         {
             _logger.LogWarning("Cannot start task {TaskId} - current state is {State}", task.TaskId, task.State);
-            return CommandResult.Failure($"Cannot start task '{task.JobName}' - task is in '{task.State}' state (must be Created)");
+            return CommandResult.Failure($"Cannot start task '{task.JobName}' - task is in '{task.State}' state (must be Created or Scheduled)");
         }
 
         try

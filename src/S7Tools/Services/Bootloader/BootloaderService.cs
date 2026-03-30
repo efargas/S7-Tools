@@ -170,7 +170,15 @@ public sealed class BootloaderService(
 
                 // Mark task as completed
                 long totalLength = result.SavedFiles?
-                    .Sum(path => { try { return new System.IO.FileInfo(path).Length; } catch { return 0L; } }) ?? 0;
+                    .Sum(path =>
+                    {
+                        try { return new System.IO.FileInfo(path).Length; }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Could not read file size for dump output: {FilePath}", path);
+                            return 0L;
+                        }
+                    }) ?? 0;
                 taskExecution.MarkAsCompleted(outputFilePath, totalLength);
 
                 _logger.LogInformation("Enhanced bootloader dump completed successfully for task {TaskId}. " +

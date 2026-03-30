@@ -182,27 +182,28 @@ public class JobSchedulerTests
             CreatedAt = DateTime.UtcNow
         };
 
-        var stateChanges = new System.Collections.Concurrent.ConcurrentBag<JobStateChangedEventArgs>();
-        scheduler.JobStateChanged += (_, args) => stateChanges.Add(args);
+        var failedTcs = new TaskCompletionSource<JobStateChangedEventArgs>(TaskCreationOptions.RunContinuationsAsynchronously);
+        scheduler.JobStateChanged += (_, args) =>
+        {
+            if (args.NewState == JobState.Failed)
+            {
+                failedTcs.TrySetResult(args);
+            }
+        };
 
         // Act: enqueue and start the scheduler, then wait for the Failed transition
         await scheduler.EnqueueAsync(testJob);
         await scheduler.StartAsync(CancellationToken.None);
 
         using var waitCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        while (!stateChanges.Any(s => s.NewState == JobState.Failed) && !waitCts.Token.IsCancellationRequested)
-        {
-            await Task.Delay(50);
-        }
+        JobStateChangedEventArgs failedArgs = await failedTcs.Task.WaitAsync(waitCts.Token);
 
         await scheduler.StopAsync(TimeSpan.FromSeconds(2), CancellationToken.None);
 
         // Assert: Running → Failed transition was raised
-        stateChanges.Should().Contain(s =>
-            s.PreviousState == JobState.Running && s.NewState == JobState.Failed,
+        failedArgs.Should().NotBeNull("job must transition to Failed when PartialDumpException is thrown");
+        failedArgs.PreviousState.Should().Be(JobState.Running,
             "job must transition Running→Failed when PartialDumpException is thrown");
-
-        JobStateChangedEventArgs failedArgs = stateChanges.First(s => s.NewState == JobState.Failed);
         failedArgs.JobId.Should().Be(42);
         failedArgs.ErrorMessage.Should().NotBeNull();
         failedArgs.ErrorMessage.Should().Contain("dump file",
