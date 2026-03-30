@@ -3,8 +3,61 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels.Pages"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Pages.AboutView"
              x:DataType="vm:AboutViewModel">
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="About S7-Tools"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                 Margin="0,0,0,10" />
+
+      <!-- App Info Section -->
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-info-circle" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="APPLICATION INFORMATION" />
+            </Grid>
+          </Expander.Header>
+
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <TextBlock Text="{Binding Greeting}"
+                       FontSize="16"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource BrandAccentBrush}" />
+            
+            <TextBlock Text="S7-Tools is a comprehensive utility suite for interacting with Siemens S7 PLCs, providing memory dumping, serial port proxying (socat), and power supply management features."
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                       TextWrapping="Wrap" />
+
+            <Border Background="{DynamicResource AppBackgroundBrush}" 
+                    BorderBrush="{DynamicResource ControlBorderBrush}" 
+                    BorderThickness="1" 
+                    CornerRadius="4" 
+                    Padding="12">
+              <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Version:" FontWeight="Bold" Margin="0,0,10,4" Foreground="{DynamicResource TextForegroundSecondaryBrush}"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="1.0.0-beta" Foreground="{DynamicResource TextForegroundSecondaryBrush}"/>
+                
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Build Date:" FontWeight="Bold" Margin="0,4,10,0" Foreground="{DynamicResource TextForegroundSecondaryBrush}"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="2024-05-20" Margin="0,4,0,0" Foreground="{DynamicResource TextForegroundSecondaryBrush}"/>
+              </Grid>
+            </Border>
+          </StackPanel>
+        </Expander>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

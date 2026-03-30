@@ -3,8 +3,44 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels.Pages"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Pages.ConnectionsView"
              x:DataType="vm:ConnectionsViewModel">
-    <TextBlock Text="Connections View" />
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Connections"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                 Margin="0,0,0,10" />
+
+      <!-- Active Connections Section -->
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-network-wired" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="ACTIVE CONNECTIONS" />
+            </Grid>
+          </Expander.Header>
+
+          <StackPanel Spacing="16" Margin="24,16,24,24" MinHeight="100" VerticalAlignment="Center">
+            <icons:Icon Value="fa-solid fa-plug-circle-exclamation" Width="48" Height="48" Foreground="{DynamicResource TextForegroundMutedBrush}" HorizontalAlignment="Center"/>
+            <TextBlock Text="No active PLC connections" 
+                       HorizontalAlignment="Center" 
+                       FontSize="16" 
+                       Foreground="{DynamicResource TextForegroundMutedBrush}" />
+          </StackPanel>
+        </Expander>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

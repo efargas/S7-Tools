@@ -17,41 +17,39 @@
                  Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                  Margin="0,0,0,10" />
 
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="16">
-          <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-calendar-alt" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SCHEDULED FOR FUTURE EXECUTION" />
+              <TextBlock Grid.Column="3" 
+                         Text="{Binding Manager.ScheduledTasks.Count, StringFormat='{}{0} tasks'}"
+                         FontSize="12"
+                         Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         VerticalAlignment="Center" 
+                         Margin="0,0,10,0"/>
+            </Grid>
+          </Expander.Header>
 
-            <TextBlock Grid.Column="0"
-                       Text="Scheduled for Future Execution"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-
-            <TextBlock Grid.Column="1"
-                       Text="{Binding Manager.ScheduledTasks.Count, StringFormat='{}{0} tasks'}"
-                       FontSize="12"
-                       Foreground="{DynamicResource TextForegroundMutedBrush}"
-                       VerticalAlignment="Center" />
-          </Grid>
-
-          <DataGrid ItemsSource="{Binding Manager.ScheduledTasks}"
-                    Background="{DynamicResource ControlBackgroundBrush}"
-                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                    GridLinesVisibility="Horizontal"
-                    HeadersVisibility="Column"
-                    CanUserReorderColumns="False"
-                    CanUserResizeColumns="True"
-                    CanUserSortColumns="True"
-                    IsReadOnly="True"
-                    MaxHeight="400">
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <DataGrid ItemsSource="{Binding Manager.ScheduledTasks}"
+                      Background="{DynamicResource ControlBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      MaxHeight="400">
             <DataGrid.Columns>
               <DataGridTemplateColumn Header="Task ID" Width="180">
                 <DataGridTemplateColumn.CellTemplate>
@@ -102,8 +100,9 @@
                 </DataGridTemplateColumn.CellTemplate>
               </DataGridTemplateColumn>
             </DataGrid.Columns>
-          </DataGrid>
-        </StackPanel>
+            </DataGrid>
+          </StackPanel>
+        </Expander>
       </Border>
     </StackPanel>
   </ScrollViewer>

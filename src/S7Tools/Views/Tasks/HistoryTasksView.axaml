@@ -18,51 +18,49 @@
                  Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                  Margin="0,0,0,10" />
 
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="16">
-          <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-              <TextBlock Text="Recently Completed Tasks"
-                         FontSize="18"
-                         FontWeight="SemiBold"
-                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-
-              <TextBlock Text="{Binding Manager.FinishedTasks.Count, StringFormat='{}{0} tasks'}"
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-history" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="RECENTLY COMPLETED TASKS" />
+              <TextBlock Grid.Column="3" 
+                         Text="{Binding Manager.FinishedTasks.Count, StringFormat='{}{0} tasks'}"
                          FontSize="12"
                          Foreground="{DynamicResource TextForegroundMutedBrush}"
-                         VerticalAlignment="Center" />
-            </StackPanel>
+                         VerticalAlignment="Center" 
+                         Margin="0,0,10,0"/>
+            </Grid>
+          </Expander.Header>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-              <Button Width="110" Height="34" Command="{Binding Manager.ClearFinishedTasksCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <Grid>
+              <Button HorizontalAlignment="Right" Width="110" Height="34" Command="{Binding Manager.ClearFinishedTasksCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
                 <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
                   <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
                   <TextBlock Text="Clear All" />
                 </StackPanel>
               </Button>
-            </StackPanel>
-          </Grid>
+            </Grid>
 
-          <DataGrid ItemsSource="{Binding Manager.FinishedTasks}"
-                    SelectedItem="{Binding SelectedHistoryTask}"
-                    Background="{DynamicResource ControlBackgroundBrush}"
-                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                    GridLinesVisibility="Horizontal"
-                    HeadersVisibility="Column"
-                    CanUserReorderColumns="False"
-                    CanUserResizeColumns="True"
-                    CanUserSortColumns="True"
-                    IsReadOnly="True"
-                    MaxHeight="350">
+            <DataGrid ItemsSource="{Binding Manager.FinishedTasks}"
+                      SelectedItem="{Binding SelectedHistoryTask}"
+                      Background="{DynamicResource ControlBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      MaxHeight="350">
             <DataGrid.Columns>
               <DataGridTemplateColumn Header="Task ID" Width="180">
                 <DataGridTemplateColumn.CellTemplate>
@@ -130,45 +128,50 @@
                 </DataGridTemplateColumn.CellTemplate>
               </DataGridTemplateColumn>
             </DataGrid.Columns>
-          </DataGrid>
-        </StackPanel>
+            </DataGrid>
+          </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Task Details Header -->
       <Border IsVisible="{Binding SelectedHistoryTask, Converter={x:Static ObjectConverters.IsNotNull}}"
-              Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="16">
-          <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+              Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-circle-info" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="TASK DETAILS" />
+            </Grid>
+          </Expander.Header>
 
-            <TextBlock Grid.Column="0"
-                       Text="Task Details"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <Grid Margin="0,0,0,8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-              <Button Width="150" Height="34" Command="{Binding OpenLogsFolderCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
-                  <TextBlock Text="Logs Folder" />
-                </StackPanel>
-              </Button>
-              <Button Width="150" Height="34" Command="{Binding OpenDumpsFolderCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-database" Width="14" Height="14" />
-                  <TextBlock Text="Dumps Folder" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
-          </Grid>
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                <Button Width="150" Height="34" Command="{Binding OpenLogsFolderCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
+                    <TextBlock Text="Logs Folder" />
+                  </StackPanel>
+                </Button>
+                <Button Width="150" Height="34" Command="{Binding OpenDumpsFolderCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-database" Width="14" Height="14" />
+                    <TextBlock Text="Dumps Folder" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
 
           <!-- Task Summary Info -->
           <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="140,*" Margin="0,8,0,0">
@@ -223,7 +226,8 @@
 
           <!-- Task Details View (Logs and Controls) -->
           <views:TaskDetailsView DataContext="{Binding TaskDetailsViewModel}" />
-        </StackPanel>
+          </StackPanel>
+        </Expander>
       </Border>
     </StackPanel>
   </ScrollViewer>

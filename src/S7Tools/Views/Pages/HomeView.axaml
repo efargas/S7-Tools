@@ -3,8 +3,122 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels.Pages"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Pages.HomeView"
-             x:DataType="vm:HomeViewModel">
-    <TextBlock Text="Home View" />
+             x:DataType="vm:HomeViewModel"
+             Background="{DynamicResource AppBackgroundBrush}">
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="16">
+      <!-- Welcome Header -->
+      <StackPanel Spacing="4" Margin="0,0,0,10">
+        <TextBlock Text="Welcome to S7-Tools"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   Foreground="{DynamicResource BrandAccentBrush}" />
+        <TextBlock Text="Your central hub for Siemens S7 PLC management and diagnostics."
+                   FontSize="14"
+                   Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      </StackPanel>
+
+      <!-- System Overview Section -->
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-tachometer-alt" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SYSTEM OVERVIEW" />
+            </Grid>
+          </Expander.Header>
+
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <TextBlock Text="S7-Tools is configured and ready for operation."
+                       FontSize="13"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                       TextWrapping="Wrap" />
+
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="0,10,0,0">
+              <Border Grid.Row="0" Grid.Column="0" Margin="0,0,8,8" Padding="16" Background="{DynamicResource AppBackgroundBrush}" CornerRadius="8" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <icons:Icon Value="fa-solid fa-microchip" Width="32" Height="32" Foreground="{DynamicResource BrandAccentBrush}" />
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="PLC Engine" FontWeight="Bold" FontSize="14" />
+                    <TextBlock Text="Version 1.2.4 (Active)" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+
+              <Border Grid.Row="0" Grid.Column="1" Margin="8,0,0,8" Padding="16" Background="{DynamicResource AppBackgroundBrush}" CornerRadius="8" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                  <icons:Icon Value="fa-solid fa-network-wired" Width="32" Height="32" Foreground="{DynamicResource BrandAccentBrush}" />
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Active Network" FontWeight="Bold" FontSize="14" />
+                    <TextBlock Text="Ethernet / TCP-IP" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </Expander>
+      </Border>
+
+      <!-- Quick Actions Section -->
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-bolt" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="QUICK ACTIONS" />
+            </Grid>
+          </Expander.Header>
+
+          <StackPanel Spacing="12" Margin="24,16,24,24">
+            <TextBlock Text="Common management and diagnostic tasks."
+                       FontSize="13"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                       Margin="0,0,0,8" />
+            
+            <WrapPanel Orientation="Horizontal" ItemWidth="180">
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <icons:Icon Value="fa-solid fa-plus-circle" Width="14" Height="14" />
+                  <TextBlock Text="New Job" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <icons:Icon Value="fa-solid fa-terminal" Width="14" Height="14" />
+                  <TextBlock Text="Live Console" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
+                  <TextBlock Text="Export Logs" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <icons:Icon Value="fa-solid fa-wrench" Width="14" Height="14" />
+                  <TextBlock Text="Check Health" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </WrapPanel>
+          </StackPanel>
+        </Expander>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

@@ -31,87 +31,104 @@
                  Margin="0,0,0,10" />
 
       <!-- Port Discovery Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16"
-              DataContext="{Binding PortScanner}">
-        <controls:SerialPortDiscoveryControl Height="210" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-search" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="PORT DISCOVERY" />
+            </Grid>
+          </Expander.Header>
+
+          <StackPanel Spacing="0" Margin="24,16,24,24" DataContext="{Binding PortScanner}">
+            <controls:SerialPortDiscoveryControl Height="210" />
+          </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Port Test Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16"
-              DataContext="{Binding PortScanner}">
-        <StackPanel Spacing="12">
-          <TextBlock Text="Port Testing"
-                     FontSize="18"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-vial" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="PORT TESTING" />
+            </Grid>
+          </Expander.Header>
 
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="150" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+          <StackPanel Spacing="12" Margin="24,16,24,24" DataContext="{Binding PortScanner}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
-                       Text="Selected Port:"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                       VerticalAlignment="Center" />
-
-            <TextBlock Grid.Column="1"
-                       Text="{Binding SelectedPort.PortName, FallbackValue='No port selected', TargetNullValue='No port selected'}"
-                       Foreground="{DynamicResource BrandAccentBrush}"
-                       FontWeight="SemiBold"
-                       VerticalAlignment="Center"
-                       Margin="8,0" />
-
-            <Button Grid.Column="2"
-                    Width="110"
-                    Height="34"
-                    Command="{Binding TestSelectedPortCommand}"
-                    Background="{DynamicResource ButtonBackgroundBrush}"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
-                <TextBlock Text="Test Port" />
-              </StackPanel>
-            </Button>
-          </Grid>
-
-          <Border Background="{DynamicResource AppBackgroundBrush}"
-                  BorderBrush="{DynamicResource ControlBorderBrush}"
-                  BorderThickness="1"
-                  CornerRadius="3"
-                  Padding="12"
-                  MinHeight="80">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Test Result:"
-                         Foreground="{DynamicResource BrandAccentBrush}"
-                         FontSize="12"
-                         FontWeight="SemiBold" />
-              <TextBlock Text="{Binding SelectedPort.LastTestResult, FallbackValue='No test performed yet', TargetNullValue='No test performed yet'}"
+              <TextBlock Grid.Column="0"
+                         Text="Selected Port:"
                          Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                         FontSize="12"
-                         TextWrapping="Wrap" />
-              <TextBlock Text="{Binding SelectedPort.LastTested, StringFormat='Last tested: {0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Not tested yet', TargetNullValue='Not tested yet'}"
-                         Foreground="{DynamicResource TextForegroundMutedBrush}"
-                         FontSize="11"
-                         Margin="0,4,0,0" />
-            </StackPanel>
-          </Border>
+                         VerticalAlignment="Center" />
 
-          <TextBlock Text="Select a port from the discovery list above and click 'Test Port' to verify accessibility and perform basic communication tests"
-                     FontSize="11"
-                     Foreground="{DynamicResource TextForegroundMutedBrush}"
-                     TextWrapping="Wrap" />
-        </StackPanel>
+              <TextBlock Grid.Column="1"
+                         Text="{Binding SelectedPort.PortName, FallbackValue='No port selected', TargetNullValue='No port selected'}"
+                         Foreground="{DynamicResource BrandAccentBrush}"
+                         FontWeight="SemiBold"
+                         VerticalAlignment="Center"
+                         Margin="8,0" />
+
+              <Button Grid.Column="2"
+                      Width="110"
+                      Height="34"
+                      Command="{Binding TestSelectedPortCommand}"
+                      Background="{DynamicResource ButtonBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
+                  <TextBlock Text="Test Port" />
+                </StackPanel>
+              </Button>
+            </Grid>
+
+            <Border Background="{DynamicResource AppBackgroundBrush}"
+                    BorderBrush="{DynamicResource ControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="12"
+                    MinHeight="80">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Test Result:"
+                           Foreground="{DynamicResource BrandAccentBrush}"
+                           FontSize="12"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding SelectedPort.LastTestResult, FallbackValue='No test performed yet', TargetNullValue='No test performed yet'}"
+                           Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                           FontSize="12"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedPort.LastTested, StringFormat='Last tested: {0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Not tested yet', TargetNullValue='Not tested yet'}"
+                           Foreground="{DynamicResource TextForegroundMutedBrush}"
+                           FontSize="11"
+                           Margin="0,4,0,0" />
+              </StackPanel>
+            </Border>
+
+            <TextBlock Text="Select a port from the discovery list above and click 'Test Port' to verify accessibility and perform basic communication tests"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}"
+                       TextWrapping="Wrap" />
+          </StackPanel>
+        </Expander>
       </Border>
 
 
