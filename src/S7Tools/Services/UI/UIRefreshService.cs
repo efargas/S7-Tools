@@ -216,8 +216,8 @@ public sealed class UIRefreshService : IUIRefreshService
         try
         {
             // Common property patterns to refresh across ViewModels
-            string[] commonProperties = new[]
-            {
+            string[] commonProperties =
+            [
                 // Common UI state properties
                 "CanExecute", "IsEnabled", "IsVisible", "IsLoading", "IsValid",
 
@@ -229,7 +229,7 @@ public sealed class UIRefreshService : IUIRefreshService
 
                 // Status properties
                 "Status", "StatusMessage", "ErrorMessage", "ValidationMessage"
-            };
+            ];
 
             // Get all properties of the ViewModel that match common patterns
             Type viewModelType = viewModel.GetType();

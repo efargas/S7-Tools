@@ -157,8 +157,8 @@ sealed class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        var basePath = AppDomain.CurrentDomain.BaseDirectory;
-        var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+        string basePath = AppDomain.CurrentDomain.BaseDirectory;
+        IConfigurationRoot configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
             .AddJsonFile(Path.Combine(basePath, "Resources", "AppSettings", "AppSettings.json"), optional: true, reloadOnChange: true)
             .AddJsonFile(Path.Combine(basePath, "Resources", "AppSettings", "UserSettings.json"), optional: true, reloadOnChange: true)
             .Build();
@@ -166,7 +166,7 @@ sealed class Program
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
 
         // Bind strongly typed options
-        var appSection = configuration.GetSection("App");
+        IConfigurationSection appSection = configuration.GetSection("App");
         services.AddOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>()
             .Bind(appSection)
             .ValidateDataAnnotations()
@@ -202,7 +202,7 @@ sealed class Program
                 .Filter.ByIncludingOnly(e => e.Properties.ContainsKey("TaskId"))
                 .WriteTo.Map("TaskId", (taskId, wt) =>
                 {
-                    var taskIdStr = taskId?.ToString() ?? "unknown";
+                    string taskIdStr = taskId?.ToString() ?? "unknown";
                     // Within a task, map by Scope to create main.log, process.log, etc.
                     wt.Map("LogScope", "Main", (scope, subWt) =>
                         subWt.File(Path.Combine(basePath, "Resources", "Logs", "Tasks", taskIdStr, $"{scope}.log"), rollingInterval: RollingInterval.Day));

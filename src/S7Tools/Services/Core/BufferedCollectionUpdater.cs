@@ -67,7 +67,7 @@ public sealed class BufferedCollectionUpdater<T> : IDisposable
         }
 
         var items = new List<T>();
-        while (_queue.TryDequeue(out var item))
+        while (_queue.TryDequeue(out T? item))
         {
             items.Add(item);
         }

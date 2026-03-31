@@ -767,7 +767,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 {
                     // Copy Strategy:
                     // 1. Capture current selection (object reference)
-                    var selectedItem = SelectedSegment;
+                    EditableMemorySegment selectedItem = SelectedSegment;
 
                     // 2. Create COPY of collection
                     var newSegments = new ObservableCollection<EditableMemorySegment>(Segments);
@@ -815,7 +815,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 {
                     // Copy Strategy:
                     // 1. Capture current selection (object reference)
-                    var selectedItem = SelectedSegment;
+                    EditableMemorySegment selectedItem = SelectedSegment;
 
                     // 2. Create COPY of collection
                     var newSegments = new ObservableCollection<EditableMemorySegment>(Segments);

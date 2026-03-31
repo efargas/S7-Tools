@@ -179,12 +179,12 @@ public sealed class JobScheduler(
     {
         ArgumentNullException.ThrowIfNull(profileSet);
 
-        return new[]
-        {
+        return
+        [
             new ResourceKey("serial", profileSet.Serial.Device),
             new ResourceKey("tcp", profileSet.Socat.Port.ToString()),
             new ResourceKey("modbus", $"{profileSet.Power.Host}:{profileSet.Power.Port}")
-        };
+        ];
     }
 
     private async Task ProcessQueueAsync(CancellationToken cancellationToken)

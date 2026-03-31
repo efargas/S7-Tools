@@ -138,7 +138,7 @@ public class JobWizardViewModel : ViewModelBase, IDisposable
                 {
                     // Update main wizard selection to match
                     // We must find the matching profile instance in our own collection
-                    var match = MemoryProfiles.FirstOrDefault(p => p.Id == stepProfile.Id);
+                    MemoryMappingProfile? match = MemoryProfiles.FirstOrDefault(p => p.Id == stepProfile.Id);
                     if (match != null && SelectedMemoryRegion?.Id != match.Id)
                     {
                         _logger.LogDebug("Syncing wizard SelectedMemoryRegion to match step profile {Id}", stepProfile.Id);

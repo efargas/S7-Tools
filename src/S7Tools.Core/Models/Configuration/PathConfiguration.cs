@@ -131,8 +131,8 @@ namespace S7Tools.Core.Models.Configuration
                 }
 
                 // Check that all computed paths are valid
-                string[] paths = new[]
-                {
+                string[] paths =
+                [
                     ResourcesDirectory,
                     AppSettingsPath,
                     ProfilesDirectory,
@@ -141,7 +141,7 @@ namespace S7Tools.Core.Models.Configuration
                     TasksPath,
                     PayloadsDirectory,
                     DumpsDirectory
-                };
+                ];
 
                 foreach (string? path in paths)
                 {

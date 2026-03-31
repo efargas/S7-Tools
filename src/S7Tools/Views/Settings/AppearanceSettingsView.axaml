@@ -19,13 +19,7 @@
                  Margin="0,0,0,10" />
 
             <!-- Theming Section -->
-            <Border Classes="ProfileSection"
-                    Background="{DynamicResource PanelBackgroundBrush}" 
-                    BorderBrush="{DynamicResource ControlBorderBrush}" 
-                    BorderThickness="1" 
-                    CornerRadius="8" 
-                    Padding="0"
-                    Margin="0">
+            <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
                 <Expander IsExpanded="True">
                     <Expander.Header>
                         <Grid Background="Transparent" Height="38" Margin="4,0">

@@ -125,7 +125,7 @@ public class SocatConfigurationService
             // Check accessibility (read/write permissions)
             try
             {
-                using var stream = File.Open(serialDevice, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                using FileStream stream = File.Open(serialDevice, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                 result.IsAccessible = true;
                 _logger.LogDebug("Serial device {Device} is accessible", serialDevice);
             }

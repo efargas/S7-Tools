@@ -1,6 +1,7 @@
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Dialogs.Models;
 
 namespace S7Tools.ViewModels.Tasks;
 
@@ -199,13 +200,13 @@ public class TaskCommandManager
             _logger.LogInformation("Restarting task {TaskId} ({JobName})", task.TaskId, task.JobName);
 
             // Get the job profile first
-            var jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false);
+            JobProfile? jobProfile = await _jobManager.GetByIdAsync(task.JobProfileId).ConfigureAwait(false);
             if (jobProfile == null)
             {
                 return CommandResult.Failure($"Failed to find job profile for task '{task.JobName}'");
             }
 
-            var newTask = await _taskScheduler.CreateTaskAsync(jobProfile).ConfigureAwait(false);
+            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(jobProfile).ConfigureAwait(false);
 
             if (newTask != null)
             {
@@ -280,7 +281,7 @@ public class TaskCommandManager
         }
 
         // Show input dialog for delay
-        var result = await _dialogService.ShowInputAsync(
+        InputResult result = await _dialogService.ShowInputAsync(
             "Schedule Task",
             "Enter delay in minutes (or specific time like '12:30'):",
             "5").ConfigureAwait(false);
@@ -327,7 +328,7 @@ public class TaskCommandManager
         try
         {
             // Show job selection dialog
-            var selectedJob = await _dialogService.ShowJobSelectionAsync().ConfigureAwait(false);
+            JobProfile? selectedJob = await _dialogService.ShowJobSelectionAsync().ConfigureAwait(false);
 
             if (selectedJob == null)
             {
@@ -335,7 +336,7 @@ public class TaskCommandManager
             }
 
             // Create task from job
-            var newTask = await _taskScheduler.CreateTaskAsync(selectedJob).ConfigureAwait(false);
+            TaskExecution newTask = await _taskScheduler.CreateTaskAsync(selectedJob).ConfigureAwait(false);
 
             if (newTask != null)
             {

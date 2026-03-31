@@ -172,8 +172,8 @@ namespace S7Tools.Services
                 }
 
                 // Create all required directories
-                string[] directoriesToCreate = new[]
-                {
+                string[] directoriesToCreate =
+                [
                     ResourcesDirectory,
                     Path.Combine(ResourcesDirectory, ResourcePaths.AppSettingsFolder),
                     ProfilesDirectory,
@@ -191,7 +191,7 @@ namespace S7Tools.Services
                     Path.Combine(ResourcesDirectory, ResourcePaths.TasksFolder),
                     PayloadsDirectory,
                     DumpsDirectory
-                };
+                ];
 
                 var createdDirectories = new List<string>();
                 foreach (string? directory in directoriesToCreate)

@@ -479,7 +479,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
 
             // Map port info objects directly from backend response to avoid double I/O testing
             var portInfos = new List<SerialPortInfo>();
-            foreach (var corePort in availablePorts)
+            foreach (Core.Interfaces.Services.SerialPortInfo corePort in availablePorts)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Reactive;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
@@ -254,7 +255,7 @@ public class LoggingSettingsViewModel : ViewModelBase, IDisposable
     private void RefreshFromSettings()
     {
         // Load settings using the new structured approach
-        var current = _settingsService.Current;
+        AppSettings current = _settingsService.Current;
         DefaultLogPath = current.Logging.LogDirectory;
         ExportPath = current.Logging.ExportDirectory;
         MinimumLogLevel = current.Logging.Level.ToString();

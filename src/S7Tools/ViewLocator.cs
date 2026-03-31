@@ -82,7 +82,7 @@ public class ViewLocator : IDataTemplate
     private static Type? ResolveViewType(Type vmType)
     {
         // Check explicit mappings first (for ViewModels that don't follow naming conventions)
-        if (ExplicitMappings.TryGetValue(vmType, out var explicitType))
+        if (ExplicitMappings.TryGetValue(vmType, out Type? explicitType))
         {
             return explicitType;
         }

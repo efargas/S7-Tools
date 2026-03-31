@@ -40,8 +40,24 @@ public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize commands
-        CutCommand = ReactiveCommand.CreateFromTask(CutAsync);
-        CopyCommand = ReactiveCommand.CreateFromTask(CopyAsync);
+        IObservable<bool> canExecuteClipboard = this.WhenAnyValue(
+            x => x.TestInputText,
+            x => x.SelectionStart,
+            x => x.SelectionEnd,
+            (text, start, end) => 
+            {
+                if (string.IsNullOrEmpty(text))
+                {
+                    return false;
+                }
+                int minIdx = Math.Min(start, end);
+                int maxIdx = Math.Max(start, end);
+                int len = maxIdx - minIdx;
+                return len > 0 && minIdx >= 0 && maxIdx <= text.Length;
+            });
+
+        CutCommand = ReactiveCommand.CreateFromTask(CutAsync, canExecuteClipboard);
+        CopyCommand = ReactiveCommand.CreateFromTask(CopyAsync, canExecuteClipboard);
         PasteCommand = ReactiveCommand.CreateFromTask(PasteAsync);
 
         // Initialize logging test commands
@@ -160,23 +176,21 @@ public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            int start = Math.Min(SelectionStart, SelectionEnd);
-            int length = Math.Abs(SelectionStart - SelectionEnd);
+            int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, TestInputText.Length);
+            int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, TestInputText.Length - start);
+            
+            if (length == 0)
+            {
+                _logger.LogWarning("Cut requested but no text is selected");
+                StatusMessage = "Please select text to cut";
+                return;
+            }
 
-            if (length > 0)
-            {
-                string textToCut = TestInputText.Substring(start, length);
-                await _clipboardService.SetTextAsync(textToCut);
-                TestInputText = TestInputText.Remove(start, length);
-                CaretIndex = start;
-                StatusMessage = UIStrings.ClipboardTextCut;
-            }
-            else
-            {
-                await _clipboardService.SetTextAsync(TestInputText);
-                TestInputText = string.Empty;
-                StatusMessage = UIStrings.ClipboardTextCut;
-            }
+            string textToCut = TestInputText.Substring(start, length);
+            await _clipboardService.SetTextAsync(textToCut);
+            TestInputText = TestInputText.Remove(start, length);
+            CaretIndex = start;
+            StatusMessage = UIStrings.ClipboardTextCut;
 
             LastButtonPressed = "Cut";
             _logger.LogInformation("Text cut to clipboard");
@@ -197,20 +211,19 @@ public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            int start = Math.Min(SelectionStart, SelectionEnd);
-            int length = Math.Abs(SelectionStart - SelectionEnd);
+            int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, TestInputText.Length);
+            int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, TestInputText.Length - start);
+            
+            if (length == 0)
+            {
+                _logger.LogWarning("Copy requested but no text is selected");
+                StatusMessage = "Please select text to copy";
+                return;
+            }
 
-            if (length > 0)
-            {
-                string textToCopy = TestInputText.Substring(start, length);
-                await _clipboardService.SetTextAsync(textToCopy);
-                StatusMessage = UIStrings.ClipboardTextCopied;
-            }
-            else
-            {
-                await _clipboardService.SetTextAsync(TestInputText);
-                StatusMessage = UIStrings.ClipboardTextCopied;
-            }
+            string textToCopy = TestInputText.Substring(start, length);
+            await _clipboardService.SetTextAsync(textToCopy);
+            StatusMessage = UIStrings.ClipboardTextCopied;
 
             LastButtonPressed = "Copy";
             _logger.LogInformation("Text copied to clipboard");
@@ -232,10 +245,10 @@ public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
                 return;
             }
 
-            int start = Math.Min(SelectionStart, SelectionEnd);
-            int length = Math.Abs(SelectionStart - SelectionEnd);
-
             string currentText = TestInputText ?? string.Empty;
+
+            int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, currentText.Length);
+            int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, currentText.Length - start);
 
             if (length > 0)
             {

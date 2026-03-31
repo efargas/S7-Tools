@@ -67,8 +67,8 @@ namespace S7Tools.ViewModels.Hex
             try
             {
                 // Create full buffer
-                var length = (int)SelectionLength;
-                var buffer = new byte[length];
+                int length = (int)SelectionLength;
+                byte[] buffer = new byte[length];
                 for (int i = 0; i < length; i++)
                 {
                     buffer[i] = pattern[i % pattern.Length];
@@ -190,7 +190,7 @@ namespace S7Tools.ViewModels.Hex
             {
                 // Read up to 8 bytes for inspection (since we only show up to double/64-bit)
                 int count = (int)Math.Min(SelectionLength, 8);
-                var buffer = new byte[count];
+                byte[] buffer = new byte[count];
                 Document.ReadBytes((ulong)SelectionStart, buffer);
                 DataInspector.Update(buffer);
             }

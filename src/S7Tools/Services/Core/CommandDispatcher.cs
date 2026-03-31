@@ -56,7 +56,7 @@ public class CommandDispatcher : ICommandDispatcher
                 return CommandResult.Failure(error);
             }
 
-            var task = (Task<CommandResult>)handleMethod.Invoke(handler, new object[] { command, cancellationToken })!;
+            var task = (Task<CommandResult>)handleMethod.Invoke(handler, [command, cancellationToken])!;
             CommandResult result = await task.ConfigureAwait(false);
 
             _logger.LogDebug("Command dispatched successfully: {CommandType}, Success: {IsSuccess}",
@@ -107,7 +107,7 @@ public class CommandDispatcher : ICommandDispatcher
                 return CommandResult<TResult>.Failure(error);
             }
 
-            var task = (Task<CommandResult<TResult>>)handleMethod.Invoke(handler, new object[] { command, cancellationToken })!;
+            var task = (Task<CommandResult<TResult>>)handleMethod.Invoke(handler, [command, cancellationToken])!;
             CommandResult<TResult> result = await task.ConfigureAwait(false);
 
             _logger.LogDebug("Command with result dispatched successfully: {CommandType} -> {ResultType}, Success: {IsSuccess}",

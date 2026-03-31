@@ -3,6 +3,7 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.ViewModels.Base;
@@ -224,7 +225,7 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
             SettingsLastModified = DateTime.UtcNow.ToLocalTime();
         }
 
-        var current = _settingsService.Current;
+        AppSettings current = _settingsService.Current;
         MemoryDumpDefaultFolder = current.MemoryDump.DefaultFolder;
         SegmentDumpDelayMs = current.MemoryDump.SegmentDumpDelayMilliseconds;
         IterationDumpDelayMs = current.MemoryDump.IterationDumpDelayMilliseconds;

@@ -235,8 +235,8 @@ public sealed class LocalizationService : ILocalizationService
         // Add other supported cultures
         // Note: In a real implementation, you would scan for available resource files
         // or maintain a configuration of supported cultures
-        string[] supportedCultureNames = new[]
-        {
+        string[] supportedCultureNames =
+        [
             "en-US", // English (United States)
             "en-GB", // English (United Kingdom)
             "de-DE", // German (Germany)
@@ -257,7 +257,7 @@ public sealed class LocalizationService : ILocalizationService
             "pl-PL", // Polish (Poland)
             "cs-CZ", // Czech (Czech Republic)
             "hu-HU"  // Hungarian (Hungary)
-        };
+        ];
 
         foreach (string? cultureName in supportedCultureNames)
         {

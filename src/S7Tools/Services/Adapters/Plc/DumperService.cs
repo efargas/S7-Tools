@@ -88,8 +88,8 @@ namespace S7Tools.Services.Adapters.Plc
 
                 Logger.LogInformation("Connection established. Starting ingestion pipeline.");
 
-                var fillTask = FillPipeAsync(_stream, _pipe.Writer, _cts.Token);
-                var readTask = ProcessPipeAsync(_pipe.Reader, _outputChannel.Writer, _cts.Token);
+                Task fillTask = FillPipeAsync(_stream, _pipe.Writer, _cts.Token);
+                Task readTask = ProcessPipeAsync(_pipe.Reader, _outputChannel.Writer, _cts.Token);
 
                 await Task.WhenAll(fillTask, readTask).ConfigureAwait(false);
             }
@@ -239,7 +239,7 @@ namespace S7Tools.Services.Adapters.Plc
                     // VERBOSE TRACE: Print buffer head to diagnose alignment issues
                     if (Logger.IsEnabled(LogLevel.Trace))
                     {
-                        var hexDump = BitConverter.ToString(buffer.Slice(0, Math.Min(buffer.Length, 16)).ToArray());
+                        string hexDump = BitConverter.ToString(buffer.Slice(0, Math.Min(buffer.Length, 16)).ToArray());
                         Logger.LogTrace("Buffer state: Length={Len}, Head=[{Hex}]",
                             buffer.Length, hexDump);
                     }
@@ -294,7 +294,7 @@ namespace S7Tools.Services.Adapters.Plc
                     } // seqReader ref-struct is destroyed here — safe to await below.
 
                     // Write pending blocks to the channel now that no ref-struct is live.
-                    foreach (var block in pendingBlocks)
+                    foreach (MemoryBlock block in pendingBlocks)
                     {
                         await writer.WriteAsync(block, token).ConfigureAwait(false);
                     }
@@ -339,7 +339,7 @@ namespace S7Tools.Services.Adapters.Plc
 
             while (reader.Remaining > 0)
             {
-                var originalPosition = reader.Position;
+                SequencePosition originalPosition = reader.Position;
                 if (!reader.TryPeek(out byte b))
                 {
                     break;
@@ -353,7 +353,7 @@ namespace S7Tools.Services.Adapters.Plc
                         return false; // Potential partial match
                     }
 
-                    var tempReader = reader; // Create a copy to peek ahead
+                    SequenceReader<byte> tempReader = reader; // Create a copy to peek ahead
                     tempReader.Advance(1); // Skip 0x05
 
                     if (tempReader.TryRead(out byte b2) && b2 == 'O' &&
@@ -377,7 +377,7 @@ namespace S7Tools.Services.Adapters.Plc
                         return false; // Potential partial match
                     }
 
-                    var tempReader = reader; // Create a copy to peek ahead
+                    SequenceReader<byte> tempReader = reader; // Create a copy to peek ahead
                     tempReader.Advance(1); // Skip O
                     if (tempReader.TryRead(out byte b2) && b2 == 'k')
                     {

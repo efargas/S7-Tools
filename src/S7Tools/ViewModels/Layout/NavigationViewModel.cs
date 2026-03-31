@@ -107,6 +107,11 @@ public class NavigationViewModel : ReactiveObject
     public Action? LogViewerAction { get; set; }
 
     /// <summary>
+    /// Action to activate the home view.
+    /// </summary>
+    public Action? HomeAction { get; set; }
+
+    /// <summary>
     /// Creates the home/initial ViewModel for the dock's default document.
     /// </summary>
     public object? CreateHomeViewModel()
@@ -322,6 +327,18 @@ public class NavigationViewModel : ReactiveObject
 
         ActivityBarItem? currentSelectedItem = _activityBarService.SelectedItem;
 
+        // Special handling for views that should never show a sidebar
+        if (itemId == "explorer" || itemId == "connections" || itemId == "logviewer")
+        {
+            // Set current content to null first to ensure the sidebar UI clears before collapsing
+            CurrentContent = null;
+            IsSidebarVisible = false;
+            
+            _activityBarService.SelectItem(itemId);
+            _logger.LogDebug("Selected document-only activity bar item {ItemId} and ensured sidebar is collapsed", itemId);
+            return;
+        }
+
         if (currentSelectedItem != null && currentSelectedItem.Id == itemId)
         {
             if (IsSidebarVisible)
@@ -348,7 +365,8 @@ public class NavigationViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Navigates to an activity bar item via keyboard (always expands sidebar).
+    /// Navigates to an activity bar item via keyboard.
+    /// Document-only views will collapse the sidebar, while others will expand it.
     /// </summary>
     /// <param name="itemId">The activity bar item ID.</param>
     private void NavigateToActivityBarItemViaKeyboard(string itemId)
@@ -358,10 +376,20 @@ public class NavigationViewModel : ReactiveObject
             return;
         }
 
-        // Keyboard navigation always selects the item and ensures sidebar is visible
+        // Keyboard navigation selects the item
         _activityBarService.SelectItem(itemId);
-        IsSidebarVisible = true;
-        _logger.LogDebug("Navigated to activity bar item {ItemId} via keyboard", itemId);
+
+        // Special handling for views that should never show a sidebar
+        if (itemId == "explorer" || itemId == "connections" || itemId == "logviewer")
+        {
+            IsSidebarVisible = false;
+            _logger.LogDebug("Navigated to document-only activity bar item {ItemId} via keyboard, sidebar collapsed", itemId);
+        }
+        else
+        {
+            IsSidebarVisible = true;
+            _logger.LogDebug("Navigated to activity bar item {ItemId} via keyboard, sidebar visible", itemId);
+        }
     }
 
     /// <summary>
@@ -385,19 +413,27 @@ public class NavigationViewModel : ReactiveObject
             {
                 case "explorer":
                     SidebarTitle = UIStrings.Navigation_Explorer;
-                    // Provide the Connections list in the sidebar for Explorer
-                    CurrentContent = CreateViewModel<ConnectionsViewModel>();
-                    OpenDockableContent(CurrentContent);
-                    _logger.LogDebug("Navigated to Explorer");
+                    // Explorer button now opens the Home view as a document, with no side panel content
+                    CurrentContent = null;
+                    IsSidebarVisible = false;
+                    if (HomeAction != null)
+                    {
+                        HomeAction();
+                    }
+                    else
+                    {
+                        OpenDockableContent(CreateViewModel<HomeViewModel>());
+                    }
+                    _logger.LogDebug("Navigated to Explorer (Home)");
                     break;
 
                 case "connections":
                     SidebarTitle = UIStrings.Navigation_Connections;
-                    ConnectionsViewModel? connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
-                    CurrentContent = connectionsViewModel;
+                    // Connection button now shows the Connection view as a document, with no side panel content
+                    CurrentContent = null;
+                    IsSidebarVisible = false;
                     ShowLogStats = false;
-                    // Open connections view as a dock tab
-                    OpenDockableContent(connectionsViewModel);
+                    OpenDockableContent(CreateViewModel<ConnectionsViewModel>());
                     _logger.LogDebug("Navigated to Connections");
                     break;
 
@@ -405,6 +441,7 @@ public class NavigationViewModel : ReactiveObject
                     SidebarTitle = UIStrings.Navigation_LogViewer;
                     // Clear sidebar content for Log Viewer to focus on the bottom Output panel
                     CurrentContent = null;
+                    IsSidebarVisible = false;
                     if (LogViewerAction != null)
                     {
                         LogViewerAction();
@@ -548,19 +585,16 @@ public class NavigationViewModel : ReactiveObject
         {
             // Create ViewModel using the factory
             var viewModel = (ViewModelBase)_viewModelFactory.Create(viewModelType);
-            CurrentContent = viewModel;
-
-            if (viewModel is HomeViewModel)
+            if (viewModel is HomeViewModel || viewModel is ConnectionsViewModel || viewModel is LogViewerViewModel)
             {
-                // CurrentContent logic is fine
-            }
-            else if (viewModel is ConnectionsViewModel)
-            {
-                // CurrentContent logic is fine
+                // Document-only views should never have sidebar content
+                CurrentContent = null;
+                IsSidebarVisible = false;
             }
             else
             {
-                // Refresh if needed
+                CurrentContent = viewModel;
+                IsSidebarVisible = true;
             }
             _logger.LogDebug("Navigated to ViewModel type: {ViewModelType}", viewModelType.Name);
         }

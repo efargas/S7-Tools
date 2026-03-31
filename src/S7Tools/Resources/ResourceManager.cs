@@ -182,10 +182,10 @@ public class S7ToolsResourceManager : IResourceManager
         var cultures = new HashSet<CultureInfo> { CultureInfo.InvariantCulture };
 
         // Add commonly supported cultures
-        string[] commonCultures = new[]
-        {
+        string[] commonCultures =
+        [
             "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "zh-CN", "ja-JP"
-        };
+        ];
 
         foreach (string? cultureName in commonCultures)
         {

@@ -658,7 +658,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 var allTasks = Task.WhenAll(activeExecutionTasks);
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 
-                var completedTask = await Task.WhenAny(allTasks, timeoutTask).ConfigureAwait(false);
+                Task completedTask = await Task.WhenAny(allTasks, timeoutTask).ConfigureAwait(false);
 
                 if (completedTask == timeoutTask)
                 {
@@ -913,7 +913,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             }
 
             // Re-enqueue skipped tasks
-            foreach (var skippedId in tasksToRequeue)
+            foreach (Guid skippedId in tasksToRequeue)
             {
                 _taskQueue.Enqueue(skippedId);
             }
@@ -1191,7 +1191,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     try
                     {
                         string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
-                        var activeTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+                        List<TaskExecution>? activeTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
                         if (activeTasks != null)
                         {
                             loadedTasks.AddRange(activeTasks);
@@ -1209,7 +1209,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     try
                     {
                         string json = await File.ReadAllTextAsync(_historyFilePath).ConfigureAwait(false);
-                        var historyTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+                        List<TaskExecution>? historyTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
                         if (historyTasks != null)
                         {
                             loadedTasks.AddRange(historyTasks);

@@ -38,7 +38,7 @@ If `indexing_status: "started"`: Search will work shortly. **DO NOT fall back to
 ## ContextStream v0.4.x (Consolidated Domain Tools)
 
 v0.4.x uses ~11 consolidated domain tools for ~75% token reduction vs previous versions.
-Rules Version: 0.1.61
+Rules Version: 0.1.86
 
 ### Required Every Message
 

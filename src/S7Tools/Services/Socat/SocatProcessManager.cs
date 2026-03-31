@@ -364,7 +364,7 @@ public partial class SocatProcessManager : IDisposable
                 // Re-discover any lingering children (in case they were orphaned before process.Kill(true))
                 List<int> latestChildPids = await _shellExecutor.GetChildProcessesAsync(processId, cancellationToken).ConfigureAwait(false);
                 var allKnownChildren = new HashSet<int>(childPids);
-                foreach (var p in latestChildPids)
+                foreach (int p in latestChildPids)
                 {
                     allKnownChildren.Add(p);
                 }
@@ -374,7 +374,7 @@ public partial class SocatProcessManager : IDisposable
                     try
                     {
                         // Check if child is still alive
-                        var result = await _shellExecutor.ExecuteCommandAsync($"kill -0 {childPid}", cancellationToken).ConfigureAwait(false);
+                        ShellCommandResult result = await _shellExecutor.ExecuteCommandAsync($"kill -0 {childPid}", cancellationToken).ConfigureAwait(false);
                         if (result.Success)
                         {
                             _logger.LogInformation("Cleaning up child process {ChildPid} for socat {ProcessId}", childPid, processId);
@@ -534,7 +534,7 @@ public partial class SocatProcessManager : IDisposable
         if (disposing)
         {
             // Dispose all active processes
-            foreach (var process in _activeProcesses.Values)
+            foreach (Process process in _activeProcesses.Values)
             {
                 try
                 { process.Dispose(); }
@@ -542,7 +542,7 @@ public partial class SocatProcessManager : IDisposable
             }
 
             // Dispose all monitors
-            foreach (var monitor in _processMonitors.Values)
+            foreach (Timer monitor in _processMonitors.Values)
             {
                 try
                 { monitor.Dispose(); }

@@ -18,11 +18,7 @@
                        Margin="0,0,0,10" />
 
             <!-- Logging Test Section -->
-            <Border Background="{DynamicResource PanelBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="0">
+            <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
                 <Expander IsExpanded="True">
                     <Expander.Header>
                         <Grid Background="Transparent" Height="38" Margin="4,0">
@@ -146,11 +142,7 @@
             </Border>
 
             <!-- Clipboard Test Section -->
-            <Border Background="{DynamicResource PanelBackgroundBrush}"
-                    BorderBrush="{DynamicResource ControlBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="0">
+            <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
                 <Expander IsExpanded="True">
                     <Expander.Header>
                         <Grid Background="Transparent" Height="38" Margin="4,0">

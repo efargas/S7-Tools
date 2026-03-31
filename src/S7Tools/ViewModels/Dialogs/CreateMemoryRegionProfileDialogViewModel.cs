@@ -8,6 +8,7 @@ using S7Tools.Core.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Dialogs.Models;
 
 namespace S7Tools.ViewModels.Dialogs;
 
@@ -477,8 +478,8 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
         {
             if (SelectedSegment != null && _dialogService != null)
             {
-                var segmentToEdit = SelectedSegment;
-                var result = await _dialogService.ShowInputAsync(
+                MemorySegment segmentToEdit = SelectedSegment;
+                InputResult result = await _dialogService.ShowInputAsync(
                     UIStrings.Navigation_Explorer, // Reusing title from UIStrings for now
                     $"Edit name for segment {segmentToEdit.Name}:",
                     segmentToEdit.Name,

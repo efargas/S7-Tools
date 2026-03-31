@@ -11,117 +11,124 @@
              x:DataType="vm:LogViewerViewModel"
              Background="{DynamicResource AppBackgroundBrush}">
 
-  <Grid RowDefinitions="Auto,*">
-    <!-- Toolbar -->
+  <Grid RowDefinitions="Auto,*" Background="{DynamicResource AppBackgroundBrush}">
+      <!-- Toolbar -->
     <Border Grid.Row="0"
             Background="{DynamicResource PanelBackgroundBrush}"
             BorderBrush="{DynamicResource ControlBorderBrush}"
-            BorderThickness="0,0,0,1"
-            Padding="16,12">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <!-- Title & Search -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
-          <StackPanel Orientation="Horizontal" Spacing="10">
-            <icons:Icon Value="fa-solid fa-list-ul" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Width="18" Height="18" />
-            <TextBlock Text="LOG VIEWER" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" LetterSpacing="0.5" />
+            BorderThickness="0,0,0,1">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,8" Spacing="8">
+          <!-- Title -->
+          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,8,0" VerticalAlignment="Center">
+            <icons:Icon Value="fa-solid fa-list-ul" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Width="16" Height="16" />
+            <TextBlock Text="LOG VIEWER" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" LetterSpacing="0.5" />
           </StackPanel>
 
+          <!-- Search -->
           <TextBox Text="{Binding SearchText, Mode=TwoWay}"
                    Watermark="Filter messages..."
-                   Width="300"
-                   Height="32"
+                   Height="28"
+                   Width="250"
                    VerticalAlignment="Center"
                    Classes="SearchBox">
             <TextBox.InnerLeftContent>
-              <icons:Icon Value="fa-solid fa-search" Margin="10,0,0,0" Width="12" Opacity="0.5" />
+              <icons:Icon Value="fa-solid fa-search" Margin="8,0,0,0" Width="12" Opacity="0.5" />
             </TextBox.InnerLeftContent>
             <TextBox.InnerRightContent>
               <Button Command="{Binding ClearFiltersCommand}"
                       IsVisible="{Binding SearchText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                      Background="Transparent" BorderThickness="0" Padding="8,0">
+                      Background="Transparent" BorderThickness="0" Padding="6,0">
                 <icons:Icon Value="fa-solid fa-times" Width="10" Opacity="0.5" />
               </Button>
             </TextBox.InnerRightContent>
           </TextBox>
-        </StackPanel>
 
-        <!-- Filters & Actions -->
-        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12">
+          <Rectangle Width="1" Height="16" Fill="{DynamicResource ControlBorderBrush}" VerticalAlignment="Center" />
+
+          <!-- Filters & Actions -->
           <ComboBox SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}"
                     ItemsSource="{Binding AvailableLogLevels}"
-                    Width="140"
-                    Height="32"
+                    Width="120"
+                    Height="28"
                     VerticalAlignment="Center">
             <ComboBox.ItemTemplate>
               <DataTemplate>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <icons:Icon Value="fa-solid fa-filter" Width="12" Opacity="0.6" />
-                  <TextBlock Text="{Binding}" />
-                </StackPanel>
+                <Border HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Padding="6,2"
+                        CornerRadius="4"
+                        Background="{Binding Converter={x:Static conv:ObjectConverters.LogLevelToBrush}}">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <icons:Icon Value="{Binding Converter={x:Static conv:ObjectConverters.LogLevelToIcon}}" Width="10" Height="10" Foreground="White" />
+                    <TextBlock Text="{Binding}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                  </StackPanel>
+                </Border>
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
 
           <ToggleButton IsChecked="{Binding AutoScroll, Mode=TwoWay}"
-                        Height="32"
-                        Padding="12,0"
+                        Height="28"
+                        Padding="8,0"
                         VerticalAlignment="Center"
                         ToolTip.Tip="Automatically scroll to newest logs">
-            <StackPanel Orientation="Horizontal" Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="6">
               <icons:Icon Value="fa-solid fa-arrow-down" Width="12" />
-              <TextBlock Text="Auto-Scroll" />
+              <TextBlock Text="Auto-Scroll" FontSize="12" />
             </StackPanel>
           </ToggleButton>
 
-          <Rectangle Width="1" Height="20" Fill="{DynamicResource ControlBorderBrush}" Margin="8,0" VerticalAlignment="Center" />
+          <Rectangle Width="1" Height="16" Fill="{DynamicResource ControlBorderBrush}" VerticalAlignment="Center" />
 
-          <Menu Background="Transparent" Padding="0">
-            <MenuItem Header="Export" Height="32">
-              <MenuItem.Header>
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <icons:Icon Value="fa-solid fa-download" Width="14" />
-                  <TextBlock Text="Export" />
-                </StackPanel>
-              </MenuItem.Header>
-              <MenuItem Header="As JSON" Command="{Binding ExportLogsCommand}" CommandParameter="json">
-                <MenuItem.Icon><icons:Icon Value="fa-solid fa-file-code" Width="14" /></MenuItem.Icon>
-              </MenuItem>
-              <MenuItem Header="As Text" Command="{Binding ExportLogsCommand}" CommandParameter="txt">
-                <MenuItem.Icon><icons:Icon Value="fa-solid fa-file-alt" Width="14" /></MenuItem.Icon>
-              </MenuItem>
-              <MenuItem Header="As CSV" Command="{Binding ExportLogsCommand}" CommandParameter="csv">
-                <MenuItem.Icon><icons:Icon Value="fa-solid fa-file-csv" Width="14" /></MenuItem.Icon>
-              </MenuItem>
-            </MenuItem>
-          </Menu>
+          <Button Height="28" Padding="8,0" Background="Transparent" BorderThickness="0">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <icons:Icon Value="fa-solid fa-download" Width="12" />
+              <TextBlock Text="Export" FontSize="12" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button.Flyout>
+              <MenuFlyout Placement="Bottom">
+                <MenuItem Header="As JSON" Command="{Binding ExportLogsCommand}" CommandParameter="json">
+                  <MenuItem.Icon><icons:Icon Value="fa-solid fa-file-code" Width="12" /></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="As Text" Command="{Binding ExportLogsCommand}" CommandParameter="txt">
+                  <MenuItem.Icon><icons:Icon Value="fa-solid fa-file-alt" Width="12" /></MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="As CSV" Command="{Binding ExportLogsCommand}" CommandParameter="csv">
+                  <MenuItem.Icon><icons:Icon Value="fa-solid fa-file-csv" Width="12" /></MenuItem.Icon>
+                </MenuItem>
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
 
           <Button Command="{Binding ClearLogsCommand}"
-                  Height="32"
+                  Height="28"
                   Background="#D13438"
                   Foreground="White"
-                  Padding="12,0">
-            <StackPanel Orientation="Horizontal" Spacing="8">
-              <icons:Icon Value="fa-solid fa-trash-can" Width="12" />
-              <TextBlock Text="Clear" />
+                  Padding="12,0"
+                  ToolTip.Tip="Clear all log entries">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+              <icons:Icon Value="fa-solid fa-trash-can" Width="12" Height="12" />
+              <TextBlock Text="Clear" FontSize="12" VerticalAlignment="Center" FontWeight="SemiBold" />
             </StackPanel>
           </Button>
         </StackPanel>
-      </Grid>
+      </ScrollViewer>
     </Border>
-
+  
     <!-- Content Area -->
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
       <Grid RowDefinitions="Auto,*">
-        <!-- Headers -->
+          <!-- Headers -->
         <Border Grid.Row="0" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,0,0,1">
-          <Grid ColumnDefinitions="180,100,150,*" MinWidth="900" Margin="12,4">
+          <Grid ColumnDefinitions="180,100,150,*" Margin="12,4">
             <TextBlock Grid.Column="0" Text="TIMESTAMP" FontSize="11" FontWeight="Bold" Opacity="0.6" />
             <TextBlock Grid.Column="1" Text="LEVEL" FontSize="11" FontWeight="Bold" Opacity="0.6" />
             <TextBlock Grid.Column="2" Text="CATEGORY" FontSize="11" FontWeight="Bold" Opacity="0.6" />
             <TextBlock Grid.Column="3" Text="MESSAGE" FontSize="11" FontWeight="Bold" Opacity="0.6" />
           </Grid>
         </Border>
-
+  
         <!-- Log List -->
         <ListBox Grid.Row="1"
                  Name="LogListBox"
@@ -136,7 +143,7 @@
               <VirtualizingStackPanel />
             </ItemsPanelTemplate>
           </ListBox.ItemsPanel>
-
+  
           <ListBox.Styles>
             <Style Selector="ListBoxItem">
               <Setter Property="Padding" Value="0" />
@@ -150,18 +157,18 @@
               </Style>
             </Style>
           </ListBox.Styles>
-
+  
           <ListBox.ItemTemplate>
             <DataTemplate DataType="models:LogModel">
               <Border BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,0,0,1">
-                <Grid ColumnDefinitions="180,100,150,*" MinWidth="900" Margin="12,6">
+                <Grid ColumnDefinitions="180,100,150,*" Margin="12,6">
                   <TextBlock Grid.Column="0"
                              Text="{Binding Timestamp, StringFormat='yyyy-MM-dd HH:mm:ss.fff'}"
                              FontSize="12"
                              FontFamily="JetBrains Mono, Cascadia Code, Consolas, monospace"
                              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                              VerticalAlignment="Center" />
-
+  
                   <Border Grid.Column="1"
                           HorizontalAlignment="Left"
                           VerticalAlignment="Center"
@@ -173,7 +180,7 @@
                       <TextBlock Text="{Binding Level}" FontSize="10" FontWeight="Bold" Foreground="White" />
                     </StackPanel>
                   </Border>
-
+  
                   <TextBlock Grid.Column="2"
                              Text="{Binding Category}"
                              FontSize="12"
@@ -181,14 +188,13 @@
                              VerticalAlignment="Center"
                              TextTrimming="CharacterEllipsis"
                              Margin="0,0,10,0" />
-
+  
                   <TextBlock Grid.Column="3"
                              Text="{Binding FormattedMessage}"
                              FontSize="12"
                              Foreground="{DynamicResource TextForegroundBrush}"
                              VerticalAlignment="Center"
-                             TextWrapping="NoWrap"
-                             TextTrimming="CharacterEllipsis" />
+                             TextWrapping="NoWrap" />
                 </Grid>
               </Border>
             </DataTemplate>

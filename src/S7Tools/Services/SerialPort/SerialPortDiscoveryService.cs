@@ -66,7 +66,7 @@ public sealed class SerialPortDiscoveryService
             var portsToScan = new List<string>();
 
             // Filter the native list depending on user preferences
-            foreach (var port in availableSystemPorts)
+            foreach (string port in availableSystemPorts)
             {
                 if (includeUsbPorts && port.Contains("ttyUSB"))
                 {
@@ -83,7 +83,7 @@ public sealed class SerialPortDiscoveryService
             }
 
             // Scan gathered valid hardware ports, ensuring unique and sorted sequence
-            foreach (var portPath in portsToScan.Distinct().OrderBy(p => p))
+            foreach (string? portPath in portsToScan.Distinct().OrderBy(p => p))
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -188,7 +188,7 @@ public sealed class SerialPortDiscoveryService
             }
 
             // Test accessibility by trying to read port status with stty
-            var result = await _shellExecutor.ExecuteDirectAsync("stty", ["-F", portPath, "-a"], timeoutMs, cancellationToken).ConfigureAwait(false);
+            ShellCommandResult result = await _shellExecutor.ExecuteDirectAsync("stty", ["-F", portPath, "-a"], timeoutMs, cancellationToken).ConfigureAwait(false);
             return result.Success;
         }
         catch (Exception ex)
@@ -295,7 +295,7 @@ public sealed class SerialPortDiscoveryService
         try
         {
             // Try to use lsof to check if port is in use
-            var result = await _shellExecutor.ExecuteDirectAsync("lsof", [portPath], 2000, cancellationToken).ConfigureAwait(false);
+            ShellCommandResult result = await _shellExecutor.ExecuteDirectAsync("lsof", [portPath], 2000, cancellationToken).ConfigureAwait(false);
             return result.Success && !string.IsNullOrWhiteSpace(result.Output);
         }
         catch

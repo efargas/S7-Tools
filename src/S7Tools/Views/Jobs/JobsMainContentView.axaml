@@ -37,504 +37,513 @@
                  Margin="0,0,0,10" />
 
       <!-- Profile Management Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Job Profile Management"
-                     FontSize="18"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-briefcase" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="JOB PROFILE MANAGEMENT" />
+            </Grid>
+          </Expander.Header>
 
-          <!-- Toolbar above the DataGrid -->
-          <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+          <StackPanel Spacing="8" Margin="24,16,24,24">
+            <!-- Toolbar above the DataGrid -->
+            <Grid Margin="0,0,0,8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-              <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
-                  <TextBlock Text="Create" />
-                </StackPanel>
-              </Button>
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                    <TextBlock Text="Create" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
-                  <TextBlock Text="Edit" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
+                    <TextBlock Text="Edit" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding DuplicateCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
-                  <TextBlock Text="Duplicate" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding DuplicateCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                    <TextBlock Text="Duplicate" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
-                  <TextBlock Text="Set Default" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
+                    <TextBlock Text="Set Default" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
-                  <TextBlock Text="Delete" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                    <TextBlock Text="Delete" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
-                  <TextBlock Text="Refresh" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
+                <Button Width="110" Height="34" Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                    <TextBlock Text="Refresh" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
 
-            <!-- Import/Export Buttons -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-              <Button Width="110" Height="34"
-                      Command="{Binding ExportJobCommand}"
-                      Background="{DynamicResource ButtonBackgroundBrush}"
-                      Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
-                  <TextBlock Text="Export" />
-                </StackPanel>
-              </Button>
+              <!-- Import/Export Buttons -->
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                <Button Width="110" Height="34"
+                        Command="{Binding ExportJobCommand}"
+                        Background="{DynamicResource ButtonBackgroundBrush}"
+                        Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
+                    <TextBlock Text="Export" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34"
-                      Command="{Binding ImportJobCommand}"
-                      Background="{DynamicResource ButtonBackgroundBrush}"
-                      Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-file-import" Width="14" Height="14" />
-                  <TextBlock Text="Import" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
-          </Grid>
+                <Button Width="110" Height="34"
+                        Command="{Binding ImportJobCommand}"
+                        Background="{DynamicResource ButtonBackgroundBrush}"
+                        Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-file-import" Width="14" Height="14" />
+                    <TextBlock Text="Import" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
 
-          <!-- Job Profiles DataGrid -->
-          <DataGrid ItemsSource="{Binding Profiles}"
-                    SelectedItem="{Binding SelectedProfile}"
-                    Background="{DynamicResource ControlBackgroundBrush}"
-                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                    GridLinesVisibility="Horizontal"
-                    HeadersVisibility="Column"
-                    CanUserReorderColumns="False"
-                    CanUserResizeColumns="True"
-                    CanUserSortColumns="True"
-                    IsReadOnly="True"
-                    Height="250"
-                    Margin="0,0,0,8">
-            <!-- Header style using Avalonia style selector -->
-            <DataGrid.Styles>
-              <Style Selector="DataGridColumnHeader">
-                <Setter Property="FontSize" Value="11" />
-                <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Padding" Value="8,4,32,4" />
-                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                <Setter Property="Template">
-                  <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                      <DockPanel>
-                        <ContentPresenter Content="{TemplateBinding Content}"
-                                          DockPanel.Dock="Left"
-                                          VerticalAlignment="Center" />
-                      </DockPanel>
-                    </Border>
-                  </ControlTemplate>
-                </Setter>
-              </Style>
-            </DataGrid.Styles>
+            <!-- Job Profiles DataGrid -->
+            <DataGrid ItemsSource="{Binding Profiles}"
+                      SelectedItem="{Binding SelectedProfile}"
+                      Background="{DynamicResource ControlBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      Height="250"
+                      Margin="0,0,0,8">
+              <!-- Header style using Avalonia style selector -->
+              <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                  <Setter Property="FontSize" Value="11" />
+                  <Setter Property="FontWeight" Value="SemiBold" />
+                  <Setter Property="Padding" Value="8,4,32,4" />
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                  <Setter Property="Template">
+                    <ControlTemplate>
+                      <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                        <DockPanel>
+                          <ContentPresenter Content="{TemplateBinding Content}"
+                                            DockPanel.Dock="Left"
+                                            VerticalAlignment="Center" />
+                        </DockPanel>
+                      </Border>
+                    </ControlTemplate>
+                  </Setter>
+                </Style>
+              </DataGrid.Styles>
 
-            <DataGrid.Columns>
-              <!-- ID Column -->
-              <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+              <DataGrid.Columns>
+                <!-- ID Column -->
+                <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <!-- Name column -->
-              <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <!-- Name column -->
+                <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <!-- Description column -->
-              <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <!-- Description column -->
+                <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <!-- Created timestamp -->
-              <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Created" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <!-- Created timestamp -->
+                <DataGridTextColumn Binding="{Binding CreatedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Created" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <!-- Modified timestamp -->
-              <DataGridTextColumn Binding="{Binding ModifiedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Modified" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <!-- Modified timestamp -->
+                <DataGridTextColumn Binding="{Binding ModifiedAt, StringFormat='yyyy-MM-dd'}" Width="100" MinWidth="90">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Modified" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <!-- Default status -->
-              <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60">
-                <DataGridCheckBoxColumn.Header>
-                  <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridCheckBoxColumn.Header>
-              </DataGridCheckBoxColumn>
+                <!-- Default status -->
+                <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
 
-              <!-- Read-only status -->
-              <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70">
-                <DataGridCheckBoxColumn.Header>
-                  <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridCheckBoxColumn.Header>
-              </DataGridCheckBoxColumn>
+                <!-- Read-only status -->
+                <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
 
-              <!-- Template status -->
-              <DataGridCheckBoxColumn Binding="{Binding IsTemplate}" Width="90" MinWidth="70">
-                <DataGridCheckBoxColumn.Header>
-                  <TextBlock Text="Template" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridCheckBoxColumn.Header>
-              </DataGridCheckBoxColumn>
-            </DataGrid.Columns>
-          </DataGrid>
+                <!-- Template status -->
+                <DataGridCheckBoxColumn Binding="{Binding IsTemplate}" Width="90" MinWidth="70">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Template" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
+              </DataGrid.Columns>
+            </DataGrid>
 
-          <!-- Profile Statistics -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <!-- Profile Statistics -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
-                       Text="{Binding Profiles.Count, StringFormat='Total Jobs: {0}'}"
-                       Foreground="{DynamicResource TextForegroundMutedBrush}"
-                       FontSize="12" />
+              <TextBlock Grid.Column="0"
+                         Text="{Binding Profiles.Count, StringFormat='Total Jobs: {0}'}"
+                         Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         FontSize="12" />
 
-            <TextBlock Grid.Column="1"
-                       Text="{Binding StatusMessage}"
-                       Foreground="{DynamicResource TextForegroundMutedBrush}"
-                       FontSize="12" />
+              <TextBlock Grid.Column="1"
+                         Text="{Binding StatusMessage}"
+                         Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         FontSize="12" />
 
-            <TextBlock Grid.Column="2"
-                       Text="{Binding JobTemplates.Count, StringFormat='Templates: {0}'}"
-                       Foreground="{DynamicResource TextForegroundMutedBrush}"
-                       FontSize="12" />
-          </Grid>
-        </StackPanel>
+              <TextBlock Grid.Column="2"
+                         Text="{Binding JobTemplates.Count, StringFormat='Templates: {0}'}"
+                         Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         FontSize="12" />
+            </Grid>
+          </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Job-Specific Operations Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="16">
-          <!-- Row 1: Job Operations Title + Action Buttons -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0"
-                       Text="Job Operations"
-                       FontSize="18"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                       VerticalAlignment="Center" />
-
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-              <Button Background="{DynamicResource ButtonBackgroundBrush}"
-                      Foreground="{DynamicResource TextForegroundBrush}"
-                      BorderThickness="0"
-                      Padding="12,8"
-                      Command="{Binding CreateFromTemplateCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <icons:Icon Value="fa-solid fa-magic" Width="16" Height="16" />
-                  <TextBlock Text="From Template" />
-                </StackPanel>
-              </Button>
-
-              <Button Background="{DynamicResource ButtonBackgroundBrush}"
-                      Foreground="{DynamicResource TextForegroundBrush}"
-                      BorderThickness="0"
-                      Padding="12,8"
-                      Command="{Binding SaveAsTemplateCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <icons:Icon Value="fa-solid fa-save" Width="16" Height="16" />
-                  <TextBlock Text="Save as Template" />
-                </StackPanel>
-              </Button>
-
-              <Button Background="{DynamicResource ButtonBackgroundBrush}"
-                      Foreground="{DynamicResource TextForegroundBrush}"
-                      BorderThickness="0"
-                      Padding="12,8"
-                      Command="{Binding ValidateJobCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                  <icons:Icon Value="fa-solid fa-check-circle" Width="16" Height="16" />
-                  <TextBlock Text="Validate" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
-          </Grid>
-
-          <!-- Row 2: Job Details for Selected Job -->
-          <StackPanel Spacing="8" IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock Text="Selected Job Details"
-                       FontSize="14"
-                       FontWeight="SemiBold"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-
-            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4">
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
-              <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedProfile.Name, FallbackValue='(No job selected)'}" Foreground="{DynamicResource TextForegroundBrush}" />
-
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
-              <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedProfile.Description, FallbackValue='No description available'}" Foreground="{DynamicResource TextForegroundBrush}" TextWrapping="Wrap" />
-
-              <TextBlock Grid.Row="2" Grid.Column="0" Text="Type:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
-              <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="User Job" Foreground="{DynamicResource TextForegroundBrush}" IsVisible="{Binding SelectedProfile.IsTemplate, Converter={StaticResource InvBool}, FallbackValue=false}" />
-                <TextBlock Text="Template" Foreground="{DynamicResource TextForegroundBrush}" IsVisible="{Binding SelectedProfile.IsTemplate, FallbackValue=false}" />
-                <TextBlock Text="(Read-Only)" Foreground="{DynamicResource TextForegroundMutedBrush}" IsVisible="{Binding SelectedProfile.IsReadOnly, FallbackValue=false}" />
-              </StackPanel>
-
-              <TextBlock Grid.Row="3" Grid.Column="0" Text="Last Modified:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
-              <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedProfile.ModifiedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Never'}" Foreground="{DynamicResource TextForegroundBrush}" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-cogs" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="JOB OPERATIONS" />
             </Grid>
-          </StackPanel>
+          </Expander.Header>
 
-          <!-- Row 3: No Selection Message -->
-          <TextBlock Text="Select a job profile to view details and perform operations"
-                     IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNull}}"
-                     Foreground="{DynamicResource TextForegroundMutedBrush}" FontStyle="Italic"
-                     HorizontalAlignment="Center"
-                     Margin="0,20" />
-        </StackPanel>
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <!-- Row 1: Action Buttons -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button Background="{DynamicResource ButtonBackgroundBrush}"
+                        Foreground="{DynamicResource TextForegroundBrush}"
+                        BorderThickness="0"
+                        Padding="12,8"
+                        Command="{Binding CreateFromTemplateCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icons:Icon Value="fa-solid fa-magic" Width="16" Height="16" />
+                    <TextBlock Text="From Template" />
+                  </StackPanel>
+                </Button>
+
+                <Button Background="{DynamicResource ButtonBackgroundBrush}"
+                        Foreground="{DynamicResource TextForegroundBrush}"
+                        BorderThickness="0"
+                        Padding="12,8"
+                        Command="{Binding SaveAsTemplateCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icons:Icon Value="fa-solid fa-save" Width="16" Height="16" />
+                    <TextBlock Text="Save as Template" />
+                  </StackPanel>
+                </Button>
+
+                <Button Background="{DynamicResource ButtonBackgroundBrush}"
+                        Foreground="{DynamicResource TextForegroundBrush}"
+                        BorderThickness="0"
+                        Padding="12,8"
+                        Command="{Binding ValidateJobCommand}">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <icons:Icon Value="fa-solid fa-check-circle" Width="16" Height="16" />
+                    <TextBlock Text="Validate" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
+
+            <!-- Row 2: Job Details for Selected Job -->
+            <StackPanel Spacing="8" IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <TextBlock Text="Selected Job Details"
+                         FontSize="14"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+
+              <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4">
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Name:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedProfile.Name, FallbackValue='(No job selected)'}" Foreground="{DynamicResource TextForegroundBrush}" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Description:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedProfile.Description, FallbackValue='No description available'}" Foreground="{DynamicResource TextForegroundBrush}" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Type:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                  <TextBlock Text="User Job" Foreground="{DynamicResource TextForegroundBrush}" IsVisible="{Binding SelectedProfile.IsTemplate, Converter={StaticResource InvBool}, FallbackValue=false}" />
+                  <TextBlock Text="Template" Foreground="{DynamicResource TextForegroundBrush}" IsVisible="{Binding SelectedProfile.IsTemplate, FallbackValue=false}" />
+                  <TextBlock Text="(Read-Only)" Foreground="{DynamicResource TextForegroundMutedBrush}" IsVisible="{Binding SelectedProfile.IsReadOnly, FallbackValue=false}" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Last Modified:" Foreground="{DynamicResource TextForegroundSecondaryBrush}" FontWeight="SemiBold" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedProfile.ModifiedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Never'}" Foreground="{DynamicResource TextForegroundBrush}" />
+              </Grid>
+            </StackPanel>
+
+            <!-- Row 3: No Selection Message -->
+            <TextBlock Text="Select a job profile to view details and perform operations"
+                       IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNull}}"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}" FontStyle="Italic"
+                       HorizontalAlignment="Center"
+                       Margin="0,20" />
+          </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Task Integration Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="16">
-          <!-- Task Integration Title -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-              <icons:Icon Value="fa-solid fa-tasks" Width="20" Height="20" Foreground="#28A745" />
-              <TextBlock Text="Task Integration"
-                         FontSize="18"
-                         FontWeight="SemiBold"
-                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                         VerticalAlignment="Center" />
-            </StackPanel>
-          </Grid>
-
-          <!-- Task Action Buttons -->
-          <StackPanel Spacing="12" IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <TextBlock Text="Create tasks from selected job profile:"
-                       FontSize="14"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                       Margin="0,0,0,8" />
-
-            <!-- Task Creation Buttons Grid -->
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
-              <!-- Create Task Button -->
-              <Button Grid.Column="0"
-                      Height="60"
-                      Background="#28A745"
-                      Foreground="{DynamicResource TextForegroundBrush}"
-                      BorderThickness="0"
-                      Command="{Binding CreateTaskFromJobCommand}"
-                      HorizontalContentAlignment="Stretch"
-                      VerticalContentAlignment="Stretch"
-                      Padding="12">
-                <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-plus-circle" Width="20" Height="20" />
-                  <TextBlock Text="Create Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
-                  <TextBlock Text="Create with normal priority" FontSize="10" Foreground="#E0E0E0" TextAlignment="Center" />
-                </StackPanel>
-              </Button>
-
-              <!-- Schedule Task Button -->
-              <Button Grid.Column="1"
-                      Height="60"
-                      Background="{DynamicResource ButtonBackgroundBrush}"
-                      Foreground="{DynamicResource TextForegroundBrush}"
-                      BorderThickness="0"
-                      Command="{Binding ScheduleTaskFromJobCommand}"
-                      HorizontalContentAlignment="Stretch"
-                      VerticalContentAlignment="Stretch"
-                      Padding="12">
-                <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-clock" Width="20" Height="20" />
-                  <TextBlock Text="Schedule Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
-                  <TextBlock Text="Schedule for future execution" FontSize="10" Foreground="#E0E0E0" TextAlignment="Center" />
-                </StackPanel>
-              </Button>
-
-              <!-- Enqueue Task Button -->
-              <Button Grid.Column="2"
-                      Height="60"
-                      Background="#FFC107"
-                      Foreground="{DynamicResource AppBackgroundBrush}"
-                      BorderThickness="0"
-                      Command="{Binding EnqueueTaskFromJobCommand}"
-                      HorizontalContentAlignment="Stretch"
-                      VerticalContentAlignment="Stretch"
-                      Padding="12">
-                <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-play-circle" Width="20" Height="20" />
-                  <TextBlock Text="Enqueue Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
-                  <TextBlock Text="Add to execution queue" FontSize="10" Foreground="#2E2E2E" TextAlignment="Center" />
-                </StackPanel>
-              </Button>
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-tasks" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="TASK INTEGRATION" />
             </Grid>
+          </Expander.Header>
 
-            <!-- Task Info Box -->
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <!-- Task Action Buttons -->
+            <StackPanel Spacing="12" IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNotNull}}">
+              <TextBlock Text="Create tasks from selected job profile:"
+                         FontSize="14"
+                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                         Margin="0,0,0,8" />
+
+              <!-- Task Creation Buttons Grid -->
+              <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                <!-- Create Task Button -->
+                <Button Grid.Column="0"
+                        Height="60"
+                        Background="#28A745"
+                        Foreground="{DynamicResource TextForegroundBrush}"
+                        BorderThickness="0"
+                        Command="{Binding CreateTaskFromJobCommand}"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Padding="12">
+                  <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-plus-circle" Width="20" Height="20" />
+                    <TextBlock Text="Create Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
+                    <TextBlock Text="Create with normal priority" FontSize="10" Foreground="#E0E0E0" TextAlignment="Center" />
+                  </StackPanel>
+                </Button>
+
+                <!-- Schedule Task Button -->
+                <Button Grid.Column="1"
+                        Height="60"
+                        Background="{DynamicResource ButtonBackgroundBrush}"
+                        Foreground="{DynamicResource TextForegroundBrush}"
+                        BorderThickness="0"
+                        Command="{Binding ScheduleTaskFromJobCommand}"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Padding="12">
+                  <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-clock" Width="20" Height="20" />
+                    <TextBlock Text="Schedule Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
+                    <TextBlock Text="Schedule for future execution" FontSize="10" Foreground="#E0E0E0" TextAlignment="Center" />
+                  </StackPanel>
+                </Button>
+
+                <!-- Enqueue Task Button -->
+                <Button Grid.Column="2"
+                        Height="60"
+                        Background="#FFC107"
+                        Foreground="{DynamicResource AppBackgroundBrush}"
+                        BorderThickness="0"
+                        Command="{Binding EnqueueTaskFromJobCommand}"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Padding="12">
+                  <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-play-circle" Width="20" Height="20" />
+                    <TextBlock Text="Enqueue Task" FontSize="13" FontWeight="SemiBold" TextAlignment="Center" />
+                    <TextBlock Text="Add to execution queue" FontSize="10" Foreground="#2E2E2E" TextAlignment="Center" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+
+              <!-- Task Info Box -->
+              <Border Background="{DynamicResource AppBackgroundBrush}"
+                      BorderBrush="{DynamicResource ControlBorderBrush}"
+                      BorderThickness="1"
+                      CornerRadius="4"
+                      Padding="12">
+                <StackPanel Spacing="8">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <icons:Icon Grid.Column="0" Value="fa-solid fa-info-circle" Width="16" Height="16" Foreground="{DynamicResource ButtonBackgroundBrush}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                    <StackPanel Grid.Column="1" Spacing="4">
+                      <TextBlock Text="Task Creation Options:"
+                                 FontSize="12"
+                                 FontWeight="SemiBold"
+                                 Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                      <TextBlock FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" TextWrapping="Wrap">
+                        <Run Text="• " />
+                        <Run Text="Create Task" FontWeight="SemiBold" />
+                        <Run Text=": Creates a task that can be started manually from Task Manager" />
+                      </TextBlock>
+                      <TextBlock FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" TextWrapping="Wrap">
+                        <Run Text="• " />
+                        <Run Text="Schedule Task" FontWeight="SemiBold" />
+                        <Run Text=": Creates a task scheduled for automatic execution at a specific date/time" />
+                      </TextBlock>
+                      <TextBlock FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" TextWrapping="Wrap">
+                        <Run Text="• " />
+                        <Run Text="Enqueue Task" FontWeight="SemiBold" />
+                        <Run Text=": Creates and immediately queues a task for execution when resources are available" />
+                      </TextBlock>
+                    </StackPanel>
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+
+            <!-- No Selection Message -->
             <Border Background="{DynamicResource AppBackgroundBrush}"
                     BorderBrush="{DynamicResource ControlBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="4"
-                    Padding="12">
-              <StackPanel Spacing="8">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                  <icons:Icon Grid.Column="0" Value="fa-solid fa-info-circle" Width="16" Height="16" Foreground="{DynamicResource ButtonBackgroundBrush}" VerticalAlignment="Top" Margin="0,2,0,0" />
-                  <StackPanel Grid.Column="1" Spacing="4">
-                    <TextBlock Text="Task Creation Options:"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
-                    <TextBlock FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" TextWrapping="Wrap">
-                      <Run Text="• " />
-                      <Run Text="Create Task" FontWeight="SemiBold" />
-                      <Run Text=": Creates a task that can be started manually from Task Manager" />
-                    </TextBlock>
-                    <TextBlock FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" TextWrapping="Wrap">
-                      <Run Text="• " />
-                      <Run Text="Schedule Task" FontWeight="SemiBold" />
-                      <Run Text=": Creates a task scheduled for automatic execution at a specific date/time" />
-                    </TextBlock>
-                    <TextBlock FontSize="11" Foreground="{DynamicResource TextForegroundMutedBrush}" TextWrapping="Wrap">
-                      <Run Text="• " />
-                      <Run Text="Enqueue Task" FontWeight="SemiBold" />
-                      <Run Text=": Creates and immediately queues a task for execution when resources are available" />
-                    </TextBlock>
-                  </StackPanel>
-                </Grid>
+                    Padding="16"
+                    IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNull}}">
+              <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <icons:Icon Value="fa-solid fa-hand-pointer" Width="32" Height="32" Foreground="#666666" />
+                <TextBlock Text="Select a job profile to create tasks"
+                           Foreground="{DynamicResource TextForegroundMutedBrush}"
+                           FontStyle="Italic"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Tasks execute the selected job configuration on PLC devices"
+                           Foreground="#666666"
+                           FontSize="11"
+                           HorizontalAlignment="Center" />
               </StackPanel>
             </Border>
           </StackPanel>
-
-          <!-- No Selection Message -->
-          <Border Background="{DynamicResource AppBackgroundBrush}"
-                  BorderBrush="{DynamicResource ControlBorderBrush}"
-                  BorderThickness="1"
-                  CornerRadius="4"
-                  Padding="16"
-                  IsVisible="{Binding SelectedProfile, Converter={x:Static ObjectConverters.IsNull}}">
-            <StackPanel Spacing="8" HorizontalAlignment="Center">
-              <icons:Icon Value="fa-solid fa-hand-pointer" Width="32" Height="32" Foreground="#666666" />
-              <TextBlock Text="Select a job profile to create tasks"
-                         Foreground="{DynamicResource TextForegroundMutedBrush}"
-                         FontStyle="Italic"
-                         HorizontalAlignment="Center" />
-              <TextBlock Text="Tasks execute the selected job configuration on PLC devices"
-                         Foreground="#666666"
-                         FontSize="11"
-                         HorizontalAlignment="Center" />
-            </StackPanel>
-          </Border>
-        </StackPanel>
+        </Expander>
       </Border>
 
 
       <!-- Status Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Status Information"
-                     FontSize="18"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-info-circle" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="STATUS INFORMATION" />
+            </Grid>
+          </Expander.Header>
 
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Spacing="4">
-              <TextBlock Text="Job Management:"
-                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                         FontWeight="SemiBold" />
-              <TextBlock Text="{Binding Profiles.Count, StringFormat='• {0} job profiles loaded'}"
-                         Foreground="{DynamicResource TextForegroundMutedBrush}"
-                         FontSize="12" />
-              <TextBlock Text="{Binding JobTemplates.Count, StringFormat='• {0} templates available'}"
+              <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="Job Management:"
+                           Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding Profiles.Count, StringFormat='• {0} job profiles loaded'}"
+                           Foreground="{DynamicResource TextForegroundMutedBrush}"
+                           FontSize="12" />
+                <TextBlock Text="{Binding JobTemplates.Count, StringFormat='• {0} templates available'}"
+                           Foreground="{DynamicResource TextForegroundMutedBrush}"
+                           FontSize="12" />
+              </StackPanel>
+
+              <StackPanel Grid.Column="1" Spacing="4">
+                <TextBlock Text="Current Status:"
+                           Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding StatusMessage, StringFormat='• {0}'}"
+                           Foreground="{DynamicResource TextForegroundMutedBrush}"
+                           FontSize="12" />
+                <TextBlock Text="{Binding SelectedProfile.Name, StringFormat='• Selected: {0}', FallbackValue='• No job selected'}"
+                           Foreground="{DynamicResource TextForegroundMutedBrush}"
+                           FontSize="12" />
+              </StackPanel>
+            </Grid>
+
+            <!-- Loading Indicator -->
+            <StackPanel Orientation="Horizontal"
+                        Spacing="8"
+                        IsVisible="{Binding IsLoading}">
+              <icons:Icon Value="fa-solid fa-spinner"
+                          Width="16"
+                          Height="16"
+                          Foreground="{DynamicResource ButtonBackgroundBrush}"
+                          Classes="spin" />
+              <TextBlock Text="Loading..."
                          Foreground="{DynamicResource TextForegroundMutedBrush}"
                          FontSize="12" />
             </StackPanel>
-
-            <StackPanel Grid.Column="1" Spacing="4">
-              <TextBlock Text="Current Status:"
-                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                         FontWeight="SemiBold" />
-              <TextBlock Text="{Binding StatusMessage, StringFormat='• {0}'}"
-                         Foreground="{DynamicResource TextForegroundMutedBrush}"
-                         FontSize="12" />
-              <TextBlock Text="{Binding SelectedProfile.Name, StringFormat='• Selected: {0}', FallbackValue='• No job selected'}"
-                         Foreground="{DynamicResource TextForegroundMutedBrush}"
-                         FontSize="12" />
-            </StackPanel>
-          </Grid>
-
-          <!-- Loading Indicator -->
-          <StackPanel Orientation="Horizontal"
-                      Spacing="8"
-                      IsVisible="{Binding IsLoading}">
-            <icons:Icon Value="fa-solid fa-spinner"
-                        Width="16"
-                        Height="16"
-                        Foreground="{DynamicResource ButtonBackgroundBrush}"
-                        Classes="spin" />
-            <TextBlock Text="Loading..."
-                       Foreground="{DynamicResource TextForegroundMutedBrush}"
-                       FontSize="12" />
           </StackPanel>
-        </StackPanel>
+        </Expander>
       </Border>
     </StackPanel>
     </ScrollViewer>

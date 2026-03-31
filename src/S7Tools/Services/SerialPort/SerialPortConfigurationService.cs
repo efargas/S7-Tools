@@ -311,7 +311,7 @@ public sealed partial class SerialPortConfigurationService
 
         try
         {
-            var result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, 5000, cancellationToken).ConfigureAwait(false);
+            ShellCommandResult result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, 5000, cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
 
             return new SttyCommandResult

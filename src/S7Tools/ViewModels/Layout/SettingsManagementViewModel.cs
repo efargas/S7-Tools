@@ -58,7 +58,7 @@ public class SettingsManagementViewModel : ReactiveObject, IDisposable
 
         var services = new ServiceCollection();
         services.AddLogging();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Create a mock options for design time
         var dummyOptions = new DummyOptions();
@@ -511,7 +511,7 @@ public class SettingsManagementViewModel : ReactiveObject, IDisposable
             }
 
             // Validate log level
-            string[] validLogLevels = new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };
+            string[] validLogLevels = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
             if (!validLogLevels.Contains(MinimumLogLevel))
             {
                 _logger.LogWarning("Invalid log level: {LogLevel}. Resetting to Information.", MinimumLogLevel);

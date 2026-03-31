@@ -147,7 +147,7 @@ public class ProfilesViewModel : ViewModelBase, IDockableViewModel
         }
         catch (Exception ex)
         {
-            var logger = _serviceProvider.GetService<ILogger<ProfilesViewModel>>();
+            ILogger<ProfilesViewModel>? logger = _serviceProvider.GetService<ILogger<ProfilesViewModel>>();
             logger?.LogError(ex, "Error creating ViewModel for profile category: {Category}", category);
 
             // Fallback

@@ -38,7 +38,7 @@ namespace S7Tools.Collections
             _isAddingRange = true;
             try
             {
-                foreach (var item in items)
+                foreach (T? item in items)
                 {
                     Items.Add(item);
                 }

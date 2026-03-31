@@ -7,6 +7,7 @@ using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models.Jobs;
+using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
@@ -542,9 +543,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var taskLogDataStore = _serviceProvider.GetRequiredService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
+            ILogDataStore taskLogDataStore = _serviceProvider.GetRequiredService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
 
-            var logViewer = ActivatorUtilities.CreateInstance<LogViewerViewModel>(_serviceProvider, taskLogDataStore);
+            LogViewerViewModel logViewer = ActivatorUtilities.CreateInstance<LogViewerViewModel>(_serviceProvider, taskLogDataStore);
             logViewer.SelectedTaskId = targetTask.TaskId;
             logViewer.SelectedScope = "Main";
             logViewer.DockId = $"TaskLog_{targetTask.TaskId}";
@@ -629,9 +630,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         // Atomically drain the dictionary to prevent lost updates.
         // We iterate through the keys and try to remove each item.
         // If an item is removed successfully, we process it.
-        foreach (var key in _pendingProgressUpdates.Keys)
+        foreach (Guid key in _pendingProgressUpdates.Keys)
         {
-            if (_pendingProgressUpdates.TryRemove(key, out var update))
+            if (_pendingProgressUpdates.TryRemove(key, out (double Percentage, string Operation, Dictionary<string, object>? ExtraData) update))
             {
                 (double percentage, string operation, Dictionary<string, object>? extraData) = update;
 
@@ -792,7 +793,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_StartingTask;
 
-            var result = await _taskCommandManager.StartTaskAsync(targetTask);
+            CommandResult result = await _taskCommandManager.StartTaskAsync(targetTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -828,7 +829,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             // No status message here as it might show dialog
 
-            var result = await _taskCommandManager.StopTaskAsync(targetTask);
+            CommandResult result = await _taskCommandManager.StopTaskAsync(targetTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -851,7 +852,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.ScheduleTaskAsync(SelectedTask);
+            CommandResult result = await _taskCommandManager.ScheduleTaskAsync(SelectedTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -885,7 +886,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.RestartTaskAsync(targetTask);
+            CommandResult result = await _taskCommandManager.RestartTaskAsync(targetTask);
             UpdateCommandResult(result);
             if (result.IsSuccess && result.Data is TaskExecution newRestartedTask)
             {
@@ -916,7 +917,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.PauseTaskAsync(SelectedTask);
+            CommandResult result = await _taskCommandManager.PauseTaskAsync(SelectedTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -939,7 +940,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.ResumeTaskAsync(SelectedTask);
+            CommandResult result = await _taskCommandManager.ResumeTaskAsync(SelectedTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -974,7 +975,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         {
             IsLoading = true;
 
-            var result = await _taskCommandManager.DeleteTaskAsync(targetTask);
+            CommandResult result = await _taskCommandManager.DeleteTaskAsync(targetTask);
             UpdateCommandResult(result);
 
             if (result.IsSuccess)
@@ -1020,7 +1021,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.ClearFinishedTasksAsync();
+            CommandResult result = await _taskCommandManager.ClearFinishedTasksAsync();
             UpdateCommandResult(result);
 
             if (result.IsSuccess)
@@ -1047,7 +1048,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.CreateTaskAsync();
+            CommandResult result = await _taskCommandManager.CreateTaskAsync();
             UpdateCommandResult(result);
 
             // We might want to select the new task if possible, but Manager doesn't return it yet.

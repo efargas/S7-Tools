@@ -9,7 +9,8 @@
              xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Jobs.JobInfoDisplayView"
-             x:DataType="vm:JobInfoDisplayViewModel">
+             x:DataType="vm:JobInfoDisplayViewModel"
+             Background="Transparent">
 
   <Design.DataContext>
     <vm:JobInfoDisplayViewModel />
@@ -794,7 +795,10 @@
                 Foreground="{DynamicResource TextForegroundBrush}"
                 BorderThickness="0"
                 Padding="16,8"
-                CornerRadius="4" />
+                CornerRadius="18"
+                FontSize="13"
+                FontWeight="SemiBold"
+                Margin="0,0,0,24" />
       </Border>
 
     </StackPanel>

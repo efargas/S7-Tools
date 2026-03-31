@@ -169,7 +169,7 @@ public sealed class MemoryDumpOrchestrator : IDisposable
             _segmentCallback = callback;
             _segmentTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-            using var reg = ct.Register(() => _segmentTcs.TrySetCanceled());
+            using CancellationTokenRegistration reg = ct.Register(() => _segmentTcs.TrySetCanceled());
 
             // Open the gate to allow consumption
             _consumptionGate.TrySetResult();

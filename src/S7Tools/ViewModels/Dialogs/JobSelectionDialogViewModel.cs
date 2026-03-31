@@ -28,7 +28,7 @@ public class JobSelectionDialogViewModel : ViewModelBase
         _filteredJobs = new ObservableCollection<JobProfile>(availableJobs);
 
         // Setup commands
-        var canConfirm = this.WhenAnyValue(x => x.SelectedJob)
+        IObservable<bool> canConfirm = this.WhenAnyValue(x => x.SelectedJob)
             .Select(job => job != null);
 
         ConfirmCommand = ReactiveCommand.Create(() => { }, canConfirm);
@@ -98,7 +98,7 @@ public class JobSelectionDialogViewModel : ViewModelBase
         }
         else
         {
-            var searchLower = SearchText.ToLowerInvariant();
+            string searchLower = SearchText.ToLowerInvariant();
             var filtered = AvailableJobs
                 .Where(job => job.Name.ToLowerInvariant().Contains(searchLower) ||
                              (job.Description?.ToLowerInvariant().Contains(searchLower) ?? false))

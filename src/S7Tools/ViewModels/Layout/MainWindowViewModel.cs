@@ -13,6 +13,7 @@ using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Pages;
 using S7Tools.ViewModels.Settings;
+using S7Tools.ViewModels.Tasks;
 
 namespace S7Tools.ViewModels.Layout;
 
@@ -49,7 +50,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var services = new ServiceCollection();
         services.AddLogging();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Create a mock options for design time
         var dummyOptions = new DummyOptions();
@@ -160,10 +161,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         {
             OpenToolTab(_serviceProvider.GetRequiredService<LogViewerViewModel>());
         };
+        Navigation.HomeAction = OpenHome;
 
         // Pre-wire TaskManagerViewModel so it can open task logs automatically
         // even if the user hasn't visited the Tasks sidebar view yet
-        var taskManagerVm = _serviceProvider.GetService<ViewModels.Tasks.TaskManagerViewModel>();
+        TaskManagerViewModel? taskManagerVm = _serviceProvider.GetService<ViewModels.Tasks.TaskManagerViewModel>();
         if (taskManagerVm != null)
         {
             taskManagerVm.OpenDocumentAction = vm => OpenDocumentTab(vm);
@@ -294,6 +296,18 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
             mainDockFactory.RestoreSettings();
         }
         _logger.LogDebug("Settings view opened via dock");
+    }
+
+    /// <summary>
+    /// Opens the Home view as a docked document tab.
+    /// </summary>
+    public void OpenHome()
+    {
+        if (_factory is MainDockFactory mainDockFactory)
+        {
+            mainDockFactory.RestoreHome();
+        }
+        _logger.LogDebug("Home view opened via dock");
     }
 
     #endregion

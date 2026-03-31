@@ -85,7 +85,7 @@ namespace S7Tools.Services.Adapters
                 throw new ArgumentException("Packet contents too large. Max size is 254 bytes.", nameof(contents));
             }
 
-            var packet = new byte[contents.Length + 2];
+            byte[] packet = new byte[contents.Length + 2];
             packet[0] = (byte)(contents.Length + 1);
             Array.Copy(contents, 0, packet, 1, contents.Length);
             packet[packet.Length - 1] = CalculateChecksum(packet, 0, packet.Length - 1);
@@ -99,7 +99,7 @@ namespace S7Tools.Services.Adapters
                 throw new ArgumentException("Invalid packet length.");
             }
 
-            var lengthByte = packet[0];
+            byte lengthByte = packet[0];
             if (lengthByte != packet.Length - 1)
             {
                 throw new ArgumentException("Packet length mismatch.");
@@ -113,7 +113,7 @@ namespace S7Tools.Services.Adapters
                 throw new Exception("ChecksumMismatchException"); // Using general exception to avoid dependency hell
             }
 
-            var contents = new byte[lengthByte - 1];
+            byte[] contents = new byte[lengthByte - 1];
             Array.Copy(packet, 1, contents, 0, contents.Length);
             return contents;
         }
@@ -128,7 +128,7 @@ namespace S7Tools.Services.Adapters
             // Safety delay exactly as in reference
             await Task.Delay(10, cancellationToken).ConfigureAwait(false);
 
-            var packet = EncodePacket(payload);
+            byte[] packet = EncodePacket(payload);
             if (_effectiveLogger.IsEnabled(LogLevel.Trace))
             {
                 _effectiveLogger.LogTrace("-> SEND: {Hex}", BitConverter.ToString(packet).Replace("-", ""));
@@ -154,7 +154,7 @@ namespace S7Tools.Services.Adapters
         /// </summary>
         public async Task<byte[]> ReceivePacketAsync(CancellationToken cancellationToken = default)
         {
-            var lengthByte = new byte[1];
+            byte[] lengthByte = new byte[1];
             int lengthBytesRead = await _transport.ReadAsync(lengthByte, 0, 1, cancellationToken).ConfigureAwait(false);
 
             if (lengthBytesRead == 0)
@@ -169,7 +169,7 @@ namespace S7Tools.Services.Adapters
                 return Array.Empty<byte>();
             }
 
-            var fullPacket = new byte[bytesToRead + 1];
+            byte[] fullPacket = new byte[bytesToRead + 1];
             fullPacket[0] = lengthByte[0];
 
             int bytesRead = 0;

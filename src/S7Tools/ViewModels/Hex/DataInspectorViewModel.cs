@@ -37,7 +37,7 @@ public partial class DataInspectorViewModel : ObservableObject
 
         // Try parsing hex
         // Support prefixes like 0x
-        var scrubbed = TargetOffset.Replace("0x", "").Trim();
+        string scrubbed = TargetOffset.Replace("0x", "").Trim();
         if (long.TryParse(scrubbed, System.Globalization.NumberStyles.HexNumber, null, out long offset))
         {
             RequestGoToOffset?.Invoke(offset);
@@ -57,7 +57,7 @@ public partial class DataInspectorViewModel : ObservableObject
             // Convert hex string "00 01 AB" to byte[]
             // Using Convert.FromHexString which expects "0001AB" (no spaces) or manually parsing.
             // We'll strip common separators.
-            var scrubbed = FillPattern.Replace(" ", "").Replace("-", "").Replace(",", "").Replace("0x", "");
+            string scrubbed = FillPattern.Replace(" ", "").Replace("-", "").Replace(",", "").Replace("0x", "");
             byte[] bytes = Convert.FromHexString(scrubbed);
             RequestFillSelection?.Invoke(bytes);
         }

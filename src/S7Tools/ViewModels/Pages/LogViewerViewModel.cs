@@ -139,7 +139,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
         InitializeCommands();
 
-        var filterPredicate = this.WhenAnyValue(
+        IObservable<Func<LogModel, bool>> filterPredicate = this.WhenAnyValue(
             x => x.SelectedLogLevel,
             x => x.SearchText,
             x => x.StartDate,
@@ -148,7 +148,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             x => x.SelectedScope)
             .Select(_ => BuildFilter());
 
-        var sortComparer = this.WhenAnyValue(
+        IObservable<IComparer<LogModel>> sortComparer = this.WhenAnyValue(
             x => x.SortColumn,
             x => x.SortAscending)
             .Select(_ => BuildSort());
@@ -463,7 +463,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (parameter is System.Collections.IList items && items.Count > 0)
             {
-                foreach (var item in items)
+                foreach (object? item in items)
                 {
                     if (item is LogModel entry)
                     {
@@ -477,7 +477,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             }
             else
             {
-                var fallbackEntry = SelectedLogEntry;
+                LogModel? fallbackEntry = SelectedLogEntry;
                 if (fallbackEntry != null)
                 {
                     sb.AppendLine($"[{fallbackEntry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{fallbackEntry.Timestamp.Millisecond:000}] [{fallbackEntry.Level}] {fallbackEntry.Category}: {fallbackEntry.FormattedMessage}");
@@ -496,7 +496,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (parameter is System.Collections.IList items && items.Count > 0)
             {
-                foreach (var item in items)
+                foreach (object? item in items)
                 {
                     if (item is LogModel entry)
                     {
@@ -510,7 +510,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             }
             else
             {
-                var fallbackEntry = SelectedLogEntry;
+                LogModel? fallbackEntry = SelectedLogEntry;
                 if (fallbackEntry != null)
                 {
                     sb.AppendLine(fallbackEntry.FormattedMessage ?? string.Empty);
@@ -591,7 +591,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     /// </summary>
     private void LoadLogEntries()
     {
-        var entries = _logDataStore.Entries;
+        IReadOnlyList<LogModel> entries = _logDataStore.Entries;
         _uiThreadService.InvokeOnUIThread(() =>
         {
             _logEntriesSource.Edit(updater =>
@@ -637,14 +637,14 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (EndDate.HasValue)
             {
-                var endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
+                DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
                 if (entry.Timestamp > endDateOffset)
                     return false;
             }
 
             if (SelectedTaskId.HasValue)
             {
-                if (entry.Properties == null || !entry.Properties.TryGetValue("TaskId", out var tid) || tid?.ToString() != SelectedTaskId.Value.ToString())
+                if (entry.Properties == null || !entry.Properties.TryGetValue("TaskId", out object? tid) || tid?.ToString() != SelectedTaskId.Value.ToString())
                 {
                     return false;
                 }
@@ -658,7 +658,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                var term = SearchText;
+                string term = SearchText;
                 bool matches = (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);

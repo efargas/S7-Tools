@@ -276,14 +276,14 @@ namespace S7Tools.Services
 
             try
             {
-                string[] profileFiles = new[]
-                {
+                string[] profileFiles =
+                [
                     _pathService.SerialProfilesPath,
                     _pathService.SocatProfilesPath,
                     _pathService.PowerSupplyProfilesPath,
                     _pathService.JobsPath,
                     _pathService.TasksPath
-                };
+                ];
 
                 bool allExist = true;
                 foreach (string? profilePath in profileFiles)

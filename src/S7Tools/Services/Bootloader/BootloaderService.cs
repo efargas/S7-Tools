@@ -142,7 +142,7 @@ public sealed class BootloaderService(
 
                 // Execute the memory dump with retry logic
                 // Directly call Orchestration to get both data and file paths
-                var result = await ExecuteWithRetryAsync(
+                BootloaderResult result = await ExecuteWithRetryAsync(
                     () => PerformBootloaderOrchestrationAsync(
                         profiles,
                         progressReporter,
@@ -670,7 +670,7 @@ public sealed class BootloaderService(
         List<byte[]> allDumps = [];
 
         long totalDumpBytes;
-        var segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
+        List<MemorySegment> segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
 
         if (profiles.DumpCount <= 0)
         {
@@ -923,7 +923,7 @@ public sealed class BootloaderService(
 
             // Calculate total expected bytes across all iterations for progress reporting
             long totalExpectedBytes = 0;
-            var segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
+            List<MemorySegment> segments = profiles.MemoryMapping?.SelectedSegments?.ToList() ?? [];
             if (segments.Count > 0)
             {
                 totalExpectedBytes = iterationCount * segments.Sum(s => (long)s.Size);
@@ -1149,7 +1149,7 @@ public sealed class BootloaderService(
                     await Task.Delay(5000, ctx.CancellationToken).ConfigureAwait(false);
                 }
 
-                var segment = segments[i];
+                MemorySegment segment = segments[i];
                 uint segStart = ParseSegmentAddress(segment);
                 uint segLength = (uint)segment.Size;
                 string stageName = stageNames[i];
@@ -1493,7 +1493,7 @@ public sealed class BootloaderService(
 
             using (var stagerCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             {
-                var progressTask = SimulateProgressAsync(
+                Task progressTask = SimulateProgressAsync(
                     stagerPayload.LongLength,
                     profiles.Serial.Configuration.BaudRate,
                     progress,
@@ -1524,7 +1524,7 @@ public sealed class BootloaderService(
 
             using (var dumperCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             {
-                var progressTask = SimulateProgressAsync(
+                Task progressTask = SimulateProgressAsync(
                     dumperPayload.LongLength,
                     profiles.Serial.Configuration.BaudRate,
                     progress,
@@ -1550,7 +1550,7 @@ public sealed class BootloaderService(
             // Stage 11: Memory Dump (20% - 95% progress) - 75% weight
             effectiveTaskLogger.LogInformation("--- Stage 11: Memory Dump (Streaming) ---");
 
-            var dumpResult = await PerformDumpProcessStreamingAsync(
+            BootloaderResult dumpResult = await PerformDumpProcessStreamingAsync(
                 client, profiles,
                 progress, effectiveTaskLogger, processLogger,
                 startPercent: 20.0, weight: 75.0,

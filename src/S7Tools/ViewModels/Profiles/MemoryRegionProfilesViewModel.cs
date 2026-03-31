@@ -80,7 +80,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
     /// </summary>
     protected override async Task<ProfileDialogResult<MemoryMappingProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
-        var nameResult = await UnifiedDialogService.ShowNameInputDialogAsync(
+        ProfileDialogResult<string> nameResult = await UnifiedDialogService.ShowNameInputDialogAsync(
             $"Create {GetProfileTypeName()}",
             "Enter a name for the new memory region profile:",
             request.DefaultName ?? GetDefaultProfileName()
@@ -92,7 +92,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
         }
 
         var newProfile = MemoryMappingProfile.CreateUserProfile(nameResult.Result ?? "New Profile");
-        var savedProfile = await _profileService.CreateAsync(newProfile);
+        MemoryMappingProfile savedProfile = await _profileService.CreateAsync(newProfile);
 
         return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
     }
@@ -126,10 +126,10 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
 
         if (dialogResult == true)
         {
-            var updatedProfile = dialogViewModel.CreateUpdatedProfile();
+            MemoryMappingProfile? updatedProfile = dialogViewModel.CreateUpdatedProfile();
             if (updatedProfile != null)
             {
-                var savedProfile = await _profileService.UpdateAsync(updatedProfile);
+                MemoryMappingProfile savedProfile = await _profileService.UpdateAsync(updatedProfile);
                 return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
             }
             return ProfileDialogResult<MemoryMappingProfile>.Failure("Failed to modify");

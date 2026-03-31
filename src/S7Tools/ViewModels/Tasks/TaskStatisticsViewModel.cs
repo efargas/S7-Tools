@@ -71,8 +71,8 @@ public class TaskStatisticsViewModel : ViewModelBase
         IEnumerable<TaskExecution> finishedTasks)
     {
         // Materialize collections to avoid multiple enumerations if they are LINQ queries (though typically passed as ObservableCollection)
-        var activeList = activeTasks as ICollection<TaskExecution> ?? activeTasks.ToList();
-        var finishedList = finishedTasks as ICollection<TaskExecution> ?? finishedTasks.ToList();
+        ICollection<TaskExecution> activeList = activeTasks as ICollection<TaskExecution> ?? activeTasks.ToList();
+        ICollection<TaskExecution> finishedList = finishedTasks as ICollection<TaskExecution> ?? finishedTasks.ToList();
 
         int allTasksCount = createdCount + queuedCount + scheduledCount + activeList.Count + finishedList.Count;
         TotalTasksCount = allTasksCount;

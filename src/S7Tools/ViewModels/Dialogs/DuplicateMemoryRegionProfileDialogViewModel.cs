@@ -357,12 +357,12 @@ public class DuplicateMemoryRegionProfileDialogViewModel : ViewModelBase, IDispo
     /// </summary>
     private string GenerateUniqueName(string baseName)
     {
-        string[] candidates = new[]
-        {
+        string[] candidates =
+        [
             $"{baseName} Copy",
             $"{baseName} (Copy)",
             $"Copy of {baseName}"
-        };
+        ];
 
         // Try standard naming patterns first
         foreach (string? candidate in candidates)

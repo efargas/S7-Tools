@@ -115,7 +115,7 @@ namespace S7Tools.Services
         {
             try
             {
-                var settings = Current;
+                AppSettings settings = Current;
                 var exportDict = new Dictionary<string, object>
                 {
                     ["logging.logDirectory"] = settings.Logging.LogDirectory,
@@ -163,7 +163,7 @@ namespace S7Tools.Services
                     PropertyNameCaseInsensitive = true
                 };
 
-                var importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, optionsFormatter);
+                Dictionary<string, object>? importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, optionsFormatter);
                 if (importedSettings == null)
                 {
                     return false;
@@ -224,7 +224,7 @@ namespace S7Tools.Services
 
         private void RaiseSettingsChanged(SettingsChangedEventArgs args)
         {
-            var handler = SettingsChanged;
+            EventHandler<SettingsChangedEventArgs>? handler = SettingsChanged;
             if (handler is null)
                 return;
 

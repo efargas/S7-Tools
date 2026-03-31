@@ -2,12 +2,14 @@ using System.Reactive;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Resources;
 using S7Tools.Extensions;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Dialogs;
 using S7Tools.ViewModels.Dialogs.Models;
+using S7Tools.ViewModels.Layout;
 using S7Tools.Views.Dialogs;
 using S7Tools.Views.Layout;
 
@@ -69,7 +71,7 @@ public partial class App : Application
                 logger.LogInformation("🚀 Launching Splash Screen...");
 
                 // Resolve correct logger for ViewModel
-                var splashLogger = _serviceProvider.GetRequiredService<ILogger<ViewModels.Layout.SplashScreenViewModel>>();
+                ILogger<SplashScreenViewModel> splashLogger = _serviceProvider.GetRequiredService<ILogger<ViewModels.Layout.SplashScreenViewModel>>();
                 var splashViewModel = new ViewModels.Layout.SplashScreenViewModel(_serviceProvider, splashLogger);
 
                 var splashScreen = new Views.Layout.SplashScreenWindow
@@ -96,13 +98,13 @@ public partial class App : Application
                         await StartSchedulersAsync(logger);
 
                         // 4. Set Initial Theme and Subscribe to Changes
-                        var settingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
-                        var lastAppliedTheme = settingsService.Current.Ui.Theme;
+                        IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
+                        string lastAppliedTheme = settingsService.Current.Ui.Theme;
                         Avalonia.Threading.Dispatcher.UIThread.Post(() => ApplyThemeVariant(lastAppliedTheme));
 
                         settingsService.SettingsChanged += (s, e) =>
                         {
-                            var newTheme = settingsService.Current.Ui.Theme;
+                            string newTheme = settingsService.Current.Ui.Theme;
                             if (Equals(newTheme, lastAppliedTheme))
                             {
                                 return;
@@ -118,7 +120,7 @@ public partial class App : Application
                             logger.LogInformation("✅ Initialization complete. Switching to Main Window.");
 
                             // Create Main Window
-                            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
+                            MainWindow mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
                             desktop.MainWindow = mainWindow;
                             mainWindow.Show();
 
@@ -127,7 +129,7 @@ public partial class App : Application
 
                             // 5. Post-Startup: Register Interaction Handlers (requires MainWindow to be active context)
                             // We need the IDialogService here.
-                            var dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+                            IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
                             RegisterInteractionHandlers(dialogService, logger);
                         });
                     }
@@ -346,7 +348,7 @@ public partial class App : Application
                     logger.LogDebug("Showing job selection dialog");
 
                     // Get job manager to fetch available jobs
-                    var jobManager = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IJobManager>();
+                    IJobManager? jobManager = _serviceProvider.GetService<S7Tools.Core.Interfaces.Services.IJobManager>();
                     if (jobManager == null)
                     {
                         logger.LogError("IJobManager service not available for job selection dialog");
@@ -355,7 +357,7 @@ public partial class App : Application
                     }
 
                     // Fetch available jobs
-                    var jobs = await jobManager.GetAllAsync();
+                    IEnumerable<JobProfile> jobs = await jobManager.GetAllAsync();
                     var jobList = new System.Collections.ObjectModel.ObservableCollection<Core.Models.Jobs.JobProfile>(jobs);
 
                     // Create the view model

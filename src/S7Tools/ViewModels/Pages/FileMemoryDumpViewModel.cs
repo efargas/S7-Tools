@@ -139,7 +139,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
 
         try
         {
-            var docVm = _serviceProvider.GetRequiredService<FileMemoryDumpDocumentViewModel>();
+            FileMemoryDumpDocumentViewModel docVm = _serviceProvider.GetRequiredService<FileMemoryDumpDocumentViewModel>();
             docVm.OpenFile(item.FullPath);
 
             OpenDocumentAction.Invoke(docVm);

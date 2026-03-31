@@ -266,13 +266,13 @@ public class AvaloniaFileDialogService : IFileDialogService
         catch (Exception)
         {
             // Return default "All files" filter if parsing fails
-            return new[]
-            {
+            return
+            [
                 new FilePickerFileType("All files")
                 {
                     Patterns = new[] { "*.*" }
                 }
-            };
+            ];
         }
     }
 }

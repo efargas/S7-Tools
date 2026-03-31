@@ -55,7 +55,7 @@ public class ProgressByteSizeConverter : IMultiValueConverter
             return (long)d;
         }
 
-        if (long.TryParse(value.ToString(), out var result))
+        if (long.TryParse(value.ToString(), out long result))
         {
             return result;
         }
