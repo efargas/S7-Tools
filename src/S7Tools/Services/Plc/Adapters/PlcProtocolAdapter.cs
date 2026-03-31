@@ -1,12 +1,3 @@
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using global::S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services.Plc.Adapters

@@ -91,25 +91,25 @@
                        Margin="0,0,0,8" />
             
             <WrapPanel Orientation="Horizontal" ItemWidth="180">
-              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Command="{Binding NewJobCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <icons:Icon Value="fa-solid fa-plus-circle" Width="14" Height="14" />
                   <TextBlock Text="New Job" VerticalAlignment="Center" />
                 </StackPanel>
               </Button>
-              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Command="{Binding LiveConsoleCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <icons:Icon Value="fa-solid fa-terminal" Width="14" Height="14" />
                   <TextBlock Text="Live Console" VerticalAlignment="Center" />
                 </StackPanel>
               </Button>
-              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Command="{Binding ExportLogsCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <icons:Icon Value="fa-solid fa-file-export" Width="14" Height="14" />
                   <TextBlock Text="Export Logs" VerticalAlignment="Center" />
                 </StackPanel>
               </Button>
-              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}">
+              <Button Margin="0,0,12,12" Height="40" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Command="{Binding CheckHealthCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <icons:Icon Value="fa-solid fa-wrench" Width="14" Height="14" />
                   <TextBlock Text="Check Health" VerticalAlignment="Center" />

@@ -1,10 +1,6 @@
-using System;
-using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using AvaloniaHex.Document;
 using AvaloniaHex.Rendering;
 using S7Tools.ViewModels.Hex;
 

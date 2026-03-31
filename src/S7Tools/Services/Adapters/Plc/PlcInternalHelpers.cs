@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace S7Tools.Services.Adapters.Plc
 {
     /// <summary>

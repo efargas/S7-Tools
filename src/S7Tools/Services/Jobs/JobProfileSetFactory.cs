@@ -1,11 +1,7 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services.Jobs;
 

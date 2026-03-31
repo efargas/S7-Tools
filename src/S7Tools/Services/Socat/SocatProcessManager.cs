@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Shell;
-using S7Tools.Extensions;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Services.Socat;
 
@@ -314,7 +308,7 @@ public partial class SocatProcessManager : IDisposable
                         {
                             await _shellExecutor.ExecuteCommandAsync($"kill -TERM {string.Join(" ", childPids)}", cancellationToken).ConfigureAwait(false);
                         }
-                        
+
                         // Also try pkill to catch any processes spawned after GetChildProcessesAsync
                         await _shellExecutor.ExecuteCommandAsync($"pkill -TERM -P {processId}", cancellationToken).ConfigureAwait(false);
 
@@ -358,7 +352,9 @@ public partial class SocatProcessManager : IDisposable
             if (!exited && !process.HasExited)
             {
                 _logger.LogWarning("Socat process {ProcessId} did not exit after SIGTERM, forcing termination", processId);
-                try { process.Kill(true); } catch { process.Kill(); }
+                try
+                { process.Kill(true); }
+                catch { process.Kill(); }
                 await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
             }
 

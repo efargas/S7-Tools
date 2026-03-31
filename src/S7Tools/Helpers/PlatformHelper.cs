@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using S7Tools.Resources;
 
 namespace S7Tools.Helpers;

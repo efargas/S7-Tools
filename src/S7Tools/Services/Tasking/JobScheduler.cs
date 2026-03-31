@@ -1,9 +1,8 @@
 using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Interfaces.Services;
 using S7Tools.Extensions;
 
 namespace S7Tools.Services.Tasking;

@@ -1,13 +1,7 @@
-using System;
-using System.IO;
 using System.Reactive;
-using System.Reactive.Disposables;
 using AvaloniaHex.Document;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Interfaces;
 using S7Tools.Models.Hex;
-using S7Tools.Services.Hex;
 
 namespace S7Tools.ViewModels.Hex
 {

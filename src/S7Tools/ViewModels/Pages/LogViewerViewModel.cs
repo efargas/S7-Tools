@@ -1,23 +1,18 @@
-using S7Tools.ViewModels.Base;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading;
 using DynamicData;
 using DynamicData.Binding;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
-using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using S7Tools.Models;
-using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
-using S7Tools.Core.Interfaces.ViewModels;
+using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Dialogs.Models;
 
 namespace S7Tools.ViewModels.Pages;
 
@@ -163,7 +158,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             .Sort(sortComparer)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Bind(out _filteredLogEntries)
-            .Subscribe(_ => 
+            .Subscribe(_ =>
             {
                 FilteredLogCount = _filteredLogEntries.Count;
                 TotalLogCount = _logDataStore.Count;
@@ -634,14 +629,17 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     {
         return entry =>
         {
-            if (entry.Level < SelectedLogLevel) return false;
-            
-            if (StartDate.HasValue && entry.Timestamp < StartDate.Value) return false;
-            
+            if (entry.Level < SelectedLogLevel)
+                return false;
+
+            if (StartDate.HasValue && entry.Timestamp < StartDate.Value)
+                return false;
+
             if (EndDate.HasValue)
             {
                 var endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
-                if (entry.Timestamp > endDateOffset) return false;
+                if (entry.Timestamp > endDateOffset)
+                    return false;
             }
 
             if (SelectedTaskId.HasValue)
@@ -654,7 +652,8 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (!string.IsNullOrEmpty(SelectedScope))
             {
-                if (entry.Scope != SelectedScope) return false;
+                if (entry.Scope != SelectedScope)
+                    return false;
             }
 
             if (!string.IsNullOrWhiteSpace(SearchText))
@@ -663,7 +662,8 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
                 bool matches = (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
-                if (!matches) return false;
+                if (!matches)
+                    return false;
             }
 
             return true;

@@ -1,5 +1,3 @@
-using Avalonia.Controls;
-
 namespace S7Tools.Views.Jobs;
 
 /// <summary>

@@ -1,6 +1,4 @@
-using System;
 using System.Buffers.Binary;
-using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using S7Tools.Services.Hex;

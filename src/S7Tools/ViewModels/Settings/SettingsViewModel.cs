@@ -1,7 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
@@ -55,6 +53,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel, IDisposable
             "Paths Settings",
             "Serial Ports",
             "Servers",
+            "Test",
         });
 
         // Initialize with Logging category
@@ -128,6 +127,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel, IDisposable
                 "Paths Settings" => CreatePathSettingsViewModel(),
                 "Serial Ports" => CreateSerialPortsSettingsViewModel(),
                 "Servers" => CreateSocatSettingsViewModel(),
+                "Test" => CreateTestSettingsViewModel(),
                 _ => new GeneralSettingsViewModel()
             };
 
@@ -229,6 +229,15 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel, IDisposable
             settingsService,
             pathService,
             portScanner);
+    }
+
+    private TestSettingsViewModel CreateTestSettingsViewModel()
+    {
+        IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
+        ILogger<TestSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<TestSettingsViewModel>>();
+
+        return new TestSettingsViewModel(dialogService, clipboardService, logger);
     }
 
     /// <inheritdoc />

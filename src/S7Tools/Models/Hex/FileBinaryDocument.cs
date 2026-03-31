@@ -1,5 +1,3 @@
-using System;
-using System.IO;
 using AvaloniaHex.Document;
 
 namespace S7Tools.Models.Hex

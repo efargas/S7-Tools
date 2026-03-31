@@ -1,7 +1,3 @@
-using System;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 using S7Tools.ViewModels.Dialogs;
 
 namespace S7Tools.Views.Dialogs;

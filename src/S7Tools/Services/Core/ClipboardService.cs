@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input.Platform;
 using S7Tools.Services.Interfaces;

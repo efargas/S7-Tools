@@ -1,9 +1,6 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.IO;
-using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Hex;
 
 namespace S7Tools.ViewModels.Pages;

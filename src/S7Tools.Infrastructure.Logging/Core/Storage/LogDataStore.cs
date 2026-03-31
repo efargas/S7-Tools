@@ -3,13 +3,11 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
-using System.Timers; // Added for batching timer
-using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
+using S7Tools.Infrastructure.Logging.Core.Models;
 using Serilog.Core;
 using Serilog.Events;
-using S7Tools.Core.Models;
-using S7Tools.Core.Interfaces.Services;
-using S7Tools.Infrastructure.Logging.Core.Models;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;
 
@@ -443,12 +441,12 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
             _ => LogLevel.None
         };
 
-        var category = logEvent.Properties.TryGetValue("SourceContext", out var sourceContext) 
-            ? sourceContext.ToString().Trim('"') 
+        var category = logEvent.Properties.TryGetValue("SourceContext", out var sourceContext)
+            ? sourceContext.ToString().Trim('"')
             : string.Empty;
 
-        var eventId = logEvent.Properties.TryGetValue("EventId", out var eventIdProp) && eventIdProp is StructureValue sv 
-                    && sv.Properties.FirstOrDefault(p => p.Name == "Id")?.Value is ScalarValue idVal 
+        var eventId = logEvent.Properties.TryGetValue("EventId", out var eventIdProp) && eventIdProp is StructureValue sv
+                    && sv.Properties.FirstOrDefault(p => p.Name == "Id")?.Value is ScalarValue idVal
                     && idVal.Value is int id
             ? new EventId(id)
             : new EventId(0);

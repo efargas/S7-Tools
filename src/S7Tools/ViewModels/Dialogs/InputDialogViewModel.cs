@@ -1,7 +1,6 @@
-using S7Tools.ViewModels.Base;
 using System.Reactive;
 using ReactiveUI;
-using S7Tools.Models;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Dialogs.Models;
 
 namespace S7Tools.ViewModels.Dialogs;

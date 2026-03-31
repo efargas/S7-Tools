@@ -1,28 +1,14 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Collections;
-using S7Tools.Core.Constants;
-using S7Tools.Core.Models;
-using S7Tools.Core.Models.Configuration;
-using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Validation;
-using S7Tools.Models;
-using S7Tools.ViewModels.Dialogs.Models;
-using S7Tools.Services;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Tasks;
 

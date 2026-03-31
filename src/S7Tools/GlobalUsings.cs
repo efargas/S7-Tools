@@ -7,5 +7,3 @@ global using Avalonia.Controls;
 global using Avalonia.Markup.Xaml;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Logging;
-global using S7Tools.ViewModels;
-global using S7Tools.Views;

@@ -1,4 +1,3 @@
-using System;
 using S7Tools.Core.Models;
 
 namespace S7Tools.Core.Exceptions;

@@ -1,16 +1,10 @@
-using S7Tools.Core.Interfaces.Services;
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using Avalonia.Platform.Storage;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Pages;
 

@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-
 namespace S7Tools.Services.Interfaces;
 
 /// <summary>

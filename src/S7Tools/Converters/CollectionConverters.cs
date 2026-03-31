@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using Avalonia.Data;
 using Avalonia.Data.Converters;
 using S7Tools.Core.Models;
 

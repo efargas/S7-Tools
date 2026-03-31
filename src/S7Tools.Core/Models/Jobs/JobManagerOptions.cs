@@ -1,5 +1,3 @@
-using System;
-
 namespace S7Tools.Core.Models.Jobs
 {
     /// <summary>

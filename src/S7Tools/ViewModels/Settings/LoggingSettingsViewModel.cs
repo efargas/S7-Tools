@@ -1,14 +1,11 @@
-using S7Tools.ViewModels.Base;
 using System.ComponentModel;
 using System.Reactive;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Settings;
 
@@ -269,7 +266,7 @@ public class LoggingSettingsViewModel : ViewModelBase, IDisposable
         LogViewerFontSize = current.Ui.LogViewerFontSize;
         MaxLogFileSizeMb = (int)(current.Logging.MaxFileSize / 1024 / 1024);
         MaxRetainedLogFiles = current.Logging.MaxFiles;
-        
+
         // Detailed Operation Logging
         LogProfileOperations = current.MemoryRegion.LogProfileOperations;
         LogModbusOperations = current.PowerSupply.LogModbusOperations;
@@ -336,11 +333,11 @@ public class LoggingSettingsViewModel : ViewModelBase, IDisposable
                 settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
                 settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
                 settings.Ui.LogViewerFontSize = LogViewerFontSize;
-                
+
                 // Serilog/File Logging
                 settings.Logging.MaxFileSize = (long)MaxLogFileSizeMb * 1024 * 1024;
                 settings.Logging.MaxFiles = MaxRetainedLogFiles;
-                
+
                 // Detailed Operation Logging
                 settings.MemoryRegion.LogProfileOperations = LogProfileOperations;
                 settings.PowerSupply.LogModbusOperations = LogModbusOperations;

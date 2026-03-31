@@ -1,13 +1,6 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Reactive;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
-using S7Tools.Core.Resources;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Layout;
 

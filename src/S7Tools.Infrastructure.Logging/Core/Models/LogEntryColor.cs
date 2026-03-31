@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace S7Tools.Infrastructure.Logging.Core.Models;
 
 /// <summary>

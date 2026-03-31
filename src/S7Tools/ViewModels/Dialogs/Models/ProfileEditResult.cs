@@ -16,17 +16,17 @@ public class ProfileEditResult
     /// </summary>
     public ViewModelBase? ProfileViewModel { get; private set; }
 
-    private ProfileEditResult() {}
+    private ProfileEditResult() { }
 
     /// <summary>
     /// Executes the Success operation.
     /// </summary>
     public static ProfileEditResult Success(ViewModelBase profileViewModel)
     {
-        return new ProfileEditResult 
-        { 
-            IsSuccess = true, 
-            ProfileViewModel = profileViewModel 
+        return new ProfileEditResult
+        {
+            IsSuccess = true,
+            ProfileViewModel = profileViewModel
         };
     }
 
@@ -35,9 +35,9 @@ public class ProfileEditResult
     /// </summary>
     public static ProfileEditResult Cancelled()
     {
-        return new ProfileEditResult 
-        { 
-            IsSuccess = false 
+        return new ProfileEditResult
+        {
+            IsSuccess = false
         };
     }
 }

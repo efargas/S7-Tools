@@ -1,10 +1,5 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Extensions;
-using S7Tools.Resources;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.ViewModels.Tasks;

@@ -1,10 +1,6 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
-using System.Reactive.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using AvaloniaHex.Document;
 using ReactiveUI;
 using S7Tools.Services.Hex;

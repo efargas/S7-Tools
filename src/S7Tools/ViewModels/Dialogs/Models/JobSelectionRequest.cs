@@ -1,5 +1,3 @@
-using global::S7Tools.Core.Models.Jobs;
-
 namespace S7Tools.ViewModels.Dialogs.Models;
 
 /// <summary>

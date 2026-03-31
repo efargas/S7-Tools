@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Collections;
 using S7Tools.Core.Models;
 using S7Tools.Services.Adapters.Plc;
@@ -132,7 +126,7 @@ public sealed class MemoryDumpOrchestrator : IDisposable
     public async Task StopAsync()
     {
         _logger.LogInformation("🛑 Stopping continuous memory dump session");
-        
+
         // Ensure dumper service sends cancellation byte (0x03) immediately before we stop
         await _dumperService.StopAsync().ConfigureAwait(false);
 

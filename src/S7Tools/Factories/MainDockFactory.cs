@@ -1,12 +1,10 @@
 using System.ComponentModel;
-using System.Linq;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
 using S7Tools.Core.Interfaces.ViewModels;
-using S7Tools.ViewModels.Layout;
 
 namespace S7Tools.Factories;
 
@@ -25,8 +23,8 @@ public class MainDockFactory : Factory
     /// <summary>Content ViewModel for the Settings document.</summary>
     public object? SettingsContent { get; set; }
 
-    /// <summary>Content ViewModel for the initial/welcome document.</summary>
-    public object? WelcomeContent { get; set; }
+    /// <summary>Content ViewModel for the home/initial document.</summary>
+    public object? HomeContent { get; set; }
 
     private IDocumentDock? _mainDocumentDock;
     private IToolDock? _bottomToolDock;
@@ -308,9 +306,9 @@ public class MainDockFactory : Factory
 
         var welcomeDocument = new Document
         {
-            Id = "Welcome",
-            Title = "Welcome",
-            Context = WelcomeContent,
+            Id = "Home",
+            Title = "Home",
+            Context = HomeContent,
             CanClose = true,
             CanFloat = true
         };

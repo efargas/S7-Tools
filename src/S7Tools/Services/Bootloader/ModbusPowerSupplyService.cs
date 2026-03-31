@@ -1,6 +1,5 @@
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
 using S7Tools.Resources;
 
 namespace S7Tools.Services.Bootloader;

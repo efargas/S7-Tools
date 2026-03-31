@@ -102,7 +102,7 @@
                     Command="{Binding Navigation.ToggleSidebarCommand}" InputGesture="Ctrl+B" />
             </MenuItem>
             <MenuItem Header="_Help" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
-                <MenuItem Header="_About" />
+                <MenuItem Header="_About" Command="{Binding AboutCommand}" />
             </MenuItem>
         </Menu>
 

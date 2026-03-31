@@ -1,5 +1,3 @@
-using System;
-
 namespace S7Tools.Extensions;
 
 /// <summary>

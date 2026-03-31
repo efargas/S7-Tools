@@ -1,9 +1,6 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using ReactiveUI;
 using S7Tools.Core.Models.Jobs;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Tasks;
 

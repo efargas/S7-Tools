@@ -1,9 +1,7 @@
-using System;
 using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using S7Tools.Resources;
 
 namespace S7Tools.Converters;
 

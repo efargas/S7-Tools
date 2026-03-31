@@ -1,7 +1,5 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using S7Tools.ViewModels.Pages;
@@ -57,7 +55,8 @@ public partial class LogViewerView : UserControl
             _scrollViewer = sv;
         }
 
-        if (_scrollViewer == null) return;
+        if (_scrollViewer == null)
+            return;
 
         double scrollable = _scrollViewer.Extent.Height - _scrollViewer.Viewport.Height;
         bool atBottom = scrollable <= 0 || _scrollViewer.Offset.Y >= scrollable - 5; // Added small tolerance

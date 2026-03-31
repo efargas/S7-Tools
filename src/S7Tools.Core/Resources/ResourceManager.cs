@@ -1,5 +1,4 @@
 using System.Globalization;
-using S7Tools.Core.Resources;
 
 namespace S7Tools.Core.Resources;
 

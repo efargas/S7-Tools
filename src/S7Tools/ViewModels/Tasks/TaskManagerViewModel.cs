@@ -1,21 +1,16 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Pages;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace S7Tools.ViewModels.Tasks;
 
@@ -554,7 +549,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             logViewer.SelectedScope = "Main";
             logViewer.DockId = $"TaskLog_{targetTask.TaskId}";
             logViewer.DockTitle = $"Logs: {targetTask.JobName}";
-            
+
             if (OpenToolAction != null)
             {
                 OpenToolAction.Invoke(logViewer);
@@ -609,7 +604,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         // Push to subject for throttling instead of direct update
         _taskStateChangedSubject.OnNext(taskExecution);
-        
+
         // Auto-open task log when task starts running
         if (taskExecution.State == TaskState.Running && (OpenToolAction != null || OpenDocumentAction != null))
         {

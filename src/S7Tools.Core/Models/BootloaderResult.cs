@@ -1,6 +1,3 @@
-
-using System.Collections.Generic;
-
 namespace S7Tools.Core.Models;
 
 /// <summary>

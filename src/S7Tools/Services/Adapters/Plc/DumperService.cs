@@ -1,12 +1,8 @@
-using System;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 
 namespace S7Tools.Services.Adapters.Plc
@@ -248,65 +244,65 @@ namespace S7Tools.Services.Adapters.Plc
                             buffer.Length, hexDump);
                     }
 
-                List<MemoryBlock> pendingBlocks;
-                bool processed;
+                    List<MemoryBlock> pendingBlocks;
+                    bool processed;
 
-                // All ref-struct usage must complete before any await.
-                {
-                    var seqReader = new SequenceReader<byte>(buffer);
-                    processed = false;
-
-                    if (_expectGreeting)
+                    // All ref-struct usage must complete before any await.
                     {
-                        bool foundGreeting = TryConsumeGreeting(ref seqReader);
-                        consumed = seqReader.Position;
+                        var seqReader = new SequenceReader<byte>(buffer);
+                        processed = false;
 
-                        if (foundGreeting)
+                        if (_expectGreeting)
                         {
-                            _expectGreeting = false;
-                            processed = true;
+                            bool foundGreeting = TryConsumeGreeting(ref seqReader);
+                            consumed = seqReader.Position;
 
-                            Logger.LogInformation("✅ Greeting consumed. Switching to DATA mode.");
-
-                            if (seqReader.Remaining > 0)
+                            if (foundGreeting)
                             {
-                                if (Logger.IsEnabled(LogLevel.Trace))
+                                _expectGreeting = false;
+                                processed = true;
+
+                                Logger.LogInformation("✅ Greeting consumed. Switching to DATA mode.");
+
+                                if (seqReader.Remaining > 0)
                                 {
-                                    Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
+                                    if (Logger.IsEnabled(LogLevel.Trace))
+                                    {
+                                        Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
+                                    }
+
+                                    buffer = buffer.Slice(consumed);
+
+                                    (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
                                 }
-
-                                buffer = buffer.Slice(consumed);
-
-                                (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
+                                else
+                                {
+                                    pendingBlocks = [];
+                                }
                             }
                             else
                             {
+                                processed = !consumed.Equals(buffer.Start);
                                 pendingBlocks = [];
                             }
                         }
                         else
                         {
-                            processed = !consumed.Equals(buffer.Start);
-                            pendingBlocks = [];
+                            processed = true;
+                            (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
                         }
-                    }
-                    else
+                    } // seqReader ref-struct is destroyed here — safe to await below.
+
+                    // Write pending blocks to the channel now that no ref-struct is live.
+                    foreach (var block in pendingBlocks)
                     {
-                        processed = true;
-                        (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
+                        await writer.WriteAsync(block, token).ConfigureAwait(false);
                     }
-                } // seqReader ref-struct is destroyed here — safe to await below.
 
-                // Write pending blocks to the channel now that no ref-struct is live.
-                foreach (var block in pendingBlocks)
-                {
-                    await writer.WriteAsync(block, token).ConfigureAwait(false);
-                }
-
-                if (!processed && buffer.Length > 0 && buffer.Length < 16)
-                {
-                    // Potential STUCK STATE diagnostic
-                }
+                    if (!processed && buffer.Length > 0 && buffer.Length < 16)
+                    {
+                        // Potential STUCK STATE diagnostic
+                    }
                 }
 
                 reader.AdvanceTo(consumed, examined);

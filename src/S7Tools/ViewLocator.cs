@@ -1,12 +1,8 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Reflection;
-using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Dock.Model.Core;
-using S7Tools.ViewModels;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools;
 

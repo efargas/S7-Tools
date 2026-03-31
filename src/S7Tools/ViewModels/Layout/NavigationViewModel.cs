@@ -1,22 +1,17 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Globalization;
+#nullable enable
 using System.Reactive;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
-using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Jobs;
 using S7Tools.ViewModels.Pages;
 using S7Tools.ViewModels.Profiles;
 using S7Tools.ViewModels.Settings;
-using S7Tools.ViewModels.Tasks;
 using DesignTimeFactory = S7Tools.Services.DesignTimeViewModelFactory;
 
 namespace S7Tools.ViewModels.Layout;
@@ -107,11 +102,16 @@ public class NavigationViewModel : ReactiveObject
     public Action<IDockableViewModel>? OpenToolAction { get; set; }
 
     /// <summary>
-    /// Creates the welcome/initial ViewModel for the dock's default document.
+    /// Action to activate the log viewer tool.
     /// </summary>
-    public object? CreateWelcomeViewModel()
+    public Action? LogViewerAction { get; set; }
+
+    /// <summary>
+    /// Creates the home/initial ViewModel for the dock's default document.
+    /// </summary>
+    public object? CreateHomeViewModel()
     {
-        return CreateViewModel<LoggingTestViewModel>();
+        return CreateViewModel<HomeViewModel>();
     }
 
     /// <summary>
@@ -385,10 +385,9 @@ public class NavigationViewModel : ReactiveObject
             {
                 case "explorer":
                     SidebarTitle = UIStrings.Navigation_Explorer;
-                    CurrentContent = CreateViewModel<HomeViewModel>();
-                    ShowLogStats = false;
-                    // Open the Welcome/LoggingTest view as a dock tab
-                    OpenDockableContent(CreateLoggingTestViewModel());
+                    // Provide the Connections list in the sidebar for Explorer
+                    CurrentContent = CreateViewModel<ConnectionsViewModel>();
+                    OpenDockableContent(CurrentContent);
                     _logger.LogDebug("Navigated to Explorer");
                     break;
 
@@ -404,7 +403,12 @@ public class NavigationViewModel : ReactiveObject
 
                 case "logviewer":
                     SidebarTitle = UIStrings.Navigation_LogViewer;
-                    CurrentContent = CreateViewModel<HomeViewModel>();
+                    // Clear sidebar content for Log Viewer to focus on the bottom Output panel
+                    CurrentContent = null;
+                    if (LogViewerAction != null)
+                    {
+                        LogViewerAction();
+                    }
                     ShowLogStats = true;
                     UpdateLogStats();
                     _logger.LogDebug("Navigated to Log Viewer");
@@ -499,7 +503,7 @@ public class NavigationViewModel : ReactiveObject
     /// </summary>
     /// <typeparam name="T">The ViewModel type to create.</typeparam>
     /// <returns>The created ViewModel instance.</returns>
-    private T? CreateViewModel<T>() where T : ViewModelBase
+    public T? CreateViewModel<T>() where T : ViewModelBase
     {
         try
         {
@@ -512,14 +516,7 @@ public class NavigationViewModel : ReactiveObject
         }
     }
 
-    /// <summary>
-    /// Creates a ViewModel for logging test functionality.
-    /// </summary>
-    /// <returns>A ViewModel representing the logging test functionality.</returns>
-    private object? CreateLoggingTestViewModel()
-    {
-        return CreateViewModel<LoggingTestViewModel>();
-    }
+
 
     /// <summary>
     /// Updates the log statistics message.

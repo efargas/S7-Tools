@@ -1,6 +1,3 @@
-using Avalonia;
-using Avalonia.Controls;
-
 namespace S7Tools.Views.Controls;
 
 public partial class PropertyDisplayItem : UserControl

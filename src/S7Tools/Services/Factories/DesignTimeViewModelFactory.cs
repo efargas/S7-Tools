@@ -1,7 +1,5 @@
-using S7Tools.ViewModels.Base;
-using System;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.Services;
 

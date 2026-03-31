@@ -1,6 +1,3 @@
-using Avalonia.Controls;
-using Avalonia.Interactivity;
-
 namespace S7Tools.Views.Pages;
 
 /// <summary>

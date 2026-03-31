@@ -1,16 +1,11 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using Avalonia.Data.Converters;
 using S7Tools.Core.Constants;
 using S7Tools.ViewModels.Controls;
-using S7Tools.ViewModels.Profiles;
 namespace S7Tools.Converters;
 
 /// <summary>

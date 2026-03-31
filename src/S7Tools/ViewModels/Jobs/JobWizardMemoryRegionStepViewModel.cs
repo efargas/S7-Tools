@@ -1,19 +1,13 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Jobs;
 

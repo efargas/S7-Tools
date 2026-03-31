@@ -1,6 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
-using Microsoft.Extensions.DependencyInjection;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.ViewModels.Base;

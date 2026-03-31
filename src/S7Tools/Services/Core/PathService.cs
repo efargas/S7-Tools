@@ -1,6 +1,4 @@
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;

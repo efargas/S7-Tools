@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Resources;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Resources;
 
 namespace S7Tools.Resources;

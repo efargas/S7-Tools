@@ -1,9 +1,4 @@
-using System;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Commands;
 
 namespace S7Tools.Services;

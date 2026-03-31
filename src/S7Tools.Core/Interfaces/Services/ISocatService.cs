@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using S7Tools.Core.Models;
 
 namespace S7Tools.Core.Interfaces.Services;

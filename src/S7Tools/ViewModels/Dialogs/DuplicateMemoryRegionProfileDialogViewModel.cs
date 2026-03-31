@@ -1,9 +1,6 @@
-using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;

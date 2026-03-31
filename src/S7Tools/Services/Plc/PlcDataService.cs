@@ -1,9 +1,8 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
-using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.ValueObjects;
-using S7Tools.Core.Interfaces.Services;
 
 namespace S7Tools.Services;
 

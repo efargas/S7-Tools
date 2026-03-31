@@ -1,13 +1,9 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.ObjectModel;
-using System.Threading;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.Services;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Pages;
 

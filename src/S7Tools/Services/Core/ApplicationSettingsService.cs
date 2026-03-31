@@ -1,12 +1,8 @@
-using System;
-using System.Threading.Tasks;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Services.Interfaces;
-using System.Collections.Generic;
-using System.Text.Json;
 
 namespace S7Tools.Services
 {
@@ -229,7 +225,8 @@ namespace S7Tools.Services
         private void RaiseSettingsChanged(SettingsChangedEventArgs args)
         {
             var handler = SettingsChanged;
-            if (handler is null) return;
+            if (handler is null)
+                return;
 
             if (_uiThreadService is not null)
             {

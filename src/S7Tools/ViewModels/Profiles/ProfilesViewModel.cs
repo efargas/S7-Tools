@@ -1,12 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
-using S7Tools.Core.Interfaces.Services;
 using S7Tools.ViewModels.Base;
-using S7Tools.ViewModels.Settings;
 
 namespace S7Tools.ViewModels.Profiles;
 

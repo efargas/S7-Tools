@@ -1,7 +1,7 @@
-using S7Tools.ViewModels.Base;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Pages;
 

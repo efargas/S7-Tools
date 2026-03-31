@@ -1,14 +1,6 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Reactive;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 

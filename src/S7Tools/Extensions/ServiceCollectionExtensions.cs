@@ -1,26 +1,16 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using S7Tools.Core.Commands;
-using S7Tools.Core.Factories;
-using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.Logging;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Resources;
 using S7Tools.Core.Validation;
 using S7Tools.Infrastructure.Logging.Core.Models;
-using S7Tools.Infrastructure.Logging.Core.Storage;
-using S7Tools.Models;
-using S7Tools.ViewModels.Dialogs.Models;
-using S7Tools.Resources;
 using S7Tools.Services;
-using S7Tools.Services.Bootloader;
 using S7Tools.Services.Interfaces;
 using S7Tools.Services.Jobs;
 using S7Tools.Services.Tasking;
-using S7Tools.ViewModels;
 using S7Tools.ViewModels.Dialogs;
 using S7Tools.ViewModels.Hex;
 using S7Tools.ViewModels.Jobs;
@@ -372,7 +362,6 @@ public static class ServiceCollectionExtensions
 
         // Add Feature ViewModels
         services.TryAddTransient<LogViewerViewModel>();
-        services.TryAddTransient<LoggingTestViewModel>();
         services.TryAddTransient<HomeViewModel>();
         services.TryAddTransient<ConnectionsViewModel>();
         services.TryAddSingleton<SettingsViewModel>(provider => new SettingsViewModel(provider));

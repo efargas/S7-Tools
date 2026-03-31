@@ -1,14 +1,9 @@
-using System.Linq;
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Validation.Models;
 using S7Tools.Extensions;
-using S7Tools.Resources;
-using System.IO;
 
 namespace S7Tools.Services.Bootloader;
 
@@ -172,7 +167,8 @@ public sealed class BootloaderService(
                 long totalLength = result.SavedFiles?
                     .Sum(path =>
                     {
-                        try { return new System.IO.FileInfo(path).Length; }
+                        try
+                        { return new System.IO.FileInfo(path).Length; }
                         catch (Exception ex)
                         {
                             _logger.LogWarning(ex, "Could not read file size for dump output: {FilePath}", path);

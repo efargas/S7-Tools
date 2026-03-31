@@ -1,13 +1,7 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Collections.Generic;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Factories;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Layout;
-using S7Tools.ViewModels.Profiles;
 
 namespace S7Tools.Services;
 

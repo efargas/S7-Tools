@@ -1,8 +1,5 @@
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 
 namespace S7Tools.Converters;

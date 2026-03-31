@@ -1,7 +1,3 @@
-using Avalonia.Controls;
-using S7Tools.ViewModels;
-using S7Tools.ViewModels.Settings;
-
 namespace S7Tools.Views.Settings;
 
 /// <summary>

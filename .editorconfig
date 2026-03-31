@@ -167,6 +167,9 @@ dotnet_naming_style.type_parameter_style.required_prefix = T
 
 # .NET diagnostic rules
 
+# IDE0005: Remove unnecessary usings
+dotnet_diagnostic.IDE0005.severity = warning
+
 # CA1001: Types that own disposable fields should be disposable
 dotnet_diagnostic.CA1001.severity = warning
 

@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Services.Interfaces;
 

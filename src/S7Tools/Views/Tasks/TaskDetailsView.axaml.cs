@@ -1,4 +1,3 @@
-using Avalonia.Controls;
 using Avalonia.ReactiveUI;
 using S7Tools.ViewModels.Tasks;
 

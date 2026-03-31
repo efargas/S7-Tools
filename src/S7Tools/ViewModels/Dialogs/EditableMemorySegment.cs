@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using ReactiveUI;
 using S7Tools.Core.Models;
