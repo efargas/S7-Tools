@@ -1,21 +1,17 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
+using S7Tools.Core.Models.Jobs;
+using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Pages;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace S7Tools.ViewModels.Tasks;
 
@@ -66,7 +62,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     private int _refreshIntervalSeconds = 2;
 
     // Throttling for UI updates
-    private readonly System.Reactive.Subjects.ISubject<TaskExecution> _taskStateChangedSubject = new System.Reactive.Subjects.Subject<TaskExecution>();
+    private readonly System.Reactive.Subjects.Subject<TaskExecution> _taskStateChangedSubject = new();
 
     private int _selectedTabIndex;
     private bool _isTaskDetailsPanelExpanded = true;
@@ -414,9 +410,12 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     /// </summary>
     /// <remarks>
     /// Removes a completed, failed, or cancelled task from the task history.
-    /// Enabled when a task in a terminal state is selected.
+    /// Always enabled; validation (terminal-state requirement) is enforced at runtime
+    /// and surfaced via <see cref="StatusMessage"/> when a non-terminal task is passed.
+    /// Accepts an explicit <see cref="TaskExecution"/> parameter (from row-level buttons)
+    /// or falls back to <see cref="SelectedTask"/> when called without a parameter.
     /// </remarks>
-    public ReactiveCommand<Unit, Unit> DeleteTaskCommand { get; private set; } = null!;
+    public ReactiveCommand<TaskExecution?, Unit> DeleteTaskCommand { get; private set; } = null!;
 
     /// <summary>
     /// Gets the command to refresh all task collections from the scheduler.
@@ -478,9 +477,6 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         IObservable<bool> canResume = this.WhenAnyValue(x => x.SelectedTask)
             .Select(task => task.TaskId != Guid.Empty && task.State == TaskState.Paused);
 
-        IObservable<bool> canDelete = this.WhenAnyValue(x => x.SelectedTask)
-            .Select(task => task.TaskId != Guid.Empty && task.IsTerminal);
-
         IObservable<bool> hasFinishedTasks = this.WhenAnyValue(x => x.FinishedTasks.Count)
             .Select(count => count > 0);
 
@@ -494,7 +490,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         RestartTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteRestartTaskAsync);
         PauseTaskCommand = ReactiveCommand.CreateFromTask(ExecutePauseTaskAsync, canPause);
         ResumeTaskCommand = ReactiveCommand.CreateFromTask(ExecuteResumeTaskAsync, canResume);
-        DeleteTaskCommand = ReactiveCommand.CreateFromTask(ExecuteDeleteTaskAsync, canDelete);
+        DeleteTaskCommand = ReactiveCommand.CreateFromTask<TaskExecution?>(ExecuteDeleteTaskAsync);
         RefreshTasksCommand = ReactiveCommand.CreateFromTask(ExecuteRefreshTasksAsync);
         ClearFinishedTasksCommand = ReactiveCommand.CreateFromTask(ExecuteClearFinishedTasksAsync, hasFinishedTasks);
         CreateTaskCommand = ReactiveCommand.CreateFromTask(ExecuteCreateTaskAsync);
@@ -547,14 +543,14 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
 
         try
         {
-            var taskLogDataStore = _serviceProvider.GetRequiredService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
+            ILogDataStore taskLogDataStore = _serviceProvider.GetRequiredService<S7Tools.Infrastructure.Logging.Core.Storage.ILogDataStore>();
 
-            var logViewer = ActivatorUtilities.CreateInstance<LogViewerViewModel>(_serviceProvider, taskLogDataStore);
+            LogViewerViewModel logViewer = ActivatorUtilities.CreateInstance<LogViewerViewModel>(_serviceProvider, taskLogDataStore);
             logViewer.SelectedTaskId = targetTask.TaskId;
             logViewer.SelectedScope = "Main";
             logViewer.DockId = $"TaskLog_{targetTask.TaskId}";
             logViewer.DockTitle = $"Logs: {targetTask.JobName}";
-            
+
             if (OpenToolAction != null)
             {
                 OpenToolAction.Invoke(logViewer);
@@ -609,7 +605,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
     {
         // Push to subject for throttling instead of direct update
         _taskStateChangedSubject.OnNext(taskExecution);
-        
+
         // Auto-open task log when task starts running
         if (taskExecution.State == TaskState.Running && (OpenToolAction != null || OpenDocumentAction != null))
         {
@@ -634,9 +630,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         // Atomically drain the dictionary to prevent lost updates.
         // We iterate through the keys and try to remove each item.
         // If an item is removed successfully, we process it.
-        foreach (var key in _pendingProgressUpdates.Keys)
+        foreach (Guid key in _pendingProgressUpdates.Keys)
         {
-            if (_pendingProgressUpdates.TryRemove(key, out var update))
+            if (_pendingProgressUpdates.TryRemove(key, out (double Percentage, string Operation, Dictionary<string, object>? ExtraData) update))
             {
                 (double percentage, string operation, Dictionary<string, object>? extraData) = update;
 
@@ -782,11 +778,11 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        if (targetTask.State != TaskState.Created)
+        if (targetTask.State is not (TaskState.Created or TaskState.Scheduled))
         {
             await _uiThreadService.InvokeOnUIThreadAsync(() =>
             {
-                StatusMessage = $"Cannot start task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be Created)";
+                StatusMessage = $"Cannot start task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be Created or Scheduled)";
             });
             _logger.LogWarning("Cannot start task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
             return;
@@ -797,7 +793,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             StatusMessage = UIStrings.Status_StartingTask;
 
-            var result = await _taskCommandManager.StartTaskAsync(targetTask);
+            CommandResult result = await _taskCommandManager.StartTaskAsync(targetTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -833,7 +829,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             IsLoading = true;
             // No status message here as it might show dialog
 
-            var result = await _taskCommandManager.StopTaskAsync(targetTask);
+            CommandResult result = await _taskCommandManager.StopTaskAsync(targetTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -856,7 +852,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.ScheduleTaskAsync(SelectedTask);
+            CommandResult result = await _taskCommandManager.ScheduleTaskAsync(SelectedTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -890,7 +886,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.RestartTaskAsync(targetTask);
+            CommandResult result = await _taskCommandManager.RestartTaskAsync(targetTask);
             UpdateCommandResult(result);
             if (result.IsSuccess && result.Data is TaskExecution newRestartedTask)
             {
@@ -921,7 +917,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.PauseTaskAsync(SelectedTask);
+            CommandResult result = await _taskCommandManager.PauseTaskAsync(SelectedTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -944,7 +940,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.ResumeTaskAsync(SelectedTask);
+            CommandResult result = await _taskCommandManager.ResumeTaskAsync(SelectedTask);
             UpdateCommandResult(result);
         }
         catch (Exception ex)
@@ -957,24 +953,35 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         }
     }
 
-    private async Task ExecuteDeleteTaskAsync()
+    private async Task ExecuteDeleteTaskAsync(TaskExecution? task)
     {
-        if (SelectedTask == null)
+        TaskExecution? targetTask = task ?? SelectedTask;
+        if (targetTask == null || targetTask.TaskId == Guid.Empty)
         {
+            return;
+        }
+
+        if (!targetTask.IsTerminal)
+        {
+            await _uiThreadService.InvokeOnUIThreadAsync(() =>
+            {
+                StatusMessage = $"Cannot delete task '{targetTask.JobName}' - task is in '{targetTask.State}' state (must be in a terminal state)";
+            });
+            _logger.LogWarning("Cannot delete task {TaskId} - current state is {State}", targetTask.TaskId, targetTask.State);
             return;
         }
 
         try
         {
             IsLoading = true;
-            // StatusMessage = UIStrings.Status_DeletingTask; // Handled by Result update or inside if we passed context
 
-            var result = await _taskCommandManager.DeleteTaskAsync(SelectedTask);
+            CommandResult result = await _taskCommandManager.DeleteTaskAsync(targetTask);
             UpdateCommandResult(result);
 
             if (result.IsSuccess)
             {
                 SelectedTask = TaskExecution.Empty;
+                await LoadTasksAsync().ConfigureAwait(false);
             }
         }
         catch (Exception ex)
@@ -1014,7 +1021,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.ClearFinishedTasksAsync();
+            CommandResult result = await _taskCommandManager.ClearFinishedTasksAsync();
             UpdateCommandResult(result);
 
             if (result.IsSuccess)
@@ -1041,7 +1048,7 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
         try
         {
             IsLoading = true;
-            var result = await _taskCommandManager.CreateTaskAsync();
+            CommandResult result = await _taskCommandManager.CreateTaskAsync();
             UpdateCommandResult(result);
 
             // We might want to select the new task if possible, but Manager doesn't return it yet.
@@ -1108,6 +1115,9 @@ public class TaskManagerViewModel : ViewModelBase, IDisposable
             ScheduledTasks.CollectionChanged -= OnTaskCollectionChanged;
             ActiveTasks.CollectionChanged -= OnTaskCollectionChanged;
             FinishedTasks.CollectionChanged -= OnTaskCollectionChanged;
+
+            _taskStateChangedSubject.OnCompleted();
+            _taskStateChangedSubject.Dispose();
 
             _disposables?.Dispose();
         }

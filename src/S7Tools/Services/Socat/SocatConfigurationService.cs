@@ -1,8 +1,3 @@
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 
@@ -130,7 +125,7 @@ public class SocatConfigurationService
             // Check accessibility (read/write permissions)
             try
             {
-                using var stream = File.Open(serialDevice, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                using FileStream stream = File.Open(serialDevice, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                 result.IsAccessible = true;
                 _logger.LogDebug("Serial device {Device} is accessible", serialDevice);
             }

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -29,6 +27,26 @@ public class SerialPortConfiguration
     [Display(Name = "Character Size (bits)", Order = 2)]
     [Range(5, 8, ErrorMessage = "Character size must be between 5 and 8 bits")]
     public int CharacterSize { get; set; } = 8;
+
+    /// <summary>
+    /// Gets or sets the data bits (alias for CharacterSize).
+    /// </summary>
+    /// <value>The number of bits per character (5-8).</value>
+    [Browsable(false)]
+    [JsonIgnore]
+    public int DataBits
+    {
+        get => CharacterSize;
+        set => CharacterSize = value;
+    }
+
+    /// <summary>
+    /// Gets or sets the serial port device name.
+    /// </summary>
+    /// <value>The serial port name, e.g., /dev/ttyS0.</value>
+    [Display(Name = "Port Name", Order = 0)]
+    [Required(ErrorMessage = "Port name is required")]
+    public string PortName { get; set; } = "/dev/ttyS0";
 
     /// <summary>
     /// Gets or sets the parity checking mode.
@@ -259,6 +277,7 @@ public class SerialPortConfiguration
         return new SerialPortConfiguration
         {
             // Basic settings
+            PortName = "/dev/ttyS0",
             BaudRate = 38400,
             CharacterSize = 8, // cs8
             Parity = ParityMode.Even, // parenb -parodd (even parity)
@@ -329,6 +348,7 @@ public class SerialPortConfiguration
             // Basic settings
             BaudRate = BaudRate,
             CharacterSize = CharacterSize,
+            PortName = PortName,
             Parity = Parity,
             StopBits = StopBits,
 

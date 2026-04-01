@@ -1,5 +1,3 @@
-using Avalonia.Controls;
-using Avalonia.Interactivity;
 using S7Tools.ViewModels.Dialogs;
 
 namespace S7Tools.Views.Dialogs;

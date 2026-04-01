@@ -21,7 +21,7 @@ public class DockingService
     /// </summary>
     public PanelState GetPanelState(string panelId)
     {
-        return _panelStates.TryGetValue(panelId, out var state) ? state : new PanelState();
+        return _panelStates.TryGetValue(panelId, out PanelState? state) ? state : new PanelState();
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public class DockingService
     /// </summary>
     public void SetPanelVisible(string panelId, bool isVisible)
     {
-        if (_panelStates.TryGetValue(panelId, out var state))
+        if (_panelStates.TryGetValue(panelId, out PanelState? state))
         {
             state.IsVisible = isVisible;
         }
@@ -40,7 +40,7 @@ public class DockingService
     /// </summary>
     public void SetPanelSize(string panelId, double size)
     {
-        if (_panelStates.TryGetValue(panelId, out var state))
+        if (_panelStates.TryGetValue(panelId, out PanelState? state))
         {
             state.Size = size;
         }

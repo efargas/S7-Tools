@@ -1,10 +1,6 @@
-using System;
 using System.Collections.ObjectModel;
 using System.Reactive;
-using System.Reactive.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using AvaloniaHex.Document;
 using ReactiveUI;
 using S7Tools.Services.Hex;
@@ -155,9 +151,9 @@ namespace S7Tools.ViewModels.Hex
                     return;
                 }
 
-                var results = await _searchService.FindAllAsync(_document, pattern, ct);
+                IEnumerable<long> results = await _searchService.FindAllAsync(_document, pattern, ct);
 
-                foreach (var res in results)
+                foreach (long res in results)
                 {
                     SearchResults.Add(res);
                 }
@@ -234,7 +230,7 @@ namespace S7Tools.ViewModels.Hex
                     case SearchMode.Hex:
                         // "AB CD" -> [0xAB, 0xCD]
                         // Remove spaces
-                        var hex = text.Replace(" ", "").Replace("-", "");
+                        string hex = text.Replace(" ", "").Replace("-", "");
                         if (hex.Length % 2 != 0)
                         {
                             return null; // Invalid
@@ -245,7 +241,7 @@ namespace S7Tools.ViewModels.Hex
                         // "01000001" -> byte
                         // Must be groups of 8? Or just sequence of bits?
                         // Implementing strict byte alignment for now.
-                        var bin = text.Replace(" ", "");
+                        string bin = text.Replace(" ", "");
                         if (bin.Length % 8 != 0)
                         {
                             return null;
@@ -254,7 +250,7 @@ namespace S7Tools.ViewModels.Hex
                         var bytes = new List<byte>();
                         for (int i = 0; i < bin.Length; i += 8)
                         {
-                            var chunk = bin.Substring(i, 8);
+                            string chunk = bin.Substring(i, 8);
                             bytes.Add(Convert.ToByte(chunk, 2));
                         }
                         return bytes.ToArray();

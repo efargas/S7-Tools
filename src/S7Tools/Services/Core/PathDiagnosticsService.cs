@@ -1,5 +1,4 @@
 using System.Text;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
 
@@ -178,14 +177,14 @@ namespace S7Tools.Services
         /// <param name="report">Diagnostic report to update</param>
         private Task ValidatePathResolutionAsync(PathDiagnosticReport report)
         {
-            string[] testPaths = new[]
-            {
+            string[] testPaths =
+            [
                 "test",
                 "test/subfolder",
                 "test/subfolder/file.txt",
                 Path.Combine("Resources", "test.json"),
                 Path.Combine("Resources", "AppSettings", "test.json")
-            };
+            ];
 
             foreach (string? testPath in testPaths)
             {

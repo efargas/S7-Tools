@@ -1,7 +1,5 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using S7Tools.ViewModels.Pages;
@@ -27,7 +25,9 @@ public partial class LogViewerView : UserControl
         if (DataContext is LogViewerViewModel vm)
         {
             if (vm.FilteredLogEntries is INotifyCollectionChanged c)
+            {
                 c.CollectionChanged += OnCollectionChanged;
+            }
 
             vm.PropertyChanged += OnViewModelPropertyChanged;
 
@@ -44,7 +44,9 @@ public partial class LogViewerView : UserControl
         if (DataContext is LogViewerViewModel vm)
         {
             if (vm.FilteredLogEntries is INotifyCollectionChanged c)
+            {
                 c.CollectionChanged -= OnCollectionChanged;
+            }
 
             vm.PropertyChanged -= OnViewModelPropertyChanged;
         }
@@ -57,7 +59,10 @@ public partial class LogViewerView : UserControl
             _scrollViewer = sv;
         }
 
-        if (_scrollViewer == null) return;
+        if (_scrollViewer == null)
+        {
+            return;
+        }
 
         double scrollable = _scrollViewer.Extent.Height - _scrollViewer.Viewport.Height;
         bool atBottom = scrollable <= 0 || _scrollViewer.Offset.Y >= scrollable - 5; // Added small tolerance
@@ -65,13 +70,17 @@ public partial class LogViewerView : UserControl
         _autoScroll = atBottom;
 
         if (DataContext is LogViewerViewModel vm && vm.AutoScroll != atBottom)
+        {
             vm.AutoScroll = atBottom;
+        }
     }
 
     private void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (!_autoScroll)
+        {
             return;
+        }
 
         Dispatcher.UIThread.Post(ScrollToBottom, DispatcherPriority.Render);
     }
@@ -79,7 +88,9 @@ public partial class LogViewerView : UserControl
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(LogViewerViewModel.AutoScroll))
+        {
             return;
+        }
 
         if (DataContext is LogViewerViewModel vm && vm.AutoScroll)
         {

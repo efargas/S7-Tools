@@ -10,7 +10,7 @@ namespace S7Tools.Core.Interfaces.Services;
 /// </summary>
 public interface IBootloaderService
 {
-/// <summary>
+    /// <summary>
     /// Performs a complete memory dump operation on the PLC.
     /// Orchestrates socat bridge setup, power cycling, handshake, stager installation, and memory dumping.
     /// </summary>

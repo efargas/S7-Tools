@@ -8,6 +8,7 @@
              xmlns:models="clr-namespace:S7Tools.Core.Models;assembly=S7Tools.Core"
              xmlns:converters="clr-namespace:S7Tools.Converters"
              xmlns:views="clr-namespace:S7Tools.Views"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="S7Tools.Views.Profiles.SerialProfileDetailedView"
              x:DataType="models:SerialPortProfile">
@@ -18,22 +19,41 @@
     <StyleInclude Source="/Styles/PropertyStyles.axaml" />
   </UserControl.Styles>
 
-  <!-- Show all properties including those marked with [Browsable(false)] -->
-  <ItemsControl ItemsSource="{Binding Configuration, Converter={StaticResource ObjectToAllPropertiesConverter}}">
-    <ItemsControl.ItemsPanel>
-      <ItemsPanelTemplate>
-        <WrapPanel Orientation="Horizontal" />
-      </ItemsPanelTemplate>
-    </ItemsControl.ItemsPanel>
-    <ItemsControl.ItemTemplate>
-      <DataTemplate DataType="vmControls:PropertyDisplayItem">
-        <Border Classes="PropertyItem">
-          <StackPanel>
-            <TextBlock Classes="PropertyLabel" Text="{Binding Label}" />
-            <TextBlock Classes="PropertyValue" Text="{Binding Value}" />
-          </StackPanel>
-        </Border>
-      </DataTemplate>
-    </ItemsControl.ItemTemplate>
-  </ItemsControl>
+  <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+    <Expander IsExpanded="True">
+      <Expander.Header>
+        <Grid Background="Transparent" Height="38" Margin="4,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+          <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-cog" />
+          <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="CONFIGURED SETTINGS" />
+        </Grid>
+      </Expander.Header>
+
+      <StackPanel Margin="24,16,24,24">
+        <!-- Show all properties including those marked with [Browsable(false)] -->
+        <ItemsControl ItemsSource="{Binding Configuration, Converter={StaticResource ObjectToAllPropertiesConverter}}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate DataType="vmControls:PropertyDisplayItem">
+              <Border Classes="PropertyItem">
+                <StackPanel>
+                  <TextBlock Classes="PropertyLabel" Text="{Binding Label}" />
+                  <TextBlock Classes="PropertyValue" Text="{Binding Value}" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Expander>
+  </Border>
 </UserControl>

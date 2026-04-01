@@ -1,10 +1,4 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using Microsoft.Extensions.Logging;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services;
@@ -272,13 +266,13 @@ public class AvaloniaFileDialogService : IFileDialogService
         catch (Exception)
         {
             // Return default "All files" filter if parsing fails
-            return new[]
-            {
+            return
+            [
                 new FilePickerFileType("All files")
                 {
                     Patterns = new[] { "*.*" }
                 }
-            };
+            ];
         }
     }
 }

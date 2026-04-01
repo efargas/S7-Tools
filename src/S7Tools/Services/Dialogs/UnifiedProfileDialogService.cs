@@ -1,17 +1,11 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Avalonia.Controls;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Models;
-using S7Tools.ViewModels.Dialogs.Models;
+using S7Tools.Core.Models;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.ViewModels.Profiles;
-using S7Tools.ViewModels;
 using CoreProfileEditRequest = S7Tools.Core.Interfaces.Services.ProfileEditRequest;
 
 namespace S7Tools.Services;
@@ -122,7 +116,7 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             _logger.LogDebug("Showing create dialog for serial port profile with default name: {DefaultName}", request.DefaultName);
-            
+
             var profileViewModel = new SerialPortProfileViewModel(
                 _serialPortProfileService,
                 _serialPortService,
@@ -158,14 +152,17 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             SerialPortProfile? profile = await _serialPortProfileService.GetByIdAsync(request.ProfileId);
-            if (profile == null) return ProfileDialogResult<SerialPortProfile>.Failure("Profile not found");
+            if (profile == null)
+            {
+                return ProfileDialogResult<SerialPortProfile>.Failure("Profile not found");
+            }
 
             var profileViewModel = new SerialPortProfileViewModel(
                 _serialPortProfileService,
                 _serialPortService,
                 _clipboardService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<SerialPortProfileViewModel>.Instance);
-            
+
             profileViewModel.LoadProfile(profile);
 
             ProfileEditResult result = await ShowEditDialogAsync("Edit Serial Port Profile", profileViewModel, ProfileType.Serial).ConfigureAwait(false);
@@ -193,7 +190,10 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             SerialPortProfile? sourceProfile = await _serialPortProfileService.GetByIdAsync(request.SourceProfileId);
-            if (sourceProfile == null) return ProfileDialogResult<string>.Failure("Source profile not found");
+            if (sourceProfile == null)
+            {
+                return ProfileDialogResult<string>.Failure("Source profile not found");
+            }
 
             InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Serial Port Profile",
@@ -202,11 +202,15 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
                 "Profile name");
 
             if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
                 return ProfileDialogResult<string>.Cancelled();
+            }
 
             string newName = inputResult.Value.Trim();
             if (!await _serialPortProfileService.IsNameUniqueAsync(newName))
+            {
                 return ProfileDialogResult<string>.Failure("Profile name already exists");
+            }
 
             return ProfileDialogResult<string>.Success(newName);
         }
@@ -263,14 +267,17 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             SocatProfile? profile = await _socatProfileService.GetByIdAsync(request.ProfileId);
-            if (profile == null) return ProfileDialogResult<SocatProfile>.Failure("Profile not found");
+            if (profile == null)
+            {
+                return ProfileDialogResult<SocatProfile>.Failure("Profile not found");
+            }
 
             var profileViewModel = new SocatProfileViewModel(
                 _socatProfileService,
                 _socatService,
                 _clipboardService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<SocatProfileViewModel>.Instance);
-            
+
             profileViewModel.LoadProfile(profile);
 
             ProfileEditResult result = await ShowEditDialogAsync("Edit Socat Profile", profileViewModel, ProfileType.Socat).ConfigureAwait(false);
@@ -298,7 +305,10 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             SocatProfile? sourceProfile = await _socatProfileService.GetByIdAsync(request.SourceProfileId);
-            if (sourceProfile == null) return ProfileDialogResult<string>.Failure("Source profile not found");
+            if (sourceProfile == null)
+            {
+                return ProfileDialogResult<string>.Failure("Source profile not found");
+            }
 
             InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Socat Profile",
@@ -307,11 +317,15 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
                 "Profile name");
 
             if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
                 return ProfileDialogResult<string>.Cancelled();
+            }
 
             string newName = inputResult.Value.Trim();
             if (!await _socatProfileService.IsNameUniqueAsync(newName))
+            {
                 return ProfileDialogResult<string>.Failure("Profile name already exists");
+            }
 
             return ProfileDialogResult<string>.Success(newName);
         }
@@ -366,12 +380,15 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             PowerSupplyProfile? profile = await _powerSupplyProfileService.GetByIdAsync(request.ProfileId);
-            if (profile == null) return ProfileDialogResult<PowerSupplyProfile>.Failure("Profile not found");
+            if (profile == null)
+            {
+                return ProfileDialogResult<PowerSupplyProfile>.Failure("Profile not found");
+            }
 
             var profileViewModel = new PowerSupplyProfileViewModel(
                 _powerSupplyProfileService,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<PowerSupplyProfileViewModel>.Instance);
-            
+
             profileViewModel.LoadProfile(profile);
 
             ProfileEditResult result = await ShowEditDialogAsync("Edit Power Supply Profile", profileViewModel, ProfileType.PowerSupply).ConfigureAwait(false);
@@ -399,7 +416,10 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
         try
         {
             PowerSupplyProfile? sourceProfile = await _powerSupplyProfileService.GetByIdAsync(request.SourceProfileId);
-            if (sourceProfile == null) return ProfileDialogResult<string>.Failure("Source profile not found");
+            if (sourceProfile == null)
+            {
+                return ProfileDialogResult<string>.Failure("Source profile not found");
+            }
 
             InputResult inputResult = await _dialogService.ShowInputAsync(
                 "Duplicate Power Supply Profile",
@@ -408,11 +428,15 @@ public class UnifiedProfileDialogService : IUnifiedProfileDialogService
                 "Profile name");
 
             if (inputResult.IsCancelled || string.IsNullOrWhiteSpace(inputResult.Value))
+            {
                 return ProfileDialogResult<string>.Cancelled();
+            }
 
             string newName = inputResult.Value.Trim();
             if (!await _powerSupplyProfileService.IsNameUniqueAsync(newName))
+            {
                 return ProfileDialogResult<string>.Failure("Profile name already exists");
+            }
 
             return ProfileDialogResult<string>.Success(newName);
         }

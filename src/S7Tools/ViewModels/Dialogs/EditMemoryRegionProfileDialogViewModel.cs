@@ -1,15 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Threading.Tasks;
 using Avalonia.Threading;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Models;
 using S7Tools.ViewModels.Base;
@@ -772,7 +767,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 {
                     // Copy Strategy:
                     // 1. Capture current selection (object reference)
-                    var selectedItem = SelectedSegment;
+                    EditableMemorySegment selectedItem = SelectedSegment;
 
                     // 2. Create COPY of collection
                     var newSegments = new ObservableCollection<EditableMemorySegment>(Segments);
@@ -820,7 +815,7 @@ public class EditMemoryRegionProfileDialogViewModel : ViewModelBase, IDisposable
                 {
                     // Copy Strategy:
                     // 1. Capture current selection (object reference)
-                    var selectedItem = SelectedSegment;
+                    EditableMemorySegment selectedItem = SelectedSegment;
 
                     // 2. Create COPY of collection
                     var newSegments = new ObservableCollection<EditableMemorySegment>(Segments);

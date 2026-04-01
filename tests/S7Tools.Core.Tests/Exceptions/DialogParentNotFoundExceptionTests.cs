@@ -59,7 +59,7 @@ public class DialogParentNotFoundExceptionTests
         var exception = new DialogParentNotFoundException();
 
         // Assert
-        exception.Should().BeOfType<DialogParentNotFoundException>().Subject;
+        exception.Should().BeOfType<DialogParentNotFoundException>();
         Assert.IsAssignableFrom<S7ToolsException>(exception);
         Assert.IsAssignableFrom<Exception>(exception);
     }
@@ -105,7 +105,7 @@ public class DialogParentNotFoundExceptionTests
 
         // Assert
         caughtException.Should().NotBeNull();
-        caughtException.Should().BeOfType<DialogParentNotFoundException>().Subject;
+        caughtException.Should().BeOfType<DialogParentNotFoundException>();
         caughtException.Message.Should().Be(expectedMessage);
     }
 }

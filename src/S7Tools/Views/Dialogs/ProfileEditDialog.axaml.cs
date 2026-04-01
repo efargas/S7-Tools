@@ -1,14 +1,8 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Reactive;
-using System.Reactive.Linq;
-using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using S7Tools.Models;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Dialogs.Models;
-using S7Tools.ViewModels;
 using S7Tools.ViewModels.Profiles;
 using S7Tools.Views.Profiles;
 

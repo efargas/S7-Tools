@@ -1,12 +1,8 @@
-using System;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using NModbus;
 using S7Tools.Core.Exceptions;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
 using S7Tools.Extensions;
 
 namespace S7Tools.Services;

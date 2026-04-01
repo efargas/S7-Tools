@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
@@ -129,5 +130,85 @@ public class JobSchedulerTests
 
         // Assert - scheduler should start and stop without throwing
         // (Actual queue processing tested in integration tests)
+    }
+
+    /// <summary>
+    /// T044: ExecuteJobAsync - when DumpAsync throws PartialDumpException the job transitions
+    /// Running → Failed, ErrorMessage includes the partial-file count, and JobStateChanged is raised
+    /// with the correct states and a non-null ErrorMessage.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteJobAsync_WhenDumpThrowsPartialDumpException_TransitionsToFailedWithPartialFileInfo()
+    {
+        // Arrange
+        var mockResources = new Mock<IResourceCoordinator>();
+        mockResources.Setup(r => r.TryAcquire(It.IsAny<ResourceKey[]>())).Returns(true);
+
+        var partialFiles = new List<string> { "/tmp/dumps/MemoryDump_partial.partial.bin" };
+        var partialResult = new BootloaderResult(partialFiles);
+        var innerEx = new InvalidOperationException("Connection lost during dump");
+        var partialEx = new PartialDumpException(
+            "Dump interrupted at iteration 1/1: Connection lost during dump",
+            innerEx,
+            partialResult);
+
+        var mockBootloader = new Mock<IBootloaderService>();
+        mockBootloader
+            .Setup(b => b.DumpAsync(
+                It.IsAny<JobProfileSet>(),
+                It.IsAny<IProgress<(string, double, long?, long?)>>(),
+                It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
+                It.IsAny<Microsoft.Extensions.Logging.ILogger?>(),
+                It.IsAny<CancellationToken>()))
+            .ThrowsAsync(partialEx);
+
+        var mockTime = new Mock<ITimeProvider>();
+        mockTime.Setup(t => t.GetLocalNow()).Returns(() => DateTime.Now);
+
+        var scheduler = new JobScheduler(
+            NullLogger<JobScheduler>.Instance,
+            mockResources.Object,
+            mockBootloader.Object,
+            mockTime.Object
+        );
+
+        Job testJob = new()
+        {
+            Id = 42,
+            Name = "Partial Dump Test Job",
+            Description = "Tests PartialDumpException handling",
+            ProfileSet = CreateTestProfileSet(),
+            State = JobState.Created,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var failedTcs = new TaskCompletionSource<JobStateChangedEventArgs>(TaskCreationOptions.RunContinuationsAsynchronously);
+        scheduler.JobStateChanged += (_, args) =>
+        {
+            if (args.NewState == JobState.Failed)
+            {
+                failedTcs.TrySetResult(args);
+            }
+        };
+
+        // Act: enqueue and start the scheduler, then wait for the Failed transition
+        await scheduler.EnqueueAsync(testJob);
+        await scheduler.StartAsync(CancellationToken.None);
+
+        using var waitCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        JobStateChangedEventArgs failedArgs = await failedTcs.Task.WaitAsync(waitCts.Token);
+
+        await scheduler.StopAsync(TimeSpan.FromSeconds(2), CancellationToken.None);
+
+        // Assert: Running → Failed transition was raised
+        failedArgs.Should().NotBeNull("job must transition to Failed when PartialDumpException is thrown");
+        failedArgs.PreviousState.Should().Be(JobState.Running,
+            "job must transition Running→Failed when PartialDumpException is thrown");
+        failedArgs.JobId.Should().Be(42);
+        failedArgs.ErrorMessage.Should().NotBeNull();
+        failedArgs.ErrorMessage.Should().Contain("dump file",
+            "error message should mention the preserved dump file(s)");
+        failedArgs.ErrorMessage.Should().Contain("1",
+            "error message should include the count of partial files");
     }
 }

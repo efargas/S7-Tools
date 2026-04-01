@@ -1,12 +1,10 @@
 using System.ComponentModel;
-using System.Linq;
 using Dock.Avalonia.Controls;
 using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 using Dock.Model.Mvvm.Controls;
 using S7Tools.Core.Interfaces.ViewModels;
-using S7Tools.ViewModels.Layout;
 
 namespace S7Tools.Factories;
 
@@ -25,8 +23,8 @@ public class MainDockFactory : Factory
     /// <summary>Content ViewModel for the Settings document.</summary>
     public object? SettingsContent { get; set; }
 
-    /// <summary>Content ViewModel for the initial/welcome document.</summary>
-    public object? WelcomeContent { get; set; }
+    /// <summary>Content ViewModel for the home/initial document.</summary>
+    public object? HomeContent { get; set; }
 
     private IDocumentDock? _mainDocumentDock;
     private IToolDock? _bottomToolDock;
@@ -87,11 +85,15 @@ public class MainDockFactory : Factory
         }
 
         // Check for existing open document by DockId
-        if (_openDocuments.TryGetValue(vm.DockId, out var existingDoc))
+        if (_openDocuments.TryGetValue(vm.DockId, out IDocument? existingDoc))
         {
-            if (_mainDocumentDock!.VisibleDockables?.Contains(existingDoc) == true)
+            // The document may have been moved to a different dock panel (e.g. side-by-side layout).
+            // Use Owner to find its current containing dock and activate it there instead of
+            // opening a duplicate tab in the main dock.
+            if (existingDoc.Owner is IDock ownerDock &&
+                ownerDock.VisibleDockables?.Contains(existingDoc) == true)
             {
-                _mainDocumentDock.ActiveDockable = existingDoc;
+                ownerDock.ActiveDockable = existingDoc;
                 if (vm is IDisposable disposableVm && !ReferenceEquals(existingDoc.Context, vm))
                 {
                     disposableVm.Dispose();
@@ -142,7 +144,7 @@ public class MainDockFactory : Factory
             return;
         }
 
-        if (_openTools.TryGetValue(vm.DockId, out var existingTool))
+        if (_openTools.TryGetValue(vm.DockId, out ITool? existingTool))
         {
             if (_bottomToolDock!.VisibleDockables?.Contains(existingTool) == true)
             {
@@ -175,7 +177,7 @@ public class MainDockFactory : Factory
     /// </summary>
     public void CloseDocument(string dockId)
     {
-        if (_openDocuments.TryGetValue(dockId, out var doc))
+        if (_openDocuments.TryGetValue(dockId, out IDocument? doc))
         {
             this.CloseDockable(doc);
         }
@@ -186,7 +188,7 @@ public class MainDockFactory : Factory
     /// </summary>
     public void CloseTool(string dockId)
     {
-        if (_openTools.TryGetValue(dockId, out var tool))
+        if (_openTools.TryGetValue(dockId, out ITool? tool))
         {
             this.CloseDockable(tool);
         }
@@ -202,7 +204,7 @@ public class MainDockFactory : Factory
             return;
         }
 
-        var existingSettings = _mainDocumentDock!.VisibleDockables?
+        Document? existingSettings = _mainDocumentDock!.VisibleDockables?
             .OfType<Document>()
             .FirstOrDefault(d => d.Id == "Settings");
 
@@ -227,6 +229,41 @@ public class MainDockFactory : Factory
         SetFocusedDockable(_mainDocumentDock!, settingsDocument);
     }
 
+    /// <summary>
+    /// Opens the Home view as a document tab (or activates it if already open).
+    /// </summary>
+    public void RestoreHome()
+    {
+        if (!EnsureDocumentDock() || HomeContent == null)
+        {
+            return;
+        }
+
+        Document? existingHome = _mainDocumentDock!.VisibleDockables?
+            .OfType<Document>()
+            .FirstOrDefault(d => d.Id == "Home");
+
+        if (existingHome != null)
+        {
+            SetActiveDockable(existingHome);
+            SetFocusedDockable(_mainDocumentDock!, existingHome);
+            return;
+        }
+
+        var homeDocument = new Document
+        {
+            Id = "Home",
+            Title = "Home",
+            Context = HomeContent,
+            CanClose = true,
+            CanFloat = true
+        };
+
+        AddDockable(_mainDocumentDock!, homeDocument);
+        SetActiveDockable(homeDocument);
+        SetFocusedDockable(_mainDocumentDock!, homeDocument);
+    }
+
     /// <inheritdoc/>
     public override void OnDockableRemoved(IDockable? dockable)
     {
@@ -239,7 +276,7 @@ public class MainDockFactory : Factory
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            foreach (var key in toRemove)
+            foreach (string? key in toRemove)
             {
                 _openDocuments.Remove(key);
             }
@@ -251,10 +288,26 @@ public class MainDockFactory : Factory
                 .Select(kvp => kvp.Key)
                 .ToList();
 
-            foreach (var key in toRemove)
+            foreach (string? key in toRemove)
             {
                 _openTools.Remove(key);
             }
+        }
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Re-registers documents that are moved between dock panels so that
+    /// the sidebar navigation can still find and activate them without
+    /// creating duplicate tabs.
+    /// </remarks>
+    public override void OnDockableAdded(IDockable? dockable)
+    {
+        base.OnDockableAdded(dockable);
+
+        if (dockable is IDocument doc && doc.Id != null && !_openDocuments.ContainsKey(doc.Id))
+        {
+            _openDocuments[doc.Id] = doc;
         }
     }
 
@@ -288,9 +341,9 @@ public class MainDockFactory : Factory
 
         var welcomeDocument = new Document
         {
-            Id = "Welcome",
-            Title = "Welcome",
-            Context = WelcomeContent,
+            Id = "Home",
+            Title = "Home",
+            Context = HomeContent,
             CanClose = true,
             CanFloat = true
         };

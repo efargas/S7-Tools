@@ -1,5 +1,3 @@
-using Avalonia.Controls;
-using S7Tools.ViewModels;
 using S7Tools.ViewModels.Profiles;
 
 namespace S7Tools.Views.Profiles;

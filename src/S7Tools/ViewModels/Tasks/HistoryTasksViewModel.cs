@@ -1,15 +1,10 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
-using S7Tools.Core.Models.Jobs;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Jobs;
 using S7Tools.Helpers;
-using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Tasks;
@@ -93,7 +88,7 @@ public sealed class HistoryTasksViewModel : ViewModelBase, IDisposable
         try
         {
             string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "Tasks", SelectedHistoryTask.TaskId.ToString());
-            
+
             if (Directory.Exists(logDirectory))
             {
                 await PlatformHelper.OpenDirectoryInExplorerAsync(logDirectory);
@@ -102,7 +97,7 @@ public sealed class HistoryTasksViewModel : ViewModelBase, IDisposable
             else
             {
                 _logger.LogWarning("Logs folder does not exist: {LogDirectory}", logDirectory);
-                
+
                 // Fallback to parent logs folder
                 string mainLogs = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "Tasks");
                 if (Directory.Exists(mainLogs))

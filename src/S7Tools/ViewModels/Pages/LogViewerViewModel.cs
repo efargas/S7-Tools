@@ -1,23 +1,18 @@
-using S7Tools.ViewModels.Base;
-using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Threading;
 using DynamicData;
 using DynamicData.Binding;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
+using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
-using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
-using S7Tools.Models;
-using S7Tools.ViewModels.Dialogs.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
-using S7Tools.Core.Interfaces.ViewModels;
+using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Dialogs.Models;
 
 namespace S7Tools.ViewModels.Pages;
 
@@ -144,7 +139,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
         InitializeCommands();
 
-        var filterPredicate = this.WhenAnyValue(
+        IObservable<Func<LogModel, bool>> filterPredicate = this.WhenAnyValue(
             x => x.SelectedLogLevel,
             x => x.SearchText,
             x => x.StartDate,
@@ -153,7 +148,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             x => x.SelectedScope)
             .Select(_ => BuildFilter());
 
-        var sortComparer = this.WhenAnyValue(
+        IObservable<IComparer<LogModel>> sortComparer = this.WhenAnyValue(
             x => x.SortColumn,
             x => x.SortAscending)
             .Select(_ => BuildSort());
@@ -163,7 +158,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             .Sort(sortComparer)
             .ObserveOn(RxApp.MainThreadScheduler)
             .Bind(out _filteredLogEntries)
-            .Subscribe(_ => 
+            .Subscribe(_ =>
             {
                 FilteredLogCount = _filteredLogEntries.Count;
                 TotalLogCount = _logDataStore.Count;
@@ -468,7 +463,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (parameter is System.Collections.IList items && items.Count > 0)
             {
-                foreach (var item in items)
+                foreach (object? item in items)
                 {
                     if (item is LogModel entry)
                     {
@@ -482,7 +477,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             }
             else
             {
-                var fallbackEntry = SelectedLogEntry;
+                LogModel? fallbackEntry = SelectedLogEntry;
                 if (fallbackEntry != null)
                 {
                     sb.AppendLine($"[{fallbackEntry.Timestamp.ToString(DateTimeFormats.LongDateTime)}.{fallbackEntry.Timestamp.Millisecond:000}] [{fallbackEntry.Level}] {fallbackEntry.Category}: {fallbackEntry.FormattedMessage}");
@@ -501,7 +496,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (parameter is System.Collections.IList items && items.Count > 0)
             {
-                foreach (var item in items)
+                foreach (object? item in items)
                 {
                     if (item is LogModel entry)
                     {
@@ -515,7 +510,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             }
             else
             {
-                var fallbackEntry = SelectedLogEntry;
+                LogModel? fallbackEntry = SelectedLogEntry;
                 if (fallbackEntry != null)
                 {
                     sb.AppendLine(fallbackEntry.FormattedMessage ?? string.Empty);
@@ -596,7 +591,7 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     /// </summary>
     private void LoadLogEntries()
     {
-        var entries = _logDataStore.Entries;
+        IReadOnlyList<LogModel> entries = _logDataStore.Entries;
         _uiThreadService.InvokeOnUIThread(() =>
         {
             _logEntriesSource.Edit(updater =>
@@ -634,19 +629,28 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
     {
         return entry =>
         {
-            if (entry.Level < SelectedLogLevel) return false;
-            
-            if (StartDate.HasValue && entry.Timestamp < StartDate.Value) return false;
-            
+            if (entry.Level < SelectedLogLevel)
+            {
+                return false;
+            }
+
+            if (StartDate.HasValue && entry.Timestamp < StartDate.Value)
+            {
+                return false;
+            }
+
             if (EndDate.HasValue)
             {
-                var endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
-                if (entry.Timestamp > endDateOffset) return false;
+                DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
+                if (entry.Timestamp > endDateOffset)
+                {
+                    return false;
+                }
             }
 
             if (SelectedTaskId.HasValue)
             {
-                if (entry.Properties == null || !entry.Properties.TryGetValue("TaskId", out var tid) || tid?.ToString() != SelectedTaskId.Value.ToString())
+                if (entry.Properties == null || !entry.Properties.TryGetValue("TaskId", out object? tid) || tid?.ToString() != SelectedTaskId.Value.ToString())
                 {
                     return false;
                 }
@@ -654,16 +658,22 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
 
             if (!string.IsNullOrEmpty(SelectedScope))
             {
-                if (entry.Scope != SelectedScope) return false;
+                if (entry.Scope != SelectedScope)
+                {
+                    return false;
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(SearchText))
             {
-                var term = SearchText;
+                string term = SearchText;
                 bool matches = (entry.Message?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
-                if (!matches) return false;
+                if (!matches)
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -782,6 +792,10 @@ internal class DesignTimeLogDataStore : ILogDataStore
     /// Executes the Clear operation.
     /// </summary>
     public void Clear() { }
+    /// <summary>
+    /// Executes the Flush operation (no-op for design-time).
+    /// </summary>
+    public void Flush() { }
     /// <summary>
     /// Executes the GetFilteredEntries operation.
     /// </summary>

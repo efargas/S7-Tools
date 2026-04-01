@@ -1,10 +1,7 @@
-using System;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using Avalonia.Controls;
 using Avalonia.Interactivity;
 using ReactiveUI;
-using S7Tools.ViewModels;
 using S7Tools.ViewModels.Jobs;
 
 namespace S7Tools.Views.Jobs;

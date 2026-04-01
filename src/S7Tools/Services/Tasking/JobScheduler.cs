@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Interfaces.Services;
 using S7Tools.Extensions;
 
 namespace S7Tools.Services.Tasking;
@@ -179,12 +179,12 @@ public sealed class JobScheduler(
     {
         ArgumentNullException.ThrowIfNull(profileSet);
 
-        return new[]
-        {
+        return
+        [
             new ResourceKey("serial", profileSet.Serial.Device),
             new ResourceKey("tcp", profileSet.Socat.Port.ToString()),
             new ResourceKey("modbus", $"{profileSet.Power.Host}:{profileSet.Power.Port}")
-        };
+        ];
     }
 
     private async Task ProcessQueueAsync(CancellationToken cancellationToken)
@@ -386,6 +386,37 @@ public sealed class JobScheduler(
                 null));
 
             _logger.LogInformation("Job {JobId} completed successfully", job.Id);
+        }
+        catch (PartialDumpException pde)
+        {
+            // Dump was interrupted but partial files were preserved
+            bool wasCancelled = pde.InnerException is OperationCanceledException;
+            string partialState = wasCancelled ? "canceled" : "failed";
+            foreach (string partialFile in pde.PartialResult.SavedFiles)
+            {
+                _logger.LogWarning("Job {JobId} dump file preserved: {FilePath}", job.Id, partialFile);
+            }
+
+            string partialMsg = $"Dump {partialState} with {pde.PartialResult.SavedFiles.Count} dump file(s) preserved (some may be partial)";
+            JobState resultState = wasCancelled ? JobState.Canceled : JobState.Failed;
+
+            Job partialJob = job with
+            {
+                State = resultState,
+                ErrorMessage = partialMsg,
+                CompletedAt = _timeProvider.GetLocalNow(),
+                ModifiedAt = _timeProvider.GetLocalNow()
+            };
+            _jobs[job.Id] = partialJob;
+
+            JobStateChanged?.Invoke(this, new JobStateChangedEventArgs(
+                job.Id,
+                JobState.Running,
+                resultState,
+                partialJob.ErrorMessage));
+
+            _logger.LogWarning("Job {JobId} dump {State} with {Count} dump file(s) preserved (some may be partial)",
+                job.Id, partialState, pde.PartialResult.SavedFiles.Count);
         }
         catch (OperationCanceledException)
         {

@@ -1,16 +1,12 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.IO;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Helpers;
 using S7Tools.Resources;
-using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Settings;
 
@@ -229,7 +225,7 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
             SettingsLastModified = DateTime.UtcNow.ToLocalTime();
         }
 
-        var current = _settingsService.Current;
+        AppSettings current = _settingsService.Current;
         MemoryDumpDefaultFolder = current.MemoryDump.DefaultFolder;
         SegmentDumpDelayMs = current.MemoryDump.SegmentDumpDelayMilliseconds;
         IterationDumpDelayMs = current.MemoryDump.IterationDumpDelayMilliseconds;
@@ -342,7 +338,8 @@ public class GeneralSettingsViewModel : ViewModelBase, IDisposable
     /// </summary>
     protected virtual void Dispose(bool disposing)
     {
-        if (_disposed) { return; }
+        if (_disposed)
+        { return; }
         if (disposing)
         {
             _disposables.Dispose();

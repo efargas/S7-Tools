@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using AvaloniaHex.Document;
 
 namespace S7Tools.Services.Hex
@@ -66,7 +61,7 @@ namespace S7Tools.Services.Hex
                     int readSize = (int)Math.Min(remaining, effectiveBufferSize);
 
                     // Read into buffer
-                    var span = buffer.AsSpan(0, readSize);
+                    Span<byte> span = buffer.AsSpan(0, readSize);
 
                     // Since IBinaryDocument.ReadBytes is synchronous in the interface (typically), we wrap in Task.Run just in case
                     // or just call it if it's fast. FileBinaryDocument uses FileStream.Read which is sync but might block.
@@ -152,7 +147,7 @@ namespace S7Tools.Services.Hex
                 {
                     long remaining = docLength - currentOffset;
                     int readSize = (int)Math.Min(remaining, BufferSize);
-                    var span = buffer.AsSpan(0, readSize);
+                    Span<byte> span = buffer.AsSpan(0, readSize);
 
                     doc.ReadBytes((ulong)currentOffset, span);
 
@@ -178,7 +173,7 @@ namespace S7Tools.Services.Hex
         private bool IsMatch(ReadOnlySpan<byte> buffer, int offset, byte[] pattern)
         {
             // buffer slice from offset, length pattern.Length
-            var slice = buffer.Slice(offset, pattern.Length);
+            ReadOnlySpan<byte> slice = buffer.Slice(offset, pattern.Length);
             return slice.SequenceEqual(pattern);
         }
     }

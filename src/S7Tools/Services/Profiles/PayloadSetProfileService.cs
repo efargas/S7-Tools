@@ -1,7 +1,4 @@
-using System;
-using System.IO;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Jobs;
 

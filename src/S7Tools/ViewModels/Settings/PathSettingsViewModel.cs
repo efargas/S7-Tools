@@ -1,14 +1,11 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.IO;
 using System.Reactive;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Settings;
 
@@ -154,7 +151,7 @@ public class PathSettingsViewModel : ViewModelBase
 
     private void RefreshFromSettings()
     {
-        var current = _settingsService.Current;
+        AppSettings current = _settingsService.Current;
 
         // Serial
         string serialPath = !string.IsNullOrEmpty(current.Profiles.SerialPath) ? current.Profiles.SerialPath : _pathService.SerialProfilesPath;

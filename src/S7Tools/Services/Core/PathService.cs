@@ -1,6 +1,4 @@
 using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
@@ -174,8 +172,8 @@ namespace S7Tools.Services
                 }
 
                 // Create all required directories
-                string[] directoriesToCreate = new[]
-                {
+                string[] directoriesToCreate =
+                [
                     ResourcesDirectory,
                     Path.Combine(ResourcesDirectory, ResourcePaths.AppSettingsFolder),
                     ProfilesDirectory,
@@ -193,7 +191,7 @@ namespace S7Tools.Services
                     Path.Combine(ResourcesDirectory, ResourcePaths.TasksFolder),
                     PayloadsDirectory,
                     DumpsDirectory
-                };
+                ];
 
                 var createdDirectories = new List<string>();
                 foreach (string? directory in directoriesToCreate)

@@ -1,10 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-
 namespace S7Tools.Services.Adapters.Plc
 {
     /// <summary>
@@ -36,7 +29,7 @@ namespace S7Tools.Services.Adapters.Plc
         {
             // Enter Subprotocol 0x80 (IRAM Mode)
             // Payload: [Magic for IRAM (Big Endian)]
-            var magicBytes = BitConverter.GetBytes(PlcConstants.SUBPROT_80_MODE_MAGICS[PlcConstants.SUBPROT_80_MODE_IRAM]);
+            byte[] magicBytes = BitConverter.GetBytes(PlcConstants.SUBPROT_80_MODE_MAGICS[PlcConstants.SUBPROT_80_MODE_IRAM]);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(magicBytes);
@@ -49,7 +42,7 @@ namespace S7Tools.Services.Adapters.Plc
             for (int i = 0; i < data.Length; i += chunkSize)
             {
                 int size = Math.Min(chunkSize, data.Length - i);
-                var chunk = new byte[size];
+                byte[] chunk = new byte[size];
                 Array.Copy(data, i, chunk, 0, size);
                 uint targetArg = address + (uint)i - 0x10000000; // Voodoo from Ref MemoryManager L200
 
@@ -60,7 +53,7 @@ namespace S7Tools.Services.Adapters.Plc
             }
 
             // Leave Subprot
-            await _protocol.SendPacketAsync(new byte[] { 0x81, 0xD0, 0x67 }, null, cancellationToken: cancellationToken);
+            await _protocol.SendPacketAsync([0x81, 0xD0, 0x67], null, cancellationToken: cancellationToken);
             await _protocol.ReceivePacketAsync(cancellationToken);
         }
 
@@ -68,7 +61,7 @@ namespace S7Tools.Services.Adapters.Plc
         {
             // Ref MemoryManager L173
             // Payload: [0x84, 0x5a, 0x2e] + [Addr(4)] + [Data]
-            var payload = new byte[7 + data.Length];
+            byte[] payload = new byte[7 + data.Length];
             payload[0] = 0x84;
             payload[1] = 0x5a;
             payload[2] = 0x2e;
@@ -85,13 +78,13 @@ namespace S7Tools.Services.Adapters.Plc
         public async Task<byte[]> InvokeDumperAsync(uint address, uint length, IProgress<long> progress, CancellationToken cancellationToken)
         {
             // Protocol: 'A' + Addr + Len
-            var args = new byte[9];
+            byte[] args = new byte[9];
             args[0] = (byte)'A';
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(address), 0, args, 1, 4);
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(length), 0, args, 5, 4);
 
             // Send Command (Invoke Hook 2)
-            var response = await _protocol.InvokeAddHookAsync(PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND, args, true, cancellationToken);
+            byte[]? response = await _protocol.InvokeAddHookAsync(PlcConstants.DEFAULT_SECOND_ADD_HOOK_IND, args, true, cancellationToken);
 
             if (response == null || !System.Text.Encoding.ASCII.GetString(response).StartsWith("Ok"))
             {
@@ -99,7 +92,7 @@ namespace S7Tools.Services.Adapters.Plc
             }
 
             // Receive Data
-            var data = await ReceiveManyAsync(progress, cancellationToken);
+            byte[] data = await ReceiveManyAsync(progress, cancellationToken);
             return data;
         }
 
@@ -131,7 +124,7 @@ namespace S7Tools.Services.Adapters.Plc
             _logger.LogInformation("Preparing to invoke dumper for address 0x{Address:X8}, length {Length} bytes", address, length);
 
             // Protocol: 'A' + Addr + Len
-            var args = new byte[9];
+            byte[] args = new byte[9];
             args[0] = (byte)'A';
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(address), 0, args, 1, 4);
             Array.Copy(PlcInternalHelpers.GetBigEndianBytes(length), 0, args, 5, 4);
@@ -185,7 +178,7 @@ namespace S7Tools.Services.Adapters.Plc
             using var ms = new MemoryStream();
             while (true)
             {
-                var chunk = await _protocol.ReceivePacketAsync(cancellationToken);
+                byte[] chunk = await _protocol.ReceivePacketAsync(cancellationToken);
                 if (chunk == null || chunk.Length == 0)
                 {
                     break;

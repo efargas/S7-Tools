@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace S7Tools.Core.Interfaces.Services;
 
 /// <summary>

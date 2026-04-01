@@ -1,25 +1,26 @@
-using S7Tools.ViewModels.Base;
+using System.ComponentModel;
 using System.Reactive;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
+using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Settings;
 
 /// <summary>
 /// ViewModel for logging settings configuration.
 /// </summary>
-public class LoggingSettingsViewModel : ViewModelBase
+public class LoggingSettingsViewModel : ViewModelBase, IDisposable
 {
     private readonly IApplicationSettingsService _settingsService;
     private readonly IPathService _pathService;
     private readonly IFileDialogService? _fileDialogService;
     private readonly ILogger<LoggingSettingsViewModel> _logger;
+    private readonly EventHandler<SettingsChangedEventArgs> _settingsChangedHandler;
+    private readonly PropertyChangedEventHandler _propertyChangedHandler;
 
     /// <summary>
     /// Initializes a new instance of the LoggingSettingsViewModel class.
@@ -50,16 +51,17 @@ public class LoggingSettingsViewModel : ViewModelBase
         RefreshFromSettings();
         _isInitializing = false;
 
-        // Subscribe to settings changes
-        _settingsService.SettingsChanged += (_, _) =>
+        // Subscribe to settings changes (stored for unsubscription in Dispose)
+        _settingsChangedHandler = (_, _) =>
         {
             _isInitializing = true;
             RefreshFromSettings();
             _isInitializing = false;
         };
+        _settingsService.SettingsChanged += _settingsChangedHandler;
 
-        // Auto-save when properties change
-        this.PropertyChanged += (s, e) =>
+        // Auto-save when properties change (stored for unsubscription in Dispose)
+        _propertyChangedHandler = (s, e) =>
         {
             if (_isInitializing)
             {
@@ -76,6 +78,7 @@ public class LoggingSettingsViewModel : ViewModelBase
                 _ = SaveLoggingSettingsAsync();
             }
         };
+        this.PropertyChanged += _propertyChangedHandler;
     }
 
     private bool _isInitializing;
@@ -252,7 +255,7 @@ public class LoggingSettingsViewModel : ViewModelBase
     private void RefreshFromSettings()
     {
         // Load settings using the new structured approach
-        var current = _settingsService.Current;
+        AppSettings current = _settingsService.Current;
         DefaultLogPath = current.Logging.LogDirectory;
         ExportPath = current.Logging.ExportDirectory;
         MinimumLogLevel = current.Logging.Level.ToString();
@@ -264,7 +267,7 @@ public class LoggingSettingsViewModel : ViewModelBase
         LogViewerFontSize = current.Ui.LogViewerFontSize;
         MaxLogFileSizeMb = (int)(current.Logging.MaxFileSize / 1024 / 1024);
         MaxRetainedLogFiles = current.Logging.MaxFiles;
-        
+
         // Detailed Operation Logging
         LogProfileOperations = current.MemoryRegion.LogProfileOperations;
         LogModbusOperations = current.PowerSupply.LogModbusOperations;
@@ -331,11 +334,11 @@ public class LoggingSettingsViewModel : ViewModelBase
                 settings.Ui.ShowCategoryInLogs = ShowCategoryInLogs;
                 settings.Ui.ShowLogLevelInLogs = ShowLogLevelInLogs;
                 settings.Ui.LogViewerFontSize = LogViewerFontSize;
-                
+
                 // Serilog/File Logging
                 settings.Logging.MaxFileSize = (long)MaxLogFileSizeMb * 1024 * 1024;
                 settings.Logging.MaxFiles = MaxRetainedLogFiles;
-                
+
                 // Detailed Operation Logging
                 settings.MemoryRegion.LogProfileOperations = LogProfileOperations;
                 settings.PowerSupply.LogModbusOperations = LogModbusOperations;
@@ -404,4 +407,23 @@ public class LoggingSettingsViewModel : ViewModelBase
     }
 
     #endregion
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases managed resources.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _settingsService.SettingsChanged -= _settingsChangedHandler;
+            this.PropertyChanged -= _propertyChangedHandler;
+        }
+    }
 }

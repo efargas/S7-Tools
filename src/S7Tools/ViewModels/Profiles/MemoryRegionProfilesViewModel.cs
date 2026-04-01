@@ -1,6 +1,3 @@
-using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Core.Models;
@@ -18,6 +15,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
 {
     private readonly IMemoryRegionProfileService _profileService;
     private readonly IUIThreadService _uiThreadService;
+    private readonly ILogger<EditMemoryRegionProfileDialogViewModel> _dialogLogger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MemoryRegionProfilesViewModel"/> class.
@@ -28,11 +26,13 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
         IDialogService dialogService,
         IUIThreadService uiThreadService,
         IFileDialogService fileDialogService,
-        ILogger<MemoryRegionProfilesViewModel> logger)
+        ILogger<MemoryRegionProfilesViewModel> logger,
+        ILogger<EditMemoryRegionProfileDialogViewModel> dialogLogger)
         : base(logger, unifiedDialogService, dialogService, uiThreadService, fileDialogService)
     {
         _profileService = profileService ?? throw new ArgumentNullException(nameof(profileService));
         _uiThreadService = uiThreadService;
+        _dialogLogger = dialogLogger ?? throw new ArgumentNullException(nameof(dialogLogger));
 
         _ = Task.Run(async () =>
         {
@@ -80,7 +80,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
     /// </summary>
     protected override async Task<ProfileDialogResult<MemoryMappingProfile>> ShowCreateDialogAsync(ProfileCreateRequest request)
     {
-        var nameResult = await UnifiedDialogService.ShowNameInputDialogAsync(
+        ProfileDialogResult<string> nameResult = await UnifiedDialogService.ShowNameInputDialogAsync(
             $"Create {GetProfileTypeName()}",
             "Enter a name for the new memory region profile:",
             request.DefaultName ?? GetDefaultProfileName()
@@ -92,7 +92,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
         }
 
         var newProfile = MemoryMappingProfile.CreateUserProfile(nameResult.Result ?? "New Profile");
-        var savedProfile = await _profileService.CreateAsync(newProfile);
+        MemoryMappingProfile savedProfile = await _profileService.CreateAsync(newProfile);
 
         return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
     }
@@ -107,8 +107,7 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
             return ProfileDialogResult<MemoryMappingProfile>.Failure("No profile selected");
         }
 
-        ILogger<EditMemoryRegionProfileDialogViewModel> dialogLogger = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { }).CreateLogger<EditMemoryRegionProfileDialogViewModel>();
-        var dialogViewModel = new EditMemoryRegionProfileDialogViewModel(SelectedProfile, dialogLogger);
+        var dialogViewModel = new EditMemoryRegionProfileDialogViewModel(SelectedProfile, _dialogLogger);
         var dialog = new EditMemoryRegionProfileDialog(dialogViewModel);
 
         bool? dialogResult = await _uiThreadService.InvokeOnUIThreadAsync(async () =>
@@ -127,10 +126,10 @@ public class MemoryRegionProfilesViewModel : ProfileManagementViewModelBase<Memo
 
         if (dialogResult == true)
         {
-            var updatedProfile = dialogViewModel.CreateUpdatedProfile();
+            MemoryMappingProfile? updatedProfile = dialogViewModel.CreateUpdatedProfile();
             if (updatedProfile != null)
             {
-                var savedProfile = await _profileService.UpdateAsync(updatedProfile);
+                MemoryMappingProfile savedProfile = await _profileService.UpdateAsync(updatedProfile);
                 return ProfileDialogResult<MemoryMappingProfile>.Success(savedProfile);
             }
             return ProfileDialogResult<MemoryMappingProfile>.Failure("Failed to modify");

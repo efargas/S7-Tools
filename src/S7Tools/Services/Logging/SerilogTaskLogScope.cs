@@ -1,5 +1,5 @@
-using Serilog.Context;
 using S7Tools.Core.Interfaces.Services;
+using Serilog.Context;
 
 namespace S7Tools.Services.Logging;
 
@@ -13,12 +13,12 @@ public class SerilogTaskLogScope : ITaskLogScope
     /// <inheritdoc />
     public IDisposable BeginScope(Guid taskId, string taskName, string logScope = "Main")
     {
-        var properties = new[]
-        {
+        IDisposable[] properties =
+        [
             LogContext.PushProperty("TaskId", taskId),
             LogContext.PushProperty("TaskName", taskName),
             LogContext.PushProperty("LogScope", logScope)
-        };
+        ];
 
         return new CompositeDisposable(properties);
     }

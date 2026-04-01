@@ -1,4 +1,3 @@
-using System;
 using Avalonia.Data.Converters;
 
 namespace S7Tools.Converters;

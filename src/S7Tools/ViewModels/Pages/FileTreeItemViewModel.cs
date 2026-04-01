@@ -1,9 +1,6 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using ReactiveUI;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Pages;
 
@@ -103,19 +100,19 @@ public partial class FileTreeItemViewModel : ViewModelBase
 
         try
         {
-            var directories = Directory.EnumerateDirectories(FullPath)
+            IEnumerable<FileTreeItemViewModel> directories = Directory.EnumerateDirectories(FullPath)
                 .Select(d => new FileTreeItemViewModel(d, true));
 
-            var files = Directory.EnumerateFiles(FullPath, "*.bin")
+            IEnumerable<FileTreeItemViewModel> files = Directory.EnumerateFiles(FullPath, "*.bin")
                 .Concat(Directory.EnumerateFiles(FullPath, "*.dmp"))
                 .Select(f => new FileTreeItemViewModel(f, false));
 
-            foreach (var dir in directories.OrderBy(d => d.Name))
+            foreach (FileTreeItemViewModel? dir in directories.OrderBy(d => d.Name))
             {
                 Children.Add(dir);
             }
 
-            foreach (var file in files.OrderBy(f => f.Name))
+            foreach (FileTreeItemViewModel? file in files.OrderBy(f => f.Name))
             {
                 Children.Add(file);
             }

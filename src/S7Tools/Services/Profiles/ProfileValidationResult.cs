@@ -1,5 +1,4 @@
 using S7Tools.ViewModels.Controls;
-using S7Tools.ViewModels.Profiles;
 
 namespace S7Tools.Services;
 

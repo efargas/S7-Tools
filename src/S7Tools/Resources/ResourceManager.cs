@@ -1,10 +1,6 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Resources;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Resources;
 
 namespace S7Tools.Resources;
@@ -186,10 +182,10 @@ public class S7ToolsResourceManager : IResourceManager
         var cultures = new HashSet<CultureInfo> { CultureInfo.InvariantCulture };
 
         // Add commonly supported cultures
-        string[] commonCultures = new[]
-        {
+        string[] commonCultures =
+        [
             "en-US", "en-GB", "es-ES", "fr-FR", "de-DE", "it-IT", "pt-BR", "ru-RU", "zh-CN", "ja-JP"
-        };
+        ];
 
         foreach (string? cultureName in commonCultures)
         {

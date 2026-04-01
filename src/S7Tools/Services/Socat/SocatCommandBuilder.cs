@@ -1,9 +1,7 @@
-using System;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Services.Socat;
 

@@ -1,0 +1,230 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Settings"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.Settings.TestSettingsView"
+             x:DataType="vm:TestSettingsViewModel">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20" Spacing="16">
+            <!-- Header -->
+            <TextBlock Text="Logging and Clipboard Testing"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                       Margin="0,0,0,10" />
+
+            <!-- Logging Test Section -->
+            <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+                <Expander IsExpanded="True">
+                    <Expander.Header>
+                        <Grid Background="Transparent" Height="38" Margin="4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                            <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-list-check" />
+                            <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="LOGGING TEST SESSION" />
+                        </Grid>
+                    </Expander.Header>
+
+                    <StackPanel Spacing="16" Margin="24,16,24,24">
+                        <TextBlock Text="Click these buttons to test different log levels. Check the Global Log View to see the results."
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+
+                        <WrapPanel Orientation="Horizontal">
+                            <!-- Trace Log Button -->
+                            <Button Command="{Binding TestTraceLogCommand}"
+                                    Background="#808080"
+                                    Foreground="White"
+                                    Margin="0,0,10,10"
+                                    Width="140">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-microscope" Width="14" Height="14" />
+                                    <TextBlock Text="Trace" FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Debug Log Button -->
+                            <Button Command="{Binding TestDebugLogCommand}"
+                                    Background="{DynamicResource BrandAccentBrush}"
+                                    Foreground="White"
+                                    Margin="0,0,10,10"
+                                    Width="140">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-bug" Width="14" Height="14" />
+                                    <TextBlock Text="Debug" FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Info Log Button -->
+                            <Button Command="{Binding TestInfoLogCommand}"
+                                    Background="{DynamicResource LogColorInfoBrush}"
+                                    Foreground="White"
+                                    Margin="0,0,10,10"
+                                    Width="140">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-info-circle" Width="14" Height="14" />
+                                    <TextBlock Text="Info" FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Warning Log Button -->
+                            <Button Command="{Binding TestWarningLogCommand}"
+                                    Background="{DynamicResource LogColorWarnBrush}"
+                                    Foreground="White"
+                                    Margin="0,0,10,10"
+                                    Width="140">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-exclamation-triangle" Width="14" Height="14" />
+                                    <TextBlock Text="Warning" FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Error Log Button -->
+                            <Button Command="{Binding TestErrorLogCommand}"
+                                    Background="{DynamicResource LogColorErrorBrush}"
+                                    Foreground="White"
+                                    Margin="0,0,10,10"
+                                    Width="140">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-circle-xmark" Width="14" Height="14" />
+                                    <TextBlock Text="Error" FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Critical Log Button -->
+                            <Button Command="{Binding TestCriticalLogCommand}"
+                                    Background="{DynamicResource LogColorFatalBrush}"
+                                    Foreground="White"
+                                    Margin="0,0,10,10"
+                                    Width="140">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-skull-crossbones" Width="14" Height="14" />
+                                    <TextBlock Text="Critical" FontSize="12" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                        </WrapPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <!-- Export Logs Button -->
+                            <Button Command="{Binding ExportLogsCommand}"
+                                    Classes="Primary"
+                                    Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-clipboard-list" Width="16" Height="16" />
+                                    <TextBlock Text="Export Logs to Clipboard" FontSize="14" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <!-- Stress Test Button -->
+                            <Button Command="{Binding TestStressLogCommand}"
+                                    Background="{DynamicResource LogColorFatalBrush}"
+                                    Foreground="White"
+                                    BorderThickness="0"
+                                    CornerRadius="4"
+                                    Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-bolt" Width="16" Height="16" />
+                                    <TextBlock Text="UI Stress Test (5000 Logs)" FontSize="14" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+            </Border>
+
+            <!-- Clipboard Test Section -->
+            <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+                <Expander IsExpanded="True">
+                    <Expander.Header>
+                        <Grid Background="Transparent" Height="38" Margin="4,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+                            <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-paste" />
+                            <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="CLIPBOARD TESTING" />
+                        </Grid>
+                    </Expander.Header>
+
+                    <StackPanel Spacing="16" Margin="24,16,24,24">
+                        <TextBlock Text="Test clipboard operations and keyboard shortcuts. Selection and caret position are synchronized."
+                                   FontSize="13"
+                                   Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+
+                        <!-- Text Input -->
+                        <TextBox Name="ClipboardTextBox"
+                                 Text="{Binding TestInputText, Mode=TwoWay}"
+                                 SelectionStart="{Binding SelectionStart, Mode=TwoWay}"
+                                 SelectionEnd="{Binding SelectionEnd, Mode=TwoWay}"
+                                 CaretIndex="{Binding CaretIndex, Mode=TwoWay}"
+                                 Watermark="Enter text to test clipboard operations..."
+                                 Background="{DynamicResource ControlBackgroundBrush}"
+                                 Foreground="{DynamicResource TextForegroundBrush}"
+                                 BorderBrush="{DynamicResource ControlBorderBrush}"
+                                 BorderThickness="1"
+                                 CornerRadius="4"
+                                 Padding="12"
+                                 MinHeight="120"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True" />
+
+                        <!-- Clipboard Buttons -->
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <Button Command="{Binding CutCommand}"
+                                    Focusable="False"
+                                    Background="{DynamicResource LogColorErrorBrush}"
+                                    Foreground="White"
+                                    Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-scissors" Width="14" Height="14" />
+                                    <TextBlock Text="Cut" FontSize="13" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{Binding CopyCommand}"
+                                    Focusable="False"
+                                    Background="{DynamicResource BrandAccentBrush}"
+                                    Foreground="White"
+                                    Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                                    <TextBlock Text="Copy" FontSize="13" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button Command="{Binding PasteCommand}"
+                                    Focusable="False"
+                                    Background="{DynamicResource LogColorInfoBrush}"
+                                    Foreground="White"
+                                    Padding="16,8">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <icons:Icon Value="fa-solid fa-paste" Width="14" Height="14" />
+                                    <TextBlock Text="Paste" FontSize="13" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <!-- Status Message -->
+                        <TextBlock Text="{Binding StatusMessage}"
+                                   FontSize="12"
+                                   FontStyle="Italic"
+                                   Foreground="{DynamicResource TextForegroundMutedBrush}"
+                                   Margin="0,5,0,0" />
+                    </StackPanel>
+                </Expander>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

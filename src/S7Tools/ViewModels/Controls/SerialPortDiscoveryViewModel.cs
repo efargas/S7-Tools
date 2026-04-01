@@ -1,18 +1,13 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Controls;
 
@@ -484,7 +479,7 @@ public sealed class SerialPortDiscoveryViewModel : ViewModelBase, IDisposable
 
             // Map port info objects directly from backend response to avoid double I/O testing
             var portInfos = new List<SerialPortInfo>();
-            foreach (var corePort in availablePorts)
+            foreach (Core.Interfaces.Services.SerialPortInfo corePort in availablePorts)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {

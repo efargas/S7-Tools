@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Logging;
-
 namespace S7Tools.Services;
 
 /// <summary>

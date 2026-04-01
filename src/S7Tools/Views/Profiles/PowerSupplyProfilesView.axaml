@@ -18,7 +18,7 @@
     <conv:ModbusTcpPropertyConverter x:Key="ModbusTcpOnOffCoil" PropertyName="OnOffCoil" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Power Supply Profiles"
@@ -27,373 +27,401 @@
                  Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                  Margin="0,0,0,10" />
 
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="8">
-          <!-- Toolbar -->
-          <Grid Margin="0,0,0,8">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+      <!-- Profile Management Section -->
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-battery-full" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="PROFILE MANAGEMENT" />
+            </Grid>
+          </Expander.Header>
 
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-              <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
-                  <TextBlock Text="Create" />
-                </StackPanel>
-              </Button>
+          <StackPanel Spacing="8" Margin="24,16,24,24">
+            <!-- Toolbar above the DataGrid -->
+            <Grid Margin="0,0,0,8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
 
-              <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
-                  <TextBlock Text="Edit" />
-                </StackPanel>
-              </Button>
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                <Button Width="110" Height="34" Command="{Binding CreateCommand}" Background="#28A745" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-plus" Width="14" Height="14" />
+                    <TextBlock Text="Create" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding DuplicateCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
-                  <TextBlock Text="Duplicate" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding EditCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-edit" Width="14" Height="14" />
+                    <TextBlock Text="Edit" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
-                  <TextBlock Text="Set Default" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding DuplicateCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-copy" Width="14" Height="14" />
+                    <TextBlock Text="Duplicate" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
-                  <TextBlock Text="Delete" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding SetDefaultCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-star" Width="14" Height="14" />
+                    <TextBlock Text="Set Default" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
-                  <TextBlock Text="Refresh" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding DeleteCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                    <TextBlock Text="Delete" />
+                  </StackPanel>
+                </Button>
 
-              <Button Width="110" Height="34" Command="{Binding ExportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
-                  <TextBlock Text="Export" />
-                </StackPanel>
-              </Button>
+                <Button Width="110" Height="34" Command="{Binding RefreshCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                    <TextBlock Text="Refresh" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
 
-              <Button Width="110" Height="34" Command="{Binding ImportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
-                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                  <icons:Icon Value="fa-solid fa-upload" Width="14" Height="14" />
-                  <TextBlock Text="Import" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
-          </Grid>
+              <!-- Import/Export Buttons -->
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                <Button Width="110" Height="34" Command="{Binding ExportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-download" Width="14" Height="14" />
+                    <TextBlock Text="Export" />
+                  </StackPanel>
+                </Button>
 
-          <!-- DataGrid -->
-          <DataGrid ItemsSource="{Binding Profiles}"
-                    SelectedItem="{Binding SelectedProfile}"
-                    Background="{DynamicResource ControlBackgroundBrush}"
-                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                    GridLinesVisibility="Horizontal"
-                    HeadersVisibility="Column"
-                    CanUserReorderColumns="False"
-                    CanUserResizeColumns="True"
-                    CanUserSortColumns="True"
-                    IsReadOnly="True"
-                    Height="400"
-                    Margin="0,0,0,8">
-            <DataGrid.Styles>
-              <Style Selector="DataGridColumnHeader">
-                <Setter Property="FontSize" Value="11" />
-                <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Padding" Value="8,4,32,4" />
-                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                <Setter Property="Template">
-                  <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
-                      <DockPanel>
-                        <ContentPresenter Content="{TemplateBinding Content}"
-                                          DockPanel.Dock="Left"
-                                          VerticalAlignment="Center" />
-                      </DockPanel>
-                    </Border>
-                  </ControlTemplate>
-                </Setter>
-              </Style>
-            </DataGrid.Styles>
+                <Button Width="110" Height="34" Command="{Binding ImportProfilesCommand}" Background="{DynamicResource ButtonBackgroundBrush}" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-upload" Width="14" Height="14" />
+                    <TextBlock Text="Import" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
 
-            <DataGrid.Columns>
-              <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+            <!-- DataGrid -->
+            <DataGrid ItemsSource="{Binding Profiles}"
+                      SelectedItem="{Binding SelectedProfile}"
+                      Background="{DynamicResource ControlBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      MaxHeight="400"
+                      Margin="0,0,0,8">
+              <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                  <Setter Property="FontSize" Value="11" />
+                  <Setter Property="FontWeight" Value="SemiBold" />
+                  <Setter Property="Padding" Value="8,4,32,4" />
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                  <Setter Property="Template">
+                    <ControlTemplate>
+                      <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                        <DockPanel>
+                          <ContentPresenter Content="{TemplateBinding Content}"
+                                            DockPanel.Dock="Left"
+                                            VerticalAlignment="Center" />
+                        </DockPanel>
+                      </Border>
+                    </ControlTemplate>
+                  </Setter>
+                </Style>
+              </DataGrid.Styles>
 
-              <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+              <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Id}" Width="60" MinWidth="50">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Name}" Width="200" MinWidth="120">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Name" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Configuration.Type}" Width="120" MinWidth="80">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Type" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Description}" Width="250" MinWidth="140">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Description" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpHost}}" Width="150" MinWidth="100" IsReadOnly="True">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Host" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Configuration.Type}" Width="120" MinWidth="80">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Type" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpPort}}" Width="70" MinWidth="50" IsReadOnly="True">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpHost}}" Width="150" MinWidth="100" IsReadOnly="True">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Host" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpDeviceId}}" Width="90" MinWidth="70" IsReadOnly="True">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Device ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpPort}}" Width="70" MinWidth="50" IsReadOnly="True">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpOnOffCoil}}" Width="100" MinWidth="80" IsReadOnly="True">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="OnOff Coil" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpDeviceId}}" Width="90" MinWidth="70" IsReadOnly="True">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Device ID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridTextColumn Binding="{Binding Version}" Width="80" MinWidth="60">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Version" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding Configuration, Converter={StaticResource ModbusTcpOnOffCoil}}" Width="100" MinWidth="80" IsReadOnly="True">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="OnOff Coil" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60" IsReadOnly="True">
-                <DataGridCheckBoxColumn.Header>
-                  <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridCheckBoxColumn.Header>
-              </DataGridCheckBoxColumn>
+                <DataGridTextColumn Binding="{Binding Version}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Version" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
 
-              <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70" IsReadOnly="True">
-                <DataGridCheckBoxColumn.Header>
-                  <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridCheckBoxColumn.Header>
-              </DataGridCheckBoxColumn>
-            </DataGrid.Columns>
-          </DataGrid>
+                <DataGridCheckBoxColumn Binding="{Binding IsDefault}" Width="80" MinWidth="60" IsReadOnly="True">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Default" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
 
-          <!-- Profile Statistics -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+                <DataGridCheckBoxColumn Binding="{Binding IsReadOnly}" Width="90" MinWidth="70" IsReadOnly="True">
+                  <DataGridCheckBoxColumn.Header>
+                    <TextBlock Text="Read-Only" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridCheckBoxColumn.Header>
+                </DataGridCheckBoxColumn>
+              </DataGrid.Columns>
+            </DataGrid>
 
-            <TextBlock Grid.Column="0"
-                       Text="{Binding Profiles.Count, StringFormat='Total Profiles: {0}'}"
-                       Foreground="{DynamicResource TextForegroundMutedBrush}"
-                       FontSize="12" />
+            <!-- Profile Statistics -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="1"
-                       Text="{Binding StatusMessage}"
-                       Foreground="{DynamicResource TextForegroundMutedBrush}"
-                       FontSize="12" />
-          </Grid>
-        </StackPanel>
+              <TextBlock Grid.Column="0"
+                         Text="{Binding Profiles.Count, StringFormat='Total Profiles: {0}'}"
+                         Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         FontSize="12" />
+
+              <TextBlock Grid.Column="1"
+                         Text="{Binding StatusMessage}"
+                         Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         FontSize="12" />
+            </Grid>
+          </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Connection Management Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Connection Management"
-                     FontSize="18"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-network-wired" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="CONNECTION MANAGEMENT" />
+            </Grid>
+          </Expander.Header>
 
-          <!-- Connection Status Display -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="150" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+          <StackPanel Spacing="8" Margin="24,16,24,24">
+            <!-- Connection Status Display -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
-                       Text="Connection Status:"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                       VerticalAlignment="Center" />
-
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-              <Border Background="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#16825D'}"
-                      CornerRadius="10"
-                      Width="20"
-                      Height="20"
-                      VerticalAlignment="Center">
-                <icons:Icon Value="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-times|fa-solid fa-check'}"
-                            Foreground="{DynamicResource TextForegroundBrush}"
-                            Width="12"
-                            Height="12" />
-              </Border>
-
-              <TextBlock Text="{Binding ConnectionStatus}"
-                         Foreground="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#4EC9B0'}"
-                         FontWeight="SemiBold"
+              <TextBlock Grid.Column="0"
+                         Text="Connection Status:"
+                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                          VerticalAlignment="Center" />
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Border Background="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#16825D'}"
+                        CornerRadius="10"
+                        Width="20"
+                        Height="20"
+                        VerticalAlignment="Center">
+                  <icons:Icon Value="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-times|fa-solid fa-check'}"
+                              Foreground="{DynamicResource TextForegroundBrush}"
+                              Width="12"
+                              Height="12" />
+                </Border>
+
+                <TextBlock Text="{Binding ConnectionStatus}"
+                           Foreground="{Binding IsConnected, Converter={StaticResource InvBool}, ConverterParameter='#D13438|#4EC9B0'}"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+              </StackPanel>
+            </Grid>
+
+            <!-- Connection Control Buttons -->
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+              <Button Width="150" Height="38"
+                      Command="{Binding ConnectCommand}"
+                      Background="#16825D"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-plug" Width="14" Height="14" />
+                  <TextBlock Text="Connect" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="150" Height="38"
+                      Command="{Binding DisconnectCommand}"
+                      Background="#D13438"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-plug-circle-xmark" Width="14" Height="14" />
+                  <TextBlock Text="Disconnect" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="150" Height="38"
+                      Command="{Binding TestConnectionCommand}"
+                      Background="{DynamicResource ButtonBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
+                  <TextBlock Text="Test Connection" />
+                </StackPanel>
+              </Button>
             </StackPanel>
-          </Grid>
 
-          <!-- Connection Control Buttons -->
-          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-            <Button Width="150" Height="38"
-                    Command="{Binding ConnectCommand}"
-                    Background="#16825D"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-plug" Width="14" Height="14" />
-                <TextBlock Text="Connect" />
-              </StackPanel>
-            </Button>
-
-            <Button Width="150" Height="38"
-                    Command="{Binding DisconnectCommand}"
-                    Background="#D13438"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-plug-circle-xmark" Width="14" Height="14" />
-                <TextBlock Text="Disconnect" />
-              </StackPanel>
-            </Button>
-
-            <Button Width="150" Height="38"
-                    Command="{Binding TestConnectionCommand}"
-                    Background="{DynamicResource ButtonBackgroundBrush}"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
-                <TextBlock Text="Test Connection" />
-              </StackPanel>
-            </Button>
+            <TextBlock Text="Connect to the selected profile's Modbus TCP device to enable power control operations"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}"
+                       Margin="0,4,0,0" />
           </StackPanel>
-
-          <TextBlock Text="Connect to the selected profile's Modbus TCP device to enable power control operations"
-                     FontSize="11"
-                     Foreground="{DynamicResource TextForegroundMutedBrush}"
-                     Margin="0,4,0,0" />
-        </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Power Control Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-              BorderBrush="{DynamicResource ControlBorderBrush}"
-              BorderThickness="1"
-              CornerRadius="4"
-              Padding="16">
-        <StackPanel Spacing="8">
-          <TextBlock Text="Power Control"
-                     FontSize="18"
-                     FontWeight="SemiBold"
-                     Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-power-off" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="POWER CONTROL" />
+            </Grid>
+          </Expander.Header>
 
-          <!-- Power Status Display -->
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="150" />
-              <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+          <StackPanel Spacing="8" Margin="24,16,24,24">
+            <!-- Power Status Display -->
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
-                       Text="Power Status:"
-                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                       VerticalAlignment="Center" />
-
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-              <Border Background="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#16825D'}"
-                      CornerRadius="10"
-                      Width="20"
-                      Height="20"
-                      VerticalAlignment="Center">
-                <icons:Icon Value="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-power-off|fa-solid fa-bolt'}"
-                            Foreground="{DynamicResource TextForegroundBrush}"
-                            Width="12"
-                            Height="12" />
-              </Border>
-
-              <TextBlock Text="{Binding PowerStatus}"
-                         Foreground="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#4EC9B0'}"
-                         FontWeight="SemiBold"
+              <TextBlock Grid.Column="0"
+                         Text="Power Status:"
+                         Foreground="{DynamicResource TextForegroundSecondaryBrush}"
                          VerticalAlignment="Center" />
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Border Background="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#16825D'}"
+                        CornerRadius="10"
+                        Width="20"
+                        Height="20"
+                        VerticalAlignment="Center">
+                  <icons:Icon Value="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='fa-solid fa-power-off|fa-solid fa-bolt'}"
+                              Foreground="{DynamicResource TextForegroundBrush}"
+                              Width="12"
+                              Height="12" />
+                </Border>
+
+                <TextBlock Text="{Binding PowerStatus}"
+                           Foreground="{Binding IsPowerOn, Converter={StaticResource InvBool}, ConverterParameter='#858585|#4EC9B0'}"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+              </StackPanel>
+            </Grid>
+
+            <!-- Power Control Buttons -->
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+              <Button Width="150" Height="38"
+                      Command="{Binding TurnOnCommand}"
+                      Background="#16825D"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
+                  <TextBlock Text="Turn ON" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="150" Height="38"
+                      Command="{Binding TurnOffCommand}"
+                      Background="#D13438"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
+                  <TextBlock Text="Turn OFF" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="150" Height="38"
+                      Command="{Binding ReadStateCommand}"
+                      Background="{DynamicResource ButtonBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-eye" Width="14" Height="14" />
+                  <TextBlock Text="Read State" />
+                </StackPanel>
+              </Button>
+
+              <Button Width="150" Height="38"
+                      Command="{Binding PowerCycleCommand}"
+                      Background="#855508"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <icons:Icon Value="fa-solid fa-rotate" Width="14" Height="14" />
+                  <TextBlock Text="Power Cycle" />
+                </StackPanel>
+              </Button>
             </StackPanel>
-          </Grid>
 
-          <!-- Power Control Buttons -->
-          <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-            <Button Width="150" Height="38"
-                    Command="{Binding TurnOnCommand}"
-                    Background="#16825D"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
-                <TextBlock Text="Turn ON" />
-              </StackPanel>
-            </Button>
-
-            <Button Width="150" Height="38"
-                    Command="{Binding TurnOffCommand}"
-                    Background="#D13438"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-power-off" Width="14" Height="14" />
-                <TextBlock Text="Turn OFF" />
-              </StackPanel>
-            </Button>
-
-            <Button Width="150" Height="38"
-                    Command="{Binding ReadStateCommand}"
-                    Background="{DynamicResource ButtonBackgroundBrush}"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-eye" Width="14" Height="14" />
-                <TextBlock Text="Read State" />
-              </StackPanel>
-            </Button>
-
-            <Button Width="150" Height="38"
-                    Command="{Binding PowerCycleCommand}"
-                    Background="#855508"
-                    Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-rotate" Width="14" Height="14" />
-                <TextBlock Text="Power Cycle" />
-              </StackPanel>
-            </Button>
+            <TextBlock Text="Control power supply via Modbus coil operations (Turn ON/OFF, Read current state, or Power Cycle with 5s delay)"
+                       FontSize="11"
+                       Foreground="{DynamicResource TextForegroundMutedBrush}"
+                       Margin="0,4,0,0" />
           </StackPanel>
-
-          <TextBlock Text="Control power supply via Modbus coil operations (Turn ON/OFF, Read current state, or Power Cycle with 5s delay)"
-                     FontSize="11"
-                     Foreground="{DynamicResource TextForegroundMutedBrush}"
-                     Margin="0,4,0,0" />
-        </StackPanel>
+        </Expander>
       </Border>
 
     </StackPanel>

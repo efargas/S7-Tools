@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Shell;
 
 namespace S7Tools.Services.Shell;
@@ -50,7 +44,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
         try
         {
             // Use pgrep to find child processes on Linux/Unix
-            var result = await ExecuteDirectAsync("pgrep", ["-P", parentPid.ToString()], 5000, cancellationToken).ConfigureAwait(false);
+            ShellCommandResult result = await ExecuteDirectAsync("pgrep", ["-P", parentPid.ToString()], 5000, cancellationToken).ConfigureAwait(false);
 
             if (result.Success && !string.IsNullOrWhiteSpace(result.Output))
             {
@@ -81,7 +75,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
 
         try
         {
-            var argsList = arguments?.ToList() ?? new List<string>();
+            List<string> argsList = arguments?.ToList() ?? new List<string>();
             _logger.LogTrace("Executing direct command: {FileName} {Arguments}", fileName, string.Join(" ", argsList));
 
             var startInfo = new ProcessStartInfo
@@ -139,7 +133,7 @@ public sealed class ShellCommandExecutor : IShellCommandExecutor
             {
                 _logger.LogTrace("Executing parsed shell command directly: {Command}", command);
 
-                var args = SplitCommandLine(command);
+                List<string> args = SplitCommandLine(command);
                 if (args.Count == 0)
                 {
                     return new ShellCommandResult(false, -1, string.Empty, "Command parsed to empty.");

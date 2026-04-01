@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Shell;
-using S7Tools.Extensions;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Services.Socat;
 
@@ -314,7 +308,7 @@ public partial class SocatProcessManager : IDisposable
                         {
                             await _shellExecutor.ExecuteCommandAsync($"kill -TERM {string.Join(" ", childPids)}", cancellationToken).ConfigureAwait(false);
                         }
-                        
+
                         // Also try pkill to catch any processes spawned after GetChildProcessesAsync
                         await _shellExecutor.ExecuteCommandAsync($"pkill -TERM -P {processId}", cancellationToken).ConfigureAwait(false);
 
@@ -358,7 +352,9 @@ public partial class SocatProcessManager : IDisposable
             if (!exited && !process.HasExited)
             {
                 _logger.LogWarning("Socat process {ProcessId} did not exit after SIGTERM, forcing termination", processId);
-                try { process.Kill(true); } catch { process.Kill(); }
+                try
+                { process.Kill(true); }
+                catch { process.Kill(); }
                 await WaitForProcessExitAsync(process, timeoutMs / 2, cancellationToken).ConfigureAwait(false);
             }
 
@@ -368,7 +364,7 @@ public partial class SocatProcessManager : IDisposable
                 // Re-discover any lingering children (in case they were orphaned before process.Kill(true))
                 List<int> latestChildPids = await _shellExecutor.GetChildProcessesAsync(processId, cancellationToken).ConfigureAwait(false);
                 var allKnownChildren = new HashSet<int>(childPids);
-                foreach (var p in latestChildPids)
+                foreach (int p in latestChildPids)
                 {
                     allKnownChildren.Add(p);
                 }
@@ -378,7 +374,7 @@ public partial class SocatProcessManager : IDisposable
                     try
                     {
                         // Check if child is still alive
-                        var result = await _shellExecutor.ExecuteCommandAsync($"kill -0 {childPid}", cancellationToken).ConfigureAwait(false);
+                        ShellCommandResult result = await _shellExecutor.ExecuteCommandAsync($"kill -0 {childPid}", cancellationToken).ConfigureAwait(false);
                         if (result.Success)
                         {
                             _logger.LogInformation("Cleaning up child process {ChildPid} for socat {ProcessId}", childPid, processId);
@@ -538,7 +534,7 @@ public partial class SocatProcessManager : IDisposable
         if (disposing)
         {
             // Dispose all active processes
-            foreach (var process in _activeProcesses.Values)
+            foreach (Process process in _activeProcesses.Values)
             {
                 try
                 { process.Dispose(); }
@@ -546,7 +542,7 @@ public partial class SocatProcessManager : IDisposable
             }
 
             // Dispose all monitors
-            foreach (var monitor in _processMonitors.Values)
+            foreach (Timer monitor in _processMonitors.Values)
             {
                 try
                 { monitor.Dispose(); }

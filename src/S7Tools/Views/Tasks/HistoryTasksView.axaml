@@ -1,178 +1,234 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:vm="using:S7Tools.ViewModels.Tasks"
-  xmlns:views="using:S7Tools.Views.Tasks"
-  mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-  x:Class="S7Tools.Views.Tasks.HistoryTasksView"
-  x:DataType="vm:HistoryTasksViewModel">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Tasks"
+             xmlns:views="using:S7Tools.Views.Tasks"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="S7Tools.Views.Tasks.HistoryTasksView"
+             x:DataType="vm:HistoryTasksViewModel">
 
-  <Grid RowDefinitions="Auto,*,Auto,*">
-    <!-- Header -->
-    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
-      CornerRadius="4,4,0,0" Padding="12,8">
-      <Grid ColumnDefinitions="*,Auto,Auto">
-        <TextBlock Grid.Column="0" Text="Recently Completed Tasks" FontWeight="Medium"
-          VerticalAlignment="Center" />
-        <TextBlock Grid.Column="1"
-          Text="{Binding Manager.FinishedTasks.Count, StringFormat='{}{0} tasks'}"
-          FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}"
-          VerticalAlignment="Center" Margin="0,0,12,0" />
-        <Button Grid.Column="2" Content="Clear History"
-          Command="{Binding Manager.ClearFinishedTasksCommand}"
-          FontSize="11" Padding="8,4" ToolTip.Tip="Clear all finished tasks" />
-      </Grid>
-    </Border>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Task History"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                 Margin="0,0,0,10" />
 
-    <!-- Task List DataGrid -->
-    <DataGrid Grid.Row="1" ItemsSource="{Binding Manager.FinishedTasks}"
-      SelectedItem="{Binding SelectedHistoryTask}"
-      IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
-      GridLinesVisibility="Horizontal" HeadersVisibility="Column">
-      <DataGrid.Columns>
-        <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
-        <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
-        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
-        <DataGridTextColumn Header="Status" Binding="{Binding State}" Width="100" />
-        <DataGridTextColumn Header="Completed"
-          Binding="{Binding CompletedAt, StringFormat='MM/dd HH:mm'}" Width="120" />
-        <DataGridTextColumn Header="Duration" Binding="{Binding ExecutionTime}" Width="80" />
-        <DataGridTemplateColumn Header="Failure Details" Width="250">
-          <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-              <StackPanel Orientation="Vertical" Spacing="2">
-                <TextBlock Text="{Binding ErrorMessage, FallbackValue='N/A'}"
-                  FontSize="11" TextWrapping="Wrap" MaxWidth="240"
-                  IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                <TextBlock FontSize="10" Foreground="{DynamicResource SystemBaseMediumBrush}"
-                  IsVisible="{Binding FailedStep, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                  <Run Text="Failed at: " />
-                  <Run Text="{Binding FailedStep}" FontWeight="SemiBold" />
-                </TextBlock>
-              </StackPanel>
-            </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-        <DataGridTemplateColumn Header="Actions" Width="100">
-          <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <Button Content="Restart" FontSize="10" Padding="6,2"
-                  Command="{Binding $parent[UserControl].DataContext.Manager.RestartTaskCommand}"
-                  CommandParameter="{Binding}"
-                  ToolTip.Tip="Restart this task" />
-              </StackPanel>
-            </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-      </DataGrid.Columns>
-    </DataGrid>
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-history" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="RECENTLY COMPLETED TASKS" />
+              <TextBlock Grid.Column="3" 
+                         Text="{Binding Manager.FinishedTasks.Count, StringFormat='{}{0} tasks'}"
+                         FontSize="12"
+                         Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         VerticalAlignment="Center" 
+                         Margin="0,0,10,0"/>
+            </Grid>
+          </Expander.Header>
 
-    <!-- Task Details Header -->
-    <Border Grid.Row="2" Background="{DynamicResource SystemRegionBrush}"
-      BorderBrush="{DynamicResource SystemBaseLowBrush}" BorderThickness="0,1,0,1" Padding="12,8"
-      IsVisible="{Binding SelectedHistoryTask, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" Text="Task Details" FontWeight="Medium" />
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-          <Button Content="Open Logs Folder" Command="{Binding OpenLogsFolderCommand}"
-            FontSize="11" Padding="8,4" />
-          <Button Content="Open Dumps Folder" Command="{Binding OpenDumpsFolderCommand}"
-            FontSize="11" Padding="8,4" />
-        </StackPanel>
-      </Grid>
-    </Border>
-
-    <!-- Task Details Panel -->
-    <Border Grid.Row="3" Background="{DynamicResource AppBackgroundBrush}" Padding="16"
-      IsVisible="{Binding SelectedHistoryTask, Converter={x:Static ObjectConverters.IsNotNull}}">
-      <ScrollViewer>
-        <StackPanel Spacing="16">
-          <!-- Task Summary Section -->
-          <Border Background="{DynamicResource PanelBackgroundBrush}" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="1" CornerRadius="4"
-            Padding="12">
-            <StackPanel Spacing="8">
-              <TextBlock Text="Task Summary" FontWeight="SemiBold" FontSize="14" />
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="140,*"
-                Margin="0,8,0,0">
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Task ID:" FontSize="12"
-                  Foreground="{DynamicResource SystemBaseMediumBrush}" />
-                <TextBlock Grid.Row="0" Grid.Column="1"
-                  Text="{Binding SelectedHistoryTask.TaskId, FallbackValue='-'}" FontSize="12" />
-
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="Job Name:" FontSize="12"
-                  Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-                <TextBlock Grid.Row="1" Grid.Column="1"
-                  Text="{Binding SelectedHistoryTask.JobName, FallbackValue='-'}" FontSize="12"
-                  Margin="0,4,0,0" />
-
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="Created:" FontSize="12"
-                  Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-                <TextBlock Grid.Row="2" Grid.Column="1"
-                  Text="{Binding SelectedHistoryTask.CreatedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}"
-                  FontSize="12" Margin="0,4,0,0" />
-
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Started:" FontSize="12"
-                  Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-                <TextBlock Grid.Row="3" Grid.Column="1"
-                  Text="{Binding SelectedHistoryTask.StartedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}"
-                  FontSize="12" Margin="0,4,0,0" />
-
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="Completed:" FontSize="12"
-                  Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-                <TextBlock Grid.Row="4" Grid.Column="1"
-                  Text="{Binding SelectedHistoryTask.CompletedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}"
-                  FontSize="12" Margin="0,4,0,0" />
-
-                <TextBlock Grid.Row="5" Grid.Column="0" Text="Total Duration:" FontSize="12"
-                  Foreground="{DynamicResource SystemBaseMediumBrush}" Margin="0,4,0,0" />
-                <TextBlock Grid.Row="5" Grid.Column="1"
-                  Text="{Binding SelectedHistoryTask.ExecutionTime, StringFormat='{}{0:mm\\:ss}', FallbackValue='-'}"
-                  FontSize="12" Margin="0,4,0,0" />
-              </Grid>
-
-              <!-- Output File Info (for successful tasks) -->
-              <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="4" Padding="8" Margin="0,8,0,0"
-                IsVisible="{Binding SelectedHistoryTask.OutputFilePath, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                <StackPanel Spacing="4">
-                  <TextBlock Text="Output File:" FontSize="11" FontWeight="SemiBold"
-                    Foreground="{DynamicResource SystemAccentBrush}" />
-                  <TextBlock Text="{Binding SelectedHistoryTask.OutputFilePath}" FontSize="11"
-                    TextWrapping="Wrap" />
-                  <TextBlock FontSize="10" Foreground="{DynamicResource SystemBaseMediumBrush}"
-                    IsVisible="{Binding SelectedHistoryTask.OutputFileSize, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <Run Text="Size: " />
-                    <Run Text="{Binding SelectedHistoryTask.OutputFileSize}" />
-                    <Run Text=" bytes" />
-                  </TextBlock>
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <Grid>
+              <Button HorizontalAlignment="Right" Width="110" Height="34" Command="{Binding Manager.ClearFinishedTasksCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-trash" Width="14" Height="14" />
+                  <TextBlock Text="Clear All" />
                 </StackPanel>
-              </Border>
+              </Button>
+            </Grid>
 
-              <!-- Error Info (for failed tasks) -->
-              <Border Background="#3D1E1E" BorderBrush="{DynamicResource LogColorFatalBrush}" BorderThickness="1"
-                CornerRadius="4" Padding="8" Margin="0,8,0,0"
-                IsVisible="{Binding SelectedHistoryTask.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                <StackPanel Spacing="4">
-                  <TextBlock Text="Error Information:" FontSize="11" FontWeight="SemiBold"
-                    Foreground="#FF6B6B" />
-                  <TextBlock Text="{Binding SelectedHistoryTask.ErrorMessage}" FontSize="11"
-                    TextWrapping="Wrap" Foreground="#FFB3B3" />
-                  <TextBlock FontSize="10" Foreground="#FF9999"
-                    IsVisible="{Binding SelectedHistoryTask.FailedStep, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                    <Run Text="Failed at step: " />
-                    <Run Text="{Binding SelectedHistoryTask.FailedStep}" FontWeight="SemiBold" />
-                  </TextBlock>
-                </StackPanel>
-              </Border>
+            <DataGrid ItemsSource="{Binding Manager.FinishedTasks}"
+                      SelectedItem="{Binding SelectedHistoryTask}"
+                      Background="{DynamicResource ControlBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      MaxHeight="350">
+            <DataGrid.Columns>
+              <DataGridTemplateColumn Header="Task ID" Width="180">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding TaskId}" 
+                               TextTrimming="CharacterEllipsis" 
+                               VerticalAlignment="Center" 
+                               Margin="12,0"
+                               ToolTip.Tip="{Binding TaskId}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="Name" Width="150">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding JobName}" 
+                               TextTrimming="CharacterEllipsis" 
+                               VerticalAlignment="Center" 
+                               Margin="12,0"
+                               ToolTip.Tip="{Binding JobName}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Header="Status" Binding="{Binding State}" Width="80" />
+              <DataGridTextColumn Header="Completed" Binding="{Binding CompletedAt, StringFormat='MM/dd HH:mm'}" Width="120" />
+              <DataGridTextColumn Header="Duration" Binding="{Binding ExecutionTime}" Width="100" />
+              <DataGridTemplateColumn Header="Failure" Width="1*" MaxWidth="300">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <StackPanel Orientation="Vertical" Spacing="2" VerticalAlignment="Center" Margin="8,0">
+                      <TextBlock Text="{Binding ErrorMessage, FallbackValue='N/A'}"
+                                 FontSize="11" TextWrapping="Wrap"
+                                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                      <TextBlock FontSize="10" Foreground="{DynamicResource TextForegroundMutedBrush}"
+                                 IsVisible="{Binding FailedStep, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <Run Text="Failed at: " />
+                        <Run Text="{Binding FailedStep}" FontWeight="SemiBold" />
+                      </TextBlock>
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="Actions" Width="100">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.RestartTaskCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="Restart this task">
+                        <icons:Icon Value="fa-solid fa-redo" Foreground="{DynamicResource SystemAccentColor}" />
+                      </Button>
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.DeleteTaskCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="Delete this task from history">
+                        <icons:Icon Value="fa-solid fa-trash" Foreground="#D13438" />
+                      </Button>
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </DataGrid.Columns>
+            </DataGrid>
+          </StackPanel>
+        </Expander>
+      </Border>
+
+      <!-- Task Details Header -->
+      <Border IsVisible="{Binding SelectedHistoryTask, Converter={x:Static ObjectConverters.IsNotNull}}"
+              Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-circle-info" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="TASK DETAILS" />
+            </Grid>
+          </Expander.Header>
+
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <Grid Margin="0,0,0,8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                <Button Width="150" Height="34" Command="{Binding OpenLogsFolderCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-folder-open" Width="14" Height="14" />
+                    <TextBlock Text="Logs Folder" />
+                  </StackPanel>
+                </Button>
+                <Button Width="150" Height="34" Command="{Binding OpenDumpsFolderCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-database" Width="14" Height="14" />
+                    <TextBlock Text="Dumps Folder" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
+
+          <!-- Task Summary Info -->
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="140,*" Margin="0,8,0,0">
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Task ID:" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" />
+            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedHistoryTask.TaskId, FallbackValue='-'}" FontSize="12" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Job Name:" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" Margin="0,4,0,0" />
+            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedHistoryTask.JobName, FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Created:" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" Margin="0,4,0,0" />
+            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedHistoryTask.CreatedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Started:" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" Margin="0,4,0,0" />
+            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedHistoryTask.StartedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Completed:" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" Margin="0,4,0,0" />
+            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedHistoryTask.CompletedAt, StringFormat='yyyy-MM-dd HH:mm:ss', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Total Duration:" FontSize="12" Foreground="{DynamicResource TextForegroundMutedBrush}" Margin="0,4,0,0" />
+            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedHistoryTask.ExecutionTime, StringFormat='{}{0:mm\\:ss}', FallbackValue='-'}" FontSize="12" Margin="0,4,0,0" />
+          </Grid>
+
+          <!-- Output File Info (for successful tasks) -->
+          <Border Background="{DynamicResource AppBackgroundBrush}" CornerRadius="4" Padding="12" Margin="0,8,0,0"
+                  IsVisible="{Binding SelectedHistoryTask.OutputFilePath, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <StackPanel Spacing="4">
+              <TextBlock Text="Output File:" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource SystemAccentColor}" />
+              <TextBlock Text="{Binding SelectedHistoryTask.OutputFilePath}" FontSize="11" TextWrapping="Wrap" />
+              <TextBlock FontSize="10" Foreground="{DynamicResource TextForegroundMutedBrush}"
+                         IsVisible="{Binding SelectedHistoryTask.OutputFileSize, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <Run Text="Size: " />
+                <Run Text="{Binding SelectedHistoryTask.OutputFileSize}" />
+                <Run Text=" bytes" />
+              </TextBlock>
+            </StackPanel>
+          </Border>
+
+          <!-- Error Info (for failed tasks) -->
+          <Border Background="#3D1E1E" BorderBrush="#D13438" BorderThickness="1"
+                  CornerRadius="4" Padding="12" Margin="0,8,0,0"
+                  IsVisible="{Binding SelectedHistoryTask.ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+            <StackPanel Spacing="4">
+              <TextBlock Text="Error Information:" FontSize="11" FontWeight="SemiBold" Foreground="#FF6B6B" />
+              <TextBlock Text="{Binding SelectedHistoryTask.ErrorMessage}" FontSize="11" TextWrapping="Wrap" Foreground="#FFB3B3" />
+              <TextBlock FontSize="10" Foreground="#FF9999"
+                         IsVisible="{Binding SelectedHistoryTask.FailedStep, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                <Run Text="Failed at step: " />
+                <Run Text="{Binding SelectedHistoryTask.FailedStep}" FontWeight="SemiBold" />
+              </TextBlock>
             </StackPanel>
           </Border>
 
           <!-- Task Details View (Logs and Controls) -->
           <views:TaskDetailsView DataContext="{Binding TaskDetailsViewModel}" />
-        </StackPanel>
-      </ScrollViewer>
-    </Border>
-  </Grid>
-
+          </StackPanel>
+        </Expander>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

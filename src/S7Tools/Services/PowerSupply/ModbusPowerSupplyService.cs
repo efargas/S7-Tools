@@ -1,6 +1,5 @@
-using Microsoft.Extensions.Logging;
-using S7Tools.Core.Models;
 using global::S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
 using S7Tools.Resources;
 
 namespace S7Tools.Services.PowerSupply;
@@ -37,7 +36,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     /// <inheritdoc />
     public Task<bool> ConnectAsync(PowerSupplyConfiguration configuration, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = taskLogger ?? _logger;
+        ILogger effectiveLogger = taskLogger ?? _logger;
         ArgumentNullException.ThrowIfNull(configuration);
         effectiveLogger.LogInformation("Connecting to power supply with configuration: {Config}", configuration.GenerateConnectionString());
         _currentConfiguration = configuration;
@@ -64,7 +63,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     /// <inheritdoc />
     public Task<bool> TurnOnAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = taskLogger ?? _logger;
+        ILogger effectiveLogger = taskLogger ?? _logger;
         if (!_isConnected)
         {
             throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
@@ -77,7 +76,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     /// <inheritdoc />
     public Task<bool> TurnOffAsync(Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = taskLogger ?? _logger;
+        ILogger effectiveLogger = taskLogger ?? _logger;
         if (!_isConnected)
         {
             throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);
@@ -102,7 +101,7 @@ public sealed class ModbusPowerSupplyService : IPowerSupplyService
     /// <inheritdoc />
     public async Task<bool> PowerCycleAsync(int delayMs = 5000, Microsoft.Extensions.Logging.ILogger? taskLogger = null, CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = taskLogger ?? _logger;
+        ILogger effectiveLogger = taskLogger ?? _logger;
         if (!_isConnected)
         {
             throw new InvalidOperationException(UIStrings.Exception_NotConnectedToPowerSupply);

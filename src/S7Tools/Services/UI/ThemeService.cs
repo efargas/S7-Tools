@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Text.Json;
-using Avalonia;
 using Avalonia.Styling;
 using S7Tools.Services.Interfaces;
 

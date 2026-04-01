@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Services.Interfaces;
 
@@ -220,8 +216,8 @@ public sealed class UIRefreshService : IUIRefreshService
         try
         {
             // Common property patterns to refresh across ViewModels
-            string[] commonProperties = new[]
-            {
+            string[] commonProperties =
+            [
                 // Common UI state properties
                 "CanExecute", "IsEnabled", "IsVisible", "IsLoading", "IsValid",
 
@@ -233,7 +229,7 @@ public sealed class UIRefreshService : IUIRefreshService
 
                 // Status properties
                 "Status", "StatusMessage", "ErrorMessage", "ValidationMessage"
-            };
+            ];
 
             // Get all properties of the ViewModel that match common patterns
             Type viewModelType = viewModel.GetType();

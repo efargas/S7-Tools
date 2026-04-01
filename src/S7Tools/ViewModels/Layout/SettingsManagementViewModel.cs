@@ -1,14 +1,6 @@
-using System;
-using System.IO;
-using System.Linq;
 using System.Reactive;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 
@@ -18,11 +10,12 @@ namespace S7Tools.ViewModels.Layout;
 /// ViewModel for managing application settings and configuration.
 /// Handles all settings-related properties, commands, and persistence.
 /// </summary>
-public class SettingsManagementViewModel : ReactiveObject
+public class SettingsManagementViewModel : ReactiveObject, IDisposable
 {
     private readonly ILogger<SettingsManagementViewModel> _logger;
     private readonly IFileDialogService? _fileDialogService;
     private readonly IApplicationSettingsService _settingsService;
+    private readonly EventHandler<SettingsChangedEventArgs> _settingsChangedHandler;
 
     // Settings Properties - will be populated from ApplicationSettingsService
     private string _defaultLogPath = string.Empty;
@@ -65,7 +58,7 @@ public class SettingsManagementViewModel : ReactiveObject
 
         var services = new ServiceCollection();
         services.AddLogging();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Create a mock options for design time
         var dummyOptions = new DummyOptions();
@@ -126,8 +119,9 @@ public class SettingsManagementViewModel : ReactiveObject
         // Load current settings from service
         RefreshFromSettings();
 
-        // Subscribe to settings changes
-        _settingsService.SettingsChanged += (_, _) => RefreshFromSettings();
+        // Subscribe to settings changes (stored for unsubscription in Dispose)
+        _settingsChangedHandler = (_, _) => RefreshFromSettings();
+        _settingsService.SettingsChanged += _settingsChangedHandler;
 
         _logger.LogDebug("SettingsManagementViewModel initialized");
     }
@@ -517,7 +511,7 @@ public class SettingsManagementViewModel : ReactiveObject
             }
 
             // Validate log level
-            string[] validLogLevels = new[] { "Trace", "Debug", "Information", "Warning", "Error", "Critical" };
+            string[] validLogLevels = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
             if (!validLogLevels.Contains(MinimumLogLevel))
             {
                 _logger.LogWarning("Invalid log level: {LogLevel}. Resetting to Information.", MinimumLogLevel);
@@ -584,4 +578,22 @@ public class SettingsManagementViewModel : ReactiveObject
     }
 
     #endregion
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases managed resources.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _settingsService.SettingsChanged -= _settingsChangedHandler;
+        }
+    }
 }

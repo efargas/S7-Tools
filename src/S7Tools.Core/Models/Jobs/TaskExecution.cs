@@ -1,6 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 
@@ -320,6 +319,58 @@ public class TaskExecution : INotifyPropertyChanged
     public TimeSpan TotalTime => Now - CreatedAt;
 
     /// <summary>
+    /// Gets the scheduled execution time stored in <see cref="ProgressData"/>["ScheduledTime"] (UTC), or
+    /// <c>null</c> if no scheduled time is present in <see cref="ProgressData"/>.
+    /// </summary>
+    /// <remarks>
+    /// The property reads directly from <see cref="ProgressData"/> without checking <see cref="State"/>.
+    /// The scheduler removes "ScheduledTime" from <see cref="ProgressData"/> when a task is promoted to the
+    /// queue, so the value is typically absent for non-scheduled tasks in practice.
+    /// Handles three value shapes produced by the scheduler and JSON deserialization:
+    /// <list type="bullet">
+    ///   <item><c>DateTime</c> — set at runtime by the scheduler.</item>
+    ///   <item><c>string</c> — written directly as a string.</item>
+    ///   <item><c>JsonElement</c> (string) — produced when <see cref="ProgressData"/> is round-tripped through
+    ///     <c>System.Text.Json</c>. <c>Unspecified</c> kind is treated as UTC to match the scheduler convention.</item>
+    /// </list>
+    /// </remarks>
+    [JsonIgnore]
+    public DateTime? ScheduledTime
+    {
+        get
+        {
+            if (!ProgressData.TryGetValue("ScheduledTime", out object? scheduledObj))
+            {
+                return null;
+            }
+
+            DateTime? result = scheduledObj switch
+            {
+                DateTime dt => dt,
+                string s when DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime parsed) => parsed,
+                System.Text.Json.JsonElement je when je.ValueKind == System.Text.Json.JsonValueKind.String =>
+                    je.GetString() is { Length: > 0 } dateStr &&
+                    DateTime.TryParse(dateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out DateTime jeDate) ? jeDate : null,
+                _ => null
+            };
+
+            // Normalize Unspecified → UTC to match the scheduler convention
+            if (result.HasValue && result.Value.Kind == DateTimeKind.Unspecified)
+            {
+                result = DateTime.SpecifyKind(result.Value, DateTimeKind.Utc);
+            }
+
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Gets the scheduled execution time in local time, or <c>null</c> if not scheduled.
+    /// </summary>
+    [JsonIgnore]
+    public DateTime? ScheduledTimeLocal => ScheduledTime?.ToLocalTime();
+
+    /// <summary>
     /// Gets a value indicating whether the task is in a terminal state.
     /// </summary>
     public bool IsTerminal => State is TaskState.Completed or TaskState.Failed or TaskState.Cancelled;
@@ -332,7 +383,7 @@ public class TaskExecution : INotifyPropertyChanged
     /// <summary>
     /// Gets a value indicating whether the task can be cancelled.
     /// </summary>
-    public bool CanCancel => State is TaskState.Created or TaskState.Queued or TaskState.Running or TaskState.Paused;
+    public bool CanCancel => State is TaskState.Created or TaskState.Queued or TaskState.Scheduled or TaskState.Running or TaskState.Paused;
 
     /// <summary>
     /// Gets a value indicating whether the task can be restarted.

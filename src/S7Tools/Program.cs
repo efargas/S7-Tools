@@ -1,26 +1,18 @@
-using System;
-using System.Reactive;
-using System.Threading.Tasks;
-using Avalonia;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Projektanker.Icons.Avalonia;
 using Projektanker.Icons.Avalonia.FontAwesome;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
-using S7Tools.Core.Interfaces.Services;
 using S7Tools.Extensions;
 using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
-using S7Tools.ViewModels;
 using S7Tools.ViewModels.Layout;
-using S7Tools.Views;
 using S7Tools.Views.Layout;
-using Splat.Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Splat.Microsoft.Extensions.DependencyInjection;
 
 
 namespace S7Tools;
@@ -165,8 +157,8 @@ sealed class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
-        var basePath = AppDomain.CurrentDomain.BaseDirectory;
-        var configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+        string basePath = AppDomain.CurrentDomain.BaseDirectory;
+        IConfigurationRoot configuration = new Microsoft.Extensions.Configuration.ConfigurationBuilder()
             .AddJsonFile(Path.Combine(basePath, "Resources", "AppSettings", "AppSettings.json"), optional: true, reloadOnChange: true)
             .AddJsonFile(Path.Combine(basePath, "Resources", "AppSettings", "UserSettings.json"), optional: true, reloadOnChange: true)
             .Build();
@@ -174,7 +166,7 @@ sealed class Program
         services.AddSingleton<Microsoft.Extensions.Configuration.IConfiguration>(configuration);
 
         // Bind strongly typed options
-        var appSection = configuration.GetSection("App");
+        IConfigurationSection appSection = configuration.GetSection("App");
         services.AddOptions<S7Tools.Core.Models.Configuration.StrongSettings.AppSettings>()
             .Bind(appSection)
             .ValidateDataAnnotations()
@@ -199,23 +191,23 @@ sealed class Program
             .Enrich.FromLogContext()
             // Global DataStore sink for UI
             .WriteTo.Sink(logDataStore)
-            
+
             // Application File Sink (No TaskId)
             .WriteTo.Logger(lc => lc
                 .Filter.ByExcluding(e => e.Properties.ContainsKey("TaskId"))
                 .WriteTo.File(Path.Combine(basePath, "Resources", "Logs", "Main", $"s7tools_{DateTime.Now:yyyyMMdd_HHmmss}.log")))
-            
+
             // Task-specific File Sinks via Map (Has TaskId)
             .WriteTo.Logger(lc => lc
                 .Filter.ByIncludingOnly(e => e.Properties.ContainsKey("TaskId"))
-                .WriteTo.Map("TaskId", (taskId, wt) => 
+                .WriteTo.Map("TaskId", (taskId, wt) =>
                 {
-                    var taskIdStr = taskId?.ToString() ?? "unknown";
+                    string taskIdStr = taskId?.ToString() ?? "unknown";
                     // Within a task, map by Scope to create main.log, process.log, etc.
-                    wt.Map("LogScope", "Main", (scope, subWt) => 
+                    wt.Map("LogScope", "Main", (scope, subWt) =>
                         subWt.File(Path.Combine(basePath, "Resources", "Logs", "Tasks", taskIdStr, $"{scope}.log"), rollingInterval: RollingInterval.Day));
                 }, sinkMapCountLimit: 50))
-                
+
             .CreateLogger();
 
         // Add logging using Serilog

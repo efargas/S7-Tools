@@ -1,8 +1,5 @@
-using System;
 using System.Reactive;
 using System.Reactive.Disposables;
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Xaml.Interactivity;
 using ReactiveUI;
 

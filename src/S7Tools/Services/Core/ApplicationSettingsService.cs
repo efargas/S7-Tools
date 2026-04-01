@@ -1,12 +1,8 @@
-using System;
-using System.Threading.Tasks;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration.StrongSettings;
 using S7Tools.Services.Interfaces;
-using System.Collections.Generic;
-using System.Text.Json;
 
 namespace S7Tools.Services
 {
@@ -119,7 +115,7 @@ namespace S7Tools.Services
         {
             try
             {
-                var settings = Current;
+                AppSettings settings = Current;
                 var exportDict = new Dictionary<string, object>
                 {
                     ["logging.logDirectory"] = settings.Logging.LogDirectory,
@@ -167,7 +163,7 @@ namespace S7Tools.Services
                     PropertyNameCaseInsensitive = true
                 };
 
-                var importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, optionsFormatter);
+                Dictionary<string, object>? importedSettings = JsonSerializer.Deserialize<Dictionary<string, object>>(json, optionsFormatter);
                 if (importedSettings == null)
                 {
                     return false;
@@ -228,8 +224,11 @@ namespace S7Tools.Services
 
         private void RaiseSettingsChanged(SettingsChangedEventArgs args)
         {
-            var handler = SettingsChanged;
-            if (handler is null) return;
+            EventHandler<SettingsChangedEventArgs>? handler = SettingsChanged;
+            if (handler is null)
+            {
+                return;
+            }
 
             if (_uiThreadService is not null)
             {

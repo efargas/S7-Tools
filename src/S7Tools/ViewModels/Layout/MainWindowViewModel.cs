@@ -1,23 +1,19 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
 using Dock.Model.Controls;
 using Dock.Model.Core;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using ReactiveUI;
-using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Extensions;
 using S7Tools.Factories;
 using S7Tools.Resources;
-using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Pages;
+using S7Tools.ViewModels.Settings;
+using S7Tools.ViewModels.Tasks;
 
 namespace S7Tools.ViewModels.Layout;
 
@@ -36,7 +32,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     private readonly IServiceProvider _serviceProvider;
     private readonly CompositeDisposable _disposables = new();
 
-    private string _testInputText = UIStrings.TestClipboardText;
     private string _statusMessage = UIStrings.StatusReady;
     private string _lastButtonPressed = "";
     private IRootDock? _layout;
@@ -55,7 +50,7 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         var services = new ServiceCollection();
         services.AddLogging();
-        var serviceProvider = services.BuildServiceProvider();
+        ServiceProvider serviceProvider = services.BuildServiceProvider();
 
         // Create a mock options for design time
         var dummyOptions = new DummyOptions();
@@ -132,23 +127,11 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
 
         // Initialize commands
         ExitCommand = ReactiveCommand.CreateFromTask(ExitAsync);
-        CutCommand = ReactiveCommand.CreateFromTask(CutAsync);
-        CopyCommand = ReactiveCommand.CreateFromTask(CopyAsync);
-        PasteCommand = ReactiveCommand.CreateFromTask(PasteAsync);
+        AboutCommand = ReactiveCommand.Create(() => OpenDocumentTab(_serviceProvider.GetRequiredService<IViewModelFactory>().Create<AboutViewModel>()));
 
-        // Initialize the unified logging test command
-        TestLogCommand = ReactiveCommand.Create<LogLevel>(TestLogWithLevel);
-
-        // Initialize individual logging test commands for backward compatibility
-        // These now delegate to the unified command, eliminating code duplication
-        TestTraceLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Trace));
-        TestDebugLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Debug));
-        TestInfoLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Information));
-        TestWarningLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Warning));
-        TestErrorLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Error));
-        TestCriticalLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Critical));
-
-        ExportLogsCommand = ReactiveCommand.CreateFromTask(ExportLogsAsync);
+        CutCommand = ReactiveCommand.Create(() => { StatusMessage = "Command executed: Cut"; _logger.LogInformation("Cut command executed"); });
+        CopyCommand = ReactiveCommand.Create(() => { StatusMessage = "Command executed: Copy"; _logger.LogInformation("Copy command executed"); });
+        PasteCommand = ReactiveCommand.Create(() => { StatusMessage = "Command executed: Paste"; _logger.LogInformation("Paste command executed"); });
 
         LoadConfigurationCommand = ReactiveCommand.CreateFromTask(LoadConfigurationAsync);
         SaveConfigurationCommand = ReactiveCommand.CreateFromTask(SaveConfigurationAsync);
@@ -172,12 +155,17 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         InitializeDocking();
 
         // Wire navigation to open content in dock tabs
-        Navigation.OpenDocumentAction = vm => OpenDocumentTab(vm);
-        Navigation.OpenToolAction = vm => OpenToolTab(vm);
+        Navigation.OpenDocumentAction = OpenDocumentTab;
+        Navigation.OpenToolAction = OpenToolTab;
+        Navigation.LogViewerAction = () =>
+        {
+            OpenToolTab(_serviceProvider.GetRequiredService<LogViewerViewModel>());
+        };
+        Navigation.HomeAction = OpenHome;
 
         // Pre-wire TaskManagerViewModel so it can open task logs automatically
         // even if the user hasn't visited the Tasks sidebar view yet
-        var taskManagerVm = _serviceProvider.GetService<ViewModels.Tasks.TaskManagerViewModel>();
+        TaskManagerViewModel? taskManagerVm = _serviceProvider.GetService<ViewModels.Tasks.TaskManagerViewModel>();
         if (taskManagerVm != null)
         {
             taskManagerVm.OpenDocumentAction = vm => OpenDocumentTab(vm);
@@ -204,15 +192,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     #endregion
 
     #region Properties
-
-    /// <summary>
-    /// Gets or sets the test input text for clipboard operations.
-    /// </summary>
-    public string TestInputText
-    {
-        get => _testInputText;
-        set => this.RaiseAndSetIfChanged(ref _testInputText, value);
-    }
 
     /// <summary>
     /// Gets or sets the status message.
@@ -254,9 +233,9 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         {
             _factory = new MainDockFactory(this)
             {
-                LogViewerContent = _serviceProvider.GetService<ViewModels.Pages.LogViewerViewModel>() ?? new ViewModels.Pages.LogViewerViewModel(),
-                WelcomeContent = Navigation.CreateWelcomeViewModel(),
-                SettingsContent = null // will be set on first use
+                LogViewerContent = Navigation.CreateViewModel<LogViewerViewModel>(),
+                SettingsContent = Navigation.CreateViewModel<SettingsViewModel>(),
+                HomeContent = Navigation.CreateHomeViewModel(),
             };
 
             Layout = _factory.CreateLayout();
@@ -319,6 +298,18 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         _logger.LogDebug("Settings view opened via dock");
     }
 
+    /// <summary>
+    /// Opens the Home view as a docked document tab.
+    /// </summary>
+    public void OpenHome()
+    {
+        if (_factory is MainDockFactory mainDockFactory)
+        {
+            mainDockFactory.RestoreHome();
+        }
+        _logger.LogDebug("Home view opened via dock");
+    }
+
     #endregion
 
     #region Commands
@@ -329,59 +320,24 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
     public ReactiveCommand<Unit, Unit> ExitCommand { get; }
 
     /// <summary>
-    /// Gets the command to cut text to clipboard.
+    /// Gets the command to open the About view.
+    /// </summary>
+    public ReactiveCommand<Unit, Unit> AboutCommand { get; }
+
+    /// <summary>
+    /// Gets the command to perform a Cut operation.
     /// </summary>
     public ReactiveCommand<Unit, Unit> CutCommand { get; }
 
     /// <summary>
-    /// Gets the command to copy text to clipboard.
+    /// Gets the command to perform a Copy operation.
     /// </summary>
     public ReactiveCommand<Unit, Unit> CopyCommand { get; }
 
     /// <summary>
-    /// Gets the command to paste text from clipboard.
+    /// Gets the command to perform a Paste operation.
     /// </summary>
     public ReactiveCommand<Unit, Unit> PasteCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test logging with a specific log level.
-    /// </summary>
-    public ReactiveCommand<LogLevel, Unit> TestLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test trace logging.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> TestTraceLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test debug logging.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> TestDebugLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test information logging.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> TestInfoLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test warning logging.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> TestWarningLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test error logging.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> TestErrorLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test critical logging.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> TestCriticalLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to export logs.
-    /// </summary>
-    public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
 
     /// <summary>
     /// Command to load configuration from a file via file picker.
@@ -477,154 +433,6 @@ public class MainWindowViewModel : ViewModelBase, IDisposable
         }
     }
 
-    /// <summary>
-    /// Cuts text to clipboard and clears the input.
-    /// </summary>
-    private async Task CutAsync()
-    {
-        try
-        {
-            if (!string.IsNullOrEmpty(TestInputText))
-            {
-                await _clipboardService.SetTextAsync(TestInputText);
-                TestInputText = string.Empty;
-                StatusMessage = UIStrings.ClipboardTextCut;
-                _logger.LogDebug("Text cut to clipboard");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to cut text to clipboard");
-            StatusMessage = UIStrings.ClipboardCutFailed;
-        }
-    }
-
-    /// <summary>
-    /// Copies text to clipboard.
-    /// </summary>
-    private async Task CopyAsync()
-    {
-        try
-        {
-            if (!string.IsNullOrEmpty(TestInputText))
-            {
-                await _clipboardService.SetTextAsync(TestInputText);
-                StatusMessage = UIStrings.ClipboardTextCopied;
-                _logger.LogDebug("Text copied to clipboard");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to copy text to clipboard");
-            StatusMessage = UIStrings.ClipboardCopyFailed;
-        }
-    }
-
-    /// <summary>
-    /// Pastes text from clipboard.
-    /// </summary>
-    private async Task PasteAsync()
-    {
-        try
-        {
-            string? text = await _clipboardService.GetTextAsync();
-            if (!string.IsNullOrEmpty(text))
-            {
-                TestInputText += text;
-                StatusMessage = UIStrings.ClipboardTextPasted;
-                _logger.LogDebug("Text pasted from clipboard");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to paste text from clipboard");
-            StatusMessage = UIStrings.ClipboardPasteFailed;
-        }
-    }
-
-    /// <summary>
-    /// Tests logging at the specified level using the unified command pattern.
-    /// This method replaces the old repetitive logging commands.
-    /// </summary>
-    /// <param name="level">The log level to test.</param>
-    private void TestLogWithLevel(LogLevel level)
-    {
-        string levelName = level switch
-        {
-            LogLevel.Trace => "TRACE",
-            LogLevel.Debug => "DEBUG",
-            LogLevel.Information => "INFO",
-            LogLevel.Warning => "WARNING",
-            LogLevel.Error => "ERROR",
-            LogLevel.Critical => "CRITICAL",
-            _ => level.ToString().ToUpperInvariant()
-        };
-
-        TestLog(level, levelName);
-    }
-
-    /// <summary>
-    /// Tests logging at the specified level.
-    /// </summary>
-    /// <param name="level">The log level to test.</param>
-    /// <param name="levelName">The display name of the log level.</param>
-    private void TestLog(LogLevel level, string levelName)
-    {
-        try
-        {
-            string message = $"This is a {levelName} level log message generated at {DateTime.UtcNow.ToLocalTime()}";
-
-            switch (level)
-            {
-                case LogLevel.Trace:
-                    _logger.LogTrace(message);
-                    break;
-                case LogLevel.Debug:
-                    _logger.LogDebug("{Message} with debug info: {@DebugData}", message, new { UserId = 123, Action = "ButtonClick" });
-                    break;
-                case LogLevel.Information:
-                    _logger.LogInformation("{Message}. User performed action: {Action}", message, $"Test {levelName} Log");
-                    break;
-                case LogLevel.Warning:
-                    _logger.LogWarning("{Message}. Something might need attention: {Warning}", message, "Test warning condition");
-                    break;
-                case LogLevel.Error:
-                    _logger.LogError("{Message}. An error occurred: {Error}", message, "Simulated error for testing");
-                    break;
-                case LogLevel.Critical:
-                    _logger.LogCritical("{Message}. System is in critical state: {CriticalIssue}", message, "Simulated critical issue");
-                    break;
-            }
-
-            LastButtonPressed = $"{levelName} Log Generated";
-            StatusMessage = UIStrings.LogTestGenerated(levelName);
-            // Button message clearing is now handled by reactive pattern in constructor
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to generate {LogLevel} log message", levelName);
-            StatusMessage = UIStrings.LogTestFailed(levelName);
-        }
-    }
-
-    /// <summary>
-    /// Exports logs to clipboard.
-    /// </summary>
-    private async Task ExportLogsAsync()
-    {
-        try
-        {
-            string exportText = "Log Export - " + DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.LongDateTime);
-            await _clipboardService.SetTextAsync(exportText);
-            StatusMessage = UIStrings.LogExportCopied;
-            _logger.LogInformation("Log export copied to clipboard");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to export logs to clipboard");
-            StatusMessage = UIStrings.Status_FailedToExportLogs;
-        }
-    }
 
     /// <summary>
     /// Reloads the current application settings.

@@ -39,12 +39,12 @@ namespace S7Tools.Services.Adapters.Plc
         /// <summary>
         /// The success response for entering a subprotocol.
         /// </summary>
-        public static readonly byte[] ANSW_ENTER_SUBPROTO_SUCCESS = { 0x80, 0x00 };
+        public static readonly byte[] ANSW_ENTER_SUBPROTO_SUCCESS = [0x80, 0x00];
 
         /// <summary>
         /// The magic numbers for entering subprotocol modes.
         /// </summary>
-        public static readonly ushort[] SUBPROT_80_MODE_MAGICS = { 0, 0x3BC2, 0x9d26, 0xe17a, 0xc54f };
+        public static readonly ushort[] SUBPROT_80_MODE_MAGICS = [0, 0x3BC2, 0x9d26, 0xe17a, 0xc54f];
 
         /// <summary>
         /// The subprotocol mode for IRAM.

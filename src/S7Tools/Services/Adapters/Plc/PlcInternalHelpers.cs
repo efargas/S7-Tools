@@ -1,6 +1,3 @@
-using System;
-using System.Linq;
-
 namespace S7Tools.Services.Adapters.Plc
 {
     /// <summary>
@@ -13,7 +10,7 @@ namespace S7Tools.Services.Adapters.Plc
         /// </summary>
         public static byte[] GetBigEndianBytes(uint value)
         {
-            var b = BitConverter.GetBytes(value);
+            byte[] b = BitConverter.GetBytes(value);
             if (BitConverter.IsLittleEndian)
             {
                 Array.Reverse(b);
@@ -39,7 +36,7 @@ namespace S7Tools.Services.Adapters.Plc
                     continue; // Length conflict check
                 }
 
-                var res = new byte[chunk.Length + 1];
+                byte[] res = new byte[chunk.Length + 1];
                 res[0] = key;
                 for (int j = 0; j < chunk.Length; j++)
                 {

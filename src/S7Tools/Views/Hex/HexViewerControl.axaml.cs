@@ -1,10 +1,6 @@
-using System;
-using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using AvaloniaHex.Document;
 using AvaloniaHex.Rendering;
 using S7Tools.ViewModels.Hex;
 
@@ -63,7 +59,7 @@ public partial class HexViewerControl : UserControl
     // Toggle Column Visibility
     private void ToggleColumn<TColumn>() where TColumn : Column
     {
-        var column = MainHexEditor.Columns.Get<TColumn>();
+        TColumn column = MainHexEditor.Columns.Get<TColumn>();
         column.IsVisible = !column.IsVisible;
     }
 
@@ -80,7 +76,7 @@ public partial class HexViewerControl : UserControl
 
     private void ToggleColumnHeader<TColumn>() where TColumn : Column
     {
-        var column = MainHexEditor.Columns.Get<TColumn>();
+        TColumn column = MainHexEditor.Columns.Get<TColumn>();
         column.IsHeaderVisible = !column.IsHeaderVisible;
     }
 
@@ -133,7 +129,7 @@ public partial class HexViewerControl : UserControl
             double padding = MainHexEditor.ColumnPadding;
             int visibleColumns = 0;
 
-            foreach (var column in MainHexEditor.Columns)
+            foreach (Column column in MainHexEditor.Columns)
             {
                 if (column.IsVisible)
                 {

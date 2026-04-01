@@ -1,22 +1,17 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Globalization;
+#nullable enable
 using System.Reactive;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.ViewModels;
-using S7Tools.Infrastructure.Logging.Core.Models;
 using S7Tools.Infrastructure.Logging.Core.Storage;
 using S7Tools.Resources;
 using S7Tools.Services;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 using S7Tools.ViewModels.Jobs;
 using S7Tools.ViewModels.Pages;
 using S7Tools.ViewModels.Profiles;
 using S7Tools.ViewModels.Settings;
-using S7Tools.ViewModels.Tasks;
 using DesignTimeFactory = S7Tools.Services.DesignTimeViewModelFactory;
 
 namespace S7Tools.ViewModels.Layout;
@@ -107,11 +102,21 @@ public class NavigationViewModel : ReactiveObject
     public Action<IDockableViewModel>? OpenToolAction { get; set; }
 
     /// <summary>
-    /// Creates the welcome/initial ViewModel for the dock's default document.
+    /// Action to activate the log viewer tool.
     /// </summary>
-    public object? CreateWelcomeViewModel()
+    public Action? LogViewerAction { get; set; }
+
+    /// <summary>
+    /// Action to activate the home view.
+    /// </summary>
+    public Action? HomeAction { get; set; }
+
+    /// <summary>
+    /// Creates the home/initial ViewModel for the dock's default document.
+    /// </summary>
+    public object? CreateHomeViewModel()
     {
-        return CreateViewModel<LoggingTestViewModel>();
+        return CreateViewModel<HomeViewModel>();
     }
 
     /// <summary>
@@ -322,6 +327,18 @@ public class NavigationViewModel : ReactiveObject
 
         ActivityBarItem? currentSelectedItem = _activityBarService.SelectedItem;
 
+        // Special handling for views that should never show a sidebar
+        if (itemId == "explorer" || itemId == "connections" || itemId == "logviewer")
+        {
+            // Set current content to null first to ensure the sidebar UI clears before collapsing
+            CurrentContent = null;
+            IsSidebarVisible = false;
+
+            _activityBarService.SelectItem(itemId);
+            _logger.LogDebug("Selected document-only activity bar item {ItemId} and ensured sidebar is collapsed", itemId);
+            return;
+        }
+
         if (currentSelectedItem != null && currentSelectedItem.Id == itemId)
         {
             if (IsSidebarVisible)
@@ -348,7 +365,8 @@ public class NavigationViewModel : ReactiveObject
     }
 
     /// <summary>
-    /// Navigates to an activity bar item via keyboard (always expands sidebar).
+    /// Navigates to an activity bar item via keyboard.
+    /// Document-only views will collapse the sidebar, while others will expand it.
     /// </summary>
     /// <param name="itemId">The activity bar item ID.</param>
     private void NavigateToActivityBarItemViaKeyboard(string itemId)
@@ -358,10 +376,20 @@ public class NavigationViewModel : ReactiveObject
             return;
         }
 
-        // Keyboard navigation always selects the item and ensures sidebar is visible
+        // Keyboard navigation selects the item
         _activityBarService.SelectItem(itemId);
-        IsSidebarVisible = true;
-        _logger.LogDebug("Navigated to activity bar item {ItemId} via keyboard", itemId);
+
+        // Special handling for views that should never show a sidebar
+        if (itemId == "explorer" || itemId == "connections" || itemId == "logviewer")
+        {
+            IsSidebarVisible = false;
+            _logger.LogDebug("Navigated to document-only activity bar item {ItemId} via keyboard, sidebar collapsed", itemId);
+        }
+        else
+        {
+            IsSidebarVisible = true;
+            _logger.LogDebug("Navigated to activity bar item {ItemId} via keyboard, sidebar visible", itemId);
+        }
     }
 
     /// <summary>
@@ -385,26 +413,39 @@ public class NavigationViewModel : ReactiveObject
             {
                 case "explorer":
                     SidebarTitle = UIStrings.Navigation_Explorer;
-                    CurrentContent = CreateViewModel<HomeViewModel>();
-                    ShowLogStats = false;
-                    // Open the Welcome/LoggingTest view as a dock tab
-                    OpenDockableContent(CreateLoggingTestViewModel());
-                    _logger.LogDebug("Navigated to Explorer");
+                    // Explorer button now opens the Home view as a document, with no side panel content
+                    CurrentContent = null;
+                    IsSidebarVisible = false;
+                    if (HomeAction != null)
+                    {
+                        HomeAction();
+                    }
+                    else
+                    {
+                        OpenDockableContent(CreateViewModel<HomeViewModel>());
+                    }
+                    _logger.LogDebug("Navigated to Explorer (Home)");
                     break;
 
                 case "connections":
                     SidebarTitle = UIStrings.Navigation_Connections;
-                    ConnectionsViewModel? connectionsViewModel = CreateViewModel<ConnectionsViewModel>();
-                    CurrentContent = connectionsViewModel;
+                    // Connection button now shows the Connection view as a document, with no side panel content
+                    CurrentContent = null;
+                    IsSidebarVisible = false;
                     ShowLogStats = false;
-                    // Open connections view as a dock tab
-                    OpenDockableContent(connectionsViewModel);
+                    OpenDockableContent(CreateViewModel<ConnectionsViewModel>());
                     _logger.LogDebug("Navigated to Connections");
                     break;
 
                 case "logviewer":
                     SidebarTitle = UIStrings.Navigation_LogViewer;
-                    CurrentContent = CreateViewModel<HomeViewModel>();
+                    // Clear sidebar content for Log Viewer to focus on the bottom Output panel
+                    CurrentContent = null;
+                    IsSidebarVisible = false;
+                    if (LogViewerAction != null)
+                    {
+                        LogViewerAction();
+                    }
                     ShowLogStats = true;
                     UpdateLogStats();
                     _logger.LogDebug("Navigated to Log Viewer");
@@ -499,7 +540,7 @@ public class NavigationViewModel : ReactiveObject
     /// </summary>
     /// <typeparam name="T">The ViewModel type to create.</typeparam>
     /// <returns>The created ViewModel instance.</returns>
-    private T? CreateViewModel<T>() where T : ViewModelBase
+    public T? CreateViewModel<T>() where T : ViewModelBase
     {
         try
         {
@@ -512,14 +553,7 @@ public class NavigationViewModel : ReactiveObject
         }
     }
 
-    /// <summary>
-    /// Creates a ViewModel for logging test functionality.
-    /// </summary>
-    /// <returns>A ViewModel representing the logging test functionality.</returns>
-    private object? CreateLoggingTestViewModel()
-    {
-        return CreateViewModel<LoggingTestViewModel>();
-    }
+
 
     /// <summary>
     /// Updates the log statistics message.
@@ -551,19 +585,16 @@ public class NavigationViewModel : ReactiveObject
         {
             // Create ViewModel using the factory
             var viewModel = (ViewModelBase)_viewModelFactory.Create(viewModelType);
-            CurrentContent = viewModel;
-
-            if (viewModel is HomeViewModel)
+            if (viewModel is HomeViewModel || viewModel is ConnectionsViewModel || viewModel is LogViewerViewModel)
             {
-                // CurrentContent logic is fine
-            }
-            else if (viewModel is ConnectionsViewModel)
-            {
-                // CurrentContent logic is fine
+                // Document-only views should never have sidebar content
+                CurrentContent = null;
+                IsSidebarVisible = false;
             }
             else
             {
-                // Refresh if needed
+                CurrentContent = viewModel;
+                IsSidebarVisible = true;
             }
             _logger.LogDebug("Navigated to ViewModel type: {ViewModelType}", viewModelType.Name);
         }

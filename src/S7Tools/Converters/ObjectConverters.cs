@@ -1,8 +1,5 @@
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Constants;
 
 namespace S7Tools.Converters;
@@ -95,4 +92,19 @@ public static class ObjectConverters
     /// </summary>
     public static readonly IValueConverter CountToVisibility =
         new FuncValueConverter<int, bool>(count => count > 0);
+
+    /// <summary>
+    /// A value converter that converts LogLevel to appropriate FontAwesome icon string.
+    /// </summary>
+    public static readonly IValueConverter LogLevelToIcon =
+        new FuncValueConverter<LogLevel, string>(level => level switch
+        {
+            LogLevel.Trace => "fa-solid fa-bug",
+            LogLevel.Debug => "fa-solid fa-terminal",
+            LogLevel.Information => "fa-solid fa-info-circle",
+            LogLevel.Warning => "fa-solid fa-exclamation-triangle",
+            LogLevel.Error => "fa-solid fa-exclamation-circle",
+            LogLevel.Critical => "fa-solid fa-radiation",
+            _ => "fa-solid fa-info-circle"
+        });
 }

@@ -1,7 +1,5 @@
 using System.Collections.ObjectModel;
 using System.Reactive;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
@@ -15,8 +13,9 @@ namespace S7Tools.ViewModels.Settings;
 /// <summary>
 /// Represents the SettingsViewModel.
 /// </summary>
-public class SettingsViewModel : ViewModelBase, IDockableViewModel
+public class SettingsViewModel : ViewModelBase, IDockableViewModel, IDisposable
 {
+    private bool _disposed;
     // IDockableViewModel implementation
     /// <summary>
     /// Gets or sets the DockId.
@@ -54,6 +53,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
             "Paths Settings",
             "Serial Ports",
             "Servers",
+            "Test",
         });
 
         // Initialize with Logging category
@@ -127,6 +127,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
                 "Paths Settings" => CreatePathSettingsViewModel(),
                 "Serial Ports" => CreateSerialPortsSettingsViewModel(),
                 "Servers" => CreateSocatSettingsViewModel(),
+                "Test" => CreateTestSettingsViewModel(),
                 _ => new GeneralSettingsViewModel()
             };
 
@@ -202,6 +203,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
     {
         IUnifiedProfileDialogService unifiedDialogService = _serviceProvider.GetRequiredService<IUnifiedProfileDialogService>();
         ILogger<ProfileManagementViewModelBase<SocatProfile>> logger = _serviceProvider.GetRequiredService<ILogger<ProfileManagementViewModelBase<SocatProfile>>>();
+        ILogger<SocatSettingsViewModel> specificLogger = _serviceProvider.GetRequiredService<ILogger<SocatSettingsViewModel>>();
         IUIThreadService uiThreadService = _serviceProvider.GetRequiredService<S7Tools.Services.Interfaces.IUIThreadService>();
         ISocatProfileService socatProfileService = _serviceProvider.GetRequiredService<ISocatProfileService>();
         ISocatService socatService = _serviceProvider.GetRequiredService<ISocatService>();
@@ -216,6 +218,7 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
         return new SocatSettingsViewModel(
             unifiedDialogService,
             logger,
+            specificLogger,
             uiThreadService,
             socatProfileService,
             socatService,
@@ -226,6 +229,48 @@ public class SettingsViewModel : ViewModelBase, IDockableViewModel
             settingsService,
             pathService,
             portScanner);
+    }
+
+    private TestSettingsViewModel CreateTestSettingsViewModel()
+    {
+        IDialogService dialogService = _serviceProvider.GetRequiredService<IDialogService>();
+        IClipboardService clipboardService = _serviceProvider.GetRequiredService<IClipboardService>();
+        ILogger<TestSettingsViewModel> logger = _serviceProvider.GetRequiredService<ILogger<TestSettingsViewModel>>();
+
+        return new TestSettingsViewModel(dialogService, clipboardService, logger);
+    }
+
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases managed resources.
+    /// </summary>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        if (disposing)
+        {
+            foreach (ViewModelBase vm in _categoryViewModels.Values)
+            {
+                if (vm is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+            }
+
+            _categoryViewModels.Clear();
+        }
     }
 
 }

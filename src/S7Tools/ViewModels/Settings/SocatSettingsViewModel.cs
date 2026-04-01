@@ -1,19 +1,11 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
-using S7Tools.Helpers;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
@@ -53,6 +45,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     /// </summary>
     /// <param name="unifiedDialogService">The unified profile dialog service.</param>
     /// <param name="logger">The logger for the base class.</param>
+    /// <param name="specificLogger">The logger specific to this ViewModel type.</param>
     /// <param name="uiThreadService">The UI thread service.</param>
     /// <param name="profileService">The socat profile service.</param>
     /// <param name="socatService">The socat service.</param>
@@ -66,6 +59,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
     public SocatSettingsViewModel(
         IUnifiedProfileDialogService unifiedDialogService,
         ILogger<ProfileManagementViewModelBase<SocatProfile>> logger,
+        ILogger<SocatSettingsViewModel> specificLogger,
         S7Tools.Services.Interfaces.IUIThreadService uiThreadService,
         ISocatProfileService profileService,
         ISocatService socatService,
@@ -90,9 +84,7 @@ public class SocatSettingsViewModel : ProfileManagementViewModelBase<SocatProfil
         _pathService = pathService ?? throw new ArgumentNullException(nameof(pathService));
         _portScanner = portScanner ?? throw new ArgumentNullException(nameof(portScanner));
 
-        // Create specific logger for this ViewModel
-        ILoggerFactory loggerFactory = Microsoft.Extensions.Logging.LoggerFactory.Create(builder => { });
-        _specificLogger = loggerFactory.CreateLogger<SocatSettingsViewModel>();
+        _specificLogger = specificLogger ?? throw new ArgumentNullException(nameof(specificLogger));
 
         // Initialize collections
         Profiles = new ObservableCollection<SocatProfile>();

@@ -1,215 +1,176 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="using:S7Tools.ViewModels.Pages"
-    xmlns:models="using:S7Tools.Core.Models"
-    xmlns:icons="using:Projektanker.Icons.Avalonia"
-    mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
-    x:Class="S7Tools.Views.Pages.StreamedMemoryDumpView"
-    x:DataType="vm:StreamedMemoryDumpViewModel"
-    Background="{DynamicResource AppBackgroundBrush}">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:S7Tools.ViewModels.Pages"
+             xmlns:models="using:S7Tools.Core.Models"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="700"
+             x:Class="S7Tools.Views.Pages.StreamedMemoryDumpView"
+             x:DataType="vm:StreamedMemoryDumpViewModel"
+             Background="{DynamicResource AppBackgroundBrush}">
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+  <Grid RowDefinitions="Auto,Auto,*">
+    <!-- Header/Connection Panel -->
+    <Border Grid.Row="0" Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+      <Expander IsExpanded="True">
+        <Expander.Header>
+          <Grid Background="Transparent" Height="38" Margin="4,0">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+            <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-stream" />
+            <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="LIVE MEMORY STREAM" />
+          </Grid>
+        </Expander.Header>
 
-        <!-- Connection Control Panel -->
-        <Border Grid.Row="0"
-            Background="{DynamicResource PanelBackgroundBrush}"
-            BorderBrush="{DynamicResource ControlBorderBrush}"
-            BorderThickness="0,0,0,1"
-            Padding="12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <StackPanel Spacing="20" Margin="24,16,24,24">
+          <TextBlock Text="Monitor real-time memory fluctuations from the target PLC engine."
+                     FontSize="13"
+                     Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                     TextWrapping="Wrap" />
 
-                <!-- Connection Parameters -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
-                    <TextBlock Text="Host:"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        VerticalAlignment="Center"
-                        FontSize="13" />
-                    <TextBox Text="{Binding Host}"
-                        Width="120"
-                        IsEnabled="{Binding !IsConnected}" />
+          <Grid ColumnDefinitions="*,Auto">
+            <!-- Input Controls -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20" VerticalAlignment="Center">
+              <StackPanel Spacing="4">
+                <TextBlock Text="PLC Host Address" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Opacity="0.7" />
+                <TextBox Text="{Binding Host}" Width="160" Height="34" Watermark="127.0.0.1" IsEnabled="{Binding !IsConnected}" Padding="10,6"/>
+              </StackPanel>
 
-                    <TextBlock Text="Port:"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        VerticalAlignment="Center"
-                        FontSize="13" />
-                    <TextBox Text="{Binding Port}"
-                        Width="80"
-                        IsEnabled="{Binding !IsConnected}" />
+              <StackPanel Spacing="4">
+                <TextBlock Text="Port" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Opacity="0.7" />
+                <TextBox Text="{Binding Port}" Width="80" Height="34" Watermark="102" IsEnabled="{Binding !IsConnected}" Padding="10,6"/>
+              </StackPanel>
 
-                    <TextBlock Text="Start Address:"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        VerticalAlignment="Center"
-                        FontSize="13" />
-                    <TextBox Text="{Binding StartAddress}"
-                        Width="100"
-                        Watermark="0x00000000"
-                        IsEnabled="{Binding !IsConnected}" />
+              <StackPanel Spacing="4">
+                <TextBlock Text="Start Offset" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextForegroundSecondaryBrush}" Opacity="0.7" />
+                <TextBox Text="{Binding StartAddress}" Width="120" Height="34" Watermark="0x0000" IsEnabled="{Binding !IsConnected}" Padding="10,6"/>
+              </StackPanel>
+            </StackPanel>
 
-                    <Button Command="{Binding ConnectCommand}"
-                        Background="{DynamicResource ButtonBackgroundBrush}"
-                        Foreground="{DynamicResource TextForegroundBrush}"
-                        Padding="12,6"
-                        IsEnabled="{Binding !IsConnected}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <icons:Icon Value="fa-solid fa-plug" Width="14" Height="14" />
-                            <TextBlock Text="Connect" FontSize="13" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding DisconnectCommand}"
-                        Background="{DynamicResource LogColorErrorBrush}"
-                        Foreground="{DynamicResource TextForegroundBrush}"
-                        Padding="12,6"
-                        IsEnabled="{Binding IsConnected}">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <icons:Icon Value="fa-solid fa-times" Width="14" Height="14" />
-                            <TextBlock Text="Disconnect" FontSize="13" />
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding ClearCommand}"
-                        Background="Transparent"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="1"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        Padding="12,6">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <icons:Icon Value="fa-solid fa-eraser" Width="14" Height="14" />
-                            <TextBlock Text="Clear" FontSize="13" />
-                        </StackPanel>
-                    </Button>
+            <!-- Actions -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Button Command="{Binding ConnectCommand}" 
+                      IsVisible="{Binding !IsConnected}"
+                      Background="#28A745" Foreground="White" Height="36" Padding="20,0" CornerRadius="4">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <icons:Icon Value="fa-solid fa-play" Width="14" />
+                  <TextBlock Text="Start Stream" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </StackPanel>
+              </Button>
 
-                <!-- Connection Status -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="{Binding ConnectionStatus}"
-                        Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                        VerticalAlignment="Center"
-                        FontSize="13" />
+              <Button Command="{Binding DisconnectCommand}" 
+                      IsVisible="{Binding IsConnected}"
+                      Background="#D13438" Foreground="White" Height="36" Padding="20,0" CornerRadius="4">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <icons:Icon Value="fa-solid fa-stop" Width="14" />
+                  <TextBlock Text="Stop Stream" FontWeight="SemiBold" VerticalAlignment="Center" />
                 </StackPanel>
+              </Button>
+
+              <Button Command="{Binding ClearCommand}" 
+                      Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Height="36" Padding="16,0" CornerRadius="4">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <icons:Icon Value="fa-solid fa-eraser" Width="14" />
+                  <TextBlock Text="Clear Buffer" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Expander>
+    </Border>
+
+    <!-- Stats Bar -->
+    <Border Grid.Row="1" Background="{DynamicResource ControlBackgroundBrush}" Padding="20,8" BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="Status:" FontSize="12" Opacity="0.6" />
+            <TextBlock Text="{Binding ConnectionStatus}" FontSize="12" FontWeight="SemiBold" />
+          </StackPanel>
+          
+          <Rectangle Width="1" Height="14" Fill="{DynamicResource ControlBorderBrush}" />
+          
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="Blocks:" FontSize="12" Opacity="0.6" />
+            <TextBlock Text="{Binding BlockCount}" FontSize="12" FontWeight="SemiBold" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="Total Size:" FontSize="12" Opacity="0.6" />
+            <TextBlock Text="{Binding TotalBytes, StringFormat={}{0:N0} bytes}" FontSize="12" FontWeight="SemiBold" />
+          </StackPanel>
+        </StackPanel>
+
+        <TextBlock Grid.Column="3" Text="S7 LIVE PROTOCOL SNIFFER" FontSize="10" FontWeight="Bold" Opacity="0.4" VerticalAlignment="Center" LetterSpacing="1" />
+      </Grid>
+    </Border>
+
+    <!-- Hex/ASCII Viewer -->
+    <ListBox Grid.Row="2"
+             ItemsSource="{Binding MemoryBlocks}"
+             Background="Transparent"
+             BorderThickness="0"
+             Padding="0"
+             ScrollViewer.HorizontalScrollBarVisibility="Auto">
+      <ListBox.ItemsPanel>
+        <ItemsPanelTemplate>
+          <VirtualizingStackPanel />
+        </ItemsPanelTemplate>
+      </ListBox.ItemsPanel>
+      
+      <ListBox.Styles>
+        <Style Selector="ListBoxItem">
+          <Setter Property="Padding" Value="0" />
+          <Setter Property="Margin" Value="0" />
+          <Setter Property="Background" Value="Transparent" />
+          <Style Selector="^:selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource ControlSelectedBackgroundBrush}" />
+          </Style>
+        </Style>
+      </ListBox.Styles>
+
+      <ListBox.ItemTemplate>
+        <DataTemplate DataType="models:MemoryBlock">
+          <Border BorderBrush="{DynamicResource ControlBorderBrush}" BorderThickness="0,0,0,1" Padding="20,4">
+            <Grid ColumnDefinitions="100,20,440,20,*">
+              <!-- Address -->
+              <TextBlock Grid.Column="0"
+                         Text="{Binding Address, StringFormat='0x{0:X8}'}"
+                         FontFamily="JetBrains Mono, Cascadia Code, Consolas, monospace"
+                         FontSize="13"
+                         Foreground="{DynamicResource BrandAccentBrush}"
+                         VerticalAlignment="Center" />
+
+              <Rectangle Grid.Column="1" Width="1" Height="16" Fill="{DynamicResource ControlBorderBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5" />
+
+              <!-- Hex -->
+              <TextBlock Grid.Column="2"
+                         Text="{Binding HexPreview}"
+                         FontFamily="JetBrains Mono, Cascadia Code, Consolas, monospace"
+                         FontSize="13"
+                         LetterSpacing="1"
+                         Foreground="{DynamicResource TextForegroundBrush}"
+                         VerticalAlignment="Center" />
+
+              <Rectangle Grid.Column="3" Width="1" Height="16" Fill="{DynamicResource ControlBorderBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.5" />
+
+              <!-- ASCII -->
+              <TextBlock Grid.Column="4"
+                         Text="{Binding AsciiPreview}"
+                         FontFamily="JetBrains Mono, Cascadia Code, Consolas, monospace"
+                         FontSize="13"
+                         Foreground="{DynamicResource SyntaxStringBrush}"
+                         VerticalAlignment="Center" />
             </Grid>
-        </Border>
-
-        <!-- Statistics Bar -->
-        <Border Grid.Row="1"
-            Background="{DynamicResource PanelBackgroundBrush}"
-            BorderBrush="{DynamicResource ControlBorderBrush}"
-            BorderThickness="0,0,0,1"
-            Padding="12,6">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <icons:Icon Value="fa-solid fa-database"
-                            Foreground="{DynamicResource BrandAccentBrush}"
-                            Width="14"
-                            Height="14"
-                            VerticalAlignment="Center" />
-                        <TextBlock Text="Blocks:"
-                            Foreground="{DynamicResource TextForegroundMutedBrush}"
-                            FontSize="12"
-                            VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding BlockCount}"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            FontSize="12"
-                            FontWeight="SemiBold"
-                            VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <icons:Icon Value="fa-solid fa-memory"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            Width="14"
-                            Height="14"
-                            VerticalAlignment="Center" />
-                        <TextBlock Text="Bytes:"
-                            Foreground="{DynamicResource TextForegroundMutedBrush}"
-                            FontSize="12"
-                            VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding TotalBytes, StringFormat={}{0:N0}}"
-                            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                            FontSize="12"
-                            FontWeight="SemiBold"
-                            VerticalAlignment="Center" />
-                    </StackPanel>
-                </StackPanel>
-
-                <TextBlock Grid.Column="2"
-                    Text="Real-Time PLC Memory Dump Viewer"
-                    Foreground="{DynamicResource TextForegroundMutedBrush}"
-                    FontSize="11"
-                    FontStyle="Italic"
-                    VerticalAlignment="Center" />
-            </Grid>
-        </Border>
-
-        <!-- Memory Dump Display (Virtualized ListBox) -->
-        <ListBox Grid.Row="2"
-            ItemsSource="{Binding MemoryBlocks}"
-            Background="Transparent"
-            BorderThickness="0">
-            <ListBox.ItemTemplate>
-                <DataTemplate x:DataType="models:MemoryBlock">
-                    <Border Background="{DynamicResource AppBackgroundBrush}"
-                        BorderBrush="{DynamicResource ControlBorderBrush}"
-                        BorderThickness="0,0,0,1"
-                        Padding="8,4">
-                        <Grid ColumnDefinitions="90,10,420,10,*">
-                            <!-- Address Column -->
-                            <TextBlock Grid.Column="0"
-                                Text="{Binding Address, StringFormat='0x{0:X8}'}"
-                                FontFamily="Cascadia Mono,Consolas,Courier New"
-                                FontSize="12"
-                                Foreground="{DynamicResource TextForegroundMutedBrush}"
-                                VerticalAlignment="Center" />
-
-                            <!-- Separator -->
-                            <Rectangle Grid.Column="1"
-                                Fill="{DynamicResource ControlBorderBrush}"
-                                Width="1"
-                                HorizontalAlignment="Center" />
-
-                            <!-- Hex Data Column -->
-                            <TextBlock Grid.Column="2"
-                                Text="{Binding HexPreview}"
-                                FontFamily="Cascadia Mono,Consolas,Courier New"
-                                FontSize="12"
-                                Foreground="{DynamicResource SyntaxStringBrush}"
-                                VerticalAlignment="Center" />
-
-                            <!-- Separator -->
-                            <Rectangle Grid.Column="3"
-                                Fill="{DynamicResource ControlBorderBrush}"
-                                Width="1"
-                                HorizontalAlignment="Center" />
-
-                            <!-- ASCII Column -->
-                            <TextBlock Grid.Column="4"
-                                Text="{Binding AsciiPreview}"
-                                FontFamily="Cascadia Mono,Consolas,Courier New"
-                                FontSize="12"
-                                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                                VerticalAlignment="Center" />
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-    </Grid>
+          </Border>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
 </UserControl>

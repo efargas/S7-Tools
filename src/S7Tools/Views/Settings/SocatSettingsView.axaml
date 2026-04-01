@@ -17,7 +17,7 @@
     <conv:BooleanToInverseBooleanConverter x:Key="InvBool" />
   </UserControl.Resources>
 
-  <ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <StackPanel Margin="20" Spacing="12">
       <!-- Header -->
       <TextBlock Text="Servers Settings"
@@ -54,247 +54,259 @@
       </Border>
 
       <!-- Port Discovery Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-        BorderBrush="{DynamicResource ControlBorderBrush}"
-        BorderThickness="1"
-        CornerRadius="4"
-        Padding="16"
-        DataContext="{Binding PortScanner}">
-        <controls:SerialPortDiscoveryControl Height="210" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-search" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="PORT DISCOVERY" />
+            </Grid>
+          </Expander.Header>
+
+          <StackPanel Spacing="0" Margin="24,16,24,24" DataContext="{Binding PortScanner}">
+            <controls:SerialPortDiscoveryControl Height="210" />
+          </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Port Test Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-        BorderBrush="{DynamicResource ControlBorderBrush}"
-        BorderThickness="1"
-        CornerRadius="4"
-        Padding="16">
-        <StackPanel Spacing="12">
-          <TextBlock Text="Socat Testing"
-            FontSize="18"
-            FontWeight="SemiBold"
-            Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-vial" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="SOCAT TESTING" />
+            </Grid>
+          </Expander.Header>
 
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="150" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+          <StackPanel Spacing="12" Margin="24,16,24,24">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Column="0"
-              Text="Selected Port:"
-              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-              VerticalAlignment="Center" />
-
-            <TextBlock Grid.Column="1"
-              Text="{Binding PortScanner.SelectedPort.PortName, FallbackValue='No port selected', TargetNullValue='No port selected'}"
-              Foreground="{DynamicResource BrandAccentBrush}"
-              FontWeight="SemiBold"
-              VerticalAlignment="Center"
-              Margin="8,0" />
-
-            <Button Grid.Column="2"
-              Width="160"
-              Height="34"
-              Command="{Binding TestSocatCommand}"
-              Background="{DynamicResource ButtonBackgroundBrush}"
-              Foreground="{DynamicResource TextForegroundBrush}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
-                <TextBlock Text="Test Socat Proxy" />
-              </StackPanel>
-            </Button>
-          </Grid>
-
-          <Border Background="{DynamicResource AppBackgroundBrush}"
-            BorderBrush="{DynamicResource ControlBorderBrush}"
-            BorderThickness="1"
-            CornerRadius="3"
-            Padding="12"
-            MinHeight="80">
-            <StackPanel Spacing="6">
-              <TextBlock Text="Test Result:"
-                Foreground="{DynamicResource BrandAccentBrush}"
-                FontSize="12"
-                FontWeight="SemiBold" />
-              <TextBlock
-                Text="{Binding TestResult, FallbackValue='No test performed yet', TargetNullValue='No test performed yet'}"
+              <TextBlock Grid.Column="0"
+                Text="Selected Port:"
                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                FontSize="12"
-                TextWrapping="Wrap" />
-              <TextBlock
-                Text="{Binding LastTested, StringFormat='Last tested: {0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Not tested yet', TargetNullValue='Not tested yet'}"
-                Foreground="{DynamicResource TextForegroundMutedBrush}"
-                FontSize="11"
-                Margin="0,4,0,0" />
-            </StackPanel>
-          </Border>
+                VerticalAlignment="Center" />
 
-          <TextBlock
-            Text="Select a port from the discovery list above and click 'Test Socat Proxy' to launch a temporary socat process and verify TCP connectivity."
-            FontSize="11"
-            Foreground="{DynamicResource TextForegroundMutedBrush}"
-            TextWrapping="Wrap" />
-        </StackPanel>
+              <TextBlock Grid.Column="1"
+                Text="{Binding PortScanner.SelectedPort.PortName, FallbackValue='No port selected', TargetNullValue='No port selected'}"
+                Foreground="{DynamicResource BrandAccentBrush}"
+                FontWeight="SemiBold"
+                VerticalAlignment="Center"
+                Margin="8,0" />
+
+              <Button Grid.Column="2"
+                      Width="110"
+                      Height="34"
+                      Command="{Binding TestSocatCommand}"
+                      Background="{DynamicResource ButtonBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-vial" Width="14" Height="14" />
+                  <TextBlock Text="Test" />
+                </StackPanel>
+              </Button>
+            </Grid>
+
+            <Border Background="{DynamicResource AppBackgroundBrush}"
+              BorderBrush="{DynamicResource ControlBorderBrush}"
+              BorderThickness="1"
+              CornerRadius="3"
+              Padding="12"
+              MinHeight="80">
+              <StackPanel Spacing="6">
+                <TextBlock Text="Test Result:"
+                  Foreground="{DynamicResource BrandAccentBrush}"
+                  FontSize="12"
+                  FontWeight="SemiBold" />
+                <TextBlock
+                  Text="{Binding TestResult, FallbackValue='No test performed yet', TargetNullValue='No test performed yet'}"
+                  Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                  FontSize="12"
+                  TextWrapping="Wrap" />
+                <TextBlock
+                  Text="{Binding LastTested, StringFormat='Last tested: {0:yyyy-MM-dd HH:mm:ss}', FallbackValue='Not tested yet', TargetNullValue='Not tested yet'}"
+                  Foreground="{DynamicResource TextForegroundMutedBrush}"
+                  FontSize="11"
+                  Margin="0,4,0,0" />
+              </StackPanel>
+            </Border>
+
+            <TextBlock
+              Text="Select a port from the discovery list above and click 'Test Socat Proxy' to launch a temporary socat process and verify TCP connectivity."
+              FontSize="11"
+              Foreground="{DynamicResource TextForegroundMutedBrush}"
+              TextWrapping="Wrap" />
+          </StackPanel>
+        </Expander>
       </Border>
 
       <!-- Process Management Section -->
-      <Border Background="{DynamicResource PanelBackgroundBrush}"
-        BorderBrush="{DynamicResource ControlBorderBrush}"
-        BorderThickness="1"
-        CornerRadius="4"
-        Padding="16">
-        <StackPanel Spacing="16">
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="Auto" />
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-tasks" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="PROCESS MANAGEMENT" />
+            </Grid>
+          </Expander.Header>
 
-            <TextBlock Grid.Column="0"
-              Text="Running Processes"
-              FontSize="18"
-              FontWeight="SemiBold"
-              Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-              VerticalAlignment="Center" />
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <!-- Toolbar above the DataGrid -->
+            <Grid Margin="0,0,0,8">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-              <Button Background="#D13438"
-                Foreground="{DynamicResource TextForegroundBrush}"
-                BorderThickness="0"
-                Padding="12,8"
-                Command="{Binding StopSocatCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-stop" Width="16" Height="16" />
-                  <TextBlock Text="Stop" />
-                </StackPanel>
-              </Button>
+              <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                <Button Width="110" Height="34" Command="{Binding StopSocatCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-stop" Width="14" Height="14" />
+                    <TextBlock Text="Stop" />
+                  </StackPanel>
+                </Button>
 
-              <Button Background="#D13438"
-                Foreground="{DynamicResource TextForegroundBrush}"
-                BorderThickness="0"
-                Padding="12,8"
-                Command="{Binding StopAllSocatCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-stop-circle" Width="16" Height="16" />
-                  <TextBlock Text="Stop All" />
-                </StackPanel>
-              </Button>
-
-              <Button Background="Transparent"
-                BorderBrush="{DynamicResource ControlBorderBrush}"
-                Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-                BorderThickness="1"
-                Padding="12,8"
-                Command="{Binding RefreshProcessesCommand}">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <icons:Icon Value="fa-solid fa-sync" Width="16" Height="16" />
-                  <TextBlock Text="Refresh" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
-          </Grid>
-
-          <!-- Running Processes List -->
-          <DataGrid ItemsSource="{Binding RunningProcesses}"
-            SelectedItem="{Binding SelectedProcess}"
-            Background="{DynamicResource ControlBackgroundBrush}"
-            Foreground="{DynamicResource TextForegroundSecondaryBrush}"
-            GridLinesVisibility="Horizontal"
-            HeadersVisibility="Column"
-            CanUserReorderColumns="False"
-            CanUserResizeColumns="True"
-            CanUserSortColumns="True"
-            IsReadOnly="True"
-            Height="150">
-            <DataGrid.Styles>
-              <Style Selector="DataGridColumnHeader">
-                <Setter Property="FontSize" Value="11" />
-                <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Padding" Value="8,4,32,4" />
-                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                <Setter Property="Template">
-                  <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}"
-                      Padding="{TemplateBinding Padding}">
-                      <DockPanel>
-                        <ContentPresenter Content="{TemplateBinding Content}"
-                          DockPanel.Dock="Left"
-                          VerticalAlignment="Center" />
-                      </DockPanel>
-                    </Border>
-                  </ControlTemplate>
-                </Setter>
-              </Style>
-            </DataGrid.Styles>
-
-            <DataGrid.Columns>
-              <DataGridTextColumn Binding="{Binding ProcessId}" Width="80" MinWidth="60">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="PID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding Profile.Name}" Width="140" MinWidth="100">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Profile" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding SerialDevice}" Width="120" MinWidth="100">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Serial Device" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding TcpPort}" Width="80" MinWidth="70">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding Status}" Width="100" MinWidth="80">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Status" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-
-              <DataGridTextColumn Binding="{Binding StartTime, StringFormat='HH:mm:ss'}" Width="80"
-                MinWidth="70">
-                <DataGridTextColumn.Header>
-                  <TextBlock Text="Started" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
-                </DataGridTextColumn.Header>
-              </DataGridTextColumn>
-            </DataGrid.Columns>
-          </DataGrid>
-
-          <Grid>
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0"
-              Text="{Binding RunningProcessCount, StringFormat='Running: {0} socat processes'}"
-              Foreground="{DynamicResource TextForegroundMutedBrush}"
-              FontSize="12"
-              VerticalAlignment="Center" />
-
-            <Button Grid.Column="1"
-              Background="{DynamicResource ButtonBackgroundBrush}"
-              Foreground="{DynamicResource TextForegroundBrush}"
-              BorderThickness="0"
-              Padding="12,6"
-              Command="{Binding TestConnectionCommand}">
-              <StackPanel Orientation="Horizontal" Spacing="6">
-                <icons:Icon Value="fa-solid fa-network-wired" Width="14" Height="14" />
-                <TextBlock Text="Connect Client" />
+                <Button Width="110" Height="34" Command="{Binding StopAllSocatCommand}" Background="#D13438" Foreground="{DynamicResource TextForegroundBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-stop-circle" Width="14" Height="14" />
+                    <TextBlock Text="Stop All" />
+                  </StackPanel>
+                </Button>
               </StackPanel>
-            </Button>
-          </Grid>
-        </StackPanel>
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                <Button Width="110" Height="34" Command="{Binding RefreshProcessesCommand}" Background="Transparent" BorderBrush="{DynamicResource ControlBorderBrush}" Foreground="{DynamicResource TextForegroundSecondaryBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <icons:Icon Value="fa-solid fa-sync" Width="14" Height="14" />
+                    <TextBlock Text="Refresh" />
+                  </StackPanel>
+                </Button>
+              </StackPanel>
+            </Grid>
+
+            <!-- DataGrid -->
+            <DataGrid ItemsSource="{Binding RunningProcesses}"
+                      SelectedItem="{Binding SelectedProcess}"
+                      Background="{DynamicResource ControlBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                      GridLinesVisibility="Horizontal"
+                      HeadersVisibility="Column"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      IsReadOnly="True"
+                      MaxHeight="300"
+                      Margin="0,0,0,8">
+              <DataGrid.Styles>
+                <Style Selector="DataGridColumnHeader">
+                  <Setter Property="FontSize" Value="11" />
+                  <Setter Property="FontWeight" Value="SemiBold" />
+                  <Setter Property="Padding" Value="8,4,32,4" />
+                  <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                  <Setter Property="Template">
+                    <ControlTemplate>
+                      <Border Background="{TemplateBinding Background}"
+                        Padding="{TemplateBinding Padding}">
+                        <DockPanel>
+                          <ContentPresenter Content="{TemplateBinding Content}"
+                            DockPanel.Dock="Left"
+                            VerticalAlignment="Center" />
+                        </DockPanel>
+                      </Border>
+                    </ControlTemplate>
+                  </Setter>
+                </Style>
+              </DataGrid.Styles>
+
+              <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding ProcessId}" Width="80" MinWidth="60">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="PID" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding Profile.Name}" Width="140" MinWidth="100">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Profile" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding SerialDevice}" Width="120" MinWidth="100">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Serial Device" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding TcpPort}" Width="80" MinWidth="70">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="TCP Port" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding Status}" Width="100" MinWidth="80">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Status" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+
+                <DataGridTextColumn Binding="{Binding StartTime, StringFormat='HH:mm:ss'}" Width="80"
+                  MinWidth="70">
+                  <DataGridTextColumn.Header>
+                    <TextBlock Text="Started" Margin="0,0,8,0" TextTrimming="CharacterEllipsis" />
+                  </DataGridTextColumn.Header>
+                </DataGridTextColumn>
+              </DataGrid.Columns>
+            </DataGrid>
+
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+
+              <TextBlock Grid.Column="0"
+                Text="{Binding RunningProcessCount, StringFormat='Running: {0} socat processes'}"
+                Foreground="{DynamicResource TextForegroundMutedBrush}"
+                FontSize="12"
+                VerticalAlignment="Center" />
+
+              <Button Grid.Column="1"
+                      Width="110"
+                      Height="34"
+                      Command="{Binding TestConnectionCommand}"
+                      Background="{DynamicResource ButtonBackgroundBrush}"
+                      Foreground="{DynamicResource TextForegroundBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                  <icons:Icon Value="fa-solid fa-network-wired" Width="14" Height="14" />
+                  <TextBlock Text="Connect" />
+                </StackPanel>
+              </Button>
+            </Grid>
+          </StackPanel>
+        </Expander>
       </Border>
 
 

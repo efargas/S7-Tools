@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using S7Tools.Resources;
 
 namespace S7Tools.Helpers;
@@ -34,7 +31,7 @@ public static class PlatformHelper
                 if (OperatingSystem.IsWindows())
                 {
                     psi = new ProcessStartInfo(path) { UseShellExecute = true };
-                    Process.Start(psi);
+                    Process.Start(psi)?.Dispose();
                     return;
                 }
                 else if (OperatingSystem.IsLinux())
@@ -90,7 +87,7 @@ public static class PlatformHelper
                 {
                     psi = new ProcessStartInfo("open") { UseShellExecute = false };
                     psi.ArgumentList.Add(path);
-                    Process.Start(psi);
+                    Process.Start(psi)?.Dispose();
                     return;
                 }
                 else

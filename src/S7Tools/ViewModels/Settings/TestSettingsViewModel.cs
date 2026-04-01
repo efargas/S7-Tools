@@ -1,46 +1,23 @@
-using S7Tools.ViewModels.Base;
-using System;
+#nullable enable
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
-using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Resources.Strings;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
-namespace S7Tools.ViewModels.Pages;
+namespace S7Tools.ViewModels.Settings;
 
 /// <summary>
-/// ViewModel for the Logging Test page, handling logging test commands and clipboard operations.
-/// Follows Single Responsibility Principle by focusing only on logging and clipboard testing.
+/// ViewModel for the Test Settings category, handling logging test commands and clipboard operations.
 /// </summary>
-public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, IDisposable
+public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
 {
-    // IDockableViewModel implementation
-    /// <summary>
-    /// Gets or sets the DockId.
-    /// </summary>
-    public string DockId => "Welcome";
-    /// <summary>
-    /// Gets or sets the DockTitle.
-    /// </summary>
-    public string DockTitle => "Welcome";
-    /// <summary>
-    /// Gets or sets the CanClose.
-    /// </summary>
-    public bool CanClose => true;
-    /// <summary>
-    /// Gets or sets the CanFloat.
-    /// </summary>
-    public bool CanFloat => true;
-
     private readonly IDialogService _dialogService;
     private readonly IClipboardService _clipboardService;
-    private readonly ILogger<LoggingTestViewModel> _logger;
+    private readonly ILogger<TestSettingsViewModel> _logger;
     private readonly CompositeDisposable _disposables = new();
 
     private string _testInputText = UIStrings.TestClipboardText;
@@ -48,49 +25,42 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
     private string _lastButtonPressed = "";
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="LoggingTestViewModel"/> class for design-time.
-    /// </summary>
-    public LoggingTestViewModel() : this(
-        new DesignTimeDialogService(),
-        new DesignTimeClipboardService(),
-        CreateDesignTimeLogger())
-    {
-    }
-
-    /// <summary>
-    /// Creates a design-time logger for the designer.
-    /// </summary>
-    /// <returns>A logger instance for design-time use.</returns>
-    private static ILogger<LoggingTestViewModel> CreateDesignTimeLogger()
-    {
-        return Microsoft.Extensions.Logging.Abstractions.NullLogger<LoggingTestViewModel>.Instance;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LoggingTestViewModel"/> class.
+    /// Initializes a new instance of the <see cref="TestSettingsViewModel"/> class.
     /// </summary>
     /// <param name="dialogService">The dialog service.</param>
     /// <param name="clipboardService">The clipboard service.</param>
     /// <param name="logger">The logger instance.</param>
-    public LoggingTestViewModel(
+    public TestSettingsViewModel(
         IDialogService dialogService,
         IClipboardService clipboardService,
-        ILogger<LoggingTestViewModel> logger)
+        ILogger<TestSettingsViewModel> logger)
     {
         _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         // Initialize commands
-        CutCommand = ReactiveCommand.CreateFromTask(CutAsync);
-        CopyCommand = ReactiveCommand.CreateFromTask(CopyAsync);
+        IObservable<bool> canExecuteClipboard = this.WhenAnyValue(
+            x => x.TestInputText,
+            x => x.SelectionStart,
+            x => x.SelectionEnd,
+            (text, start, end) =>
+            {
+                if (string.IsNullOrEmpty(text))
+                {
+                    return false;
+                }
+                int minIdx = Math.Min(start, end);
+                int maxIdx = Math.Max(start, end);
+                int len = maxIdx - minIdx;
+                return len > 0 && minIdx >= 0 && maxIdx <= text.Length;
+            });
+
+        CutCommand = ReactiveCommand.CreateFromTask(CutAsync, canExecuteClipboard);
+        CopyCommand = ReactiveCommand.CreateFromTask(CopyAsync, canExecuteClipboard);
         PasteCommand = ReactiveCommand.CreateFromTask(PasteAsync);
 
-        // Initialize the unified logging test command
-        TestLogCommand = ReactiveCommand.Create<LogLevel>(TestLogWithLevel);
-
-        // Initialize individual logging test commands for backward compatibility
-        // These now delegate to the unified command, eliminating code duplication
+        // Initialize logging test commands
         TestTraceLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Trace));
         TestDebugLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Debug));
         TestInfoLogCommand = ReactiveCommand.Create(() => TestLogWithLevel(LogLevel.Information));
@@ -114,7 +84,7 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
             })
             .DisposeWith(_disposables);
 
-        _logger.LogDebug("LoggingTestViewModel initialized");
+        _logger.LogDebug("TestSettingsViewModel initialized");
     }
 
     #region Properties
@@ -146,77 +116,57 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
         set => this.RaiseAndSetIfChanged(ref _lastButtonPressed, value);
     }
 
+    /// <summary>
+    /// Gets or sets the selection start index.
+    /// </summary>
+    public int SelectionStart
+    {
+        get => _selectionStart;
+        set => this.RaiseAndSetIfChanged(ref _selectionStart, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the selection end index.
+    /// </summary>
+    public int SelectionEnd
+    {
+        get => _selectionEnd;
+        set => this.RaiseAndSetIfChanged(ref _selectionEnd, value);
+    }
+
+    /// <summary>
+    /// Gets or sets the caret index.
+    /// </summary>
+    public int CaretIndex
+    {
+        get => _caretIndex;
+        set => this.RaiseAndSetIfChanged(ref _caretIndex, value);
+    }
+
+    private int _selectionStart;
+    private int _selectionEnd;
+    private int _caretIndex;
+
     #endregion
 
     #region Commands
 
-    /// <summary>
-    /// Gets the command to cut text to clipboard.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> CutCommand { get; }
-
-    /// <summary>
-    /// Gets the command to copy text to clipboard.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> CopyCommand { get; }
-
-    /// <summary>
-    /// Gets the command to paste text from clipboard.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> PasteCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test logging with a specific log level.
-    /// </summary>
-    public ReactiveCommand<LogLevel, Unit> TestLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test trace logging.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> TestTraceLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test debug logging.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> TestDebugLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test information logging.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> TestInfoLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test warning logging.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> TestWarningLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test error logging.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> TestErrorLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test critical logging.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> TestCriticalLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to test UI stress with many logs.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> TestStressLogCommand { get; }
-
-    /// <summary>
-    /// Gets the command to export logs to clipboard.
-    /// </summary>
     public ReactiveCommand<Unit, Unit> ExportLogsCommand { get; }
 
     #endregion
 
     #region Command Implementations
 
-    /// <summary>
-    /// Cuts the test input text to the clipboard.
-    /// </summary>
     private async Task CutAsync()
     {
         try
@@ -225,9 +175,23 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
             {
                 return;
             }
-            await _clipboardService.SetTextAsync(TestInputText);
-            TestInputText = string.Empty;
+
+            int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, TestInputText.Length);
+            int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, TestInputText.Length - start);
+
+            if (length == 0)
+            {
+                _logger.LogWarning("Cut requested but no text is selected");
+                StatusMessage = "Please select text to cut";
+                return;
+            }
+
+            string textToCut = TestInputText.Substring(start, length);
+            await _clipboardService.SetTextAsync(textToCut);
+            TestInputText = TestInputText.Remove(start, length);
+            CaretIndex = start;
             StatusMessage = UIStrings.ClipboardTextCut;
+
             LastButtonPressed = "Cut";
             _logger.LogInformation("Text cut to clipboard");
         }
@@ -238,15 +202,29 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
         }
     }
 
-    /// <summary>
-    /// Copies the test input text to the clipboard.
-    /// </summary>
     private async Task CopyAsync()
     {
         try
         {
-            await _clipboardService.SetTextAsync(TestInputText);
+            if (string.IsNullOrEmpty(TestInputText))
+            {
+                return;
+            }
+
+            int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, TestInputText.Length);
+            int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, TestInputText.Length - start);
+
+            if (length == 0)
+            {
+                _logger.LogWarning("Copy requested but no text is selected");
+                StatusMessage = "Please select text to copy";
+                return;
+            }
+
+            string textToCopy = TestInputText.Substring(start, length);
+            await _clipboardService.SetTextAsync(textToCopy);
             StatusMessage = UIStrings.ClipboardTextCopied;
+
             LastButtonPressed = "Copy";
             _logger.LogInformation("Text copied to clipboard");
         }
@@ -257,21 +235,38 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
         }
     }
 
-    /// <summary>
-    /// Pastes text from the clipboard to the test input.
-    /// </summary>
     private async Task PasteAsync()
     {
         try
         {
             string? clipboardText = await _clipboardService.GetTextAsync();
-            if (!string.IsNullOrEmpty(clipboardText))
+            if (string.IsNullOrEmpty(clipboardText))
             {
-                TestInputText = clipboardText;
-                StatusMessage = UIStrings.ClipboardTextPasted;
-                LastButtonPressed = "Paste";
-                _logger.LogInformation("Text pasted from clipboard");
+                return;
             }
+
+            string currentText = TestInputText ?? string.Empty;
+
+            int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, currentText.Length);
+            int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, currentText.Length - start);
+
+            if (length > 0)
+            {
+                // Replace selection
+                TestInputText = currentText.Remove(start, length).Insert(start, clipboardText);
+                CaretIndex = start + clipboardText.Length;
+            }
+            else
+            {
+                // Insert at caret
+                int insertPos = Math.Clamp(CaretIndex, 0, currentText.Length);
+                TestInputText = currentText.Insert(insertPos, clipboardText);
+                CaretIndex = insertPos + clipboardText.Length;
+            }
+
+            StatusMessage = UIStrings.ClipboardTextPasted;
+            LastButtonPressed = "Paste";
+            _logger.LogInformation("Text pasted from clipboard");
         }
         catch (Exception ex)
         {
@@ -280,39 +275,23 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
         }
     }
 
-    /// <summary>
-    /// Tests logging with the specified log level.
-    /// This unified method eliminates code duplication across different log level commands.
-    /// </summary>
-    /// <param name="logLevel">The log level to test.</param>
     private void TestLogWithLevel(LogLevel logLevel)
     {
         string message = $"Test {logLevel} log message at {DateTime.UtcNow.ToLocalTime():HH:mm:ss}";
-
-
         _logger.Log(logLevel, message);
-
         LastButtonPressed = logLevel.ToString();
     }
 
-    /// <summary>
-    /// Tests UI stress by generating a large number of log messages.
-    /// </summary>
     private async Task TestStressLogAsync()
     {
         StatusMessage = "Starting UI Stress Test (5000 logs)...";
         LastButtonPressed = "Stress Test";
-        
-        // Run in background to not block UI thread during log generation
-        await Task.Run(async () => 
+
+        await Task.Run(async () =>
         {
             for (int i = 1; i <= 5000; i++)
             {
-                // Use structured logging to test performance
                 _logger.LogInformation("Stress test message #{Index} at {Time}", i, DateTime.Now.ToString("HH:mm:ss.fff"));
-                
-                // Minimal delay every 10 messages to avoid complete saturation of the thread pool 
-                // but keep it fast enough to stress the UI renderer
                 if (i % 10 == 0)
                 {
                     await Task.Delay(1).ConfigureAwait(false);
@@ -323,14 +302,10 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
         StatusMessage = "UI Stress Test Complete (5000 logs)";
     }
 
-    /// <summary>
-    /// Exports logs to the clipboard.
-    /// </summary>
     private async Task ExportLogsAsync()
     {
         try
         {
-            // For now, just show a message. Full implementation would export actual logs.
             string exportedLogs = $"Log export requested at {DateTime.UtcNow.ToLocalTime().ToString(DateTimeFormats.LongDateTime)}";
             await _clipboardService.SetTextAsync(exportedLogs);
             StatusMessage = UIStrings.Status_LogsExportedToClipboard;
@@ -346,16 +321,9 @@ public sealed class LoggingTestViewModel : ViewModelBase, IDockableViewModel, ID
 
     #endregion
 
-    #region IDisposable
-
-    /// <summary>
-    /// Disposes the ViewModel and releases resources.
-    /// </summary>
     public void Dispose()
     {
         _disposables.Dispose();
-        _logger.LogDebug("LoggingTestViewModel disposed");
+        _logger.LogDebug("TestSettingsViewModel disposed");
     }
-
-    #endregion
 }

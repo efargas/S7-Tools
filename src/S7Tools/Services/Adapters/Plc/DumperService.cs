@@ -1,12 +1,8 @@
-using System;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Models;
 
 namespace S7Tools.Services.Adapters.Plc
@@ -92,8 +88,8 @@ namespace S7Tools.Services.Adapters.Plc
 
                 Logger.LogInformation("Connection established. Starting ingestion pipeline.");
 
-                var fillTask = FillPipeAsync(_stream, _pipe.Writer, _cts.Token);
-                var readTask = ProcessPipeAsync(_pipe.Reader, _outputChannel.Writer, _cts.Token);
+                Task fillTask = FillPipeAsync(_stream, _pipe.Writer, _cts.Token);
+                Task readTask = ProcessPipeAsync(_pipe.Reader, _outputChannel.Writer, _cts.Token);
 
                 await Task.WhenAll(fillTask, readTask).ConfigureAwait(false);
             }
@@ -243,70 +239,70 @@ namespace S7Tools.Services.Adapters.Plc
                     // VERBOSE TRACE: Print buffer head to diagnose alignment issues
                     if (Logger.IsEnabled(LogLevel.Trace))
                     {
-                        var hexDump = BitConverter.ToString(buffer.Slice(0, Math.Min(buffer.Length, 16)).ToArray());
+                        string hexDump = BitConverter.ToString(buffer.Slice(0, Math.Min(buffer.Length, 16)).ToArray());
                         Logger.LogTrace("Buffer state: Length={Len}, Head=[{Hex}]",
                             buffer.Length, hexDump);
                     }
 
-                List<MemoryBlock> pendingBlocks;
-                bool processed;
+                    List<MemoryBlock> pendingBlocks;
+                    bool processed;
 
-                // All ref-struct usage must complete before any await.
-                {
-                    var seqReader = new SequenceReader<byte>(buffer);
-                    processed = false;
-
-                    if (_expectGreeting)
+                    // All ref-struct usage must complete before any await.
                     {
-                        bool foundGreeting = TryConsumeGreeting(ref seqReader);
-                        consumed = seqReader.Position;
+                        var seqReader = new SequenceReader<byte>(buffer);
+                        processed = false;
 
-                        if (foundGreeting)
+                        if (_expectGreeting)
                         {
-                            _expectGreeting = false;
-                            processed = true;
+                            bool foundGreeting = TryConsumeGreeting(ref seqReader);
+                            consumed = seqReader.Position;
 
-                            Logger.LogInformation("✅ Greeting consumed. Switching to DATA mode.");
-
-                            if (seqReader.Remaining > 0)
+                            if (foundGreeting)
                             {
-                                if (Logger.IsEnabled(LogLevel.Trace))
+                                _expectGreeting = false;
+                                processed = true;
+
+                                Logger.LogInformation("✅ Greeting consumed. Switching to DATA mode.");
+
+                                if (seqReader.Remaining > 0)
                                 {
-                                    Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
+                                    if (Logger.IsEnabled(LogLevel.Trace))
+                                    {
+                                        Logger.LogTrace("  Greeting consumed, remaining: {Rem} bytes. Proceeding to data parse.", seqReader.Remaining);
+                                    }
+
+                                    buffer = buffer.Slice(consumed);
+
+                                    (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
                                 }
-
-                                buffer = buffer.Slice(consumed);
-
-                                (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
+                                else
+                                {
+                                    pendingBlocks = [];
+                                }
                             }
                             else
                             {
+                                processed = !consumed.Equals(buffer.Start);
                                 pendingBlocks = [];
                             }
                         }
                         else
                         {
-                            processed = !consumed.Equals(buffer.Start);
-                            pendingBlocks = [];
+                            processed = true;
+                            (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
                         }
-                    }
-                    else
+                    } // seqReader ref-struct is destroyed here — safe to await below.
+
+                    // Write pending blocks to the channel now that no ref-struct is live.
+                    foreach (MemoryBlock block in pendingBlocks)
                     {
-                        processed = true;
-                        (pendingBlocks, consumed) = ParseProtocol(ref seqReader, ref currentAddress);
+                        await writer.WriteAsync(block, token).ConfigureAwait(false);
                     }
-                } // seqReader ref-struct is destroyed here — safe to await below.
 
-                // Write pending blocks to the channel now that no ref-struct is live.
-                foreach (var block in pendingBlocks)
-                {
-                    await writer.WriteAsync(block, token).ConfigureAwait(false);
-                }
-
-                if (!processed && buffer.Length > 0 && buffer.Length < 16)
-                {
-                    // Potential STUCK STATE diagnostic
-                }
+                    if (!processed && buffer.Length > 0 && buffer.Length < 16)
+                    {
+                        // Potential STUCK STATE diagnostic
+                    }
                 }
 
                 reader.AdvanceTo(consumed, examined);
@@ -343,7 +339,7 @@ namespace S7Tools.Services.Adapters.Plc
 
             while (reader.Remaining > 0)
             {
-                var originalPosition = reader.Position;
+                SequencePosition originalPosition = reader.Position;
                 if (!reader.TryPeek(out byte b))
                 {
                     break;
@@ -357,7 +353,7 @@ namespace S7Tools.Services.Adapters.Plc
                         return false; // Potential partial match
                     }
 
-                    var tempReader = reader; // Create a copy to peek ahead
+                    SequenceReader<byte> tempReader = reader; // Create a copy to peek ahead
                     tempReader.Advance(1); // Skip 0x05
 
                     if (tempReader.TryRead(out byte b2) && b2 == 'O' &&
@@ -381,7 +377,7 @@ namespace S7Tools.Services.Adapters.Plc
                         return false; // Potential partial match
                     }
 
-                    var tempReader = reader; // Create a copy to peek ahead
+                    SequenceReader<byte> tempReader = reader; // Create a copy to peek ahead
                     tempReader.Advance(1); // Skip O
                     if (tempReader.TryRead(out byte b2) && b2 == 'k')
                     {

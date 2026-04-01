@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Logging;
 
 namespace S7Tools.Services;

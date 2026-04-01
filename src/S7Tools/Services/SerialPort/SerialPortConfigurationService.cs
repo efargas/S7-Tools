@@ -1,14 +1,10 @@
-using System;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Exceptions;
-using S7Tools.Core.Models;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.Shell;
+using S7Tools.Core.Models;
 
 namespace S7Tools.Services.SerialPort;
 
@@ -315,7 +311,7 @@ public sealed partial class SerialPortConfigurationService
 
         try
         {
-            var result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, 5000, cancellationToken).ConfigureAwait(false);
+            ShellCommandResult result = await _shellExecutor.ExecuteCommandWithTimeoutAsync(command, 5000, cancellationToken).ConfigureAwait(false);
             stopwatch.Stop();
 
             return new SttyCommandResult

@@ -1,10 +1,5 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using S7Tools.Core.Exceptions;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models;
 using S7Tools.Core.Models.Jobs;
@@ -170,10 +165,19 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             return Task.FromResult(false);
         }
 
-        if (task.State != TaskState.Created)
+        if (task.State is not (TaskState.Created or TaskState.Scheduled))
         {
             _logger.LogWarning("Task {TaskId} is in state {State}, cannot enqueue", taskId, task.State);
             return Task.FromResult(false);
+        }
+
+        // If the task was scheduled, remove it from the scheduled map before enqueueing
+        if (task.State == TaskState.Scheduled)
+        {
+            _scheduledTasks.TryRemove(taskId, out _);
+            task.ProgressData.Remove("ScheduledTime");
+            _logger.LogInformation("Task {TaskId} ({JobName}) promoted from schedule to immediate queue",
+                taskId, task.JobName);
         }
 
         if (!TryEnqueueInternal(taskId, task))
@@ -250,6 +254,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
         if (utcTime <= _timeProvider.GetUtcNow())
         {
             _scheduledTasks.TryRemove(taskId, out _);
+            task.ProgressData.Remove("ScheduledTime");
             if (!TryEnqueueInternal(taskId, task, "Promoted to queue from schedule"))
             {
                 _logger.LogWarning("Failed to promote scheduled task {TaskId} to queue because it is full", taskId);
@@ -653,7 +658,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                 var allTasks = Task.WhenAll(activeExecutionTasks);
                 var timeoutTask = Task.Delay(TimeSpan.FromSeconds(30), cancellationToken);
 
-                var completedTask = await Task.WhenAny(allTasks, timeoutTask).ConfigureAwait(false);
+                Task completedTask = await Task.WhenAny(allTasks, timeoutTask).ConfigureAwait(false);
 
                 if (completedTask == timeoutTask)
                 {
@@ -908,7 +913,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             }
 
             // Re-enqueue skipped tasks
-            foreach (var skippedId in tasksToRequeue)
+            foreach (Guid skippedId in tasksToRequeue)
             {
                 _taskQueue.Enqueue(skippedId);
             }
@@ -1075,6 +1080,37 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
             _logger.LogInformation("Task {TaskId} ({JobName}) completed successfully. Output: {OutputFile}",
                 taskId, task.JobName, primaryOutputFile);
         }
+        catch (PartialDumpException pde)
+        {
+            // Dump was interrupted but partial files were saved — log them and mark appropriately
+            bool wasCancelled = pde.InnerException is OperationCanceledException;
+            string partialState = wasCancelled ? "canceled" : "failed";
+
+            if (wasCancelled)
+            {
+                string cancelMsg = $"Task was cancelled; {pde.PartialResult.SavedFiles.Count} dump file(s) were preserved (some may be partial)";
+                task.UpdateState(TaskState.Cancelled, cancelMsg);
+                TaskStateChanged?.Invoke(task);
+                _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
+                Interlocked.Increment(ref _cancelledTasks);
+            }
+            else
+            {
+                string failMsg = $"Dump failed with {pde.PartialResult.SavedFiles.Count} dump file(s) preserved (some may be partial)";
+                task.MarkAsFailed(failMsg, pde.ToString());
+                TaskStateChanged?.Invoke(task);
+                _ = Task.Run(() => SaveTasksAsync(), CancellationToken.None);
+                Interlocked.Increment(ref _totalTasksProcessed);
+                Interlocked.Increment(ref _failedTasks);
+            }
+
+            foreach (string partialFile in pde.PartialResult.SavedFiles)
+            {
+                _logger.LogWarning("Task {TaskId} dump file preserved: {FilePath}", taskId, partialFile);
+            }
+            _logger.LogWarning("Task {TaskId} ({JobName}) dump {State} with {Count} dump file(s) preserved (some may be partial)",
+                taskId, task.JobName, partialState, pde.PartialResult.SavedFiles.Count);
+        }
         catch (OperationCanceledException)
         {
             task.UpdateState(TaskState.Cancelled, "Task was cancelled");
@@ -1155,7 +1191,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     try
                     {
                         string json = await File.ReadAllTextAsync(_tasksFilePath).ConfigureAwait(false);
-                        var activeTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+                        List<TaskExecution>? activeTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
                         if (activeTasks != null)
                         {
                             loadedTasks.AddRange(activeTasks);
@@ -1173,7 +1209,7 @@ public class EnhancedTaskScheduler : ITaskScheduler, IDisposable
                     try
                     {
                         string json = await File.ReadAllTextAsync(_historyFilePath).ConfigureAwait(false);
-                        var historyTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
+                        List<TaskExecution>? historyTasks = System.Text.Json.JsonSerializer.Deserialize<List<TaskExecution>>(json);
                         if (historyTasks != null)
                         {
                             loadedTasks.AddRange(historyTasks);

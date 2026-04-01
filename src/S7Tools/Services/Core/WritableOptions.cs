@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Threading;
 using Microsoft.Extensions.Options;
 using S7Tools.Core.Interfaces.Services;
 
@@ -62,7 +61,7 @@ namespace S7Tools.Services
             _writeLock.Wait();
             try
             {
-                var physicalPath = Path.IsPathRooted(_file) ? _file : Path.Combine(_basePath, _file);
+                string physicalPath = Path.IsPathRooted(_file) ? _file : Path.Combine(_basePath, _file);
 
                 JsonNode? rootNode = null;
 
@@ -70,7 +69,7 @@ namespace S7Tools.Services
                 {
                     try
                     {
-                        var jsonContent = File.ReadAllText(physicalPath);
+                        string jsonContent = File.ReadAllText(physicalPath);
                         if (!string.IsNullOrWhiteSpace(jsonContent))
                         {
                             rootNode = JsonNode.Parse(jsonContent);
@@ -94,24 +93,24 @@ namespace S7Tools.Services
                 }
 
                 // Get current strongly-typed settings, apply changes
-                var sectionObject = CurrentValue;
+                T sectionObject = CurrentValue;
                 applyChanges(sectionObject);
 
                 // Serialize the mutated section back to JsonNode
-                var sectionNode = JsonSerializer.SerializeToNode(sectionObject, JsonOptions);
+                JsonNode? sectionNode = JsonSerializer.SerializeToNode(sectionObject, JsonOptions);
 
                 // Update or Create the block in the root node (e.g., "App")
                 jObject[_section] = sectionNode;
 
                 // Ensure the directory exists before saving
-                var dir = Path.GetDirectoryName(physicalPath);
+                string? dir = Path.GetDirectoryName(physicalPath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
                 }
 
                 // Atomic write
-                var tempPath = physicalPath + ".tmp";
+                string tempPath = physicalPath + ".tmp";
                 File.WriteAllText(tempPath, jObject.ToJsonString(JsonOptions));
                 File.Move(tempPath, physicalPath, overwrite: true);
             }
@@ -129,7 +128,7 @@ namespace S7Tools.Services
             await _writeLock.WaitAsync().ConfigureAwait(false);
             try
             {
-                var physicalPath = Path.IsPathRooted(_file) ? _file : Path.Combine(_basePath, _file);
+                string physicalPath = Path.IsPathRooted(_file) ? _file : Path.Combine(_basePath, _file);
 
                 JsonNode? rootNode = null;
 
@@ -137,7 +136,7 @@ namespace S7Tools.Services
                 {
                     try
                     {
-                        var jsonContent = await File.ReadAllTextAsync(physicalPath).ConfigureAwait(false);
+                        string jsonContent = await File.ReadAllTextAsync(physicalPath).ConfigureAwait(false);
                         if (!string.IsNullOrWhiteSpace(jsonContent))
                         {
                             rootNode = JsonNode.Parse(jsonContent);
@@ -159,19 +158,19 @@ namespace S7Tools.Services
                     jObject = new JsonObject();
                 }
 
-                var sectionObject = CurrentValue;
+                T sectionObject = CurrentValue;
                 await applyChanges(sectionObject).ConfigureAwait(false);
 
-                var sectionNode = JsonSerializer.SerializeToNode(sectionObject, JsonOptions);
+                JsonNode? sectionNode = JsonSerializer.SerializeToNode(sectionObject, JsonOptions);
                 jObject[_section] = sectionNode;
 
-                var dir = Path.GetDirectoryName(physicalPath);
+                string? dir = Path.GetDirectoryName(physicalPath);
                 if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 {
                     Directory.CreateDirectory(dir);
                 }
 
-                var tempPath = physicalPath + ".tmp";
+                string tempPath = physicalPath + ".tmp";
                 await File.WriteAllTextAsync(tempPath, jObject.ToJsonString(JsonOptions)).ConfigureAwait(false);
                 File.Move(tempPath, physicalPath, overwrite: true);
             }

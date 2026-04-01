@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using S7Tools.Services.Interfaces;
 
 namespace S7Tools.Services.Core;
@@ -72,7 +67,7 @@ public sealed class BufferedCollectionUpdater<T> : IDisposable
         }
 
         var items = new List<T>();
-        while (_queue.TryDequeue(out var item))
+        while (_queue.TryDequeue(out T? item))
         {
             items.Add(item);
         }

@@ -1,13 +1,6 @@
-using S7Tools.ViewModels.Base;
-using System;
-using System.Reactive;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Interfaces.Services;
-using S7Tools.Core.Models.Configuration;
-using S7Tools.Core.Resources;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Layout;
 
@@ -45,15 +38,15 @@ public class SplashScreenViewModel(IServiceProvider serviceProvider, ILogger<Spl
             // Step 1: Path Service
             StatusText = "Initializing file system...";
             Progress = 10;
-            var pathService = _serviceProvider.GetRequiredService<IPathService>();
+            IPathService pathService = _serviceProvider.GetRequiredService<IPathService>();
             await pathService.InitializeAsync();
             _logger.LogInformation("Path service initialized.");
 
             // Step 2: Resource Manager
             StatusText = "Loading resources...";
             Progress = 30;
-            var resourceService = _serviceProvider.GetRequiredService<IResourceManagerService>();
-            var resourceResult = await resourceService.InitializeResourcesAsync();
+            IResourceManagerService resourceService = _serviceProvider.GetRequiredService<IResourceManagerService>();
+            ResourceInitializationResult resourceResult = await resourceService.InitializeResourcesAsync();
             if (!resourceResult.Success)
             {
                 _logger.LogWarning("Resource initialization had errors.");
@@ -63,7 +56,7 @@ public class SplashScreenViewModel(IServiceProvider serviceProvider, ILogger<Spl
             // Step 3: Settings
             StatusText = "Loading settings...";
             Progress = 60;
-            var settingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
+            IApplicationSettingsService settingsService = _serviceProvider.GetRequiredService<IApplicationSettingsService>();
             await settingsService.LoadSettingsAsync();
             _logger.LogInformation("Settings loaded.");
 

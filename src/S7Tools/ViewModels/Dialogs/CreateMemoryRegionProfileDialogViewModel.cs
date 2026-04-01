@@ -1,19 +1,14 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
 using S7Tools.Core.Constants;
 using S7Tools.Core.Models;
 using S7Tools.Resources;
 using S7Tools.Services.Interfaces;
 using S7Tools.ViewModels.Base;
+using S7Tools.ViewModels.Dialogs.Models;
 
 namespace S7Tools.ViewModels.Dialogs;
 
@@ -483,8 +478,8 @@ public sealed class CreateMemoryRegionProfileDialogViewModel : ViewModelBase, ID
         {
             if (SelectedSegment != null && _dialogService != null)
             {
-                var segmentToEdit = SelectedSegment;
-                var result = await _dialogService.ShowInputAsync(
+                MemorySegment segmentToEdit = SelectedSegment;
+                InputResult result = await _dialogService.ShowInputAsync(
                     UIStrings.Navigation_Explorer, // Reusing title from UIStrings for now
                     $"Edit name for segment {segmentToEdit.Name}:",
                     segmentToEdit.Name,

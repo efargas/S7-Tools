@@ -3,47 +3,106 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:S7Tools.ViewModels.Tasks"
+             xmlns:icons="using:Projektanker.Icons.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="S7Tools.Views.Tasks.ActiveTasksView"
              x:DataType="vm:ActiveTasksViewModel">
 
-  <Grid RowDefinitions="Auto,*">
-    <Border Grid.Row="0" Background="{DynamicResource SystemRegionBrush}"
-            CornerRadius="4,4,0,0" Padding="12,8">
-      <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" Text="Currently Running Tasks" FontWeight="Medium" />
-        <TextBlock Grid.Column="1" Text="{Binding Manager.ActiveTasks.Count, StringFormat='{}{0} tasks'}"
-                   FontSize="12" Foreground="{DynamicResource SystemBaseMediumBrush}" />
-      </Grid>
-    </Border>
+  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="20" Spacing="12">
+      <!-- Header -->
+      <TextBlock Text="Active Tasks"
+                 FontSize="24"
+                 FontWeight="Bold"
+                 Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                 Margin="0,0,0,10" />
 
-    <DataGrid Grid.Row="1" ItemsSource="{Binding Manager.ActiveTasks}"
-              IsReadOnly="True" CanUserReorderColumns="False" CanUserResizeColumns="True"
-              GridLinesVisibility="Horizontal" HeadersVisibility="Column">
-      <DataGrid.Columns>
-        <DataGridTextColumn Header="Task ID" Binding="{Binding TaskId}" Width="240" />
-        <DataGridTextColumn Header="Name" Binding="{Binding JobName}" Width="200" />
-        <DataGridTextColumn Header="Job" Binding="{Binding JobName}" Width="150" />
-        <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="100" />
-        <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="80" />
-        <DataGridTextColumn Header="Elapsed" Binding="{Binding ExecutionTime}" Width="80" />
-        <DataGridTemplateColumn Header="Actions" Width="120">
-          <DataGridTemplateColumn.CellTemplate>
-            <DataTemplate>
-              <StackPanel Orientation="Horizontal" Spacing="4">
-                <Button Content="Stop" FontSize="10" Padding="6,2"
-                        Command="{Binding $parent[UserControl].DataContext.Manager.StopTaskCommand}"
-                        CommandParameter="{Binding}"
-                        ToolTip.Tip="Stop this task" />
-                <Button Content="Details" FontSize="10" Padding="6,2"
-                        Command="{Binding $parent[UserControl].DataContext.Manager.CreateTaskCommand}"
-                        ToolTip.Tip="Show task details" />
-              </StackPanel>
-            </DataTemplate>
-          </DataGridTemplateColumn.CellTemplate>
-        </DataGridTemplateColumn>
-      </DataGrid.Columns>
-    </DataGrid>
-  </Grid>
+      <Border Classes="ProfileSection" Background="{DynamicResource PanelBackgroundBrush}">
+        <Expander IsExpanded="True">
+          <Expander.Header>
+            <Grid Background="Transparent" Height="38" Margin="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <icons:Icon Grid.Column="0" Classes="ExpanderIcon ExpanderArrow" />
+              <icons:Icon Grid.Column="1" Classes="ExpanderIcon" Value="fa-solid fa-bolt" />
+              <TextBlock Grid.Column="2" Classes="ExpanderHeader" Text="CURRENTLY RUNNING TASKS" />
+            </Grid>
+          </Expander.Header>
 
+          <StackPanel Spacing="16" Margin="24,16,24,24">
+            <TextBlock Text="{Binding Manager.ActiveTasks.Count, StringFormat='{}{0} tasks currently running'}"
+                       FontSize="13"
+                       Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                       TextWrapping="Wrap" />
+
+          <DataGrid ItemsSource="{Binding Manager.ActiveTasks}"
+                    Background="{DynamicResource ControlBackgroundBrush}"
+                    Foreground="{DynamicResource TextForegroundSecondaryBrush}"
+                    GridLinesVisibility="Horizontal"
+                    HeadersVisibility="Column"
+                    CanUserReorderColumns="False"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    IsReadOnly="True"
+                    MaxHeight="400">
+            <DataGrid.Columns>
+              <DataGridTemplateColumn Header="Task ID" Width="180">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding TaskId}" 
+                               TextTrimming="CharacterEllipsis" 
+                               VerticalAlignment="Center" 
+                               Margin="12,0"
+                               ToolTip.Tip="{Binding TaskId}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTemplateColumn Header="Name" Width="1*" MinWidth="150" MaxWidth="300">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding JobName}" 
+                               TextTrimming="CharacterEllipsis" 
+                               VerticalAlignment="Center" 
+                               Margin="12,0"
+                               ToolTip.Tip="{Binding JobName}" />
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Header="Progress" Binding="{Binding ProgressPercentage, StringFormat='{}{0:F1}%'}" Width="100" />
+              <DataGridTextColumn Header="Started" Binding="{Binding StartedAt, StringFormat='HH:mm:ss'}" Width="100" />
+              <DataGridTextColumn Header="Elapsed" Binding="{Binding ExecutionTime}" Width="100" />
+              <DataGridTemplateColumn Header="Actions" Width="100">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.StopTaskCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="Stop this task">
+                        <icons:Icon Value="fa-solid fa-stop" Foreground="#D13438" />
+                      </Button>
+                      <Button Command="{Binding $parent[UserControl].DataContext.Manager.ViewTaskLogsCommand}"
+                              CommandParameter="{Binding}"
+                              Background="Transparent"
+                              BorderThickness="0"
+                              Padding="4"
+                              ToolTip.Tip="View task logs">
+                        <icons:Icon Value="fa-solid fa-file-alt" Foreground="{DynamicResource TextForegroundSecondaryBrush}" />
+                      </Button>
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+          </StackPanel>
+        </Expander>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

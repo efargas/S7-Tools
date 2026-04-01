@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Text;
-using Microsoft.Extensions.Logging;
 using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Models.Configuration;
 
@@ -277,14 +276,14 @@ namespace S7Tools.Services
 
             try
             {
-                string[] profileFiles = new[]
-                {
+                string[] profileFiles =
+                [
                     _pathService.SerialProfilesPath,
                     _pathService.SocatProfilesPath,
                     _pathService.PowerSupplyProfilesPath,
                     _pathService.JobsPath,
                     _pathService.TasksPath
-                };
+                ];
 
                 bool allExist = true;
                 foreach (string? profilePath in profileFiles)

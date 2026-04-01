@@ -1,15 +1,10 @@
-using S7Tools.ViewModels.Base;
-using System;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
-using Avalonia.Platform.Storage;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ReactiveUI;
+using S7Tools.Core.Interfaces.Services;
 using S7Tools.Core.Interfaces.ViewModels;
 using S7Tools.Services.Interfaces;
+using S7Tools.ViewModels.Base;
 
 namespace S7Tools.ViewModels.Pages;
 
@@ -38,12 +33,17 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
 
-        // Load default folder from settings
+        // Load default folder from settings, resolving relative paths via IPathService
         string defaultFolder = _settingsService.Current.MemoryDump.DefaultFolder;
-        if (!string.IsNullOrEmpty(defaultFolder) && Directory.Exists(defaultFolder))
+        if (!string.IsNullOrEmpty(defaultFolder))
         {
-            RootFolderPath = defaultFolder;
-            LoadTree();
+            IPathService pathService = _serviceProvider.GetRequiredService<IPathService>();
+            string resolvedFolder = pathService.ResolvePath(defaultFolder);
+            if (Directory.Exists(resolvedFolder))
+            {
+                RootFolderPath = resolvedFolder;
+                LoadTree();
+            }
         }
 
         FileTreeItems.CollectionChanged += (_, _) => this.RaisePropertyChanged(nameof(HasItems));
@@ -139,7 +139,7 @@ public partial class FileMemoryDumpViewModel : ViewModelBase
 
         try
         {
-            var docVm = _serviceProvider.GetRequiredService<FileMemoryDumpDocumentViewModel>();
+            FileMemoryDumpDocumentViewModel docVm = _serviceProvider.GetRequiredService<FileMemoryDumpDocumentViewModel>();
             docVm.OpenFile(item.FullPath);
 
             OpenDocumentAction.Invoke(docVm);

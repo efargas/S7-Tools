@@ -3,13 +3,11 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Text;
 using System.Text.Json;
-using System.Timers; // Added for batching timer
-using Microsoft.Extensions.Logging;
+using S7Tools.Core.Interfaces.Services;
+using S7Tools.Core.Models;
+using S7Tools.Infrastructure.Logging.Core.Models;
 using Serilog.Core;
 using Serilog.Events;
-using S7Tools.Core.Models;
-using S7Tools.Core.Interfaces.Services;
-using S7Tools.Infrastructure.Logging.Core.Models;
 
 namespace S7Tools.Infrastructure.Logging.Core.Storage;
 
@@ -138,6 +136,9 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
         _logQueue.Enqueue(logEntry);
     }
 
+    /// <inheritdoc />
+    public void Flush() => FlushQueue();
+
     /// <summary>
     /// Flushes the queued log entries into the main buffer and notifies the UI in a single batch.
     /// </summary>
@@ -149,7 +150,7 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
         }
 
         var batch = new List<LogModel>();
-        while (_logQueue.TryDequeue(out var entry))
+        while (_logQueue.TryDequeue(out LogModel? entry))
         {
             batch.Add(entry);
         }
@@ -163,7 +164,7 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
         lock (_lock)
         {
             startIndex = _count;
-            foreach (var logEntry in batch)
+            foreach (LogModel logEntry in batch)
             {
                 // Add the new entry to circular buffer
                 _buffer[_head] = logEntry;
@@ -432,7 +433,7 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
     /// <inheritdoc />
     public void Emit(LogEvent logEvent)
     {
-        var level = logEvent.Level switch
+        LogLevel level = logEvent.Level switch
         {
             LogEventLevel.Verbose => LogLevel.Trace,
             LogEventLevel.Debug => LogLevel.Debug,
@@ -443,17 +444,17 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
             _ => LogLevel.None
         };
 
-        var category = logEvent.Properties.TryGetValue("SourceContext", out var sourceContext) 
-            ? sourceContext.ToString().Trim('"') 
+        string category = logEvent.Properties.TryGetValue("SourceContext", out LogEventPropertyValue? sourceContext)
+            ? sourceContext.ToString().Trim('"')
             : string.Empty;
 
-        var eventId = logEvent.Properties.TryGetValue("EventId", out var eventIdProp) && eventIdProp is StructureValue sv 
-                    && sv.Properties.FirstOrDefault(p => p.Name == "Id")?.Value is ScalarValue idVal 
+        EventId eventId = logEvent.Properties.TryGetValue("EventId", out LogEventPropertyValue? eventIdProp) && eventIdProp is StructureValue sv
+                    && sv.Properties.FirstOrDefault(p => p.Name == "Id")?.Value is ScalarValue idVal
                     && idVal.Value is int id
             ? new EventId(id)
             : new EventId(0);
 
-        var scope = logEvent.Properties.TryGetValue("LogScope", out var scopeProp)
+        string? scope = logEvent.Properties.TryGetValue("LogScope", out LogEventPropertyValue? scopeProp)
             ? scopeProp.ToString().Trim('"')
             : null;
 
@@ -462,7 +463,7 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
             kvp => (object?)(kvp.Value is ScalarValue scalar ? scalar.Value : kvp.Value.ToString())
         );
 
-        if (logEvent.Properties.TryGetValue("TaskId", out var taskIdValue) && Guid.TryParse(taskIdValue.ToString().Trim('"'), out var parsedTaskId))
+        if (logEvent.Properties.TryGetValue("TaskId", out LogEventPropertyValue? taskIdValue) && Guid.TryParse(taskIdValue.ToString().Trim('"'), out Guid parsedTaskId))
         {
             properties["TaskId"] = parsedTaskId;
         }
