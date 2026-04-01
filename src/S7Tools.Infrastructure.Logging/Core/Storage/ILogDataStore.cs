@@ -47,6 +47,12 @@ public interface ILogDataStore : INotifyPropertyChanged, INotifyCollectionChange
     void Clear();
 
     /// <summary>
+    /// Flushes any queued log entries into the store immediately.
+    /// Useful for testing or when immediate visibility is required.
+    /// </summary>
+    void Flush();
+
+    /// <summary>
     /// Gets log entries that match the specified filter criteria.
     /// </summary>
     /// <param name="filter">The filter function to apply.</param>

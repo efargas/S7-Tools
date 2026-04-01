@@ -44,7 +44,7 @@ public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
             x => x.TestInputText,
             x => x.SelectionStart,
             x => x.SelectionEnd,
-            (text, start, end) => 
+            (text, start, end) =>
             {
                 if (string.IsNullOrEmpty(text))
                 {
@@ -178,7 +178,7 @@ public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
 
             int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, TestInputText.Length);
             int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, TestInputText.Length - start);
-            
+
             if (length == 0)
             {
                 _logger.LogWarning("Cut requested but no text is selected");
@@ -213,7 +213,7 @@ public sealed class TestSettingsViewModel : ViewModelBase, IDisposable
 
             int start = Math.Clamp(Math.Min(SelectionStart, SelectionEnd), 0, TestInputText.Length);
             int length = Math.Clamp(Math.Abs(SelectionStart - SelectionEnd), 0, TestInputText.Length - start);
-            
+
             if (length == 0)
             {
                 _logger.LogWarning("Copy requested but no text is selected");

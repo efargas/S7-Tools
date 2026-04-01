@@ -136,6 +136,9 @@ public sealed class LogDataStore : ILogDataStore, ITaskLogDataStore, ILogEventSi
         _logQueue.Enqueue(logEntry);
     }
 
+    /// <inheritdoc />
+    public void Flush() => FlushQueue();
+
     /// <summary>
     /// Flushes the queued log entries into the main buffer and notifies the UI in a single batch.
     /// </summary>

@@ -226,7 +226,9 @@ namespace S7Tools.Services
         {
             EventHandler<SettingsChangedEventArgs>? handler = SettingsChanged;
             if (handler is null)
+            {
                 return;
+            }
 
             if (_uiThreadService is not null)
             {

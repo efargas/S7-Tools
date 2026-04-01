@@ -49,6 +49,7 @@ public sealed class LogDataStoreTests : IDisposable
 
         // Act
         _dataStore.AddEntry(logEntry);
+        _dataStore.Flush();
 
         // Assert
         _dataStore.Count.Should().Be(1);
@@ -80,6 +81,7 @@ public sealed class LogDataStoreTests : IDisposable
         {
             _dataStore.AddEntry(entry);
         }
+        _dataStore.Flush();
 
         // Assert
         _dataStore.Count.Should().Be(5); // Buffer size
@@ -103,6 +105,7 @@ public sealed class LogDataStoreTests : IDisposable
 
         // Act
         _dataStore.AddEntry(logEntry);
+        _dataStore.Flush();
 
         // Assert
         propertyChangedEvents.Should().Contain(nameof(LogDataStore.Count));
@@ -121,6 +124,7 @@ public sealed class LogDataStoreTests : IDisposable
 
         // Act
         _dataStore.AddEntry(logEntry);
+        _dataStore.Flush();
 
         // Assert
         collectionChangedArgs.Should().NotBeNull();
@@ -194,6 +198,7 @@ public sealed class LogDataStoreTests : IDisposable
     {
         // Arrange
         _dataStore.AddEntry(CreateLogEntry("Test", LogLevel.Information));
+        _dataStore.Flush();
         var propertyChangedEvents = new List<string>();
         NotifyCollectionChangedEventArgs? collectionChangedArgs = null;
 
@@ -269,6 +274,7 @@ public sealed class LogDataStoreTests : IDisposable
         // Arrange
         LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
+        _dataStore.Flush();
 
         // Act
         string result = await _dataStore.ExportAsync("txt");
@@ -285,6 +291,7 @@ public sealed class LogDataStoreTests : IDisposable
         // Arrange
         LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
+        _dataStore.Flush();
 
         // Act
         string result = await _dataStore.ExportAsync("json");
@@ -301,6 +308,7 @@ public sealed class LogDataStoreTests : IDisposable
         // Arrange
         LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
+        _dataStore.Flush();
 
         // Act
         string result = await _dataStore.ExportAsync("csv");
@@ -318,6 +326,7 @@ public sealed class LogDataStoreTests : IDisposable
         // Arrange
         LogModel entry = CreateLogEntry("Test message", LogLevel.Information);
         _dataStore.AddEntry(entry);
+        _dataStore.Flush();
 
         // Act
         string result = await _dataStore.ExportAsync("invalid");
@@ -351,6 +360,7 @@ public sealed class LogDataStoreTests : IDisposable
         }
 
         await Task.WhenAll(tasks);
+        _dataStore.Flush();
 
         // Assert
         _dataStore.Count.Should().Be(_options.MaxEntries); // Should be at max capacity
@@ -363,6 +373,7 @@ public sealed class LogDataStoreTests : IDisposable
     {
         // Arrange
         _dataStore.AddEntry(CreateLogEntry("Test", LogLevel.Information));
+        _dataStore.Flush();
 
         // Act
         _dataStore.Dispose();

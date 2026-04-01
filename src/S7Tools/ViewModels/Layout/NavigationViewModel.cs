@@ -333,7 +333,7 @@ public class NavigationViewModel : ReactiveObject
             // Set current content to null first to ensure the sidebar UI clears before collapsing
             CurrentContent = null;
             IsSidebarVisible = false;
-            
+
             _activityBarService.SelectItem(itemId);
             _logger.LogDebug("Selected document-only activity bar item {ItemId} and ensured sidebar is collapsed", itemId);
             return;

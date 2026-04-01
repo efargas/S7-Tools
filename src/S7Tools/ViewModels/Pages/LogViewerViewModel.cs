@@ -630,16 +630,22 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
         return entry =>
         {
             if (entry.Level < SelectedLogLevel)
+            {
                 return false;
+            }
 
             if (StartDate.HasValue && entry.Timestamp < StartDate.Value)
+            {
                 return false;
+            }
 
             if (EndDate.HasValue)
             {
                 DateTimeOffset endDateOffset = EndDate.Value.AddDays(1).AddTicks(-1);
                 if (entry.Timestamp > endDateOffset)
+                {
                     return false;
+                }
             }
 
             if (SelectedTaskId.HasValue)
@@ -653,7 +659,9 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
             if (!string.IsNullOrEmpty(SelectedScope))
             {
                 if (entry.Scope != SelectedScope)
+                {
                     return false;
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(SearchText))
@@ -663,7 +671,9 @@ public sealed class LogViewerViewModel : ViewModelBase, IDockableViewModel, IDis
                                (entry.Category?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
                                (entry.Exception?.ToString().Contains(term, StringComparison.OrdinalIgnoreCase) ?? false);
                 if (!matches)
+                {
                     return false;
+                }
             }
 
             return true;
@@ -782,6 +792,10 @@ internal class DesignTimeLogDataStore : ILogDataStore
     /// Executes the Clear operation.
     /// </summary>
     public void Clear() { }
+    /// <summary>
+    /// Executes the Flush operation (no-op for design-time).
+    /// </summary>
+    public void Flush() { }
     /// <summary>
     /// Executes the GetFilteredEntries operation.
     /// </summary>

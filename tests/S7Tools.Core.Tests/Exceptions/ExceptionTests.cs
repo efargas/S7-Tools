@@ -335,7 +335,7 @@ public class ExceptionTests
         // Assert
         Assert.Contains("3 error(s)", exception.Message);
         exception.ValidationErrors.Count.Should().Be(3);
-        exception.ValidationErrors.Should().Be(errors);
+        exception.ValidationErrors.Should().BeEquivalentTo(errors);
     }
 
     [Fact]

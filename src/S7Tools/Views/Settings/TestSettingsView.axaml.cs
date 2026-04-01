@@ -1,7 +1,4 @@
-using Avalonia;
-using Avalonia.Controls;
 using Avalonia.ReactiveUI;
-using ReactiveUI;
 using S7Tools.ViewModels.Settings;
 
 namespace S7Tools.Views.Settings;
@@ -20,8 +17,8 @@ public partial class TestSettingsView : ReactiveUserControl<TestSettingsViewMode
         {
             textBox.PropertyChanged += (s, e) =>
             {
-                if (e.Property.Name == "SelectionStart" || 
-                    e.Property.Name == "SelectionEnd" || 
+                if (e.Property.Name == "SelectionStart" ||
+                    e.Property.Name == "SelectionEnd" ||
                     e.Property.Name == "CaretIndex")
                 {
                     if (ViewModel != null)

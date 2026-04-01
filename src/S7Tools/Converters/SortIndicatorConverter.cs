@@ -11,7 +11,9 @@ public class SortIndicatorConverter : IValueConverter
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo? culture)
     {
         if (value is not string sortColumn || parameter is not string columnName)
+        {
             return "";
+        }
 
         return sortColumn == columnName ? "↑" : "";
     }
